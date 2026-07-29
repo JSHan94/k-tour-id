@@ -38,45 +38,50 @@ secrets.json
 
 
 # =============================================================================
-# FRONTEND (kstayble-fe / Next.js / PNPM)
+# K-TOUR ID APP (Next.js / PNPM)
 # =============================================================================
 
 # Dependencies
-kstayble-fe/node_modules/
+k-tour-id-app/node_modules/
 
 # Next.js build output and cache
-kstayble-fe/.next/
-kstayble-fe/out/
+k-tour-id-app/.next/
+k-tour-id-app/out/
+k-tour-id-app/.vinext/
 
 # Other build artifacts
-kstayble-fe/build/
-kstayble-fe/dist/
+k-tour-id-app/build/
+k-tour-id-app/dist/
+k-tour-id-app/.wrangler/
 
 
 # =============================================================================
-# SMART CONTRACTS (kstayble-contracts / Foundry)
+# LEGACY SMART CONTRACT EXPERIMENTS (Foundry)
 # =============================================================================
 
 # Compiled artifacts and cache
-kstayble-contracts/out/
-kstayble-contracts/cache/
+legacy-contracts/out/
+legacy-contracts/cache/
 
 # Foundry dependencies
 # Note: Since you have a .gitmodules file, `lib` is likely managed by `forge install`.
 # It's common practice to ignore the contents to keep the repo clean.
-kstayble-contracts/lib/
+legacy-contracts/lib/
 
 # Test reports and coverage
-kstayble-contracts/coverage/
-kstayble-contracts/lcov.info
+legacy-contracts/coverage/
+legacy-contracts/lcov.info
 broadcast/
 
 
 # =============================================================================
 # PRIVATE / INTERNAL — do not publish
 # =============================================================================
-# Team chat export (private)
-ChatExport_2026-06-23/
+# User-provided research and internal working files
+ChatExport_*/
+TrackNo2_*.pdf
+tmp/
+라온시큐어_*/
 # Internal review notes (kept local, not for the public repo)
 docs/FEEDBACK.md
 docs/DESIGN_DIAGNOSIS.md
