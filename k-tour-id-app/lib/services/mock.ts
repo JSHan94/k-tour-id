@@ -306,18 +306,18 @@ export const mockBenefitService: BenefitService = {
     const benefit = m.includes("coupon") || m.includes("benefit") || m.includes("혜택") || m.includes("쿠폰") || m.includes("남은")
     if (food)
       return ko
-        ? "오늘은 서대문 후라이드 치킨을 추천해요. 이 화면의 배달 서비스와 쿠폰은 제휴 전 시뮬레이션이며, 실제 연동 시 가맹점 VP 검증 뒤 혜택을 적용합니다. 데모 혜택을 볼까요?"
-        : "Try Korean fried chicken in Seodaemun. Delivery brands and coupons shown here are pre-partnership simulations; a live integration would apply benefits only after merchant VP verification. Open the demo benefit?"
+        ? "오늘은 서대문 후라이드 치킨을 추천해요. 주문 전에 예상 도착 시간과 최종 결제 금액을 확인할 수 있어요. 여행자 혜택을 볼까요?"
+        : "Try Korean fried chicken in Seodaemun. You can review the arrival time and final total before ordering. View your traveler benefits?"
     if (transit)
       return ko
-        ? "현재 T-money 화면은 연동 개념 목업이에요. 실제 제휴·태그 결제는 아직 연결되지 않았고, 앱에서는 파트너가 발급한 교통 바우처의 발급·사용 흐름만 시뮬레이션합니다."
-        : "The T-money screen is an integration concept only. No live partnership or tap payment is connected; the app currently simulates issuance and redemption of a partner-funded transit voucher."
+        ? "교통 바우처가 있다면 지갑에서 사용 상태와 기한을 확인할 수 있어요. 탑승 전에 이용 가능한 교통수단을 확인해 주세요."
+        : "If you have a transit voucher, check its availability and expiry in Wallet before you travel."
     if (benefit)
       return ko
-        ? "잔액과 남은 여행 기간을 기준으로 ₩180,000을 사용자 선택형 귀국·재방문 바우처로 전환하는 데모를 보여드릴 수 있어요. 제휴 브랜드 쿠폰으로 확정되는 것은 아니며, 전환 전 재원과 환불 조건을 확인합니다."
-        : "I can demo converting ₩180,000 into a user-selected return-trip voucher based on your balance and trip period. It is not a confirmed brand coupon; funding and refund terms are shown before conversion."
+        ? "남은 여행 잔액을 바우처로 전환할 수 있어요. 전환하기 전에 금액, 사용 기한, 미사용 시 되돌리는 조건을 모두 확인해 드릴게요."
+        : "You can convert part of your travel balance into a voucher. I’ll show the amount, expiry and return conditions before you confirm."
     return ko
-      ? "저는 K-Tour ID 가이드예요. 신원 제시, 여행자 혜택, 원화 지갑과 바우처 사용 방법을 도와드려요. 시뮬레이션과 실제 연동 상태도 구분해 설명할게요."
-      : "I'm your K-Tour ID guide. Ask about presenting your ID, visitor benefits, the KRW wallet or vouchers. I'll also distinguish simulated and connected features."
+      ? "저는 K-Tour ID 가이드예요. 여행자 할인, 여행 잔액, 바우처 사용 방법을 도와드려요."
+      : "I'm your K-Tour ID guide. Ask about traveler discounts, your travel balance or vouchers."
   },
 }

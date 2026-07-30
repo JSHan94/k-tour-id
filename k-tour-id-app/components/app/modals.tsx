@@ -3,10 +3,10 @@
 import { useRef, useState } from "react"
 import { Sheet, SheetContent } from "@/components/app/sheet"
 import { QRCode } from "@/components/qr-code"
-import { Check, Loader2, ShieldCheck } from "lucide-react"
+import { Check, Loader2 } from "lucide-react"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-import { formatKRW, formatUSD, formatWon, shortAddress } from "@/lib/format"
+import { formatKRW, formatUSD, formatWon } from "@/lib/format"
 import type { Transaction } from "@/lib/types"
 
 function SuccessCheck() {
@@ -21,17 +21,29 @@ function SuccessCheck() {
 
 export function ReceiveModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const { session } = useApp()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const addr = session.wallet.address
+  const [copied, setCopied] = useState(false)
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(addr)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent title={t("modal.receive")}>
+      <SheetContent title={lang === "ko" ? "받기 QR" : "Receive QR"}>
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-border">
-            <QRCode value={addr} size={150} className="!border-0" />
+            <QRCode value={addr} size={150} className="!border-0" ariaLabel={t("modal.receive")} />
           </div>
-          <p className="font-mono text-[12px] text-muted-foreground">{shortAddress(addr)}</p>
-          <p className="text-center text-[12px] text-muted-foreground">{t("modal.receiveSub")}</p>
+          <p className="max-w-[280px] text-center text-[13px] leading-relaxed text-muted-foreground">{t("modal.receiveSub")}</p>
+          <button type="button" onClick={copyLink} className="pressable flex min-h-11 items-center justify-center rounded-xl border border-border bg-card px-4 text-[13px] font-bold text-foreground">
+            {copied ? (lang === "ko" ? "받기 링크를 복사했어요" : "Receive link copied") : (lang === "ko" ? "받기 링크 복사" : "Copy receive link")}
+          </button>
         </div>
       </SheetContent>
     </Sheet>
@@ -135,7 +147,6 @@ export function PayModal({
   const { pay, session } = useApp()
   const { t, lang } = useLang()
   const [phase, setPhase] = useState<"confirm" | "processing" | "done" | "error">("confirm")
-  const [receiptId, setReceiptId] = useState("")
   const busy = useRef(false)
 
   const amount = item?.amountKRW ?? 0
@@ -148,7 +159,6 @@ export function PayModal({
     setPhase("processing")
     try {
       await pay(item.merchant, item.amountKRW, item.category)
-      setReceiptId(`RCT-DEMO-${String(Date.now()).slice(-6)}`)
       setPhase("done")
       setTimeout(() => {
         onOpenChange(false)
@@ -175,10 +185,7 @@ export function PayModal({
             <SuccessCheck />
             <p className="text-[13px] font-semibold">{item?.merchant}</p>
             <p className="tabular text-[16px] font-extrabold">{lang === "ko" ? formatWon(amount) : `₩${amount.toLocaleString("en-US")}`}</p>
-            <p className="font-mono text-[10px] text-muted-foreground">{receiptId}</p>
-            <p className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
-              <ShieldCheck className="h-3 w-3 text-primary" /> {t("modal.loggedOmnione")}
-            </p>
+            <p className="inline-flex items-center gap-1 text-[13px] text-muted-foreground">{t("modal.loggedOmnione")}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -189,10 +196,10 @@ export function PayModal({
               </p>
               {showUsd && <p className="tabular text-[12px] text-muted-foreground">≈ {formatUSD(amount, session.wallet.usdRate)}</p>}
             </div>
-            <div className="grid grid-cols-[88px_1fr] gap-y-2 rounded-2xl border border-border bg-card p-3.5 text-[10.5px]">
+            <div className="grid grid-cols-[88px_1fr] gap-y-3 rounded-2xl border border-border bg-card p-3.5 text-[12px]">
               <span className="text-muted-foreground">{lang === "ko" ? "이용 방식" : "Fulfilment"}</span><span className="font-semibold">{item?.fulfilment ?? (lang === "ko" ? "결제 후 주문 확정" : "Order confirmed after payment")}</span>
               <span className="text-muted-foreground">{lang === "ko" ? "장소" : "Location"}</span><span className="font-semibold">{item?.location ?? (lang === "ko" ? "제휴 서비스" : "Partner service")}</span>
-              <span className="text-muted-foreground">{lang === "ko" ? "취소·환불" : "Cancellation"}</span><span className="font-semibold">{item?.cancellation ?? (lang === "ko" ? "제휴사 확정 전 데모 주문 취소 가능" : "Demo order can be cancelled before partner confirmation")}</span>
+              <span className="text-muted-foreground">{lang === "ko" ? "취소·환불" : "Cancellation"}</span><span className="font-semibold">{item?.cancellation ?? (lang === "ko" ? "주문 확정 전 취소 가능" : "Can be cancelled before confirmation")}</span>
             </div>
             <p className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
               {phase === "error" ? (lang === "ko" ? "결제 요청을 완료하지 못했습니다. 금액은 차감되지 않았습니다." : "Payment failed and no balance was deducted.") : insufficient ? (lang === "ko" ? "잔액이 부족해요" : "Insufficient balance") : t("modal.payNote")}

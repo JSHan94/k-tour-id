@@ -160,11 +160,16 @@ export interface SettlementReceipt {
 /** One shared record keeps the holder, merchant and settlement mock in sync. */
 export type DemoJourneyStage =
   | "request-ready"
+  | "checking"
   | "presentation-created"
+  | "presentation-expired"
+  | "presentation-revoked"
+  | "presentation-offline"
   | "benefit-ready"
   | "paid"
   | "settlement-submitted"
   | "anchored"
+  | "refunded"
 
 export type DemoClaimKey = "credentialActive" | "visitorEligibility" | "tripActive" | "couponUnused" | "ageOver19"
 

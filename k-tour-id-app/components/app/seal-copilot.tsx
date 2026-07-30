@@ -8,8 +8,8 @@ import { AppIcon, type IconKey } from "@/lib/icon-map"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { formatWon } from "@/lib/format"
-import { pickContext, type CopilotCommand, D_DAY, TRIP_REMAINING_PCT } from "@/lib/copilot/context"
-import { STAY } from "@/lib/mock-data"
+import { pickContext, type CopilotCommand, D_DAY } from "@/lib/copilot/context"
+import { STAY, TRIP_BUDGET_KRW } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
 
 type Phase = "idle" | "confirm" | "processing" | "done" | "error"
@@ -56,12 +56,14 @@ export function SealCopilot() {
   if (!session.onboarded || pathname.startsWith("/connect/chat")) return null
 
   const money = (krw?: number) => (krw == null ? "" : lang === "ko" ? formatWon(krw) : `₩${krw.toLocaleString("en-US")}`)
+  const spentKRW = transactions.filter((tx) => tx.amountKRW < 0).reduce((sum, tx) => sum + Math.abs(tx.amountKRW), 0)
+  const tripRemainingPct = Math.max(0, Math.round(((TRIP_BUDGET_KRW - spentKRW) / TRIP_BUDGET_KRW) * 100))
 
   const contextLine = (() => {
     const bal = money(session.wallet.balanceKRW)
     if (pathname === "/") return `${STAY.cityKo && lang === "ko" ? STAY.cityKo : STAY.city} · D-${D_DAY} · ${bal}`
-    if (pathname.startsWith("/wallet")) return `${t("wallet.budgetLeft")} ${TRIP_REMAINING_PCT}% · ${bal}`
-    if (pathname.startsWith("/pass")) return session.capsule ? `${session.capsule.stayPeriod} · ${session.capsule.trustLevel}` : ""
+    if (pathname.startsWith("/wallet")) return `${t("wallet.budgetLeft")} ${tripRemainingPct}% · ${bal}`
+    if (pathname.startsWith("/pass")) return session.capsule ? `${session.capsule.stayPeriod} · ${t("pass.statusActive")}` : ""
     if (pathname.startsWith("/alerts")) return `${notifications.filter((n) => !n.read).length} unread`
     return bal
   })()
@@ -111,10 +113,9 @@ export function SealCopilot() {
         const nextBalance = c.kind === "topup"
           ? session.wallet.balanceKRW + c.amountKRW
           : Math.max(0, session.wallet.balanceKRW - c.amountKRW)
-        const reference = `DEMO-${c.kind.toUpperCase()}-${String(Date.now()).slice(-6)}`
         copilotPushAi(lang === "ko"
-          ? `${c.kind === "convert" ? "바우처 전환" : c.kind === "topup" ? "데모 잔액 충전" : "데모 결제"}이 완료됐어요. 남은 데모 잔액은 ${money(nextBalance)}, 영수증은 ${reference}입니다.`
-          : `${c.kind === "convert" ? "Voucher conversion" : c.kind === "topup" ? "Demo top-up" : "Demo payment"} complete. Demo balance: ${money(nextBalance)} · Receipt: ${reference}.`)
+          ? `${c.kind === "convert" ? "바우처 전환" : c.kind === "topup" ? "여행 잔액 충전" : "결제"}이 완료됐어요. 남은 여행 잔액은 ${money(nextBalance)}입니다.`
+          : `${c.kind === "convert" ? "Voucher conversion" : c.kind === "topup" ? "Travel balance top-up" : "Payment"} complete. Travel balance: ${money(nextBalance)}.`)
       }
     } catch {
       setPhase((p) => ({ ...p, [c.id]: "error" }))
@@ -175,7 +176,7 @@ export function SealCopilot() {
       <Sheet open={copilotOpen} onOpenChange={(v) => (v ? openCopilot() : closeCopilot())}>
         <SheetContent title={t("seal.title")}>
           {/* context read */}
-          <div className="mb-3 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="mb-3 flex items-center justify-center gap-1.5 text-[12px] text-muted-foreground">
             <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 font-medium text-foreground/70">
               <ShieldCheck className="h-3 w-3 text-primary" /> {screenChip}
             </span>
@@ -210,8 +211,8 @@ export function SealCopilot() {
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-semibold text-foreground">{c.label ?? t(c.labelKey ?? "")}</p>
-                    <p className={cn("truncate text-[11px]", confirming ? "font-semibold text-primary" : "text-muted-foreground")}>
+                    <p className="break-words text-[13px] font-semibold leading-snug text-foreground">{c.label ?? t(c.labelKey ?? "")}</p>
+                    <p className={cn("break-words text-[12px] leading-snug", confirming ? "font-semibold text-primary" : "text-muted-foreground")}>
                       {ph === "done"
                         ? doneSubtitle(c.kind)
                         : ph === "error"
@@ -226,7 +227,7 @@ export function SealCopilot() {
                   {c.amountKRW != null && ph !== "done" && (
                     <span
                       className={cn(
-                        "tabular flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                        "tabular flex-shrink-0 rounded-full px-2 py-0.5 text-[12px] font-semibold",
                         confirming ? "bg-primary text-white" : "bg-primary/10 text-primary",
                       )}
                     >
@@ -239,7 +240,7 @@ export function SealCopilot() {
           </div>
 
           {/* chat thread */}
-          <div className="mt-4 max-h-[200px] space-y-2.5 overflow-y-auto border-t border-border pt-3">
+          <div className="mt-4 max-h-[200px] space-y-2.5 overflow-y-auto border-t border-border pt-3" aria-live="polite" aria-busy={copilotThinking}>
             {copilotThread.map((m, i) => (
               <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
                 <div
@@ -270,7 +271,7 @@ export function SealCopilot() {
                 key={k}
                 type="button"
                 onClick={() => send(t(k))}
-                className="pressable flex-shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground/80"
+                className="pressable min-h-10 flex-shrink-0 rounded-full border border-border bg-card px-3 py-1.5 text-[12px] font-medium text-foreground/80"
               >
                 {t(k)}
               </button>
@@ -286,6 +287,7 @@ export function SealCopilot() {
             className="mt-2 flex items-center gap-2"
           >
             <input
+              aria-label={lang === "ko" ? "K-Tour ID 가이드에게 질문" : "Ask K-Tour ID Guide"}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={t("ai.placeholder")}
@@ -294,8 +296,8 @@ export function SealCopilot() {
             <button
               type="submit"
               disabled={copilotThinking || !input.trim()}
-              className="bg-brand-gradient pressable grid h-10 w-10 flex-shrink-0 place-items-center rounded-full text-white disabled:opacity-50"
-              aria-label="Send"
+              className="bg-brand-gradient pressable grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-white disabled:opacity-50"
+              aria-label={lang === "ko" ? "보내기" : "Send"}
             >
               <Send className="h-4 w-4" />
             </button>

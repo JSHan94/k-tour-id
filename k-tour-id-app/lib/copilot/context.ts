@@ -2,7 +2,7 @@
 // numbers), returns the right commands, chat chips, and at most one nudge.
 // Anti-paperclip: silent by default; one dot; whisper only for the leftover case.
 
-import { STAY, TRIP_BUDGET_KRW, TRIP_SPENT_KRW } from "@/lib/mock-data"
+import { STAY } from "@/lib/mock-data"
 
 export type CmdKind = "pay" | "topup" | "convert" | "markRead" | "navigate" | "explain"
 
@@ -37,7 +37,6 @@ export interface CopilotContext {
 }
 
 export const LEFTOVER_KRW = 180_000
-export const TRIP_REMAINING_PCT = Math.max(0, Math.round(((TRIP_BUDGET_KRW - TRIP_SPENT_KRW) / TRIP_BUDGET_KRW) * 100))
 export const D_DAY = STAY.total - STAY.day
 
 const CONVERT: CopilotCommand = { id: "convert", kind: "convert", labelKey: "seal.cmd.convert", icon: "ticket", amountKRW: LEFTOVER_KRW, reason: `D-${D_DAY}` }

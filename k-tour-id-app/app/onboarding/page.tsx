@@ -16,17 +16,12 @@ import {
   Gift,
   ShieldCheck,
   AlertTriangle,
-  Radio,
 } from "lucide-react"
 import { PhoneFrame, Logo, LangToggle } from "@/components/app/shell"
 import { Seal } from "@/components/app/seal"
 import { KPassCard } from "@/components/app/cards"
-import { BrandMark } from "@/components/app/brand"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-import { shortDid } from "@/lib/format"
-import type { BrandKey } from "@/lib/brands"
-import { BRANDS } from "@/lib/brands"
 import type { Identity, IdentityMethod, UserType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -54,14 +49,13 @@ const VALUE_ROWS = [
   { icon: Gift, key: "ob.value.r2" },
   { icon: ShieldCheck, key: "ob.value.r3" },
 ]
-const VALUE_PARTNERS: BrandKey[] = ["tmoney", "baemin", "oliveyoung", "naver", "socar", "museum"]
 const ISSUE_STEPS = ["ob.issuing.c1", "ob.issuing.c2", "ob.issuing.c3"]
 
-function Dots({ index }: { index: number }) {
+function Dots({ index, label }: { index: number; label: string }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5" role="img" aria-label={label}>
       {[0, 1, 2].map((i) => (
-        <span key={i} className={cn("h-1.5 rounded-full transition-all", i <= index ? "w-6 bg-primary" : "w-2 bg-border")} />
+        <span aria-hidden="true" key={i} className={cn("h-1.5 rounded-full transition-all", i <= index ? "w-6 bg-primary" : "w-2 bg-border")} />
       ))}
     </div>
   )
@@ -90,6 +84,15 @@ export default function OnboardingPage() {
   }, [hydrated, renewMode, session.userType])
 
   const chosen = TYPES.find((ty) => ty.key === selected) ?? null
+  const stepLabel = {
+    lang: lang === "ko" ? "언어 선택" : "Choose language",
+    value: lang === "ko" ? "서비스 안내" : "Service overview",
+    type: lang === "ko" ? "사용자 유형과 동의" : "Traveler type and consent",
+    verify: lang === "ko" ? "본인 확인" : "Identity check",
+    confirm: lang === "ko" ? "확인 결과 검토" : "Review identity result",
+    issue: lang === "ko" ? "K-Tour ID 만드는 중" : "Creating K-Tour ID",
+    done: lang === "ko" ? "K-Tour ID 준비 완료" : "K-Tour ID ready",
+  }[step]
 
   const runVerify = async () => {
     if (!chosen) return
@@ -122,10 +125,11 @@ export default function OnboardingPage() {
   return (
     <PhoneFrame hideNav>
       <div className="flex min-h-[calc(100vh-2.5rem)] flex-col px-6 pb-8 pt-2">
+        <p className="sr-only" role="status" aria-live="polite">{stepLabel}</p>
         {/* top bar (hidden on the cover) */}
         {step !== "lang" && (
           <div className="mb-7 flex items-center justify-between">
-            <Dots index={DOTS[step]} />
+            <Dots index={DOTS[step]} label={lang === "ko" ? `가입 진행: ${stepLabel}` : `Onboarding progress: ${stepLabel}`} />
             <LangToggle />
           </div>
         )}
@@ -133,7 +137,7 @@ export default function OnboardingPage() {
         {renewMode && step !== "done" && (
           <div className="mb-5 flex items-start gap-3 rounded-2xl bg-[#fbf2d9] p-3.5 text-[#735116] ring-1 ring-[#ead59d]">
             <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0" />
-            <div><p className="text-[12px] font-bold">{lang === "ko" ? "K-Tour ID 갱신" : "Renew K-Tour ID"}</p><p className="mt-0.5 text-[10.5px] leading-relaxed">{lang === "ko" ? "기존 Credential은 변경하지 않고, 신원 소스를 다시 확인한 뒤 새 Credential을 발급합니다." : "Your current credential stays unchanged until the identity source is re-verified and a new credential is issued."}</p></div>
+            <div><p className="text-[13px] font-bold">{lang === "ko" ? "K-Tour ID 갱신" : "Renew K-Tour ID"}</p><p className="mt-1 text-[12px] leading-relaxed">{lang === "ko" ? "본인 확인을 다시 마치면 새 K-Tour ID를 사용할 수 있어요." : "Verify your identity again to use a renewed K-Tour ID."}</p></div>
           </div>
         )}
 
@@ -145,7 +149,7 @@ export default function OnboardingPage() {
             <h1 className="mt-4 text-[26px] font-extrabold leading-tight tracking-tight text-foreground">{t("ob.hero.title")}</h1>
             <p className="mt-2 max-w-[280px] text-[13px] leading-relaxed text-muted-foreground">{t("ob.hero.sub")}</p>
 
-            <p className="mt-9 text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{t("ob.hero.chooseLang")}</p>
+            <p className="mt-9 text-[12px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{t("ob.hero.chooseLang")}</p>
             <div className="mt-3 grid w-full grid-cols-2 gap-3">
               {(["ko", "en"] as const).map((l) => (
                 <button
@@ -173,11 +177,6 @@ export default function OnboardingPage() {
               {t("ob.skip")}
             </button>
 
-            <div className="mt-auto flex items-center gap-2 pt-8 text-[11px] text-muted-foreground">
-              <BrandMark brand="omnione" size={16} ring={false} />
-              <BrandMark brand="raonsecure" size={16} ring={false} />
-              {t("ob.hero.footer")}
-            </div>
           </div>
         )}
 
@@ -198,16 +197,6 @@ export default function OnboardingPage() {
               ))}
             </div>
 
-            <p className="mt-7 text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground">{t("home.partners")}</p>
-            <div className="no-scrollbar mt-3 flex gap-3 overflow-x-auto">
-              {VALUE_PARTNERS.map((p) => (
-                <div key={p} className="flex w-[52px] flex-shrink-0 flex-col items-center gap-1.5">
-                  <BrandMark brand={p} size={44} />
-                  <span className="w-full truncate text-center text-[10px] text-muted-foreground">{BRANDS[p].name}</span>
-                </div>
-              ))}
-            </div>
-
             <button
               type="button"
               onClick={() => setStep("type")}
@@ -215,7 +204,7 @@ export default function OnboardingPage() {
             >
               {t("ob.value.cta")} <ArrowRight className="h-4 w-4" />
             </button>
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">{t("ob.value.helper")}</p>
+            <p className="mt-2 text-center text-[12px] text-muted-foreground">{t("ob.value.helper")}</p>
           </div>
         )}
 
@@ -234,6 +223,7 @@ export default function OnboardingPage() {
                     key={ty.key}
                     type="button"
                     onClick={() => setSelected(ty.key)}
+                    aria-pressed={active}
                     className={cn(
                       "pressable flex w-full items-center gap-3 rounded-2xl border p-4 text-left",
                       active ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border hover:bg-secondary",
@@ -244,8 +234,8 @@ export default function OnboardingPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[15px] font-semibold text-foreground">{t(ty.titleK)}</p>
-                      <p className="truncate text-[12px] text-muted-foreground">{t(ty.capK)}</p>
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground/80">{t(ty.metaK)}</p>
+                      <p className="text-[12px] leading-snug text-muted-foreground">{t(ty.capK)}</p>
+                      <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{t(ty.metaK)}</p>
                     </div>
                     <ChevronRight className={cn("h-4 w-4", active ? "text-primary" : "text-muted-foreground")} />
                   </button>
@@ -256,7 +246,9 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setConsent((c) => !c)}
-              className="mt-4 flex items-start gap-2.5 text-left"
+              role="checkbox"
+              aria-checked={consent}
+              className="mt-4 flex min-h-11 items-start gap-2.5 text-left"
             >
               <span className={cn("mt-0.5 grid h-5 w-5 flex-shrink-0 place-items-center rounded-md border", consent ? "border-primary bg-primary text-white" : "border-border")}>
                 {consent && <Check className="h-3.5 w-3.5" />}
@@ -264,13 +256,14 @@ export default function OnboardingPage() {
               <span className="text-[12px] leading-snug text-muted-foreground">{t("ob.consent")}</span>
             </button>
 
-            {selected && (
-              <div className="mt-3 grid grid-cols-[86px_1fr] gap-y-2 rounded-2xl bg-surface-2 p-3.5 text-[10.5px] ring-1 ring-border">
-                <span className="text-muted-foreground">{lang === "ko" ? "목적" : "Purpose"}</span><span className="font-semibold">{lang === "ko" ? "K-Tour 서비스 Credential 발급" : "Issue a K-Tour service credential"}</span>
-                <span className="text-muted-foreground">{lang === "ko" ? "원문 보관" : "Raw data"}</span><span className="font-semibold">{lang === "ko" ? "기기 밖 저장 안 함" : "Not retained outside the device"}</span>
-                <span className="text-muted-foreground">{lang === "ko" ? "취소" : "Withdraw"}</span><span className="font-semibold">{lang === "ko" ? "발급 전 언제든 가능" : "Any time before issuance"}</span>
-              </div>
-            )}
+            <details className="mt-2 rounded-2xl bg-card px-3.5 py-3 text-[12px] ring-1 ring-border">
+              <summary className="flex min-h-11 cursor-pointer items-center font-bold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                {lang === "ko" ? "개인정보 처리 안내·이용약관" : "Privacy notice & terms"}
+              </summary>
+              <p className="mt-2 leading-relaxed text-muted-foreground">
+                {lang === "ko" ? "본인 확인 결과는 K-Tour ID를 만드는 데만 사용합니다. 확인한 신분증 원본은 저장하지 않으며, 발급 전에는 언제든 동의를 철회할 수 있어요." : "We use the identity-check result only to create your K-Tour ID. Source identity documents are not stored, and you can withdraw before issuance."}
+              </p>
+            </details>
 
             <button
               type="button"
@@ -293,7 +286,7 @@ export default function OnboardingPage() {
 
             {verifying && <p className="mb-3 text-center text-[12px] text-muted-foreground">{t("ob.verify.progress")}</p>}
             {verifyError && (
-              <div role="alert" className="mb-3 flex items-start gap-2 rounded-xl bg-primary/8 px-3 py-2.5 text-[11px] leading-relaxed text-primary ring-1 ring-primary/15">
+              <div role="alert" className="mb-3 flex items-start gap-2 rounded-xl bg-primary/8 px-3 py-2.5 text-[12px] leading-relaxed text-primary ring-1 ring-primary/15">
                 <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" /> {verifyError}
               </div>
             )}
@@ -306,18 +299,6 @@ export default function OnboardingPage() {
             >
               {verifying ? t("ob.verifying") : t("ob.verifyBtn", { x: t(chosen.vtK) })}
             </button>
-            <p className="mt-3 text-center text-[11px] font-medium text-muted-foreground">
-              {chosen.method === "passport-did"
-                ? t("ob.provider.passport")
-                : chosen.method === "foreigner-id"
-                  ? t("ob.provider.residence")
-                  : t("ob.provider.mobileId")}
-            </p>
-            {!verifying && !verifyError && (
-              <button type="button" onClick={() => setVerifyError(t("ob.verify.timeout"))} className="mt-1 py-1 text-[10px] font-medium text-muted-foreground underline underline-offset-2">
-                {t("ob.verify.previewFailure")}
-              </button>
-            )}
             <button type="button" onClick={() => setStep("type")} disabled={verifying} className="mt-1 py-2 text-[13px] font-medium text-muted-foreground disabled:opacity-50">
               {t("common.back")}
             </button>
@@ -327,7 +308,7 @@ export default function OnboardingPage() {
         {/* ── 4 · Portrait confirm ──────────────────────────────── */}
         {step === "confirm" && identity && (
           <div className="flex flex-1 flex-col items-center pt-2 text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary">{t("ob.confirm.overline")}</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-primary">{t("ob.confirm.overline")}</p>
             <h1 className="mt-1 text-[24px] font-extrabold tracking-tight text-foreground">{t("ob.confirm.title")}</h1>
 
             <div className="relative mt-7">
@@ -342,22 +323,21 @@ export default function OnboardingPage() {
               </span>
             </div>
 
-            <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-success-surface px-2.5 py-1 text-[11px] font-semibold text-success">
+            <span className="mt-4 inline-flex items-center gap-1 rounded-full bg-success-surface px-2.5 py-1 text-[12px] font-semibold text-success">
               <Check className="h-3 w-3" /> {t("ob.confirm.chip")}
             </span>
-            <p className="mt-2 text-[11px] text-muted-foreground">{t(chosen?.method === "foreigner-id" ? "ob.confirm.caption.foreignerId" : chosen?.method === "passport-did" ? "ob.confirm.caption.passport" : "ob.confirm.caption.mobileId")}</p>
+            <p className="mt-2 text-[12px] text-muted-foreground">{t(chosen?.method === "foreigner-id" ? "ob.confirm.caption.foreignerId" : chosen?.method === "passport-did" ? "ob.confirm.caption.passport" : "ob.confirm.caption.mobileId")}</p>
 
             <div className="mt-4 w-full rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-border">
               <p className="flex items-center justify-center gap-1.5 text-[16px] font-bold text-foreground">
                 {identity.displayName} <span className="text-[14px]">{identity.nationalityFlag}</span>
               </p>
               <p className="text-[12px] text-muted-foreground">{identity.nationality}</p>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">{shortDid(identity.did)}</p>
             </div>
 
-            <p className="mt-3 max-w-[300px] text-[11px] leading-relaxed text-muted-foreground">{t("ob.confirm.privacy")}</p>
+            <p className="mt-3 max-w-[300px] text-[12px] leading-relaxed text-muted-foreground">{t("ob.confirm.privacy")}</p>
             {issueError && (
-              <p role="alert" className="mt-3 rounded-xl bg-primary/8 px-3 py-2 text-[11px] font-medium text-primary ring-1 ring-primary/15">{issueError}</p>
+              <p role="alert" className="mt-3 rounded-xl bg-primary/8 px-3 py-2 text-[12px] font-medium text-primary ring-1 ring-primary/15">{issueError}</p>
             )}
 
             <button
@@ -396,7 +376,7 @@ export default function OnboardingPage() {
                 </div>
               ))}
             </div>
-            <p className="inline-flex items-center gap-2 text-[11px] text-muted-foreground">
+            <p className="inline-flex items-center gap-2 text-[12px] text-muted-foreground">
               {t("common.issuedBy")}
             </p>
           </div>
@@ -419,7 +399,6 @@ export default function OnboardingPage() {
               <span className="rounded-full bg-primary/8 px-3 py-1.5 text-[12px] font-semibold text-primary">
                 {t("wallet.label")} ₩{session.wallet.balanceKRW.toLocaleString("en-US")}
               </span>
-              <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-foreground ring-1 ring-border">{t("ob.done.tmoney")}</span>
               <span className="rounded-full bg-surface-2 px-3 py-1.5 text-[12px] font-medium text-foreground ring-1 ring-border">{t("ob.done.coupon")}</span>
             </div>
 
@@ -430,7 +409,7 @@ export default function OnboardingPage() {
             >
               {t("ob.enter")} <ArrowRight className="h-4 w-4" />
             </button>
-            <p className="mt-2 text-center text-[11px] text-muted-foreground">{t("ob.done.valid")}</p>
+            <p className="mt-2 text-center text-[12px] text-muted-foreground">{t("ob.done.valid")}</p>
           </div>
         )}
       </div>
@@ -457,16 +436,16 @@ function VerificationPreview({ method, verifying }: { method: IdentityMethod; ve
         ) : (
           <div className="text-center">
             {isResidence ? <Contact className="mx-auto h-12 w-12 text-white/70" /> : <Smartphone className="mx-auto h-12 w-12 text-white/70" />}
-            <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[10px] font-bold text-white/65"><Radio className="h-3 w-3" /> QR / APP CALL</div>
+            <div className="mt-3 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-bold text-white/70">{t("ob.verify.mobileId")}</div>
           </div>
         )}
       </div>
       <div className="flex flex-wrap justify-center gap-2">
-        {(isPassport ? ["MRZ", "NFC", "Liveness"] : isResidence ? ["coresidence", "Consent", "Callback"] : ["Mobile ID", "Consent", "Callback"]).map((label) => (
-          <span key={label} className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold text-muted-foreground ring-1 ring-border">{label}</span>
+        {(isPassport ? ["Document", "Photo", "Face"] : isResidence ? ["Card", "Consent", "Result"] : ["ID", "Consent", "Result"]).map((label) => (
+          <span key={label} className="rounded-full bg-secondary px-2.5 py-1 text-[12px] font-bold text-muted-foreground ring-1 ring-border">{label}</span>
         ))}
       </div>
-      <p className="max-w-[300px] text-center text-[11px] leading-relaxed text-muted-foreground">
+      <p className="max-w-[300px] text-center text-[12px] leading-relaxed text-muted-foreground">
         {isPassport ? t("ob.verify.path.passport") : isResidence ? t("ob.verify.path.residence") : t("ob.verify.path.mobileId")}
       </p>
     </div>

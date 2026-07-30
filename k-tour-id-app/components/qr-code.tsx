@@ -6,9 +6,10 @@ interface QRCodeProps {
   value: string
   size?: number
   className?: string
+  ariaLabel?: string
 }
 
-export function QRCode({ value, size = 200, className = '' }: QRCodeProps) {
+export function QRCode({ value, size = 200, className = '', ariaLabel = 'QR code' }: QRCodeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -71,6 +72,8 @@ export function QRCode({ value, size = 200, className = '' }: QRCodeProps) {
 
   return (
     <canvas
+      role="img"
+      aria-label={ariaLabel}
       ref={canvasRef}
       width={size}
       height={size}

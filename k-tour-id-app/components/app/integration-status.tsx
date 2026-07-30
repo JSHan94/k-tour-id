@@ -24,8 +24,8 @@ const MODE_META: Record<IntegrationMode, { label: string; detail: string; tone: 
     tone: "bg-[#f6ecd6] text-[#7b5b20] ring-[#b88a3d]/25",
   },
   simulated: {
-    label: "SIMULATION",
-    detail: "Mock response · no real identity or funds",
+    label: "DEMO",
+    detail: "Interactive demo · no real identity or payment",
     tone: "bg-primary/8 text-primary ring-primary/20",
   },
 }
@@ -34,7 +34,7 @@ export function IntegrationModeBadge({ mode = APP_INTEGRATION_MODE, compact = fa
   const meta = MODE_META[mode]
   const Icon = mode === "live" ? Radio : mode === "sandbox" ? ShieldCheck : FlaskConical
   return (
-    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 font-bold tracking-[0.08em] ring-1", compact ? "text-[9px]" : "text-[10px]", meta.tone)}>
+    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 font-bold tracking-[0.08em] ring-1", compact ? "text-[11px]" : "text-[12px]", meta.tone)}>
       <Icon className="h-3 w-3" /> {meta.label}
     </span>
   )
@@ -44,10 +44,9 @@ export function SimulationStrip() {
   const { lang } = useLang()
   if (APP_INTEGRATION_MODE !== "simulated") return null
   return (
-    <div className="mx-4 mb-1 flex min-h-8 items-center justify-between gap-2 rounded-xl bg-primary/7 px-3 py-1.5 ring-1 ring-primary/15">
-      <span className="min-w-0 flex-1 truncate text-[10px] font-semibold text-primary">
-        <span className="max-[460px]:hidden">{lang === "ko" ? "시연용 목업 · 실제 신분증·자금 없음" : "Demo mock · no real identity or funds"}</span>
-        <span className="hidden max-[460px]:inline">{lang === "ko" ? "시연용 · 실제 신분증·자금 없음" : "Demo · no real ID or funds"}</span>
+    <div className="mx-4 mb-1 flex min-h-9 items-center justify-between gap-3 rounded-xl bg-primary/7 px-3 py-2 ring-1 ring-primary/15">
+      <span className="min-w-0 flex-1 text-[12px] font-semibold leading-snug text-primary">
+        {lang === "ko" ? "인터랙티브 데모 · 실제 신분증이나 결제가 사용되지 않아요" : "Interactive demo · no real ID or payment is used"}
       </span>
       <IntegrationModeBadge compact />
     </div>

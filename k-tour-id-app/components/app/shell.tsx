@@ -83,12 +83,13 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               aria-label={t(labelKey)}
               className="pressable relative flex min-h-14 flex-col items-center justify-center gap-1 pt-1.5"
             >
               {active && <span className="absolute top-0 h-[3px] w-7 rounded-full bg-primary" />}
               <Icon className={cn("h-[22px] w-[22px]", active ? "text-primary" : "text-muted-foreground")} strokeWidth={active ? 2.3 : 1.9} />
-              <span className={cn("text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")}>{t(labelKey)}</span>
+              <span className={cn("text-[11px] font-medium", active ? "text-primary" : "text-muted-foreground")}>{t(labelKey)}</span>
             </Link>
           )
         })}
@@ -113,7 +114,7 @@ export function LangToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Toggle language"
+      aria-label={lang === "ko" ? "Switch to English" : "한국어로 전환"}
       className="pressable grid h-11 min-w-11 place-items-center rounded-full bg-secondary px-2.5 text-[12px] font-bold text-foreground/70"
     >
       {lang === "ko" ? "EN" : "한"}
@@ -127,7 +128,7 @@ export function HomeHeader({ name, avatar }: { name: string; avatar?: string }) 
     <header className="flex items-center justify-between px-5 pb-3 pt-3">
       <div className="min-w-0">
         <p className="text-[12px] uppercase tracking-[0.12em] text-muted-foreground">{t("home.hello")}</p>
-        <h1 className="truncate text-[24px] font-extrabold leading-tight tracking-tight text-foreground">{name}</h1>
+        <h1 className="break-words text-[24px] font-extrabold leading-tight tracking-tight text-foreground">{name}</h1>
       </div>
       <div className="flex items-center gap-2.5">
         <LangToggle />

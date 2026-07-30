@@ -7,31 +7,29 @@ import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
 import { Seal } from "@/components/app/seal"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-import { formatKRW, shortDid } from "@/lib/format"
+import { formatKRW } from "@/lib/format"
 
 const MENU = [
-  { icon: CreditCard, title: "Payment & demo balance", titleKo: "결제·데모 잔액", subtitle: "Transactions, top-up and receive", subtitleKo: "거래내역·충전·받기", href: "/wallet" },
-  { icon: ShieldCheck, title: "Security & Privacy", titleKo: "보안·프라이버시", subtitle: "Credential status and evidence", subtitleKo: "Credential 상태·연동 증거", href: "/pass" },
+  { icon: CreditCard, title: "Travel balance", titleKo: "여행 잔액", subtitle: "Transactions, add money and receive", subtitleKo: "거래내역·충전·받기", href: "/wallet" },
+  { icon: ShieldCheck, title: "K-Tour ID & Privacy", titleKo: "K-Tour ID·개인정보", subtitle: "Availability, expiry and shared information", subtitleKo: "사용 상태·기한·공유 정보", href: "/pass" },
   { icon: Bell, title: "Notifications", titleKo: "알림", subtitle: "Payments, benefits and security", subtitleKo: "결제·혜택·보안 알림", href: "/alerts" },
-  { icon: HelpCircle, title: "Help & Support", titleKo: "도움말·지원", subtitle: "Product FAQ and demo guide", subtitleKo: "제품 FAQ·데모 가이드", href: "/ask" },
+  { icon: HelpCircle, title: "Help & Support", titleKo: "도움말·지원", subtitle: "Benefits, refunds and ID renewal", subtitleKo: "혜택·취소환불·ID 갱신 안내", href: "/help" },
 ]
 
 export default function ProfilePage() {
   const router = useRouter()
   const { session, transactions, vouchers, reset } = useApp()
   const { t, lang } = useLang()
-  const { capsule, identity, wallet } = session
+  const { capsule, identity } = session
 
   const name = capsule?.holderName ?? identity?.displayName ?? t("home.guest")
-  const email = `${name.split(" ")[0].toLowerCase()}@ktourid.io`
   const spent = transactions.filter((tx) => tx.amountKRW < 0).reduce((a, tx) => a + Math.abs(tx.amountKRW), 0)
   const saved = vouchers.filter((voucher) => voucher.status === "redeemed").reduce((sum, voucher) => sum + voucher.valueKRW, 0)
-  const showUsd = session.userType !== "korean"
 
   const stats = [
-    { label: t("profile.spent"), value: formatKRW(spent), period: t("profile.thisStay") },
-    { label: t("profile.payments"), value: String(transactions.length), period: t("profile.thisStay") },
-    { label: t("profile.saved"), value: formatKRW(saved), period: t("profile.withBenefits") },
+    { label: t("profile.spent"), value: formatKRW(spent) },
+    { label: t("profile.payments"), value: String(transactions.filter((tx) => tx.amountKRW < 0).length) },
+    { label: t("profile.saved"), value: formatKRW(saved) },
   ]
 
   const signOut = () => {
@@ -48,17 +46,11 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3">
             <img src={identity?.photoUrl ?? "/portraits/peter.jpg"} alt={name} className="h-14 w-14 rounded-full object-cover ring-1 ring-border" />
             <div className="min-w-0 flex-1">
-              <h2 className="truncate text-[16px] font-bold text-foreground">{name}</h2>
-              <p className="truncate text-[12px] text-muted-foreground">{email}</p>
+              <h2 className="break-words text-[16px] font-bold leading-tight text-foreground">{name}</h2>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-success-surface px-2 py-0.5 text-[10px] font-semibold text-success">
-                  <BadgeCheck className="h-3 w-3" /> {t("profile.verified")}
+                <span className="inline-flex items-center gap-1 rounded-full bg-success-surface px-2.5 py-1 text-[12px] font-semibold text-[#46603f]">
+                  <BadgeCheck className="h-3.5 w-3.5" /> {lang === "ko" ? "신원 확인 완료" : "Identity checked"}
                 </span>
-                {capsule && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold capitalize text-primary">
-                    {capsule.trustLevel}
-                  </span>
-                )}
               </div>
             </div>
           </div>
@@ -67,8 +59,7 @@ export default function ProfilePage() {
             {stats.map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-[14px] font-bold tabular-nums text-foreground">{s.value}</p>
-                <p className="text-[10px] text-muted-foreground">{s.label}</p>
-                <p className="text-[9px] text-muted-foreground/70">{s.period}</p>
+                <p className="mt-1 text-[12px] text-muted-foreground">{s.label}</p>
               </div>
             ))}
           </div>
@@ -83,9 +74,7 @@ export default function ProfilePage() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-foreground">{t("profile.kpass")}</p>
-            <p className="truncate font-mono text-[11px] text-muted-foreground">
-              {identity ? shortDid(identity.did) : "Not issued"} · Open DID
-            </p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">{capsule ? (lang === "ko" ? "여행 중 사용 가능" : "Ready to use during your trip") : (lang === "ko" ? "아직 발급되지 않았어요" : "Not created yet")}</p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>
@@ -100,7 +89,7 @@ export default function ProfilePage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-semibold text-foreground">{lang === "ko" ? titleKo : title}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{lang === "ko" ? subtitleKo : subtitle}</p>
+                  <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{lang === "ko" ? subtitleKo : subtitle}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </Link>

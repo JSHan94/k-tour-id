@@ -3,7 +3,7 @@
 import type React from "react"
 import { Bus, ShoppingBag, Bike, CalendarCheck, Gift } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { formatManwon, formatUSD, formatWon, shortDid } from "@/lib/format"
+import { formatManwon, formatUSD, formatWon } from "@/lib/format"
 import { useCountUp } from "@/lib/use-count-up"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { Seal } from "@/components/app/seal"
@@ -53,7 +53,7 @@ export function WalletCard({
   return (
     <div className={cn("card-ink relative overflow-hidden rounded-3xl p-5 text-white", className)}>
       <div className="relative">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-white/55">
+        <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.12em] text-white/65">
           <span className="inline-block h-3.5 w-3.5 rounded-[28%] bg-[var(--seal)]" />
           {label ?? t("wallet.label")}
         </div>
@@ -77,7 +77,7 @@ export function WalletCard({
           <div className="mt-4 space-y-2.5">
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-white/45">{t("wallet.tripSpent")}</p>
+                <p className="text-[12px] uppercase tracking-wide text-white/60">{t("wallet.tripSpent")}</p>
                 <p className="tabular text-[13px] font-semibold text-white/85">−{ko ? formatWon(detail.spentKRW) : `₩${detail.spentKRW.toLocaleString("en-US")}`}</p>
               </div>
               <span className="text-gold tabular text-[12px] font-semibold">{remainingPct}% {t("wallet.budgetLeft")}</span>
@@ -95,18 +95,18 @@ export function WalletCard({
   )
 }
 
-const SERVICE_META: Record<ServiceKey, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
-  transport: { label: "Transport", icon: Bus },
-  shopping: { label: "Shopping", icon: ShoppingBag },
-  delivery: { label: "Delivery", icon: Bike },
-  reservation: { label: "Reservation", icon: CalendarCheck },
-  benefit: { label: "Benefits", icon: Gift },
+const SERVICE_META: Record<ServiceKey, { ko: string; en: string; icon: React.ComponentType<{ className?: string }> }> = {
+  transport: { ko: "교통", en: "Transport", icon: Bus },
+  shopping: { ko: "쇼핑", en: "Shopping", icon: ShoppingBag },
+  delivery: { ko: "배달", en: "Delivery", icon: Bike },
+  reservation: { ko: "예약", en: "Reservation", icon: CalendarCheck },
+  benefit: { ko: "혜택", en: "Benefits", icon: Gift },
 }
 
-const USER_TYPE_LABEL: Record<KPassCapsule["userType"], string> = {
-  korean: "Korean Resident",
-  foreigner: "Foreign Visitor",
-  "long-term": "Long-stay Resident",
+const USER_TYPE_LABEL: Record<KPassCapsule["userType"], { ko: string; en: string }> = {
+  korean: { ko: "국내 여행자", en: "Korean traveler" },
+  foreigner: { ko: "외국인 여행자", en: "International visitor" },
+  "long-term": { ko: "장기 체류 여행자", en: "Long-stay visitor" },
 }
 
 function formatPassDate(iso: string): string {
@@ -127,7 +127,7 @@ export function KPassCard({
   stamp?: boolean
   className?: string
 }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   return (
     <div className={cn("card-credential relative overflow-hidden rounded-3xl p-5 text-white", className)}>
       {/* dojang seal stamped on the document */}
@@ -135,7 +135,7 @@ export function KPassCard({
 
       <div className="relative">
         <div>
-          <p className="text-gold text-[11px] font-medium uppercase tracking-[0.16em]">K-Tour ID</p>
+          <p className="text-gold text-[12px] font-medium uppercase tracking-[0.14em]">K-Tour ID</p>
           <p className="mt-0.5 text-[13px] text-white/80">{t("pass.subtitle")}</p>
         </div>
 
@@ -150,20 +150,20 @@ export function KPassCard({
             <span className="text-[22px] leading-none">{identity?.nationalityFlag ?? "🪪"}</span>
           )}
           <div className="min-w-0">
-            <p className="flex items-center gap-1.5 truncate text-[19px] font-bold leading-tight">
+            <p className="flex flex-wrap items-center gap-1.5 break-words text-[19px] font-bold leading-tight">
               {capsule.holderName}
               {identity?.photoUrl && identity?.nationalityFlag && (
                 <span className="text-[14px]">{identity.nationalityFlag}</span>
               )}
             </p>
-            <p className="text-[12px] text-white/65">{USER_TYPE_LABEL[capsule.userType]}</p>
+            <p className="text-[12px] text-white/65">{USER_TYPE_LABEL[capsule.userType][lang]}</p>
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-y-3 text-[12px]">
           <Field label={t("pass.stayPeriod")} value={capsule.stayPeriod} />
           <Field label={t("pass.paymentLimit")} value={formatManwon(capsule.paymentLimitKRW)} />
-          <Field label={t("pass.trustLevel")} value={capsule.trustLevel} className="capitalize" />
+          <Field label={t("pass.status")} value={capsule.status === "active" ? t("pass.statusActive") : capsule.status} className="capitalize" />
           <Field label={t("pass.validUntil")} value={formatPassDate(capsule.expiresAt)} />
         </div>
 
@@ -171,20 +171,15 @@ export function KPassCard({
           {capsule.services.map((s) => {
             const Icon = SERVICE_META[s].icon
             return (
-              <span key={s} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-1 text-[10px] font-medium ring-1 ring-white/15">
+              <span key={s} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1.5 text-[12px] font-medium ring-1 ring-white/15">
                 <Icon className="h-3 w-3" />
-                {SERVICE_META[s].label}
+                {SERVICE_META[s][lang]}
               </span>
             )
           })}
         </div>
 
-        <div className="mt-5 flex items-center justify-between gap-2 border-t border-white/12 pt-3 text-[10px] text-white/55">
-          <span className="inline-flex min-w-0 items-center gap-1 font-mono">
-            <span className="truncate">{shortDid(capsule.did)}</span>
-          </span>
-          <span className="flex-shrink-0">{t("common.issuedBy")}</span>
-        </div>
+        <p className="mt-5 border-t border-white/12 pt-3 text-[12px] leading-relaxed text-white/65">{t("common.issuedBy")}</p>
       </div>
     </div>
   )
@@ -193,7 +188,7 @@ export function KPassCard({
 function Field({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
     <div>
-      <p className="text-gold text-[10px] uppercase tracking-wide opacity-80">{label}</p>
+      <p className="text-gold text-[12px] uppercase tracking-wide opacity-90">{label}</p>
       <p className={cn("tabular font-semibold", className)}>{value}</p>
     </div>
   )

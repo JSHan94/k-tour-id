@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BadgeCheck, Building2, CircleDot, Landmark, ScanLine, ShieldCheck } from "lucide-react"
+import { Building2, CircleDot, Landmark, ScanLine } from "lucide-react"
 import { Seal } from "@/components/app/seal"
 import { cn } from "@/lib/utils"
 
@@ -19,7 +19,7 @@ export function EnvironmentBadge({ kind, className }: { kind: EnvironmentKind; c
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-extrabold tracking-[0.12em]",
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-extrabold tracking-[0.1em]",
         ENV_STYLES[kind],
         className,
       )}
@@ -31,8 +31,8 @@ export function EnvironmentBadge({ kind, className }: { kind: EnvironmentKind; c
 }
 
 const NAV = [
-  { href: "/partner/verify", label: "Verifier", sub: "VP request & policy", icon: ScanLine },
-  { href: "/partner/settlements", label: "Settlements", sub: "Payment & anchor", icon: Landmark },
+  { href: "/partner/verify", label: "Benefit check", sub: "Scan and confirm", icon: ScanLine },
+  { href: "/partner/settlements", label: "Payouts", sub: "Review and submit", icon: Landmark },
 ] as const
 
 export function PartnerShell({ children }: { children: React.ReactNode }) {
@@ -45,11 +45,11 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
           <PartnerBrand />
           <div className="mt-8 rounded-2xl border border-border bg-surface-2 p-3.5">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Workspace</p>
+              <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Demo workspace</p>
               <EnvironmentBadge kind="SIMULATED" />
             </div>
-            <p className="mt-2 text-[14px] font-bold">Bukchon Welcome Center</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Partner DID · did:omn:2Kf8…9aC1</p>
+            <p className="mt-2 text-[14px] font-bold">Bukchon Craft House</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">Workshop counter</p>
           </div>
 
           <nav aria-label="Partner console" className="mt-5 space-y-1.5">
@@ -59,6 +59,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={href}
                   href={href}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
                     "flex min-h-14 items-center gap-3 rounded-2xl px-3.5 py-2.5 transition-colors",
                     active ? "bg-ink text-white shadow-sm" : "text-foreground hover:bg-secondary",
@@ -69,22 +70,14 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-bold">{label}</span>
-                    <span className={cn("block text-[10px]", active ? "text-white/55" : "text-muted-foreground")}>{sub}</span>
+                    <span className={cn("block text-[12px]", active ? "text-white/70" : "text-muted-foreground")}>{sub}</span>
                   </span>
                 </Link>
               )
             })}
           </nav>
 
-          <div className="mt-auto rounded-2xl border border-border bg-card p-3.5">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-success" />
-              <p className="text-[12px] font-bold">Privacy edge active</p>
-            </div>
-            <p className="mt-1.5 text-[10.5px] leading-relaxed text-muted-foreground">
-              This console stores policy results and event references, not raw identity documents.
-            </p>
-          </div>
+          <p className="mt-auto px-2 text-[12px] leading-relaxed text-muted-foreground">Prototype workspace · no real payment is sent.</p>
         </aside>
 
         <div className="min-w-0">
@@ -92,17 +85,14 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between gap-3 lg:justify-end">
               <div className="lg:hidden"><PartnerBrand /></div>
               <div className="flex items-center gap-2">
-                <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground sm:flex">
-                  <span className="h-2 w-2 rounded-full bg-success" />
-                  Verifier simulation ready
-                </div>
-                <button
-                  type="button"
-                  className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-foreground"
-                  aria-label="Partner account"
+                <EnvironmentBadge kind="SIMULATED" className="lg:hidden" />
+                <span
+                  className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground"
+                  role="img"
+                  aria-label="Bukchon Craft House account"
                 >
                   <Building2 className="h-[18px] w-[18px]" />
-                </button>
+                </span>
               </div>
             </div>
             <nav aria-label="Partner console mobile" className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
@@ -112,6 +102,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
                   <Link
                     key={href}
                     href={href}
+                    aria-current={active ? "page" : undefined}
                     className={cn(
                       "flex min-h-11 items-center justify-center gap-2 rounded-xl border text-[12px] font-bold",
                       active ? "border-ink bg-ink text-white" : "border-border bg-card text-muted-foreground",
@@ -137,7 +128,7 @@ function PartnerBrand() {
       <Seal size={38} />
       <div>
         <p className="text-[15px] font-extrabold tracking-tight">K-Tour ID</p>
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Partner console</p>
+        <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Merchant workspace</p>
       </div>
     </div>
   )
@@ -161,7 +152,7 @@ export function Panel({
       {(title || eyebrow || action) && (
         <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
           <div>
-            {eyebrow && <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-primary">{eyebrow}</p>}
+            {eyebrow && <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-primary">{eyebrow}</p>}
             {title && <h2 className="mt-0.5 text-[16px] font-extrabold tracking-tight">{title}</h2>}
           </div>
           {action}
@@ -176,32 +167,11 @@ export function PageIntro({ eyebrow, title, body, children }: { eyebrow: string;
   return (
     <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
       <div className="max-w-3xl">
-        <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-primary">{eyebrow}</p>
+        <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-primary">{eyebrow}</p>
         <h1 className="mt-1 text-[clamp(26px,4vw,38px)] font-extrabold leading-tight tracking-[-0.035em]">{title}</h1>
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground sm:text-[14px]">{body}</p>
       </div>
       {children}
     </div>
-  )
-}
-
-export function EnvironmentLegend() {
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-2.5">
-      <EnvironmentBadge kind="LIVE" />
-      <span className="mr-2 text-[10px] text-muted-foreground">production-connected</span>
-      <EnvironmentBadge kind="SANDBOX" />
-      <span className="mr-2 text-[10px] text-muted-foreground">test endpoint</span>
-      <EnvironmentBadge kind="SIMULATED" />
-      <span className="text-[10px] text-muted-foreground">local demo event</span>
-    </div>
-  )
-}
-
-export function VerifiedMark({ label = "Verified" }: { label?: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-success-surface px-2.5 py-1 text-[11px] font-bold text-success">
-      <BadgeCheck className="h-3.5 w-3.5" /> {label}
-    </span>
   )
 }

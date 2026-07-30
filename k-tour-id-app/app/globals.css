@@ -21,7 +21,7 @@
   --secondary: #ece6da; /* warm tint surface */
   --secondary-foreground: #1c1813;
   --muted: #ece6da;
-  --muted-foreground: #8a8276;
+  --muted-foreground: #6f685e;
   --accent: #b88a3d; /* 금박 gold — used sparingly */
   --accent-foreground: #1c1813;
   --destructive: #c2392f;
@@ -46,7 +46,7 @@
   --surface-1: #fffdf8;
   --surface-2: #ece6da;
   --seal: #c2392f;
-  --success: #5b7553; /* 쑥색 sage — positive amounts, verified states */
+  --success: #46603f; /* 쑥색 sage — positive amounts, verified states */
   --success-surface: #e7ede4; /* light sage chip background */
 
   /* legacy tile tokens (now unused — tiles are tonal) */
@@ -79,7 +79,7 @@
   --secondary: #ece6da;
   --secondary-foreground: #1c1813;
   --muted: #ece6da;
-  --muted-foreground: #8a8276;
+  --muted-foreground: #6f685e;
   --accent: #b88a3d;
   --accent-foreground: #1c1813;
   --destructive: #c2392f;
@@ -258,4 +258,15 @@
 @keyframes whisper-in {
   0% { opacity: 0; transform: translateX(8px); }
   100% { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

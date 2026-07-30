@@ -76,7 +76,7 @@ export default function ConnectChatPage() {
     touched.current = true
     push({ fromMe: true, text: lang === "ko" ? `같이 결제 ${formatWon(SPLIT_KRW)} 완료 ✓` : `Split pay ₩${SPLIT_KRW.toLocaleString("en-US")} done ✓` })
     await pay(SPLIT_MERCHANT, SPLIT_KRW, "delivery")
-    setTimeout(() => push({ fromMe: false, text: lang === "ko" ? "확인했어요! 로컬 시뮬레이션 영수증이 생성됐어요 🙆" : "Got it — a local simulation receipt was created 🙆" }), 700)
+    setTimeout(() => push({ fromMe: false, text: lang === "ko" ? "확인했어요! 결제 영수증도 저장됐어요 🙆" : "Got it — your payment receipt is saved 🙆" }), 700)
   }
 
   return (
@@ -92,7 +92,7 @@ export default function ConnectChatPage() {
       />
 
       {/* safety banner */}
-      <div className="mx-5 mb-3 flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2 text-[11px] text-muted-foreground ring-1 ring-border">
+      <div className="mx-5 mb-3 flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-[12px] text-muted-foreground ring-1 ring-border">
         <ShieldCheck className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
         {t("connect.chat.safety")}
       </div>
@@ -125,7 +125,7 @@ export default function ConnectChatPage() {
             <button
               type="button"
               onClick={confirmSplit}
-              className="pressable flex w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"
+              className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"
             >
               <Receipt className="h-3.5 w-3.5 text-primary" />
               {`${t("connect.split")} · ${lang === "ko" ? formatWon(SPLIT_KRW) : `₩${SPLIT_KRW.toLocaleString("en-US")}`}`}
@@ -136,23 +136,23 @@ export default function ConnectChatPage() {
               <button
                 type="button"
                 onClick={() => setSplitState("idle")}
-                className="pressable flex-1 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"
+                className="pressable min-h-11 flex-1 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"
               >
                 {lang === "ko" ? "취소" : "Cancel"}
               </button>
               <button
                 type="button"
                 onClick={executeSplit}
-                className="pressable flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white"
+                className="pressable min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white"
               >
                 {lang === "ko" ? `₩${SPLIT_KRW.toLocaleString("ko-KR")} 결제 확인` : `Confirm ₩${SPLIT_KRW.toLocaleString("en-US")}`}
               </button>
             </div>
           )}
           {splitState === "done" && (
-            <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-muted-foreground ring-1 ring-border opacity-60">
+            <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-muted-foreground ring-1 ring-border">
               <Receipt className="h-3.5 w-3.5 text-primary" />
-              {lang === "ko" ? "데모 결제 완료 · 로컬 영수증" : "Demo payment complete · local receipt"}
+              {lang === "ko" ? "결제 완료 · 영수증 저장됨" : "Payment complete · receipt saved"}
             </div>
           )}
         </div>
@@ -168,6 +168,7 @@ export default function ConnectChatPage() {
           className="flex items-center gap-2"
         >
           <input
+            aria-label={lang === "ko" ? "메시지 입력" : "Message"}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={t("connect.chat.placeholder")}
@@ -176,8 +177,8 @@ export default function ConnectChatPage() {
           <button
             type="submit"
             disabled={!input.trim()}
-            className="bg-brand-gradient pressable grid h-10 w-10 flex-shrink-0 place-items-center rounded-full text-white disabled:opacity-50"
-            aria-label="Send"
+            className="bg-brand-gradient pressable grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-white disabled:opacity-50"
+            aria-label={lang === "ko" ? "보내기" : "Send"}
           >
             <Send className="h-4 w-4" />
           </button>
@@ -188,5 +189,5 @@ export default function ConnectChatPage() {
 }
 
 function cnTime(fromMe: boolean) {
-  return `mt-0.5 text-[10px] text-muted-foreground ${fromMe ? "text-right" : ""}`
+  return `mt-0.5 text-[12px] text-muted-foreground ${fromMe ? "text-right" : ""}`
 }

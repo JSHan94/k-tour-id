@@ -10,6 +10,7 @@ import { Seal } from "@/components/app/seal"
 import { BrandMark } from "@/components/app/brand"
 import { partnerToBrand } from "@/lib/brands"
 import { cn } from "@/lib/utils"
+import { serviceCopy } from "@/lib/service-copy"
 
 function QuickActionGlyph({ iconKey, className }: { iconKey: QuickAction["iconKey"]; className?: string }) {
   if (iconKey === "topup") return <span className={cn("text-[18px] font-bold leading-none", className)}>₩</span>
@@ -30,7 +31,7 @@ export function QuickActionTile({ action, onClick }: { action: QuickAction; onCl
       <span className="grid h-14 w-14 place-items-center rounded-2xl bg-secondary text-primary ring-1 ring-border">
         <QuickActionGlyph iconKey={action.iconKey} className="h-[22px] w-[22px]" />
       </span>
-      <span className="text-[11px] font-medium text-muted-foreground">{t(`qa.${action.key}`)}</span>
+      <span className="text-[12px] font-medium text-muted-foreground">{t(`qa.${action.key}`)}</span>
     </button>
   )
 }
@@ -49,7 +50,7 @@ export function VerifiedStrip({ onClick }: { onClick?: () => void }) {
         <p className="inline-flex items-center gap-1 text-[13px] font-semibold text-foreground">
           <BadgeCheck className="h-3.5 w-3.5 text-primary" /> {t("home.verifiedStrip.title")}
         </p>
-        <p className="truncate text-[11px] text-muted-foreground">{t("home.verifiedStrip.sub")}</p>
+        <p className="text-[12px] leading-snug text-muted-foreground">{t("home.verifiedStrip.sub")}</p>
       </div>
       <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
     </button>
@@ -60,6 +61,7 @@ export function ServiceCard({ item, onClick }: { item: ServiceItem; onClick?: ()
   const { lang } = useLang()
   const price = lang === "ko" ? formatWon(item.priceKRW) : `₩${item.priceKRW.toLocaleString("en-US")}`
   const brandKey = partnerToBrand(item.partner)
+  const copy = serviceCopy(item, lang)
   return (
     <button
       type="button"
@@ -67,25 +69,25 @@ export function ServiceCard({ item, onClick }: { item: ServiceItem; onClick?: ()
       className="pressable w-full overflow-hidden rounded-2xl bg-card text-left ring-1 ring-border"
     >
       <div className="relative">
-        <img src={item.image || "/placeholder.svg"} alt={item.name} loading="lazy" decoding="async" className="h-24 w-full object-cover" />
+        <img src={item.image || "/placeholder.svg"} alt={copy.name} loading="lazy" decoding="async" className="h-24 w-full object-cover" />
         {brandKey && (
           <span className="absolute left-2 top-2 shadow-sm">
             <BrandMark brand={brandKey} size={24} />
           </span>
         )}
-        <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-ink/70 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+        <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-ink/80 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
           <Star className="h-2.5 w-2.5 fill-[var(--gold)] text-[var(--gold)]" />
           {item.rating}
         </span>
       </div>
       <div className="p-3">
-        <h3 className="truncate text-[13px] font-semibold text-foreground">{item.name}</h3>
-        <p className="mt-0.5 flex items-center gap-0.5 truncate text-[11px] text-muted-foreground">
-          <MapPin className="h-3 w-3 flex-shrink-0" /> {item.location}
+        <h3 className="break-words text-[13px] font-semibold leading-snug text-foreground">{copy.name}</h3>
+        <p className="mt-0.5 flex items-start gap-0.5 text-[12px] leading-snug text-muted-foreground">
+          <MapPin className="h-3 w-3 flex-shrink-0" /> {copy.location}
         </p>
         <div className="mt-2 flex items-baseline justify-between">
           <span className="tabular text-[13px] font-bold text-foreground">{price}</span>
-          <span className="text-[11px] text-muted-foreground">{item.etaLabel}</span>
+          <span className="text-[12px] text-muted-foreground">{copy.eta}</span>
         </div>
       </div>
     </button>

@@ -2,25 +2,30 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, BadgeCheck, ChevronRight, Eye, RefreshCcw, ScanLine, ShieldCheck, XCircle } from "lucide-react"
+import { AlertTriangle, BadgeCheck, ChevronRight, Eye, RefreshCcw, ScanLine, XCircle } from "lucide-react"
 import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
-import { KPassCard } from "@/components/app/cards"
 import { Seal } from "@/components/app/seal"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-import { formatTxDate, shortDid, shortHash } from "@/lib/format"
-import { IntegrationModeBadge } from "@/components/app/integration-status"
 
-const METHOD_LABEL: Record<string, string> = {
-  "mobile-id": "Mobile ID / OmniOne CX",
-  "passport-did": "Passport DID + eKYC",
-  "foreigner-id": "Foreigner ID Adapter",
+const USER_TYPE = {
+  korean: { ko: "국내 여행자", en: "Korean traveler" },
+  foreigner: { ko: "외국인 여행자", en: "International visitor" },
+  "long-term": { ko: "장기 체류 여행자", en: "Long-stay visitor" },
+} as const
+
+function benefitLabel(benefit: string, ko: boolean) {
+  if (!ko) return benefit
+  if (benefit === "Visitor workshop benefit") return "북촌 공예 체험 할인"
+  if (benefit === "Welcome coupon pack") return "K-Tour 웰컴 쿠폰"
+  return benefit
 }
 
 export default function PassPage() {
-  const { session, events } = useApp()
+  const { session } = useApp()
   const { t, lang } = useLang()
   const { capsule, identity } = session
+  const ko = lang === "ko"
   const [statusPreview, setStatusPreview] = useState<"revoked" | "expired" | null>(null)
 
   useEffect(() => {
@@ -36,130 +41,116 @@ export default function PassPage() {
         <PageHeader title={t("pass.title")} />
         <div className="flex flex-col items-center gap-4 px-6 pt-20 text-center">
           <Seal size={56} />
-          <p className="text-[14px] text-muted-foreground">
-            No K-Tour ID yet. Verify an identity source to receive your private service credential.
+          <p className="max-w-[290px] text-[14px] leading-relaxed text-muted-foreground">
+            {ko ? "K-Tour ID를 발급하면 여행자 혜택을 편리하게 이용할 수 있어요." : "Create your K-Tour ID to use eligible traveler benefits."}
           </p>
-          <Link href="/onboarding" className="bg-brand-gradient pressable rounded-xl px-5 py-2.5 text-[14px] font-semibold text-white">
-            {t("ob.enter")}
+          <Link href="/onboarding" className="bg-brand-gradient pressable flex min-h-12 items-center rounded-xl px-5 text-[14px] font-semibold text-white">
+            {ko ? "K-Tour ID 만들기" : "Create K-Tour ID"}
           </Link>
         </div>
       </PhoneFrame>
     )
   }
 
+  const unavailable = statusPreview != null || capsule.status !== "active"
+  const statusTitle = statusPreview === "expired"
+    ? (ko ? "사용 기간이 끝났어요" : "Your K-Tour ID has expired")
+    : statusPreview === "revoked"
+      ? (ko ? "지금은 사용할 수 없어요" : "Your K-Tour ID is unavailable")
+      : (ko ? "여행 중 사용 가능" : "Ready to use during your trip")
+  const validUntil = new Intl.DateTimeFormat(ko ? "ko-KR" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(capsule.expiresAt))
+  const typeLabel = USER_TYPE[capsule.userType][ko ? "ko" : "en"]
+
   return (
     <PhoneFrame>
-      <PageHeader
-        title={t("pass.title")}
-        right={
-          <Link href="/evidence" aria-label="Integration evidence" className="pressable grid h-11 w-11 place-items-center rounded-full text-muted-foreground hover:bg-secondary hover:text-foreground">
-            <ShieldCheck className="h-4 w-4" />
-          </Link>
-        }
-      />
+      <PageHeader title={t("pass.title")} />
 
       <div className="space-y-6 px-5 pt-1">
-        {statusPreview && (
-          <div className="rounded-3xl border border-primary/20 bg-[#f7e8e4] p-4 text-primary">
+        {unavailable && (
+          <div role="status" className="rounded-3xl border border-primary/20 bg-[#f7e8e4] p-4 text-primary">
             <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-card ring-1 ring-primary/15">{statusPreview === "revoked" ? <XCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}</span>
+              <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-card ring-1 ring-primary/15">
+                {statusPreview === "revoked" ? <XCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+              </span>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2"><p className="text-[13px] font-extrabold">{statusPreview === "revoked" ? (lang === "ko" ? "Credential 폐기 판정" : "Credential revoked") : (lang === "ko" ? "Credential 만료 판정" : "Credential expired")}</p><IntegrationModeBadge compact /></div>
-                <p className="mt-1 text-[11px] leading-relaxed text-primary/75">{lang === "ko" ? "데모 상태 확인 결과입니다. 현재 저장된 Credential은 변경하지 않았으며, 재발급 흐름으로 계속할 수 있습니다." : "This is a simulated status result. The stored credential was not changed; continue to the reissue flow."}</p>
+                <p className="text-[15px] font-extrabold">{statusTitle}</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-primary/85">
+                  {ko ? "신원을 다시 확인해 새 K-Tour ID를 발급해 주세요." : "Verify your identity again to create a new K-Tour ID."}
+                </p>
               </div>
             </div>
-            <Link href="/onboarding?mode=renew" className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[12px] font-bold text-white"><RefreshCcw className="h-4 w-4" /> {lang === "ko" ? "새 K-Tour ID 발급" : "Reissue K-Tour ID"}</Link>
+            <Link href="/onboarding?mode=renew" className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-bold text-white">
+              <RefreshCcw className="h-4 w-4" /> {ko ? "K-Tour ID 다시 발급하기" : "Renew K-Tour ID"}
+            </Link>
           </div>
         )}
 
-        <KPassCard capsule={capsule} identity={identity} />
-
-        {statusPreview ? (
-          <div className="flex min-h-14 items-center gap-3 rounded-2xl bg-secondary px-4 text-muted-foreground ring-1 ring-border">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-card"><ScanLine className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-foreground">{lang === "ko" ? "Credential 제시 불가" : "Presentation unavailable"}</p>
-              <p className="mt-0.5 text-[11px]">{lang === "ko" ? "재발급 후 다시 제시할 수 있습니다" : "Reissue the credential before presenting again"}</p>
+        <section className="card-credential relative overflow-hidden rounded-3xl p-5 text-white">
+          <Seal size={52} className="absolute right-4 top-4" />
+          <p className="text-[13px] font-semibold text-gold">K-Tour ID</p>
+          <div className="mt-6 flex items-center gap-3">
+            <img
+              src={identity?.photoUrl ?? "/abstract-profile.png"}
+              alt={ko ? `${capsule.holderName} 프로필 사진` : `${capsule.holderName} profile photo`}
+              className="h-14 w-14 rounded-full object-cover ring-2 ring-[var(--gold)]/70"
+            />
+            <div className="min-w-0">
+              <h1 className="break-words text-[20px] font-bold leading-tight">{capsule.holderName}</h1>
+              <p className="mt-0.5 text-[13px] text-white/75">{typeLabel}</p>
             </div>
           </div>
-        ) : (
+          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-white/15 pt-4">
+            <div>
+              <p className="text-[12px] text-white/70">{ko ? "상태" : "Status"}</p>
+              <p className="mt-1 inline-flex items-center gap-1.5 text-[14px] font-bold">
+                {unavailable ? <XCircle className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4 text-gold" />}
+                {unavailable ? (ko ? "사용 불가" : "Unavailable") : (ko ? "사용 가능" : "Available")}
+              </p>
+            </div>
+            <div>
+              <p className="text-[12px] text-white/70">{ko ? "사용 기한" : "Valid until"}</p>
+              <p className="mt-1 text-[14px] font-bold tabular-nums">{validUntil}</p>
+            </div>
+          </div>
+        </section>
+
+        {!unavailable && (
           <Link href="/present" className="bg-brand-gradient pressable flex min-h-14 items-center gap-3 rounded-2xl px-4 text-white shadow-sm">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/12"><ScanLine className="h-5 w-5" /></span>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold">{lang === "ko" ? "K-Tour ID 제시" : "Present K-Tour ID"}</p>
-              <p className="mt-0.5 text-[11px] text-white/65">{lang === "ko" ? "필요한 정보만 공개하고 혜택을 인증합니다" : "Share only what is needed to unlock a benefit"}</p>
+              <p className="text-[15px] font-bold">{ko ? "여행자 할인받기" : "Get a traveler discount"}</p>
+              <p className="mt-0.5 text-[12px] text-white/75">{ko ? "매장 요청을 확인하고 필요한 정보만 공유해요" : "Review the shop request and share only what is needed"}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-white/55" />
+            <ChevronRight className="h-5 w-5 text-white/70" />
           </Link>
         )}
 
-        <div className={statusPreview ? "flex items-center justify-between rounded-2xl bg-[#f7e8e4] px-4 py-3 ring-1 ring-primary/20" : "flex items-center justify-between rounded-2xl bg-success-surface px-4 py-3 ring-1 ring-success/20"}>
-          <span className={statusPreview ? "inline-flex items-center gap-2 text-[12px] font-bold text-primary" : "inline-flex items-center gap-2 text-[12px] font-bold text-success"}>{statusPreview ? <XCircle className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4" />} {statusPreview ? (statusPreview === "revoked" ? "Credential revoked" : "Credential expired") : (lang === "ko" ? "Credential 활성" : "Credential active")}</span>
-          <IntegrationModeBadge compact />
-        </div>
-
-        <div>
-          <SectionTitle>{t("pass.credential")}</SectionTitle>
-          <div className="divide-y divide-border rounded-2xl bg-surface-2 px-4 ring-1 ring-border">
-            <DetailRow label={t("pass.holder")} value={capsule.holderName} />
-            <DetailRow label={t("pass.nationality")} value={`${identity?.nationalityFlag ?? ""} ${identity?.nationality ?? "—"}`} />
-            <DetailRow label={t("pass.verifiedVia")} value={identity ? METHOD_LABEL[identity.method] : "—"} />
-            <DetailRow label={t("pass.issuer")} value={capsule.issuer} />
-            <DetailRow label="Type" value={capsule.credentialType} mono />
-            <DetailRow label={t("pass.did")} value={shortDid(capsule.did)} mono />
-            <DetailRow label={t("pass.issued")} value={formatTxDate(capsule.issuedAt)} />
-            <DetailRow label={t("pass.validUntil")} value={formatTxDate(capsule.expiresAt)} />
-          </div>
-        </div>
-
-        <div>
-          <SectionTitle>{t("pass.benefits")}</SectionTitle>
-          <div className="flex flex-wrap gap-2">
-            {capsule.benefits.map((b) => (
-              <span key={b} className="rounded-full bg-primary/8 px-3 py-1.5 text-[12px] font-medium text-primary">
-                {b}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
-          <div className="flex items-center gap-2">
-            <Eye className="h-4 w-4 text-primary" />
-            <h3 className="text-[14px] font-bold text-foreground">{t("pass.privacyEdge")}</h3>
-          </div>
-          <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">{t("pass.privacyBody")}</p>
-        </div>
-
-        <div>
-          <SectionTitle action={<Link href="/evidence" className="text-[11px] font-bold text-primary">{lang === "ko" ? "연동 증거" : "Evidence"}</Link>}>{t("pass.eventLog")}</SectionTitle>
+        <section>
+          <SectionTitle>{ko ? "이용 가능한 혜택" : "Available benefits"}</SectionTitle>
           <div className="space-y-2">
-            {events.map((e) => (
-              <div key={e.id} className="flex items-center gap-3 rounded-2xl bg-surface-2 px-3.5 py-3 ring-1 ring-border">
-                <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <ShieldCheck className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-semibold text-foreground">{t(`evt.${e.type}`)}</p>
-                  <p className="truncate text-[10px] text-muted-foreground/70">🔒 {t("pass.localOnly")} · {e.summary}</p>
-                </div>
-                <span className="font-mono text-[10px] text-muted-foreground">{shortHash(e.txHash)}</span>
+            {capsule.benefits.filter((benefit) => !benefit.toLowerCase().includes("concept")).map((benefit) => (
+              <div key={benefit} className="flex min-h-12 items-center gap-3 rounded-2xl bg-card px-4 ring-1 ring-border">
+                <BadgeCheck className="h-4 w-4 flex-shrink-0 text-success" />
+                <span className="text-[14px] font-medium text-foreground">{benefitLabel(benefit, ko)}</span>
               </div>
             ))}
           </div>
-        </div>
+        </section>
+
+        <section className="rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
+          <div className="flex items-center gap-2">
+            <Eye className="h-5 w-5 text-primary" />
+            <h2 className="text-[15px] font-bold text-foreground">{ko ? "개인정보는 필요한 만큼만" : "Only share what is needed"}</h2>
+          </div>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+            {ko ? "혜택을 받을 때 이름이나 여권번호 대신, 자격이 맞는지만 매장에 알려줘요. 공유할 내용은 제출 전에 확인할 수 있습니다." : "When you use a benefit, the shop receives an eligibility result instead of your name or passport number. You can review it before sharing."}
+          </p>
+        </section>
       </div>
     </PhoneFrame>
-  )
-}
-
-function DetailRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3 py-3 text-[13px]">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={mono ? "font-mono text-[12px] font-medium text-foreground" : "font-medium text-foreground"}>
-        {value}
-      </span>
-    </div>
   )
 }
