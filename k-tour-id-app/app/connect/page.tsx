@@ -10,6 +10,7 @@ import { formatWon } from "@/lib/format"
 import { ACTIVITIES, PEERS } from "@/lib/mock-data"
 import type { Activity, ActivityCategory, Peer } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { IntegrationModeBadge } from "@/components/app/integration-status"
 
 const CAT_ICON: Record<ActivityCategory, React.ComponentType<{ className?: string }>> = {
   food: Utensils,
@@ -46,7 +47,9 @@ export default function ConnectPage() {
           <p className="text-[13px] font-semibold text-foreground">{t("connect.hero")}</p>
           <p className="text-[11px] text-muted-foreground">{t("connect.heroSub")}</p>
         </div>
+        <IntegrationModeBadge compact />
       </div>
+      <p className="mx-5 mb-4 rounded-xl bg-[#fbf2d9] px-3 py-2 text-[10px] leading-relaxed text-[#735116] ring-1 ring-[#ead59d]">{t("connect.conceptNotice")}</p>
 
       {/* tabs */}
       <div className="mx-5 mb-4 flex gap-5 border-b border-border">

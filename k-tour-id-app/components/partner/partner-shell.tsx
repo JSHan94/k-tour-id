@@ -46,7 +46,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
           <div className="mt-8 rounded-2xl border border-border bg-surface-2 p-3.5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Workspace</p>
-              <EnvironmentBadge kind="SANDBOX" />
+              <EnvironmentBadge kind="SIMULATED" />
             </div>
             <p className="mt-2 text-[14px] font-bold">Bukchon Welcome Center</p>
             <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Partner DID · did:omn:2Kf8…9aC1</p>
@@ -94,7 +94,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-2">
                 <div className="hidden items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground sm:flex">
                   <span className="h-2 w-2 rounded-full bg-success" />
-                  Verifier service ready
+                  Verifier simulation ready
                 </div>
                 <button
                   type="button"

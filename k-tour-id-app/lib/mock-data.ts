@@ -158,7 +158,7 @@ export const DEFAULT_EVENTS: ChainEvent[] = [
     type: "WalletLinked",
     txHash: "0x4d6f8a0c2e4b6d8f0a2c4e6b8d0f2a4c6e8b0d2f4a6c8e0b2d4f6a8c0e2d4f6a",
     timestamp: "2026-06-12T09:21:00+09:00",
-    summary: "KRW payment wallet linked to the K-Tour credential holder",
+    summary: "Demo KRW travel balance linked to the K-Tour credential holder",
     integrationMode: "simulated",
     evidence: {
       network: "OmniOne Chain adapter · simulated",
@@ -178,6 +178,11 @@ export const DEFAULT_VOUCHERS: Voucher[] = [
     status: "available",
     eligibilityClaim: "visitorEligibility",
     funding: "municipal-campaign",
+    applicableMerchant: "Bukchon Craft House · demo merchant",
+    applicableService: "reservation",
+    minimumSpendKRW: 50_000,
+    redemption: "single-use",
+    campaignId: "CAM-BUKCHON-2026-07",
   },
   {
     id: "voucher-welcome-10",
@@ -188,6 +193,11 @@ export const DEFAULT_VOUCHERS: Voucher[] = [
     status: "available",
     eligibilityClaim: "couponUnused",
     funding: "partner-funded",
+    applicableMerchant: "K-Tour ID demo network",
+    applicableService: "shopping",
+    minimumSpendKRW: 30_000,
+    redemption: "single-use",
+    campaignId: "CAM-WELCOME-2026-Q3",
   },
 ]
 
@@ -243,11 +253,11 @@ export const BENEFIT_OFFERS: BenefitOffer[] = [
   },
   {
     id: "b2",
-    title: "Leftover KRW → T-money voucher",
-    detail: "Auto-convert projected unused ₩180,000 before departure",
+    title: "Leftover demo KRW → return-trip voucher",
+    detail: "Choose whether to convert projected unused ₩180,000 before departure",
     kind: "coupon",
     valueLabel: "₩180,000",
-    reason: "12 days left, low transit balance",
+    reason: "12 days left · user-funded · returnable while unused",
     icon: "transit",
   },
   {
@@ -286,8 +296,8 @@ export const DEFAULT_NOTIFICATIONS: AppNotification[] = [
   { id: 1, type: "transaction", title: "Payment Successful", message: "You paid ₩135,727 to Olive Young", time: "2 hours ago", read: false, icon: "check", iconBg: "#e7ede4" },
   { id: 2, type: "promotion", title: "AI Benefit", message: "Turn leftover KRW into a T-money voucher before you leave", time: "4 hours ago", read: false, icon: "gift", iconBg: "#f3ece0" },
   { id: 3, type: "security", title: "K-Tour ID verified", message: "Demo credential status confirmed by the simulated verifier", time: "1 day ago", read: true, icon: "shield", iconBg: "#ece6da" },
-  { id: 4, type: "transaction", title: "Voucher Issued", message: "₩50,000 welcome coupon added to your wallet", time: "2 days ago", read: true, icon: "ticket", iconBg: "#f1e8e0" },
-  { id: 5, type: "system", title: "Capsule Updated", message: "Your stay period and payment limit were refreshed", time: "3 days ago", read: true, icon: "refresh", iconBg: "#ece6da" },
+  { id: 4, type: "transaction", title: "Voucher issued", message: "₩10,000 welcome coupon added to your benefit wallet", time: "2 days ago", read: true, icon: "ticket", iconBg: "#f1e8e0" },
+  { id: 5, type: "system", title: "K-Tour ID updated", message: "Your service trip window and payment limit were refreshed", time: "3 days ago", read: true, icon: "refresh", iconBg: "#ece6da" },
 ]
 
 // ---- Badge banner (Magpie & Tiger) -----------------------------------------

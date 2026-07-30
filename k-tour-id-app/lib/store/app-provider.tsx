@@ -5,6 +5,8 @@ import type {
   AppNotification,
   BenefitOffer,
   ChainEvent,
+  DemoClaimKey,
+  DemoJourney,
   Identity,
   IdentityMethod,
   KPassCapsule,
@@ -15,6 +17,7 @@ import type {
   Voucher,
   OperationResult,
 } from "@/lib/types"
+import { DEFAULT_DEMO_JOURNEY, DEMO_REQUIRED_CLAIMS, demoClaimValue, voucherMatchesPurchase } from "@/lib/demo-journey"
 import {
   benefitService,
   capsuleService,
@@ -45,6 +48,7 @@ interface AppContextValue {
   events: ChainEvent[]
   notifications: AppNotification[]
   vouchers: Voucher[]
+  demoJourney: DemoJourney
   hydrated: boolean
   // onboarding
   reset: () => void
@@ -62,8 +66,13 @@ interface AppContextValue {
     voucherId: string
     presentationId: string
   }) => Promise<OperationResult<SettlementReceipt>>
+  recordDemoPresentation: (claims: DemoClaimKey[]) => boolean
+  submitDemoSettlement: () => void
+  anchorDemoSettlement: () => Promise<void>
+  resetDemoJourney: () => void
   /** convert leftover KRW into a newly issued, user-funded voucher. */
   convertLeftover: (amountKRW: number) => Promise<void>
+  refundConvertedVoucher: (voucherId: string) => Promise<void>
   // notifications
   dismissNotification: (id: number) => void
   markAllRead: () => void
@@ -85,7 +94,7 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null)
 
-const STORAGE_KEY = "k-tour-id-state-v2"
+const STORAGE_KEY = "k-tour-id-state-v3"
 
 interface PersistShape {
   session: Session
@@ -93,6 +102,7 @@ interface PersistShape {
   events: ChainEvent[]
   notifications: AppNotification[]
   vouchers: Voucher[]
+  demoJourney: DemoJourney
   dismissedNudges: string[]
 }
 
@@ -105,6 +115,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<ChainEvent[]>([])
   const [notifications, setNotifications] = useState<AppNotification[]>([])
   const [vouchers, setVouchers] = useState<Voucher[]>([])
+  const [demoJourney, setDemoJourney] = useState<DemoJourney>(DEFAULT_DEMO_JOURNEY)
   const [dismissedNudges, setDismissedNudges] = useState<string[]>([])
   const [hydrated, setHydrated] = useState(false)
 
@@ -115,6 +126,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const sessionRef = useRef(session)
   sessionRef.current = session
+  const demoJourneyRef = useRef(demoJourney)
+  demoJourneyRef.current = demoJourney
 
   useEffect(() => {
     try {
@@ -127,6 +140,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (parsed.notifications) setNotifications(parsed.notifications)
         if (parsed.vouchers) setVouchers(parsed.vouchers)
         else if (parsed.session?.onboarded) setVouchers(DEFAULT_VOUCHERS)
+        if (parsed.demoJourney) setDemoJourney(parsed.demoJourney)
         if (parsed.dismissedNudges) setDismissedNudges(parsed.dismissedNudges)
       }
     } catch {
@@ -139,13 +153,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // Only persist a real, onboarded session — never a partial/guest shell, so a
     // mid-ceremony refresh or a sign-out can't leave orphaned state on disk.
     if (!hydrated || !session.onboarded) return
-    const payload: PersistShape = { session, transactions, events, notifications, vouchers, dismissedNudges }
+    const payload: PersistShape = { session, transactions, events, notifications, vouchers, demoJourney, dismissedNudges }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     } catch {
       /* quota / unavailable */
     }
-  }, [hydrated, session, transactions, events, notifications, vouchers, dismissedNudges])
+  }, [hydrated, session, transactions, events, notifications, vouchers, demoJourney, dismissedNudges])
 
   const reset = useCallback(() => {
     try {
@@ -156,6 +170,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setEvents([])
     setNotifications([])
     setVouchers([])
+    setDemoJourney(DEFAULT_DEMO_JOURNEY)
     setDismissedNudges([])
     setCopilotThread([])
     setCopilotOpen(false)
@@ -167,6 +182,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setEvents(DEFAULT_EVENTS)
     setNotifications(DEFAULT_NOTIFICATIONS)
     setVouchers(DEFAULT_VOUCHERS)
+    setDemoJourney(DEFAULT_DEMO_JOURNEY)
     setDismissedNudges([])
   }, [])
 
@@ -181,6 +197,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTransactions([])
     setNotifications([])
     setVouchers([])
+    setDemoJourney(DEFAULT_DEMO_JOURNEY)
     setDismissedNudges([])
     const capsule = await capsuleService.issue(identity, userType)
     const identityEvent = await chainService.log(
@@ -189,10 +206,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     )
     const issuedEvent = await chainService.log(
       "KPassIssued",
-      `K-Tour service credential issued for ${capsule.holderName} (${userType})`,
+      `K-Tour service credential issued; holder reference kept off-chain (${userType})`,
     )
     const wallet = await walletService.create(capsule.holderName)
-    const linkedEvent = await chainService.log("WalletLinked", "KRW payment wallet linked to K-Tour credential holder")
+    const linkedEvent = await chainService.log("WalletLinked", "Demo KRW travel balance linked to the K-Tour credential holder")
 
     setSession((s) => ({ ...s, onboarded: true, userType, identity, capsule, wallet }))
     setEvents([identityEvent, issuedEvent, linkedEvent])
@@ -219,6 +236,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ...t,
     ])
     setEvents((e) => [evt, ...e])
+    setNotifications((items) => [{
+      id: Date.now(),
+      type: "transaction",
+      title: "Demo balance topped up",
+      message: `₩${amountKRW.toLocaleString()} was added to your demo KRW balance`,
+      time: "Just now",
+      read: false,
+      icon: "topup",
+      iconBg: "#e7ede4",
+    }, ...items])
   }, [])
 
   const pay = useCallback(
@@ -248,9 +275,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ...t,
       ])
       setEvents((e) => [evt, ...e])
+      setNotifications((items) => [{
+        id: Date.now(),
+        type: "transaction",
+        title: "Demo payment complete",
+        message: `You paid ₩${Math.abs(amountKRW).toLocaleString()} to ${merchant}`,
+        time: "Just now",
+        read: false,
+        icon: "check",
+        iconBg: "#e7ede4",
+      }, ...items])
     },
     [],
   )
+
+  const recordDemoPresentation = useCallback((claims: DemoClaimKey[]) => {
+    const voucher = vouchers.find((item) => item.id === demoJourneyRef.current.voucherId)
+    const allRequired = DEMO_REQUIRED_CLAIMS.every((claim) => claims.includes(claim))
+    const allPassed = claims.every((claim) => demoClaimValue(claim, sessionRef.current.userType, voucher))
+    const passed = allRequired && allPassed
+    setDemoJourney((current) => ({
+      ...current,
+      stage: passed ? "benefit-ready" : "presentation-created",
+      presentedClaims: claims,
+    }))
+    return passed
+  }, [vouchers])
 
   const payWithBenefit = useCallback(async (input: {
     merchant: string
@@ -261,8 +311,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }): Promise<OperationResult<SettlementReceipt>> => {
     const capsule = sessionRef.current.capsule
     const voucher = vouchers.find((item) => item.id === input.voucherId)
+    const journey = demoJourneyRef.current
     if (!capsule || !voucher) {
       return { ok: false, error: { code: "MISSING_CREDENTIAL_OR_VOUCHER", message: "Credential or voucher is missing", retryable: false } }
+    }
+    if (journey.stage !== "benefit-ready" || input.presentationId !== journey.presentationId) {
+      return { ok: false, error: { code: "PRESENTATION_REQUIRED", message: "Create the matching one-time presentation before using this benefit", retryable: false } }
+    }
+    if (!DEMO_REQUIRED_CLAIMS.every((claim) => journey.presentedClaims.includes(claim))) {
+      return { ok: false, error: { code: "CLAIMS_INCOMPLETE", message: "The merchant's required proof is incomplete", retryable: false } }
+    }
+    if (!voucherMatchesPurchase(voucher, input)) {
+      return { ok: false, error: { code: "VOUCHER_NOT_APPLICABLE", message: "This voucher does not match the merchant, service, or minimum spend", retryable: false } }
     }
 
     const policy = await policyService.evaluate({
@@ -296,13 +356,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       presentationId: input.presentationId,
     })
     if (!settlement.ok || !settlement.data) return settlement
-    const settlementEvent = await chainService.log(
-      "PartnerSettlementLogged",
-      `${settlement.data.id} anchored for ${input.merchant}`,
-    )
     const receipt = {
       ...settlement.data,
-      eventIds: [presentationEvent.id, verificationEvent.id, benefitEvent.id, paymentEvent.id, voucherEvent.id, settlementEvent.id],
+      id: journey.settlementId,
+      status: "pending" as const,
+      eventIds: [presentationEvent.id, verificationEvent.id, benefitEvent.id, paymentEvent.id, voucherEvent.id],
     }
 
     setSession((current) => ({
@@ -312,21 +370,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setVouchers((items) => items.map((item) => (item.id === voucher.id ? redeemed.data! : item)))
     setTransactions((items) => [
       {
-        id: `tx-${paymentEvent.id}`,
+        id: journey.paymentId,
         merchant: input.merchant,
         category: input.service,
         amountKRW: -policy.data!.payableKRW,
         date: new Date().toISOString(),
         icon: "ticket",
         iconBg: "#e7ede4",
-        chainEvent: "PartnerSettlementLogged",
-        txHash: settlementEvent.txHash,
+        chainEvent: "PaymentAuthorized",
+        txHash: paymentEvent.txHash,
       },
       ...items,
     ])
-    setEvents((items) => [settlementEvent, voucherEvent, paymentEvent, benefitEvent, verificationEvent, presentationEvent, ...items])
+    setEvents((items) => [voucherEvent, paymentEvent, benefitEvent, verificationEvent, presentationEvent, ...items])
+    setDemoJourney((current) => ({
+      ...current,
+      stage: "paid",
+      grossKRW: input.grossKRW,
+      voucherKRW: policy.data!.discountKRW,
+      paidKRW: policy.data!.payableKRW,
+      presentedClaims: current.presentedClaims,
+    }))
+    setNotifications((items) => [{
+      id: Date.now(),
+      type: "transaction",
+      title: "Bukchon workshop paid",
+      message: `₩${policy.data!.discountKRW.toLocaleString()} benefit applied · ₩${policy.data!.payableKRW.toLocaleString()} paid`,
+      time: "Just now",
+      read: false,
+      icon: "ticket",
+      iconBg: "#e7ede4",
+    }, ...items])
     return { ok: true, data: receipt }
   }, [vouchers])
+
+  const submitDemoSettlement = useCallback(() => {
+    setDemoJourney((current) => current.stage === "paid" ? { ...current, stage: "settlement-submitted" } : current)
+  }, [])
+
+  const anchorDemoSettlement = useCallback(async () => {
+    if (demoJourneyRef.current.stage !== "settlement-submitted") return
+    const journey = demoJourneyRef.current
+    const event = await chainService.log(
+      "PartnerSettlementLogged",
+      `${journey.settlementId} anchored for ${journey.merchant}; customer identity excluded`,
+    )
+    setEvents((items) => [event, ...items])
+    setDemoJourney((current) => ({ ...current, stage: "anchored", anchorHash: event.txHash }))
+  }, [])
+
+  const resetDemoJourney = useCallback(() => {
+    const hadPayment = transactions.some((item) => item.id === demoJourneyRef.current.paymentId)
+    if (hadPayment) {
+      setSession((current) => ({
+        ...current,
+        wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + demoJourneyRef.current.paidKRW },
+      }))
+    }
+    setTransactions((items) => items.filter((item) => item.id !== demoJourneyRef.current.paymentId))
+    setEvents((items) => items.filter((item) => ![
+      "PresentationCreated", "PresentationVerified", "BenefitApplied", "VoucherRedeemed", "PartnerSettlementLogged",
+    ].includes(item.type) && !(item.type === "PaymentAuthorized" && item.summary.includes(demoJourneyRef.current.merchant))))
+    setVouchers((items) => items.map((item) => item.id === DEFAULT_DEMO_JOURNEY.voucherId ? { ...item, status: "available" } : item))
+    setNotifications((items) => items.filter((item) => !item.message.includes("Bukchon") && !item.title.includes("Bukchon")))
+    setDemoJourney(DEFAULT_DEMO_JOURNEY)
+  }, [transactions])
 
   // Convert leftover KRW → a voucher. This issues a voucher; redemption happens later.
   const convertLeftover = useCallback(async (amountKRW: number) => {
@@ -335,7 +443,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!converted.ok || !converted.data) return
     const evt = await chainService.log(
       "VoucherIssued",
-      `Converted ₩${amountKRW.toLocaleString()} leftover to T-money + coupons`,
+      `Converted ₩${amountKRW.toLocaleString()} demo balance to a user-funded return-trip voucher`,
     )
     setSession((s) => ({
       ...s,
@@ -344,7 +452,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTransactions((t) => [
       {
         id: `tx-${evt.id}`,
-        merchant: "Leftover → T-money + coupons",
+        merchant: "Demo balance → return-trip voucher",
         category: "benefit",
         amountKRW: -Math.abs(amountKRW),
         date: new Date().toISOString(),
@@ -357,7 +465,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     ])
     setVouchers((items) => [converted.data!, ...items])
     setEvents((e) => [evt, ...e])
+    setNotifications((items) => [{
+      id: Date.now(),
+      type: "transaction",
+      title: "Return-trip voucher created",
+      message: `₩${amountKRW.toLocaleString()} moved from demo balance into a user-funded voucher`,
+      time: "Just now",
+      read: false,
+      icon: "ticket",
+      iconBg: "#e7ede4",
+    }, ...items])
   }, [])
+
+  const refundConvertedVoucher = useCallback(async (voucherId: string) => {
+    const voucher = vouchers.find((item) => item.id === voucherId)
+    if (!voucher || voucher.funding !== "user-converted" || voucher.status !== "available") return
+    const event = await chainService.log("VoucherRefunded", `${voucher.id} returned to the holder's demo KRW balance`)
+    setSession((current) => ({ ...current, wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + voucher.valueKRW } }))
+    setVouchers((items) => items.filter((item) => item.id !== voucher.id))
+    setTransactions((items) => [{
+      id: `tx-${event.id}`,
+      merchant: "Return-trip voucher refund",
+      category: "benefit",
+      amountKRW: voucher.valueKRW,
+      date: new Date().toISOString(),
+      icon: "ticket",
+      iconBg: "#e7ede4",
+      chainEvent: "VoucherRefunded",
+      txHash: event.txHash,
+    }, ...items])
+    setEvents((items) => [event, ...items])
+    setNotifications((items) => [{
+      id: Date.now(), type: "transaction", title: "Voucher returned", message: `₩${voucher.valueKRW.toLocaleString()} restored to your demo balance`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
+    }, ...items])
+  }, [vouchers])
 
   const dismissNotification = useCallback((id: number) => {
     setNotifications((n) => n.filter((x) => x.id !== id))
@@ -409,6 +550,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       events,
       notifications,
       vouchers,
+      demoJourney,
       hydrated,
       reset,
       loadDemoAccount,
@@ -417,7 +559,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       topUp,
       pay,
       payWithBenefit,
+      recordDemoPresentation,
+      submitDemoSettlement,
+      anchorDemoSettlement,
+      resetDemoJourney,
       convertLeftover,
+      refundConvertedVoucher,
       dismissNotification,
       markAllRead,
       recommendBenefits,
@@ -434,8 +581,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dismissNudge,
     }),
     [
-      session, transactions, events, notifications, vouchers, hydrated, reset, loadDemoAccount, verifyIdentity, issueCapsule,
-      topUp, pay, payWithBenefit, convertLeftover, dismissNotification, markAllRead, recommendBenefits, chat,
+      session, transactions, events, notifications, vouchers, demoJourney, hydrated, reset, loadDemoAccount, verifyIdentity, issueCapsule,
+      topUp, pay, payWithBenefit, recordDemoPresentation, submitDemoSettlement, anchorDemoSettlement, resetDemoJourney,
+      convertLeftover, refundConvertedVoucher, dismissNotification, markAllRead, recommendBenefits, chat,
       copilotOpen, openCopilot, closeCopilot, copilotThread, copilotThinking, copilotSeed, copilotSend,
       copilotPushAi, dismissedNudges, dismissNudge,
     ],

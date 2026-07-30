@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowRight,
@@ -69,7 +69,7 @@ function Dots({ index }: { index: number }) {
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { verifyIdentity, issueCapsule, session, loadDemoAccount } = useApp()
+  const { verifyIdentity, issueCapsule, session, loadDemoAccount, hydrated } = useApp()
   const { t, lang, setLang } = useLang()
   const [step, setStep] = useState<Step>("lang")
   const [selected, setSelected] = useState<UserType | null>(null)
@@ -78,6 +78,16 @@ export default function OnboardingPage() {
   const [identity, setIdentity] = useState<Identity | null>(null)
   const [verifyError, setVerifyError] = useState<string | null>(null)
   const [issueError, setIssueError] = useState<string | null>(null)
+  const [renewMode, setRenewMode] = useState(false)
+
+  useEffect(() => {
+    if (!hydrated || renewMode) return
+    const renew = new URLSearchParams(window.location.search).get("mode") === "renew"
+    if (!renew) return
+    setRenewMode(true)
+    setSelected(session.userType ?? "foreigner")
+    setStep("type")
+  }, [hydrated, renewMode, session.userType])
 
   const chosen = TYPES.find((ty) => ty.key === selected) ?? null
 
@@ -117,6 +127,13 @@ export default function OnboardingPage() {
           <div className="mb-7 flex items-center justify-between">
             <Dots index={DOTS[step]} />
             <LangToggle />
+          </div>
+        )}
+
+        {renewMode && step !== "done" && (
+          <div className="mb-5 flex items-start gap-3 rounded-2xl bg-[#fbf2d9] p-3.5 text-[#735116] ring-1 ring-[#ead59d]">
+            <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0" />
+            <div><p className="text-[12px] font-bold">{lang === "ko" ? "K-Tour ID 갱신" : "Renew K-Tour ID"}</p><p className="mt-0.5 text-[10.5px] leading-relaxed">{lang === "ko" ? "기존 Credential은 변경하지 않고, 신원 소스를 다시 확인한 뒤 새 Credential을 발급합니다." : "Your current credential stays unchanged until the identity source is re-verified and a new credential is issued."}</p></div>
           </div>
         )}
 
@@ -246,6 +263,14 @@ export default function OnboardingPage() {
               </span>
               <span className="text-[12px] leading-snug text-muted-foreground">{t("ob.consent")}</span>
             </button>
+
+            {selected && (
+              <div className="mt-3 grid grid-cols-[86px_1fr] gap-y-2 rounded-2xl bg-surface-2 p-3.5 text-[10.5px] ring-1 ring-border">
+                <span className="text-muted-foreground">{lang === "ko" ? "목적" : "Purpose"}</span><span className="font-semibold">{lang === "ko" ? "K-Tour 서비스 Credential 발급" : "Issue a K-Tour service credential"}</span>
+                <span className="text-muted-foreground">{lang === "ko" ? "원문 보관" : "Raw data"}</span><span className="font-semibold">{lang === "ko" ? "기기 밖 저장 안 함" : "Not retained outside the device"}</span>
+                <span className="text-muted-foreground">{lang === "ko" ? "취소" : "Withdraw"}</span><span className="font-semibold">{lang === "ko" ? "발급 전 언제든 가능" : "Any time before issuance"}</span>
+              </div>
+            )}
 
             <button
               type="button"

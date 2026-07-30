@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import {
   ArrowDownToLine,
-  ArrowUpRight,
+  ArrowRight,
   Blocks,
   Check,
   CheckCircle2,
@@ -16,98 +17,112 @@ import {
   TicketCheck,
   WalletCards,
 } from "lucide-react"
-import { EnvironmentBadge, EnvironmentLegend, PageIntro, Panel } from "@/components/partner/partner-shell"
+import { EnvironmentBadge, PageIntro, Panel } from "@/components/partner/partner-shell"
+import { useApp } from "@/lib/store/app-provider"
 import { cn } from "@/lib/utils"
 
-type BatchState = "ready" | "submitted" | "anchored"
-
-const EVENTS = [
-  { time: "14:32:08", type: "VoucherRedeemed", ref: "CPN-0729-1842", amount: "−₩5,000", tone: "text-primary" },
-  { time: "14:32:10", type: "PaymentAuthorized", ref: "PAY-0729-6231", amount: "₩45,000", tone: "text-foreground" },
-  { time: "14:32:14", type: "PartnerSettlementLogged", ref: "STL-0729-0088", amount: "₩62,055", tone: "text-success" },
-] as const
-
-const BATCH_META: Record<BatchState, { label: string; copy: string }> = {
-  ready: { label: "Ready to settle", copy: "All included payment and voucher events passed reconciliation." },
-  submitted: { label: "Settlement submitted", copy: "The sandbox batch is awaiting chain anchor confirmation." },
-  anchored: { label: "Anchored", copy: "Event root and settlement reference are recorded as demo evidence." },
-}
-
 export default function PartnerSettlementsPage() {
-  const [batchState, setBatchState] = useState<BatchState>("ready")
+  const { demoJourney, submitDemoSettlement, anchorDemoSettlement } = useApp()
   const [copied, setCopied] = useState(false)
-  const meta = BATCH_META[batchState]
+  const [anchoring, setAnchoring] = useState(false)
+  const hasPayment = ["paid", "settlement-submitted", "anchored"].includes(demoJourney.stage)
+  const submitted = ["settlement-submitted", "anchored"].includes(demoJourney.stage)
+  const anchored = demoJourney.stage === "anchored"
 
-  const advance = () => setBatchState((current) => current === "ready" ? "submitted" : "anchored")
+  const advance = async () => {
+    if (demoJourney.stage === "paid") {
+      submitDemoSettlement()
+      return
+    }
+    if (demoJourney.stage === "settlement-submitted") {
+      setAnchoring(true)
+      await anchorDemoSettlement()
+      setAnchoring(false)
+    }
+  }
+
+  const copyEvidence = async () => {
+    if (!anchored) return
+    const payload = `${demoJourney.settlementId} | ${demoJourney.anchorHash ?? "simulated"}`
+    try { await navigator.clipboard.writeText(payload) } catch { /* browser may block clipboard in preview */ }
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1200)
+  }
 
   return (
     <>
       <PageIntro
         eyebrow="Merchant settlement"
-        title="From benefit to settlement evidence."
-        body="Reconcile a privacy-safe coupon redemption and KRW payment, then anchor event evidence without placing customer identity or payment originals on-chain."
+        title="One receipt, from benefit to payout."
+        body="The same holder payment is reconciled with campaign funding, merchant fees and non-PII evidence. Every amount and reference below comes from the shared demo transaction."
       >
-        <EnvironmentLegend />
+        <EnvironmentBadge kind="SIMULATED" />
       </PageIntro>
 
+      {!hasPayment && (
+        <div className="mb-5 flex flex-col gap-4 rounded-3xl border border-[#ead59d] bg-[#fbf2d9] p-5 text-[#735116] sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[13px] font-extrabold">Waiting for the holder payment</p>
+            <p className="mt-1 text-[11px] leading-relaxed">Complete the K-Tour ID presentation and pay the workshop order. This batch will then populate with the same receipt IDs.</p>
+          </div>
+          <Link href="/present" className="inline-flex min-h-11 flex-shrink-0 items-center justify-center gap-2 rounded-xl bg-ink px-4 text-[12px] font-bold text-white">
+            Open holder flow <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric icon={CircleDollarSign} label="Gross payment" value="₩50,000" note="1 sandbox payment" />
-        <Metric icon={TicketCheck} label="Voucher funded" value="−₩5,000" note="Bukchon campaign" />
-        <Metric icon={WalletCards} label="Merchant due" value="₩44,325" note="After 1.5% fee" accent />
-        <Metric icon={Blocks} label="Evidence events" value="3" note="No customer PII" />
+        <Metric icon={CircleDollarSign} label="Order gross" value={`₩${demoJourney.grossKRW.toLocaleString()}`} note={demoJourney.receiptId} />
+        <Metric icon={TicketCheck} label="Campaign funds" value={`+₩${demoJourney.campaignReimbursementKRW.toLocaleString()}`} note={demoJourney.campaignId} />
+        <Metric icon={WalletCards} label="Merchant receivable" value={`₩${demoJourney.merchantDueKRW.toLocaleString()}`} note="Payment + campaign − fee" accent />
+        <Metric icon={Blocks} label="Settlement state" value={anchored ? "Anchored" : submitted ? "Submitted" : hasPayment ? "Ready" : "Waiting"} note="PII excluded" />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(380px,0.8fr)]">
         <div className="space-y-5">
-          <Panel eyebrow="01 · Reconciliation" title="Settlement batch · BUK-2026-0729-08" action={<EnvironmentBadge kind="SANDBOX" />}>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[680px] border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-border bg-surface-2/65 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">
-                    <th className="px-5 py-3">Time</th>
-                    <th className="px-4 py-3">Event</th>
-                    <th className="px-4 py-3">Reference</th>
-                    <th className="px-4 py-3">Privacy</th>
-                    <th className="px-5 py-3 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {EVENTS.map((event) => (
-                    <tr key={event.type} className="border-b border-border last:border-b-0">
-                      <td className="px-5 py-4 font-mono text-[11px] text-muted-foreground">{event.time}</td>
-                      <td className="px-4 py-4 text-[12px] font-bold">{event.type}</td>
-                      <td className="px-4 py-4 font-mono text-[11px] text-muted-foreground">{event.ref}</td>
-                      <td className="px-4 py-4"><span className="rounded-full bg-success-surface px-2 py-1 text-[10px] font-bold text-success">PII excluded</span></td>
-                      <td className={cn("px-5 py-4 text-right text-[13px] font-extrabold tabular-nums", event.tone)}>{event.amount}</td>
+          <Panel eyebrow="01 · Reconciliation" title={`Settlement · ${demoJourney.settlementId}`} action={<EnvironmentBadge kind="SIMULATED" />}>
+            {hasPayment ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px] border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-border bg-surface-2/65 text-[10px] font-extrabold uppercase tracking-[0.1em] text-muted-foreground">
+                      <th className="px-4 py-3">Event</th><th className="px-3 py-3">Reference</th><th className="px-3 py-3">Source</th><th className="px-3 py-3">Privacy</th><th className="px-4 py-3 text-right">Amount</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    <EventRow type="VoucherRedeemed" reference={demoJourney.voucherId} source="Bukchon campaign" amount={`₩${demoJourney.voucherKRW.toLocaleString()}`} tone="text-primary" />
+                    <EventRow type="PaymentAuthorized" reference={demoJourney.paymentId} source="Holder demo balance" amount={`₩${demoJourney.paidKRW.toLocaleString()}`} />
+                    <EventRow type="PartnerSettlementLogged" reference={demoJourney.settlementId} source={anchored ? "Anchor receipt" : "Pending anchor"} amount={`₩${demoJourney.merchantDueKRW.toLocaleString()}`} tone="text-success" />
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <EmptyBatch />
+            )}
           </Panel>
 
-          <Panel eyebrow="02 · Money movement" title="Payment and voucher breakdown">
-            <div className="grid gap-5 p-5 md:grid-cols-[1fr_1fr] sm:p-6">
+          <Panel eyebrow="02 · Money movement" title="Payment, campaign and fee breakdown">
+            <div className="grid gap-5 p-5 md:grid-cols-2 sm:p-6">
               <div className="space-y-3">
-                <MoneyRow label="Order subtotal" value="₩50,000" />
-                <MoneyRow label="Bukchon campaign voucher" value="−₩5,000" accent />
-                <MoneyRow label="Customer paid" value="₩45,000" strong />
-                <div className="border-t border-dashed border-border pt-3">
-                  <MoneyRow label="Platform fee · 1.5%" value="−₩675" />
-                  <div className="mt-3 rounded-2xl bg-ink p-4 text-white">
-                    <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-white/55">Merchant receivable</p>
-                    <p className="mt-1 text-[28px] font-extrabold tracking-tight">₩44,325</p>
-                  </div>
+                <MoneyRow label="Order subtotal" value={`₩${demoJourney.grossKRW.toLocaleString()}`} />
+                <MoneyRow label="Customer benefit" value={`−₩${demoJourney.voucherKRW.toLocaleString()}`} accent />
+                <MoneyRow label="Customer paid" value={`₩${demoJourney.paidKRW.toLocaleString()}`} strong />
+                <MoneyRow label="Campaign reimbursement" value={`+₩${demoJourney.campaignReimbursementKRW.toLocaleString()}`} />
+                <MoneyRow label="Platform fee · 1.5% of customer payment" value={`−₩${demoJourney.platformFeeKRW.toLocaleString()}`} />
+                <div className="rounded-2xl bg-ink p-4 text-white">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-white/55">Merchant receivable</p>
+                  <p className="mt-1 text-[28px] font-extrabold tracking-tight">₩{demoJourney.merchantDueKRW.toLocaleString()}</p>
+                  <p className="mt-1 text-[10px] text-white/50">₩{demoJourney.paidKRW.toLocaleString()} + ₩{demoJourney.campaignReimbursementKRW.toLocaleString()} − ₩{demoJourney.platformFeeKRW.toLocaleString()}</p>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-border bg-surface-2 p-4">
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.12em] text-muted-foreground">Settlement route</p>
                 <ol className="mt-4 space-y-4">
-                  <RouteStep icon={TicketCheck} title="Voucher liability applied" copy="Campaign budget · Bukchon district" done />
-                  <RouteStep icon={WalletCards} title="KRW payment authorized" copy="Sandbox stable wallet reference" done />
-                  <RouteStep icon={Landmark} title="Merchant payout" copy={batchState === "ready" ? "Waiting for batch submission" : "Destination · •••• 7821"} done={batchState !== "ready"} />
-                  <RouteStep icon={Blocks} title="Evidence anchored" copy={batchState === "anchored" ? "Simulated anchor confirmed" : "Pending settlement completion"} done={batchState === "anchored"} />
+                  <RouteStep icon={TicketCheck} title="Voucher liability matched" copy={`Municipal campaign · ${demoJourney.campaignId}`} done={hasPayment} />
+                  <RouteStep icon={WalletCards} title="Customer payment reconciled" copy={demoJourney.paymentId} done={hasPayment} />
+                  <RouteStep icon={Landmark} title="Merchant payout submitted" copy={submitted ? "Destination · •••• 7821" : "Waiting for batch approval"} done={submitted} />
+                  <RouteStep icon={Blocks} title="Evidence anchored" copy={anchored ? "Simulated anchor receipt created" : "Runs after payout submission"} done={anchored} />
                 </ol>
               </div>
             </div>
@@ -115,60 +130,39 @@ export default function PartnerSettlementsPage() {
         </div>
 
         <div className="space-y-5">
-          <Panel eyebrow="03 · Batch action" title={meta.label} action={<EnvironmentBadge kind="SIMULATED" />}>
+          <Panel eyebrow="03 · Batch action" title={anchored ? "Settlement evidence complete" : submitted ? "Settlement submitted" : hasPayment ? "Ready to settle" : "No payable batch"} action={<EnvironmentBadge kind="SIMULATED" />}>
             <div className="p-5 sm:p-6">
               <div className="flex items-start gap-3 rounded-2xl bg-surface-2 p-4">
-                <span className={cn("grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl", batchState === "anchored" ? "bg-success-surface text-success" : "bg-card text-primary")}>
-                  {batchState === "anchored" ? <CheckCircle2 className="h-5 w-5" /> : <FileCheck2 className="h-5 w-5" />}
+                <span className={cn("grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl", anchored ? "bg-success-surface text-success" : "bg-card text-primary")}>
+                  {anchored ? <CheckCircle2 className="h-5 w-5" /> : <FileCheck2 className="h-5 w-5" />}
                 </span>
                 <div>
-                  <p className="text-[13px] font-extrabold">{meta.label}</p>
-                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{meta.copy}</p>
+                  <p className="text-[13px] font-extrabold">{anchored ? "Anchor receipt attached" : submitted ? "Payout instruction accepted" : hasPayment ? "All references reconciled" : "Holder action required"}</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{anchored ? "The non-PII event root is attached to this exact settlement." : submitted ? "Create the simulated chain evidence as the final step." : hasPayment ? "Submit the payout only after reviewing the funding equation." : "No settlement can be submitted before payment."}</p>
                 </div>
               </div>
-
-              {batchState !== "anchored" ? (
-                <button type="button" onClick={advance} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-gradient px-4 text-[13px] font-extrabold text-white">
-                  {batchState === "ready" ? <><ArrowDownToLine className="h-[18px] w-[18px]" /> Submit sandbox settlement</> : <><Blocks className="h-[18px] w-[18px]" /> Simulate chain anchor</>}
-                </button>
-              ) : (
-                <button type="button" onClick={() => setBatchState("ready")} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-background px-4 text-[13px] font-extrabold">
-                  Reset demo batch
+              {!anchored && (
+                <button type="button" onClick={advance} disabled={!hasPayment || anchoring} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-gradient px-4 text-[13px] font-extrabold text-white disabled:opacity-40">
+                  {submitted ? <><Blocks className="h-[18px] w-[18px]" /> {anchoring ? "Creating simulated anchor…" : "Create simulated anchor"}</> : <><ArrowDownToLine className="h-[18px] w-[18px]" /> Submit settlement</>}
                 </button>
               )}
             </div>
           </Panel>
 
-          <Panel eyebrow="04 · Chain evidence" title="Anchor receipt" action={<EnvironmentBadge kind="SIMULATED" />}>
+          <Panel eyebrow="04 · Shared receipt" title={demoJourney.receiptId} action={<EnvironmentBadge kind="SIMULATED" />}>
             <div className="p-5 sm:p-6">
-              <div className="flex items-center gap-2 text-[12px] font-bold text-success">
-                <ShieldCheck className="h-4 w-4" /> Off-chain originals protected
-              </div>
-              <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                Only event references and a deterministic batch root are shown. Customer identity, VP, payment payload, and receipt details remain off-chain.
-              </p>
-
+              <div className="flex items-center gap-2 text-[12px] font-bold text-success"><ShieldCheck className="h-4 w-4" /> Holder and merchant IDs match</div>
+              <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">Only event references and the batch root are shown. Identity, VP and payment payloads remain off-chain.</p>
               <dl className="mt-5 space-y-3">
-                <EvidenceRow label="Network" value="OmniOne testnet" />
-                <EvidenceRow label="Event root" value="0x8c1e…97af" mono />
-                <EvidenceRow label="Transaction" value={batchState === "anchored" ? "0xf912…44ce" : "Not anchored"} mono />
-                <EvidenceRow label="Recorded at" value={batchState === "anchored" ? "2026-07-29 14:32:18 KST" : "—"} />
+                <EvidenceRow label="Request" value={demoJourney.requestId} mono />
+                <EvidenceRow label="Presentation" value={demoJourney.presentationId} mono />
+                <EvidenceRow label="Payment" value={demoJourney.paymentId} mono />
+                <EvidenceRow label="Network" value="OmniOne Chain adapter · simulated" />
+                <EvidenceRow label="Anchor" value={anchored ? shortHash(demoJourney.anchorHash) : "Not created"} mono />
               </dl>
-
-              <button
-                type="button"
-                disabled={batchState !== "anchored"}
-                onClick={() => { setCopied(true); window.setTimeout(() => setCopied(false), 1200) }}
-                className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 text-[12px] font-bold disabled:opacity-40"
-              >
-                {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
-                {copied ? "Evidence copied" : "Copy anchor evidence"}
+              <button type="button" disabled={!anchored} onClick={copyEvidence} className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-3 text-[12px] font-bold disabled:opacity-40">
+                {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}{copied ? "Evidence copied" : "Copy anchor evidence"}
               </button>
-
-              <div className="mt-3 flex items-center justify-between gap-3 rounded-xl bg-[#f7e8e4] px-3 py-2.5 text-[10px] text-primary">
-                <span>This is demo evidence, not a live explorer transaction.</span>
-                <ArrowUpRight className="h-3.5 w-3.5 flex-shrink-0" />
-              </div>
             </div>
           </Panel>
         </div>
@@ -177,48 +171,31 @@ export default function PartnerSettlementsPage() {
   )
 }
 
+function EventRow({ type, reference, source, amount, tone }: { type: string; reference: string; source: string; amount: string; tone?: string }) {
+  return <tr className="border-b border-border last:border-b-0"><td className="px-4 py-4 text-[12px] font-bold">{type}</td><td className="px-3 py-4 font-mono text-[11px] text-muted-foreground">{reference}</td><td className="px-3 py-4 text-[11px] text-muted-foreground">{source}</td><td className="px-3 py-4"><span className="rounded-full bg-success-surface px-2 py-1 text-[10px] font-bold text-success">PII excluded</span></td><td className={cn("whitespace-nowrap px-4 py-4 text-right text-[13px] font-extrabold tabular-nums", tone)}>{amount}</td></tr>
+}
+
+function EmptyBatch() {
+  return <div className="grid min-h-48 place-items-center p-6 text-center"><div><ReceiptText className="mx-auto h-7 w-7 text-muted-foreground" /><p className="mt-3 text-[13px] font-bold">No payment to reconcile yet</p><p className="mt-1 text-[11px] text-muted-foreground">A rejected, expired or unpaid presentation never creates a settlement row.</p></div></div>
+}
+
 function Metric({ icon: Icon, label, value, note, accent }: { icon: typeof ReceiptText; label: string; value: string; note: string; accent?: boolean }) {
-  return (
-    <div className={cn("rounded-2xl border border-border p-4 shadow-[0_8px_24px_rgba(28,24,19,0.035)]", accent ? "bg-ink text-white" : "bg-card")}>
-      <div className="flex items-center justify-between">
-        <span className={cn("grid h-9 w-9 place-items-center rounded-xl", accent ? "bg-white/10 text-gold" : "bg-secondary text-primary")}><Icon className="h-[18px] w-[18px]" /></span>
-        <EnvironmentBadge kind="SIMULATED" className={accent ? "border-white/15 bg-white/10 text-white/65" : undefined} />
-      </div>
-      <p className={cn("mt-4 text-[10px] font-extrabold uppercase tracking-[0.11em]", accent ? "text-white/50" : "text-muted-foreground")}>{label}</p>
-      <p className="mt-0.5 text-[23px] font-extrabold tracking-tight">{value}</p>
-      <p className={cn("mt-1 text-[10px]", accent ? "text-white/50" : "text-muted-foreground")}>{note}</p>
-    </div>
-  )
+  return <div className={cn("rounded-2xl border border-border p-4 shadow-[0_8px_24px_rgba(28,24,19,0.035)]", accent ? "bg-ink text-white" : "bg-card")}><div className="flex items-center justify-between"><span className={cn("grid h-9 w-9 place-items-center rounded-xl", accent ? "bg-white/10 text-gold" : "bg-secondary text-primary")}><Icon className="h-[18px] w-[18px]" /></span><EnvironmentBadge kind="SIMULATED" className={accent ? "border-white/15 bg-white/10 text-white/65" : undefined} /></div><p className={cn("mt-4 text-[10px] font-extrabold uppercase tracking-[0.11em]", accent ? "text-white/50" : "text-muted-foreground")}>{label}</p><p className="mt-0.5 truncate text-[23px] font-extrabold tracking-tight">{value}</p><p className={cn("mt-1 truncate text-[10px]", accent ? "text-white/50" : "text-muted-foreground")}>{note}</p></div>
 }
 
 function MoneyRow({ label, value, strong, accent }: { label: string; value: string; strong?: boolean; accent?: boolean }) {
-  return (
-    <div className={cn("flex items-center justify-between gap-3 text-[12px]", strong && "rounded-xl bg-surface-2 px-3 py-2.5")}>
-      <span className={strong ? "font-bold" : "text-muted-foreground"}>{label}</span>
-      <span className={cn("font-bold tabular-nums", strong && "text-[14px]", accent && "text-primary")}>{value}</span>
-    </div>
-  )
+  return <div className={cn("flex items-center justify-between gap-3 text-[12px]", strong && "rounded-xl bg-surface-2 px-3 py-2.5")}><span className={strong ? "font-bold" : "text-muted-foreground"}>{label}</span><span className={cn("font-bold tabular-nums", strong && "text-[14px]", accent && "text-primary")}>{value}</span></div>
 }
 
 function RouteStep({ icon: Icon, title, copy, done }: { icon: typeof ReceiptText; title: string; copy: string; done?: boolean }) {
-  return (
-    <li className="flex items-start gap-3">
-      <span className={cn("grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg", done ? "bg-success-surface text-success" : "bg-card text-muted-foreground")}>
-        {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-      </span>
-      <div>
-        <p className="text-[12px] font-bold">{title}</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground">{copy}</p>
-      </div>
-    </li>
-  )
+  return <li className="flex items-start gap-3"><span className={cn("grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg", done ? "bg-success-surface text-success" : "bg-card text-muted-foreground")}>{done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}</span><div className="min-w-0"><p className="text-[12px] font-bold">{title}</p><p className="mt-0.5 truncate text-[10px] text-muted-foreground">{copy}</p></div></li>
 }
 
 function EvidenceRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-border pb-3 last:border-0 last:pb-0">
-      <dt className="text-[11px] text-muted-foreground">{label}</dt>
-      <dd className={cn("text-right text-[11px] font-bold", mono && "font-mono")}>{value}</dd>
-    </div>
-  )
+  return <div className="flex items-center justify-between gap-4 border-b border-border pb-3 last:border-0 last:pb-0"><dt className="text-[11px] text-muted-foreground">{label}</dt><dd className={cn("max-w-[68%] truncate text-right text-[11px] font-bold", mono && "font-mono")}>{value}</dd></div>
+}
+
+function shortHash(value?: string) {
+  if (!value) return "Not created"
+  return value.length > 18 ? `${value.slice(0, 10)}…${value.slice(-6)}` : value
 }

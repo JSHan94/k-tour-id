@@ -36,10 +36,13 @@ import { Seal } from "@/components/app/seal"
 import { Switch } from "@/components/ui/switch"
 import { Progress } from "@/components/ui/progress"
 import { useLang } from "@/lib/i18n/lang-provider"
+import { useApp } from "@/lib/store/app-provider"
+import { demoClaimValue } from "@/lib/demo-journey"
+import type { DemoClaimKey, DemoJourney } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 type FlowStep = "scan" | "request" | "consent" | "creating" | "result"
-type DemoResult = "success" | "expired" | "revoked" | "offline"
+type DemoResult = "success" | "expired" | "revoked" | "offline" | "ineligible"
 
 type Copy = {
   [key: string]: string
@@ -75,6 +78,8 @@ const COPY: Record<"ko" | "en", Copy> = {
     claimTripMeta: "유효 여부만 공개 · 날짜 비공개",
     claimVoucher: "이 혜택을 아직 사용하지 않음",
     claimVoucherMeta: "쿠폰 ID·사용 여부만 공개",
+    claimCredential: "K-Tour ID 활성 상태",
+    claimCredentialMeta: "유효·미폐기 여부만 공개",
     consentPurpose: "위 목적과 보관 정책을 확인했으며, 선택한 정보를 1회 제출하는 데 동의합니다.",
     consentHelper: "필수 정보 2개와 제출 동의가 필요해요.",
     createCta: "안전하게 증명 만들기",
@@ -125,6 +130,10 @@ const COPY: Record<"ko" | "en", Copy> = {
     noPiiBody: "선택한 조건 판정만 VP에 포함",
     stoppedTitle: "OpenDID 검증이 안전하게 중단됐어요",
     stoppedBody: "혜택·결제·체인 영수증은 생성되지 않았습니다.",
+    ineligibleTitle: "이 혜택의 대상이 아니에요",
+    ineligibleBody: "현재 K-Tour ID의 이용자 유형이 외국인 여행자 캠페인 조건과 일치하지 않습니다.",
+    otherBenefitCta: "다른 혜택 보기",
+    receiptId: "Receipt ID",
   },
   en: {
     title: "Present K-Tour ID",
@@ -155,8 +164,10 @@ const COPY: Record<"ko" | "en", Copy> = {
     claimTripMeta: "Shares status only · dates stay private",
     claimVoucher: "This benefit is unused",
     claimVoucherMeta: "Shares coupon ID and use status",
+    claimCredential: "K-Tour ID is active",
+    claimCredentialMeta: "Shares valid / not-revoked only",
     consentPurpose: "I reviewed the purpose and retention policy and agree to a one-time presentation of the selected data.",
-    consentHelper: "Two required claims and your consent are needed.",
+    consentHelper: "All four required claims and your consent are needed.",
     createCta: "Create proof securely",
     back: "Back",
     creatingTitle: "Creating your proof",
@@ -205,13 +216,18 @@ const COPY: Record<"ko" | "en", Copy> = {
     noPiiBody: "Only selected policy decisions are included in the VP",
     stoppedTitle: "OpenDID verification stopped safely",
     stoppedBody: "No benefit, payment, or chain receipt was created.",
+    ineligibleTitle: "This benefit is not available",
+    ineligibleBody: "This K-Tour ID user type does not meet the foreign-visitor campaign policy.",
+    otherBenefitCta: "View other benefits",
+    receiptId: "Receipt ID",
   },
 }
 
 const CLAIMS = [
-  { id: "eligibility", label: "claimEligible", meta: "claimEligibleMeta", required: true, icon: BadgeCheck },
-  { id: "trip", label: "claimTrip", meta: "claimTripMeta", required: true, icon: Clock3 },
-  { id: "voucher", label: "claimVoucher", meta: "claimVoucherMeta", required: false, icon: TicketCheck },
+  { id: "credentialActive", label: "claimCredential", meta: "claimCredentialMeta", required: true, icon: ShieldCheck },
+  { id: "visitorEligibility", label: "claimEligible", meta: "claimEligibleMeta", required: true, icon: BadgeCheck },
+  { id: "tripActive", label: "claimTrip", meta: "claimTripMeta", required: true, icon: Clock3 },
+  { id: "couponUnused", label: "claimVoucher", meta: "claimVoucherMeta", required: true, icon: TicketCheck },
 ] as const
 
 const RESULT_OPTIONS: { value: DemoResult; label: string }[] = [
@@ -223,10 +239,11 @@ const RESULT_OPTIONS: { value: DemoResult; label: string }[] = [
 
 export function HolderPresentationFlow() {
   const { lang } = useLang()
+  const { session, vouchers, demoJourney, recordDemoPresentation } = useApp()
   const c = COPY[lang]
   const [step, setStep] = useState<FlowStep>("scan")
   const [result, setResult] = useState<DemoResult>("success")
-  const [claims, setClaims] = useState<Record<string, boolean>>({ eligibility: true, trip: true, voucher: true })
+  const [claims, setClaims] = useState<Record<DemoClaimKey, boolean>>({ credentialActive: true, visitorEligibility: true, tripActive: true, couponUnused: true, ageOver19: false })
   const [consented, setConsented] = useState(false)
   const [progress, setProgress] = useState(10)
   const [showDetails, setShowDetails] = useState(false)
@@ -245,15 +262,26 @@ export function HolderPresentationFlow() {
     const first = window.setTimeout(() => setProgress(42), 350)
     const second = window.setTimeout(() => setProgress(74), 900)
     const third = window.setTimeout(() => setProgress(100), 1450)
-    const finish = window.setTimeout(() => setStep("result"), 1850)
+    const finish = window.setTimeout(() => {
+      if (result === "success") {
+        const selectedClaims = CLAIMS.filter((claim) => claims[claim.id]).map((claim) => claim.id)
+        if (!recordDemoPresentation(selectedClaims)) setResult("ineligible")
+      }
+      setStep("result")
+    }, 1850)
     return () => [first, second, third, finish].forEach(window.clearTimeout)
-  }, [step])
+  }, [claims, recordDemoPresentation, result, step])
 
   const requiredReady = useMemo(
     () => CLAIMS.filter((claim) => claim.required).every((claim) => claims[claim.id]),
     [claims],
   )
   const canPresent = requiredReady && consented
+  const campaignVoucher = vouchers.find((voucher) => voucher.id === demoJourney.voucherId)
+  const claimResults = useMemo(
+    () => Object.fromEntries(CLAIMS.map((claim) => [claim.id, demoClaimValue(claim.id, session.userType, campaignVoucher)])) as Record<DemoClaimKey, boolean>,
+    [campaignVoucher, session.userType],
+  )
 
   const goBack = () => {
     if (step === "request") setStep("scan")
@@ -290,7 +318,7 @@ export function HolderPresentationFlow() {
           <div className="grid h-11 w-11 place-items-center"><LangToggle /></div>
         </header>
 
-        {step === "scan" && <ScanStep c={c} onScan={() => setStep("request")} />}
+        {step === "scan" && <ScanStep c={c} journey={demoJourney} onScan={() => setStep("request")} />}
         {step === "request" && (
           <RequestStep
             c={c}
@@ -298,6 +326,7 @@ export function HolderPresentationFlow() {
             onResult={updateResult}
             onContinue={() => setStep("consent")}
             onDecline={() => setStep("scan")}
+            journey={demoJourney}
           />
         )}
         {step === "consent" && (
@@ -309,6 +338,7 @@ export function HolderPresentationFlow() {
             onClaim={(id, value) => setClaims((current) => ({ ...current, [id]: value }))}
             onConsent={setConsented}
             onContinue={() => setStep("creating")}
+            claimResults={claimResults}
           />
         )}
         {step === "creating" && <CreatingStep c={c} progress={progress} />}
@@ -319,6 +349,7 @@ export function HolderPresentationFlow() {
             showDetails={showDetails}
             onToggleDetails={() => setShowDetails((value) => !value)}
             onRetry={() => setStep("request")}
+            journey={demoJourney}
           />
         )}
       </div>
@@ -335,7 +366,7 @@ function SimulationNotice({ c, className }: { c: Copy; className?: string }) {
   )
 }
 
-function ScanStep({ c, onScan }: { c: Copy; onScan: () => void }) {
+function ScanStep({ c, journey, onScan }: { c: Copy; journey: DemoJourney; onScan: () => void }) {
   return (
     <main className="flex flex-1 flex-col px-5 pb-7">
       <div className="pt-6 text-center">
@@ -361,6 +392,7 @@ function ScanStep({ c, onScan }: { c: Copy; onScan: () => void }) {
               <QrCode className="h-14 w-14 text-white/45" />
             </div>
           </div>
+          <p className="absolute inset-x-5 bottom-3 truncate text-center font-mono text-[9px] text-white/45">{journey.requestId}</p>
         </div>
       </div>
 
@@ -375,7 +407,7 @@ function ScanStep({ c, onScan }: { c: Copy; onScan: () => void }) {
   )
 }
 
-function MerchantHeader({ c }: { c: Copy }) {
+function MerchantHeader({ c, journey }: { c: Copy; journey: DemoJourney }) {
   return (
     <div className="rounded-3xl bg-surface-2 p-4 ring-1 ring-border">
       <div className="flex items-center gap-3">
@@ -383,27 +415,27 @@ function MerchantHeader({ c }: { c: Copy }) {
           <Building2 className="h-6 w-6" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[16px] font-bold text-foreground">Bukchon Craft House</p>
+          <p className="text-[16px] font-bold text-foreground">{journey.merchantDisplay}</p>
           <p className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-success"><BadgeCheck className="h-3.5 w-3.5" /> {c.verifiedMerchant}</p>
         </div>
         <Seal size={34} />
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-[11px] text-muted-foreground">
         <span className="inline-flex items-center gap-1"><Clock3 className="h-3.5 w-3.5" /> {c.requestValidity}</span>
-        <span className="font-mono">REQ…7A31</span>
+        <span className="font-mono">{journey.requestId}</span>
       </div>
     </div>
   )
 }
 
-function RequestStep({ c, result, onResult, onContinue, onDecline }: { c: Copy; result: DemoResult; onResult: (value: DemoResult) => void; onContinue: () => void; onDecline: () => void }) {
+function RequestStep({ c, result, journey, onResult, onContinue, onDecline }: { c: Copy; result: DemoResult; journey: DemoJourney; onResult: (value: DemoResult) => void; onContinue: () => void; onDecline: () => void }) {
   return (
     <main className="flex flex-1 flex-col px-5 pb-7 pt-3">
       <h1 className="whitespace-pre-line text-[24px] font-extrabold leading-tight tracking-tight text-foreground">{c.requestTitle}</h1>
       <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{c.scanBody}</p>
 
       <div className="mt-5">
-        <MerchantHeader c={c} />
+        <MerchantHeader c={c} journey={journey} />
       </div>
 
       <section className="mt-5">
@@ -458,7 +490,7 @@ function DemoControls({ c, value, onChange }: { c: Copy; value: DemoResult; onCh
   )
 }
 
-function ConsentStep({ c, claims, consented, canPresent, onClaim, onConsent, onContinue }: { c: Copy; claims: Record<string, boolean>; consented: boolean; canPresent: boolean; onClaim: (id: string, value: boolean) => void; onConsent: (value: boolean) => void; onContinue: () => void }) {
+function ConsentStep({ c, claims, claimResults, consented, canPresent, onClaim, onConsent, onContinue }: { c: Copy; claims: Record<DemoClaimKey, boolean>; claimResults: Record<DemoClaimKey, boolean>; consented: boolean; canPresent: boolean; onClaim: (id: DemoClaimKey, value: boolean) => void; onConsent: (value: boolean) => void; onContinue: () => void }) {
   return (
     <main className="flex flex-1 flex-col px-5 pb-7 pt-3">
       <div className="flex items-start gap-3">
@@ -475,7 +507,12 @@ function ConsentStep({ c, claims, consented, canPresent, onClaim, onConsent, onC
             <span className={cn("grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl", claims[id] ? "bg-card text-success" : "bg-secondary text-muted-foreground")}><Icon className="h-5 w-5" /></span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2"><span className="text-[13px] font-bold text-foreground">{c[label]}</span><span className="text-[9px] font-bold text-primary">{required ? c.required : c.optional}</span></span>
-              <span className="mt-1 block text-[11px] text-muted-foreground">{c[meta]}</span>
+              <span className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                {c[meta]}
+                <span className={cn("rounded-full px-1.5 py-0.5 text-[8px] font-extrabold", claimResults[id] ? "bg-success-surface text-success" : "bg-primary/8 text-primary")}>
+                  {claimResults[id] ? "PASS" : "NOT ELIGIBLE"}
+                </span>
+              </span>
             </span>
             <Switch checked={claims[id]} onCheckedChange={(checked) => onClaim(id, checked)} aria-label={c[label]} className="h-6 w-10 data-[state=checked]:bg-success [&_[data-slot=switch-thumb]]:size-5" />
           </label>
@@ -544,7 +581,7 @@ function CreatingStep({ c, progress }: { c: Copy; progress: number }) {
   )
 }
 
-function ResultStep({ c, result, showDetails, onToggleDetails, onRetry }: { c: Copy; result: DemoResult; showDetails: boolean; onToggleDetails: () => void; onRetry: () => void }) {
+function ResultStep({ c, result, journey, showDetails, onToggleDetails, onRetry }: { c: Copy; result: DemoResult; journey: DemoJourney; showDetails: boolean; onToggleDetails: () => void; onRetry: () => void }) {
   if (result !== "success") return <FailureResult c={c} result={result} onRetry={onRetry} />
   return (
     <main className="flex flex-1 flex-col px-5 pb-7 pt-4">
@@ -557,13 +594,13 @@ function ResultStep({ c, result, showDetails, onToggleDetails, onRetry }: { c: C
 
       <div className="card-ink mt-6 rounded-3xl p-5 text-white">
         <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div><p className="text-[10px] uppercase tracking-[0.12em] text-white/50">{c.benefit}</p><p className="mt-1 text-[15px] font-bold">Mother-of-pearl workshop</p></div>
+          <div><p className="text-[10px] uppercase tracking-[0.12em] text-white/50">{c.benefit}</p><p className="mt-1 text-[15px] font-bold">{journey.product}</p></div>
           <span className="rounded-full bg-[var(--gold)]/15 px-3 py-1.5 text-[11px] font-extrabold text-gold ring-1 ring-[var(--gold)]/25">−10%</span>
         </div>
         <div className="mt-4 space-y-2 text-[12px]">
-          <MoneyRow label={c.original} value="₩50,000" />
-          <MoneyRow label={c.discount} value="−₩5,000" positive />
-          <MoneyRow label={c.total} value="₩45,000" total />
+          <MoneyRow label={c.original} value={`₩${journey.grossKRW.toLocaleString()}`} />
+          <MoneyRow label={c.discount} value={`−₩${journey.voucherKRW.toLocaleString()}`} positive />
+          <MoneyRow label={c.total} value={`₩${journey.paidKRW.toLocaleString()}`} total />
         </div>
       </div>
 
@@ -575,11 +612,12 @@ function ResultStep({ c, result, showDetails, onToggleDetails, onRetry }: { c: C
         </button>
         {showDetails && (
           <div className="border-t border-border px-4 py-1">
-            <EvidenceRow label={c.verifier} value="Bukchon Craft House" />
-            <EvidenceRow label={c.proof} value="vp:7a31…b8f2" mono />
+            <EvidenceRow label={c.verifier} value={journey.merchantDisplay} />
+            <EvidenceRow label={c.proof} value={journey.presentationId} mono />
             <EvidenceRow label={c.credentialStatus} value={c.valid} success />
             <EvidenceRow label={c.receiptAnchor} value={c.simulatedAnchor} />
-            <EvidenceRow label={c.requestId} value="req:01J3…7A31" mono />
+            <EvidenceRow label={c.requestId} value={journey.requestId} mono />
+            <EvidenceRow label={c.receiptId} value={journey.receiptId} mono />
             <EvidenceRow label={c.holderDid} value="did:omn:holder…18d4" mono />
             <EvidenceRow label={c.verifierDid} value="did:omn:merchant…a202" mono />
             <EvidenceRow label={c.standard} value="W3C VC · OpenDID VP" />
@@ -590,7 +628,7 @@ function ResultStep({ c, result, showDetails, onToggleDetails, onRetry }: { c: C
       <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-[10px] leading-relaxed text-muted-foreground"><LockKeyhole className="mt-0.5 h-3 w-3 flex-shrink-0" /> {c.privacyReceipt}</p>
 
       <div className="mt-auto pt-6">
-        <Link href="/benefits?verified=1&presentation=vp%3A7a31-b8f2" className="bg-brand-gradient pressable flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-[15px] font-bold text-white">
+        <Link href={`/benefits?verified=1&presentation=${encodeURIComponent(journey.presentationId)}`} className="bg-brand-gradient pressable flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-[15px] font-bold text-white">
           {c.payCta} <ArrowRight className="h-4 w-4" />
         </Link>
         <Link href="/pass" className="pressable mt-2 flex min-h-11 w-full items-center justify-center text-[13px] font-semibold text-muted-foreground">{c.doneCta}</Link>
@@ -621,8 +659,9 @@ function EvidenceRow({ label, value, mono, success }: { label: string; value: st
 function FailureResult({ c, result, onRetry }: { c: Copy; result: Exclude<DemoResult, "success">; onRetry: () => void }) {
   const meta = {
     expired: { icon: TimerReset, title: c.expiredTitle, body: c.expiredBody, cta: c.renewCta, href: "/onboarding?mode=renew", code: "CREDENTIAL_EXPIRED" },
-    revoked: { icon: XCircle, title: c.revokedTitle, body: c.revokedBody, cta: c.statusCta, href: "/pass?panel=status", code: "CREDENTIAL_REVOKED" },
+    revoked: { icon: XCircle, title: c.revokedTitle, body: c.revokedBody, cta: c.statusCta, href: "/pass?panel=status&preview=revoked", code: "CREDENTIAL_REVOKED" },
     offline: { icon: Unplug, title: c.offlineTitle, body: c.offlineBody, cta: c.retryCta, href: "", code: "VERIFIER_UNAVAILABLE" },
+    ineligible: { icon: AlertTriangle, title: c.ineligibleTitle, body: c.ineligibleBody, cta: c.otherBenefitCta, href: "/benefits", code: "CAMPAIGN_NOT_ELIGIBLE" },
   }[result]
   const Icon = meta.icon
   return (

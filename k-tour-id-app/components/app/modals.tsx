@@ -118,6 +118,9 @@ export interface PayItem {
   merchant: string
   amountKRW: number
   category: Transaction["category"]
+  location?: string
+  fulfilment?: string
+  cancellation?: string
 }
 
 export function PayModal({
@@ -132,6 +135,7 @@ export function PayModal({
   const { pay, session } = useApp()
   const { t, lang } = useLang()
   const [phase, setPhase] = useState<"confirm" | "processing" | "done" | "error">("confirm")
+  const [receiptId, setReceiptId] = useState("")
   const busy = useRef(false)
 
   const amount = item?.amountKRW ?? 0
@@ -144,6 +148,7 @@ export function PayModal({
     setPhase("processing")
     try {
       await pay(item.merchant, item.amountKRW, item.category)
+      setReceiptId(`RCT-DEMO-${String(Date.now()).slice(-6)}`)
       setPhase("done")
       setTimeout(() => {
         onOpenChange(false)
@@ -169,6 +174,8 @@ export function PayModal({
           <div className="flex flex-col items-center gap-2 py-3 text-center">
             <SuccessCheck />
             <p className="text-[13px] font-semibold">{item?.merchant}</p>
+            <p className="tabular text-[16px] font-extrabold">{lang === "ko" ? formatWon(amount) : `₩${amount.toLocaleString("en-US")}`}</p>
+            <p className="font-mono text-[10px] text-muted-foreground">{receiptId}</p>
             <p className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
               <ShieldCheck className="h-3 w-3 text-primary" /> {t("modal.loggedOmnione")}
             </p>
@@ -181,6 +188,11 @@ export function PayModal({
                 {lang === "ko" ? formatWon(amount) : `₩${amount.toLocaleString("en-US")}`}
               </p>
               {showUsd && <p className="tabular text-[12px] text-muted-foreground">≈ {formatUSD(amount, session.wallet.usdRate)}</p>}
+            </div>
+            <div className="grid grid-cols-[88px_1fr] gap-y-2 rounded-2xl border border-border bg-card p-3.5 text-[10.5px]">
+              <span className="text-muted-foreground">{lang === "ko" ? "이용 방식" : "Fulfilment"}</span><span className="font-semibold">{item?.fulfilment ?? (lang === "ko" ? "결제 후 주문 확정" : "Order confirmed after payment")}</span>
+              <span className="text-muted-foreground">{lang === "ko" ? "장소" : "Location"}</span><span className="font-semibold">{item?.location ?? (lang === "ko" ? "제휴 서비스" : "Partner service")}</span>
+              <span className="text-muted-foreground">{lang === "ko" ? "취소·환불" : "Cancellation"}</span><span className="font-semibold">{item?.cancellation ?? (lang === "ko" ? "제휴사 확정 전 데모 주문 취소 가능" : "Demo order can be cancelled before partner confirmation")}</span>
             </div>
             <p className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
               {phase === "error" ? (lang === "ko" ? "결제 요청을 완료하지 못했습니다. 금액은 차감되지 않았습니다." : "Payment failed and no balance was deducted.") : insufficient ? (lang === "ko" ? "잔액이 부족해요" : "Insufficient balance") : t("modal.payNote")}

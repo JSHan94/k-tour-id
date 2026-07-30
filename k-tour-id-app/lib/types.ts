@@ -1,6 +1,6 @@
 // K-Tour ID domain model.
 // Mirrors the product spec in docs/: identity proof → K-Tour service credential (VC)
-// → KRW stablecoin wallet → services → OmniOne Chain event log → AI benefits.
+// → demo KRW balance → services → OmniOne Chain event log → AI benefits.
 
 /** 내국인 / 외국인 관광객 / 장기체류 외국인 */
 export type UserType = "korean" | "foreigner" | "long-term"
@@ -73,6 +73,7 @@ export type ChainEventType =
   | "PaymentAuthorized"
   | "VoucherIssued"
   | "VoucherRedeemed"
+  | "VoucherRefunded"
   | "PartnerSettlementLogged"
   | "CredentialRevoked"
 
@@ -136,6 +137,12 @@ export interface Voucher {
   status: VoucherStatus
   eligibilityClaim: ClaimKey
   funding: "partner-funded" | "municipal-campaign" | "user-converted"
+  /** Mock policy constraints. These make the clickable demo behave like a real campaign. */
+  applicableMerchant?: string
+  applicableService?: ServiceKey
+  minimumSpendKRW?: number
+  redemption: "single-use" | "stored-value"
+  campaignId?: string
 }
 
 export interface SettlementReceipt {
@@ -148,6 +155,42 @@ export interface SettlementReceipt {
   presentationId: string
   eventIds: string[]
   integrationMode: IntegrationMode
+}
+
+/** One shared record keeps the holder, merchant and settlement mock in sync. */
+export type DemoJourneyStage =
+  | "request-ready"
+  | "presentation-created"
+  | "benefit-ready"
+  | "paid"
+  | "settlement-submitted"
+  | "anchored"
+
+export type DemoClaimKey = "credentialActive" | "visitorEligibility" | "tripActive" | "couponUnused" | "ageOver19"
+
+export interface DemoJourney {
+  stage: DemoJourneyStage
+  merchant: string
+  merchantDisplay: string
+  product: string
+  purpose: string
+  requestId: string
+  presentationId: string
+  voucherId: string
+  paymentId: string
+  settlementId: string
+  receiptId: string
+  campaignId: string
+  requestedClaims: DemoClaimKey[]
+  presentedClaims: DemoClaimKey[]
+  grossKRW: number
+  voucherKRW: number
+  paidKRW: number
+  platformFeeKRW: number
+  campaignReimbursementKRW: number
+  merchantDueKRW: number
+  createdAt: string
+  anchorHash?: string
 }
 
 export interface OperationResult<T> {

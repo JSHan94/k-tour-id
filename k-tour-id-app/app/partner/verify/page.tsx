@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
 import {
   AlertTriangle,
   ArrowRight,
@@ -27,46 +28,51 @@ import {
   VerifiedMark,
 } from "@/components/partner/partner-shell"
 import { cn } from "@/lib/utils"
+import { useApp } from "@/lib/store/app-provider"
+import type { DemoJourney, Session, Voucher } from "@/lib/types"
 
 type VerifyState = "waiting" | "submitted" | "verified" | "failed" | "expired"
-type ClaimKey = "kpass" | "stay" | "adult" | "coupon" | "nationality"
+type ClaimKey = "kpass" | "visitor" | "stay" | "coupon"
 
 const CLAIMS: { key: ClaimKey; label: string; detail: string; minimal?: boolean }[] = [
   { key: "kpass", label: "Valid K-Tour ID", detail: "Credential is active and not revoked", minimal: true },
+  { key: "visitor", label: "Foreign-visitor campaign eligible", detail: "Boolean result only; no nationality value", minimal: true },
   { key: "stay", label: "Stay is currently valid", detail: "Boolean result only; no visa number", minimal: true },
-  { key: "adult", label: "Age threshold met", detail: "Over 19 result; no date of birth", minimal: true },
   { key: "coupon", label: "Bukchon welcome coupon eligible", detail: "Eligibility and prior-use check", minimal: true },
-  { key: "nationality", label: "Nationality", detail: "Optional; avoid unless policy requires it" },
 ]
 
 const STATE_META: Record<VerifyState, { label: string; copy: string; icon: typeof Clock3; tone: string }> = {
   waiting: { label: "Waiting", copy: "Ask the visitor to scan the QR in their wallet.", icon: Clock3, tone: "text-[#8a642b] bg-[#f5ecdc]" },
   submitted: { label: "Submitted", copy: "VP received. Signature and policy checks are running.", icon: LoaderCircle, tone: "text-primary bg-[#f7e8e4]" },
   verified: { label: "Verified", copy: "The credential and requested policy conditions passed.", icon: CheckCircle2, tone: "text-success bg-success-surface" },
-  failed: { label: "Failed", copy: "Signature verification failed. No benefit was issued.", icon: XCircle, tone: "text-primary bg-[#f7e8e4]" },
+  failed: { label: "Not approved", copy: "A credential or campaign-policy check failed. No benefit was issued.", icon: XCircle, tone: "text-primary bg-[#f7e8e4]" },
   expired: { label: "Expired", copy: "This one-time request expired without storing visitor data.", icon: AlertTriangle, tone: "text-[#8a642b] bg-[#f5ecdc]" },
 }
 
 export default function PartnerVerifyPage() {
+  const { session, vouchers, demoJourney, resetDemoJourney } = useApp()
   const [state, setState] = useState<VerifyState>("waiting")
-  const [claims, setClaims] = useState<ClaimKey[]>(["kpass", "stay", "adult", "coupon"])
-  const [purpose, setPurpose] = useState("Bukchon welcome benefit")
-  const [couponRedeemed, setCouponRedeemed] = useState(false)
-  const [requestVersion, setRequestVersion] = useState(1)
   const [copied, setCopied] = useState(false)
 
-  const requestId = `VRF-BUK-0729-${String(1200 + requestVersion).padStart(4, "0")}`
-  const qrValue = useMemo(() => `ktourid://present?request=${requestId}&env=sandbox&mode=simulated`, [requestId])
-  const selectedClaims = CLAIMS.filter((claim) => claims.includes(claim.key))
+  const purpose = "Bukchon welcome benefit"
+  const requestId = demoJourney.requestId
+  const qrValue = useMemo(() => `ktourid://present?request=${requestId}&mode=simulated`, [requestId])
+  const selectedClaims = CLAIMS
+
+  useEffect(() => {
+    if (demoJourney.stage === "presentation-created") setState("failed")
+    else if (["benefit-ready", "paid", "settlement-submitted", "anchored"].includes(demoJourney.stage)) setState("verified")
+  }, [demoJourney.stage])
 
   const regenerate = () => {
-    setRequestVersion((value) => value + 1)
+    resetDemoJourney()
     setState("waiting")
-    setCouponRedeemed(false)
   }
 
-  const toggleClaim = (key: ClaimKey) => {
-    setClaims((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key])
+  const copyRequest = async () => {
+    try { await navigator.clipboard.writeText(qrValue) } catch { /* preview clipboard may be blocked */ }
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 1200)
   }
 
   const meta = STATE_META[state]
@@ -86,43 +92,28 @@ export default function PartnerVerifyPage() {
         <Panel
           eyebrow="01 · Request builder"
           title="What does this counter need to know?"
-          action={<EnvironmentBadge kind="SANDBOX" />}
+          action={<EnvironmentBadge kind="SIMULATED" />}
         >
           <div className="space-y-5 p-5 sm:p-6">
-            <label className="block">
-              <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Purpose</span>
-              <select
-                value={purpose}
-                onChange={(event) => setPurpose(event.target.value)}
-                className="mt-2 min-h-11 w-full rounded-xl border border-border bg-background px-3.5 text-[13px] font-semibold outline-none focus:border-primary focus:ring-2 focus:ring-primary/15"
-              >
-                <option>Bukchon welcome benefit</option>
-                <option>Adult-only experience eligibility</option>
-                <option>Tourist transit pass activation</option>
-              </select>
-            </label>
+            <div className="block">
+              <span className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Canonical demo purpose</span>
+              <div className="mt-2 rounded-xl border border-border bg-background px-3.5 py-3 text-[13px] font-semibold">{purpose}</div>
+            </div>
 
             <div>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Requested claims</p>
-                <span className="text-[11px] font-semibold text-success">{claims.length} selected</span>
+                <span className="text-[11px] font-semibold text-success">{CLAIMS.length} required</span>
               </div>
               <div className="mt-2.5 space-y-2">
                 {CLAIMS.map((claim) => {
-                  const selected = claims.includes(claim.key)
                   return (
-                    <button
+                    <div
                       key={claim.key}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => toggleClaim(claim.key)}
-                      className={cn(
-                        "flex min-h-14 w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors",
-                        selected ? "border-primary/30 bg-primary/[0.045]" : "border-border bg-background",
-                      )}
+                      className="flex min-h-14 w-full items-center gap-3 rounded-2xl border border-primary/30 bg-primary/[0.045] p-3 text-left"
                     >
-                      <span className={cn("grid h-5 w-5 flex-shrink-0 place-items-center rounded-md border", selected ? "border-primary bg-primary text-white" : "border-border bg-card")}>
-                        {selected && <Check className="h-3.5 w-3.5" />}
+                      <span className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-md border border-primary bg-primary text-white">
+                        <Check className="h-3.5 w-3.5" />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-1.5 text-[13px] font-bold">
@@ -131,7 +122,7 @@ export default function PartnerVerifyPage() {
                         </span>
                         <span className="mt-0.5 block text-[11px] text-muted-foreground">{claim.detail}</span>
                       </span>
-                    </button>
+                    </div>
                   )
                 })}
               </div>
@@ -142,19 +133,16 @@ export default function PartnerVerifyPage() {
                 <ShieldCheck className="h-4 w-4 text-success" /> Data minimization check
               </div>
               <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                {claims.includes("nationality")
-                  ? "Nationality is optional and increases disclosure. Remove it unless the campaign policy needs it."
-                  : "Good: this request can be fulfilled without name, birth date, document number, photo, or raw credential."}
+                This preset is fulfilled without name, nationality value, birth date, document number, photo, or raw credential.
               </p>
             </div>
 
             <button
               type="button"
               onClick={regenerate}
-              disabled={claims.length === 0}
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand-gradient px-4 text-[13px] font-bold text-white disabled:opacity-40"
             >
-              <ScanLine className="h-[18px] w-[18px]" /> Generate one-time request
+              <ScanLine className="h-[18px] w-[18px]" /> Reset canonical request
             </button>
           </div>
         </Panel>
@@ -189,7 +177,7 @@ export default function PartnerVerifyPage() {
 
                 <button
                   type="button"
-                  onClick={() => { setCopied(true); window.setTimeout(() => setCopied(false), 1200) }}
+                  onClick={copyRequest}
                   className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 text-[11px] font-bold"
                 >
                   {copied ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
@@ -205,7 +193,7 @@ export default function PartnerVerifyPage() {
                     key={item}
                     type="button"
                     aria-pressed={state === item}
-                    onClick={() => { setState(item); if (item !== "verified") setCouponRedeemed(false) }}
+                    onClick={() => setState(item)}
                     className={cn(
                       "min-h-9 rounded-full border px-3 text-[10px] font-extrabold uppercase tracking-[0.08em]",
                       state === item ? "border-ink bg-ink text-white" : "border-border bg-card text-muted-foreground",
@@ -219,8 +207,8 @@ export default function PartnerVerifyPage() {
             </div>
           </Panel>
 
-          {state === "verified" ? (
-            <VerifiedResult couponRedeemed={couponRedeemed} onRedeem={() => setCouponRedeemed(true)} selectedClaims={selectedClaims} />
+          {state === "verified" || (state === "failed" && demoJourney.stage === "presentation-created") ? (
+            <VerifiedResult purpose={purpose} selectedClaims={selectedClaims} session={session} vouchers={vouchers} journey={demoJourney} />
           ) : (
             <StateFollowUp state={state} onAdvance={() => setState(state === "waiting" ? "submitted" : "verified")} onRegenerate={regenerate} />
           )}
@@ -264,16 +252,29 @@ function StateFollowUp({ state, onAdvance, onRegenerate }: { state: VerifyState;
   )
 }
 
-function VerifiedResult({ couponRedeemed, onRedeem, selectedClaims }: { couponRedeemed: boolean; onRedeem: () => void; selectedClaims: typeof CLAIMS }) {
+function VerifiedResult({ purpose, selectedClaims, session, vouchers, journey }: { purpose: string; selectedClaims: typeof CLAIMS; session: Session; vouchers: Voucher[]; journey: DemoJourney }) {
+  const campaign = purpose === "Bukchon welcome benefit"
+  const voucher = vouchers.find((item) => item.id === journey.voucherId)
+  const isPaid = ["paid", "settlement-submitted", "anchored"].includes(journey.stage)
+  const resultFor = (key: ClaimKey) => {
+    if (key === "kpass") return session.capsule?.status === "active"
+    if (key === "visitor") return session.userType === "foreigner"
+    if (key === "stay") return !!session.capsule && new Date(session.capsule.expiresAt).getTime() > Date.now()
+    if (key === "coupon") return journey.presentedClaims.includes("couponUnused") || voucher?.status === "available"
+    return true
+  }
+  const passed = selectedClaims.every((claim) => resultFor(claim.key))
   return (
-    <Panel eyebrow="03 · Policy result" title="Minimum disclosure result" action={<VerifiedMark />}>
+    <Panel eyebrow="03 · Policy result" title="Minimum disclosure result" action={passed ? <VerifiedMark /> : <span className="inline-flex items-center gap-1 rounded-full bg-[#f7e8e4] px-2.5 py-1 text-[11px] font-bold text-primary"><XCircle className="h-3.5 w-3.5" /> Not approved</span>}>
       <div className="grid gap-5 p-5 lg:grid-cols-[1fr_0.9fr] sm:p-6">
         <div>
           <div className="space-y-2">
             {selectedClaims.map((claim) => (
               <div key={claim.key} className="flex min-h-11 items-center justify-between gap-3 rounded-xl bg-surface-2 px-3.5 py-2">
                 <span className="text-[11px] font-semibold text-muted-foreground">{claim.label}</span>
-                <span className="inline-flex items-center gap-1 text-[12px] font-extrabold text-success"><CheckCircle2 className="h-4 w-4" /> PASS</span>
+                <span className={cn("inline-flex items-center gap-1 text-[12px] font-extrabold", resultFor(claim.key) ? "text-success" : "text-primary")}>
+                  {resultFor(claim.key) ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />} {resultFor(claim.key) ? "PASS" : "FAIL"}
+                </span>
               </div>
             ))}
           </div>
@@ -290,20 +291,25 @@ function VerifiedResult({ couponRedeemed, onRedeem, selectedClaims }: { couponRe
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-gold"><Gift className="h-5 w-5" /></span>
             <EnvironmentBadge kind="SIMULATED" className="border-white/15 bg-white/10 text-white/75" />
           </div>
-          <p className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white/55">Eligible benefit</p>
-          <h3 className="mt-1 text-[18px] font-extrabold">Bukchon Welcome · 10%</h3>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/60">Single-use voucher · valid today · settlement-ready</p>
-          <button
-            type="button"
-            onClick={onRedeem}
-            disabled={couponRedeemed}
-            className={cn(
-              "mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-extrabold",
-              couponRedeemed ? "bg-success text-white" : "bg-white text-ink",
-            )}
-          >
-            {couponRedeemed ? <><TicketCheck className="h-4 w-4" /> Redeemed · CPN-0729-1842</> : <><FileCheck2 className="h-4 w-4" /> Redeem coupon</>}
-          </button>
+          <p className="mt-4 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white/55">{campaign ? "Campaign decision" : "Policy decision"}</p>
+          <h3 className="mt-1 text-[18px] font-extrabold">{passed ? campaign ? "Bukchon Welcome · 10%" : "Eligibility confirmed" : "Policy not satisfied"}</h3>
+          <p className="mt-1 text-[11px] leading-relaxed text-white/60">
+            {campaign ? `Single-use voucher · ${journey.campaignId}` : `${purpose} · no benefit voucher created`}
+          </p>
+          {campaign && passed && (isPaid ? (
+            <div className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-success text-[12px] font-extrabold text-white">
+              <TicketCheck className="h-4 w-4" /> Redeemed · {journey.voucherId}
+            </div>
+          ) : (
+            <Link href={`/benefits?verified=1&presentation=${encodeURIComponent(journey.presentationId)}`} className="mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-white text-[12px] font-extrabold text-ink">
+              <FileCheck2 className="h-4 w-4" /> Continue in holder wallet
+            </Link>
+          ))}
+          {!campaign && (
+            <div className={cn("mt-5 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-[12px] font-extrabold", passed ? "bg-success text-white" : "bg-primary text-white")}>
+              {passed ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />} {passed ? "Access allowed" : "Access denied"}
+            </div>
+          )}
         </div>
       </div>
     </Panel>

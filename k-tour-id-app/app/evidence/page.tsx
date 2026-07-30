@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Check, ChevronRight, Database, ExternalLink, Fingerprint, Link2, Server, ShieldCheck, Smartphone } from "lucide-react"
+import { Check, ChevronRight, Database, ExternalLink, Fingerprint, Link2, ReceiptText, Server, ShieldCheck, Smartphone } from "lucide-react"
 import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
 import { IntegrationEvidenceCard, IntegrationModeBadge } from "@/components/app/integration-status"
 import { useApp } from "@/lib/store/app-provider"
@@ -9,14 +9,14 @@ import { useLang } from "@/lib/i18n/lang-provider"
 import { shortHash } from "@/lib/format"
 
 const INTEGRATIONS = [
-  { name: "Mobile ID · OmniOne CX", role: "Government Mobile ID request and verification", state: "sandbox" as const, icon: Smartphone },
+  { name: "Mobile ID · OmniOne CX", role: "Government Mobile ID request and verification", state: "simulated" as const, icon: Smartphone },
   { name: "Passport eKYC adapter", role: "MRZ/NFC, face match and liveness for short-stay visitors", state: "simulated" as const, icon: Fingerprint },
   { name: "OpenDID Issuer / Wallet / Verifier", role: "K-Tour credential issuance, VP creation and verification", state: "simulated" as const, icon: ShieldCheck },
   { name: "OmniOne Chain anchor", role: "Non-PII event commitments and settlement audit trail", state: "simulated" as const, icon: Link2 },
 ]
 
 export default function EvidencePage() {
-  const { events } = useApp()
+  const { events, demoJourney } = useApp()
   const { lang } = useLang()
   const ko = lang === "ko"
   const latest = events[0]
@@ -69,6 +69,24 @@ export default function EvidencePage() {
                 </div>
               )
             })}
+          </div>
+        </div>
+
+        <div>
+          <SectionTitle>{ko ? "공통 데모 영수증" : "Shared demo receipt"}</SectionTitle>
+          <div className="rounded-2xl bg-ink p-4 text-white">
+            <div className="flex items-center justify-between gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-gold"><ReceiptText className="h-5 w-5" /></span>
+              <IntegrationModeBadge mode="simulated" compact />
+            </div>
+            <p className="mt-3 text-[14px] font-bold">{demoJourney.product}</p>
+            <p className="mt-1 text-[11px] text-white/55">{demoJourney.merchantDisplay} · {demoJourney.stage}</p>
+            <dl className="mt-4 grid grid-cols-[88px_1fr] gap-y-2 text-[10px]">
+              <dt className="text-white/45">Receipt</dt><dd className="truncate font-mono">{demoJourney.receiptId}</dd>
+              <dt className="text-white/45">Request</dt><dd className="truncate font-mono">{demoJourney.requestId}</dd>
+              <dt className="text-white/45">Presentation</dt><dd className="truncate font-mono">{demoJourney.presentationId}</dd>
+              <dt className="text-white/45">Settlement</dt><dd className="truncate font-mono">{demoJourney.settlementId}</dd>
+            </dl>
           </div>
         </div>
 

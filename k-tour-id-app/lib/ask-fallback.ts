@@ -36,8 +36,8 @@ export const ASK_FAQ: Faq[] = [
   },
   {
     keys: ["가맹점", "vp", "검증", "verify", "면세", "presentation", "merchant", "verifier", "tax"],
-    a: "가맹점은 VP(Verifiable Presentation)만 받아 PII 없이 4가지를 검증합니다: ① 발급자 서명 진위(발급자 DID·키를 체인에서 resolve, 중앙DB 불필요) ② 소지자 본인성(VP가 소지자 키로 서명됨) ③ 유효·미폐기·미만료 ④ 필요한 자격만(예: 외국인 관광객, 면세 자격, 쿠폰 미사용, 19세 이상). 예: 면세점은 '검증된 외국인 관광객 + 체류 유효'만 확인하고 여권번호·이름은 받지 않습니다. (가맹점 VP 검증 자체는 결선에서 OmniOne으로 붙습니다.)",
-    aEn: "A merchant receives only a VP (Verifiable Presentation) and verifies four things without any PII: (1) issuer signature authenticity (resolve the issuer DID/key on-chain — no central DB), (2) holder binding (VP signed by the holder's key), (3) validity / not-revoked / not-expired, (4) just the needed claim (e.g., foreign tourist, tax-free eligible, coupon unused, age ≥ 19). A duty-free shop confirms 'verified foreign tourist + stay valid' without ever seeing the passport number or name. (Merchant-side VP verification itself lands in the finals via OmniOne.)",
+    a: "가맹점은 VP(Verifiable Presentation)를 받아 PII 없이 4가지를 검증하는 구조입니다: ① 선택된 OpenDID 배치 방식의 발급자 DID·키 신뢰 ② 소지자 키 바인딩 ③ 유효·미폐기·미만료 ④ 필요한 자격 조건. DID 해석이 체인인지 registry인지, 캐시·장애 처리가 어떤지는 실제 배치 사양 확인 전에 단정하지 않습니다. 목업에서는 '외국인 여행자 + 여행 유효 + 혜택 미사용'만 확인하고 여권번호·이름은 받지 않습니다.",
+    aEn: "A merchant receives a VP and checks four things without PII: (1) issuer DID/key trust using the selected OpenDID deployment, (2) holder-key binding, (3) valid / not-revoked / not-expired status, and (4) only the required policy predicates. We do not claim whether DID resolution is on-chain or registry-backed, or how caching and outages work, until the actual deployment is confirmed. The mock verifies foreign visitor, active trip and unused benefit without receiving a passport number or name.",
   },
   {
     keys: ["온체인", "오프체인", "on-chain", "off-chain", "프라이버시", "privacy", "해시", "hash", "개인정보", "pii"],
@@ -76,8 +76,8 @@ export const ASK_FAQ: Faq[] = [
   },
   {
     keys: ["기술", "스택", "stack", "tech", "어떻게 만들", "구현", "build", "nextjs"],
-    a: "Next.js 16(App Router) · React 19 · Tailwind v4 · TypeScript. 서비스는 인터페이스+mock으로 분리(lib/services, DEMO_MODE)해 결선에 OmniOne/Open DID/결제 어댑터를 한 줄로 교체합니다. 디자인은 한국 헤리티지(한지·먹·인주 도장·단청) 랭귀지입니다.",
-    aEn: "Next.js 16 (App Router) · React 19 · Tailwind v4 · TypeScript. Services are split behind interfaces + mocks (lib/services, DEMO_MODE) so the OmniOne / Open DID / payment adapters swap in for the finals with a one-line change. The design uses a Korean-heritage language (hanji paper, ink, dojang seal-red, dancheong).",
+    a: "Next.js 16(App Router) · React 19 · Tailwind v4 · TypeScript. 서비스는 인터페이스와 목업으로 경계를 나눠 실제 OmniOne·OpenDID·결제 연동 작업이 화면 로직과 분리되도록 구성했습니다. 디자인은 한국 헤리티지(한지·먹·인주 도장·단청) 랭귀지입니다.",
+    aEn: "Next.js 16 (App Router) · React 19 · Tailwind v4 · TypeScript. Service boundaries are separated behind interfaces and mocks so the future OmniOne, OpenDID and payment integration work stays isolated from screen logic. The design uses a Korean-heritage language (hanji paper, ink, dojang seal-red, dancheong).",
   },
 ]
 

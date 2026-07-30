@@ -7,7 +7,7 @@ import { geminiGenerate } from "@/lib/gemini"
 export const runtime = "nodejs"
 
 const SYSTEM =
-  "You are the K-Tour ID AI Benefit Router, a concise concierge for visitors to Korea using a KRW stablecoin wallet. Recommend transport/food/shopping/reservation options and suggest converting leftover KRW into coupons or experience NFTs. Reply in the user's language (Korean or English), in plain text, under 60 words."
+  "You are the K-Tour ID AI Benefit Router, a concise concierge for visitors to Korea using a simulated KRW travel balance. Recommend transport, food, shopping and reservation options. Describe any conversion, coupon, payment or NFT as simulated unless a verified integration response is explicitly available. Reply in the user's language (Korean or English), in plain text, under 60 words."
 
 export async function POST(req: Request) {
   const gemini = process.env.GEMINI_API_KEY

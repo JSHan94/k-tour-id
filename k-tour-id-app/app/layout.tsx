@@ -25,13 +25,13 @@ export const metadata: Metadata = {
     title: "K-Tour ID",
     description: "Prove less. Travel more. · Simulation build",
     type: "website",
-    images: [{ url: "/og.png", width: 1731, height: 909, alt: "K-Tour ID simulation build social preview" }],
+    images: [{ url: "/og-v2.png", width: 1536, height: 1024, alt: "K-Tour ID proof-to-settlement simulation journey" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "K-Tour ID",
     description: "Prove less. Travel more. · Simulation build",
-    images: ["/og.png"],
+    images: ["/og-v2.png"],
   },
 }
 

@@ -195,10 +195,13 @@ export const mockPolicyService: PolicyService = {
     if (!capsule.services.includes(service)) {
       return { ok: false, error: { code: "SERVICE_NOT_ALLOWED", message: "This service is outside the credential policy", retryable: false } }
     }
-    if (amountKRW > capsule.paymentLimitKRW || amountKRW > balanceKRW) {
+    if (amountKRW > capsule.paymentLimitKRW) {
       return { ok: false, error: { code: "PAYMENT_LIMIT", message: "Payment exceeds the available limit", retryable: false } }
     }
     const discountKRW = voucher?.status === "available" ? Math.min(voucher.valueKRW, amountKRW) : 0
+    if (amountKRW - discountKRW > balanceKRW) {
+      return { ok: false, error: { code: "INSUFFICIENT_BALANCE", message: "The payable amount exceeds the demo KRW balance", retryable: false } }
+    }
     return { ok: true, data: { payableKRW: amountKRW - discountKRW, discountKRW } }
   },
 }
@@ -227,6 +230,7 @@ export const mockVoucherService: VoucherService = {
         status: "available",
         eligibilityClaim: "tripActive",
         funding: "user-converted",
+        redemption: "stored-value",
       },
     }
   },

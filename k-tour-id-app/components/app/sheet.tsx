@@ -2,6 +2,7 @@
 
 import type React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 /** Mobile bottom sheet (Radix Dialog, slides up from the bottom of the phone column). */
@@ -28,6 +29,15 @@ export function SheetContent({
         )}
       >
         <div className="sheet-grabber mx-auto mb-4" />
+        <DialogPrimitive.Description className="sr-only">
+          {title ? `${title} options and confirmation` : "App options and confirmation"}
+        </DialogPrimitive.Description>
+        <DialogPrimitive.Close
+          aria-label="Close"
+          className="pressable absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-secondary text-muted-foreground hover:text-foreground"
+        >
+          <X className="h-4 w-4" />
+        </DialogPrimitive.Close>
         <DialogPrimitive.Title className={cn("mb-4 text-center text-[15px] font-bold text-foreground", !title && "sr-only")}>
           {title ?? "Sheet"}
         </DialogPrimitive.Title>

@@ -16,6 +16,7 @@ import { QUICK_ACTIONS, SERVICE_ITEMS, STAY, PARTNERS } from "@/lib/mock-data"
 import { BRANDS, type BrandKey } from "@/lib/brands"
 import type { ServiceCategory } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { JourneyProgress } from "@/components/app/journey-progress"
 
 const TABS: { key: ServiceCategory; labelKey: string }[] = [
   { key: "food", labelKey: "tab.food" },
@@ -58,6 +59,8 @@ export default function HomePage() {
       <div className="mt-4 space-y-5 px-5">
         {/* Trust strip (replaces the old presale banner) */}
         <VerifiedStrip onClick={() => router.push("/pass")} />
+
+        <JourneyProgress />
 
         {/* The product's primary action: present the credential, not receive funds. */}
         <Link href="/present" className="card-credential pressable flex min-h-[88px] items-center gap-4 rounded-3xl p-4 text-white">
@@ -137,7 +140,17 @@ export default function HomePage() {
                 <ServiceCard
                   item={item}
                   onClick={() =>
-                    setPayItem({ merchant: item.name, amountKRW: item.priceKRW, category: payCategory(item.category) })
+                    setPayItem({
+                      merchant: item.name,
+                      amountKRW: item.priceKRW,
+                      category: payCategory(item.category),
+                      location: item.location,
+                      fulfilment: item.category === "food"
+                        ? `${item.etaLabel} · demo delivery`
+                        : item.category === "medical"
+                          ? `${item.etaLabel} · next available appointment`
+                          : `${item.etaLabel} · demo reservation`,
+                    })
                   }
                 />
               </div>

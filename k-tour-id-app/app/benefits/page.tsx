@@ -2,22 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { BadgeCheck, Check, ChevronRight, Gift, Loader2, ReceiptText, ShieldCheck, TicketCheck } from "lucide-react"
+import { BadgeCheck, Check, ChevronRight, Gift, HelpCircle, Loader2, ReceiptText, ShieldCheck, TicketCheck, WalletCards } from "lucide-react"
 import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
 import { IntegrationModeBadge } from "@/components/app/integration-status"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import type { SettlementReceipt, Voucher } from "@/lib/types"
+import { voucherMatchesPurchase } from "@/lib/demo-journey"
 import { cn } from "@/lib/utils"
 
-const DEMO_PURCHASE = {
-  merchant: "Bukchon Craft House · demo merchant",
-  grossKRW: 50_000,
-  service: "reservation" as const,
-}
-
 export default function BenefitsPage() {
-  const { session, vouchers, payWithBenefit, loadDemoAccount } = useApp()
+  const { session, vouchers, demoJourney, payWithBenefit, loadDemoAccount } = useApp()
   const { lang } = useLang()
   const ko = lang === "ko"
   const [hasProof, setHasProof] = useState(false)
@@ -29,24 +24,31 @@ export default function BenefitsPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
+    const requestedPresentation = params.get("presentation")
     const verified = params.get("verified") === "1"
+      && requestedPresentation === demoJourney.presentationId
+      && demoJourney.stage === "benefit-ready"
     setHasProof(verified)
-    if (params.get("presentation")) setPresentationId(params.get("presentation")!)
-    // A direct presenter link is an explicit demo handoff; seed the demo holder
-    // so the full proof → benefit → settlement path remains executable.
-    if (verified && !session.onboarded) loadDemoAccount()
-  }, [loadDemoAccount, session.onboarded])
+    if (requestedPresentation) setPresentationId(requestedPresentation)
+    if (params.get("verified") === "1" && !session.onboarded) loadDemoAccount()
+    if (verified) setSelectedId(demoJourney.voucherId)
+  }, [demoJourney.presentationId, demoJourney.stage, demoJourney.voucherId, loadDemoAccount, session.onboarded])
 
-  const available = useMemo(() => vouchers.filter((voucher) => voucher.status === "available"), [vouchers])
-  const selected = vouchers.find((voucher) => voucher.id === (selectedId ?? available[0]?.id)) ?? null
-  const payable = Math.max(0, DEMO_PURCHASE.grossKRW - (selected?.valueKRW ?? 0))
+  const purchase = useMemo(() => ({
+    merchant: demoJourney.merchant,
+    grossKRW: demoJourney.grossKRW,
+    service: "reservation" as const,
+  }), [demoJourney.grossKRW, demoJourney.merchant])
+  const available = useMemo(() => vouchers.filter((voucher) => voucherMatchesPurchase(voucher, purchase)), [purchase, vouchers])
+  const selected = vouchers.find((voucher) => voucher.id === selectedId && available.some((item) => item.id === voucher.id)) ?? null
+  const payable = Math.max(0, purchase.grossKRW - (selected?.valueKRW ?? 0))
 
   const complete = async () => {
     if (!selected || !hasProof || phase === "processing") return
     setPhase("processing")
     setError("")
     const result = await payWithBenefit({
-      ...DEMO_PURCHASE,
+      ...purchase,
       voucherId: selected.id,
       presentationId,
     })
@@ -79,7 +81,7 @@ export default function BenefitsPage() {
                   <IntegrationModeBadge compact />
                 </div>
                 <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">
-                  {ko ? "이름·여권번호 없이 ‘여행자 자격·여행 유효·미사용’만 확인했습니다." : "Only eligibility, active trip and unused benefit were proved — no name or passport number."}
+                  {ko ? "K-Tour ID 활성·여행자 자격·여행 유효·미사용을 하나의 요청으로 확인했습니다. 이름과 여권번호는 전달되지 않았습니다." : "One request proved active K-Tour ID, visitor eligibility, active trip and unused benefit. No name or passport number was shared."}
                 </p>
               </div>
             </div>
@@ -98,7 +100,7 @@ export default function BenefitsPage() {
         <div>
           <SectionTitle>{ko ? "사용할 혜택" : "Choose a benefit"}</SectionTitle>
           <div className="space-y-3">
-            {vouchers.map((voucher) => (
+            {available.map((voucher) => (
               <VoucherRow
                 key={voucher.id}
                 voucher={voucher}
@@ -107,6 +109,11 @@ export default function BenefitsPage() {
                 ko={ko}
               />
             ))}
+            {available.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-border bg-surface-2 p-4 text-center text-[12px] text-muted-foreground">
+                {ko ? "이 가맹점·서비스·최소 결제액에 맞는 사용 가능 혜택이 없습니다." : "No available voucher matches this merchant, service and minimum spend."}
+              </div>
+            )}
           </div>
         </div>
 
@@ -116,10 +123,10 @@ export default function BenefitsPage() {
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-secondary text-primary"><ReceiptText className="h-5 w-5" /></span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[14px] font-bold text-foreground">Mother-of-pearl workshop</p>
+                <p className="truncate text-[14px] font-bold text-foreground">{demoJourney.product}</p>
                 <p className="text-[11px] text-muted-foreground">{ko ? "검증된 가맹점 · 예약" : "Verified demo merchant · reservation"}</p>
               </div>
-              <p className="text-[15px] font-bold tabular-nums">₩{DEMO_PURCHASE.grossKRW.toLocaleString()}</p>
+              <p className="text-[15px] font-bold tabular-nums">₩{purchase.grossKRW.toLocaleString()}</p>
             </div>
             <div className="mt-4 space-y-2 border-t border-border pt-3 text-[12px]">
               <PriceRow label={ko ? "혜택" : "Benefit"} value={`−₩${(selected?.valueKRW ?? 0).toLocaleString()}`} success />
@@ -161,7 +168,9 @@ function VoucherRow({ voucher, selected, onSelect, ko }: { voucher: Voucher; sel
           {disabled && <span className="rounded-full bg-secondary px-2 py-0.5 text-[9px] font-bold text-muted-foreground">{voucher.status.toUpperCase()}</span>}
         </div>
         <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{voucher.partner}</p>
-        <p className="mt-1 text-[10px] text-muted-foreground">{ko ? "재원" : "Funding"}: {voucher.funding}</p>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          {ko ? "재원" : "Funding"}: {voucher.funding} · {ko ? `최소 ₩${(voucher.minimumSpendKRW ?? 0).toLocaleString()}` : `Min. ₩${(voucher.minimumSpendKRW ?? 0).toLocaleString()}`}
+        </p>
       </div>
       <p className="text-[14px] font-extrabold text-primary">₩{voucher.valueKRW.toLocaleString()}</p>
     </button>
@@ -169,11 +178,12 @@ function VoucherRow({ voucher, selected, onSelect, ko }: { voucher: Voucher; sel
 }
 
 function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boolean }) {
+  const { demoJourney, session } = useApp()
   const events = [
     ko ? "선택적 공개 VP 검증" : "Selective-disclosure VP verified",
     ko ? "혜택 정책 적용" : "Benefit policy applied",
     ko ? "바우처 1회 사용 처리" : "Voucher marked as redeemed",
-    ko ? "결제 승인·정산 앵커 생성" : "Payment authorized & settlement anchored",
+    ko ? "결제 승인·가맹점 정산 대기" : "Payment authorized & settlement queued",
   ]
   return (
     <PhoneFrame hideNav>
@@ -181,13 +191,28 @@ function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boole
       <div className="flex min-h-[calc(100vh-8rem)] flex-col px-5 pb-7 pt-3">
         <div className="text-center">
           <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-success-surface text-success"><Check className="h-8 w-8" /></span>
-          <h1 className="mt-4 text-[22px] font-extrabold text-foreground">{ko ? "검증부터 정산까지 완료" : "Verified through settlement"}</h1>
-          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{ko ? "여권 원문 없이 혜택을 적용하고 가맹점 정산 증거까지 만들었습니다." : "The benefit was applied and settlement evidence created without sharing passport data."}</p>
+          <h1 className="mt-4 text-[22px] font-extrabold text-foreground">{ko ? "검증된 결제가 완료됐어요" : "Verified purchase complete"}</h1>
+          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{ko ? "여권 원문 없이 혜택을 적용하고 결제 영수증을 만들었습니다. 가맹점 정산은 다음 단계입니다." : "The benefit was applied and a payment receipt created without sharing passport data. Merchant settlement is next."}</p>
         </div>
         <div className="mt-6 rounded-2xl bg-card p-4 ring-1 ring-border">
+          <div className="mb-3 flex items-start gap-3 border-b border-border pb-3">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-secondary text-primary"><ReceiptText className="h-5 w-5" /></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-bold">{demoJourney.product}</p>
+              <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{demoJourney.merchantDisplay} · {demoJourney.receiptId}</p>
+            </div>
+          </div>
           <PriceRow label={ko ? "상품 금액" : "Gross"} value={`₩${receipt.grossKRW.toLocaleString()}`} />
           <PriceRow label={ko ? "혜택" : "Benefit"} value={`−₩${receipt.voucherKRW.toLocaleString()}`} success />
           <PriceRow label={ko ? "결제 금액" : "Paid"} value={`₩${receipt.paidKRW.toLocaleString()}`} strong />
+          <PriceRow label={ko ? "남은 데모 잔액" : "Demo balance remaining"} value={`₩${session.wallet.balanceKRW.toLocaleString()}`} />
+        </div>
+        <div className="mt-3 flex items-start gap-3 rounded-2xl bg-[#fbf2d9] p-4 text-[#735116] ring-1 ring-[#ead59d]">
+          <WalletCards className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <div>
+            <p className="text-[12px] font-bold">{ko ? "결제 완료 · 가맹점 정산 대기" : "Payment complete · merchant settlement pending"}</p>
+            <p className="mt-1 text-[10.5px] leading-relaxed">{ko ? "북촌 캠페인이 ₩5,000을 부담하고, 가맹점 콘솔에서 결제와 캠페인 재원을 대조합니다." : "The Bukchon campaign funds ₩5,000; the merchant console reconciles customer payment and campaign reimbursement."}</p>
+          </div>
         </div>
         <div className="mt-6 space-y-3">
           {events.map((event, index) => (
@@ -204,6 +229,9 @@ function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boole
           </Link>
           <Link href="/partner/settlements" className="pressable flex min-h-12 items-center justify-center rounded-2xl border border-border bg-card px-4 text-[14px] font-bold text-foreground">
             {ko ? "가맹점 정산 화면 보기" : "Open merchant settlement"}
+          </Link>
+          <Link href="/ask" className="pressable flex min-h-11 items-center justify-center gap-2 text-[12px] font-semibold text-muted-foreground">
+            <HelpCircle className="h-4 w-4" /> {ko ? "취소·환불 도움말" : "Cancellation & refund help"}
           </Link>
         </div>
       </div>

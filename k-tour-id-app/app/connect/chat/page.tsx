@@ -152,7 +152,7 @@ export default function ConnectChatPage() {
           {splitState === "done" && (
             <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-muted-foreground ring-1 ring-border opacity-60">
               <Receipt className="h-3.5 w-3.5 text-primary" />
-              {lang === "ko" ? "결제 완료 · OmniOne 기록됨" : "Paid · logged on OmniOne"}
+              {lang === "ko" ? "데모 결제 완료 · 로컬 영수증" : "Demo payment complete · local receipt"}
             </div>
           )}
         </div>

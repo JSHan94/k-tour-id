@@ -107,6 +107,15 @@ export function SealCopilot() {
       else if (c.kind === "convert" && c.amountKRW != null) await convertLeftover(c.amountKRW)
       else if (c.kind === "markRead") markAllRead()
       setPhase((p) => ({ ...p, [c.id]: "done" }))
+      if (isMoney(c.kind) && c.amountKRW != null) {
+        const nextBalance = c.kind === "topup"
+          ? session.wallet.balanceKRW + c.amountKRW
+          : Math.max(0, session.wallet.balanceKRW - c.amountKRW)
+        const reference = `DEMO-${c.kind.toUpperCase()}-${String(Date.now()).slice(-6)}`
+        copilotPushAi(lang === "ko"
+          ? `${c.kind === "convert" ? "바우처 전환" : c.kind === "topup" ? "데모 잔액 충전" : "데모 결제"}이 완료됐어요. 남은 데모 잔액은 ${money(nextBalance)}, 영수증은 ${reference}입니다.`
+          : `${c.kind === "convert" ? "Voucher conversion" : c.kind === "topup" ? "Demo top-up" : "Demo payment"} complete. Demo balance: ${money(nextBalance)} · Receipt: ${reference}.`)
+      }
     } catch {
       setPhase((p) => ({ ...p, [c.id]: "error" }))
     } finally {
@@ -208,7 +217,9 @@ export function SealCopilot() {
                         : ph === "error"
                           ? lang === "ko" ? "완료하지 못했어요 · 변경 없음" : "Could not complete · no change"
                         : confirming
-                          ? lang === "ko" ? "한 번 더 눌러 확인" : "Tap again to confirm"
+                          ? c.kind === "convert"
+                            ? lang === "ko" ? "사용자 재원 · 30일 만료 · 미사용 시 전액 복귀 · 다시 눌러 확인" : "User-funded · 30 days · fully returnable while unused · tap again"
+                            : lang === "ko" ? "한 번 더 눌러 확인" : "Tap again to confirm"
                           : c.reason ?? ""}
                     </p>
                   </div>

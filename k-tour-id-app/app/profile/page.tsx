@@ -10,27 +10,28 @@ import { useLang } from "@/lib/i18n/lang-provider"
 import { formatKRW, shortDid } from "@/lib/format"
 
 const MENU = [
-  { icon: CreditCard, title: "Payment Methods", subtitle: "KRW wallet, KakaoPay on-ramp" },
-  { icon: ShieldCheck, title: "Security & Privacy", subtitle: "DID keys, selective disclosure" },
-  { icon: Bell, title: "Notifications", subtitle: "Push, benefit alerts" },
-  { icon: HelpCircle, title: "Help & Support", subtitle: "FAQ, contact us" },
+  { icon: CreditCard, title: "Payment & demo balance", titleKo: "결제·데모 잔액", subtitle: "Transactions, top-up and receive", subtitleKo: "거래내역·충전·받기", href: "/wallet" },
+  { icon: ShieldCheck, title: "Security & Privacy", titleKo: "보안·프라이버시", subtitle: "Credential status and evidence", subtitleKo: "Credential 상태·연동 증거", href: "/pass" },
+  { icon: Bell, title: "Notifications", titleKo: "알림", subtitle: "Payments, benefits and security", subtitleKo: "결제·혜택·보안 알림", href: "/alerts" },
+  { icon: HelpCircle, title: "Help & Support", titleKo: "도움말·지원", subtitle: "Product FAQ and demo guide", subtitleKo: "제품 FAQ·데모 가이드", href: "/ask" },
 ]
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { session, transactions, reset } = useApp()
-  const { t } = useLang()
+  const { session, transactions, vouchers, reset } = useApp()
+  const { t, lang } = useLang()
   const { capsule, identity, wallet } = session
 
   const name = capsule?.holderName ?? identity?.displayName ?? t("home.guest")
   const email = `${name.split(" ")[0].toLowerCase()}@ktourid.io`
   const spent = transactions.filter((tx) => tx.amountKRW < 0).reduce((a, tx) => a + Math.abs(tx.amountKRW), 0)
+  const saved = vouchers.filter((voucher) => voucher.status === "redeemed").reduce((sum, voucher) => sum + voucher.valueKRW, 0)
   const showUsd = session.userType !== "korean"
 
   const stats = [
     { label: t("profile.spent"), value: formatKRW(spent), period: t("profile.thisStay") },
     { label: t("profile.payments"), value: String(transactions.length), period: t("profile.thisStay") },
-    { label: t("profile.saved"), value: "₩156,890", period: t("profile.withBenefits") },
+    { label: t("profile.saved"), value: formatKRW(saved), period: t("profile.withBenefits") },
   ]
 
   const signOut = () => {
@@ -92,17 +93,17 @@ export default function ProfilePage() {
         <div>
           <SectionTitle>{t("profile.settings")}</SectionTitle>
           <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-border">
-            {MENU.map(({ icon: Icon, title, subtitle }) => (
-              <button key={title} type="button" className="pressable flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/60">
+            {MENU.map(({ icon: Icon, title, titleKo, subtitle, subtitleKo, href }) => (
+              <Link key={title} href={href} className="pressable flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/60">
                 <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-secondary text-foreground/70">
                   <Icon className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-semibold text-foreground">{title}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">{subtitle}</p>
+                  <p className="text-[13px] font-semibold text-foreground">{lang === "ko" ? titleKo : title}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">{lang === "ko" ? subtitleKo : subtitle}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </Link>
             ))}
           </div>
         </div>
