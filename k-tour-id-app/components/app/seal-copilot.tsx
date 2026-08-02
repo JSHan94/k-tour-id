@@ -22,26 +22,15 @@ export function SealCopilot() {
     session, transactions, notifications,
     copilotOpen, openCopilot, closeCopilot,
     copilotThread, copilotThinking, copilotSeed, copilotSend, copilotPushAi,
-    dismissedNudges, dismissNudge,
+    dismissedNudges,
     pay, topUp, convertLeftover, markAllRead,
   } = useApp()
 
   const ctx = pickContext(pathname, dismissedNudges)
   const [phase, setPhase] = useState<Record<string, Phase>>({})
   const [input, setInput] = useState("")
-  const [whisperOpen, setWhisperOpen] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const running = useRef<Set<string>>(new Set())
-
-  // show the whisper once on entering a screen that has one; auto-retract to a dot
-  useEffect(() => {
-    if (ctx.nudge?.kind === "whisper") {
-      setWhisperOpen(true)
-      const id = setTimeout(() => setWhisperOpen(false), 6000)
-      return () => clearTimeout(id)
-    }
-    setWhisperOpen(false)
-  }, [pathname, ctx.nudge?.kind, ctx.nudge?.id])
 
   // seed the greeting the first time the sheet opens
   useEffect(() => {
@@ -132,47 +121,8 @@ export function SealCopilot() {
     copilotSend(q)
   }
 
-  const dot = ctx.nudge != null
-  const whisper = ctx.nudge?.kind === "whisper" && whisperOpen && !copilotOpen
-
   return (
     <>
-      {/* FAB — pinned inside the phone column, above the docked nav */}
-      <div className="pointer-events-none fixed bottom-0 left-1/2 z-[60] h-0 w-full max-w-[420px] -translate-x-1/2">
-        <div className="absolute bottom-[92px] right-4 flex items-center gap-2">
-          {whisper && (
-            <button
-              type="button"
-              onClick={() => {
-                // open the copilot (showing the Convert command) — never auto-spend on a nudge tap
-                setWhisperOpen(false)
-                dismissNudge(ctx.nudge!.id)
-                openCopilot()
-              }}
-              className="pointer-events-auto max-w-[230px] rounded-full border border-border bg-card px-3.5 py-2 text-left text-[12px] font-medium text-foreground shadow-[0_6px_24px_rgba(28,24,19,0.16)]"
-              style={{ animation: "whisper-in 0.3s ease-out" }}
-            >
-              {t(ctx.nudge!.textKey ?? "")}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => (copilotOpen ? closeCopilot() : openCopilot())}
-            aria-label="K-Tour ID AI"
-            className="bg-brand-gradient shadow-card-hero pointer-events-auto relative grid h-[54px] w-[54px] place-items-center rounded-full text-white"
-            style={{ animation: "breathe 2.6s ease-in-out infinite" }}
-          >
-            <span className="text-[24px] font-bold leading-none" style={{ fontFamily: "var(--font-sans)" }}>信</span>
-            {dot && !copilotOpen && (
-              <span
-                className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-card bg-[var(--seal)]"
-                style={{ animation: "dot-pulse 0.6s ease-out" }}
-              />
-            )}
-          </button>
-        </div>
-      </div>
-
       <Sheet open={copilotOpen} onOpenChange={(v) => (v ? openCopilot() : closeCopilot())}>
         <SheetContent title={t("seal.title")}>
           {/* context read */}

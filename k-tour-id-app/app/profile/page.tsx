@@ -41,21 +41,21 @@ export default function ProfilePage() {
     <PhoneFrame>
       <PageHeader title={t("profile.title")} />
 
-      <div className="space-y-6 px-5 pt-1">
-        <div className="rounded-2xl bg-card p-4 shadow-[0_2px_14px_rgba(20,22,30,0.06)] ring-1 ring-border">
+      <div className="space-y-8 px-6 pt-2">
+        <div>
           <div className="flex items-center gap-3">
             <img src={identity?.photoUrl ?? "/portraits/peter.jpg"} alt={name} className="h-14 w-14 rounded-full object-cover ring-1 ring-border" />
             <div className="min-w-0 flex-1">
-              <h2 className="break-words text-[16px] font-bold leading-tight text-foreground">{name}</h2>
+              <h2 className="font-display break-words text-[23px] font-semibold leading-tight text-foreground">{name}</h2>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-success-surface px-2.5 py-1 text-[12px] font-semibold text-[#46603f]">
+                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success">
                   <BadgeCheck className="h-3.5 w-3.5" /> {lang === "ko" ? "신원 확인 완료" : "Identity checked"}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-border pt-3">
+          <div className="mt-5 grid grid-cols-3 divide-x divide-foreground/10 border-y border-foreground/10 py-4">
             {stats.map((s) => (
               <div key={s.label} className="text-center">
                 <p className="text-[14px] font-bold tabular-nums text-foreground">{s.value}</p>
@@ -67,9 +67,9 @@ export default function ProfilePage() {
 
         <Link
           href="/pass"
-          className="pressable flex items-center gap-3 rounded-2xl bg-surface-2 p-4 ring-1 ring-border hover:bg-secondary"
+          className="pressable flex items-center gap-3 border-b border-foreground/10 pb-5"
         >
-          <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-secondary ring-1 ring-border">
+          <span className="grid h-11 w-11 flex-shrink-0 place-items-center">
             <Seal size={28} />
           </span>
           <div className="min-w-0 flex-1">
@@ -81,10 +81,10 @@ export default function ProfilePage() {
 
         <div>
           <SectionTitle>{t("profile.settings")}</SectionTitle>
-          <div className="divide-y divide-border rounded-2xl bg-card ring-1 ring-border">
+          <div className="divide-y divide-foreground/10 border-y border-foreground/10">
             {MENU.map(({ icon: Icon, title, titleKo, subtitle, subtitleKo, href }) => (
               <Link key={title} href={href} className="pressable flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/60">
-                <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-secondary text-foreground/70">
+                <span className="grid h-9 w-9 flex-shrink-0 place-items-center text-foreground/55">
                   <Icon className="h-[18px] w-[18px]" />
                 </span>
                 <div className="min-w-0 flex-1">
@@ -100,7 +100,7 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={signOut}
-          className="pressable flex w-full items-center justify-center gap-2 rounded-2xl border border-border py-3 text-[14px] font-semibold text-foreground/70 hover:bg-secondary"
+          className="pressable flex min-h-12 w-full items-center justify-center gap-2 border-t border-foreground/10 py-3 text-[14px] font-semibold text-foreground/70"
         >
           <LogOut className="h-4 w-4" /> {t("profile.signout")}
         </button>

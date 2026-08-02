@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { Bus, ShoppingBag, Bike, CalendarCheck, Gift } from "lucide-react"
+import { Bus, ShoppingBag, Bike, CalendarCheck, Gift, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatManwon, formatUSD, formatWon } from "@/lib/format"
 import { useCountUp } from "@/lib/use-count-up"
@@ -51,22 +51,22 @@ export function WalletCard({
   const remainingPct = detail ? Math.max(0, Math.round(((detail.budgetKRW - detail.spentKRW) / detail.budgetKRW) * 100)) : 0
 
   return (
-    <div className={cn("card-ink relative overflow-hidden rounded-3xl p-5 text-white", className)}>
+    <div className={cn("card-ink relative overflow-hidden rounded-[28px] p-6 text-white", className)}>
       <div className="relative">
-        <div className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.12em] text-white/65">
-          <span className="inline-block h-3.5 w-3.5 rounded-[28%] bg-[var(--seal)]" />
+        <div className="flex items-center gap-1.5 text-[13px] font-medium text-white/65">
+          <span className="inline-block h-2 w-2 rounded-full bg-[var(--seal)]" />
           {label ?? t("wallet.label")}
         </div>
 
         {/* hero figure — 만원 in Korean, ₩ in English */}
         {ko ? (
           <>
-            <p className="tabular mt-3 text-[40px] font-extrabold leading-none tracking-tight">{formatManwon(balance)}</p>
+            <p className="font-display tabular mt-4 text-[42px] font-semibold leading-none tracking-[-0.04em]">{formatManwon(balance)}</p>
             <p className="tabular mt-2 text-[13px] text-white/55">{formatWon(wallet.balanceKRW)}</p>
           </>
         ) : (
           <>
-            <p className="tabular mt-3 text-[38px] font-extrabold leading-none tracking-tight">
+            <p className="font-display tabular mt-4 text-[40px] font-semibold leading-none tracking-[-0.04em]">
               ₩{balance.toLocaleString("en-US")}
             </p>
             <p className="tabular mt-2 text-[13px] text-white/55">≈ {formatUSD(wallet.balanceKRW, wallet.usdRate)} USD</p>
@@ -115,6 +115,11 @@ function formatPassDate(iso: string): string {
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
 }
 
+function localizeStayPeriod(value: string, lang: "ko" | "en") {
+  if (value === "Service trip window · 90 days") return lang === "ko" ? "90일" : "90 days"
+  return value
+}
+
 /** K-Pass Capsule — 단청 navy + 금박 foil credential, stamped with a 도장 seal. */
 export function KPassCard({
   capsule,
@@ -129,14 +134,14 @@ export function KPassCard({
 }) {
   const { t, lang } = useLang()
   return (
-    <div className={cn("card-credential relative overflow-hidden rounded-3xl p-5 text-white", className)}>
+    <div className={cn("card-credential relative overflow-hidden rounded-[28px] p-6 text-white", className)}>
       {/* dojang seal stamped on the document */}
       <Seal size={56} stamp={stamp} className="absolute right-4 top-4 opacity-95" />
 
       <div className="relative">
         <div>
-          <p className="text-gold text-[12px] font-medium uppercase tracking-[0.14em]">K-Tour ID</p>
-          <p className="mt-0.5 text-[13px] text-white/80">{t("pass.subtitle")}</p>
+          <p className="text-gold text-[13px] font-medium tracking-[0.08em]">K-Tour ID</p>
+          <p className="mt-1 text-[13px] text-white/70">{t("pass.subtitle")}</p>
         </div>
 
         <div className="mt-6 flex items-center gap-3">
@@ -150,7 +155,7 @@ export function KPassCard({
             <span className="text-[22px] leading-none">{identity?.nationalityFlag ?? "🪪"}</span>
           )}
           <div className="min-w-0">
-            <p className="flex flex-wrap items-center gap-1.5 break-words text-[19px] font-bold leading-tight">
+            <p className="font-display flex flex-wrap items-center gap-1.5 break-words text-[21px] font-semibold leading-tight">
               {capsule.holderName}
               {identity?.photoUrl && identity?.nationalityFlag && (
                 <span className="text-[14px]">{identity.nationalityFlag}</span>
@@ -161,25 +166,13 @@ export function KPassCard({
         </div>
 
         <div className="mt-5 grid grid-cols-2 gap-y-3 text-[12px]">
-          <Field label={t("pass.stayPeriod")} value={capsule.stayPeriod} />
+          <Field label={t("pass.stayPeriod")} value={localizeStayPeriod(capsule.stayPeriod, lang)} />
           <Field label={t("pass.paymentLimit")} value={formatManwon(capsule.paymentLimitKRW)} />
           <Field label={t("pass.status")} value={capsule.status === "active" ? t("pass.statusActive") : capsule.status} className="capitalize" />
           <Field label={t("pass.validUntil")} value={formatPassDate(capsule.expiresAt)} />
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-1.5">
-          {capsule.services.map((s) => {
-            const Icon = SERVICE_META[s].icon
-            return (
-              <span key={s} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1.5 text-[12px] font-medium ring-1 ring-white/15">
-                <Icon className="h-3 w-3" />
-                {SERVICE_META[s][lang]}
-              </span>
-            )
-          })}
-        </div>
-
-        <p className="mt-5 border-t border-white/12 pt-3 text-[12px] leading-relaxed text-white/65">{t("common.issuedBy")}</p>
+        <p className="mt-5 flex items-center gap-2 border-t border-white/12 pt-4 text-[12px] leading-relaxed text-white/60"><ShieldCheck className="h-4 w-4 text-gold" /> {t("common.issuedBy")}</p>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { QrCode, ArrowDownLeft, Gift, Plus, RefreshCcw, TicketCheck } from "lucide-react"
 import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
 import { WalletCard } from "@/components/app/cards"
@@ -44,12 +45,18 @@ function voucherRestriction(voucher: Voucher, ko: boolean) {
 }
 
 export default function WalletPage() {
-  const { session, transactions, vouchers, refundConvertedVoucher } = useApp()
+  const router = useRouter()
+  const { session, transactions, vouchers, refundConvertedVoucher, hydrated } = useApp()
   const { t, lang } = useLang()
   const [showReceive, setShowReceive] = useState(false)
   const [showTopUp, setShowTopUp] = useState(false)
   const [showPay, setShowPay] = useState(false)
   const spentKRW = transactions.filter((tx) => tx.amountKRW < 0).reduce((sum, tx) => sum + Math.abs(tx.amountKRW), 0)
+
+  useEffect(() => {
+    if (hydrated && !session.onboarded) router.replace("/onboarding")
+  }, [hydrated, router, session.onboarded])
+  if (!session.onboarded) return null
 
   const actions = [
     { label: t("wallet.pay"), icon: QrCode, onClick: () => setShowPay(true) },
@@ -61,20 +68,20 @@ export default function WalletPage() {
     <PhoneFrame>
       <PageHeader title={t("wallet.title")} />
 
-      <div className="space-y-6 px-5 pt-1">
+      <div className="space-y-8 px-6 pt-2">
         <WalletCard
           wallet={session.wallet}
           userType={session.userType}
           label={lang === "ko" ? "여행 잔액" : "Travel balance"}
           detail={{ budgetKRW: TRIP_BUDGET_KRW, spentKRW, series: DAILY_BALANCE_KRW }}
         >
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-3">
             {actions.map(({ label, icon: Icon, onClick }) => (
               <button
                 key={label}
                 type="button"
                 onClick={onClick}
-                className="pressable flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl bg-white/10 py-2.5 text-[12px] font-medium text-white hover:bg-white/15"
+                className="pressable flex min-h-14 flex-col items-center justify-center gap-1 py-2.5 text-[12px] font-medium text-white/82"
               >
                 <Icon className="h-4 w-4" />
                 {label}
@@ -85,16 +92,16 @@ export default function WalletPage() {
 
         <div>
           <SectionTitle>{lang === "ko" ? "바우처 지갑" : "Voucher wallet"}</SectionTitle>
-          <div className="space-y-2">
+          <div className="divide-y divide-foreground/10 border-y border-foreground/10">
             {vouchers.map((voucher) => (
-              <div key={voucher.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
+              <div key={voucher.id} className="py-5">
                 <div className="flex items-start gap-3">
-                  <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-secondary text-primary">{voucher.funding === "user-converted" ? <RefreshCcw className="h-5 w-5" /> : <Gift className="h-5 w-5" />}</span>
+                  <span className="grid h-8 w-8 flex-shrink-0 place-items-center text-primary">{voucher.funding === "user-converted" ? <RefreshCcw className="h-5 w-5" /> : <Gift className="h-5 w-5" />}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-[14px] font-bold leading-snug">{voucherTitle(voucher, lang === "ko")}</p>
                       <span className={cn(
-                        "rounded-full px-2 py-1 text-[12px] font-bold",
+                        "rounded-full px-2 py-1 text-[12px] font-semibold",
                         voucher.status === "available" ? "bg-success-surface text-[#46603f]" : voucher.status === "expired" ? "bg-primary/8 text-primary" : "bg-secondary text-muted-foreground",
                       )}>
                         {STATUS_LABEL[voucher.status][lang === "ko" ? "ko" : "en"]}
@@ -108,9 +115,9 @@ export default function WalletPage() {
                   <p className="text-[14px] font-extrabold text-primary">₩{voucher.valueKRW.toLocaleString()}</p>
                 </div>
                 {voucher.funding === "user-converted" && voucher.status === "available" && (
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-foreground/10 pt-3">
                     <p className="text-[12px] leading-relaxed text-muted-foreground">{lang === "ko" ? "사용하지 않았다면 전액을 여행 잔액으로 돌려받을 수 있어요." : "If unused, the full value can be returned to your travel balance."}</p>
-                    <button type="button" onClick={() => refundConvertedVoucher(voucher.id)} className="pressable inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 text-[12px] font-bold"><TicketCheck className="h-4 w-4" /> {lang === "ko" ? "전환 취소" : "Return"}</button>
+                    <button type="button" onClick={() => refundConvertedVoucher(voucher.id)} className="pressable inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 px-2 text-[12px] font-semibold underline underline-offset-4"><TicketCheck className="h-4 w-4" /> {lang === "ko" ? "전환 취소" : "Return"}</button>
                   </div>
                 )}
               </div>

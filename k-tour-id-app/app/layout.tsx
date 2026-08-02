@@ -1,23 +1,16 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import "@fontsource-variable/noto-sans-kr"
+import "@fontsource-variable/noto-serif-kr"
 import "./globals.css"
 import { AppProvider } from "@/lib/store/app-provider"
 import { LangProvider } from "@/lib/i18n/lang-provider"
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-})
-// Korean glyphs render via the OS Korean fonts in the --font-sans stack
-// (Apple SD Gothic Neo / Malgun Gothic / Noto Sans KR) — no webfont gamble.
 
 export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id.phenixnet-jl.chatgpt.site",
   ),
-  title: "K-Tour ID — AI Tourist Trust Wallet",
+  title: "K-Tour ID — Prove less. Travel more.",
   description:
     "K-Tour ID turns verified identity sources into a privacy-preserving visitor credential for benefits, payments, vouchers and partner settlement.",
   generator: "K-Tour ID",
@@ -25,18 +18,18 @@ export const metadata: Metadata = {
     title: "K-Tour ID",
     description: "Prove less. Travel more. · Simulation build",
     type: "website",
-    images: [{ url: "/og-v2.png", width: 1536, height: 1024, alt: "K-Tour ID proof-to-settlement simulation journey" }],
+    images: [{ url: "/seoul-after-rain-hero.jpg", width: 933, height: 1400, alt: "Seoul after rain" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "K-Tour ID",
     description: "Prove less. Travel more. · Simulation build",
-    images: ["/og-v2.png"],
+    images: ["/seoul-after-rain-hero.jpg"],
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#1c1813", // 먹 ink — matches the warm palette
+  themeColor: "#f7f5f0",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // so env(safe-area-inset-*) resolves on notched iOS
@@ -48,7 +41,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className={`${inter.variable} antialiased`}>
+    <html lang="ko" className="antialiased">
       <body className="font-sans">
         <LangProvider>
           <AppProvider>{children}</AppProvider>

@@ -2,17 +2,11 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, BadgeCheck, ChevronRight, Eye, RefreshCcw, ScanLine, XCircle } from "lucide-react"
-import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
-import { Seal } from "@/components/app/seal"
+import { AlertTriangle, ArrowRight, BadgeCheck, Eye, RefreshCcw, ScanLine, XCircle } from "lucide-react"
+import { PhoneFrame, PageHeader } from "@/components/app/shell"
+import { KPassCard } from "@/components/app/cards"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-
-const USER_TYPE = {
-  korean: { ko: "국내 여행자", en: "Korean traveler" },
-  foreigner: { ko: "외국인 여행자", en: "International visitor" },
-  "long-term": { ko: "장기 체류 여행자", en: "Long-stay visitor" },
-} as const
 
 function benefitLabel(benefit: string, ko: boolean) {
   if (!ko) return benefit
@@ -39,15 +33,12 @@ export default function PassPage() {
     return (
       <PhoneFrame>
         <PageHeader title={t("pass.title")} />
-        <div className="flex flex-col items-center gap-4 px-6 pt-20 text-center">
-          <Seal size={56} />
-          <p className="max-w-[290px] text-[14px] leading-relaxed text-muted-foreground">
-            {ko ? "K-Tour ID를 발급하면 여행자 혜택을 편리하게 이용할 수 있어요." : "Create your K-Tour ID to use eligible traveler benefits."}
-          </p>
-          <Link href="/onboarding" className="bg-brand-gradient pressable flex min-h-12 items-center rounded-xl px-5 text-[14px] font-semibold text-white">
-            {ko ? "K-Tour ID 만들기" : "Create K-Tour ID"}
-          </Link>
-        </div>
+        <main className="flex min-h-[70vh] flex-col justify-center px-6 pb-10 text-center">
+          <p className="text-[13px] font-semibold text-primary">K-Tour ID</p>
+          <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.25]">{ko ? "여행을 위한 신분증을\n만들어 보세요." : "Create an ID\nmade for travel."}</h1>
+          <p className="mt-3 text-[15px] leading-6 text-muted-foreground">{ko ? "필요한 자격만 보여주고 여행자 혜택을 편리하게 이용할 수 있어요." : "Share only the eligibility you need and unlock traveler benefits."}</p>
+          <Link href="/onboarding" className="pressable mt-8 flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? "K-Tour ID 만들기" : "Create K-Tour ID"}</Link>
+        </main>
       </PhoneFrame>
     )
   }
@@ -55,102 +46,48 @@ export default function PassPage() {
   const unavailable = statusPreview != null || capsule.status !== "active"
   const statusTitle = statusPreview === "expired"
     ? (ko ? "사용 기간이 끝났어요" : "Your K-Tour ID has expired")
-    : statusPreview === "revoked"
-      ? (ko ? "지금은 사용할 수 없어요" : "Your K-Tour ID is unavailable")
-      : (ko ? "여행 중 사용 가능" : "Ready to use during your trip")
-  const validUntil = new Intl.DateTimeFormat(ko ? "ko-KR" : "en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(new Date(capsule.expiresAt))
-  const typeLabel = USER_TYPE[capsule.userType][ko ? "ko" : "en"]
+    : (ko ? "지금은 사용할 수 없어요" : "Your K-Tour ID is unavailable")
 
   return (
     <PhoneFrame>
       <PageHeader title={t("pass.title")} />
-
-      <div className="space-y-6 px-5 pt-1">
+      <main className="space-y-7 px-6 pt-2">
         {unavailable && (
-          <div role="status" className="rounded-3xl border border-primary/20 bg-[#f7e8e4] p-4 text-primary">
+          <section role="status" className="border-l-2 border-destructive py-1 pl-4 text-destructive">
             <div className="flex items-start gap-3">
-              <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-xl bg-card ring-1 ring-primary/15">
-                {statusPreview === "revoked" ? <XCircle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-extrabold">{statusTitle}</p>
-                <p className="mt-1 text-[13px] leading-relaxed text-primary/85">
-                  {ko ? "신원을 다시 확인해 새 K-Tour ID를 발급해 주세요." : "Verify your identity again to create a new K-Tour ID."}
-                </p>
-              </div>
+              {statusPreview === "revoked" ? <XCircle className="mt-0.5 h-5 w-5 flex-shrink-0" /> : <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0" />}
+              <div><p className="text-[15px] font-semibold">{statusTitle}</p><p className="mt-1 text-[13px] leading-5 text-destructive/80">{ko ? "신원을 다시 확인해 새 K-Tour ID를 발급해 주세요." : "Verify your identity again to create a new K-Tour ID."}</p></div>
             </div>
-            <Link href="/onboarding?mode=renew" className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[13px] font-bold text-white">
-              <RefreshCcw className="h-4 w-4" /> {ko ? "K-Tour ID 다시 발급하기" : "Renew K-Tour ID"}
-            </Link>
-          </div>
+            <Link href="/onboarding?mode=renew" className="pressable mt-3 flex min-h-11 items-center gap-2 pl-8 text-[13px] font-semibold underline underline-offset-4"><RefreshCcw className="h-4 w-4" /> {ko ? "다시 발급하기" : "Renew K-Tour ID"}</Link>
+          </section>
         )}
 
-        <section className="card-credential relative overflow-hidden rounded-3xl p-5 text-white">
-          <Seal size={52} className="absolute right-4 top-4" />
-          <p className="text-[13px] font-semibold text-gold">K-Tour ID</p>
-          <div className="mt-6 flex items-center gap-3">
-            <img
-              src={identity?.photoUrl ?? "/abstract-profile.png"}
-              alt={ko ? `${capsule.holderName} 프로필 사진` : `${capsule.holderName} profile photo`}
-              className="h-14 w-14 rounded-full object-cover ring-2 ring-[var(--gold)]/70"
-            />
-            <div className="min-w-0">
-              <h1 className="break-words text-[20px] font-bold leading-tight">{capsule.holderName}</h1>
-              <p className="mt-0.5 text-[13px] text-white/75">{typeLabel}</p>
-            </div>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-white/15 pt-4">
-            <div>
-              <p className="text-[12px] text-white/70">{ko ? "상태" : "Status"}</p>
-              <p className="mt-1 inline-flex items-center gap-1.5 text-[14px] font-bold">
-                {unavailable ? <XCircle className="h-4 w-4" /> : <BadgeCheck className="h-4 w-4 text-gold" />}
-                {unavailable ? (ko ? "사용 불가" : "Unavailable") : (ko ? "사용 가능" : "Available")}
-              </p>
-            </div>
-            <div>
-              <p className="text-[12px] text-white/70">{ko ? "사용 기한" : "Valid until"}</p>
-              <p className="mt-1 text-[14px] font-bold tabular-nums">{validUntil}</p>
-            </div>
-          </div>
-        </section>
+        <KPassCard capsule={capsule} identity={identity} />
 
-        {!unavailable && (
-          <Link href="/present" className="bg-brand-gradient pressable flex min-h-14 items-center gap-3 rounded-2xl px-4 text-white shadow-sm">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/12"><ScanLine className="h-5 w-5" /></span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-bold">{ko ? "여행자 할인받기" : "Get a traveler discount"}</p>
-              <p className="mt-0.5 text-[12px] text-white/75">{ko ? "매장 요청을 확인하고 필요한 정보만 공유해요" : "Review the shop request and share only what is needed"}</p>
-            </div>
-            <ChevronRight className="h-5 w-5 text-white/70" />
+        {!unavailable && capsule.userType === "foreigner" && (
+          <Link href="/present?auto=1" className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-white">
+            <span className="flex items-center gap-3 text-[16px] font-semibold"><ScanLine className="h-5 w-5" /> {ko ? "매장에서 할인받기" : "Get an in-store discount"}</span>
+            <ArrowRight className="h-5 w-5" />
           </Link>
         )}
 
         <section>
-          <SectionTitle>{ko ? "이용 가능한 혜택" : "Available benefits"}</SectionTitle>
-          <div className="space-y-2">
-            {capsule.benefits.filter((benefit) => !benefit.toLowerCase().includes("concept")).map((benefit) => (
-              <div key={benefit} className="flex min-h-12 items-center gap-3 rounded-2xl bg-card px-4 ring-1 ring-border">
+          <p className="text-[14px] font-semibold text-muted-foreground">{ko ? "이용 가능한 혜택" : "Available benefits"}</p>
+          <div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">
+            {capsule.benefits.filter((benefit) => !benefit.toLowerCase().includes("concept") && (capsule.userType === "foreigner" || benefit !== "Visitor workshop benefit")).map((benefit) => (
+              <div key={benefit} className="flex min-h-[58px] items-center gap-3 py-3">
                 <BadgeCheck className="h-4 w-4 flex-shrink-0 text-success" />
-                <span className="text-[14px] font-medium text-foreground">{benefitLabel(benefit, ko)}</span>
+                <span className="text-[14px] font-medium">{benefitLabel(benefit, ko)}</span>
               </div>
             ))}
           </div>
         </section>
 
-        <section className="rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
-          <div className="flex items-center gap-2">
-            <Eye className="h-5 w-5 text-primary" />
-            <h2 className="text-[15px] font-bold text-foreground">{ko ? "개인정보는 필요한 만큼만" : "Only share what is needed"}</h2>
-          </div>
-          <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-            {ko ? "혜택을 받을 때 이름이나 여권번호 대신, 자격이 맞는지만 매장에 알려줘요. 공유할 내용은 제출 전에 확인할 수 있습니다." : "When you use a benefit, the shop receives an eligibility result instead of your name or passport number. You can review it before sharing."}
-          </p>
+        <section className="flex items-start gap-3 pb-3">
+          <Eye className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+          <div><h2 className="text-[14px] font-semibold">{ko ? "개인정보는 필요한 만큼만" : "Only share what is needed"}</h2><p className="mt-1 text-[13px] leading-5 text-muted-foreground">{ko ? "매장에는 이름이나 여권번호 대신, 자격이 맞는지만 알려줘요." : "The shop receives eligibility—not your name or passport number."}</p></div>
         </section>
-      </div>
+      </main>
     </PhoneFrame>
   )
 }

@@ -3,33 +3,29 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
-  K-Tour ID design language — Korean heritage, not shadcn default.
-  한지 paper ground · 먹 ink near-black · 인주 dojang seal-red brand ·
-  단청 navy + gold-foil credential. No indigo, no everywhere-gradient.
-*/
+/* Seoul after rain — contemporary Korean travel, quiet luxury. */
 :root {
-  --background: #f4f1e9; /* 한지 paper */
-  --foreground: #1c1813; /* 먹 ink */
-  --card: #fffdf8;
-  --card-foreground: #1c1813;
-  --popover: #fffdf8;
-  --popover-foreground: #1c1813;
+  --background: #f7f5f0;
+  --foreground: #191816;
+  --card: #fbfaf6;
+  --card-foreground: #191816;
+  --popover: #fbfaf6;
+  --popover-foreground: #191816;
 
-  --primary: #c2392f; /* 인주 seal red */
-  --primary-foreground: #fdf6f0;
-  --secondary: #ece6da; /* warm tint surface */
-  --secondary-foreground: #1c1813;
-  --muted: #ece6da;
-  --muted-foreground: #6f685e;
-  --accent: #b88a3d; /* 금박 gold — used sparingly */
-  --accent-foreground: #1c1813;
-  --destructive: #c2392f;
-  --destructive-foreground: #fdf6f0;
+  --primary: #b34438;
+  --primary-foreground: #fffaf5;
+  --secondary: #efede7;
+  --secondary-foreground: #191816;
+  --muted: #efede7;
+  --muted-foreground: #706c65;
+  --accent: #a98952;
+  --accent-foreground: #191816;
+  --destructive: #b23b36;
+  --destructive-foreground: #fffaf5;
 
-  --border: #e4ddcf; /* hairline */
-  --input: #e4ddcf;
-  --ring: #c2392f;
+  --border: rgba(25, 24, 22, 0.10);
+  --input: rgba(25, 24, 22, 0.12);
+  --ring: #b34438;
 
   --chart-1: #c2392f;
   --chart-2: #1e2745;
@@ -40,14 +36,14 @@
   --radius: 1.25rem; /* 20px outer */
 
   /* heritage surfaces */
-  --ink: #16130d; /* 먹 near-black, wallet card */
-  --navy: #1e2745; /* 단청 navy credential */
-  --gold: #c3a063; /* 금박 foil */
-  --surface-1: #fffdf8;
-  --surface-2: #ece6da;
-  --seal: #c2392f;
-  --success: #46603f; /* 쑥색 sage — positive amounts, verified states */
-  --success-surface: #e7ede4; /* light sage chip background */
+  --ink: #171815;
+  --navy: #18243a;
+  --gold: #ae8a50;
+  --surface-1: #fbfaf6;
+  --surface-2: #efede7;
+  --seal: #b34438;
+  --success: #326451;
+  --success-surface: #e8eee9;
 
   /* legacy tile tokens (now unused — tiles are tonal) */
   --c-topup: #c2392f;
@@ -64,7 +60,8 @@
   --sidebar-border: #e4ddcf;
   --sidebar-ring: #c2392f;
 
-  --font-sans: var(--font-inter), "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Noto Sans KR Variable", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Noto Serif KR Variable", "AppleMyungjo", Georgia, serif;
 }
 
 .dark {
@@ -98,8 +95,8 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-serif: var(--font-sans);
+  --font-sans: "Noto Sans KR Variable", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-display);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   --color-background: var(--background);
@@ -166,6 +163,10 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
   /* legacy shim: any leftover .font-press renders as clean sans */
   .font-press {
     font-family: var(--font-sans);
@@ -176,12 +177,12 @@
 
 @layer utilities {
   .pressable {
-    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+    transition: transform 180ms cubic-bezier(.2,.8,.2,1), opacity 180ms cubic-bezier(.2,.8,.2,1), background-color 180ms cubic-bezier(.2,.8,.2,1);
     touch-action: manipulation;
   }
   .pressable:active {
-    transform: scale(0.97);
-    opacity: 0.92;
+    transform: translateY(1px) scale(0.985);
+    opacity: 0.9;
   }
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -196,7 +197,30 @@
     background: rgba(28, 24, 19, 0.16);
   }
 
-  /* 먹 ink wallet card — flat anodized near-black, faint warm specular + gold glow */
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  .paper-grain {
+    background-image: radial-gradient(rgba(25, 24, 22, 0.035) 0.55px, transparent 0.55px);
+    background-size: 4px 4px;
+  }
+
+  .safe-top {
+    padding-top: max(1.25rem, env(safe-area-inset-top));
+  }
+
+  .safe-bottom {
+    padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* Credential surfaces are the only intentionally dimensional objects. */
   .card-ink {
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 22%),
@@ -204,8 +228,7 @@
       #16130d;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      0 1px 2px rgba(22, 19, 13, 0.5),
-      0 18px 38px -14px rgba(22, 19, 13, 0.5);
+      0 16px 36px -18px rgba(22, 19, 13, 0.44);
   }
 
   /* 단청 navy + 금박 foil credential — the ONE gradient object */
@@ -213,23 +236,19 @@
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.10), transparent 24%),
       radial-gradient(80% 70% at 86% -12%, rgba(195, 160, 99, 0.30), transparent 55%),
-      linear-gradient(158deg, #283464 0%, #1e2745 58%, #161d36 100%);
+      linear-gradient(158deg, #25324e 0%, #18243a 62%, #111a2b 100%);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.12),
       inset 0 0 0 1px rgba(195, 160, 99, 0.22),
-      0 1px 2px rgba(22, 19, 13, 0.4),
-      0 18px 40px -12px rgba(30, 39, 69, 0.5);
+      0 18px 42px -18px rgba(24, 36, 58, 0.58);
   }
 
-  /* seal-red brand surface (CTAs, accents, logo) — replaces the old indigo gradient */
   .bg-brand-gradient {
-    background-image: linear-gradient(180deg, #cf4135 0%, #b8302a 100%);
+    background: var(--primary);
   }
   .shadow-card-hero {
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 1px 2px rgba(22, 19, 13, 0.35),
-      0 16px 36px -12px rgba(30, 39, 69, 0.45);
+      0 16px 40px -18px rgba(25, 20, 15, 0.36);
   }
   .text-gold { color: var(--gold); }
 }
@@ -246,10 +265,6 @@
 @keyframes seal-stamp {
   0% { opacity: 0; transform: scale(1.1) rotate(-5deg); }
   100% { opacity: 1; transform: scale(1) rotate(-5deg); }
-}
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
 }
 @keyframes dot-pulse {
   0% { transform: scale(0.5); opacity: 0.5; }
