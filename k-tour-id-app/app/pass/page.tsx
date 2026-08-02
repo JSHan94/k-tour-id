@@ -7,11 +7,17 @@ import { PhoneFrame, PageHeader } from "@/components/app/shell"
 import { KPassCard } from "@/components/app/cards"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
+import { PERSONA_CONFIG } from "@/lib/catalog"
 
 function benefitLabel(benefit: string, ko: boolean) {
   if (!ko) return benefit
   if (benefit === "Visitor workshop benefit") return "북촌 공예 체험 할인"
   if (benefit === "Welcome coupon pack") return "K-Tour 웰컴 쿠폰"
+  if (benefit === "Everyday transit benefit") return "생활 교통 혜택"
+  if (benefit === "Neighborhood service offers") return "동네 생활 서비스"
+  if (benefit === "Regional culture program") return "지역 문화 프로그램"
+  if (benefit === "Local mobility offers") return "지역 모빌리티 혜택"
+  if (benefit === "Travel transit offers") return "여행 교통 혜택"
   return benefit
 }
 
@@ -47,6 +53,7 @@ export default function PassPage() {
   const statusTitle = statusPreview === "expired"
     ? (ko ? "사용 기간이 끝났어요" : "Your K-Tour ID has expired")
     : (ko ? "지금은 사용할 수 없어요" : "Your K-Tour ID is unavailable")
+  const persona = PERSONA_CONFIG[capsule.userType]
 
   return (
     <PhoneFrame>
@@ -64,9 +71,9 @@ export default function PassPage() {
 
         <KPassCard capsule={capsule} identity={identity} />
 
-        {!unavailable && capsule.userType === "foreigner" && (
-          <Link href="/present?auto=1" className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-white">
-            <span className="flex items-center gap-3 text-[16px] font-semibold"><ScanLine className="h-5 w-5" /> {ko ? "매장에서 할인받기" : "Get an in-store discount"}</span>
+        {!unavailable && (
+          <Link href={capsule.userType === "foreigner" ? "/present?auto=1" : `/explore/${persona.firstItemId}`} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-white">
+            <span className="flex items-center gap-3 text-[16px] font-semibold"><ScanLine className="h-5 w-5" /> {persona.primaryCta[lang]}</span>
             <ArrowRight className="h-5 w-5" />
           </Link>
         )}

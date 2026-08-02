@@ -79,6 +79,7 @@ export default function BenefitsPage() {
         <div className="mt-8 border-y border-foreground/10 py-5">
           <p className="text-[15px] font-semibold">{productName}</p>
           <p className="mt-1 text-[13px] text-muted-foreground">{merchantName}</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">{ko ? demoJourney.optionLabel : demoJourney.optionLabelEn} · {ko ? demoJourney.fulfilmentLabel : demoJourney.fulfilmentLabelEn}</p>
           <div className="mt-6 space-y-3 text-[14px]">
             <Row label={ko ? "상품 금액" : "Original price"} value={`₩${demoJourney.grossKRW.toLocaleString()}`} />
             <Row label={ko ? "여행자 할인" : "Traveler discount"} value={`− ₩${demoJourney.voucherKRW.toLocaleString()}`} success />
@@ -124,9 +125,10 @@ function BenefitDiscovery({ ko }: { ko: boolean }) {
 }
 
 function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boolean }) {
-  const { demoJourney, session, refundDemoPurchase } = useApp()
+  const { demoJourney, session, orders, refundDemoPurchase } = useApp()
   const [refundStep, setRefundStep] = useState<"idle" | "confirm" | "processing" | "error">("idle")
   const refunded = demoJourney.stage === "refunded"
+  const order = orders.find((candidate) => candidate.transactionId === demoJourney.paymentId)
   const merchantName = ko ? "북촌 공예관" : demoJourney.merchantDisplay
   const productName = ko ? "자개 공예 체험" : demoJourney.product
 
@@ -158,6 +160,7 @@ function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boole
         <section className="mt-10 border-y border-foreground/10 py-5">
           <p className="text-[15px] font-semibold">{productName}</p>
           <p className="mt-1 text-[13px] text-muted-foreground">{merchantName}</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">{ko ? demoJourney.optionLabel : demoJourney.optionLabelEn} · {ko ? demoJourney.fulfilmentLabel : demoJourney.fulfilmentLabelEn}</p>
           <div className="mt-6 space-y-3 text-[13px]">
             <Row label={ko ? "상품 금액" : "Original price"} value={`₩${receipt.grossKRW.toLocaleString()}`} />
             <Row label={ko ? "여행자 할인" : "Traveler discount"} value={`− ₩${receipt.voucherKRW.toLocaleString()}`} success />
@@ -168,7 +171,7 @@ function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boole
         <p className="mt-5 text-center text-[13px] text-muted-foreground">{ko ? "남은 여행 잔액" : "Travel balance"} · <strong className="font-semibold text-foreground">₩{session.wallet.balanceKRW.toLocaleString()}</strong></p>
 
         <div className="mt-auto pt-8">
-          <Link href="/" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? "완료" : "Done"}</Link>
+          <Link href={!refunded && order ? `/orders/${order.id}` : "/"} className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{!refunded && order ? (ko ? "모바일 입장권 열기" : "Open mobile ticket") : (ko ? "완료" : "Done")}</Link>
           <details className="mt-3 border-b border-foreground/10 text-[13px] text-muted-foreground">
             <summary className="pressable flex min-h-12 cursor-pointer list-none items-center justify-center gap-2 font-medium">{ko ? "영수증·주문 관리" : "Receipt & order management"}<ChevronDown className="h-4 w-4" /></summary>
             <div className="space-y-3 pb-5 pt-2">

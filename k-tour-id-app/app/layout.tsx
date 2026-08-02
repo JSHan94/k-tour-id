@@ -12,19 +12,19 @@ export const metadata: Metadata = {
   ),
   title: "K-Tour ID — Prove less. Travel more.",
   description:
-    "K-Tour ID turns verified identity sources into a privacy-preserving visitor credential for benefits, payments, vouchers and partner settlement.",
+    "One K-Tour ID for tailored travel, everyday services, local benefits and privacy-preserving payments in Korea.",
   generator: "K-Tour ID",
   openGraph: {
     title: "K-Tour ID",
-    description: "Prove less. Travel more. · Simulation build",
+    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits · Simulation build",
     type: "website",
-    images: [{ url: "/seoul-after-rain-hero.jpg", width: 933, height: 1400, alt: "Seoul after rain" }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "K-Tour ID · Prove less. Travel more." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "K-Tour ID",
-    description: "Prove less. Travel more. · Simulation build",
-    images: ["/seoul-after-rain-hero.jpg"],
+    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits · Simulation build",
+    images: ["/og.png"],
   },
 }
 

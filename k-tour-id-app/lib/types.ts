@@ -46,7 +46,7 @@ export interface KPassCapsule {
   status: CredentialStatus
   /** Private service credential issuer. This is not the government Mobile ID issuer. */
   issuer: "K-Tour ID"
-  credentialType: "KTourVisitorCredential"
+  credentialType: "KTourServiceCredential"
   /** 사용 가능 서비스 */
   services: ServiceKey[]
   /** 혜택권 */
@@ -71,6 +71,7 @@ export type ChainEventType =
   | "PresentationVerified"
   | "BenefitApplied"
   | "PaymentAuthorized"
+  | "PaymentRefunded"
   | "VoucherIssued"
   | "VoucherRedeemed"
   | "VoucherRefunded"
@@ -143,6 +144,10 @@ export interface Voucher {
   minimumSpendKRW?: number
   redemption: "single-use" | "stored-value"
   campaignId?: string
+  /** Persona routing is explicit in the mock; policy services remain authoritative. */
+  eligibleUserTypes?: UserType[]
+  /** Product detail that can explain where this voucher is usable. */
+  itemId?: string
 }
 
 export interface SettlementReceipt {
@@ -175,6 +180,12 @@ export type DemoClaimKey = "credentialActive" | "visitorEligibility" | "tripActi
 
 export interface DemoJourney {
   stage: DemoJourneyStage
+  itemId: string
+  optionId: string
+  optionLabel: string
+  optionLabelEn: string
+  fulfilmentLabel: string
+  fulfilmentLabelEn: string
   merchant: string
   merchantDisplay: string
   product: string
@@ -220,7 +231,7 @@ export interface Transaction {
   txHash: string
 }
 
-export type ServiceCategory = "food" | "shopping" | "medical"
+export type ServiceCategory = "experience" | "food" | "mobility" | "shopping" | "wellness" | "medical"
 
 export interface ServiceItem {
   id: string
@@ -233,6 +244,76 @@ export interface ServiceItem {
   image: string
   partner?: string
   url?: string
+}
+
+export interface LocalizedText {
+  ko: string
+  en: string
+}
+
+export interface ServiceOption {
+  id: string
+  label: LocalizedText
+  priceDeltaKRW?: number
+  available: boolean
+}
+
+/** Curated, purchasable Explore item. Kept separate from the legacy catalog. */
+export interface MarketplaceItem {
+  id: string
+  category: ServiceCategory
+  service: Exclude<ServiceKey, "benefit">
+  title: LocalizedText
+  description: LocalizedText
+  location: LocalizedText
+  availability: LocalizedText
+  duration: LocalizedText
+  fulfilment: "booking" | "delivery" | "pickup" | "instant"
+  fulfilmentLabel: LocalizedText
+  cancellation: LocalizedText
+  languageLabels: string[]
+  merchant: string
+  image: string
+  priceKRW: number
+  rating: number
+  options: ServiceOption[]
+  eligibleUserTypes: UserType[]
+  featuredFor: UserType[]
+  voucherId?: string
+  integrationMode: IntegrationMode
+}
+
+export interface CommerceOrder {
+  id: string
+  receiptId: string
+  itemId: string
+  title: string
+  titleEn: string
+  merchant: string
+  service: Exclude<ServiceKey, "benefit">
+  optionId: string
+  optionLabel: string
+  optionLabelEn: string
+  grossKRW: number
+  discountKRW: number
+  paidKRW: number
+  voucherId?: string
+  status: "paid" | "used" | "refunded"
+  fulfilment: MarketplaceItem["fulfilment"]
+  cancellation: string
+  cancellationEn: string
+  fulfilmentLabel: string
+  fulfilmentLabelEn: string
+  /** Mock operational fields surfaced in the receipt so fulfilment is testable. */
+  deliveryAddress?: string
+  activationAt: string
+  cancelDeadline: string
+  refundableKRW: number
+  refundedKRW?: number
+  refundedAt?: string
+  settledUsageDays?: number
+  paidAt: string
+  transactionId: string
 }
 
 export interface BenefitOffer {

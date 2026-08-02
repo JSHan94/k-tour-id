@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Home, Wallet, ChevronLeft, BadgeCheck } from "lucide-react"
+import { Bell, Home, Wallet, ChevronLeft, BadgeCheck, Compass } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { Seal } from "@/components/app/seal"
@@ -33,6 +33,7 @@ export function PhoneFrame({
 
 const NAV_ITEMS = [
   { href: "/", labelKey: "nav.home", icon: Home },
+  { href: "/explore", labelKey: "nav.explore", icon: Compass },
   { href: "/pass", labelKey: "nav.pass", icon: BadgeCheck },
   { href: "/wallet", labelKey: "nav.wallet", icon: Wallet },
 ] as const
@@ -42,7 +43,7 @@ export function BottomNav() {
   const { t } = useLang()
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-foreground/[0.07] bg-background/92 backdrop-blur-xl">
-      <div className="grid grid-cols-3 px-8 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
+      <div className="grid grid-cols-4 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
         {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
           const active = href === "/"
             ? pathname === "/"

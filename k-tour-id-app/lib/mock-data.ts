@@ -16,6 +16,7 @@ import type {
   Voucher,
   Wallet,
 } from "@/lib/types"
+import { vouchersForUserType } from "@/lib/catalog"
 
 export const USD_RATE = 1381.7
 
@@ -43,7 +44,7 @@ export const DEFAULT_CAPSULE: KPassCapsule = {
   trustLevel: "verified",
   status: "active",
   issuer: "K-Tour ID",
-  credentialType: "KTourVisitorCredential",
+  credentialType: "KTourServiceCredential",
   services: ["transport", "shopping", "delivery", "reservation", "benefit"],
   benefits: ["Visitor workshop benefit", "Transit voucher concept", "Welcome coupon pack"],
 }
@@ -169,36 +170,7 @@ export const DEFAULT_EVENTS: ChainEvent[] = [
 
 /** Demo inventory. Partner/municipal funding is deliberately separated from user funds. */
 export const DEFAULT_VOUCHERS: Voucher[] = [
-  {
-    id: "voucher-bukchon-10",
-    title: "Bukchon visitor workshop · 10%",
-    partner: "Bukchon Craft House · demo merchant",
-    valueKRW: 5_000,
-    expiresAt: "2026-09-10T23:59:59+09:00",
-    status: "available",
-    eligibilityClaim: "visitorEligibility",
-    funding: "municipal-campaign",
-    applicableMerchant: "Bukchon Craft House · demo merchant",
-    applicableService: "reservation",
-    minimumSpendKRW: 50_000,
-    redemption: "single-use",
-    campaignId: "CAM-BUKCHON-2026-07",
-  },
-  {
-    id: "voucher-welcome-10",
-    title: "K-Tour welcome coupon",
-    partner: "K-Tour ID demo network",
-    valueKRW: 10_000,
-    expiresAt: "2026-09-10T23:59:59+09:00",
-    status: "available",
-    eligibilityClaim: "couponUnused",
-    funding: "partner-funded",
-    applicableMerchant: "K-Tour ID demo network",
-    applicableService: "shopping",
-    minimumSpendKRW: 30_000,
-    redemption: "single-use",
-    campaignId: "CAM-WELCOME-2026-Q3",
-  },
+  ...vouchersForUserType("foreigner"),
 ]
 
 // ---- Home: quick actions ---------------------------------------------------

@@ -100,7 +100,7 @@ export const mockIdentityService: IdentityService = {
 const SERVICES_BY_TYPE: Record<UserType, ServiceKey[]> = {
   korean: ["transport", "shopping", "delivery", "reservation", "benefit"],
   foreigner: ["transport", "shopping", "delivery", "reservation", "benefit"],
-  "long-term": ["transport", "shopping", "delivery", "benefit"],
+  "long-term": ["transport", "shopping", "delivery", "reservation", "benefit"],
 }
 
 export const mockCapsuleService: CapsuleService = {
@@ -108,7 +108,7 @@ export const mockCapsuleService: CapsuleService = {
     await delay(1600)
     const now = new Date()
     const expires = new Date(now)
-    expires.setDate(expires.getDate() + 90)
+    expires.setDate(expires.getDate() + (userType === "long-term" ? 365 : userType === "korean" ? 30 : 90))
     return {
       id: `kpass:${fakeHash(identity.did).slice(2, 14)}`,
       holderName: identity.displayName,
@@ -116,17 +116,22 @@ export const mockCapsuleService: CapsuleService = {
       did: identity.did,
       issuedAt: now.toISOString(),
       expiresAt: expires.toISOString(),
-      stayPeriod: userType === "korean" ? "Domestic traveler" : "Service trip window · 90 days",
+      stayPeriod: userType === "korean"
+        ? "Domestic trip · 30 days"
+        : userType === "long-term"
+          ? "Resident service cycle · 12 months"
+          : "Visitor service window · 90 days",
       paymentLimitKRW: userType === "long-term" ? 2_000_000 : 5_000_000,
       trustLevel: userType === "korean" ? "premium" : "verified",
       status: "active",
       issuer: "K-Tour ID",
-      credentialType: "KTourVisitorCredential",
+      credentialType: "KTourServiceCredential",
       services: SERVICES_BY_TYPE[userType],
-      benefits:
-        userType === "korean"
-          ? ["Local resident discounts", "Cultural coupon pack"]
-          : ["Visitor workshop benefit", "Transit voucher concept", "Welcome coupon pack"],
+      benefits: userType === "korean"
+        ? ["Regional culture program", "Local mobility offers"]
+        : userType === "long-term"
+          ? ["Everyday transit benefit", "Neighborhood service offers"]
+          : ["Visitor workshop benefit", "Travel transit offers", "Welcome coupon pack"],
     }
   },
 }
@@ -209,7 +214,7 @@ export const mockPolicyService: PolicyService = {
 export const mockVoucherService: VoucherService = {
   async redeem(voucher) {
     await delay(350)
-    if (voucher.status !== "available") {
+    if (voucher.status !== "available" && voucher.status !== "reserved") {
       return { ok: false, error: { code: "VOUCHER_UNAVAILABLE", message: "Voucher has already been used or expired", retryable: false } }
     }
     return { ok: true, data: { ...voucher, status: "redeemed" } }

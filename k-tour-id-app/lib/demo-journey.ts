@@ -9,6 +9,12 @@ export const DEMO_REQUIRED_CLAIMS: DemoClaimKey[] = [
 
 export const DEFAULT_DEMO_JOURNEY: DemoJourney = {
   stage: "request-ready",
+  itemId: "bukchon-workshop",
+  optionId: "today-1830",
+  optionLabel: "오늘 18:30",
+  optionLabelEn: "Today 18:30",
+  fulfilmentLabel: "예약 후 모바일 입장권",
+  fulfilmentLabelEn: "Mobile ticket after booking",
   merchant: "Bukchon Craft House · demo merchant",
   merchantDisplay: "Bukchon Craft House",
   product: "Mother-of-pearl workshop",

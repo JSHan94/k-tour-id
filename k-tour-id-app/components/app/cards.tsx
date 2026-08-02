@@ -77,7 +77,7 @@ export function WalletCard({
           <div className="mt-4 space-y-2.5">
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-[12px] uppercase tracking-wide text-white/60">{t("wallet.tripSpent")}</p>
+                <p className="text-[12px] uppercase tracking-wide text-white/60">{userType === "long-term" ? (ko ? "이번 달 사용" : "This month") : t("wallet.tripSpent")}</p>
                 <p className="tabular text-[13px] font-semibold text-white/85">−{ko ? formatWon(detail.spentKRW) : `₩${detail.spentKRW.toLocaleString("en-US")}`}</p>
               </div>
               <span className="text-gold tabular text-[12px] font-semibold">{remainingPct}% {t("wallet.budgetLeft")}</span>
@@ -106,7 +106,7 @@ const SERVICE_META: Record<ServiceKey, { ko: string; en: string; icon: React.Com
 const USER_TYPE_LABEL: Record<KPassCapsule["userType"], { ko: string; en: string }> = {
   korean: { ko: "국내 여행자", en: "Korean traveler" },
   foreigner: { ko: "외국인 여행자", en: "International visitor" },
-  "long-term": { ko: "장기 체류 여행자", en: "Long-stay visitor" },
+  "long-term": { ko: "장기 체류 생활자", en: "Long-term resident" },
 }
 
 function formatPassDate(iso: string): string {
@@ -117,6 +117,9 @@ function formatPassDate(iso: string): string {
 
 function localizeStayPeriod(value: string, lang: "ko" | "en") {
   if (value === "Service trip window · 90 days") return lang === "ko" ? "90일" : "90 days"
+  if (value === "Visitor service window · 90 days") return lang === "ko" ? "방문 이용 기간 · 90일" : "Visitor window · 90 days"
+  if (value === "Resident service cycle · 12 months") return lang === "ko" ? "생활 서비스 · 12개월" : "Resident services · 12 months"
+  if (value === "Domestic trip · 30 days") return lang === "ko" ? "국내 여행 · 30일" : "Domestic trip · 30 days"
   return value
 }
 

@@ -39,6 +39,7 @@ export function HolderPresentationFlow() {
     beginDemoPresentation,
     recordDemoPresentation,
     recordDemoPresentationFailure,
+    prepareDemoPurchase,
     payWithBenefit,
   } = useApp()
   const [step, setStep] = useState<FlowStep>("scan")
@@ -52,12 +53,16 @@ export function HolderPresentationFlow() {
     const params = new URLSearchParams(window.location.search)
     const requestedResult = params.get("result") as DemoResult | null
     const requestedStep = params.get("step")
+    const requestedItem = params.get("item")
+    const requestedOption = params.get("option")
+    if (requestedItem && requestedOption) prepareDemoPurchase(requestedItem, requestedOption)
     const autoScan = params.get("auto") === "1"
     if (requestedResult && PRESENTER_RESULTS.includes(requestedResult)) setResult(requestedResult)
     if (["scan", "consent", "result"].includes(requestedStep ?? "")) setStep(requestedStep as FlowStep)
     if (autoScan && !requestedStep) {
       setStep("scan")
-      const id = window.setTimeout(() => setStep("consent"), 620)
+      const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 620
+      const id = window.setTimeout(() => setStep("consent"), delay)
       return () => window.clearTimeout(id)
     }
   }, [])
@@ -67,6 +72,7 @@ export function HolderPresentationFlow() {
     setChecking(true)
     setError("")
     beginDemoPresentation()
+    const transitionDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 720
     window.setTimeout(() => {
       if (result === "success") {
         const accepted = recordDemoPresentation([...CLAIMS])
@@ -76,7 +82,7 @@ export function HolderPresentationFlow() {
       }
       setChecking(false)
       setStep("result")
-    }, 720)
+    }, transitionDelay)
   }
 
   const completePayment = async () => {
@@ -96,10 +102,10 @@ export function HolderPresentationFlow() {
         const code = payment.error?.code
         if (code === "INSUFFICIENT_BALANCE") {
           setError(ko ? "여행 잔액이 부족해요." : "Your travel balance is too low.")
-          setRecovery({ href: "/wallet", label: ko ? "잔액 충전하기" : "Add money" })
+          setRecovery({ href: "/wallet?topup=1&returnTo=%2Fpresent%3Fstep%3Dresult", label: ko ? "충전하고 돌아오기" : "Top up and return" })
         } else if (code === "CREDENTIAL_EXPIRED" || code === "CREDENTIAL_INACTIVE") {
           setError(ko ? "K-Tour ID를 갱신한 뒤 결제해 주세요." : "Renew K-Tour ID before paying.")
-          setRecovery({ href: "/onboarding?mode=renew", label: ko ? "K-Tour ID 갱신" : "Renew K-Tour ID" })
+          setRecovery({ href: "/onboarding?mode=renew&returnTo=%2Fpresent%3Fstep%3Dresult", label: ko ? "K-Tour ID 갱신" : "Renew K-Tour ID" })
         } else if (code === "VOUCHER_UNAVAILABLE") {
           setError(ko ? "이 혜택은 이미 사용했거나 기간이 끝났어요." : "This benefit was already used or has expired.")
           setRecovery({ href: "/", label: ko ? "홈으로" : "Back home" })
@@ -121,7 +127,7 @@ export function HolderPresentationFlow() {
 
   const goBack = () => {
     if (step === "result") setStep("consent")
-    else if (step === "consent") window.location.assign("/")
+    else if (step === "consent") window.history.back()
     else window.history.back()
   }
 
@@ -195,6 +201,7 @@ function ConsentStep({ ko, journey, checking, onContinue }: { ko: boolean; journ
         <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 제휴 매장" : "K-Tour ID partner"}</p>
         <h1 className="font-display mt-3 text-[35px] font-semibold tracking-[-0.035em]">₩{journey.voucherKRW.toLocaleString()} <span className="text-[22px]">{ko ? "할인" : "off"}</span></h1>
         <p className="mt-2 text-[15px] text-foreground">{productName}</p>
+        <p className="mt-1 text-[13px] text-muted-foreground">{ko ? journey.optionLabel : journey.optionLabelEn} · {ko ? journey.fulfilmentLabel : journey.fulfilmentLabelEn}</p>
       </div>
 
       <div className="mt-7 border-y border-foreground/10 py-5">
@@ -226,6 +233,7 @@ function PaymentStep({ ko, journey, paying, error, recovery, onPay }: { ko: bool
       <div className="mt-8 border-y border-foreground/10 py-5">
           <p className="text-[15px] font-semibold">{productName}</p>
           <p className="mt-1 text-[13px] text-muted-foreground">{merchantName}</p>
+          <p className="mt-1 text-[13px] text-muted-foreground">{ko ? journey.optionLabel : journey.optionLabelEn} · {ko ? journey.fulfilmentLabel : journey.fulfilmentLabelEn}</p>
         <div className="mt-6 space-y-3 text-[14px]">
           <PriceRow label={ko ? "상품 금액" : "Original price"} value={`₩${journey.grossKRW.toLocaleString()}`} />
           <PriceRow label={ko ? "여행자 할인" : "Traveler discount"} value={`− ₩${journey.voucherKRW.toLocaleString()}`} success />
@@ -255,7 +263,7 @@ function PriceRow({ label, value, success }: { label: string; value: string; suc
 
 function FailureResult({ ko, result, onRetry }: { ko: boolean; result: Exclude<DemoResult, "success">; onRetry: () => void }) {
   const meta = {
-    expired: { icon: TimerReset, koTitle: "K-Tour ID 유효기간이 끝났어요", enTitle: "Your K-Tour ID has expired", koBody: "갱신하면 혜택을 다시 확인할 수 있어요.", enBody: "Renew to check your benefit again.", koCta: "K-Tour ID 갱신", enCta: "Renew K-Tour ID", href: "/onboarding?mode=renew" },
+    expired: { icon: TimerReset, koTitle: "K-Tour ID 유효기간이 끝났어요", enTitle: "Your K-Tour ID has expired", koBody: "갱신하면 이 혜택 확인으로 돌아올 수 있어요.", enBody: "Renew, then return to this benefit check.", koCta: "K-Tour ID 갱신", enCta: "Renew K-Tour ID", href: "/onboarding?mode=renew&returnTo=%2Fpresent%3Fstep%3Dconsent" },
     revoked: { icon: XCircle, koTitle: "이 K-Tour ID는 사용할 수 없어요", enTitle: "This K-Tour ID can't be used", koBody: "상태를 확인하거나 새로 발급받아 주세요.", enBody: "Check its status or request a new K-Tour ID.", koCta: "상태 확인", enCta: "Check status", href: "/pass?panel=status&preview=revoked" },
     offline: { icon: Unplug, koTitle: "지금은 확인할 수 없어요", enTitle: "We can't check right now", koBody: "연결을 확인해 주세요. 정보는 전달되지 않았어요.", enBody: "Check your connection. No information was sent.", koCta: "다시 확인", enCta: "Try again", href: "" },
     ineligible: { icon: AlertTriangle, koTitle: "이 할인은 이용할 수 없어요", enTitle: "This discount isn't available", koBody: "현재 K-Tour ID는 이 혜택의 대상이 아니에요.", enBody: "Your current K-Tour ID isn't eligible for this benefit.", koCta: "확인하고 홈으로", enCta: "Back home", href: "/" },

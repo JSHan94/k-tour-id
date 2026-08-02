@@ -52,7 +52,7 @@ export function ReceiveModal({ open, onOpenChange }: { open: boolean; onOpenChan
 
 const TOPUP_AMOUNTS = [50_000, 100_000, 300_000]
 
-export function TopUpModal({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; onOpenChange: (v: boolean) => void; onComplete?: () => void }) {
   const { topUp } = useApp()
   const { t, lang } = useLang()
   const [amount, setAmount] = useState(TOPUP_AMOUNTS[1])
@@ -70,6 +70,7 @@ export function TopUpModal({ open, onOpenChange }: { open: boolean; onOpenChange
         onOpenChange(false)
         setPhase("choose")
         busy.current = false
+        onComplete?.()
       }, 1200)
     } catch {
       setPhase("error")
@@ -98,6 +99,7 @@ export function TopUpModal({ open, onOpenChange }: { open: boolean; onOpenChange
                 <button
                   key={a}
                   type="button"
+                  aria-pressed={amount === a}
                   onClick={() => setAmount(a)}
                   className={`pressable rounded-xl border py-2.5 text-[13px] font-semibold tabular-nums ${
                     amount === a ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:bg-secondary"
@@ -107,7 +109,7 @@ export function TopUpModal({ open, onOpenChange }: { open: boolean; onOpenChange
                 </button>
               ))}
             </div>
-            <p className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
+            <p aria-live="polite" role={phase === "error" ? "alert" : "status"} className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
               {phase === "error" ? (lang === "ko" ? "충전 요청을 완료하지 못했습니다. 다시 시도해 주세요." : "Top-up could not be completed. Please try again.") : t("modal.topupNote")}
             </p>
             <button
@@ -201,7 +203,7 @@ export function PayModal({
               <span className="text-muted-foreground">{lang === "ko" ? "장소" : "Location"}</span><span className="font-semibold">{item?.location ?? (lang === "ko" ? "제휴 서비스" : "Partner service")}</span>
               <span className="text-muted-foreground">{lang === "ko" ? "취소·환불" : "Cancellation"}</span><span className="font-semibold">{item?.cancellation ?? (lang === "ko" ? "주문 확정 전 취소 가능" : "Can be cancelled before confirmation")}</span>
             </div>
-            <p className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
+            <p aria-live="polite" role={phase === "error" ? "alert" : "status"} className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
               {phase === "error" ? (lang === "ko" ? "결제 요청을 완료하지 못했습니다. 금액은 차감되지 않았습니다." : "Payment failed and no balance was deducted.") : insufficient ? (lang === "ko" ? "잔액이 부족해요" : "Insufficient balance") : t("modal.payNote")}
             </p>
             <button
