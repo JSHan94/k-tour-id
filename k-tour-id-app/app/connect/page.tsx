@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { BadgeCheck, ChevronRight, Dices, Landmark, Languages, ShieldCheck, UsersRound, Utensils, X } from "lucide-react"
+import { BadgeCheck, Check, ChevronRight, Dices, Landmark, Languages, MessageCircle, ShieldCheck, UsersRound, Utensils, X } from "lucide-react"
 import { PhoneFrame, LangToggle } from "@/components/app/shell"
 import { Seal } from "@/components/app/seal"
 import { useLang } from "@/lib/i18n/lang-provider"
@@ -10,6 +11,7 @@ import { formatWon } from "@/lib/format"
 import { ACTIVITIES } from "@/lib/mock-data"
 import type { Activity, ActivityCategory } from "@/lib/types"
 import { useApp } from "@/lib/store/app-provider"
+import { useActivityMembership } from "@/app/connect/use-activity-membership"
 
 const CAT_ICON: Record<ActivityCategory, React.ComponentType<{ className?: string }>> = {
   food: Utensils,
@@ -32,17 +34,39 @@ export default function ConnectPage() {
   const { session, hydrated } = useApp()
   const { t, lang } = useLang()
   const [selected, setSelected] = useState<Activity | null>(null)
+  const [joinError, setJoinError] = useState<"full" | "not-ready" | "storage" | null>(null)
   const currentName = session.identity?.displayName
   const currentPhoto = session.identity?.photoUrl
   const activities = ACTIVITIES.filter((activity) => activity.host !== currentName)
+  const { joinedActivityIds, ready: membershipsReady, isJoined, joinActivity, leaveActivity } = useActivityMembership(session.identity?.did)
+  const myActivities = activities.filter((activity) => joinedActivityIds.includes(activity.id))
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
   }, [hydrated, router, session.onboarded])
 
-  if (!hydrated || !session.onboarded) return null
+  if (!hydrated || !session.onboarded || !membershipsReady) return null
 
   const ko = lang === "ko"
+
+  const openActivity = (activity: Activity) => {
+    if (isJoined(activity.id)) {
+      router.push(`/connect/chat?activity=${activity.id}`)
+      return
+    }
+    setJoinError(null)
+    setSelected(activity)
+  }
+
+  const confirmJoin = () => {
+    if (!selected) return
+    const result = joinActivity(selected)
+    if (!result.ok) {
+      setJoinError(result.reason)
+      return
+    }
+    router.push(`/connect/chat?activity=${selected.id}`)
+  }
 
   return (
     <PhoneFrame>
@@ -65,6 +89,23 @@ export default function ConnectPage() {
         <p className="mt-4 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-success" />{t("connect.conceptNotice")}</p>
       </section>
 
+      <section className="px-6 pt-8" aria-labelledby="my-activities-title">
+        <div className="flex items-end justify-between">
+          <div><p className="text-[12px] font-semibold text-success">CONFIRMED</p><h2 id="my-activities-title" className="font-display mt-1 text-[23px] font-semibold">{ko ? "내 활동" : "My activities"}</h2></div>
+          <span className="text-[12px] text-muted-foreground">{myActivities.length}{ko ? "개" : " joined"}</span>
+        </div>
+        {myActivities.length === 0 ? (
+          <div className="mt-3 rounded-[16px] bg-surface-2 px-4 py-4 ring-1 ring-border">
+            <p className="text-[13px] font-semibold">{ko ? "아직 참가한 활동이 없어요" : "No confirmed activities yet"}</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{ko ? "아래 활동에 참가하면 전용 채팅방이 여기에 저장돼요." : "Join an activity below and its participant chat will stay here."}</p>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {myActivities.map((activity) => <MyActivityCard key={activity.id} activity={activity} onCancel={() => leaveActivity(activity.id)} />)}
+          </div>
+        )}
+      </section>
+
       <section className="px-6 pt-8">
         <div className="flex items-end justify-between">
           <div><p className="text-[12px] font-semibold text-primary">OPEN NOW</p><h2 className="font-display mt-1 text-[23px] font-semibold">{ko ? "지금 같이할 수 있어요" : "Find something to do together"}</h2></div>
@@ -72,22 +113,24 @@ export default function ConnectPage() {
         </div>
         <div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">
           {activities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} currentPhoto={currentPhoto} onOpen={() => setSelected(activity)} />
+            <ActivityCard key={activity.id} activity={activity} currentPhoto={currentPhoto} joined={isJoined(activity.id)} onOpen={() => openActivity(activity)} />
           ))}
         </div>
       </section>
 
-      {selected && <JoinSheet activity={selected} onClose={() => setSelected(null)} onJoin={() => router.push(`/connect/chat?activity=${selected.id}`)} />}
+      {selected && <JoinSheet activity={selected} error={joinError} onClose={() => { setSelected(null); setJoinError(null) }} onJoin={confirmJoin} />}
     </PhoneFrame>
   )
 }
 
-function ActivityCard({ activity, currentPhoto, onOpen }: { activity: Activity; currentPhoto?: string; onOpen: () => void }) {
+function ActivityCard({ activity, currentPhoto, joined, onOpen }: { activity: Activity; currentPhoto?: string; joined: boolean; onOpen: () => void }) {
   const { t, lang } = useLang()
   const Icon = CAT_ICON[activity.category]
   const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
   const place = lang === "en" ? activity.placeEn ?? activity.place : activity.place
   const time = lang === "en" ? activity.timeEn ?? activity.time : activity.time
+  const joinedCount = Math.min(activity.capacity, activity.joined + (joined ? 1 : 0))
+  const full = !joined && activity.joined >= activity.capacity
 
   return (
     <button type="button" onClick={onOpen} className="pressable w-full py-5 text-left">
@@ -111,21 +154,43 @@ function ActivityCard({ activity, currentPhoto, onOpen }: { activity: Activity; 
               <img key={index} src={photo} alt="" className="h-7 w-7 rounded-full object-cover ring-2 ring-card" />
             ))}
           </div>
-          <span className="ml-2 text-[12px] tabular-nums text-muted-foreground">{activity.joined}/{activity.capacity}{lang === "ko" ? "명" : " joined"}</span>
+          <span className="ml-2 text-[12px] tabular-nums text-muted-foreground">{joinedCount}/{activity.capacity}{lang === "ko" ? "명" : " joined"}</span>
         </div>
-        <span className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-primary">{t("connect.join")}<ChevronRight className="h-3.5 w-3.5" /></span>
+        <span className={`inline-flex items-center gap-0.5 text-[13px] font-semibold ${joined ? "text-success" : full ? "text-muted-foreground" : "text-primary"}`}>{joined ? (lang === "ko" ? "참가 완료 · 채팅 입장" : "Joined · Enter chat") : full ? (lang === "ko" ? "마감" : "Full") : t("connect.join")}{joined ? <Check className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}</span>
       </div>
     </button>
   )
 }
 
-function JoinSheet({ activity, onClose, onJoin }: { activity: Activity; onClose: () => void; onJoin: () => void }) {
+function MyActivityCard({ activity, onCancel }: { activity: Activity; onCancel: () => void }) {
+  const { lang } = useLang()
+  const ko = lang === "ko"
+  const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
+  const place = lang === "en" ? activity.placeEn ?? activity.place : activity.place
+  const time = lang === "en" ? activity.timeEn ?? activity.time : activity.time
+
+  return (
+    <article className="rounded-[18px] bg-card p-4 ring-1 ring-border">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0"><p className="inline-flex items-center gap-1 text-[11px] font-semibold text-success"><Check className="h-3.5 w-3.5" />{ko ? "참가 확정" : "Participation confirmed"}</p><h3 className="mt-1 truncate text-[15px] font-bold">{title}</h3><p className="mt-1 truncate text-[12px] text-muted-foreground">{place} · {time}</p></div>
+        <UsersRound className="h-5 w-5 flex-shrink-0 text-primary" />
+      </div>
+      <div className="mt-4 flex gap-2">
+        <button type="button" onClick={onCancel} className="pressable min-h-11 rounded-xl px-3 text-[12px] font-semibold text-muted-foreground ring-1 ring-border">{ko ? "참가 취소" : "Cancel"}</button>
+        <Link href={`/connect/chat?activity=${activity.id}`} className="pressable flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-[12px] font-semibold text-white"><MessageCircle className="h-4 w-4" />{ko ? "채팅방 들어가기" : "Enter group chat"}</Link>
+      </div>
+    </article>
+  )
+}
+
+function JoinSheet({ activity, error, onClose, onJoin }: { activity: Activity; error: "full" | "not-ready" | "storage" | null; onClose: () => void; onJoin: () => void }) {
   const { lang } = useLang()
   const ko = lang === "ko"
   const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
   const place = lang === "en" ? activity.placeEn ?? activity.place : activity.place
   const time = lang === "en" ? activity.timeEn ?? activity.time : activity.time
   const spots = Math.max(0, activity.capacity - activity.joined)
+  const full = spots === 0
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/35" role="presentation">
@@ -143,7 +208,8 @@ function JoinSheet({ activity, onClose, onJoin }: { activity: Activity; onClose:
         </div>
 
         {activity.costKRW != null && <p className="mt-4 text-center text-[12px] text-muted-foreground">{ko ? "예상 1인 비용" : "Estimated per person"} · <strong className="text-foreground">{lang === "ko" ? formatWon(activity.costKRW) : `₩${activity.costKRW.toLocaleString("en-US")}`}</strong></p>}
-        <button type="button" onClick={onJoin} className="bg-brand-gradient pressable mt-5 min-h-14 w-full rounded-[15px] text-[15px] font-semibold text-white">{ko ? "참여하고 채팅방 들어가기" : "Join and enter group chat"}</button>
+        {error && <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-center text-[12px] font-semibold text-destructive">{error === "full" ? (ko ? "방금 정원이 마감됐어요. 다른 활동을 골라 주세요." : "This activity just filled up. Choose another one.") : error === "storage" ? (ko ? "참가 상태를 저장하지 못했어요. 브라우저 저장 설정을 확인해 주세요." : "We couldn't save your participation. Check your browser storage settings.") : (ko ? "참가 상태를 불러오는 중이에요. 잠시 후 다시 시도해 주세요." : "Membership is still loading. Try again in a moment.")}</p>}
+        <button type="button" onClick={onJoin} disabled={full} className="bg-brand-gradient pressable mt-5 min-h-14 w-full rounded-[15px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45">{full ? (ko ? "정원 마감" : "Activity full") : (ko ? "참여하고 채팅방 들어가기" : "Join and enter group chat")}</button>
       </section>
     </div>
   )

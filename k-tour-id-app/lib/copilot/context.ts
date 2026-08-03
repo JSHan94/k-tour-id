@@ -3,6 +3,7 @@
 // Anti-paperclip: silent by default; one dot; whisper only for the leftover case.
 
 import { STAY } from "@/lib/mock-data"
+import type { UserType } from "@/lib/types"
 
 export type CmdKind = "pay" | "topup" | "convert" | "markRead" | "navigate" | "explain"
 
@@ -39,7 +40,7 @@ export interface CopilotContext {
 export const LEFTOVER_KRW = 180_000
 export const D_DAY = STAY.total - STAY.day
 
-const CONVERT: CopilotCommand = { id: "convert", kind: "convert", labelKey: "seal.cmd.convert", icon: "ticket", amountKRW: LEFTOVER_KRW, reason: `D-${D_DAY}` }
+const convertCommand = (balanceKRW: number): CopilotCommand => ({ id: "convert", kind: "convert", labelKey: "seal.cmd.convert", icon: "ticket", amountKRW: Math.min(LEFTOVER_KRW, Math.max(0, balanceKRW)), reason: `D-${D_DAY} · unused funds stay yours` })
 const TOPUP: CopilotCommand = { id: "topup", kind: "topup", labelKey: "seal.cmd.topup", icon: "topup", amountKRW: 100_000 }
 
 function routeKey(pathname: string): "home" | "wallet" | "pass" | "alerts" | "profile" | "connect" | "ai" | "other" {
@@ -53,9 +54,11 @@ function routeKey(pathname: string): "home" | "wallet" | "pass" | "alerts" | "pr
   return "other"
 }
 
-export function pickContext(pathname: string, dismissed: string[]): CopilotContext {
+export function pickContext(pathname: string, dismissed: string[], persona: { userType: UserType | null; balanceKRW: number }): CopilotContext {
   const r = routeKey(pathname)
   const notDismissed = (id: string) => !dismissed.includes(id)
+  const canConvert = persona.userType === "foreigner" && persona.balanceKRW > 0
+  const convert = convertCommand(persona.balanceKRW)
 
   switch (r) {
     case "wallet":
@@ -63,7 +66,7 @@ export function pickContext(pathname: string, dismissed: string[]): CopilotConte
         commands: [
           TOPUP,
           { id: "pay-gs25", kind: "pay", label: "GS25 Convenience", icon: "card", amountKRW: 4_500, merchant: "GS25 Convenience", category: "shopping" },
-          CONVERT,
+          ...(canConvert ? [convert] : []),
         ],
         chips: ["seal.chip.budget", "ai.s3"],
         nudge: notDismissed("leftover") ? { id: "leftover", kind: "dot" } : null,
@@ -81,7 +84,7 @@ export function pickContext(pathname: string, dismissed: string[]): CopilotConte
       return {
         commands: [
           { id: "markread", kind: "markRead", labelKey: "seal.cmd.markRead", icon: "check" },
-          CONVERT,
+          ...(canConvert ? [convert] : []),
         ],
         chips: ["seal.chip.tidy"],
         nudge: notDismissed("alerts") ? { id: "alerts", kind: "dot" } : null,
@@ -105,10 +108,26 @@ export function pickContext(pathname: string, dismissed: string[]): CopilotConte
       }
     case "home":
     default:
+      if (persona.userType === "korean") return {
+        commands: [
+          { id: "regional-pick", kind: "navigate", label: "지역 문화 혜택", icon: "ticket", href: "/explore/regional-craft-day", reason: "모바일 ID로 확인 가능한 국내 여행 혜택" },
+          TOPUP,
+        ],
+        chips: ["ai.s1", "seal.chip.help"],
+        nudge: null,
+      }
+      if (persona.userType === "long-term") return {
+        commands: [
+          { id: "resident-transit", kind: "navigate", label: "서울 생활 교통 30일권", icon: "transit", href: "/explore/seoul-transit-30", reason: "장기 체류 K-Tour ID로 이용 가능" },
+          TOPUP,
+        ],
+        chips: ["ai.s2", "seal.chip.budget"],
+        nudge: null,
+      }
       return {
         commands: [
           { id: "pay-food", kind: "pay", label: "Korean Fried Chicken", icon: "delivery", amountKRW: 65_000, merchant: "Korean Fried Chicken", category: "delivery", reason: "Baemin 10%" },
-          CONVERT,
+          ...(canConvert ? [convert] : []),
           TOPUP,
         ],
         chips: ["ai.s1", "ai.s2", "ai.s3"],

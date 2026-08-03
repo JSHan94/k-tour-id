@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, QrCode, ArrowDownLeft, Gift, Plus, RefreshCcw, TicketCheck } from "lucide-react"
+import { Bell, QrCode, ArrowDownLeft, Gift, Plus, RefreshCcw, TicketCheck, MapPinned } from "lucide-react"
 import { PhoneFrame, LangToggle, SectionTitle } from "@/components/app/shell"
 import { WalletCard } from "@/components/app/cards"
 import { TxRow } from "@/components/app/tx-row"
@@ -15,6 +15,7 @@ import type { Voucher } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { PERSONA_CONFIG } from "@/lib/catalog"
 import { instantPassState } from "@/lib/commerce-policy"
+import { effectiveVoucherStatus, isVoucherAvailable } from "@/lib/voucher-policy"
 
 const DEMO_PAY: PayItem = { merchant: "GS25 Convenience", amountKRW: 4_500, category: "shopping" }
 
@@ -36,7 +37,7 @@ function voucherTitle(voucher: Voucher, ko: boolean) {
 
 function voucherRestriction(voucher: Voucher, ko: boolean) {
   if (voucher.funding === "user-converted") {
-    return ko ? "사용 전에는 여행 잔액으로 다시 돌릴 수 있어요" : "Return it to your travel balance before use"
+    return ko ? `${voucher.partner.replace(" · demo concept", "")}에서 사용 · 사용 전에는 잔액으로 복구 가능` : `Use at ${voucher.partner.replace(" · demo concept", "")} · returnable before use`
   }
   const merchant = voucher.applicableMerchant?.replace(" · demo merchant", "").replace(" demo network", "")
   const minimum = voucher.minimumSpendKRW ? `₩${voucher.minimumSpendKRW.toLocaleString()}` : null
@@ -58,6 +59,7 @@ export default function WalletPage() {
   const [showReceive, setShowReceive] = useState(false)
   const [showTopUp, setShowTopUp] = useState(false)
   const [showPay, setShowPay] = useState(false)
+  const [returningVoucherId, setReturningVoucherId] = useState("")
   const [returnAfterTopUp, setReturnAfterTopUp] = useState("")
   const spentKRW = Math.max(0, transactions.filter((tx) => tx.category !== "topup").reduce((sum, tx) => sum - tx.amountKRW, 0))
   const showBudgetFixture = session.identity?.did === DEFAULT_SESSION.identity?.did
@@ -106,6 +108,14 @@ export default function WalletPage() {
           </div>
         </WalletCard>
 
+        <section>
+          <SectionTitle>{lang === "ko" ? "나의 여정" : "My journey"}</SectionTitle>
+          <div className="rounded-[20px] bg-surface-2 p-5 ring-1 ring-border">
+            <div className="flex items-start gap-3"><MapPinned className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" /><div><p className="text-[14px] font-semibold">{persona.statusDetail[lang]}</p><p className="mt-1 text-[12px] leading-5 text-muted-foreground">{lang === "ko" ? `K-Tour ID 발급 · 주문 ${orders.length}건 · 사용한 혜택 ${vouchers.filter((voucher) => voucher.status === "redeemed").length}건` : `K-Tour ID issued · ${orders.length} orders · ${vouchers.filter((voucher) => voucher.status === "redeemed").length} benefits used`}</p></div></div>
+            {vouchers.some((voucher) => voucher.funding === "user-converted" && isVoucherAvailable(voucher)) && <Link href={`/explore/${vouchers.find((voucher) => voucher.funding === "user-converted" && isVoucherAvailable(voucher))?.itemId ?? "insadong-tea"}`} className="pressable mt-4 flex min-h-11 items-center justify-between border-t border-foreground/10 pt-3 text-[13px] font-semibold text-primary"><span>{lang === "ko" ? "다음 방문 바우처 사용하기" : "Use my return-trip voucher"}</span><TicketCheck className="h-4 w-4" /></Link>}
+          </div>
+        </section>
+
         <div>
           <SectionTitle>{lang === "ko" ? "바우처 지갑" : "Voucher wallet"}</SectionTitle>
           <div className="divide-y divide-foreground/10 border-y border-foreground/10">
@@ -118,9 +128,9 @@ export default function WalletPage() {
                       <p className="text-[14px] font-bold leading-snug">{voucherTitle(voucher, lang === "ko")}</p>
                       <span className={cn(
                         "rounded-full px-2 py-1 text-[12px] font-semibold",
-                        voucher.status === "available" ? "bg-success-surface text-[#46603f]" : voucher.status === "expired" ? "bg-primary/8 text-primary" : "bg-secondary text-muted-foreground",
+                        effectiveVoucherStatus(voucher) === "available" ? "bg-success-surface text-[#46603f]" : effectiveVoucherStatus(voucher) === "expired" ? "bg-primary/8 text-primary" : "bg-secondary text-muted-foreground",
                       )}>
-                        {STATUS_LABEL[voucher.status][lang === "ko" ? "ko" : "en"]}
+                        {STATUS_LABEL[effectiveVoucherStatus(voucher)][lang === "ko" ? "ko" : "en"]}
                       </span>
                     </div>
                     <p className="mt-1.5 text-[12px] leading-relaxed text-muted-foreground">{voucherRestriction(voucher, lang === "ko")}</p>
@@ -130,15 +140,15 @@ export default function WalletPage() {
                   </div>
                   <p className="text-[14px] font-extrabold text-primary">₩{voucher.valueKRW.toLocaleString()}</p>
                 </div>
-                {voucher.funding === "user-converted" && voucher.status === "available" && (
+                {voucher.funding === "user-converted" && ["available", "expired"].includes(effectiveVoucherStatus(voucher)) && (
                   <div className="mt-3 flex items-center justify-between gap-3 border-t border-foreground/10 pt-3">
                     <p className="text-[12px] leading-relaxed text-muted-foreground">{lang === "ko" ? "사용하지 않았다면 전액을 여행 잔액으로 돌려받을 수 있어요." : "If unused, the full value can be returned to your travel balance."}</p>
-                    <button type="button" onClick={() => refundConvertedVoucher(voucher.id)} className="pressable inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 px-2 text-[12px] font-semibold underline underline-offset-4"><TicketCheck className="h-4 w-4" /> {lang === "ko" ? "전환 취소" : "Return"}</button>
+                    <button type="button" disabled={returningVoucherId === voucher.id} onClick={async () => { if (returningVoucherId) return; setReturningVoucherId(voucher.id); await refundConvertedVoucher(voucher.id); setReturningVoucherId("") }} className="pressable inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 px-2 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-50"><TicketCheck className="h-4 w-4" /> {returningVoucherId === voucher.id ? (lang === "ko" ? "복구 중…" : "Returning…") : (lang === "ko" ? "전환 취소" : "Return")}</button>
                   </div>
                 )}
                 {voucher.itemId && (
                   <Link href={`/explore/${voucher.itemId}`} className="pressable mt-2 inline-flex min-h-10 items-center pl-11 text-[12px] font-semibold text-primary underline underline-offset-4">
-                    {voucher.status === "available" ? (lang === "ko" ? "사용 가능한 상품 보기" : "View eligible item") : (lang === "ko" ? "상품 다시 보기" : "View item again")}
+                    {isVoucherAvailable(voucher) ? (lang === "ko" ? "사용 가능한 상품 보기" : "View eligible item") : (lang === "ko" ? "상품 다시 보기" : "View item again")}
                   </Link>
                 )}
               </div>

@@ -52,7 +52,7 @@ export default function HomePage() {
 
       <main className="px-6 py-8">
         <section aria-label={ko ? "이용 상태" : "Account status"} className="grid grid-cols-2 divide-x divide-foreground/10 border-y border-foreground/10 py-5">
-          <Link href="/wallet" className="pressable pr-5"><span className="flex items-center gap-2 text-[13px] text-muted-foreground"><BadgeCheck className="h-4 w-4 text-success" />K-Tour ID</span><strong className="mt-2 block text-[17px] font-semibold">{ko ? "사용 가능" : "Active"}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{session.userType === "foreigner" ? (ko ? `${remainingDays}일 남음` : `${remainingDays} days left`) : persona.statusDetail[lang]}</span></Link>
+          <Link href="/pass" className="pressable pr-5"><span className="flex items-center gap-2 text-[13px] text-muted-foreground"><BadgeCheck className="h-4 w-4 text-success" />K-Tour ID</span><strong className="mt-2 block text-[17px] font-semibold">{ko ? "사용 가능" : "Active"}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{session.userType === "foreigner" ? (ko ? `${remainingDays}일 남음` : `${remainingDays} days left`) : persona.statusDetail[lang]}</span></Link>
           <Link href="/wallet" className="pressable pl-5"><span className="flex items-center gap-2 text-[13px] text-muted-foreground"><Wallet className="h-4 w-4" />{persona.balanceLabel[lang]}</span><strong className="tabular mt-2 block text-[17px] font-semibold">₩{session.wallet.balanceKRW.toLocaleString()}</strong><span className="mt-1 block text-[12px] text-muted-foreground">KRW</span></Link>
         </section>
 

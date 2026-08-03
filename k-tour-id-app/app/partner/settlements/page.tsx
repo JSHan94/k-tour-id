@@ -8,12 +8,13 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  FileSearch,
   Landmark,
   LoaderCircle,
   ReceiptText,
   WalletCards,
 } from "lucide-react"
-import { PageIntro, Panel } from "@/components/partner/partner-shell"
+import { EnvironmentBadge, PageIntro, Panel } from "@/components/partner/partner-shell"
 import { useApp } from "@/lib/store/app-provider"
 import { cn } from "@/lib/utils"
 
@@ -25,6 +26,7 @@ export default function PartnerSettlementsPage() {
   const hasPayment = ["paid", "settlement-submitted", "anchored"].includes(demoJourney.stage)
   const complete = demoJourney.stage === "anchored"
   const refunded = demoJourney.stage === "refunded"
+  const userFunded = demoJourney.campaignId === "USER-RETURN-TRIP"
 
   useEffect(() => {
     if (!finishAfterSubmit || demoJourney.stage !== "settlement-submitted" || finishingRef.current) return
@@ -53,14 +55,21 @@ export default function PartnerSettlementsPage() {
       <PageIntro
         eyebrow="Payouts"
         title={refunded ? "Refund adjustment recorded." : hasPayment ? (complete ? "Payout scheduled for Jul 31." : "₩" + demoJourney.merchantDueKRW.toLocaleString() + " ready for payout.") : "No payout ready yet."}
-        body={refunded ? "The visitor payment and campaign benefit were reversed. No payout is due for this order." : hasPayment ? "One paid workshop order is included in the Jul 30 payout." : "A completed customer payment will appear here automatically."}
-      />
+        body={refunded ? (userFunded ? `The cash payment and customer-owned voucher value for ${demoJourney.product} were reversed. No payout is due.` : `The payment and campaign contribution for ${demoJourney.product} were reversed. No payout is due.`) : hasPayment ? `${demoJourney.product} is included in the Jul 30 payout.` : "A completed customer payment will appear here automatically."}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <EnvironmentBadge kind="SIMULATED" />
+          <Link href="/evidence" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3.5 text-[12px] font-bold text-foreground">
+            <FileSearch className="h-4 w-4 text-primary" /> View evidence
+          </Link>
+        </div>
+      </PageIntro>
       <p className="sr-only" role="status" aria-live="polite">
         {running ? "Submitting payout" : refunded ? "Refund adjustment complete; no payout due" : complete ? "Payout scheduled for Jul 31" : hasPayment ? "Payout ready to submit" : "No payout ready"}
       </p>
 
       {refunded ? (
-        <RefundedPayout gross={demoJourney.grossKRW} paid={demoJourney.paidKRW} benefit={demoJourney.voucherKRW} fee={demoJourney.platformFeeKRW} payout={demoJourney.merchantDueKRW} />
+        <RefundedPayout gross={demoJourney.grossKRW} paid={demoJourney.paidKRW} benefit={demoJourney.voucherKRW} fee={demoJourney.platformFeeKRW} payout={demoJourney.merchantDueKRW} userFunded={userFunded} />
       ) : !hasPayment ? (
         <EmptyPayout />
       ) : (
@@ -79,20 +88,100 @@ export default function PartnerSettlementsPage() {
           <Panel eyebrow="Payout summary" title="How this amount was calculated">
             <div className="space-y-4 p-5 sm:p-6">
               <MoneyRow label="Order total" value={demoJourney.grossKRW} />
-              <MoneyRow label="Paid by visitor" value={demoJourney.paidKRW} />
-              <MoneyRow label="Campaign reimbursement" value={demoJourney.campaignReimbursementKRW} prefix="+" accent />
+              <MoneyRow label="Cash payment" value={demoJourney.paidKRW} />
+              {userFunded ? <MoneyRow label="User-funded voucher redeemed" value={demoJourney.voucherKRW} prefix="+" accent /> : <MoneyRow label="Campaign reimbursement" value={demoJourney.campaignReimbursementKRW} prefix="+" accent />}
               <MoneyRow label="Platform fee" value={demoJourney.platformFeeKRW} prefix="−" />
               <div className="border-t border-border pt-4">
                 <MoneyRow label="Net payout" value={demoJourney.merchantDueKRW} strong />
               </div>
               <p className="rounded-2xl bg-surface-2 p-3 text-[12px] leading-relaxed text-muted-foreground">
-                The visitor paid ₩{demoJourney.paidKRW.toLocaleString()} and the campaign covers ₩{demoJourney.campaignReimbursementKRW.toLocaleString()}. The fee is deducted before payout.
+                {userFunded ? `The customer paid ₩${demoJourney.paidKRW.toLocaleString()} in cash and redeemed ₩${demoJourney.voucherKRW.toLocaleString()} of their own stored voucher value.` : `The visitor paid ₩${demoJourney.paidKRW.toLocaleString()} and the campaign covers ₩${demoJourney.campaignReimbursementKRW.toLocaleString()}.`} The fee is deducted before payout.
               </p>
             </div>
           </Panel>
         </div>
       )}
+
+      <div className={cn("mt-5 grid gap-5", !userFunded && "xl:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]")}>
+        <TransactionTrace
+          userFunded={userFunded}
+          campaignId={demoJourney.campaignId}
+          voucherId={demoJourney.voucherId}
+          receiptId={demoJourney.receiptId}
+          settlementId={demoJourney.settlementId}
+        />
+        {!userFunded && <CampaignImpact
+          campaignId={demoJourney.campaignId}
+          localSalesKRW={3_600_000}
+          subsidyKRW={360_000}
+          payoutKRW={3_551_400}
+        />}
+      </div>
     </>
+  )
+}
+
+function TransactionTrace({ userFunded, campaignId, voucherId, receiptId, settlementId }: { userFunded: boolean; campaignId: string; voucherId: string; receiptId: string; settlementId: string }) {
+  return (
+    <Panel
+      eyebrow="Transaction trace"
+      title={userFunded ? "User-funded voucher order" : "Campaign-funded order"}
+      action={<EnvironmentBadge kind="SIMULATED" />}
+    >
+      <dl className="divide-y divide-border px-5 sm:px-6">
+        <TraceRow label="Funding source" value={userFunded ? "Customer-owned return-trip voucher · demo fixture" : "Municipal campaign · demo fixture"} />
+        <TraceRow label="Campaign ID" value={campaignId} mono />
+        <TraceRow label="Voucher ID" value={voucherId} mono />
+        <TraceRow label="Customer receipt" value={receiptId} mono />
+        <TraceRow label="Settlement ID" value={settlementId} mono />
+      </dl>
+      <div className="border-t border-border p-5 sm:px-6">
+        <Link href="/evidence" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-[12px] font-bold text-white">
+          <FileSearch className="h-4 w-4" /> Open linked simulation evidence <ArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    </Panel>
+  )
+}
+
+function TraceRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="grid gap-1 py-3.5 sm:grid-cols-[128px_minmax(0,1fr)] sm:items-center sm:gap-4">
+      <dt className="text-[12px] font-semibold text-muted-foreground">{label}</dt>
+      <dd className={cn("break-all text-[12px] font-bold", mono && "font-mono text-[11px]")}>{value}</dd>
+    </div>
+  )
+}
+
+function CampaignImpact({ campaignId, localSalesKRW, subsidyKRW, payoutKRW }: { campaignId: string; localSalesKRW: number; subsidyKRW: number; payoutKRW: number }) {
+  const metrics = [
+    { label: "Benefits issued", value: "240" },
+    { label: "Redemption rate", value: "30%", detail: "72 simulated uses" },
+    { label: "Local sales", value: `₩${localSalesKRW.toLocaleString()}` },
+    { label: "Campaign subsidy", value: `₩${subsidyKRW.toLocaleString()}` },
+    { label: "Partner payout", value: `₩${payoutKRW.toLocaleString()}` },
+  ]
+
+  return (
+    <Panel eyebrow="Campaign impact" title={campaignId} action={<EnvironmentBadge kind="SIMULATED" />}>
+      <div className="p-5 sm:p-6">
+        <p className="max-w-2xl text-[12px] leading-relaxed text-muted-foreground">
+          Illustrative aggregate fixture for the current campaign. It contains no traveler identity or live government reporting data.
+        </p>
+        <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
+              <dt className="text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">{metric.label}</dt>
+              <dd className="mt-2 text-[20px] font-extrabold tracking-tight tabular-nums">{metric.value}</dd>
+              {metric.detail && <p className="mt-1 text-[11px] text-muted-foreground">{metric.detail}</p>}
+            </div>
+          ))}
+        </dl>
+        <p className="mt-4 rounded-2xl bg-[#f5ecdc] p-3 text-[12px] leading-relaxed text-[#735116]">
+          Demo insight only: these figures show the intended reporting shape, not a verified policy result, partner statement or live dataset.
+        </p>
+      </div>
+    </Panel>
   )
 }
 
@@ -130,14 +219,14 @@ function PayoutHero({ amount, complete, running, onSubmit }: { amount: number; c
   )
 }
 
-function RefundedPayout({ gross, paid, benefit, fee, payout }: { gross: number; paid: number; benefit: number; fee: number; payout: number }) {
+function RefundedPayout({ gross, paid, benefit, fee, payout, userFunded }: { gross: number; paid: number; benefit: number; fee: number; payout: number; userFunded: boolean }) {
   return (
     <Panel eyebrow="Refunded order" title="No payout due">
       <div className="grid gap-6 p-5 sm:p-6 md:grid-cols-[1fr_280px] md:items-center">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full bg-success-surface px-3 py-1.5 text-[12px] font-bold text-success"><CheckCircle2 className="h-4 w-4" /> Adjustment complete</span>
-          <h2 className="mt-4 text-[24px] font-extrabold">Customer and campaign amounts reversed</h2>
-          <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">The customer's ₩{paid.toLocaleString()} payment and the ₩{benefit.toLocaleString()} campaign contribution were reversed. The ₩{fee.toLocaleString()} fee was cancelled.</p>
+          <h2 className="mt-4 text-[24px] font-extrabold">{userFunded ? "Cash and customer voucher value reversed" : "Customer and campaign amounts reversed"}</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-muted-foreground">The customer's ₩{paid.toLocaleString()} cash payment and the ₩{benefit.toLocaleString()} {userFunded ? "customer-owned voucher value" : "campaign contribution"} were reversed. The ₩{fee.toLocaleString()} fee was cancelled.</p>
         </div>
         <div className="rounded-2xl bg-surface-2 p-4">
           <MoneyRow label="Original order" value={gross} />

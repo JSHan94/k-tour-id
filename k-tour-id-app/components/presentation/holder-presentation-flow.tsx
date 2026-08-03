@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   AlertTriangle,
   ArrowLeft,
@@ -28,10 +29,11 @@ type FlowStep = "scan" | "consent" | "result"
 type DemoResult = "success" | "expired" | "revoked" | "offline" | "ineligible"
 type PaymentRecovery = { href: string; label: string } | null
 
-const CLAIMS = ["credentialActive", "visitorEligibility", "tripActive", "couponUnused"] as const
+const CLAIMS = ["credentialActive", "serviceEligibility", "tripActive", "couponUnused"] as const
 const PRESENTER_RESULTS: DemoResult[] = ["success", "expired", "revoked", "offline"]
 
 export function HolderPresentationFlow() {
+  const router = useRouter()
   const { lang } = useLang()
   const ko = lang === "ko"
   const {
@@ -94,7 +96,7 @@ export function HolderPresentationFlow() {
       const payment = await payWithBenefit({
         merchant: demoJourney.merchant,
         grossKRW: demoJourney.grossKRW,
-        service: "reservation",
+        service: demoJourney.service,
         voucherId: demoJourney.voucherId,
         presentationId: demoJourney.presentationId,
       })
@@ -118,7 +120,7 @@ export function HolderPresentationFlow() {
         setPaying(false)
         return
       }
-      window.location.assign("/benefits")
+      router.push("/benefits")
     } catch {
       setError(ko ? "결제를 완료하지 못했어요. 다시 시도해 주세요." : "We couldn't complete the payment. Please try again.")
       setPaying(false)
@@ -182,39 +184,46 @@ function ScanStep({ ko, onScan }: { ko: boolean; onScan: () => void }) {
 }
 
 function ConsentStep({ ko, journey, checking, onContinue }: { ko: boolean; journey: DemoJourney; checking: boolean; onContinue: () => void }) {
-  const merchantName = ko ? "북촌 공예관" : journey.merchantDisplay
-  const productName = ko ? "자개 공예 체험" : journey.product
+  const merchantName = journey.merchantDisplay
+  const productName = ko ? journey.productKo : journey.product
+  const userFunded = journey.campaignId === "USER-RETURN-TRIP"
   return (
     <main className="safe-bottom flex flex-1 flex-col px-6 pt-2">
       <div className="card-credential relative h-[210px] overflow-hidden rounded-[24px] p-6 text-white">
         <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full border border-gold/25" />
         <div className="absolute -right-4 top-4 h-32 w-32 rounded-full border border-gold/15" />
-        <p className="text-[12px] font-medium tracking-[0.16em] text-gold">BUKCHON · SEOUL</p>
-        <p className="font-display mt-7 text-[46px] font-semibold leading-none text-white/92">北村</p>
+        <p className="text-[12px] font-medium tracking-[0.16em] text-gold">K-TOUR ID · ONE-TIME CHECK</p>
+        <p className="font-display mt-7 text-[40px] font-semibold leading-none text-white/92">{userFunded ? (ko ? "바우처 사용 확인" : "Voucher use check") : (ko ? "혜택 확인" : "Benefit check")}</p>
         <div className="absolute inset-x-6 bottom-6 flex items-end justify-between border-t border-white/15 pt-3">
           <p className="text-[14px] font-medium text-white">{merchantName}</p>
-          <p className="text-[12px] text-white/55">CRAFT HOUSE</p>
+          <p className="text-[12px] text-white/55">SIMULATED</p>
         </div>
       </div>
 
       <div className="pt-7">
-        <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 제휴 매장" : "K-Tour ID partner"}</p>
-        <h1 className="font-display mt-3 text-[35px] font-semibold tracking-[-0.035em]">₩{journey.voucherKRW.toLocaleString()} <span className="text-[22px]">{ko ? "할인" : "off"}</span></h1>
+        <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 데모 이용처 · 제휴 전" : "K-Tour ID demo merchant · pre-partnership"}</p>
+        <h1 className="font-display mt-3 text-[35px] font-semibold tracking-[-0.035em]">₩{journey.voucherKRW.toLocaleString()} <span className="text-[22px]">{userFunded ? (ko ? "바우처 사용" : "voucher use") : (ko ? "혜택" : "benefit")}</span></h1>
         <p className="mt-2 text-[15px] text-foreground">{productName}</p>
         <p className="mt-1 text-[13px] text-muted-foreground">{ko ? journey.optionLabel : journey.optionLabelEn} · {ko ? journey.fulfilmentLabel : journey.fulfilmentLabelEn}</p>
       </div>
 
       <div className="mt-7 border-y border-foreground/10 py-5">
-        <p className="flex items-start gap-3 text-[14px] leading-6"><ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-success" /> {ko ? "여행자 여부만 확인해요. 이름과 여권번호는 매장에 공유하지 않아요." : "Only traveler eligibility is checked. Your name and passport number stay private."}</p>
+        <p className="flex items-start gap-3 text-[14px] leading-6"><ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-success" /> {userFunded ? (ko ? "내 바우처 사용에 필요한 유효 상태만 1회 확인해요. 이름과 신분증 번호는 이용처에 공유하지 않아요." : "Only the status predicates needed to use your voucher are checked once. Your name and document number stay private.") : (ko ? "이 혜택에 필요한 자격 값만 1회 확인해요. 이름과 신분증 번호는 이용처에 공유하지 않아요." : "Only the eligibility predicates required for this benefit are checked once. Your name and document number stay private.")}</p>
         <details className="mt-3 pl-8 text-[12px] leading-5 text-muted-foreground">
           <summary className="min-h-8 cursor-pointer font-medium underline decoration-foreground/20 underline-offset-4">{ko ? "무엇을 확인하나요?" : "What is checked?"}</summary>
-          <p>{ko ? "K-Tour ID 상태, 여행자 자격, 여행 기간, 혜택의 이전 사용 여부를 한 번 확인합니다." : "We check K-Tour ID status, traveler eligibility, trip period, and previous benefit use once."}</p>
+          <dl className="mt-2 space-y-1.5">
+            <ConsentFact label={ko ? "확인 값" : "Predicates"} value={userFunded ? (ko ? "K-Tour ID 유효 · 서비스 대상 · 이용기간 유효 · 바우처 사용 가능" : "Active ID · service eligibility · active service period · voucher available") : (ko ? "K-Tour ID 유효 · 서비스 대상 · 이용기간 유효 · 혜택 미사용" : "Active ID · service eligibility · active service period · benefit unused")} />
+            <ConsentFact label={ko ? "요청자" : "Verifier"} value={merchantName} />
+            <ConsentFact label={ko ? "목적" : "Purpose"} value={ko ? `${productName} ${userFunded ? "내 바우처 결제" : "혜택 적용"}` : journey.purpose} />
+            <ConsentFact label={ko ? "보관" : "Retention"} value={ko ? "원문 미보관 · 검증 영수증만 저장" : "No source data retained · verification receipt only"} />
+            <ConsentFact label={ko ? "요청 번호" : "Request"} value={journey.requestId} />
+          </dl>
         </details>
       </div>
 
       <div className="mt-auto pt-7">
         <button type="button" onClick={onContinue} disabled={checking} className="pressable flex min-h-14 w-full items-center justify-center gap-3 rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-65">
-          {checking ? <><Loader2 className="h-5 w-5 animate-spin" /> {ko ? "할인을 확인하고 있어요…" : "Checking your discount…"}</> : <><LockKeyhole className="h-5 w-5" /> {ko ? `동의하고 ₩${journey.voucherKRW.toLocaleString()} 할인받기` : `Agree and save ₩${journey.voucherKRW.toLocaleString()}`}</>}
+          {checking ? <><Loader2 className="h-5 w-5 animate-spin" /> {userFunded ? (ko ? "바우처 사용 조건을 확인하고 있어요…" : "Checking voucher use…") : (ko ? "혜택을 확인하고 있어요…" : "Checking your benefit…")}</> : <><LockKeyhole className="h-5 w-5" /> {userFunded ? (ko ? `동의하고 내 바우처에서 ₩${journey.voucherKRW.toLocaleString()} 사용` : `Agree to use ₩${journey.voucherKRW.toLocaleString()} from my voucher`) : (ko ? `동의하고 ₩${journey.voucherKRW.toLocaleString()} 혜택받기` : `Agree and apply ₩${journey.voucherKRW.toLocaleString()} benefit`)}</>}
         </button>
         <p className="mt-3 text-center text-[12px] leading-5 text-muted-foreground">{ko ? "버튼을 누르면 위 목적의 1회성 자격 확인에 동의합니다." : "By continuing, you consent to this one-time eligibility check."}</p>
       </div>
@@ -223,12 +232,13 @@ function ConsentStep({ ko, journey, checking, onContinue }: { ko: boolean; journ
 }
 
 function PaymentStep({ ko, journey, paying, error, recovery, onPay }: { ko: boolean; journey: DemoJourney; paying: boolean; error: string; recovery: PaymentRecovery; onPay: () => void }) {
-  const merchantName = ko ? "북촌 공예관" : journey.merchantDisplay
-  const productName = ko ? "자개 공예 체험" : journey.product
+  const merchantName = journey.merchantDisplay
+  const productName = ko ? journey.productKo : journey.product
+  const userFunded = journey.campaignId === "USER-RETURN-TRIP"
   return (
     <main className="safe-bottom flex flex-1 flex-col px-6 pt-4">
-      <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><Check className="h-4 w-4" /> {ko ? "여행자 할인 적용" : "Traveler discount applied"}</p>
-      <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.24] tracking-[-0.03em]">{ko ? "할인된 금액으로\n결제할까요?" : "Ready to pay\nthe discounted price?"}</h1>
+      <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><Check className="h-4 w-4" /> {userFunded ? (ko ? "재방문 바우처 적용" : "Return-trip voucher applied") : (ko ? "K-Tour ID 혜택 적용" : "K-Tour ID benefit applied")}</p>
+      <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.24] tracking-[-0.03em]">{userFunded ? (ko ? "내 바우처를 사용하고\n남은 금액을 결제할까요?" : "Use your voucher and\npay the remaining amount?") : (ko ? "혜택이 적용된 금액으로\n결제할까요?" : "Ready to pay\nthe benefit-adjusted price?")}</h1>
 
       <div className="mt-8 border-y border-foreground/10 py-5">
           <p className="text-[15px] font-semibold">{productName}</p>
@@ -236,7 +246,7 @@ function PaymentStep({ ko, journey, paying, error, recovery, onPay }: { ko: bool
           <p className="mt-1 text-[13px] text-muted-foreground">{ko ? journey.optionLabel : journey.optionLabelEn} · {ko ? journey.fulfilmentLabel : journey.fulfilmentLabelEn}</p>
         <div className="mt-6 space-y-3 text-[14px]">
           <PriceRow label={ko ? "상품 금액" : "Original price"} value={`₩${journey.grossKRW.toLocaleString()}`} />
-          <PriceRow label={ko ? "여행자 할인" : "Traveler discount"} value={`− ₩${journey.voucherKRW.toLocaleString()}`} success />
+          <PriceRow label={userFunded ? (ko ? "재방문 바우처 사용" : "Return-trip voucher") : (ko ? "K-Tour ID 혜택" : "K-Tour ID benefit")} value={`− ₩${journey.voucherKRW.toLocaleString()}`} success />
         </div>
       </div>
 
@@ -244,17 +254,21 @@ function PaymentStep({ ko, journey, paying, error, recovery, onPay }: { ko: bool
         <span className="text-[14px] text-muted-foreground">{ko ? "결제할 금액" : "Total due"}</span>
         <strong className="font-display tabular text-[40px] font-semibold tracking-[-0.04em]">₩{journey.paidKRW.toLocaleString()}</strong>
       </div>
-      <p className="mt-2 text-right text-[13px] font-medium text-success">{ko ? `오늘 ₩${journey.voucherKRW.toLocaleString()} 절약` : `Save ₩${journey.voucherKRW.toLocaleString()} today`}</p>
+      <p className="mt-2 text-right text-[13px] font-medium text-success">{userFunded ? (ko ? `내 바우처에서 ₩${journey.voucherKRW.toLocaleString()} 사용` : `₩${journey.voucherKRW.toLocaleString()} from your voucher`) : (ko ? `오늘 ₩${journey.voucherKRW.toLocaleString()} 절약` : `Save ₩${journey.voucherKRW.toLocaleString()} today`)}</p>
 
       {error && <div role="alert" className="mt-5 border-l-2 border-destructive pl-3 text-[13px] text-destructive"><p>{error}</p>{recovery && <Link href={recovery.href} className="mt-2 inline-flex min-h-8 items-center font-semibold underline underline-offset-4">{recovery.label}<ArrowRight className="ml-1 h-4 w-4" /></Link>}</div>}
       <div className="mt-auto pt-8">
         <button type="button" onClick={onPay} disabled={paying} className="pressable flex min-h-14 w-full items-center justify-center gap-3 rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-65">
           {paying ? <><Loader2 className="h-5 w-5 animate-spin" /> {ko ? "결제하고 있어요…" : "Processing…"}</> : <>{ko ? `₩${journey.paidKRW.toLocaleString()} 결제` : `Pay ₩${journey.paidKRW.toLocaleString()}`} <ArrowRight className="h-5 w-5" /></>}
         </button>
-        <p className="mt-3 text-center text-[12px] text-muted-foreground">{ko ? "혜택은 자동으로 적용됐어요." : "Your benefit has been applied automatically."}</p>
+        <p className="mt-3 text-center text-[12px] text-muted-foreground">{userFunded ? (ko ? "선택한 내 바우처 금액이 적용됐어요." : "Your selected voucher value has been applied.") : (ko ? "혜택은 자동으로 적용됐어요." : "Your benefit has been applied automatically.")}</p>
       </div>
     </main>
   )
+}
+
+function ConsentFact({ label, value }: { label: string; value: string }) {
+  return <div className="grid grid-cols-[72px_1fr] gap-2"><dt>{label}</dt><dd className="break-words text-foreground/80">{value}</dd></div>
 }
 
 function PriceRow({ label, value, success }: { label: string; value: string; success?: boolean }) {

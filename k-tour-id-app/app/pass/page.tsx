@@ -49,8 +49,9 @@ export default function PassPage() {
     )
   }
 
-  const unavailable = statusPreview != null || capsule.status !== "active"
-  const statusTitle = statusPreview === "expired"
+  const expiredByDate = new Date(capsule.expiresAt).getTime() <= Date.now()
+  const unavailable = statusPreview != null || capsule.status !== "active" || expiredByDate
+  const statusTitle = statusPreview === "expired" || expiredByDate
     ? (ko ? "사용 기간이 끝났어요" : "Your K-Tour ID has expired")
     : (ko ? "지금은 사용할 수 없어요" : "Your K-Tour ID is unavailable")
   const persona = PERSONA_CONFIG[capsule.userType]

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { Building2, CircleDot, Landmark, ScanLine } from "lucide-react"
 import { Seal } from "@/components/app/seal"
 import { cn } from "@/lib/utils"
+import { useApp } from "@/lib/store/app-provider"
 
 export type EnvironmentKind = "LIVE" | "SANDBOX" | "SIMULATED"
 
@@ -37,6 +38,7 @@ const NAV = [
 
 export function PartnerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const { demoJourney } = useApp()
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -48,8 +50,8 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
               <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Demo workspace</p>
               <EnvironmentBadge kind="SIMULATED" />
             </div>
-            <p className="mt-2 text-[14px] font-bold">Bukchon Craft House</p>
-            <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">Workshop counter</p>
+            <p className="mt-2 text-[14px] font-bold">{demoJourney.merchantDisplay}</p>
+            <p className="mt-1 break-all text-[12px] leading-relaxed text-muted-foreground">{demoJourney.campaignId} · current transaction</p>
           </div>
 
           <nav aria-label="Partner console" className="mt-5 space-y-1.5">
@@ -89,7 +91,7 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
                 <span
                   className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground"
                   role="img"
-                  aria-label="Bukchon Craft House account"
+                  aria-label={`${demoJourney.merchantDisplay} account`}
                 >
                   <Building2 className="h-[18px] w-[18px]" />
                 </span>

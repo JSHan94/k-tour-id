@@ -3,11 +3,12 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, Home, Wallet, ChevronLeft, Compass, UsersRound } from "lucide-react"
+import { BadgeCheck, Bell, Home, ChevronLeft, Compass, UsersRound } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { Seal } from "@/components/app/seal"
 import { SealCopilot } from "@/components/app/seal-copilot"
+import { APP_INTEGRATION_MODE, IntegrationModeBadge } from "@/components/app/integration-status"
 
 export function PhoneFrame({
   children,
@@ -21,6 +22,7 @@ export function PhoneFrame({
   return (
     <div className="paper-grain min-h-screen w-full bg-background flex justify-center">
       <div className="relative w-full max-w-[420px] min-h-screen bg-background md:shadow-[0_0_50px_rgba(25,24,22,0.08)] overflow-hidden">
+        {APP_INTEGRATION_MODE === "simulated" && <div title="Interactive demo · no real identity or payment" className="pointer-events-none fixed left-1/2 top-[max(0.35rem,env(safe-area-inset-top))] z-[80] -translate-x-1/2 opacity-90"><IntegrationModeBadge compact /></div>}
         <div className={cn("min-h-screen", hideNav ? "" : "pb-24", className)}>
           {children}
         </div>
@@ -35,16 +37,18 @@ const NAV_ITEMS = [
   { href: "/", labelKey: "nav.home", icon: Home },
   { href: "/explore", labelKey: "nav.explore", icon: Compass },
   { href: "/connect", labelKey: "nav.connect", icon: UsersRound },
-  { href: "/wallet", labelKey: "nav.wallet", icon: Wallet },
+  { href: "/wallet", labelKey: "nav.wallet", labelKo: "ID·지갑", labelEn: "ID·Wallet", icon: BadgeCheck },
 ] as const
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { t } = useLang()
+  const { t, lang } = useLang()
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-foreground/[0.07] bg-background/92 backdrop-blur-xl">
       <div className="grid grid-cols-4 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
-        {NAV_ITEMS.map(({ href, labelKey, icon: Icon }) => {
+        {NAV_ITEMS.map((item) => {
+          const { href, labelKey, icon: Icon } = item
+          const label = "labelKo" in item ? (lang === "ko" ? item.labelKo : item.labelEn) : t(labelKey)
           const active = href === "/"
             ? pathname === "/"
             : href === "/wallet"
@@ -55,11 +59,11 @@ export function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              aria-label={t(labelKey)}
+              aria-label={label}
               className="pressable relative flex min-h-[58px] flex-col items-center justify-center gap-1"
             >
               <Icon className={cn("h-[21px] w-[21px]", active ? "text-foreground" : "text-muted-foreground")} strokeWidth={active ? 2.1 : 1.7} />
-              <span className={cn("text-[12px] font-medium", active ? "text-foreground" : "text-muted-foreground")}>{t(labelKey)}</span>
+              <span className={cn("text-[12px] font-medium", active ? "text-foreground" : "text-muted-foreground")}>{label}</span>
             </Link>
           )
         })}

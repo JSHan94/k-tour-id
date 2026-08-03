@@ -160,7 +160,12 @@ export function PayModal({
     busy.current = true
     setPhase("processing")
     try {
-      await pay(item.merchant, item.amountKRW, item.category)
+      const paid = await pay(item.merchant, item.amountKRW, item.category)
+      if (!paid) {
+        setPhase("error")
+        busy.current = false
+        return
+      }
       setPhase("done")
       setTimeout(() => {
         onOpenChange(false)

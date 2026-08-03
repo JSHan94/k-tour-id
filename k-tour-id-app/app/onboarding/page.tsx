@@ -24,10 +24,54 @@ const METHODS: {
   { key: "korean", method: "mobile-id", icon: Smartphone },
 ]
 
-const VERIFICATION_JOURNEY: Record<UserType, { eyebrow: string; ko: string; en: string; actionKo: string; actionEn: string }> = {
-  foreigner: { eyebrow: "PASSPORT + FACE", ko: "여권 정보와 얼굴 일치 결과를 확인해요", en: "Check the passport chip and face-match result", actionKo: "데모 여권 스캔", actionEn: "Scan demo passport" },
-  "long-term": { eyebrow: "RESIDENCE ID", ko: "등록된 체류 신분증 제공자로 연결해요", en: "Connect to the registered residence-ID provider", actionKo: "거주 신분증으로 연결", actionEn: "Connect residence ID" },
-  korean: { eyebrow: "MOBILE ID", ko: "모바일 신분증 앱에서 요청을 승인해요", en: "Approve the request in the Mobile ID app", actionKo: "모바일 신분증 열기", actionEn: "Open Mobile ID" },
+const VERIFICATION_JOURNEY: Record<UserType, {
+  eyebrow: string
+  ko: string
+  en: string
+  actionKo: string
+  actionEn: string
+  providerKo: string
+  providerEn: string
+  claimsKo: string
+  claimsEn: string
+}> = {
+  foreigner: {
+    eyebrow: "PASSPORT + FACE",
+    ko: "여권 정보와 얼굴 일치 결과를 확인해요",
+    en: "Check the passport chip and face-match result",
+    actionKo: "데모 여권 스캔",
+    actionEn: "Scan demo passport",
+    providerKo: "데모 여권·얼굴 일치 제공자",
+    providerEn: "Demo passport & face-match provider",
+    claimsKo: "여권 유효 여부, 이름, 국적, 생년월일, 얼굴 일치 결과",
+    claimsEn: "Passport validity, name, nationality, date of birth and face-match result",
+  },
+  "long-term": {
+    eyebrow: "RESIDENCE ID",
+    ko: "등록된 체류 신분증 제공자로 연결해요",
+    en: "Connect to the registered residence-ID provider",
+    actionKo: "거주 신분증으로 연결",
+    actionEn: "Connect residence ID",
+    providerKo: "데모 체류 신분증 제공자",
+    providerEn: "Demo residence-ID provider",
+    claimsKo: "체류 신분증 유효 여부, 이름, 국적, 생년월일, 체류 자격 결과",
+    claimsEn: "Residence-ID validity, name, nationality, date of birth and residence eligibility result",
+  },
+  korean: {
+    eyebrow: "MOBILE ID",
+    ko: "모바일 신분증 앱에서 요청을 승인해요",
+    en: "Approve the request in the Mobile ID app",
+    actionKo: "모바일 신분증 열기",
+    actionEn: "Open Mobile ID",
+    providerKo: "데모 모바일 신분증 제공자",
+    providerEn: "Demo Mobile ID provider",
+    claimsKo: "모바일 신분증 유효 여부, 이름, 국적, 생년월일",
+    claimsEn: "Mobile ID validity, name, nationality and date of birth",
+  },
+}
+
+function DemoMark() {
+  return <span className="rounded-full border border-current/20 px-2 py-1 text-[10px] font-bold tracking-[0.12em] opacity-70">DEMO · SIMULATED</span>
 }
 
 export default function OnboardingPage() {
@@ -42,6 +86,7 @@ export default function OnboardingPage() {
   const [renewMode, setRenewMode] = useState(false)
   const [issuedHere, setIssuedHere] = useState(false)
   const [identityPreview, setIdentityPreview] = useState<Identity | null>(null)
+  const [consentChecked, setConsentChecked] = useState(false)
   const [returnTo, setReturnTo] = useState("/pass")
   const completionHeadingRef = useRef<HTMLHeadingElement>(null)
   const seededPersonaApplied = useRef(false)
@@ -83,11 +128,12 @@ export default function OnboardingPage() {
         : (index + (event.key === "ArrowDown" || event.key === "ArrowRight" ? 1 : -1) + METHODS.length) % METHODS.length
     setSelected(METHODS[next].key)
     setIdentityPreview(null)
+    setConsentChecked(false)
     event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role="radio"]')[next]?.focus()
   }
 
   const completeVerification = async () => {
-    if (busy) return
+    if (busy || !consentChecked) return
     setBusy(true)
     setError("")
     try {
@@ -116,6 +162,21 @@ export default function OnboardingPage() {
     }
   }
 
+  const leaveVerification = () => {
+    setError("")
+    setIdentityPreview(null)
+    setConsentChecked(false)
+    if (renewMode) router.push("/pass")
+    else setStep("persona")
+  }
+
+  const changeIdentityType = () => {
+    setError("")
+    setIdentityPreview(null)
+    setConsentChecked(false)
+    setStep("persona")
+  }
+
   return (
     <PhoneFrame hideNav>
       {step === "cover" && (
@@ -124,7 +185,7 @@ export default function OnboardingPage() {
             <img src="/seoul-after-rain-hero.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[55%_48%]" />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,16,25,.46),rgba(10,16,25,.06)_48%,rgba(10,16,25,.82))]" />
             <div className="safe-top relative z-10 flex items-center justify-between px-6">
-              <p className="font-display text-[20px] font-semibold">K-Tour ID</p>
+              <div className="flex items-center gap-2"><p className="font-display text-[20px] font-semibold">K-Tour ID</p><DemoMark /></div>
               <div className="text-white"><LangToggle /></div>
             </div>
             <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-8">
@@ -150,7 +211,7 @@ export default function OnboardingPage() {
         <main className="safe-bottom safe-top flex min-h-screen flex-col px-6">
           <header className="flex items-center justify-between">
             <button type="button" onClick={() => setStep("cover")} aria-label={ko ? "뒤로" : "Back"} className="pressable grid h-11 w-11 place-items-center rounded-full"><ArrowLeft className="h-5 w-5" /></button>
-            <p className="text-[13px] font-medium text-muted-foreground">2 / 4</p>
+            <div className="flex flex-col items-center gap-1"><p className="text-[13px] font-medium text-muted-foreground">2 / 4</p><DemoMark /></div>
             <LangToggle />
           </header>
           <div className="mt-7">
@@ -171,7 +232,7 @@ export default function OnboardingPage() {
                   aria-checked={active}
                   tabIndex={active ? 0 : -1}
                   onKeyDown={(event) => movePersona(event, index)}
-                  onClick={() => { setSelected(item.key); setIdentityPreview(null) }}
+                  onClick={() => { setSelected(item.key); setIdentityPreview(null); setConsentChecked(false) }}
                   className={cn("pressable relative flex min-h-[94px] w-full items-center gap-4 px-2 text-left", active && "text-foreground")}
                 >
                   <span className="tabular w-7 text-[12px] font-semibold text-muted-foreground">0{index + 1}</span>
@@ -195,8 +256,8 @@ export default function OnboardingPage() {
       {step === "verify" && (
         <main aria-busy={busy} className="safe-bottom safe-top flex min-h-screen flex-col px-6">
           <header className="flex items-center justify-between">
-            <button type="button" onClick={() => identityPreview ? setIdentityPreview(null) : renewMode ? router.push("/pass") : setStep("persona")} disabled={busy} aria-label={ko ? "뒤로" : "Back"} className="pressable grid h-11 w-11 place-items-center rounded-full disabled:opacity-40"><ArrowLeft className="h-5 w-5" /></button>
-            <p className="text-[13px] font-medium text-muted-foreground">{renewMode ? "1 / 2" : "3 / 4"}</p>
+            <button type="button" onClick={() => identityPreview ? setIdentityPreview(null) : leaveVerification()} disabled={busy} aria-label={ko ? "뒤로" : "Back"} className="pressable grid h-11 w-11 place-items-center rounded-full disabled:opacity-40"><ArrowLeft className="h-5 w-5" /></button>
+            <div className="flex flex-col items-center gap-1"><p className="text-[13px] font-medium text-muted-foreground">{renewMode ? "1 / 2" : "3 / 4"}</p><DemoMark /></div>
             <LangToggle />
           </header>
           <div className="mt-7">
@@ -204,25 +265,47 @@ export default function OnboardingPage() {
             <h1 className="font-display text-balance mt-2 text-[31px] font-semibold leading-[1.24] tracking-[-0.03em]">{identityPreview ? (ko ? "이 정보로 K-Tour ID를\n만들까요?" : "Create your K-Tour ID\nwith these details?") : verificationJourney[lang]}</h1>
             <p className="mt-3 text-[14px] leading-6 text-muted-foreground">{identityPreview ? (ko ? "발급 전에 이름·국적·확인 방법을 마지막으로 확인하세요." : "Check the name, nationality and verification method before issuance.") : (ko ? "실제 신분증은 업로드하지 않는 시뮬레이션이에요. 연결 방식만 실제 서비스처럼 보여드려요." : "This simulation uploads no real ID and demonstrates the intended provider handoff.")}</p>
           </div>
-          <div className="my-8 flex flex-1 items-center justify-center">
+          <div className={cn("flex flex-1 items-center justify-center", identityPreview ? "my-8" : "mb-5 mt-7")}>
             <div className="card-credential relative flex h-[244px] w-full flex-col justify-between overflow-hidden rounded-[28px] p-6 text-white">
               <div className="flex items-center justify-between"><span className="text-[13px] font-medium text-white/65">{identityPreview ? "VERIFIED DETAILS" : verificationJourney.eyebrow}</span><chosen.icon className="h-6 w-6 text-gold" /></div>
               {identityPreview ? <div className="flex items-end gap-4"><img src={identityPreview.photoUrl} alt="" className="h-16 w-16 rounded-full object-cover ring-2 ring-gold/70" /><div className="min-w-0"><p className="font-display text-[24px] font-semibold">{identityPreview.displayName}</p><p className="mt-1 text-[13px] text-white/68">{identityPreview.nationalityFlag} {identityPreview.nationality}</p><p className="mt-1 text-[12px] text-white/55">{persona.verification[lang]}</p></div></div> : <div><div className="mb-5 h-px w-full bg-white/15" /><p className="font-display text-[26px] font-semibold">{verificationJourney[lang]}</p><p className="mt-2 text-[13px] text-white/62">{persona.value[lang]}</p></div>}
               {busy && <div className="absolute inset-x-6 top-1/2 h-px animate-[scan_1.5s_ease-in-out_infinite] bg-gold shadow-[0_0_12px_rgba(174,138,80,.75)]" />}
             </div>
           </div>
+          {!identityPreview && (
+            <section aria-labelledby="verification-consent-title" className="mb-4 rounded-[18px] border border-foreground/10 bg-secondary/45 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <h2 id="verification-consent-title" className="text-[13px] font-semibold">{ko ? "필수 확인·동의" : "Required review & consent"}</h2>
+                  <dl className="mt-2 space-y-1.5 text-[12px] leading-[1.55] text-muted-foreground">
+                    <div><dt className="inline font-semibold text-foreground">{ko ? "요청자" : "Requester"} · </dt><dd className="inline">K-Tour ID</dd></div>
+                    <div><dt className="inline font-semibold text-foreground">{ko ? "확인 제공자" : "Provider"} · </dt><dd className="inline">{ko ? verificationJourney.providerKo : verificationJourney.providerEn} · SIMULATED</dd></div>
+                    <div><dt className="inline font-semibold text-foreground">{ko ? "목적" : "Purpose"} · </dt><dd className="inline">{ko ? "K-Tour ID 발급·갱신 및 이용 가능한 여행·생활 혜택 확인" : "Issue or renew K-Tour ID and determine eligible travel and everyday benefits"}</dd></div>
+                    <div><dt className="inline font-semibold text-foreground">{ko ? "확인 항목" : "Requested items"} · </dt><dd className="inline">{ko ? verificationJourney.claimsKo : verificationJourney.claimsEn}</dd></div>
+                    <div><dt className="inline font-semibold text-foreground">{ko ? "보관기간" : "Retention"} · </dt><dd className="inline">{ko ? "요청·임시 결과는 이번 발급 세션까지, 발급 결과는 로그아웃·데모 초기화 또는 ID 만료까지" : "Request and temporary result: this issuance session; issued result: until sign-out, demo reset or ID expiry"}</dd></div>
+                  </dl>
+                  <p className="mt-2 text-[12px] font-medium leading-[1.55] text-success">{ko ? "원문 신분증·스캔 이미지·얼굴 이미지는 저장하지 않아요." : "Original ID data, scans and face images are not stored."}</p>
+                </div>
+              </div>
+              <label className="mt-3 flex min-h-11 cursor-pointer items-start gap-3 border-t border-foreground/10 pt-3 text-[13px] font-semibold leading-5">
+                <input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} className="mt-0.5 h-5 w-5 flex-shrink-0 accent-[var(--primary)]" />
+                <span>{ko ? "[필수] 위 내용을 확인했고 데모 제공자 연결에 동의해요." : "[Required] I reviewed the details and agree to connect to the demo provider."}</span>
+              </label>
+              <button type="button" onClick={leaveVerification} className="pressable mt-1 min-h-10 w-full text-[12px] font-medium text-muted-foreground underline decoration-foreground/25 underline-offset-4">{ko ? "동의하지 않고 돌아가기" : "Decline and go back"}</button>
+            </section>
+          )}
           {busy && <p role="status" aria-live="polite" className="mb-3 text-center text-[13px] text-muted-foreground">{identityPreview ? (ko ? "K-Tour ID를 발급하고 있어요." : "Issuing your K-Tour ID.") : (ko ? "확인 제공자의 결과를 불러오고 있어요." : "Retrieving the provider's verified result.")}</p>}
-          {error && <div role="alert" className="mb-3 border-l-2 border-destructive pl-3"><p className="text-[13px] leading-5 text-destructive">{error}</p><button type="button" onClick={() => setStep("persona")} className="mt-1 min-h-9 text-[12px] font-semibold underline underline-offset-4">{ko ? "유형 다시 선택" : "Choose another type"}</button></div>}
-          <button type="button" onClick={identityPreview ? issueVerifiedIdentity : completeVerification} disabled={busy} className="pressable flex min-h-14 items-center justify-center gap-3 rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-65">
+          {error && <div role="alert" className="mb-3 border-l-2 border-destructive pl-3"><p className="text-[13px] leading-5 text-destructive">{error}</p><div className="mt-1 flex flex-wrap gap-x-4"><button type="button" onClick={identityPreview ? issueVerifiedIdentity : completeVerification} disabled={busy || (!identityPreview && !consentChecked)} className="min-h-9 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-40">{ko ? "같은 방식으로 다시 시도" : "Retry the same method"}</button><button type="button" onClick={changeIdentityType} disabled={busy} className="min-h-9 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-40">{ko ? "확인 유형 변경" : "Change verification type"}</button></div></div>}
+          <button type="button" onClick={identityPreview ? issueVerifiedIdentity : completeVerification} disabled={busy || (!identityPreview && !consentChecked)} className="pressable flex min-h-14 items-center justify-center gap-3 rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-40">
             {busy ? <><Loader2 className="h-5 w-5 animate-spin" /> {identityPreview ? (ko ? "발급하고 있어요…" : "Issuing…") : (ko ? "확인하고 있어요…" : "Verifying…")}</> : identityPreview ? <>{ko ? "확인하고 K-Tour ID 만들기" : "Confirm and create K-Tour ID"}<ArrowRight className="h-5 w-5" /></> : <>{ko ? verificationJourney.actionKo : verificationJourney.actionEn} <ArrowRight className="h-5 w-5" /></>}
           </button>
-          <details className="mt-2 text-[12px] leading-5 text-muted-foreground"><summary className="flex min-h-11 cursor-pointer items-center justify-center font-medium">{ko ? "개인정보 및 필수 동의" : "Privacy and required consent"}</summary><p className="pb-2">{ko ? "확인 결과는 발급 전에 검토할 수 있고, 원문 신분증 정보는 이 데모에 저장되지 않아요. 발급 전까지 이전 화면으로 돌아갈 수 있습니다." : "You can review the result before issuance. Original identity-document data is not stored in this demo, and you can go back before confirming."}</p></details>
         </main>
       )}
 
       {step === "done" && session.capsule && (
         <main className="safe-bottom safe-top flex min-h-screen flex-col px-6">
-          <div className="flex items-center justify-between"><p className="text-[13px] font-medium text-success">{renewMode ? "2 / 2" : "4 / 4"} · {ko ? "준비 완료" : "Ready"}</p><span className="grid h-11 w-11 place-items-center rounded-full border border-success/20 text-success" style={{ animation: "seal-stamp 360ms cubic-bezier(.2,.8,.2,1)" }}><Check className="h-5 w-5" /></span></div>
+          <div className="flex items-center justify-between"><div className="flex items-center gap-2"><p className="text-[13px] font-medium text-success">{renewMode ? "2 / 2" : "4 / 4"} · {ko ? "준비 완료" : "Ready"}</p><DemoMark /></div><span className="grid h-11 w-11 place-items-center rounded-full border border-success/20 text-success" style={{ animation: "seal-stamp 360ms cubic-bezier(.2,.8,.2,1)" }}><Check className="h-5 w-5" /></span></div>
           <h1 ref={completionHeadingRef} tabIndex={-1} className="font-display text-balance mt-9 whitespace-pre-line text-[34px] font-semibold leading-[1.18] tracking-[-0.035em] outline-none">{persona.completionTitle[lang]}</h1>
           <p className="mt-3 text-[15px] leading-6 text-muted-foreground">{persona.completionBody[lang]}</p>
           <section className="mt-9 divide-y divide-foreground/10 border-y border-foreground/10">

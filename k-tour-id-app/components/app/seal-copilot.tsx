@@ -26,7 +26,7 @@ export function SealCopilot() {
     pay, topUp, convertLeftover, markAllRead,
   } = useApp()
 
-  const ctx = pickContext(pathname, dismissedNudges)
+  const ctx = pickContext(pathname, dismissedNudges, { userType: session.userType, balanceKRW: session.wallet.balanceKRW })
   const [phase, setPhase] = useState<Record<string, Phase>>({})
   const [input, setInput] = useState("")
   const endRef = useRef<HTMLDivElement>(null)
@@ -50,7 +50,11 @@ export function SealCopilot() {
 
   const contextLine = (() => {
     const bal = money(session.wallet.balanceKRW)
-    if (pathname === "/") return `${STAY.cityKo && lang === "ko" ? STAY.cityKo : STAY.city} · D-${D_DAY} · ${bal}`
+    if (pathname === "/") {
+      if (session.userType === "foreigner") return `${STAY.cityKo && lang === "ko" ? STAY.cityKo : STAY.city} · D-${D_DAY} · ${bal}`
+      if (session.userType === "long-term") return `${lang === "ko" ? "서울 생활 혜택" : "Seoul resident benefits"} · ${bal}`
+      return `${lang === "ko" ? "국내 여행 혜택" : "Local travel benefits"} · ${bal}`
+    }
     if (pathname.startsWith("/wallet")) return `${t("wallet.budgetLeft")} ${tripRemainingPct}% · ${bal}`
     if (pathname.startsWith("/pass")) return session.capsule ? `${session.capsule.stayPeriod} · ${t("pass.statusActive")}` : ""
     if (pathname.startsWith("/alerts")) return `${notifications.filter((n) => !n.read).length} unread`
@@ -93,18 +97,29 @@ export function SealCopilot() {
     running.current.add(c.id) // synchronous lock — blocks the double-tap race
     setPhase((p) => ({ ...p, [c.id]: "processing" }))
     try {
-      if (c.kind === "pay" && c.merchant && c.amountKRW != null) await pay(c.merchant, c.amountKRW, (c.category as never) ?? "shopping")
-      else if (c.kind === "topup" && c.amountKRW != null) await topUp(c.amountKRW)
-      else if (c.kind === "convert" && c.amountKRW != null) await convertLeftover(c.amountKRW)
-      else if (c.kind === "markRead") markAllRead()
+      let succeeded = true
+      let failure = ""
+      if (c.kind === "pay" && c.merchant && c.amountKRW != null) {
+        succeeded = await pay(c.merchant, c.amountKRW, (c.category as never) ?? "shopping")
+        if (!succeeded) failure = lang === "ko" ? "여행 잔액이 부족해요. 지갑에서 충전한 뒤 다시 시도해 주세요." : "Your travel balance is too low. Top up in Wallet and try again."
+      } else if (c.kind === "topup" && c.amountKRW != null) await topUp(c.amountKRW)
+      else if (c.kind === "convert" && c.amountKRW != null) {
+        const result = await convertLeftover(c.amountKRW)
+        succeeded = result.ok
+        if (!result.ok) failure = result.error?.code === "INSUFFICIENT_BALANCE"
+          ? (lang === "ko" ? "전환할 여행 잔액이 부족해요. 금액을 확인해 주세요." : "There isn't enough travel balance to convert.")
+          : (lang === "ko" ? "바우처를 만들지 못했어요. 다시 시도해 주세요." : "We couldn't create the voucher. Please try again.")
+      } else if (c.kind === "markRead") markAllRead()
+      if (!succeeded) {
+        setPhase((p) => ({ ...p, [c.id]: "error" }))
+        copilotPushAi(failure)
+        return
+      }
       setPhase((p) => ({ ...p, [c.id]: "done" }))
       if (isMoney(c.kind) && c.amountKRW != null) {
-        const nextBalance = c.kind === "topup"
-          ? session.wallet.balanceKRW + c.amountKRW
-          : Math.max(0, session.wallet.balanceKRW - c.amountKRW)
         copilotPushAi(lang === "ko"
-          ? `${c.kind === "convert" ? "바우처 전환" : c.kind === "topup" ? "여행 잔액 충전" : "결제"}이 완료됐어요. 남은 여행 잔액은 ${money(nextBalance)}입니다.`
-          : `${c.kind === "convert" ? "Voucher conversion" : c.kind === "topup" ? "Travel balance top-up" : "Payment"} complete. Travel balance: ${money(nextBalance)}.`)
+          ? `${c.kind === "convert" ? "재방문 바우처 생성" : c.kind === "topup" ? "여행 잔액 충전" : "결제"}이 완료됐어요. 최신 잔액과 사용처는 ID·지갑에서 확인할 수 있어요.`
+          : `${c.kind === "convert" ? "Return-trip voucher created" : c.kind === "topup" ? "Travel balance top-up" : "Payment"} complete. Check ID · Wallet for the current balance and next action.`)
       }
     } catch {
       setPhase((p) => ({ ...p, [c.id]: "error" }))
@@ -169,7 +184,7 @@ export function SealCopilot() {
                           ? lang === "ko" ? "완료하지 못했어요 · 변경 없음" : "Could not complete · no change"
                         : confirming
                           ? c.kind === "convert"
-                            ? lang === "ko" ? "사용자 재원 · 30일 만료 · 미사용 시 전액 복귀 · 다시 눌러 확인" : "User-funded · 30 days · fully returnable while unused · tap again"
+                            ? lang === "ko" ? "사용자 재원 · 365일 유효 · 미사용 시 전액 복귀 · 다시 눌러 확인" : "User-funded · valid for 365 days · fully returnable while unused · tap again"
                             : lang === "ko" ? "한 번 더 눌러 확인" : "Tap again to confirm"
                           : c.reason ?? ""}
                     </p>

@@ -176,7 +176,7 @@ export type DemoJourneyStage =
   | "anchored"
   | "refunded"
 
-export type DemoClaimKey = "credentialActive" | "visitorEligibility" | "tripActive" | "couponUnused" | "ageOver19"
+export type DemoClaimKey = "credentialActive" | "serviceEligibility" | "tripActive" | "couponUnused" | "ageOver19"
 
 export interface DemoJourney {
   stage: DemoJourneyStage
@@ -189,6 +189,8 @@ export interface DemoJourney {
   merchant: string
   merchantDisplay: string
   product: string
+  productKo: string
+  service: Exclude<ServiceKey, "benefit">
   purpose: string
   requestId: string
   presentationId: string
@@ -298,6 +300,7 @@ export interface CommerceOrder {
   discountKRW: number
   paidKRW: number
   voucherId?: string
+  voucherFunding?: Voucher["funding"]
   status: "paid" | "used" | "refunded"
   fulfilment: MarketplaceItem["fulfilment"]
   cancellation: string

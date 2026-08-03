@@ -15,7 +15,7 @@ import { QRCode } from "@/components/qr-code"
 export default function OrderReceiptPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
-  const { orders, session, refundCommerceOrder, hydrated } = useApp()
+  const { orders, session, vouchers, refundCommerceOrder, hydrated } = useApp()
   const { lang } = useLang()
   const ko = lang === "ko"
   const order = orders.find((candidate) => candidate.id === params.id)
@@ -24,6 +24,8 @@ export default function OrderReceiptPage() {
   useEffect(() => { if (hydrated && !session.onboarded) router.replace("/onboarding") }, [hydrated, router, session.onboarded])
   if (!session.onboarded) return null
   if (!order) return <MissingOrder ko={ko} />
+  const userFunded = order.voucherFunding === "user-converted"
+  const returnVoucher = vouchers.find((voucher) => voucher.id === order.voucherId)
   const refunded = order.status === "refunded"
   const refundAmount = order.refundedKRW ?? order.refundableKRW
   const passState = instantPassState(order)
@@ -33,8 +35,8 @@ export default function OrderReceiptPage() {
   const beforeDeadline = Date.now() <= new Date(order.cancelDeadline).getTime()
   const refundableNow = activeInstantPass
     ? Math.max(0, Math.floor((order.paidKRW * Math.max(0, 30 - elapsedDays)) / 30))
-    : beforeDeadline ? order.refundableKRW : 0
-  const partialRefund = refunded && refundAmount < order.paidKRW
+    : beforeDeadline ? (userFunded ? order.discountKRW : order.refundableKRW) : 0
+  const partialRefund = !userFunded && refunded && refundAmount < order.paidKRW
 
   const refund = async () => {
     if (refundStep === "idle") { setRefundStep("confirm"); return }
@@ -66,9 +68,9 @@ export default function OrderReceiptPage() {
             {partialRefund
               ? (ko ? `${order.settledUsageDays ?? 1}일 이용분을 제외하고 잔액으로 돌아왔어요.` : `Your unused days were returned after settling ${order.settledUsageDays ?? 1} active day${(order.settledUsageDays ?? 1) === 1 ? "" : "s"}.`)
               : refunded
-                ? (ko ? "잔액과 이용 전 혜택이 돌아왔어요." : "Your balance and unused benefit are restored.")
+                ? userFunded ? (ko ? "사용한 금액이 재방문 바우처로 돌아왔어요." : "The used value returned to your return-trip voucher.") : (ko ? "잔액과 이용 전 혜택이 돌아왔어요." : "Your balance and unused benefit are restored.")
                 : order.discountKRW > 0
-                  ? (ko ? `K-Tour ID로 ₩${order.discountKRW.toLocaleString()} 아꼈어요.` : `You saved ₩${order.discountKRW.toLocaleString()} with K-Tour ID.`)
+                  ? userFunded ? (ko ? `재방문 바우처에서 ₩${order.discountKRW.toLocaleString()} 사용했어요.` : `Used ₩${order.discountKRW.toLocaleString()} from your return-trip voucher.`) : (ko ? `K-Tour ID로 ₩${order.discountKRW.toLocaleString()} 아꼈어요.` : `You saved ₩${order.discountKRW.toLocaleString()} with K-Tour ID.`)
                   : (ko ? "선택한 일정이 준비됐어요." : "Your selected option is ready.")}
           </h1>
         </div>
@@ -80,12 +82,12 @@ export default function OrderReceiptPage() {
           <p className="mt-1 text-[13px] text-muted-foreground">{order.merchant.replace(" · demo concept", "").replace(" · demo merchant", "")}</p>
           <div className="mt-6 space-y-3 text-[13px]">
             <Row label={ko ? "상품 금액" : "Original price"} value={`₩${order.grossKRW.toLocaleString()}`} />
-            <Row label="K-Tour ID" value={order.discountKRW ? `− ₩${order.discountKRW.toLocaleString()}` : "—"} accent={order.discountKRW > 0} />
-            <Row label={refunded ? (ko ? "환불 금액" : "Refunded") : (ko ? "결제 금액" : "Paid")} value={`${refunded ? "+" : ""}₩${(refunded ? refundAmount : order.paidKRW).toLocaleString()}`} strong />
+            <Row label={userFunded ? (ko ? "재방문 바우처" : "Return-trip voucher") : "K-Tour ID"} value={order.discountKRW ? `− ₩${order.discountKRW.toLocaleString()}` : "—"} accent={order.discountKRW > 0} />
+            <Row label={refunded ? userFunded ? (ko ? "바우처 복구" : "Voucher restored") : (ko ? "환불 금액" : "Refunded") : (ko ? "현금 결제" : "Cash paid")} value={`${refunded ? "+" : ""}₩${(refunded ? refundAmount : order.paidKRW).toLocaleString()}`} strong />
             {partialRefund && <Row label={ko ? `${order.settledUsageDays ?? 1}일 이용 정산` : `${order.settledUsageDays ?? 1} active day${(order.settledUsageDays ?? 1) === 1 ? "" : "s"}`} value={`₩${(order.paidKRW - refundAmount).toLocaleString()}`} />}
           </div>
         </section>
-        <div className="mt-5 flex items-center justify-center gap-2 text-[13px] text-muted-foreground"><Wallet className="h-4 w-4" />{ko ? "남은 잔액" : "Balance"} · <strong className="tabular font-semibold text-foreground">₩{session.wallet.balanceKRW.toLocaleString()}</strong></div>
+        <div className="mt-5 flex items-center justify-center gap-2 text-[13px] text-muted-foreground"><Wallet className="h-4 w-4" />{userFunded ? (ko ? "재방문 바우처" : "Return-trip voucher") : (ko ? "남은 잔액" : "Balance")} · <strong className="tabular font-semibold text-foreground">₩{(userFunded ? returnVoucher?.valueKRW ?? 0 : session.wallet.balanceKRW).toLocaleString()}</strong></div>
 
         <div className="mt-auto pt-8">
           {refunded ? <Link href="/" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? "홈으로" : "Back home"}</Link> : <><Link href="/wallet" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{walletCta(order, ko)}</Link><Link href="/" className="pressable mt-2 flex min-h-11 items-center justify-center text-[13px] font-medium text-muted-foreground">{ko ? "홈으로" : "Back home"}</Link></>}
@@ -99,9 +101,10 @@ export default function OrderReceiptPage() {
               <Row label={refunded ? (ko ? "실제 환불액" : "Refunded amount") : (ko ? "현재 예상 환불액" : "Refundable now")} value={`₩${(refunded ? refundAmount : refundableNow).toLocaleString()}`} />
               {refunded && order.refundedAt && <Row label={ko ? "환불 완료 시각" : "Refunded at"} value={formatDate(order.refundedAt, ko)} />}
               <Row label={ko ? "영수증 번호" : "Receipt"} value={order.receiptId} />
+              <Link href="/evidence" className="pressable inline-flex min-h-10 items-center text-[12px] font-semibold text-primary underline underline-offset-4">{ko ? "시뮬레이션 증거 보기" : "View simulation evidence"}</Link>
               {!refunded && <>
                 <p className="text-[12px] leading-5">{ko ? order.cancellation : order.cancellationEn}</p>
-                {refundStep === "confirm" && <p role="alert" className="border-l-2 border-gold pl-3 text-[12px] leading-5">{order.status === "used" || activeInstantPass ? (ko ? `이미 개시되어 ₩${refundableNow.toLocaleString()}이 환불되고 사용한 혜택은 복구되지 않아요.` : `This pass is active: ₩${refundableNow.toLocaleString()} is refundable and the used benefit is not restored.`) : (ko ? "이용 전 취소라 결제 금액과 사용한 혜택이 함께 복구돼요." : "Before use, cancelling restores both the payment and benefit.")}</p>}
+                {refundStep === "confirm" && <p role="alert" className="border-l-2 border-gold pl-3 text-[12px] leading-5">{order.status === "used" || activeInstantPass ? (ko ? `이미 개시되어 ₩${refundableNow.toLocaleString()}이 환불되고 사용한 혜택은 복구되지 않아요.` : `This pass is active: ₩${refundableNow.toLocaleString()} is refundable and the used benefit is not restored.`) : userFunded ? (ko ? "이용 전 취소라 사용한 금액이 재방문 바우처로 돌아와요." : "Cancelling before use restores the value to your return-trip voucher.") : (ko ? "이용 전 취소라 결제 금액과 사용한 혜택이 함께 복구돼요." : "Before use, cancelling restores both the payment and benefit.")}</p>}
                 {refundStep === "error" && <p role="alert" className="text-destructive">{ko ? "취소하지 못했어요. 다시 시도해 주세요." : "Cancellation failed. Try again."}</p>}
                 {refundableNow <= 0 ? <p role="status" className="rounded-[12px] bg-secondary p-3 text-center text-[12px] font-medium">{expiredInstantPass ? (ko ? "30일 이용 기간이 끝난 이용권이에요." : "This 30-day pass has expired.") : (ko ? "취소 가능 시각이 지나 환불할 수 없어요." : "The cancellation window has closed.")}</p> : <button type="button" onClick={refund} disabled={refundStep === "busy"} className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-secondary text-[13px] font-semibold text-foreground disabled:opacity-60">{refundStep === "busy" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}{refundStep === "confirm" ? (ko ? `₩${refundableNow.toLocaleString()} 환불 확정` : `Confirm ₩${refundableNow.toLocaleString()} refund`) : (ko ? "취소·환불" : "Cancel & refund")}</button>}
               </>}

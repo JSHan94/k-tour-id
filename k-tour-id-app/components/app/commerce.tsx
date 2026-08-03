@@ -6,12 +6,13 @@ import Link from "next/link"
 import { ArrowRight, BadgeCheck, CalendarDays, Check, ChevronRight, Loader2, MapPin, Ticket } from "lucide-react"
 import { useLang } from "@/lib/i18n/lang-provider"
 import type { MarketplaceItem, ServiceOption, Voucher } from "@/lib/types"
+import { isVoucherAvailable } from "@/lib/voucher-policy"
 import { cn } from "@/lib/utils"
 import { timingForOrder } from "@/lib/commerce-policy"
 
 function price(item: MarketplaceItem, voucher?: Voucher, option?: ServiceOption) {
   const gross = item.priceKRW + (option?.priceDeltaKRW ?? 0)
-  const discount = voucher?.status === "available" ? Math.min(voucher.valueKRW, gross) : 0
+  const discount = isVoucherAvailable(voucher) ? Math.min(voucher.valueKRW, gross) : 0
   return { gross, discount, final: gross - discount }
 }
 
@@ -56,9 +57,9 @@ export function ServiceRow({ item, voucher }: { item: MarketplaceItem; voucher?:
 export function BenefitTicket({ item, voucher }: { item: MarketplaceItem; voucher: Voucher }) {
   const { lang } = useLang()
   return (
-    <Link href={`/explore/${item.id}`} className={cn("pressable flex min-h-[86px] items-center gap-4 py-4", voucher.status !== "available" && "opacity-60")}>
+    <Link href={`/explore/${item.id}`} className={cn("pressable flex min-h-[86px] items-center gap-4 py-4", !isVoucherAvailable(voucher) && "opacity-60")}>
       <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-success-surface text-success"><Ticket className="h-5 w-5" /></span>
-      <span className="min-w-0 flex-1"><strong className="tabular block text-[18px] text-success">₩{voucher.valueKRW.toLocaleString()} {lang === "ko" ? "절약" : "saved"}</strong><span className="mt-1 block truncate text-[12px] text-muted-foreground">{item.title[lang]} · {voucher.status === "available" ? (lang === "ko" ? "사용 가능" : "Available") : (lang === "ko" ? "사용 완료" : "Used")}</span></span>
+      <span className="min-w-0 flex-1"><strong className="tabular block text-[18px] text-success">₩{voucher.valueKRW.toLocaleString()} {voucher.funding === "user-converted" ? (lang === "ko" ? "바우처" : "voucher") : (lang === "ko" ? "절약" : "saved")}</strong><span className="mt-1 block truncate text-[12px] text-muted-foreground">{item.title[lang]} · {isVoucherAvailable(voucher) ? (lang === "ko" ? "사용 가능" : "Available") : (lang === "ko" ? "사용 완료·만료" : "Used or expired")}</span></span>
       <ChevronRight className="h-4 w-4 text-muted-foreground" />
     </Link>
   )

@@ -203,7 +203,10 @@ export const mockPolicyService: PolicyService = {
     if (amountKRW > capsule.paymentLimitKRW) {
       return { ok: false, error: { code: "PAYMENT_LIMIT", message: "Payment exceeds the available limit", retryable: false } }
     }
-    const discountKRW = voucher?.status === "available" ? Math.min(voucher.valueKRW, amountKRW) : 0
+    if (voucher && (voucher.status !== "available" || new Date(voucher.expiresAt).getTime() <= Date.now())) {
+      return { ok: false, error: { code: "VOUCHER_UNAVAILABLE", message: "Voucher has already been used or expired", retryable: false } }
+    }
+    const discountKRW = voucher ? Math.min(voucher.valueKRW, amountKRW) : 0
     if (amountKRW - discountKRW > balanceKRW) {
       return { ok: false, error: { code: "INSUFFICIENT_BALANCE", message: "The payable amount exceeds the demo KRW balance", retryable: false } }
     }
@@ -214,7 +217,7 @@ export const mockPolicyService: PolicyService = {
 export const mockVoucherService: VoucherService = {
   async redeem(voucher) {
     await delay(350)
-    if (voucher.status !== "available" && voucher.status !== "reserved") {
+    if ((voucher.status !== "available" && voucher.status !== "reserved") || new Date(voucher.expiresAt).getTime() <= Date.now()) {
       return { ok: false, error: { code: "VOUCHER_UNAVAILABLE", message: "Voucher has already been used or expired", retryable: false } }
     }
     return { ok: true, data: { ...voucher, status: "redeemed" } }
@@ -227,15 +230,19 @@ export const mockVoucherService: VoucherService = {
     return {
       ok: true,
       data: {
-        id: `voucher:converted:${fakeHash(String(amountKRW)).slice(2, 10)}`,
-        title: "Return-trip partner voucher",
-        partner: "K-Tour ID demo network",
+        id: `voucher:converted:${Date.now().toString(36)}:${fakeHash(String(amountKRW)).slice(2, 8)}`,
+        title: "Return-trip Insadong voucher",
+        partner: "Insadong Tea Room · demo concept",
         valueKRW: amountKRW,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString(),
+        expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60_000).toISOString(),
         status: "available",
         eligibilityClaim: "tripActive",
         funding: "user-converted",
+        applicableMerchant: "Insadong Tea Room · demo concept",
+        applicableService: "reservation",
         redemption: "stored-value",
+        eligibleUserTypes: ["foreigner", "long-term", "korean"],
+        itemId: "insadong-tea",
       },
     }
   },

@@ -82,7 +82,7 @@ interface AppContextValue {
   refundDemoPurchase: () => Promise<boolean>
   resetDemoJourney: () => void
   /** convert leftover KRW into a newly issued, user-funded voucher. */
-  convertLeftover: (amountKRW: number) => Promise<void>
+  convertLeftover: (amountKRW: number) => Promise<OperationResult<Voucher>>
   refundConvertedVoucher: (voucherId: string) => Promise<void>
   // notifications
   dismissNotification: (id: number) => void
@@ -105,7 +105,8 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null)
 
-const STORAGE_KEY = "k-tour-id-state-v5"
+const STORAGE_KEY = "k-tour-id-state-v6"
+const requiresPresentation = (voucher?: Voucher): boolean => voucher != null
 
 interface PersistShape {
   session: Session
@@ -155,6 +156,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const demoRefundBusyRef = useRef(false)
   const commercePaymentBusyRef = useRef(false)
   const commerceRefundBusyRef = useRef(false)
+  const convertedVoucherRefundBusyRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     try {
@@ -379,6 +381,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (voucher?.eligibleUserTypes && !voucher.eligibleUserTypes.includes(userType)) {
       return { ok: false, error: { code: "NOT_ELIGIBLE", message: "This benefit does not match the current K-Tour ID", retryable: false } }
     }
+    if (requiresPresentation(voucher)) {
+      return { ok: false, error: { code: "PRESENTATION_REQUIRED", message: "Review and consent to the one-time eligibility proof before redeeming this benefit", retryable: false } }
+    }
 
     commercePaymentBusyRef.current = true
     let voucherReserved = false
@@ -495,7 +500,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (order.fulfilment !== "instant" && now > cancelDeadline) return false
     const elapsedDays = activeInstantPass ? Math.max(1, Math.ceil((now - activationAt) / 86_400_000)) : 0
     const refundableKRW = activeInstantPass ? Math.max(0, Math.floor((order.paidKRW * Math.max(0, 30 - elapsedDays)) / 30)) : order.paidKRW
-    if (refundableKRW <= 0) return false
+    const userVoucherRestoreKRW = order.voucherFunding === "user-converted" && !activeInstantPass ? order.discountKRW : 0
+    if (refundableKRW <= 0 && userVoucherRestoreKRW <= 0) return false
     const benefitRestored = !!order.voucherId && !activeInstantPass
     const paymentEvent = await chainService.log("PaymentRefunded", `${order.receiptId} refunded ₩${refundableKRW.toLocaleString()}`)
     const voucherEvent = benefitRestored && order.voucherId
@@ -504,19 +510,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const refundedAt = new Date().toISOString()
     setSession((current) => ({ ...current, wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + refundableKRW } }))
     if (benefitRestored && order.voucherId) {
-      setVouchers((items) => items.map((voucher) => voucher.id === order.voucherId ? { ...voucher, status: "available" } : voucher))
+      setVouchers((items) => items.map((voucher) => voucher.id === order.voucherId
+        ? { ...voucher, valueKRW: voucher.funding === "user-converted" ? voucher.valueKRW + order.discountKRW : voucher.valueKRW, status: new Date(voucher.expiresAt).getTime() <= Date.now() ? "expired" : "available" }
+        : voucher))
     }
-    setOrders((items) => items.map((candidate) => candidate.id === order.id ? { ...candidate, status: "refunded", refundedKRW: refundableKRW, refundedAt, settledUsageDays: activeInstantPass ? elapsedDays : undefined } : candidate))
+    setOrders((items) => items.map((candidate) => candidate.id === order.id ? { ...candidate, status: "refunded", refundedKRW: userVoucherRestoreKRW || refundableKRW, refundedAt, settledUsageDays: activeInstantPass ? elapsedDays : undefined } : candidate))
     if (order.transactionId === demoJourneyRef.current.paymentId) {
       setDemoJourney((current) => ({ ...current, stage: "refunded" }))
     }
-    setTransactions((items) => [{
+    if (refundableKRW > 0) setTransactions((items) => [{
       id: `${order.transactionId}-refund`, merchant: order.merchant, category: order.service, amountKRW: refundableKRW,
       date: refundedAt, icon: "refresh", iconBg: "#e7ede4", chainEvent: "PaymentRefunded", txHash: paymentEvent.txHash,
     }, ...items])
     setEvents((items) => [voucherEvent, paymentEvent, ...items].filter((event): event is ChainEvent => event != null))
     setNotifications((items) => [{
-      id: Date.now(), type: "transaction", title: "Order refunded", message: `${order.titleEn} · ₩${refundableKRW.toLocaleString()} returned`,
+      id: Date.now(), type: "transaction", title: "Order refunded", message: `${order.titleEn} · ₩${(userVoucherRestoreKRW || refundableKRW).toLocaleString()} ${userVoucherRestoreKRW ? "restored to the return-trip voucher" : "returned"}`,
       time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
     }, ...items])
     return true
@@ -532,12 +540,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const prepareDemoPurchase = useCallback((itemId: string, optionId: string) => {
     const item = itemById(itemId)
     const option = item?.options.find((candidate) => candidate.id === optionId)
-    if (!item || !option || item.id !== "bukchon-workshop") return
-    const voucher = item.voucherId ? vouchers.find((candidate) => candidate.id === item.voucherId) : undefined
+    if (!item || !option) return
+    const voucher = (item.voucherId ? vouchers.find((candidate) => candidate.id === item.voucherId) : undefined)
+      ?? vouchers.find((candidate) => candidate.funding === "user-converted" && candidate.itemId === item.id && candidate.status === "available")
+    if (!voucher || !sessionRef.current.userType || !item.eligibleUserTypes.includes(sessionRef.current.userType)) return
     const grossKRW = item.priceKRW + (option.priceDeltaKRW ?? 0)
-    const voucherKRW = voucher?.status === "available" ? Math.min(voucher.valueKRW, grossKRW) : 0
-    setDemoJourney((current) => ({
-      ...current,
+    const voucherKRW = voucher.status === "available" && new Date(voucher.expiresAt).getTime() > Date.now() ? Math.min(voucher.valueKRW, grossKRW) : 0
+    const paidKRW = grossKRW - voucherKRW
+    const platformFeeKRW = Math.round(grossKRW * 0.015)
+    const token = item.id.replace(/[^a-z0-9]/gi, "").slice(0, 12).toUpperCase()
+    const stamp = Date.now().toString(36).toUpperCase()
+    setDemoJourney({
+      ...DEFAULT_DEMO_JOURNEY,
       stage: "request-ready",
       itemId: item.id,
       optionId: option.id,
@@ -546,19 +560,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fulfilmentLabel: item.fulfilmentLabel.ko,
       fulfilmentLabelEn: item.fulfilmentLabel.en,
       merchant: item.merchant,
-      merchantDisplay: item.merchant.replace(" · demo merchant", ""),
+      merchantDisplay: item.merchant.replace(" · demo merchant", "").replace(" · demo concept", ""),
       product: item.title.en,
+      productKo: item.title.ko,
+      service: item.service,
+      purpose: voucher.funding === "user-converted" ? `Use customer-owned return-trip voucher for ${item.title.en}` : `Apply the K-Tour ID benefit to ${item.title.en}`,
+      requestId: `REQ-${token}-${stamp}`,
+      presentationId: `VP-${token}-${stamp}`,
+      voucherId: voucher.id,
+      paymentId: `PAY-${token}-${stamp}`,
+      settlementId: `STL-${token}-${stamp}`,
+      receiptId: `RCT-${token}-${stamp}`,
+      campaignId: voucher.campaignId ?? (voucher.funding === "user-converted" ? "USER-RETURN-TRIP" : `CAM-${token}`),
+      requestedClaims: DEMO_REQUIRED_CLAIMS,
       grossKRW,
       voucherKRW,
-      paidKRW: grossKRW - voucherKRW,
+      paidKRW,
+      platformFeeKRW,
+      campaignReimbursementKRW: voucher.funding === "user-converted" ? 0 : voucherKRW,
+      merchantDueKRW: grossKRW - platformFeeKRW,
+      createdAt: new Date().toISOString(),
       presentedClaims: [],
-    }))
+    })
   }, [vouchers])
 
   const recordDemoPresentation = useCallback((claims: DemoClaimKey[]) => {
-    const voucher = vouchers.find((item) => item.id === demoJourneyRef.current.voucherId)
+    const journey = demoJourneyRef.current
+    const voucher = vouchers.find((item) => item.id === journey.voucherId)
+    const item = itemById(journey.itemId)
+    const serviceEligible = !!item && !!sessionRef.current.userType && item.eligibleUserTypes.includes(sessionRef.current.userType)
     const allRequired = DEMO_REQUIRED_CLAIMS.every((claim) => claims.includes(claim))
-    const allPassed = claims.every((claim) => demoClaimValue(claim, sessionRef.current.userType, voucher, sessionRef.current.capsule))
+    const allPassed = claims.every((claim) => demoClaimValue(claim, sessionRef.current.userType, voucher, sessionRef.current.capsule, serviceEligible))
     const passed = allRequired && allPassed
     setDemoJourney((current) => ({
       ...current,
@@ -592,6 +624,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     if (journey.stage !== "benefit-ready" || input.presentationId !== journey.presentationId) {
       return { ok: false, error: { code: "PRESENTATION_REQUIRED", message: "Create the matching one-time presentation before using this benefit", retryable: false } }
+    }
+    if (input.service !== journey.service || input.merchant !== journey.merchant || input.voucherId !== journey.voucherId) {
+      return { ok: false, error: { code: "PRESENTATION_MISMATCH", message: "The proof does not match this merchant order", retryable: false } }
     }
     if (!DEMO_REQUIRED_CLAIMS.every((claim) => journey.presentedClaims.includes(claim))) {
       return { ok: false, error: { code: "CLAIMS_INCOMPLETE", message: "The merchant's required proof is incomplete", retryable: false } }
@@ -647,7 +682,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ...current,
       wallet: { ...current.wallet, balanceKRW: Math.max(0, current.wallet.balanceKRW - policy.data!.payableKRW) },
     }))
-    setVouchers((items) => items.map((item) => (item.id === voucher.id ? redeemed.data! : item)))
+    const redeemedVoucher = voucher.redemption === "stored-value" && voucher.valueKRW > policy.data.discountKRW
+      ? { ...voucher, valueKRW: voucher.valueKRW - policy.data.discountKRW, status: "available" as const }
+      : redeemed.data!
+    setVouchers((items) => items.map((item) => (item.id === voucher.id ? redeemedVoucher : item)))
     setTransactions((items) => [
       {
         id: journey.paymentId,
@@ -681,6 +719,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         discountKRW: policy.data.discountKRW,
         paidKRW: policy.data.payableKRW,
         voucherId: voucher.id,
+        voucherFunding: voucher.funding,
         status: timing.status,
         fulfilment: catalogItem.fulfilment,
         cancellation: catalogItem.cancellation.ko,
@@ -707,7 +746,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications((items) => [{
       id: Date.now(),
       type: "transaction",
-      title: "Bukchon workshop paid",
+      title: `${journey.product} paid`,
       message: `₩${policy.data!.discountKRW.toLocaleString()} benefit applied · ₩${policy.data!.payableKRW.toLocaleString()} paid`,
       time: "Just now",
       read: false,
@@ -748,11 +787,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ])
       const refundedAt = new Date().toISOString()
       setSession((current) => ({ ...current, wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + journey.paidKRW } }))
-      setVouchers((items) => items.map((item) => item.id === journey.voucherId ? { ...item, status: "available" } : item))
+      setVouchers((items) => items.map((item) => {
+        if (item.id !== journey.voucherId) return item
+        if (new Date(item.expiresAt).getTime() <= Date.now()) return { ...item, status: "expired" }
+        if (item.funding === "user-converted") return { ...item, valueKRW: item.valueKRW + journey.voucherKRW, status: "available" }
+        return { ...item, status: "available" }
+      }))
       setTransactions((items) => [{
         id: `${journey.paymentId}-refund`,
         merchant: journey.merchant,
-        category: "reservation",
+        category: journey.service,
         amountKRW: journey.paidKRW,
         date: refundedAt,
         icon: "refresh",
@@ -763,7 +807,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setEvents((items) => [voucherEvent, paymentEvent, ...items])
       setOrders((items) => items.map((item) => item.transactionId === journey.paymentId ? { ...item, status: "refunded", refundedKRW: journey.paidKRW, refundedAt } : item))
       setNotifications((items) => [{
-        id: Date.now(), type: "transaction", title: "Workshop refund complete", message: `₩${journey.paidKRW.toLocaleString()} returned and the ₩${journey.voucherKRW.toLocaleString()} benefit restored`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
+        id: Date.now(), type: "transaction", title: "Order refund complete", message: `₩${journey.paidKRW.toLocaleString()} returned and the ₩${journey.voucherKRW.toLocaleString()} benefit restored`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
       }, ...items])
       setDemoJourney((current) => ({ ...current, stage: "refunded" }))
       return true
@@ -785,31 +829,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTransactions((items) => items.filter((item) => item.id !== journey.paymentId && item.id !== `${journey.paymentId}-refund`))
     const eventMarkers = [journey.presentationId, journey.voucherId, journey.settlementId, journey.receiptId, journey.merchant]
     setEvents((items) => items.filter((item) => !eventMarkers.some((marker) => item.summary.includes(marker))))
-    setVouchers((items) => items.map((item) => item.id === DEFAULT_DEMO_JOURNEY.voucherId ? { ...item, status: "available" } : item))
-    setNotifications((items) => items.filter((item) => !item.message.includes("Bukchon") && !item.title.includes("Bukchon")))
+    setVouchers((items) => items.map((item) => item.id === journey.voucherId
+      ? { ...item, valueKRW: item.funding === "user-converted" && hadPayment && !hadRefund ? item.valueKRW + journey.voucherKRW : item.valueKRW, status: new Date(item.expiresAt).getTime() <= Date.now() ? "expired" : "available" }
+      : item))
+    setNotifications((items) => items.filter((item) => !item.message.includes(journey.product) && !item.title.includes(journey.product)))
     setOrders((items) => items.filter((item) => item.transactionId !== journey.paymentId))
     setDemoJourney(DEFAULT_DEMO_JOURNEY)
   }, [transactions])
 
   // Convert leftover KRW → a voucher. This issues a voucher; redemption happens later.
-  const convertLeftover = useCallback(async (amountKRW: number) => {
-    if (Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) return
-    const converted = await voucherService.convertLeftover(amountKRW)
-    if (!converted.ok || !converted.data) return
+  const convertLeftover = useCallback(async (amountKRW: number): Promise<OperationResult<Voucher>> => {
+    const normalized = Math.abs(amountKRW)
+    if (!Number.isFinite(normalized) || normalized <= 0) {
+      return { ok: false, error: { code: "INVALID_AMOUNT", message: "Enter a positive conversion amount", retryable: false } }
+    }
+    if (normalized > sessionRef.current.wallet.balanceKRW) {
+      return { ok: false, error: { code: "INSUFFICIENT_BALANCE", message: "The demo travel balance is too low", retryable: true } }
+    }
+    const converted = await voucherService.convertLeftover(normalized)
+    if (!converted.ok || !converted.data) return converted
     const evt = await chainService.log(
       "VoucherIssued",
-      `Converted ₩${amountKRW.toLocaleString()} demo balance to a user-funded return-trip voucher`,
+      `Converted ₩${normalized.toLocaleString()} demo balance to a user-funded return-trip voucher`,
     )
     setSession((s) => ({
       ...s,
-      wallet: { ...s.wallet, balanceKRW: Math.max(0, s.wallet.balanceKRW - Math.abs(amountKRW)) },
+      wallet: { ...s.wallet, balanceKRW: Math.max(0, s.wallet.balanceKRW - normalized) },
     }))
     setTransactions((t) => [
       {
         id: `tx-${evt.id}`,
         merchant: "Demo balance → return-trip voucher",
         category: "benefit",
-        amountKRW: -Math.abs(amountKRW),
+        amountKRW: -normalized,
         date: new Date().toISOString(),
         icon: "ticket",
         iconBg: "#e7ede4",
@@ -824,35 +876,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: Date.now(),
       type: "transaction",
       title: "Return-trip voucher created",
-      message: `₩${amountKRW.toLocaleString()} moved from demo balance into a user-funded voucher`,
+      message: `₩${normalized.toLocaleString()} moved from demo balance into a user-funded voucher`,
       time: "Just now",
       read: false,
       icon: "ticket",
       iconBg: "#e7ede4",
     }, ...items])
+    return { ok: true, data: converted.data }
   }, [])
 
   const refundConvertedVoucher = useCallback(async (voucherId: string) => {
+    if (convertedVoucherRefundBusyRef.current.has(voucherId)) return
     const voucher = vouchers.find((item) => item.id === voucherId)
-    if (!voucher || voucher.funding !== "user-converted" || voucher.status !== "available") return
-    const event = await chainService.log("VoucherRefunded", `${voucher.id} returned to the holder's demo KRW balance`)
-    setSession((current) => ({ ...current, wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + voucher.valueKRW } }))
-    setVouchers((items) => items.filter((item) => item.id !== voucher.id))
-    setTransactions((items) => [{
-      id: `tx-${event.id}`,
-      merchant: "Return-trip voucher refund",
-      category: "benefit",
-      amountKRW: voucher.valueKRW,
-      date: new Date().toISOString(),
-      icon: "ticket",
-      iconBg: "#e7ede4",
-      chainEvent: "VoucherRefunded",
-      txHash: event.txHash,
-    }, ...items])
-    setEvents((items) => [event, ...items])
-    setNotifications((items) => [{
-      id: Date.now(), type: "transaction", title: "Voucher returned", message: `₩${voucher.valueKRW.toLocaleString()} restored to your demo balance`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
-    }, ...items])
+    if (!voucher || voucher.funding !== "user-converted" || !["available", "expired"].includes(voucher.status)) return
+    convertedVoucherRefundBusyRef.current.add(voucherId)
+    setVouchers((items) => items.map((item) => item.id === voucherId ? { ...item, status: "reserved" } : item))
+    try {
+      const event = await chainService.log("VoucherRefunded", `${voucher.id} returned to the holder's demo KRW balance`)
+      setSession((current) => ({ ...current, wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + voucher.valueKRW } }))
+      setVouchers((items) => items.filter((item) => item.id !== voucher.id))
+      setTransactions((items) => [{
+        id: `tx-${event.id}`,
+        merchant: "Return-trip voucher refund",
+        category: "benefit",
+        amountKRW: voucher.valueKRW,
+        date: new Date().toISOString(),
+        icon: "ticket",
+        iconBg: "#e7ede4",
+        chainEvent: "VoucherRefunded",
+        txHash: event.txHash,
+      }, ...items])
+      setEvents((items) => [event, ...items])
+      setNotifications((items) => [{
+        id: Date.now(), type: "transaction", title: "Voucher returned", message: `₩${voucher.valueKRW.toLocaleString()} restored to your demo balance`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
+      }, ...items])
+    } catch {
+      setVouchers((items) => items.map((item) => item.id === voucherId && item.status === "reserved" ? { ...item, status: "available" } : item))
+    } finally {
+      convertedVoucherRefundBusyRef.current.delete(voucherId)
+    }
   }, [vouchers])
 
   const dismissNotification = useCallback((id: number) => {
