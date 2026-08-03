@@ -38,7 +38,7 @@ export default function PassPage() {
   if (!capsule) {
     return (
       <PhoneFrame>
-        <PageHeader title={t("pass.title")} />
+        <PageHeader title={t("pass.title")} back="/wallet" />
         <main className="flex min-h-[70vh] flex-col justify-center px-6 pb-10 text-center">
           <p className="text-[13px] font-semibold text-primary">K-Tour ID</p>
           <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.25]">{ko ? "여행을 위한 신분증을\n만들어 보세요." : "Create an ID\nmade for travel."}</h1>
@@ -57,7 +57,7 @@ export default function PassPage() {
 
   return (
     <PhoneFrame>
-      <PageHeader title={t("pass.title")} />
+      <PageHeader title={t("pass.title")} back="/wallet" />
       <main className="space-y-7 px-6 pt-2">
         {unavailable && (
           <section role="status" className="border-l-2 border-destructive py-1 pl-4 text-destructive">

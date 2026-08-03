@@ -1,6 +1,6 @@
 # Demo portrait assets
 
-The `*-v2.jpg` portraits are synthetic demo assets generated with OpenAI's built-in image generation on 2026-08-03. They do not depict real users, celebrities, or identity-document holders. The nationality and residence information shown in the product comes from the mock identity record, not from visual inference about a face.
+The portrait files listed below are synthetic demo assets generated with OpenAI's built-in image generation on 2026-08-03. They do not depict real users, celebrities, or identity-document holders. The nationality and residence information shown in the product comes from the mock identity record, not from visual inference about a face.
 
 ## Shared art direction
 
@@ -13,7 +13,7 @@ The `*-v2.jpg` portraits are synthetic demo assets generated with OpenAI's built
 
 | Asset | Fictional character prompt |
 | --- | --- |
-| `minjun-v2.jpg` | Korean man Kim Minjun, early 30s, friendly Seoul neighborhood guide, understated navy and warm-gray casual clothing, café or neighborhood setting. |
+| `minjun-v3.jpg` | Native South Korean man Kim Minjun, early 30s, clearly contemporary Korean casting for a Korean audience, understated navy and warm-gray clothing, Seoul neighborhood setting. |
 | `nguyen-v2.jpg` | Vietnamese man Nguyen Van An, early 30s, long-term Seoul resident, olive and cream everyday clothing, residential street or café setting. |
 | `daniel-v2.jpg` | White American man Daniel Miller, late 20s, short-term traveler in Korea, charcoal and soft-blue casual travel clothing, Seoul street setting. |
 | `jieun-v2.jpg` | Korean woman Lee Jieun, late 20s, Korean tutor and café regular, muted terracotta and cream clothing, café setting. |

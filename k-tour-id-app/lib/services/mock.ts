@@ -87,7 +87,7 @@ export const mockIdentityService: IdentityService = {
       nationalityFlag: nat.flag,
       photoUrl:
         userType === "korean"
-          ? "/portraits/minjun-v2.jpg"
+          ? "/portraits/minjun-v3.jpg"
           : userType === "long-term"
             ? "/portraits/nguyen-v2.jpg"
             : "/portraits/daniel-v2.jpg",

@@ -266,7 +266,7 @@ export function demoSessionForUserType(userType: UserType): Session {
   const identityByType: Record<UserType, Identity> = {
     foreigner: { method: "passport-did", displayName: "Daniel Miller", nationality: "United States", nationalityFlag: "🇺🇸", photoUrl: "/portraits/daniel-v2.jpg", verified: true, did: "did:omn:z6Mk-demo-visitor" },
     "long-term": { method: "foreigner-id", displayName: "Nguyen Van An", nationality: "Viet Nam", nationalityFlag: "🇻🇳", photoUrl: "/portraits/nguyen-v2.jpg", verified: true, did: "did:omn:z6Mk-demo-resident" },
-    korean: { method: "mobile-id", displayName: "김민준", nationality: "Republic of Korea", nationalityFlag: "🇰🇷", photoUrl: "/portraits/minjun-v2.jpg", verified: true, did: "did:omn:z6Mk-demo-domestic" },
+    korean: { method: "mobile-id", displayName: "김민준", nationality: "Republic of Korea", nationalityFlag: "🇰🇷", photoUrl: "/portraits/minjun-v3.jpg", verified: true, did: "did:omn:z6Mk-demo-domestic" },
   }
   const identity = identityByType[userType]
   const capsule: KPassCapsule = {

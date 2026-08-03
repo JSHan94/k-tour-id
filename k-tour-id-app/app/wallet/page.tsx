@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { QrCode, ArrowDownLeft, Gift, Plus, RefreshCcw, TicketCheck } from "lucide-react"
-import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
+import { Bell, QrCode, ArrowDownLeft, Gift, Plus, RefreshCcw, TicketCheck } from "lucide-react"
+import { PhoneFrame, LangToggle, SectionTitle } from "@/components/app/shell"
 import { WalletCard } from "@/components/app/cards"
 import { TxRow } from "@/components/app/tx-row"
 import { ReceiveModal, TopUpModal, PayModal, type PayItem } from "@/components/app/modals"
@@ -80,14 +80,16 @@ export default function WalletPage() {
 
   return (
     <PhoneFrame>
-      <PageHeader title={t("wallet.title")} />
+      <header className="safe-top flex items-center justify-between px-6 pb-5"><div><p className="text-[12px] font-semibold text-primary">IDENTITY · MONEY · BENEFITS</p><h1 className="font-display mt-1 text-[30px] font-semibold tracking-[-0.03em]">{t("wallet.title")}</h1></div><div className="flex items-center gap-1"><LangToggle /><Link href="/alerts" aria-label={lang === "ko" ? "알림" : "Alerts"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><Bell className="h-[18px] w-[18px]" /></Link></div></header>
 
-      <div className="space-y-8 px-6 pt-2">
+      <div className="space-y-8 px-6">
         <WalletCard
           wallet={session.wallet}
           userType={session.userType}
           label={persona.balanceLabel[lang]}
           detail={showBudgetFixture ? { budgetKRW: TRIP_BUDGET_KRW, spentKRW, series: [...DAILY_BALANCE_KRW.slice(0, -1), session.wallet.balanceKRW] } : undefined}
+          identity={session.identity}
+          capsule={session.capsule}
         >
           <div className="grid grid-cols-3 divide-x divide-white/12 border-t border-white/12 pt-3">
             {actions.map(({ label, icon: Icon, onClick }) => (

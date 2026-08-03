@@ -290,7 +290,7 @@ export const ACTIVITIES: Activity[] = [
     titleEn: "Hangang Chicken & Beer 🍗",
     host: "김민준",
     hostFlag: "🇰🇷",
-    hostPhoto: "/portraits/minjun-v2.jpg",
+    hostPhoto: "/portraits/minjun-v3.jpg",
     hostType: "korean",
     trustLevel: "verified",
     place: "여의도 한강공원",
@@ -299,7 +299,7 @@ export const ACTIVITIES: Activity[] = [
     timeEn: "Today 19:00",
     capacity: 6,
     joined: 3,
-    participants: ["/portraits/minjun-v2.jpg", "/portraits/daniel-v2.jpg", "/portraits/emma-v2.jpg"],
+    participants: ["/portraits/minjun-v3.jpg", "/portraits/daniel-v2.jpg", "/portraits/emma-v2.jpg"],
     costKRW: 18000,
   },
   {
@@ -345,7 +345,7 @@ export const ACTIVITIES: Activity[] = [
     titleEn: "Gangnam Board Game Meetup",
     host: "김민준",
     hostFlag: "🇰🇷",
-    hostPhoto: "/portraits/minjun-v2.jpg",
+    hostPhoto: "/portraits/minjun-v3.jpg",
     hostType: "korean",
     trustLevel: "verified",
     place: "강남역 보드게임카페",
@@ -354,7 +354,7 @@ export const ACTIVITIES: Activity[] = [
     timeEn: "Sun 16:00",
     capacity: 6,
     joined: 4,
-    participants: ["/portraits/minjun-v2.jpg", "/portraits/emma-v2.jpg"],
+    participants: ["/portraits/minjun-v3.jpg", "/portraits/emma-v2.jpg"],
   },
   {
     id: "act-5",
@@ -377,7 +377,7 @@ export const ACTIVITIES: Activity[] = [
 ]
 
 export const PEERS: Peer[] = [
-  { id: "p-1", name: "김민준", flag: "🇰🇷", photo: "/portraits/minjun-v2.jpg", userType: "korean", trustLevel: "verified", role: "guide", bio: "서울 토박이 — 맛집·교통·행정 도와드려요", bioEn: "Seoul native — food, transit & admin help", langs: ["KO", "EN"] },
+  { id: "p-1", name: "김민준", flag: "🇰🇷", photo: "/portraits/minjun-v3.jpg", userType: "korean", trustLevel: "verified", role: "guide", bio: "서울 토박이 — 맛집·교통·행정 도와드려요", bioEn: "Seoul native — food, transit & admin help", langs: ["KO", "EN"] },
   { id: "p-2", name: "이지은", flag: "🇰🇷", photo: "/portraits/jieun-v2.jpg", userType: "korean", trustLevel: "verified", role: "tutor", bio: "한국어 튜터 · 카페에서 편하게 언어교환", bioEn: "Korean tutor · easy language exchange at a café", langs: ["KO", "EN"] },
   { id: "p-3", name: "Nguyen Van An", flag: "🇻🇳", photo: "/portraits/nguyen-v2.jpg", userType: "long-term", trustLevel: "verified", role: "buddy", bio: "5년차 서울러 · 베트남어·한국어로 도와드려요", bioEn: "5 years in Seoul · happy to help in Vietnamese or Korean", langs: ["VI", "KO", "EN"] },
   { id: "p-4", name: "Amara Lewis", flag: "🇺🇸", photo: "/portraits/amara-v2.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "K-pop·전시 좋아해요 · 같이 다녀요", bioEn: "Love K-pop & exhibitions · let's explore together", langs: ["EN"] },

@@ -1,7 +1,8 @@
 "use client"
 
 import type React from "react"
-import { Bus, ShoppingBag, Bike, CalendarCheck, Gift, ShieldCheck } from "lucide-react"
+import Link from "next/link"
+import { Bus, ShoppingBag, Bike, CalendarCheck, ChevronRight, Gift, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { formatManwon, formatUSD, formatWon } from "@/lib/format"
 import { useCountUp } from "@/lib/use-count-up"
@@ -35,6 +36,8 @@ export function WalletCard({
   userType,
   label,
   detail,
+  identity,
+  capsule,
   children,
   className,
 }: {
@@ -42,6 +45,8 @@ export function WalletCard({
   userType?: UserType | null
   label?: string
   detail?: WalletDetail
+  identity?: Identity | null
+  capsule?: KPassCapsule | null
   children?: React.ReactNode
   className?: string
 }) {
@@ -53,7 +58,8 @@ export function WalletCard({
   return (
     <div className={cn("card-ink relative overflow-hidden rounded-[28px] p-6 text-white", className)}>
       <div className="relative">
-        <div className="flex items-center gap-1.5 text-[13px] font-medium text-white/65">
+        {identity && capsule && <Link href="/pass" aria-label={ko ? "K-Tour ID 상세 보기" : "View K-Tour ID details"} className="pressable flex items-center gap-3 border-b border-white/12 pb-5"><img src={identity.photoUrl ?? "/abstract-profile.png"} alt="" className="h-11 w-11 rounded-full object-cover ring-1 ring-[var(--gold)]/65" /><span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-[12px] font-medium text-white/58"><span>K-Tour ID</span><span className="h-1 w-1 rounded-full bg-[var(--gold)]" /><span>{capsule.status === "active" ? (ko ? "사용 가능" : "Active") : capsule.status}</span></span><strong className="mt-1 block truncate text-[15px] font-semibold text-white">{capsule.holderName} {identity.nationalityFlag}</strong><span className="mt-1 block text-[11px] text-white/48">{ko ? `${formatPassDate(capsule.expiresAt)}까지 · 상세 보기` : `Valid to ${formatPassDate(capsule.expiresAt)} · View details`}</span></span><ChevronRight className="h-5 w-5 flex-shrink-0 text-white/42" /></Link>}
+        <div className={cn("flex items-center gap-1.5 text-[13px] font-medium text-white/65", identity && capsule ? "mt-5" : "")}>
           <span className="inline-block h-2 w-2 rounded-full bg-[var(--seal)]" />
           {label ?? t("wallet.label")}
         </div>

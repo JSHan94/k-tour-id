@@ -19,7 +19,7 @@ export default function ConnectChatPage() {
   const { t, lang } = useLang()
   const [title, setTitle] = useState("김민준")
   const [rich, setRich] = useState(true)
-  const [hostPhoto, setHostPhoto] = useState("/portraits/minjun-v2.jpg")
+  const [hostPhoto, setHostPhoto] = useState("/portraits/minjun-v3.jpg")
   const [selfTarget, setSelfTarget] = useState(false)
   const [messages, setMessages] = useState<ConnectMessage[]>(CONNECT_MESSAGES)
   const [input, setInput] = useState("")
