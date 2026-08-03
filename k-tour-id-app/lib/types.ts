@@ -362,24 +362,11 @@ export interface Activity {
   costKRW?: number
 }
 
-export type ConnectRole = "guide" | "buddy" | "tutor"
-
-export interface Peer {
-  id: string
-  name: string
-  flag: string
-  photo: string
-  userType: UserType
-  trustLevel: TrustLevel
-  role: ConnectRole
-  bio: string
-  bioEn?: string
-  langs: string[]
-}
-
 export interface ConnectMessage {
   id: string
   fromMe: boolean
+  senderName?: string
+  senderPhoto?: string
   text: string
   textEn?: string
   time: string

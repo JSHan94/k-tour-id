@@ -2,28 +2,25 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Send, ShieldCheck, BadgeCheck, Receipt } from "lucide-react"
+import { BadgeCheck, MapPin, Receipt, Send, ShieldCheck, UsersRound } from "lucide-react"
 import { PhoneFrame, PageHeader } from "@/components/app/shell"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { formatWon } from "@/lib/format"
-import { CONNECT_MESSAGES, PEERS, ACTIVITIES } from "@/lib/mock-data"
-import type { ConnectMessage } from "@/lib/types"
+import { ACTIVITIES, CONNECT_MESSAGES } from "@/lib/mock-data"
+import type { Activity, ConnectMessage } from "@/lib/types"
 
 const SPLIT_KRW = 18000
 const SPLIT_MERCHANT = "한강 치맥 (1/n)"
+const DEFAULT_ACTIVITY = ACTIVITIES[0]
 
 export default function ConnectChatPage() {
   const router = useRouter()
   const { pay, transactions, session, hydrated } = useApp()
   const { t, lang } = useLang()
-  const [title, setTitle] = useState("김민준")
-  const [rich, setRich] = useState(true)
-  const [hostPhoto, setHostPhoto] = useState("/portraits/minjun-v3.jpg")
-  const [selfTarget, setSelfTarget] = useState(false)
+  const [activity, setActivity] = useState<Activity>(DEFAULT_ACTIVITY)
   const [messages, setMessages] = useState<ConnectMessage[]>(CONNECT_MESSAGES)
   const [input, setInput] = useState("")
-  // derive paid-state from the persisted ledger so a refresh can't double-charge
   const [splitState, setSplitState] = useState<"idle" | "confirming" | "done">(
     () => (transactions.some((tx) => tx.merchant === SPLIT_MERCHANT) ? "done" : "idle"),
   )
@@ -35,52 +32,36 @@ export default function ConnectChatPage() {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
   }, [hydrated, router, session.onboarded])
 
-  // entry context: match the avatar + thread to whoever was tapped (?with=)
   useEffect(() => {
-    const w = new URLSearchParams(window.location.search).get("with")
-    if (w && w === session.identity?.displayName) {
-      setSelfTarget(true)
-      router.replace("/connect")
-      return
+    const id = new URLSearchParams(window.location.search).get("activity")
+    const next = ACTIVITIES.find((candidate) => candidate.id === id) ?? DEFAULT_ACTIVITY
+    setActivity(next)
+    if (next.id !== DEFAULT_ACTIVITY.id && !touched.current) {
+      const ko = lang === "ko"
+      setMessages([
+        { id: "g1", fromMe: false, senderName: next.host, senderPhoto: next.hostPhoto, text: ko ? "어서 오세요! 참가가 확인돼서 그룹 채팅방이 열렸어요 🙂" : "Welcome! Your spot is confirmed, so the group chat is now open 🙂", time: ko ? "방금" : "Just now" },
+        { id: "g2", fromMe: true, text: ko ? "안녕하세요! 같이하게 되어 반가워요." : "Hi everyone! Glad to join you.", time: ko ? "방금" : "Just now" },
+        { id: "g3", fromMe: false, senderName: next.host, senderPhoto: next.hostPhoto, text: ko ? "반가워요. 시작 10분 전에 장소에서 만나요!" : "Great to meet you. Let's meet at the place 10 minutes early!", time: ko ? "방금" : "Just now" },
+      ])
     }
-    const who =
-      PEERS.find((p) => p.name === w) ??
-      ACTIVITIES.map((a) => ({ name: a.host, photo: a.hostPhoto })).find((a) => a.name === w)
-    if (who) setHostPhoto(who.photo)
-    if (w && w !== "김민준") {
-      setTitle(w)
-      setRich(false)
-      if (!touched.current) {
-        const ko = lang === "ko"
-        setMessages([
-          { id: "g1", fromMe: false, text: ko ? "안녕하세요! K-Tour ID에서 연결됐네요 🙂" : "Hi! Nice to connect on K-Tour ID 🙂", time: ko ? "오후 5:01" : "5:01 PM" },
-          { id: "g2", fromMe: true, text: ko ? "반가워요! 같이 하고 싶어서 연락드려요." : "Hi! I'd love to join you.", time: ko ? "오후 5:02" : "5:02 PM" },
-          { id: "g3", fromMe: false, text: ko ? "좋아요 — 검증된 분이라 안심돼요. 언제 편하세요?" : "Great — you're verified, so I feel safe. When works for you?", time: ko ? "오후 5:03" : "5:03 PM" },
-        ])
-      }
-    }
-  }, [lang, router, session.identity?.displayName])
+  }, [lang])
 
   useEffect(() => {
     requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth" }))
   }, [messages.length])
 
-  const push = (m: Omit<ConnectMessage, "id" | "time">) =>
-    setMessages((cur) => [...cur, { ...m, id: `m-${cur.length + 1}`, time: lang === "ko" ? "지금" : "now" }])
+  const push = (message: Omit<ConnectMessage, "id" | "time">) =>
+    setMessages((current) => [...current, { ...message, id: `m-${current.length + 1}`, time: lang === "ko" ? "지금" : "now" }])
 
   const send = (text: string) => {
-    const q = text.trim()
-    if (!q) return
+    const value = text.trim()
+    if (!value) return
     touched.current = true
     setInput("")
-    push({ fromMe: true, text: q })
-    setTimeout(() => push({ fromMe: false, text: lang === "ko" ? "좋아요! 그때 봬요 🙂" : "Great — see you then! 🙂" }), 800)
+    push({ fromMe: true, text: value })
+    setTimeout(() => push({ fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: lang === "ko" ? "좋아요! 그때 같이 봬요 🙂" : "Great — see you all then! 🙂" }), 800)
   }
 
-  // two-step money action: idle → confirming → done (with a synchronous lock)
-  const confirmSplit = () => {
-    if (splitState === "idle") setSplitState("confirming")
-  }
   const executeSplit = async () => {
     if (splitState !== "confirming" || splitBusy.current) return
     splitBusy.current = true
@@ -89,119 +70,57 @@ export default function ConnectChatPage() {
     if (!paid) {
       setSplitState("idle")
       splitBusy.current = false
-      push({ fromMe: false, text: lang === "ko" ? "잔액이 부족해요. 여행 잔액을 충전한 뒤 다시 시도해 주세요." : "Your balance is too low. Add funds and try again." })
+      push({ fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: lang === "ko" ? "잔액이 부족해요. 여행 잔액을 충전한 뒤 다시 시도해 주세요." : "Your balance is too low. Add funds and try again." })
       return
     }
     setSplitState("done")
     push({ fromMe: true, text: lang === "ko" ? `같이 결제 ${formatWon(SPLIT_KRW)} 완료 ✓` : `Split pay ₩${SPLIT_KRW.toLocaleString("en-US")} done ✓` })
-    setTimeout(() => push({ fromMe: false, text: lang === "ko" ? "확인했어요! 결제 영수증도 저장됐어요 🙆" : "Got it — your payment receipt is saved 🙆" }), 700)
+    setTimeout(() => push({ fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: lang === "ko" ? "확인했어요! 결제 영수증도 저장됐어요 🙆" : "Got it — your payment receipt is saved 🙆" }), 700)
   }
 
-  if (!hydrated || !session.onboarded || selfTarget) return null
+  if (!hydrated || !session.onboarded) return null
+
+  const ko = lang === "ko"
+  const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
+  const place = lang === "en" ? activity.placeEn ?? activity.place : activity.place
+  const time = lang === "en" ? activity.timeEn ?? activity.time : activity.time
+  const rich = activity.id === DEFAULT_ACTIVITY.id
 
   return (
-    <PhoneFrame>
-      <PageHeader
-        title={title}
-        back="/connect"
-        right={
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-success-surface text-success">
-            <BadgeCheck className="h-4 w-4" />
-          </span>
-        }
-      />
+    <PhoneFrame hideNav>
+      <PageHeader title={title} back="/connect" right={<span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success"><UsersRound className="h-4 w-4" />{activity.joined}</span>} />
 
-      {/* safety banner */}
-      <div className="mx-5 mb-3 flex items-center gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-[12px] text-muted-foreground ring-1 ring-border">
-        <ShieldCheck className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
-        {t("connect.chat.safety")}
-      </div>
+      <section className="mx-5 mb-4 border-y border-foreground/10 py-3">
+        <div className="flex items-center justify-between gap-3 text-[12px] text-muted-foreground"><span className="flex min-w-0 items-center gap-1.5"><MapPin className="h-3.5 w-3.5 flex-shrink-0 text-primary" /><span className="truncate">{place}</span></span><span className="flex-shrink-0">{time}</span></div>
+        <div className="mt-3 flex items-center justify-between"><div className="flex -space-x-2">{activity.participants.slice(0, 5).map((photo, index) => <img key={index} src={photo} alt="" className="h-7 w-7 rounded-full object-cover ring-2 ring-background" />)}</div><span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success"><BadgeCheck className="h-3.5 w-3.5" />K-Tour ID {ko ? "확인" : "checked"}</span></div>
+      </section>
 
-      <div className="space-y-3 px-5 pb-2">
-        {messages.map((m) => (
-          <div key={m.id} className={m.fromMe ? "flex justify-end" : "flex items-end gap-2"}>
-            {!m.fromMe && <img src={hostPhoto} alt="" className="h-7 w-7 flex-shrink-0 rounded-full object-cover" />}
+      <div className="mx-5 mb-4 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" />{t("connect.chat.safety")}</div>
+
+      <div className="space-y-3 px-5 pb-3">
+        {messages.map((message) => (
+          <div key={message.id} className={message.fromMe ? "flex justify-end" : "flex items-end gap-2"}>
+            {!message.fromMe && <img src={message.senderPhoto ?? activity.hostPhoto} alt="" className="h-7 w-7 flex-shrink-0 rounded-full object-cover" />}
             <div className="max-w-[78%]">
-              <div
-                className={
-                  m.fromMe
-                    ? "rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-[13px] text-white"
-                    : "rounded-2xl rounded-bl-md bg-surface-2 px-3.5 py-2.5 text-[13px] text-foreground ring-1 ring-border"
-                }
-              >
-                {lang === "ko" ? m.text : m.textEn ?? m.text}
-              </div>
-              <p className={cnTime(m.fromMe)}>{lang === "ko" ? m.time : m.timeEn ?? m.time}</p>
+              {!message.fromMe && <p className="mb-1 text-[11px] font-medium text-muted-foreground">{message.senderName ?? activity.host}</p>}
+              <div className={message.fromMe ? "rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-[13px] text-white" : "rounded-2xl rounded-bl-md bg-surface-2 px-3.5 py-2.5 text-[13px] text-foreground ring-1 ring-border"}>{lang === "ko" ? message.text : message.textEn ?? message.text}</div>
+              <p className={cnTime(message.fromMe)}>{lang === "ko" ? message.time : message.timeEn ?? message.time}</p>
             </div>
           </div>
         ))}
         <div ref={endRef} />
       </div>
 
-      {/* split-pay action — only the 한강 치맥 host room, with a deliberate confirm step */}
-      {rich && (
-        <div className="px-5 pb-2">
-          {splitState === "idle" && (
-            <button
-              type="button"
-              onClick={confirmSplit}
-              className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"
-            >
-              <Receipt className="h-3.5 w-3.5 text-primary" />
-              {`${t("connect.split")} · ${lang === "ko" ? formatWon(SPLIT_KRW) : `₩${SPLIT_KRW.toLocaleString("en-US")}`}`}
-            </button>
-          )}
-          {splitState === "confirming" && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSplitState("idle")}
-                className="pressable min-h-11 flex-1 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"
-              >
-                {lang === "ko" ? "취소" : "Cancel"}
-              </button>
-              <button
-                type="button"
-                onClick={executeSplit}
-                className="pressable min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white"
-              >
-                {lang === "ko" ? `₩${SPLIT_KRW.toLocaleString("ko-KR")} 결제 확인` : `Confirm ₩${SPLIT_KRW.toLocaleString("en-US")}`}
-              </button>
-            </div>
-          )}
-          {splitState === "done" && (
-            <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-muted-foreground ring-1 ring-border">
-              <Receipt className="h-3.5 w-3.5 text-primary" />
-              {lang === "ko" ? "결제 완료 · 영수증 저장됨" : "Payment complete · receipt saved"}
-            </div>
-          )}
-        </div>
-      )}
+      {rich && <div className="px-5 pb-2">
+        {splitState === "idle" && <button type="button" onClick={() => setSplitState("confirming")} className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"><Receipt className="h-3.5 w-3.5 text-primary" />{`${t("connect.split")} · ${ko ? formatWon(SPLIT_KRW) : `₩${SPLIT_KRW.toLocaleString("en-US")}`}`}</button>}
+        {splitState === "confirming" && <div className="flex gap-2"><button type="button" onClick={() => setSplitState("idle")} className="pressable min-h-11 flex-1 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold ring-1 ring-border">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={executeSplit} className="pressable min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white">{ko ? `₩${SPLIT_KRW.toLocaleString("ko-KR")} 결제 확인` : `Confirm ₩${SPLIT_KRW.toLocaleString("en-US")}`}</button></div>}
+        {splitState === "done" && <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-muted-foreground ring-1 ring-border"><Receipt className="h-3.5 w-3.5 text-primary" />{ko ? "결제 완료 · 영수증 저장됨" : "Payment complete · receipt saved"}</div>}
+      </div>}
 
-      {/* input */}
-      <div className="sticky bottom-0 bg-card px-5 pb-4 pt-1">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            send(input)
-          }}
-          className="flex items-center gap-2"
-        >
-          <input
-            aria-label={lang === "ko" ? "메시지 입력" : "Message"}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={t("connect.chat.placeholder")}
-            className="flex-1 rounded-full bg-surface-2 px-4 py-2.5 text-[13px] outline-none ring-1 ring-border focus:ring-primary"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim()}
-            className="bg-brand-gradient pressable grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-white disabled:opacity-50"
-            aria-label={lang === "ko" ? "보내기" : "Send"}
-          >
-            <Send className="h-4 w-4" />
-          </button>
+      <div className="sticky bottom-0 bg-card px-5 pb-4 pt-2">
+        <form onSubmit={(event) => { event.preventDefault(); send(input) }} className="flex items-center gap-2">
+          <input aria-label={ko ? "메시지 입력" : "Message"} value={input} onChange={(event) => setInput(event.target.value)} placeholder={t("connect.chat.placeholder")} className="flex-1 rounded-full bg-surface-2 px-4 py-2.5 text-[13px] outline-none ring-1 ring-border focus:ring-primary" />
+          <button type="submit" disabled={!input.trim()} className="bg-brand-gradient pressable grid h-11 w-11 flex-shrink-0 place-items-center rounded-full text-white disabled:opacity-50" aria-label={ko ? "보내기" : "Send"}><Send className="h-4 w-4" /></button>
         </form>
       </div>
     </PhoneFrame>

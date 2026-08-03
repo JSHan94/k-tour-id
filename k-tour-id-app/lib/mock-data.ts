@@ -9,7 +9,6 @@ import type {
   ConnectMessage,
   Identity,
   KPassCapsule,
-  Peer,
   ServiceItem,
   Session,
   Transaction,
@@ -376,19 +375,11 @@ export const ACTIVITIES: Activity[] = [
   },
 ]
 
-export const PEERS: Peer[] = [
-  { id: "p-1", name: "김민준", flag: "🇰🇷", photo: "/portraits/minjun-v3.jpg", userType: "korean", trustLevel: "verified", role: "guide", bio: "서울 토박이 — 맛집·교통·행정 도와드려요", bioEn: "Seoul native — food, transit & admin help", langs: ["KO", "EN"] },
-  { id: "p-2", name: "이지은", flag: "🇰🇷", photo: "/portraits/jieun-v2.jpg", userType: "korean", trustLevel: "verified", role: "tutor", bio: "한국어 튜터 · 카페에서 편하게 언어교환", bioEn: "Korean tutor · easy language exchange at a café", langs: ["KO", "EN"] },
-  { id: "p-3", name: "Nguyen Van An", flag: "🇻🇳", photo: "/portraits/nguyen-v2.jpg", userType: "long-term", trustLevel: "verified", role: "buddy", bio: "5년차 서울러 · 베트남어·한국어로 도와드려요", bioEn: "5 years in Seoul · happy to help in Vietnamese or Korean", langs: ["VI", "KO", "EN"] },
-  { id: "p-4", name: "Amara Lewis", flag: "🇺🇸", photo: "/portraits/amara-v2.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "K-pop·전시 좋아해요 · 같이 다녀요", bioEn: "Love K-pop & exhibitions · let's explore together", langs: ["EN"] },
-  { id: "p-5", name: "Daniel Miller", flag: "🇺🇸", photo: "/portraits/daniel-v2.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "여행 3주차 · 같이 다닐 사람 찾아요", bioEn: "3 weeks traveling · looking for travel buddies", langs: ["EN", "KO"] },
-]
-
 /** Seeded demo chat room (with the 한강 치맥 host). */
 export const CONNECT_MESSAGES: ConnectMessage[] = [
-  { id: "m1", fromMe: false, text: "안녕하세요! 한강 치맥 번개 호스트 김민준이에요 🙂", textEn: "Hi! I'm Minjun, host of the Hangang chicken & beer meetup 🙂", time: "오후 5:02", timeEn: "5:02 PM" },
+  { id: "m1", fromMe: false, senderName: "김민준", senderPhoto: "/portraits/minjun-v3.jpg", text: "안녕하세요! 한강 치맥 번개 호스트 김민준이에요 🙂", textEn: "Hi! I'm Minjun, host of the Hangang chicken & beer meetup 🙂", time: "오후 5:02", timeEn: "5:02 PM" },
   { id: "m2", fromMe: true, text: "오 안녕하세요! 저도 참여 가능할까요?", textEn: "Oh hi! Could I join too?", time: "오후 5:04", timeEn: "5:04 PM" },
-  { id: "m3", fromMe: false, text: "그럼요, K-Tour ID가 활성 상태라 바로 환영이에요. 7시에 여의도에서 봬요!", textEn: "Of course — your K-Tour ID is active, so welcome aboard. See you at Yeouido at 7!", time: "오후 5:05", timeEn: "5:05 PM" },
+  { id: "m3", fromMe: false, senderName: "김민준", senderPhoto: "/portraits/minjun-v3.jpg", text: "그럼요, K-Tour ID가 활성 상태라 바로 환영이에요. 7시에 여의도에서 봬요!", textEn: "Of course — your K-Tour ID is active, so welcome aboard. See you at Yeouido at 7!", time: "오후 5:05", timeEn: "5:05 PM" },
   { id: "m4", fromMe: true, text: "치킨은 어떻게 주문해요?", textEn: "How do we order the chicken?", time: "오후 5:06", timeEn: "5:06 PM" },
-  { id: "m5", fromMe: false, text: "배민으로 같이 시키고 '같이 결제'로 1/n 해요. 1인 ₩18,000이에요 👍", textEn: "We order together on Baemin and split 1/n with 'Split pay' — ₩18,000 each 👍", time: "오후 5:07", timeEn: "5:07 PM" },
+  { id: "m5", fromMe: false, senderName: "김민준", senderPhoto: "/portraits/minjun-v3.jpg", text: "배민으로 같이 시키고 '같이 결제'로 1/n 해요. 1인 ₩18,000이에요 👍", textEn: "We order together on Baemin and split 1/n with 'Split pay' — ₩18,000 each 👍", time: "오후 5:07", timeEn: "5:07 PM" },
 ]
