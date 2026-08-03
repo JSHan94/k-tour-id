@@ -42,6 +42,40 @@ export function formatTxDate(iso: string): string {
   return `${y}/${m}/${day} | ${String(h).padStart(2, "0")}:${min} ${ampm}`
 }
 
+export function formatDateTime(iso: string, lang: "ko" | "en"): string {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  return new Intl.DateTimeFormat(lang === "ko" ? "ko-KR" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date)
+}
+
+export function localizedNationality(nationality: string, lang: "ko" | "en"): string {
+  if (lang === "en") return nationality
+  const names: Record<string, string> = {
+    "Republic of Korea": "대한민국",
+    "South Korea": "대한민국",
+    "United States": "미국",
+    Vietnam: "베트남",
+    Nigeria: "나이지리아",
+    Germany: "독일",
+    France: "프랑스",
+    Japan: "일본",
+    China: "중국",
+  }
+  return names[nationality] ?? nationality
+}
+
+export function daysUntil(iso: string): number {
+  const time = new Date(iso).getTime()
+  if (Number.isNaN(time)) return 0
+  return Math.max(0, Math.ceil((time - Date.now()) / 86_400_000))
+}
+
 export function shortHash(hash: string): string {
   if (!hash) return ""
   return `${hash.slice(0, 6)}…${hash.slice(-4)}`

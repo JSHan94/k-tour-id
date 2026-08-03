@@ -35,14 +35,14 @@ export function ReceiveModal({ open, onOpenChange }: { open: boolean; onOpenChan
   }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent title={lang === "ko" ? "받기 QR" : "Receive QR"}>
+      <SheetContent title={lang === "ko" ? "송금받기 QR" : "Receive QR"}>
         <div className="flex flex-col items-center gap-3">
           <div className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-border">
             <QRCode value={addr} size={150} className="!border-0" ariaLabel={t("modal.receive")} />
           </div>
           <p className="max-w-[280px] text-center text-[13px] leading-relaxed text-muted-foreground">{t("modal.receiveSub")}</p>
           <button type="button" onClick={copyLink} className="pressable flex min-h-11 items-center justify-center rounded-xl border border-border bg-card px-4 text-[13px] font-bold text-foreground">
-            {copied ? (lang === "ko" ? "받기 링크를 복사했어요" : "Receive link copied") : (lang === "ko" ? "받기 링크 복사" : "Copy receive link")}
+            {copied ? (lang === "ko" ? "지갑 주소를 복사했어요" : "Wallet address copied") : (lang === "ko" ? "지갑 주소 복사" : "Copy wallet address")}
           </button>
         </div>
       </SheetContent>
@@ -67,9 +67,9 @@ export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; 
       await topUp(amount)
       setPhase("done")
       setTimeout(() => {
-        onOpenChange(false)
-        setPhase("choose")
         busy.current = false
+        setPhase("choose")
+        onOpenChange(false)
         onComplete?.()
       }, 1200)
     } catch {
@@ -82,8 +82,9 @@ export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; 
     <Sheet
       open={open}
       onOpenChange={(v) => {
+        if (!v && busy.current) return
         onOpenChange(v)
-        if (!v) { setPhase("choose"); busy.current = false }
+        if (!v) setPhase("choose")
       }}
     >
       <SheetContent title={phase === "done" ? t("modal.topupDone") : t("modal.topup")}>
@@ -105,7 +106,7 @@ export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; 
                     amount === a ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:bg-secondary"
                   }`}
                 >
-                  ₩{(a / 1000).toLocaleString()}k
+                  {lang === "ko" ? formatWon(a) : `₩${a.toLocaleString("en-US")}`}
                 </button>
               ))}
             </div>
@@ -168,9 +169,9 @@ export function PayModal({
       }
       setPhase("done")
       setTimeout(() => {
-        onOpenChange(false)
-        setPhase("confirm")
         busy.current = false
+        setPhase("confirm")
+        onOpenChange(false)
       }, 1400)
     } catch {
       setPhase("error")
@@ -182,8 +183,9 @@ export function PayModal({
     <Sheet
       open={open}
       onOpenChange={(v) => {
+        if (!v && busy.current) return
         onOpenChange(v)
-        if (!v) { setPhase("confirm"); busy.current = false }
+        if (!v) setPhase("confirm")
       }}
     >
       <SheetContent title={phase === "done" ? t("modal.payDone") : t("modal.pay")}>

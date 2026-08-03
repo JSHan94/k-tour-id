@@ -114,14 +114,14 @@ export default function AskPage() {
                 <div className="max-w-[88%] whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-2xl rounded-bl-md bg-card px-4 py-3 text-[14px] leading-relaxed text-foreground ring-1 ring-border">
                   {clean(m.text)}
                 </div>
-                <div className="flex items-center gap-2 pl-1 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-2 pl-1 text-[12px] text-muted-foreground">
                   {i !== 0 && (
                     <button type="button" onClick={() => copy(i, clean(m.text))} className="pressable inline-flex items-center gap-1 hover:text-foreground">
                       {copied === i ? <Check className="h-3 w-3 text-success" /> : <Copy className="h-3 w-3" />}
                       {copied === i ? "복사됨" : "복사"}
                     </button>
                   )}
-                  {m.fallback && <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px]">오프라인 답변(키 미연결)</span>}
+                  {m.fallback && <span className="rounded-full bg-surface-2 px-2 py-0.5 text-[12px]">기본 안내</span>}
                 </div>
               </div>
             )

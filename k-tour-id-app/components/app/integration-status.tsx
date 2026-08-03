@@ -12,30 +12,31 @@ export const APP_INTEGRATION_MODE: IntegrationMode =
       ? "sandbox"
       : "simulated"
 
-const MODE_META: Record<IntegrationMode, { label: string; detail: string; tone: string }> = {
+const MODE_META: Record<IntegrationMode, { label: { ko: string; en: string }; detail: { ko: string; en: string }; tone: string }> = {
   live: {
-    label: "LIVE",
-    detail: "Production response",
+    label: { ko: "실연동", en: "LIVE" },
+    detail: { ko: "운영 환경 응답", en: "Production response" },
     tone: "bg-success-surface text-success ring-success/20",
   },
   sandbox: {
-    label: "SANDBOX",
-    detail: "Test credential response",
+    label: { ko: "테스트", en: "SANDBOX" },
+    detail: { ko: "테스트 자격 응답", en: "Test credential response" },
     tone: "bg-[#f6ecd6] text-[#7b5b20] ring-[#b88a3d]/25",
   },
   simulated: {
-    label: "PREVIEW",
-    detail: "Product preview response",
+    label: { ko: "목업", en: "PREVIEW" },
+    detail: { ko: "제품 목업 응답", en: "Product preview response" },
     tone: "bg-primary/8 text-primary ring-primary/20",
   },
 }
 
 export function IntegrationModeBadge({ mode = APP_INTEGRATION_MODE, compact = false }: { mode?: IntegrationMode; compact?: boolean }) {
   const meta = MODE_META[mode]
+  const { lang } = useLang()
   const Icon = mode === "live" ? Radio : mode === "sandbox" ? ShieldCheck : FlaskConical
   return (
-    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 font-bold tracking-[0.08em] ring-1", compact ? "text-[11px]" : "text-[12px]", meta.tone)}>
-      <Icon className="h-3 w-3" /> {meta.label}
+    <span className={cn("inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 text-[12px] font-bold tracking-[0.05em] ring-1", meta.tone)}>
+      <Icon className="h-3 w-3" /> {meta.label[lang]}
     </span>
   )
 }
@@ -69,22 +70,24 @@ export function IntegrationEvidenceCard({
   mode?: IntegrationMode
 }) {
   const meta = MODE_META[mode]
+  const { lang } = useLang()
+  const ko = lang === "ko"
   return (
     <div className="rounded-2xl bg-ink p-4 text-white shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-gold">Integration evidence</p>
+          <p className="text-[12px] font-semibold text-gold">{ko ? "연동 증거" : "Integration evidence"}</p>
           <h3 className="mt-1 text-[15px] font-bold">{title}</h3>
         </div>
         <IntegrationModeBadge mode={mode} compact />
       </div>
-      <dl className="mt-4 space-y-2 border-t border-white/10 pt-3 text-[11px]">
-        <EvidenceRow label="Provider" value={provider} />
-        <EvidenceRow label="Request" value={requestId} mono />
-        <EvidenceRow label="Timestamp" value={timestamp} />
-        <EvidenceRow label="Payload hash" value={`${payloadHash.slice(0, 14)}…${payloadHash.slice(-8)}`} mono />
+      <dl className="mt-4 space-y-2 border-t border-white/10 pt-3 text-[12px]">
+        <EvidenceRow label={ko ? "제공자" : "Provider"} value={provider} />
+        <EvidenceRow label={ko ? "요청" : "Request"} value={requestId} mono />
+        <EvidenceRow label={ko ? "시각" : "Timestamp"} value={timestamp} />
+        <EvidenceRow label={ko ? "데이터 해시" : "Payload hash"} value={`${payloadHash.slice(0, 14)}…${payloadHash.slice(-8)}`} mono />
       </dl>
-      <p className="mt-3 rounded-xl bg-white/7 px-3 py-2 text-[10px] leading-relaxed text-white/60">{meta.detail}. Personal data is never included in this evidence payload.</p>
+      <p className="mt-3 rounded-xl bg-white/7 px-3 py-2 text-[12px] leading-relaxed text-white/72">{meta.detail[lang]}. {ko ? "이 증거 데이터에는 개인정보를 넣지 않아요." : "Personal data is never included in this evidence payload."}</p>
     </div>
   )
 }
@@ -92,8 +95,8 @@ export function IntegrationEvidenceCard({
 function EvidenceRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <dt className="text-white/45">{label}</dt>
-      <dd className={cn("max-w-[68%] break-all text-right text-white/85", mono && "font-mono text-[10px]")}>{value}</dd>
+      <dt className="text-white/60">{label}</dt>
+      <dd className={cn("max-w-[68%] break-all text-right text-white/88", mono && "font-mono text-[12px]")}>{value}</dd>
     </div>
   )
 }

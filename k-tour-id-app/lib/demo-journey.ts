@@ -1,4 +1,5 @@
 import type { DemoClaimKey, DemoJourney, KPassCapsule, UserType, Voucher } from "@/lib/types"
+import { isCredentialUsable } from "@/lib/credential-status"
 
 export const DEMO_REQUIRED_CLAIMS: DemoClaimKey[] = [
   "credentialActive",
@@ -40,7 +41,7 @@ export const DEFAULT_DEMO_JOURNEY: DemoJourney = {
 }
 
 export function demoClaimValue(key: DemoClaimKey, userType: UserType | null, voucher?: Voucher, capsule?: KPassCapsule | null, serviceEligible = false): boolean {
-  if (key === "credentialActive") return capsule?.status === "active" && new Date(capsule.expiresAt).getTime() > Date.now()
+  if (key === "credentialActive") return isCredentialUsable(capsule)
   if (key === "tripActive") return !!capsule && new Date(capsule.expiresAt).getTime() > Date.now()
   if (key === "ageOver19") return true
   if (key === "serviceEligibility") return !!userType && serviceEligible

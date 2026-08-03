@@ -9,10 +9,10 @@ import { useLang } from "@/lib/i18n/lang-provider"
 import { shortHash } from "@/lib/format"
 
 const INTEGRATIONS = [
-  { name: "Mobile ID · OmniOne CX", role: "Government Mobile ID request and verification", state: "simulated" as const, icon: Smartphone },
-  { name: "Passport eKYC adapter", role: "MRZ/NFC, face match and liveness for short-stay visitors", state: "simulated" as const, icon: Fingerprint },
-  { name: "OpenDID Issuer / Wallet / Verifier", role: "K-Tour credential issuance, VP creation and verification", state: "simulated" as const, icon: ShieldCheck },
-  { name: "OmniOne Chain anchor", role: "Non-PII event commitments and settlement audit trail", state: "simulated" as const, icon: Link2 },
+  { name: "Mobile ID · OmniOne CX", role: { ko: "모바일 신분증 요청·확인", en: "Mobile ID request and verification" }, state: "simulated" as const, icon: Smartphone },
+  { name: "Passport eKYC adapter", role: { ko: "단기 방문자를 위한 MRZ/NFC·얼굴 일치·실재성 확인", en: "MRZ/NFC, face match and liveness for short-stay visitors" }, state: "simulated" as const, icon: Fingerprint },
+  { name: "OpenDID Issuer / Wallet / Verifier", role: { ko: "민간 여행 서비스 자격 발급·제출·확인", en: "Private travel credential issuance, presentation and verification" }, state: "simulated" as const, icon: ShieldCheck },
+  { name: "OmniOne Chain anchor", role: { ko: "개인정보를 제외한 이벤트·정산 감사 기록", en: "Non-PII event commitments and settlement audit trail" }, state: "simulated" as const, icon: Link2 },
 ]
 
 export default function EvidencePage() {
@@ -26,7 +26,7 @@ export default function EvidencePage() {
       <PageHeader title={ko ? "연동 증거" : "Integration evidence"} back="/pass" />
       <div className="space-y-6 px-5 pb-8 pt-1">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary">Proof, not theatre</p>
+          <p className="text-[13px] font-semibold text-primary">{ko ? "연동 상태 · 증거 범위" : "Integration status · evidence scope"}</p>
           <h1 className="mt-1 text-[22px] font-extrabold tracking-tight text-foreground">{ko ? "무엇이 실제이고, 무엇이 목업인지" : "What is real, sandboxed or mocked"}</h1>
           <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
             {ko ? "각 어댑터의 실행 모드와 요청·응답 증거를 분리합니다. 현재 해시와 DID는 시연 데이터이며 실제 OmniOne 트랜잭션으로 표시하지 않습니다." : "Each adapter exposes its execution mode and evidence. Current hashes and DIDs are demo data and are never presented as live OmniOne transactions."}
@@ -44,7 +44,7 @@ export default function EvidencePage() {
                     <p className="text-[13px] font-bold text-foreground">{name}</p>
                     <IntegrationModeBadge mode={state} compact />
                   </div>
-                  <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">{role}</p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{role[lang]}</p>
                 </div>
               </div>
             ))}
@@ -79,13 +79,13 @@ export default function EvidencePage() {
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-gold"><ReceiptText className="h-5 w-5" /></span>
               <IntegrationModeBadge mode="simulated" compact />
             </div>
-            <p className="mt-3 text-[14px] font-bold">{demoJourney.product}</p>
-            <p className="mt-1 text-[11px] text-white/55">{demoJourney.merchantDisplay} · {demoJourney.stage}</p>
-            <dl className="mt-4 grid grid-cols-[88px_1fr] gap-y-2 text-[10px]">
-              <dt className="text-white/45">Receipt</dt><dd className="truncate font-mono">{demoJourney.receiptId}</dd>
-              <dt className="text-white/45">Request</dt><dd className="truncate font-mono">{demoJourney.requestId}</dd>
-              <dt className="text-white/45">Presentation</dt><dd className="truncate font-mono">{demoJourney.presentationId}</dd>
-              <dt className="text-white/45">Settlement</dt><dd className="truncate font-mono">{demoJourney.settlementId}</dd>
+            <p className="mt-3 text-[14px] font-bold">{ko ? demoJourney.productKo : demoJourney.product}</p>
+            <p className="mt-1 text-[12px] text-white/72">{demoJourney.merchantDisplay} · {demoJourney.stage}</p>
+            <dl className="mt-4 grid grid-cols-[88px_1fr] gap-y-2 text-[12px]">
+              <dt className="text-white/60">{ko ? "영수증" : "Receipt"}</dt><dd className="truncate font-mono">{demoJourney.receiptId}</dd>
+              <dt className="text-white/60">{ko ? "요청" : "Request"}</dt><dd className="truncate font-mono">{demoJourney.requestId}</dd>
+              <dt className="text-white/60">{ko ? "자격 제출" : "Presentation"}</dt><dd className="truncate font-mono">{demoJourney.presentationId}</dd>
+              <dt className="text-white/60">{ko ? "정산" : "Settlement"}</dt><dd className="truncate font-mono">{demoJourney.settlementId}</dd>
             </dl>
           </div>
         </div>
@@ -110,8 +110,8 @@ export default function EvidencePage() {
                   <p className="text-[12px] font-bold text-foreground">{event.type}</p>
                   <IntegrationModeBadge mode={event.integrationMode ?? "simulated"} compact />
                 </div>
-                <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">{event.summary}</p>
-                <p className="mt-2 font-mono text-[10px] text-muted-foreground">{shortHash(event.txHash)}</p>
+                <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground">{event.summary}</p>
+                <p className="mt-2 font-mono text-[12px] text-muted-foreground">{shortHash(event.txHash)}</p>
               </div>
             ))}
           </div>

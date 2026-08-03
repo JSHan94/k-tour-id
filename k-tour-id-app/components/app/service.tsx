@@ -75,7 +75,7 @@ export function ServiceCard({ item, onClick }: { item: ServiceItem; onClick?: ()
             <BrandMark brand={brandKey} size={24} />
           </span>
         )}
-        <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-ink/80 px-2 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+        <span className="absolute right-2 top-2 inline-flex items-center gap-0.5 rounded-full bg-ink/80 px-2 py-1 text-[12px] font-semibold text-white backdrop-blur-sm">
           <Star className="h-2.5 w-2.5 fill-[var(--gold)] text-[var(--gold)]" />
           {item.rating}
         </span>

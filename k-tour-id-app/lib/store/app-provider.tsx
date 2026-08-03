@@ -66,7 +66,7 @@ interface AppContextValue {
   pay: (merchant: string, amountKRW: number, category: Transaction["category"]) => Promise<boolean>
   purchaseServiceItem: (input: { itemId: string; optionId: string; useBenefit: boolean; deliveryAddress?: string }) => Promise<OperationResult<CommerceOrder>>
   refundCommerceOrder: (orderId: string) => Promise<boolean>
-  prepareDemoPurchase: (itemId: string, optionId: string) => void
+  prepareDemoPurchase: (itemId: string, optionId: string) => boolean
   payWithBenefit: (input: {
     merchant: string
     grossKRW: number
@@ -106,7 +106,87 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue | null>(null)
 
 const STORAGE_KEY = "k-tour-id-state-v7"
+const LEDGER_LOCK = "k-tour-id-ledger-v1"
+const LEDGER_LEASE_KEY = "k-tour-id:ledger-lease:v1"
+const LEDGER_OPERATION_PREFIX = "k-tour-id:ledger-operation:v1"
 const requiresPresentation = (voucher?: Voucher): boolean => voucher != null
+
+async function afterStateCommit() {
+  await new Promise<void>((resolve) => window.requestAnimationFrame(() => window.requestAnimationFrame(() => resolve())))
+}
+
+/** Serializes balance mutations across tabs in the local clickable product. */
+async function withLedgerLock<T>(operation: () => Promise<T>): Promise<T> {
+  const execute = async () => {
+    const result = await operation()
+    await afterStateCommit()
+    return result
+  }
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    return navigator.locks.request(LEDGER_LOCK, execute)
+  }
+
+  const token = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  let acquired = false
+  while (!acquired) {
+    try {
+      const current = JSON.parse(localStorage.getItem(LEDGER_LEASE_KEY) ?? "null") as { token?: string; expiresAt?: number } | null
+      if (!current?.expiresAt || current.expiresAt <= Date.now()) {
+        localStorage.setItem(LEDGER_LEASE_KEY, JSON.stringify({ token, expiresAt: Date.now() + 3_000 }))
+        const lease = JSON.parse(localStorage.getItem(LEDGER_LEASE_KEY) ?? "null") as { token?: string } | null
+        if (lease?.token === token) {
+          acquired = true
+          break
+        }
+      }
+    } catch {
+      return execute()
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 40))
+  }
+  const heartbeat = window.setInterval(() => {
+    try {
+      const current = JSON.parse(localStorage.getItem(LEDGER_LEASE_KEY) ?? "null") as { token?: string } | null
+      if (current?.token === token) localStorage.setItem(LEDGER_LEASE_KEY, JSON.stringify({ token, expiresAt: Date.now() + 3_000 }))
+    } catch { /* unavailable */ }
+  }, 1_000)
+  try {
+    return await execute()
+  } finally {
+    window.clearInterval(heartbeat)
+    try {
+      const current = JSON.parse(localStorage.getItem(LEDGER_LEASE_KEY) ?? "null") as { token?: string } | null
+      if (current?.token === token) localStorage.removeItem(LEDGER_LEASE_KEY)
+    } catch { /* unavailable */ }
+  }
+}
+
+function ledgerOperationKey(id: string) {
+  return `${LEDGER_OPERATION_PREFIX}:${encodeURIComponent(id)}`
+}
+
+function claimLedgerOperation(id: string) {
+  try {
+    const key = ledgerOperationKey(id)
+    if (localStorage.getItem(key)) return false
+    localStorage.setItem(key, new Date().toISOString())
+    return localStorage.getItem(key) != null
+  } catch {
+    return true
+  }
+}
+
+function releaseLedgerOperation(id: string) {
+  try { localStorage.removeItem(ledgerOperationKey(id)) } catch { /* unavailable */ }
+}
+
+function clearLedgerOperationHistory() {
+  try {
+    const keys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter((key): key is string => Boolean(key))
+    keys.filter((key) => key.startsWith(`${LEDGER_OPERATION_PREFIX}:`)).forEach((key) => localStorage.removeItem(key))
+    localStorage.removeItem(LEDGER_LEASE_KEY)
+  } catch { /* unavailable */ }
+}
 
 interface PersistShape {
   session: Session
@@ -127,6 +207,12 @@ function migratePersistedSession(session: Session): Session {
     ...session,
     identity: { ...session.identity, photoUrl: currentPhotoUrl },
   }
+}
+
+function migratePersistedVouchers(vouchers: Voucher[]): Voucher[] {
+  return vouchers.map((voucher) => voucher.funding === "user-converted" && voucher.status === "reserved"
+    ? { ...voucher, status: "available" }
+    : voucher)
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -156,27 +242,54 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const demoRefundBusyRef = useRef(false)
   const commercePaymentBusyRef = useRef(false)
   const commerceRefundBusyRef = useRef(false)
+  const walletTopUpBusyRef = useRef(false)
+  const walletPayBusyRef = useRef(false)
   const convertedVoucherRefundBusyRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) {
+    const restore = (raw: string | null) => {
+      if (!raw) {
+        setSession(GUEST_SESSION)
+        setTransactions([])
+        setEvents([])
+        setNotifications([])
+        setVouchers([])
+        setOrders([])
+        setDemoJourney(DEFAULT_DEMO_JOURNEY)
+        setDismissedNudges([])
+        return
+      }
+      try {
         const parsed = JSON.parse(raw) as Partial<PersistShape>
         if (parsed.session) setSession(migratePersistedSession(parsed.session))
         if (parsed.transactions) setTransactions(parsed.transactions)
         if (parsed.events) setEvents(parsed.events)
         if (parsed.notifications) setNotifications(parsed.notifications)
-        if (parsed.vouchers) setVouchers(parsed.vouchers)
+        if (parsed.vouchers) setVouchers(migratePersistedVouchers(parsed.vouchers))
         else if (parsed.session?.onboarded) setVouchers(DEFAULT_VOUCHERS)
         if (parsed.orders) setOrders(parsed.orders)
         if (parsed.demoJourney) setDemoJourney(parsed.demoJourney)
         if (parsed.dismissedNudges) setDismissedNudges(parsed.dismissedNudges)
+      } catch {
+        /* ignore corrupt state */
+      }
+    }
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        restore(raw)
       }
     } catch {
       /* ignore corrupt state */
     }
     setHydrated(true)
+
+    const syncAcrossTabs = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY) restore(event.newValue)
+    }
+    window.addEventListener("storage", syncAcrossTabs)
+    return () => window.removeEventListener("storage", syncAcrossTabs)
   }, [])
 
   useEffect(() => {
@@ -195,6 +308,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.removeItem(STORAGE_KEY)
     } catch { /* unavailable */ }
+    clearLedgerOperationHistory()
     setSession(GUEST_SESSION)
     setTransactions([])
     setEvents([])
@@ -208,6 +322,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadDemoAccount = useCallback(() => {
+    clearLedgerOperationHistory()
     setSession(DEFAULT_SESSION)
     setTransactions(DEFAULT_TRANSACTIONS)
     setEvents(DEFAULT_EVENTS)
@@ -219,6 +334,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const loadDemoPersona = useCallback((userType: UserType, balanceKRW?: number) => {
+    clearLedgerOperationHistory()
     const seeded = demoSessionForUserType(userType)
     setSession(balanceKRW == null ? seeded : { ...seeded, wallet: { ...seeded.wallet, balanceKRW } })
     setTransactions([])
@@ -240,6 +356,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const issueCapsule = useCallback(async (identity: Identity, userType: UserType) => {
     const renewing = sessionRef.current.onboarded
+    const verifiedIdentity = renewing && sessionRef.current.userType === userType && sessionRef.current.identity
+      ? { ...identity, did: sessionRef.current.identity.did }
+      : identity
     if (!renewing) {
       setTransactions([])
       setNotifications([])
@@ -248,17 +367,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setDemoJourney(DEFAULT_DEMO_JOURNEY)
       setDismissedNudges([])
     }
-    const capsule = await capsuleService.issue(identity, userType)
+    const capsule = await capsuleService.issue(verifiedIdentity, userType)
     const identityEvent = await chainService.log(
       "IdentityVerified",
-      `${identity.method} source verified; raw identity data kept off-chain`,
+      `${verifiedIdentity.method} source verified; raw identity data kept off-chain`,
     )
     const issuedEvent = await chainService.log(
       "KPassIssued",
       `K-Tour service credential issued; holder reference kept off-chain (${userType})`,
     )
     if (renewing) {
-      setSession((current) => ({ ...current, onboarded: true, userType, identity, capsule }))
+      setSession((current) => ({ ...current, onboarded: true, userType, identity: verifiedIdentity, capsule }))
       setEvents((current) => [issuedEvent, identityEvent, ...current])
       setVouchers((current) => {
         const previousStatus = new Map(current.map((voucher) => [voucher.id, voucher.status]))
@@ -270,7 +389,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       const wallet = await walletService.create(capsule.holderName)
       const linkedEvent = await chainService.log("WalletLinked", "KRW travel balance linked to the K-Tour credential holder")
-      setSession((current) => ({ ...current, onboarded: true, userType, identity, capsule, wallet: { ...wallet, balanceKRW: PERSONA_BALANCES[userType] } }))
+      setSession((current) => ({ ...current, onboarded: true, userType, identity: verifiedIdentity, capsule, wallet: { ...wallet, balanceKRW: PERSONA_BALANCES[userType] } }))
       setEvents([identityEvent, issuedEvent, linkedEvent])
       setVouchers(vouchersForUserType(userType))
     }
@@ -278,58 +397,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const topUp = useCallback(async (amountKRW: number) => {
-    const updated = await walletService.topUp(sessionRef.current.wallet, amountKRW)
-    const evt = await chainService.log("WalletFunded", `Top-up of ₩${amountKRW.toLocaleString()} authorised`)
-    setSession((s) => ({ ...s, wallet: updated }))
-    setTransactions((t) => [
-      {
-        id: `tx-${evt.id}`,
-        merchant: "Top up",
-        category: "topup",
-        amountKRW,
-        date: new Date().toISOString(),
-        icon: "topup",
-        iconBg: "#f3ece0",
-        chainEvent: "WalletFunded",
-        txHash: evt.txHash,
-      },
-      ...t,
-    ])
-    setEvents((e) => [evt, ...e])
-    setNotifications((items) => [{
-      id: Date.now(),
-      type: "transaction",
-      title: "Travel balance topped up",
-      message: `₩${amountKRW.toLocaleString()} was added to your demo KRW balance`,
-      time: "Just now",
-      read: false,
-      icon: "topup",
-      iconBg: "#e7ede4",
-    }, ...items])
-  }, [])
-
-  const pay = useCallback(
-    async (merchant: string, amountKRW: number, category: Transaction["category"]) => {
-      // never confirm a spend the wallet can't fund (no ghost-spend / phantom chain event)
-      if (Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) return false
-      const evt = await chainService.log(
-        "PaymentAuthorized",
-        `Payment of ₩${amountKRW.toLocaleString()} to ${merchant}`,
-      )
-      setSession((s) => ({
-        ...s,
-        wallet: { ...s.wallet, balanceKRW: Math.max(0, s.wallet.balanceKRW - Math.abs(amountKRW)) },
-      }))
+    return withLedgerLock(async () => {
+    if (walletTopUpBusyRef.current) throw new Error("TOPUP_IN_PROGRESS")
+    walletTopUpBusyRef.current = true
+    try {
+      const updated = await walletService.topUp(sessionRef.current.wallet, amountKRW)
+      const evt = await chainService.log("WalletFunded", `Top-up of ₩${amountKRW.toLocaleString()} authorised`)
+      setSession((s) => ({ ...s, wallet: updated }))
       setTransactions((t) => [
         {
           id: `tx-${evt.id}`,
-          merchant,
-          category,
-          amountKRW: -Math.abs(amountKRW),
+          merchant: "Top up",
+          category: "topup",
+          amountKRW,
           date: new Date().toISOString(),
-          icon: "card",
-          iconBg: "#ece6da",
-          chainEvent: "PaymentAuthorized",
+          icon: "topup",
+          iconBg: "#f3ece0",
+          chainEvent: "WalletFunded",
           txHash: evt.txHash,
         },
         ...t,
@@ -338,14 +422,64 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setNotifications((items) => [{
         id: Date.now(),
         type: "transaction",
-        title: "Payment complete",
-        message: `You paid ₩${Math.abs(amountKRW).toLocaleString()} to ${merchant}`,
+        title: "Travel balance topped up",
+        message: `₩${amountKRW.toLocaleString()} was added to your travel balance`,
         time: "Just now",
         read: false,
-        icon: "check",
+        icon: "topup",
         iconBg: "#e7ede4",
       }, ...items])
-      return true
+    } finally {
+      walletTopUpBusyRef.current = false
+    }
+    })
+  }, [])
+
+  const pay = useCallback(
+    async (merchant: string, amountKRW: number, category: Transaction["category"]) => {
+      return withLedgerLock(async () => {
+      // never confirm a spend the wallet can't fund (no ghost-spend / phantom chain event)
+      if (walletPayBusyRef.current || Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) return false
+      walletPayBusyRef.current = true
+      try {
+        const evt = await chainService.log(
+          "PaymentAuthorized",
+          `Payment of ₩${amountKRW.toLocaleString()} to ${merchant}`,
+        )
+        setSession((s) => ({
+          ...s,
+          wallet: { ...s.wallet, balanceKRW: Math.max(0, s.wallet.balanceKRW - Math.abs(amountKRW)) },
+        }))
+        setTransactions((t) => [
+          {
+            id: `tx-${evt.id}`,
+            merchant,
+            category,
+            amountKRW: -Math.abs(amountKRW),
+            date: new Date().toISOString(),
+            icon: "card",
+            iconBg: "#ece6da",
+            chainEvent: "PaymentAuthorized",
+            txHash: evt.txHash,
+          },
+          ...t,
+        ])
+        setEvents((e) => [evt, ...e])
+        setNotifications((items) => [{
+          id: Date.now(),
+          type: "transaction",
+          title: "Payment complete",
+          message: `You paid ₩${Math.abs(amountKRW).toLocaleString()} to ${merchant}`,
+          time: "Just now",
+          read: false,
+          icon: "check",
+          iconBg: "#e7ede4",
+        }, ...items])
+        return true
+      } finally {
+        walletPayBusyRef.current = false
+      }
+      })
     },
     [],
   )
@@ -356,6 +490,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     useBenefit: boolean
     deliveryAddress?: string
   }): Promise<OperationResult<CommerceOrder>> => {
+    return withLedgerLock(async () => {
     if (commercePaymentBusyRef.current) {
       return { ok: false, error: { code: "PAYMENT_IN_PROGRESS", message: "This order is already being processed", retryable: true } }
     }
@@ -438,6 +573,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         discountKRW: policy.data.discountKRW,
         paidKRW: policy.data.payableKRW,
         voucherId: voucher?.id,
+        voucherFunding: voucher?.funding,
         status: timing.status,
         fulfilment: item.fulfilment,
         cancellation: item.cancellation.ko,
@@ -486,11 +622,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       commercePaymentBusyRef.current = false
     }
+    })
   }, [vouchers])
 
   const refundCommerceOrder = useCallback(async (orderId: string) => {
+    return withLedgerLock(async () => {
     const order = orders.find((candidate) => candidate.id === orderId)
     if (!order || !["paid", "used"].includes(order.status) || commerceRefundBusyRef.current) return false
+    const operationId = `refund-order:${orderId}`
+    if (!claimLedgerOperation(operationId)) return false
+    let operationCompleted = false
     commerceRefundBusyRef.current = true
     try {
     const now = Date.now()
@@ -500,7 +641,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (order.fulfilment !== "instant" && now > cancelDeadline) return false
     const elapsedDays = activeInstantPass ? Math.max(1, Math.ceil((now - activationAt) / 86_400_000)) : 0
     const refundableKRW = activeInstantPass ? Math.max(0, Math.floor((order.paidKRW * Math.max(0, 30 - elapsedDays)) / 30)) : order.paidKRW
-    const userVoucherRestoreKRW = order.voucherFunding === "user-converted" && !activeInstantPass ? order.discountKRW : 0
+    const userFundedOrder = order.voucherFunding === "user-converted"
+      || vouchers.find((voucher) => voucher.id === order.voucherId)?.funding === "user-converted"
+    const userVoucherRestoreKRW = userFundedOrder && !activeInstantPass ? order.discountKRW : 0
     if (refundableKRW <= 0 && userVoucherRestoreKRW <= 0) return false
     const benefitRestored = !!order.voucherId && !activeInstantPass
     const paymentEvent = await chainService.log("PaymentRefunded", `${order.receiptId} refunded ₩${refundableKRW.toLocaleString()}`)
@@ -514,24 +657,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ? { ...voucher, valueKRW: voucher.funding === "user-converted" ? voucher.valueKRW + order.discountKRW : voucher.valueKRW, status: new Date(voucher.expiresAt).getTime() <= Date.now() ? "expired" : "available" }
         : voucher))
     }
-    setOrders((items) => items.map((candidate) => candidate.id === order.id ? { ...candidate, status: "refunded", refundedKRW: userVoucherRestoreKRW || refundableKRW, refundedAt, settledUsageDays: activeInstantPass ? elapsedDays : undefined } : candidate))
+    setOrders((items) => items.map((candidate) => candidate.id === order.id ? { ...candidate, status: "refunded", refundedKRW: refundableKRW, refundedAt, settledUsageDays: activeInstantPass ? elapsedDays : undefined } : candidate))
     if (order.transactionId === demoJourneyRef.current.paymentId) {
-      setDemoJourney((current) => ({ ...current, stage: "refunded" }))
+      setDemoJourney((current) => ({
+        ...current,
+        stage: "refunded",
+        refundCashKRW: refundableKRW,
+        refundVoucherKRW: userVoucherRestoreKRW,
+        reversedBenefitKRW: benefitRestored && !userFundedOrder ? order.discountKRW : 0,
+        settledUsageDays: activeInstantPass ? elapsedDays : undefined,
+      }))
     }
     if (refundableKRW > 0) setTransactions((items) => [{
       id: `${order.transactionId}-refund`, merchant: order.merchant, category: order.service, amountKRW: refundableKRW,
       date: refundedAt, icon: "refresh", iconBg: "#e7ede4", chainEvent: "PaymentRefunded", txHash: paymentEvent.txHash,
     }, ...items])
     setEvents((items) => [voucherEvent, paymentEvent, ...items].filter((event): event is ChainEvent => event != null))
+    const restoredTotalKRW = refundableKRW + userVoucherRestoreKRW
     setNotifications((items) => [{
-      id: Date.now(), type: "transaction", title: "Order refunded", message: `${order.titleEn} · ₩${(userVoucherRestoreKRW || refundableKRW).toLocaleString()} ${userVoucherRestoreKRW ? "restored to the return-trip voucher" : "returned"}`,
+      id: Date.now(), type: "transaction", title: "Order refunded", message: userVoucherRestoreKRW > 0
+        ? `${order.titleEn} · ₩${restoredTotalKRW.toLocaleString()} restored (₩${refundableKRW.toLocaleString()} balance + ₩${userVoucherRestoreKRW.toLocaleString()} voucher)`
+        : `${order.titleEn} · ₩${refundableKRW.toLocaleString()} returned${benefitRestored ? " and the benefit restored" : ""}`,
       time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
     }, ...items])
+    operationCompleted = true
     return true
     } finally {
       commerceRefundBusyRef.current = false
+      if (!operationCompleted) releaseLedgerOperation(operationId)
     }
-  }, [orders])
+    })
+  }, [orders, vouchers])
 
   const beginDemoPresentation = useCallback(() => {
     setDemoJourney((current) => ({ ...current, stage: "checking", presentedClaims: [] }))
@@ -540,10 +696,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const prepareDemoPurchase = useCallback((itemId: string, optionId: string) => {
     const item = itemById(itemId)
     const option = item?.options.find((candidate) => candidate.id === optionId)
-    if (!item || !option) return
+    if (!item || !option) return false
     const voucher = (item.voucherId ? vouchers.find((candidate) => candidate.id === item.voucherId) : undefined)
       ?? vouchers.find((candidate) => candidate.funding === "user-converted" && candidate.itemId === item.id && candidate.status === "available")
-    if (!voucher || !sessionRef.current.userType || !item.eligibleUserTypes.includes(sessionRef.current.userType)) return
+    if (!voucher || !sessionRef.current.userType || !item.eligibleUserTypes.includes(sessionRef.current.userType)) return false
     const grossKRW = item.priceKRW + (option.priceDeltaKRW ?? 0)
     const voucherKRW = voucher.status === "available" && new Date(voucher.expiresAt).getTime() > Date.now() ? Math.min(voucher.valueKRW, grossKRW) : 0
     const paidKRW = grossKRW - voucherKRW
@@ -582,6 +738,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
       presentedClaims: [],
     })
+    return true
   }, [vouchers])
 
   const recordDemoPresentation = useCallback((claims: DemoClaimKey[]) => {
@@ -616,6 +773,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     voucherId: string
     presentationId: string
   }): Promise<OperationResult<SettlementReceipt>> => {
+    return withLedgerLock(async () => {
     const capsule = sessionRef.current.capsule
     const voucher = vouchers.find((item) => item.id === input.voucherId)
     const journey = demoJourneyRef.current
@@ -637,6 +795,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (demoPaymentBusyRef.current) {
       return { ok: false, error: { code: "PAYMENT_IN_PROGRESS", message: "This payment is already being processed", retryable: true } }
     }
+    const operationId = `payment:${journey.paymentId}`
+    if (!claimLedgerOperation(operationId)) {
+      return { ok: false, error: { code: "PAYMENT_IN_PROGRESS", message: "This payment was already processed", retryable: false } }
+    }
+    let operationCompleted = false
     demoPaymentBusyRef.current = true
 
     try {
@@ -682,8 +845,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ...current,
       wallet: { ...current.wallet, balanceKRW: Math.max(0, current.wallet.balanceKRW - policy.data!.payableKRW) },
     }))
-    const redeemedVoucher = voucher.redemption === "stored-value" && voucher.valueKRW > policy.data.discountKRW
-      ? { ...voucher, valueKRW: voucher.valueKRW - policy.data.discountKRW, status: "available" as const }
+    const storedValueRemaining = voucher.redemption === "stored-value"
+      ? Math.max(0, voucher.valueKRW - policy.data.discountKRW)
+      : 0
+    const redeemedVoucher = voucher.redemption === "stored-value"
+      ? { ...voucher, valueKRW: storedValueRemaining, status: storedValueRemaining > 0 ? "available" as const : "redeemed" as const }
       : redeemed.data!
     setVouchers((items) => items.map((item) => (item.id === voucher.id ? redeemedVoucher : item)))
     setTransactions((items) => [
@@ -753,10 +919,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       icon: "ticket",
       iconBg: "#e7ede4",
     }, ...items])
+    operationCompleted = true
     return { ok: true, data: receipt }
     } finally {
       demoPaymentBusyRef.current = false
+      if (!operationCompleted) releaseLedgerOperation(operationId)
     }
+    })
   }, [vouchers])
 
   const submitDemoSettlement = useCallback(() => {
@@ -777,8 +946,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const refundDemoPurchase = useCallback(async () => {
     const journey = demoJourneyRef.current
     const canonicalOrder = orders.find((item) => item.transactionId === journey.paymentId)
-    if (canonicalOrder && Date.now() > new Date(canonicalOrder.cancelDeadline).getTime()) return false
     if (!["paid", "settlement-submitted", "anchored"].includes(journey.stage) || demoRefundBusyRef.current) return false
+    if (canonicalOrder) return refundCommerceOrder(canonicalOrder.id)
+    return withLedgerLock(async () => {
+    const operationId = `refund-payment:${journey.paymentId}`
+    if (!claimLedgerOperation(operationId)) return false
+    let operationCompleted = false
     demoRefundBusyRef.current = true
     try {
       const [paymentEvent, voucherEvent] = await Promise.all([
@@ -809,17 +982,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setNotifications((items) => [{
         id: Date.now(), type: "transaction", title: "Order refund complete", message: `₩${journey.paidKRW.toLocaleString()} returned and the ₩${journey.voucherKRW.toLocaleString()} benefit restored`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
       }, ...items])
-      setDemoJourney((current) => ({ ...current, stage: "refunded" }))
+      setDemoJourney((current) => ({
+        ...current,
+        stage: "refunded",
+        refundCashKRW: journey.paidKRW,
+        refundVoucherKRW: journey.campaignId === "USER-RETURN-TRIP" ? journey.voucherKRW : 0,
+        reversedBenefitKRW: journey.campaignId === "USER-RETURN-TRIP" ? 0 : journey.voucherKRW,
+      }))
+      operationCompleted = true
       return true
     } finally {
       demoRefundBusyRef.current = false
+      if (!operationCompleted) releaseLedgerOperation(operationId)
     }
-  }, [orders])
+    })
+  }, [orders, refundCommerceOrder])
 
   const resetDemoJourney = useCallback(() => {
     const journey = demoJourneyRef.current
+    releaseLedgerOperation(`payment:${journey.paymentId}`)
+    releaseLedgerOperation(`refund-payment:${journey.paymentId}`)
+    orders.filter((item) => item.transactionId === journey.paymentId).forEach((item) => releaseLedgerOperation(`refund-order:${item.id}`))
     const hadPayment = transactions.some((item) => item.id === journey.paymentId)
-    const hadRefund = transactions.some((item) => item.id === `${journey.paymentId}-refund`)
+    const hadRefund = journey.stage === "refunded" || transactions.some((item) => item.id === `${journey.paymentId}-refund`)
     if (hadPayment && !hadRefund) {
       setSession((current) => ({
         ...current,
@@ -835,22 +1020,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications((items) => items.filter((item) => !item.message.includes(journey.product) && !item.title.includes(journey.product)))
     setOrders((items) => items.filter((item) => item.transactionId !== journey.paymentId))
     setDemoJourney(DEFAULT_DEMO_JOURNEY)
-  }, [transactions])
+  }, [orders, transactions])
 
   // Convert leftover KRW → a voucher. This issues a voucher; redemption happens later.
   const convertLeftover = useCallback(async (amountKRW: number): Promise<OperationResult<Voucher>> => {
+    return withLedgerLock(async () => {
     const normalized = Math.abs(amountKRW)
     if (!Number.isFinite(normalized) || normalized <= 0) {
       return { ok: false, error: { code: "INVALID_AMOUNT", message: "Enter a positive conversion amount", retryable: false } }
     }
     if (normalized > sessionRef.current.wallet.balanceKRW) {
-      return { ok: false, error: { code: "INSUFFICIENT_BALANCE", message: "The demo travel balance is too low", retryable: true } }
+      return { ok: false, error: { code: "INSUFFICIENT_BALANCE", message: "The travel balance is too low", retryable: true } }
     }
     const converted = await voucherService.convertLeftover(normalized)
     if (!converted.ok || !converted.data) return converted
     const evt = await chainService.log(
       "VoucherIssued",
-      `Converted ₩${normalized.toLocaleString()} demo balance to a user-funded return-trip voucher`,
+      `Converted ₩${normalized.toLocaleString()} from travel balance to a user-funded return-trip voucher`,
     )
     setSession((s) => ({
       ...s,
@@ -876,23 +1062,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       id: Date.now(),
       type: "transaction",
       title: "Return-trip voucher created",
-      message: `₩${normalized.toLocaleString()} moved from demo balance into a user-funded voucher`,
+      message: `₩${normalized.toLocaleString()} moved from travel balance into a user-funded voucher`,
       time: "Just now",
       read: false,
       icon: "ticket",
       iconBg: "#e7ede4",
     }, ...items])
     return { ok: true, data: converted.data }
+    })
   }, [])
 
   const refundConvertedVoucher = useCallback(async (voucherId: string) => {
+    return withLedgerLock(async () => {
     if (convertedVoucherRefundBusyRef.current.has(voucherId)) return
     const voucher = vouchers.find((item) => item.id === voucherId)
     if (!voucher || voucher.funding !== "user-converted" || !["available", "expired"].includes(voucher.status)) return
+    const operationId = `refund-voucher:${voucherId}`
+    if (!claimLedgerOperation(operationId)) return
+    let operationCompleted = false
     convertedVoucherRefundBusyRef.current.add(voucherId)
-    setVouchers((items) => items.map((item) => item.id === voucherId ? { ...item, status: "reserved" } : item))
     try {
-      const event = await chainService.log("VoucherRefunded", `${voucher.id} returned to the holder's demo KRW balance`)
+      const event = await chainService.log("VoucherRefunded", `${voucher.id} returned to the holder's travel balance`)
       setSession((current) => ({ ...current, wallet: { ...current.wallet, balanceKRW: current.wallet.balanceKRW + voucher.valueKRW } }))
       setVouchers((items) => items.filter((item) => item.id !== voucher.id))
       setTransactions((items) => [{
@@ -908,13 +1098,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }, ...items])
       setEvents((items) => [event, ...items])
       setNotifications((items) => [{
-        id: Date.now(), type: "transaction", title: "Voucher returned", message: `₩${voucher.valueKRW.toLocaleString()} restored to your demo balance`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
+        id: Date.now(), type: "transaction", title: "Voucher returned", message: `₩${voucher.valueKRW.toLocaleString()} restored to your travel balance`, time: "Just now", read: false, icon: "refresh", iconBg: "#e7ede4",
       }, ...items])
+      operationCompleted = true
     } catch {
-      setVouchers((items) => items.map((item) => item.id === voucherId && item.status === "reserved" ? { ...item, status: "available" } : item))
+      /* no local value was moved; keep the voucher available for retry */
     } finally {
       convertedVoucherRefundBusyRef.current.delete(voucherId)
+      if (!operationCompleted) releaseLedgerOperation(operationId)
     }
+    })
   }, [vouchers])
 
   const dismissNotification = useCallback((id: number) => {

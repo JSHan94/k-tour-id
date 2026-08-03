@@ -61,6 +61,19 @@ export default function ExplorePage() {
   if (!session.onboarded) return null
 
   const feature = shown[0]
+  const featureReason = feature ? [
+    userType === "foreigner"
+      ? (ko ? "단기 방문자 K-Tour ID" : "Short-term visitor K-Tour ID")
+      : userType === "long-term"
+        ? (ko ? "거주 외국인 K-Tour ID" : "Foreign-resident K-Tour ID")
+        : (ko ? "국내 여행자 K-Tour ID" : "Domestic-traveler K-Tour ID"),
+    feature.languageLabels.includes("English")
+      ? (ko ? "영어 이용 가능" : "English available")
+      : (ko ? "한국어 진행" : "Korean-language"),
+    locationStatus === "granted"
+      ? proximityLabel(feature, location, lang)
+      : (ko ? "위치 미사용" : "Location off"),
+  ].filter(Boolean).join(" · ") : ""
   const rows = shown.slice(1)
   const filterOrder: Filter[] = userType === "long-term"
     ? ["all", "mobility", "food", "experience"]
@@ -78,7 +91,7 @@ export default function ExplorePage() {
     <PhoneFrame>
       <header className="safe-top px-6 pb-4">
         <div className="flex items-center justify-between">
-          <div><p className="text-[12px] font-semibold text-primary">CURATED FOR YOU</p><h1 className="font-display mt-1 text-[30px] font-semibold tracking-[-0.03em]">{exploreTitle}</h1></div>
+          <div><p className="text-[13px] font-semibold text-primary">{ko ? "맞춤 추천" : "Curated for you"}</p><h1 className="font-display mt-1 text-[30px] font-semibold tracking-[-0.03em]">{exploreTitle}</h1></div>
           <div className="flex items-center gap-1"><LangToggle /><Link href="/alerts" aria-label={ko ? "알림" : "Alerts"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><Bell className="h-[18px] w-[18px]" /></Link></div>
         </div>
         <p className="mt-3 max-w-[330px] text-[14px] leading-6 text-muted-foreground">{persona.homeBody[lang]} {ko ? `${catalog.length}가지 선택만 간결하게 모았어요.` : `${catalog.length} focused choices, without the clutter.`}</p>
@@ -91,14 +104,14 @@ export default function ExplorePage() {
         <div className="no-scrollbar -mx-6 mt-4 flex gap-2 overflow-x-auto px-6 pb-1">
           {filterOrder.map((key) => <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)} className={cn("pressable inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold", filter === key ? "bg-ink text-white" : "bg-secondary text-muted-foreground")}>{filter === key && <Check className="h-3.5 w-3.5" />}{FILTERS[key][lang]}</button>)}
         </div>
-        <p className="mt-3 flex items-center gap-2 text-[12px] text-success"><SlidersHorizontal className="h-3.5 w-3.5" />{locationStatus === "granted" ? (ko ? "내 위치에서 가까운 순 · 이용 가능한 항목만" : "Closest to you · eligible items only") : (ko ? "내 K-Tour ID로 이용 가능한 순서" : "Eligible for your K-Tour ID first")}</p>
+        <p className="mt-3 flex items-center gap-2 text-[13px] text-success"><SlidersHorizontal className="h-3.5 w-3.5" />{locationStatus === "granted" ? (ko ? "내 위치에서 가까운 순 · 이용 가능한 항목만" : "Closest to you · eligible items only") : (ko ? "내 자격으로 이용 가능한 항목 먼저" : "Eligible items first for your K-Tour ID")}</p>
       </header>
 
       <main className="px-6 pb-8 pt-4">
         {feature ? (
           <>
-            <section><p className="mb-4 text-[13px] font-semibold text-primary">{locationStatus === "granted" ? (ko ? "내 위치에서 가장 가까워요" : "Closest to you") : (ko ? "나를 위한 첫 선택" : "First pick for you")}</p><EditorialFeature item={feature} voucher={vouchers.find((voucher) => voucher.id === feature.voucherId)} proximity={proximityLabel(feature, location, lang)} /></section>
-            {benefitPairs.length > 0 && filter === "all" && !query && <section className="mt-11"><div className="flex items-end justify-between"><div><p className="text-[12px] font-semibold text-success">K-TOUR ID</p><h2 className="font-display mt-1 text-[24px] font-semibold">{ko ? "지금 쓸 수 있는 혜택" : "Benefits ready now"}</h2></div><span className="text-[12px] text-muted-foreground">{benefitPairs.length}{ko ? "개" : " available"}</span></div><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{benefitPairs.map(({ item, voucher }) => <BenefitTicket key={voucher.id} item={item} voucher={voucher} />)}</div></section>}
+            <section><p className="mb-4 text-[13px] font-semibold text-primary">{locationStatus === "granted" ? (ko ? "내 위치에서 가장 가까워요" : "Closest to you") : (ko ? "나를 위한 첫 선택" : "First pick for you")}</p><EditorialFeature item={feature} voucher={vouchers.find((voucher) => voucher.id === feature.voucherId)} proximity={proximityLabel(feature, location, lang)} reason={featureReason} /></section>
+            {benefitPairs.length > 0 && filter === "all" && !query && <section className="mt-11"><div className="flex items-end justify-between"><div><p className="text-[12px] font-semibold text-success">K-Tour ID</p><h2 className="font-display mt-1 text-[24px] font-semibold">{ko ? "지금 쓸 수 있는 혜택" : "Benefits ready now"}</h2></div><span className="text-[12px] text-muted-foreground">{benefitPairs.length}{ko ? "개" : " available"}</span></div><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{benefitPairs.map(({ item, voucher }) => <BenefitTicket key={voucher.id} item={item} voucher={voucher} />)}</div></section>}
             {visibleRows.length > 0 && <section className="mt-11"><p className="text-[12px] font-semibold text-primary">{ko ? "이어서 둘러보기" : "Keep exploring"}</p><h2 className="font-display mt-1 text-[24px] font-semibold">{ko ? "오늘 가능한 선택" : "Available today"}</h2><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{visibleRows.slice(0, 5).map((item) => <ServiceRow key={item.id} item={item} voucher={vouchers.find((voucher) => voucher.id === item.voucherId)} proximity={proximityLabel(item, location, lang)} />)}</div></section>}
           </>
         ) : (

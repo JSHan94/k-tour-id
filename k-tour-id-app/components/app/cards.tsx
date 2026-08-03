@@ -9,6 +9,16 @@ import { useCountUp } from "@/lib/use-count-up"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { Seal } from "@/components/app/seal"
 import type { Identity, KPassCapsule, ServiceKey, UserType, Wallet } from "@/lib/types"
+import { effectiveCredentialStatus, isCredentialUsable } from "@/lib/credential-status"
+
+function credentialLabel(capsule: KPassCapsule, ko: boolean) {
+  const status = effectiveCredentialStatus(capsule)
+  if (isCredentialUsable(capsule)) return ko ? "사용 가능" : "Active"
+  if (status === "expired") return ko ? "갱신 필요" : "Renewal needed"
+  if (status === "revoked") return ko ? "사용 취소" : "Revoked"
+  if (status === "suspended") return ko ? "사용 정지" : "Suspended"
+  return ko ? "준비 중" : "Pending"
+}
 
 function Sparkline({ points, className }: { points: number[]; className?: string }) {
   const w = 120
@@ -58,7 +68,7 @@ export function WalletCard({
   return (
     <div className={cn("card-ink relative overflow-hidden rounded-[28px] p-6 text-white", className)}>
       <div className="relative">
-        {identity && capsule && <Link href="/pass" aria-label={ko ? "K-Tour ID 상세 보기" : "View K-Tour ID details"} className="pressable flex items-center gap-3 border-b border-white/12 pb-5"><img src={identity.photoUrl ?? "/abstract-profile.png"} alt="" className="h-11 w-11 rounded-full object-cover ring-1 ring-[var(--gold)]/65" /><span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-[12px] font-medium text-white/58"><span>K-Tour ID</span><span className="h-1 w-1 rounded-full bg-[var(--gold)]" /><span>{capsule.status === "active" ? (ko ? "사용 가능" : "Active") : capsule.status}</span></span><strong className="mt-1 block truncate text-[15px] font-semibold text-white">{capsule.holderName} {identity.nationalityFlag}</strong><span className="mt-1 block text-[11px] text-white/48">{ko ? `${formatPassDate(capsule.expiresAt)}까지 · 상세 보기` : `Valid to ${formatPassDate(capsule.expiresAt)} · View details`}</span></span><ChevronRight className="h-5 w-5 flex-shrink-0 text-white/42" /></Link>}
+        {identity && capsule && <Link href="/pass" aria-label={ko ? "K-Tour ID 상세 보기" : "View K-Tour ID details"} className="pressable flex items-center gap-3 border-b border-white/12 pb-5"><img src={identity.photoUrl ?? "/abstract-profile.png"} alt="" className="h-11 w-11 rounded-full object-cover ring-1 ring-[var(--gold)]/65" /><span className="min-w-0 flex-1"><span className="flex items-center gap-2 text-[12px] font-medium text-white/72"><span>K-Tour ID</span><span className="h-1 w-1 rounded-full bg-[var(--gold)]" /><span>{credentialLabel(capsule, ko)}</span></span><strong className="mt-1 block truncate text-[15px] font-semibold text-white">{capsule.holderName} {identity.nationalityFlag}</strong><span className="mt-1 block text-[12px] text-white/68">{isCredentialUsable(capsule) ? (ko ? `${formatPassDate(capsule.expiresAt)}까지 · 상세 보기` : `Valid to ${formatPassDate(capsule.expiresAt)} · View details`) : (ko ? "상태 확인·갱신" : "Review status or renew")}</span></span><ChevronRight className="h-5 w-5 flex-shrink-0 text-white/58" /></Link>}
         <div className={cn("flex items-center gap-1.5 text-[13px] font-medium text-white/65", identity && capsule ? "mt-5" : "")}>
           <span className="inline-block h-2 w-2 rounded-full bg-[var(--seal)]" />
           {label ?? t("wallet.label")}
@@ -177,7 +187,7 @@ export function KPassCard({
         <div className="mt-5 grid grid-cols-2 gap-y-3 text-[12px]">
           <Field label={t("pass.stayPeriod")} value={localizeStayPeriod(capsule.stayPeriod, lang)} />
           <Field label={t("pass.paymentLimit")} value={lang === "ko" ? formatManwon(capsule.paymentLimitKRW) : `₩${capsule.paymentLimitKRW.toLocaleString("en-US")}`} />
-          <Field label={t("pass.status")} value={capsule.status === "active" ? t("pass.statusActive") : capsule.status} className="capitalize" />
+          <Field label={t("pass.status")} value={credentialLabel(capsule, lang === "ko")} className="capitalize" />
           <Field label={t("pass.validUntil")} value={formatPassDate(capsule.expiresAt)} />
         </div>
 

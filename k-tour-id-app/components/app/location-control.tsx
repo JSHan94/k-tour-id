@@ -43,7 +43,7 @@ export function LocationControl({ compact = false }: { compact?: boolean }) {
         </span>
         <span className="min-w-0 flex-1">
           <strong className="block text-[13px] font-semibold">{requesting ? (ko ? "현재 위치를 확인하고 있어요" : "Finding your location") : title}</strong>
-          <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">{detail}</span>
+          <span className="mt-1 block text-[12px] leading-5 text-muted-foreground">{detail}</span>
         </span>
         <ChevronRight className={cn("h-4 w-4 flex-shrink-0 text-muted-foreground transition-transform", manageOpen && "rotate-90")} />
       </button>

@@ -7,7 +7,7 @@ import { AppIcon, type IconKey } from "@/lib/icon-map"
 import { BrandMark } from "@/components/app/brand"
 import type { BrandKey } from "@/lib/brands"
 import type { Transaction } from "@/lib/types"
-import { formatKRW, formatUSD, formatWon, formatTxDate } from "@/lib/format"
+import { formatDateTime, formatKRW, formatUSD, formatWon } from "@/lib/format"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { cn } from "@/lib/utils"
 
@@ -17,9 +17,8 @@ export function TxRow({ tx, usdRate, userType }: { tx: Transaction; usdRate: num
   const positive = tx.amountKRW > 0
   const ko = lang === "ko"
   const refunded = tx.id.endsWith("-refund")
-  const merchant = refunded
-    ? `${tx.merchant.replace(" · demo merchant", "")} · ${ko ? "환불" : "Refund"}`
-    : tx.merchant.replace(" · demo merchant", "")
+  const merchantName = localizedMerchant(tx.merchant.replace(" · demo merchant", ""), ko)
+  const merchant = refunded ? `${merchantName} · ${ko ? "환불" : "Refund"}` : merchantName
   const amountStr = ko ? formatWon(tx.amountKRW, { sign: true }) : formatKRW(tx.amountKRW, { sign: true })
 
   return (
@@ -41,7 +40,7 @@ export function TxRow({ tx, usdRate, userType }: { tx: Transaction; usdRate: num
         )}
         <div className="min-w-0 flex-1">
           <p className="break-words text-[14px] font-semibold leading-snug text-foreground">{merchant}</p>
-          <p className="text-[12px] text-muted-foreground">{formatTxDate(tx.date)}</p>
+          <p className="text-[12px] text-muted-foreground">{formatDateTime(tx.date, lang)}</p>
         </div>
         <div className="text-right">
           <p className={cn("tabular text-[14px] font-bold", positive ? "text-success" : "text-foreground")}>{amountStr}</p>
@@ -61,12 +60,22 @@ export function TxRow({ tx, usdRate, userType }: { tx: Transaction; usdRate: num
               value={`${ko ? formatWon(tx.amountKRW, { sign: true }) : formatKRW(tx.amountKRW, { sign: true })}${userType !== "korean" && !ko ? `  ·  ${formatUSD(tx.amountKRW, usdRate, { sign: true })}` : ""}`}
               mono
             />
-            <Row label={ko ? "일시" : "Date"} value={formatTxDate(tx.date)} />
+            <Row label={ko ? "일시" : "Date"} value={formatDateTime(tx.date, lang)} />
           </div>
         </SheetContent>
       </Sheet>
     </>
   )
+}
+
+function localizedMerchant(merchant: string, ko: boolean): string {
+  const copy: Record<string, { ko: string; en: string }> = {
+    "Top up": { ko: "여행 잔액 충전", en: "Travel balance top-up" },
+    "Travel balance → return-trip voucher": { ko: "여행 잔액 → 재방문 바우처", en: "Travel balance → return-trip voucher" },
+    "Return-trip voucher refund": { ko: "재방문 바우처 전환 취소", en: "Return-trip voucher return" },
+    "한강 치맥 비용 나누기": { ko: "한강 치맥 비용 나누기", en: "Hangang meetup cost split" },
+  }
+  return copy[merchant]?.[ko ? "ko" : "en"] ?? merchant
 }
 
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {

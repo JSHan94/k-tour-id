@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Check, X } from "lucide-react"
 import { PhoneFrame, PageHeader } from "@/components/app/shell"
 import { useApp } from "@/lib/store/app-provider"
@@ -10,10 +11,17 @@ import type { AppNotification } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 export default function AlertsPage() {
-  const { notifications, dismissNotification, markAllRead } = useApp()
+  const router = useRouter()
+  const { notifications, dismissNotification, markAllRead, session, hydrated } = useApp()
   const { t, lang } = useLang()
   const ko = lang === "ko"
   const [tab, setTab] = useState<"all" | "unread">("all")
+
+  useEffect(() => {
+    if (hydrated && !session.onboarded) router.replace("/onboarding")
+  }, [hydrated, router, session.onboarded])
+
+  if (!hydrated || !session.onboarded) return null
 
   const list = tab === "unread" ? notifications.filter((n) => !n.read) : notifications
 
@@ -100,11 +108,11 @@ export default function AlertsPage() {
 
 function notificationCopy(notification: AppNotification, ko: boolean) {
   const defaults: Record<number, { ko: [string, string, string]; en: [string, string, string] }> = {
-    1: { ko: ["결제 완료", "올리브영에서 ₩135,727을 결제했어요", "2시간 전"], en: ["Payment complete", "You paid ₩135,727 at Olive Young", "2 hours ago"] },
-    2: { ko: ["여행 혜택", "남은 여행 잔액을 귀국·재방문 바우처로 전환할 수 있어요", "4시간 전"], en: ["Travel benefit", "You can turn remaining travel balance into a return-trip voucher", "4 hours ago"] },
-    3: { ko: ["K-Tour ID 확인", "K-Tour ID 상태를 확인했어요", "1일 전"], en: ["K-Tour ID checked", "Your K-Tour ID is ready to use", "1 day ago"] },
-    4: { ko: ["바우처 추가", "₩10,000 웰컴 쿠폰이 혜택 지갑에 추가됐어요", "2일 전"], en: ["Voucher added", "A ₩10,000 welcome coupon was added to your benefit wallet", "2 days ago"] },
-    5: { ko: ["K-Tour ID 업데이트", "여행 기간과 결제 한도가 업데이트됐어요", "3일 전"], en: ["K-Tour ID updated", "Your trip window and payment limit were refreshed", "3 days ago"] },
+    1: { ko: ["결제 완료", "올리브영에서 ₩135,727을 결제했어요", "6월 20일"], en: ["Payment complete", "You paid ₩135,727 at Olive Young", "Jun 20"] },
+    2: { ko: ["여행 혜택", "남은 여행 잔액을 재방문 바우처로 전환할 수 있어요", "6월 19일"], en: ["Travel benefit", "You can turn remaining travel balance into a return-trip voucher", "Jun 19"] },
+    3: { ko: ["K-Tour ID 확인", "K-Tour ID 상태를 확인했어요", "6월 12일"], en: ["K-Tour ID checked", "Your K-Tour ID is ready to use", "Jun 12"] },
+    4: { ko: ["바우처 추가", "₩10,000 웰컴 쿠폰이 ID·지갑에 추가됐어요", "6월 12일"], en: ["Voucher added", "A ₩10,000 welcome coupon was added to ID · Wallet", "Jun 12"] },
+    5: { ko: ["K-Tour ID 업데이트", "여행 기간과 결제 한도가 업데이트됐어요", "6월 12일"], en: ["K-Tour ID updated", "Your trip window and payment limit were refreshed", "Jun 12"] },
   }
   const preset = defaults[notification.id]
   if (preset) {
@@ -112,11 +120,14 @@ function notificationCopy(notification: AppNotification, ko: boolean) {
     return { title, message, time }
   }
   if (!ko) return notification
-  if (notification.title.includes("Bukchon workshop paid")) return { title: "북촌 공예 체험 결제 완료", message: "여행자 할인이 적용됐어요", time: "방금" }
-  if (notification.title.includes("Workshop refund complete")) return { title: "북촌 공예 체험 환불 완료", message: "결제 금액과 여행자 혜택이 복구됐어요", time: "방금" }
-  if (notification.title.includes("Payment complete")) return { title: "결제 완료", message: "결제가 완료됐어요", time: "방금" }
-  if (notification.title.includes("Travel balance topped up")) return { title: "여행 잔액 충전 완료", message: "여행 잔액이 충전됐어요", time: "방금" }
-  if (notification.title.includes("Voucher returned")) return { title: "바우처 전환 취소", message: "금액이 여행 잔액으로 돌아왔어요", time: "방금" }
-  if (notification.title.includes("Return-trip voucher")) return { title: "귀국·재방문 바우처 준비 완료", message: "바우처 지갑에서 확인할 수 있어요", time: "방금" }
+  const amounts = notification.message.match(/₩[\d,]+/g) ?? []
+  if (notification.title.endsWith(" paid")) return { title: "혜택 결제 완료", message: amounts.length >= 2 ? `혜택 ${amounts[0]} 적용 · ${amounts[1]} 결제` : "혜택을 적용해 결제했어요", time: "방금" }
+  if (notification.title.includes("Order refund complete")) return { title: "주문 환불 완료", message: amounts.length >= 2 ? `${amounts[0]} 환불 · 혜택 ${amounts[1]} 복구` : "결제 금액과 이용 전 혜택이 복구됐어요", time: "방금" }
+  if (notification.title.includes("Order confirmed")) return { title: "주문 완료", message: amounts[0] ? `${amounts[0]} 결제 · 주문이 확정됐어요` : "주문이 확정됐어요", time: "방금" }
+  if (notification.title.includes("Order refunded")) return { title: "주문 환불 완료", message: amounts.length >= 3 ? `총 ${amounts[0]} 복구 · 여행 잔액 ${amounts[1]} · 바우처 ${amounts[2]}` : amounts[0] ? `${amounts[0]}이 여행 잔액으로 돌아왔어요${notification.message.includes("benefit restored") ? " · 이용 전 혜택 복구" : ""}` : "환불 처리가 완료됐어요", time: "방금" }
+  if (notification.title.includes("Payment complete")) return { title: "결제 완료", message: amounts[0] ? `${amounts[0]} 결제가 완료됐어요` : "결제가 완료됐어요", time: "방금" }
+  if (notification.title.includes("Travel balance topped up")) return { title: "여행 잔액 충전 완료", message: amounts[0] ? `${amounts[0]}이 여행 잔액에 추가됐어요` : "여행 잔액이 충전됐어요", time: "방금" }
+  if (notification.title.includes("Voucher returned")) return { title: "바우처 전환 취소", message: amounts[0] ? `${amounts[0]}이 여행 잔액으로 돌아왔어요` : "금액이 여행 잔액으로 돌아왔어요", time: "방금" }
+  if (notification.title.includes("Return-trip voucher")) return { title: "재방문 바우처 준비 완료", message: amounts[0] ? `${amounts[0]} 바우처가 ID·지갑에 추가됐어요` : "ID·지갑에서 확인할 수 있어요", time: "방금" }
   return { ...notification, time: notification.time === "Just now" ? "방금" : notification.time }
 }

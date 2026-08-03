@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { ArrowRight, BadgeCheck, Check, LocateFixed, UsersRound, X } from "lucide-react"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { useNearbyLocation } from "@/lib/location/location-provider"
+import { useApp } from "@/lib/store/app-provider"
 
 const GUIDE_KEY = "k-tour-id-first-guide-v1"
 
@@ -30,33 +31,38 @@ const STEPS = [
     icon: UsersRound,
     eyebrowKo: "액티비티에서 자연스럽게",
     eyebrowEn: "MEET THROUGH ACTIVITIES",
-    titleKo: "함께한 사람과만\n연결할 수 있어요.",
-    titleEn: "Connect only after\nan activity brings you together.",
-    bodyKo: "친구 찾기는 공개 DM이 아니라 액티비티 참여에서 시작해요. 참여한 사람끼리만 그룹 채팅이 열려 부담을 낮췄어요.",
-    bodyEn: "Friend-making starts with an activity, not open DMs. Group chat opens only for participants, keeping the first step comfortable.",
+    titleKo: "같은 액티비티 참여자와만\n연결할 수 있어요.",
+    titleEn: "Connect only with people\nin the same activity.",
+    bodyKo: "친구 찾기는 공개 DM이 아니라 액티비티 참여에서 시작해요. 같은 액티비티 참여자끼리만 그룹 채팅이 열려 부담을 낮췄어요.",
+    bodyEn: "Friend-making starts with an activity, not open DMs. Group chat opens only for people confirmed in the same activity.",
   },
 ] as const
 
 export function FirstRunGuide() {
   const { lang } = useLang()
+  const { session } = useApp()
   const { requestLocation, status } = useNearbyLocation()
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
+  const [locationError, setLocationError] = useState(false)
   const dialogRef = useRef<HTMLElement>(null)
   const ko = lang === "ko"
+  const holderId = session.capsule?.did ?? session.identity?.did
+  const guideKey = holderId ? `${GUIDE_KEY}:${encodeURIComponent(holderId)}` : null
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get("welcome") !== "1") return
+    if (!guideKey) return
     let seen = false
-    try { seen = localStorage.getItem(GUIDE_KEY) === "seen" } catch { /* unavailable */ }
+    try { seen = localStorage.getItem(guideKey) === "seen" } catch { /* unavailable */ }
     if (seen) {
       params.delete("welcome")
       window.history.replaceState({}, "", `${window.location.pathname}${params.size ? `?${params}` : ""}`)
       return
     }
     setOpen(true)
-  }, [])
+  }, [guideKey])
 
   useEffect(() => {
     if (!open) return
@@ -74,7 +80,9 @@ export function FirstRunGuide() {
   const Icon = current.icon
 
   const close = () => {
-    try { localStorage.setItem(GUIDE_KEY, "seen") } catch { /* unavailable */ }
+    if (guideKey) {
+      try { localStorage.setItem(guideKey, "seen") } catch { /* unavailable */ }
+    }
     const params = new URLSearchParams(window.location.search)
     params.delete("welcome")
     window.history.replaceState({}, "", `${window.location.pathname}${params.size ? `?${params}` : ""}`)
@@ -87,8 +95,10 @@ export function FirstRunGuide() {
   }
 
   const useLocation = async () => {
-    await requestLocation()
-    advance()
+    setLocationError(false)
+    const granted = await requestLocation()
+    if (granted) advance()
+    else setLocationError(true)
   }
 
   return (
@@ -102,16 +112,17 @@ export function FirstRunGuide() {
           <button type="button" onClick={close} aria-label={ko ? "가이드 건너뛰기" : "Skip guide"} className="pressable grid h-11 w-11 place-items-center rounded-full text-muted-foreground"><X className="h-5 w-5" /></button>
         </div>
         <div className="mt-5 grid h-14 w-14 place-items-center rounded-full bg-secondary text-primary"><Icon className="h-6 w-6" /></div>
-        {step === 0 && <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-success-surface px-3 py-1.5 text-[11px] font-semibold text-success"><Check className="h-3.5 w-3.5" />{ko ? "K-Tour ID 준비 완료" : "Your K-Tour ID is ready"}</p>}
-        <p className={step === 0 ? "mt-4 text-[12px] font-semibold tracking-[0.08em] text-primary" : "mt-6 text-[12px] font-semibold tracking-[0.08em] text-primary"}>{ko ? current.eyebrowKo : current.eyebrowEn}</p>
+        {step === 0 && <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-success-surface px-3 py-1.5 text-[12px] font-semibold text-success"><Check className="h-3.5 w-3.5" />{ko ? "K-Tour ID 준비 완료" : "Your K-Tour ID is ready"}</p>}
+        <p className={step === 0 ? "mt-4 text-[13px] font-semibold tracking-[0.04em] text-primary" : "mt-6 text-[13px] font-semibold tracking-[0.04em] text-primary"}>{ko ? current.eyebrowKo : current.eyebrowEn}</p>
         <h2 id="first-guide-title" className="font-display text-balance mt-2 whitespace-pre-line text-[30px] font-semibold leading-[1.2] tracking-[-0.03em]">{ko ? current.titleKo : current.titleEn}</h2>
         <p className="mt-4 text-[14px] leading-6 text-muted-foreground">{ko ? current.bodyKo : current.bodyEn}</p>
         {step === 0 && <div className="mt-5 flex items-start gap-3 rounded-[14px] bg-success-surface px-4 py-3 text-[12px] leading-5 text-success"><Check className="mt-0.5 h-4 w-4 flex-shrink-0" /><span>{ko ? "위치를 켜지 않아도 서울 중심 추천으로 계속 이용할 수 있어요." : "You can continue with central Seoul recommendations without enabling location."}</span></div>}
+        {step === 0 && locationError && <p role="alert" className="mt-3 rounded-[14px] bg-destructive/10 px-4 py-3 text-[12px] font-medium leading-5 text-destructive">{ko ? "위치를 확인하지 못했어요. 기기 설정에서 위치 권한을 켜고 다시 시도하거나, 위치 없이 계속할 수 있어요." : "We couldn't access your location. Enable location in your device settings and try again, or continue without it."}</p>}
         <button type="button" onClick={step === 0 ? () => void useLocation() : advance} disabled={status === "requesting"} className="pressable mt-7 flex min-h-14 w-full items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-50">
-          <span>{step === 0 ? (status === "requesting" ? (ko ? "현재 위치 확인 중…" : "Finding your location…") : (ko ? "현재 위치로 시작" : "Use my current location")) : step === STEPS.length - 1 ? (ko ? "홈 시작하기" : "Start exploring") : (ko ? "다음" : "Next")}</span>
+          <span>{step === 0 ? (status === "requesting" ? (ko ? "현재 위치 확인 중…" : "Finding your location…") : locationError ? (ko ? "위치 다시 확인" : "Try location again") : (ko ? "현재 위치로 시작" : "Use my current location")) : step === STEPS.length - 1 ? (ko ? "홈 시작하기" : "Start exploring") : (ko ? "다음" : "Next")}</span>
           <ArrowRight className="h-5 w-5" />
         </button>
-        {step === 0 && <button type="button" onClick={advance} className="pressable mt-2 min-h-11 w-full text-[13px] font-medium text-muted-foreground">{ko ? "위치 없이 계속" : "Continue without location"}</button>}
+        {step === 0 && <button type="button" onClick={() => { setLocationError(false); advance() }} className="pressable mt-2 min-h-11 w-full text-[13px] font-medium text-muted-foreground">{ko ? "위치 없이 계속" : "Continue without location"}</button>}
       </section>
     </div>
   )

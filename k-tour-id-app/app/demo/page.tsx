@@ -9,6 +9,7 @@ import { Seal } from "@/components/app/seal"
 import { PERSONA_CONFIG } from "@/lib/catalog"
 import { useApp } from "@/lib/store/app-provider"
 import type { UserType } from "@/lib/types"
+import { useNearbyLocation } from "@/lib/location/location-provider"
 
 const PERSONA_ICONS = { foreigner: Plane, "long-term": Contact, korean: Smartphone } as const
 const STAGE_LABELS: Record<string, string> = {
@@ -25,10 +26,29 @@ const STAGE_LABELS: Record<string, string> = {
 export default function DemoHubPage() {
   const router = useRouter()
   const { reset, loadDemoAccount, loadDemoPersona, demoJourney } = useApp()
+  const { clearLocation } = useNearbyLocation()
+
+  const clearMockState = () => {
+    reset()
+    clearLocation()
+    try {
+      const prefixes = [
+        "k-tour-id-state-",
+        "k-tour-id-first-guide-",
+        "k-tour-id:activity-memberships:",
+        "k-tour-id:activity-safety:",
+        "k-tour-id:journey-checkin:",
+        "k-tour-id:ledger-",
+        "k-tour-id:ledger-operation:",
+        "k-tour-id-location-",
+      ]
+      const keys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter((key): key is string => Boolean(key))
+      keys.filter((key) => prefixes.some((prefix) => key.startsWith(prefix))).forEach((key) => localStorage.removeItem(key))
+    } catch { /* unavailable */ }
+  }
 
   const startOnboarding = (userType: UserType) => {
-    try { localStorage.removeItem("k-tour-id-first-guide-v1") } catch { /* unavailable */ }
-    reset()
+    clearMockState()
     router.push(`/onboarding?persona=${userType}&demo=1`)
   }
   const startCommerce = (userType: UserType) => {
@@ -57,7 +77,7 @@ export default function DemoHubPage() {
       <div className="mx-auto max-w-6xl">
         <header className="flex flex-col gap-5 border-b border-border pb-7 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3"><Seal size={46} /><div><p className="text-[13px] font-bold uppercase tracking-[0.12em] text-primary">Presenter workspace</p><h1 className="mt-1 text-3xl font-extrabold tracking-tight">K-Tour ID scenario hub</h1></div></div>
-          <div className="flex flex-wrap gap-2"><Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold"><House className="h-4 w-4" /> Consumer app</Link><button type="button" onClick={reset} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white"><RefreshCcw className="h-4 w-4" /> Clear all state</button></div>
+          <div className="flex flex-wrap gap-2"><Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold"><House className="h-4 w-4" /> Consumer app</Link><button type="button" onClick={clearMockState} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white"><RefreshCcw className="h-4 w-4" /> Clear all state</button></div>
         </header>
 
         <section className="mt-8">

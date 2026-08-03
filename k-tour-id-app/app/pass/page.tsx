@@ -8,11 +8,12 @@ import { KPassCard } from "@/components/app/cards"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { PERSONA_CONFIG } from "@/lib/catalog"
+import { effectiveCredentialStatus, isCredentialUsable } from "@/lib/credential-status"
 
 function benefitLabel(benefit: string, ko: boolean) {
   if (!ko) return benefit
   if (benefit === "Visitor workshop benefit") return "북촌 공예 체험 할인"
-  if (benefit === "Welcome coupon pack") return "K-Tour 웰컴 쿠폰"
+  if (benefit === "Welcome coupon pack") return "K-Tour ID 웰컴 쿠폰"
   if (benefit === "Everyday transit benefit") return "생활 교통 혜택"
   if (benefit === "Neighborhood service offers") return "동네 생활 서비스"
   if (benefit === "Regional culture program") return "지역 문화 프로그램"
@@ -22,7 +23,7 @@ function benefitLabel(benefit: string, ko: boolean) {
 }
 
 export default function PassPage() {
-  const { session } = useApp()
+  const { session, hydrated } = useApp()
   const { t, lang } = useLang()
   const { capsule, identity } = session
   const ko = lang === "ko"
@@ -35,23 +36,25 @@ export default function PassPage() {
     if (preview === "revoked" || preview === "expired") setStatusPreview(preview)
   }, [])
 
+  if (!hydrated) return null
+
   if (!capsule) {
     return (
       <PhoneFrame>
         <PageHeader title={t("pass.title")} back="/wallet" />
         <main className="flex min-h-[70vh] flex-col justify-center px-6 pb-10 text-center">
           <p className="text-[13px] font-semibold text-primary">K-Tour ID</p>
-          <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.25]">{ko ? "여행을 위한 신분증을\n만들어 보세요." : "Create an ID\nmade for travel."}</h1>
-          <p className="mt-3 text-[15px] leading-6 text-muted-foreground">{ko ? "필요한 자격만 보여주고 여행자 혜택을 편리하게 이용할 수 있어요." : "Share only the eligibility you need and unlock traveler benefits."}</p>
+          <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.25]">{ko ? "여행 서비스 자격을\n준비해 보세요." : "Create a private credential\nfor travel services."}</h1>
+          <p className="mt-3 text-[15px] leading-6 text-muted-foreground">{ko ? "필요한 자격만 보여주고 여행자 혜택을 편리하게 이용할 수 있어요. 정부 신분증·비자·체류 허가를 대신하지 않습니다." : "Share only the eligibility you need and unlock traveler benefits. This is not a government ID, visa or immigration status."}</p>
           <Link href="/onboarding" className="pressable mt-8 flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? "K-Tour ID 만들기" : "Create K-Tour ID"}</Link>
         </main>
       </PhoneFrame>
     )
   }
 
-  const expiredByDate = new Date(capsule.expiresAt).getTime() <= Date.now()
-  const unavailable = statusPreview != null || capsule.status !== "active" || expiredByDate
-  const statusTitle = statusPreview === "expired" || expiredByDate
+  const effectiveStatus = effectiveCredentialStatus(capsule)
+  const unavailable = statusPreview != null || !isCredentialUsable(capsule)
+  const statusTitle = statusPreview === "expired" || effectiveStatus === "expired"
     ? (ko ? "사용 기간이 끝났어요" : "Your K-Tour ID has expired")
     : (ko ? "지금은 사용할 수 없어요" : "Your K-Tour ID is unavailable")
   const persona = PERSONA_CONFIG[capsule.userType]
@@ -71,6 +74,8 @@ export default function PassPage() {
         )}
 
         <KPassCard capsule={capsule} identity={identity} />
+
+        <p className="border-l-2 border-gold pl-3 text-[13px] leading-5 text-muted-foreground">{ko ? "K-Tour ID는 민간 여행 서비스 자격이며 정부 신분증·비자·체류 허가를 대신하지 않아요." : "K-Tour ID is a private travel-service credential, not a government ID, visa or immigration status."}</p>
 
         {!unavailable && (
           <Link href={capsule.userType === "foreigner" ? "/present?auto=1" : `/explore/${persona.firstItemId}`} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-white">

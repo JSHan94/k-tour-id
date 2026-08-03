@@ -9,7 +9,7 @@ export interface Faq {
 }
 
 export const ASK_SUGGESTIONS = [
-  "K-Tour ID이 뭐예요?",
+  "K-Tour ID가 뭐예요?",
   "모바일 신분증·여권은 어떻게 쓰여요?",
   "DID랑 VC(K-Tour ID) 차이는?",
   "가맹점은 뭘 검증하나요?",

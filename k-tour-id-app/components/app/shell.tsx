@@ -35,7 +35,7 @@ const NAV_ITEMS = [
   { href: "/", labelKey: "nav.home", icon: Home },
   { href: "/explore", labelKey: "nav.explore", icon: Compass },
   { href: "/connect", labelKey: "nav.connect", icon: UsersRound },
-  { href: "/wallet", labelKey: "nav.wallet", labelKo: "ID·지갑", labelEn: "ID·Wallet", icon: BadgeCheck },
+  { href: "/wallet", labelKey: "nav.wallet", labelKo: "ID·지갑", labelEn: "ID · Wallet", icon: BadgeCheck },
 ] as const
 
 export function BottomNav() {

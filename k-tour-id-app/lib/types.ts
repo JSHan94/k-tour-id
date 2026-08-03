@@ -209,6 +209,11 @@ export interface DemoJourney {
   merchantDueKRW: number
   createdAt: string
   anchorHash?: string
+  /** Actual refund outcomes; shared by holder and partner views. */
+  refundCashKRW?: number
+  refundVoucherKRW?: number
+  reversedBenefitKRW?: number
+  settledUsageDays?: number
 }
 
 export interface OperationResult<T> {
@@ -362,6 +367,8 @@ export interface Activity {
   trustLevel: TrustLevel
   place: string
   placeEn?: string
+  image: string
+  imagePosition?: string
   geo?: {
     latitude: number
     longitude: number

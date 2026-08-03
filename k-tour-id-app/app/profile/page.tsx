@@ -3,18 +3,18 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ChevronRight, CreditCard, ShieldCheck, Bell, HelpCircle, LogOut, BadgeCheck } from "lucide-react"
+import { ChevronRight, CreditCard, Bell, HelpCircle, LogOut, BadgeCheck } from "lucide-react"
 import { PhoneFrame, PageHeader, SectionTitle } from "@/components/app/shell"
 import { Seal } from "@/components/app/seal"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-import { formatKRW } from "@/lib/format"
+import { formatKRW, localizedNationality } from "@/lib/format"
+import { isCredentialUsable } from "@/lib/credential-status"
 
 const MENU = [
-  { icon: CreditCard, title: "Travel balance", titleKo: "여행 잔액", subtitle: "Transactions, add money and receive", subtitleKo: "거래내역·충전·받기", href: "/wallet" },
-  { icon: ShieldCheck, title: "K-Tour ID & Privacy", titleKo: "K-Tour ID·개인정보", subtitle: "Availability, expiry and shared information", subtitleKo: "사용 상태·기한·공유 정보", href: "/pass" },
+  { icon: CreditCard, title: "Travel balance", titleKo: "여행 잔액", subtitle: "Transactions, add money and receive", subtitleKo: "거래 내역·충전·받기", href: "/wallet" },
   { icon: Bell, title: "Notifications", titleKo: "알림", subtitle: "Payments, benefits and security", subtitleKo: "결제·혜택·보안 알림", href: "/alerts" },
-  { icon: HelpCircle, title: "Help & Support", titleKo: "도움말·지원", subtitle: "Benefits, refunds and ID renewal", subtitleKo: "혜택·취소환불·ID 갱신 안내", href: "/help" },
+  { icon: HelpCircle, title: "Help & Support", titleKo: "도움말·지원", subtitle: "Benefits, refunds and ID renewal", subtitleKo: "혜택·취소·환불·ID 갱신 안내", href: "/help" },
 ]
 
 export default function ProfilePage() {
@@ -59,7 +59,7 @@ export default function ProfilePage() {
                   <BadgeCheck className="h-3.5 w-3.5" /> {lang === "ko" ? "신원 확인 완료" : "Identity checked"}
                 </span>}
               </div>
-              {identity && <p className="mt-1 text-[12px] text-muted-foreground">{identity.nationalityFlag} {identity.nationality} · {identity.method === "mobile-id" ? (lang === "ko" ? "모바일 신분증 확인" : "Mobile ID") : identity.method === "foreigner-id" ? (lang === "ko" ? "외국인등록 확인" : "Residence ID") : (lang === "ko" ? "여권 확인" : "Passport check")}</p>}
+              {identity && <p className="mt-1 text-[13px] text-muted-foreground">{identity.nationalityFlag} {localizedNationality(identity.nationality, lang)} · {identity.method === "mobile-id" ? (lang === "ko" ? "모바일 신분증 확인" : "Mobile ID") : identity.method === "foreigner-id" ? (lang === "ko" ? "외국인등록증 확인" : "Residence Card") : (lang === "ko" ? "여권 확인" : "Passport check")}</p>}
             </div>
           </div>
 
@@ -82,7 +82,7 @@ export default function ProfilePage() {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-semibold text-foreground">{t("profile.kpass")}</p>
-            <p className="mt-0.5 text-[12px] text-muted-foreground">{capsule ? (lang === "ko" ? "여행 중 사용 가능" : "Ready to use during your trip") : (lang === "ko" ? "아직 발급되지 않았어요" : "Not created yet")}</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">{capsule ? isCredentialUsable(capsule) ? (lang === "ko" ? "여행 중 사용 가능" : "Ready to use during your trip") : (lang === "ko" ? "상태 확인·갱신 필요" : "Review status or renew") : (lang === "ko" ? "아직 발급되지 않았어요" : "Not created yet")}</p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </Link>

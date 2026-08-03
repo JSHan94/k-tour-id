@@ -2,7 +2,6 @@
 // numbers), returns the right commands, chat chips, and at most one nudge.
 // Anti-paperclip: silent by default; one dot; whisper only for the leftover case.
 
-import { STAY } from "@/lib/mock-data"
 import type { UserType } from "@/lib/types"
 
 export type CmdKind = "pay" | "topup" | "convert" | "markRead" | "navigate" | "explain"
@@ -12,11 +11,13 @@ export interface CopilotCommand {
   kind: CmdKind
   /** literal label (merchant/offer) — takes precedence over labelKey */
   label?: string
+  labelEn?: string
   labelKey?: string
   icon: string
   /** KRW amount; the component formats the value pill from this */
   amountKRW?: number
   reason?: string
+  reasonEn?: string
   merchant?: string
   category?: string
   href?: string
@@ -38,9 +39,7 @@ export interface CopilotContext {
 }
 
 export const LEFTOVER_KRW = 180_000
-export const D_DAY = STAY.total - STAY.day
-
-const convertCommand = (balanceKRW: number): CopilotCommand => ({ id: "convert", kind: "convert", labelKey: "seal.cmd.convert", icon: "ticket", amountKRW: Math.min(LEFTOVER_KRW, Math.max(0, balanceKRW)), reason: `D-${D_DAY} · unused funds stay yours` })
+const convertCommand = (balanceKRW: number): CopilotCommand => ({ id: "convert", kind: "convert", labelKey: "seal.cmd.convert", icon: "ticket", amountKRW: Math.min(LEFTOVER_KRW, Math.max(0, balanceKRW)), reason: "" })
 const TOPUP: CopilotCommand = { id: "topup", kind: "topup", labelKey: "seal.cmd.topup", icon: "topup", amountKRW: 100_000 }
 
 function routeKey(pathname: string): "home" | "wallet" | "pass" | "alerts" | "profile" | "connect" | "ai" | "other" {
@@ -75,7 +74,7 @@ export function pickContext(pathname: string, dismissed: string[], persona: { us
       return {
         commands: [
           { id: "explain-pass", kind: "explain", labelKey: "seal.cmd.explainPass", icon: "shield", sayKey: "seal.say.pass", askKey: "seal.ask.pass" },
-          { id: "reissue", kind: "navigate", labelKey: "seal.cmd.reissue", icon: "stamp", href: "/onboarding" },
+          { id: "reissue", kind: "navigate", labelKey: "seal.cmd.reissue", icon: "stamp", href: "/onboarding?mode=renew" },
         ],
         chips: ["seal.chip.verify", "ai.s2"],
         nudge: null,
@@ -101,7 +100,7 @@ export function pickContext(pathname: string, dismissed: string[], persona: { us
       return {
         commands: [
           { id: "explain-cap", kind: "explain", labelKey: "seal.cmd.whatCanIDo", icon: "sparkles", sayKey: "seal.say.help", askKey: "seal.ask.help" },
-          { id: "reonboard", kind: "navigate", labelKey: "seal.cmd.reonboard", icon: "stamp", href: "/onboarding" },
+          { id: "reonboard", kind: "navigate", labelKey: "seal.cmd.reonboard", icon: "stamp", href: "/onboarding?mode=renew" },
         ],
         chips: ["seal.chip.help"],
         nudge: null,
@@ -110,7 +109,7 @@ export function pickContext(pathname: string, dismissed: string[], persona: { us
     default:
       if (persona.userType === "korean") return {
         commands: [
-          { id: "regional-pick", kind: "navigate", label: "지역 문화 혜택", icon: "ticket", href: "/explore/regional-craft-day", reason: "모바일 ID로 확인 가능한 국내 여행 혜택" },
+          { id: "regional-pick", kind: "navigate", label: "지역 문화 혜택", labelEn: "Regional culture benefit", icon: "ticket", href: "/explore/regional-craft-day", reason: "모바일 신분증으로 확인 가능한 국내 여행 혜택", reasonEn: "Available for a verified domestic traveler" },
           TOPUP,
         ],
         chips: ["ai.s1", "seal.chip.help"],
@@ -118,7 +117,7 @@ export function pickContext(pathname: string, dismissed: string[], persona: { us
       }
       if (persona.userType === "long-term") return {
         commands: [
-          { id: "resident-transit", kind: "navigate", label: "서울 생활 교통 30일권", icon: "transit", href: "/explore/seoul-transit-30", reason: "장기 체류 K-Tour ID로 이용 가능" },
+          { id: "resident-transit", kind: "navigate", label: "서울 생활 교통 30일권", labelEn: "30-day Seoul transit pass", icon: "transit", href: "/explore/seoul-transit-30", reason: "거주 외국인 K-Tour ID로 이용 가능", reasonEn: "Available for a verified foreign resident" },
           TOPUP,
         ],
         chips: ["ai.s2", "seal.chip.budget"],
@@ -126,7 +125,7 @@ export function pickContext(pathname: string, dismissed: string[], persona: { us
       }
       return {
         commands: [
-          { id: "pay-food", kind: "pay", label: "Korean Fried Chicken", icon: "delivery", amountKRW: 65_000, merchant: "Korean Fried Chicken", category: "delivery", reason: "Baemin 10%" },
+          { id: "pay-food", kind: "pay", label: "한국식 프라이드치킨", labelEn: "Korean fried chicken", icon: "delivery", amountKRW: 65_000, merchant: "Korean Fried Chicken", category: "delivery", reason: "배달 음식 추천", reasonEn: "A popular delivery choice" },
           ...(canConvert ? [convert] : []),
           TOPUP,
         ],

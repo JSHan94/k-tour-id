@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -24,6 +25,7 @@ import { useLang } from "@/lib/i18n/lang-provider"
 import { useApp } from "@/lib/store/app-provider"
 import type { DemoJourney } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { isCredentialUsable } from "@/lib/credential-status"
 
 type FlowStep = "scan" | "consent" | "result"
 type DemoResult = "success" | "expired" | "revoked" | "offline" | "ineligible"
@@ -37,6 +39,8 @@ export function HolderPresentationFlow() {
   const { lang } = useLang()
   const ko = lang === "ko"
   const {
+    session,
+    hydrated,
     demoJourney,
     beginDemoPresentation,
     recordDemoPresentation,
@@ -50,14 +54,20 @@ export function HolderPresentationFlow() {
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState("")
   const [recovery, setRecovery] = useState<PaymentRecovery>(null)
+  const initialized = useRef(false)
 
   useEffect(() => {
+    if (!hydrated || !session.onboarded || initialized.current) return
+    initialized.current = true
     const params = new URLSearchParams(window.location.search)
     const requestedResult = params.get("result") as DemoResult | null
     const requestedStep = params.get("step")
     const requestedItem = params.get("item")
     const requestedOption = params.get("option")
-    if (requestedItem && requestedOption) prepareDemoPurchase(requestedItem, requestedOption)
+    if (requestedItem && requestedOption && !prepareDemoPurchase(requestedItem, requestedOption)) {
+      router.replace(`/explore/${encodeURIComponent(requestedItem)}`)
+      return
+    }
     const autoScan = params.get("auto") === "1"
     if (requestedResult && PRESENTER_RESULTS.includes(requestedResult)) setResult(requestedResult)
     if (["scan", "consent", "result"].includes(requestedStep ?? "")) setStep(requestedStep as FlowStep)
@@ -67,7 +77,13 @@ export function HolderPresentationFlow() {
       const id = window.setTimeout(() => setStep("consent"), delay)
       return () => window.clearTimeout(id)
     }
-  }, [])
+  }, [hydrated, prepareDemoPurchase, router, session.onboarded])
+
+  useEffect(() => {
+    if (hydrated && !session.onboarded) router.replace("/onboarding")
+  }, [hydrated, router, session.onboarded])
+
+  if (!hydrated || !session.onboarded) return null
 
   const checkEligibility = () => {
     if (checking) return
@@ -77,8 +93,15 @@ export function HolderPresentationFlow() {
     const transitionDelay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 720
     window.setTimeout(() => {
       if (result === "success") {
-        const accepted = recordDemoPresentation([...CLAIMS])
-        if (!accepted) setResult("ineligible")
+        const capsule = session.capsule
+        if (!isCredentialUsable(capsule)) {
+          const failure = capsule?.status === "revoked" || capsule?.status === "suspended" ? "revoked" : "expired"
+          recordDemoPresentationFailure(failure)
+          setResult(failure)
+        } else {
+          const accepted = recordDemoPresentation([...CLAIMS])
+          if (!accepted) setResult("ineligible")
+        }
       } else if (result === "expired" || result === "revoked" || result === "offline") {
         recordDemoPresentationFailure(result)
       }
@@ -149,7 +172,7 @@ export function HolderPresentationFlow() {
         {step === "result" && (
           result === "success"
             ? <PaymentStep ko={ko} journey={demoJourney} paying={paying} error={error} recovery={recovery} onPay={completePayment} />
-            : <FailureResult ko={ko} result={result} onRetry={() => setStep("consent")} />
+            : <FailureResult ko={ko} result={result} onRetry={() => { setResult("success"); setStep("consent") }} />
         )}
       </div>
     </PhoneFrame>
@@ -192,16 +215,16 @@ function ConsentStep({ ko, journey, checking, onContinue }: { ko: boolean; journ
       <div className="card-credential relative h-[210px] overflow-hidden rounded-[24px] p-6 text-white">
         <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full border border-gold/25" />
         <div className="absolute -right-4 top-4 h-32 w-32 rounded-full border border-gold/15" />
-        <p className="text-[12px] font-medium tracking-[0.16em] text-gold">K-TOUR ID · ONE-TIME CHECK</p>
+        <p className="text-[12px] font-medium tracking-[0.12em] text-gold">{ko ? "K-Tour ID · 1회 확인" : "K-Tour ID · ONE-TIME CHECK"}</p>
         <p className="font-display mt-7 text-[40px] font-semibold leading-none text-white/92">{userFunded ? (ko ? "바우처 사용 확인" : "Voucher use check") : (ko ? "혜택 확인" : "Benefit check")}</p>
         <div className="absolute inset-x-6 bottom-6 flex items-end justify-between border-t border-white/15 pt-3">
           <p className="text-[14px] font-medium text-white">{merchantName}</p>
-          <p className="text-[12px] text-white/55">K-TOUR ID</p>
+          <p className="text-[12px] text-white/70">K-Tour ID</p>
         </div>
       </div>
 
       <div className="pt-7">
-        <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 제휴 이용처" : "K-Tour ID partner merchant"}</p>
+        <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 혜택 이용처" : "K-Tour ID benefit location"}</p>
         <h1 className="font-display mt-3 text-[35px] font-semibold tracking-[-0.035em]">₩{journey.voucherKRW.toLocaleString()} <span className="text-[22px]">{userFunded ? (ko ? "바우처 사용" : "voucher use") : (ko ? "혜택" : "benefit")}</span></h1>
         <p className="mt-2 text-[15px] text-foreground">{productName}</p>
         <p className="mt-1 text-[13px] text-muted-foreground">{ko ? journey.optionLabel : journey.optionLabelEn} · {ko ? journey.fulfilmentLabel : journey.fulfilmentLabelEn}</p>

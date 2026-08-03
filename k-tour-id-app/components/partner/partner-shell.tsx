@@ -7,29 +7,41 @@ import { Building2, Landmark, ScanLine } from "lucide-react"
 import { Seal } from "@/components/app/seal"
 import { cn } from "@/lib/utils"
 import { useApp } from "@/lib/store/app-provider"
+import { useLang } from "@/lib/i18n/lang-provider"
 
-const NAV = [
-  { href: "/partner/verify", label: "Benefit check", sub: "Scan and confirm", icon: ScanLine },
-  { href: "/partner/settlements", label: "Payouts", sub: "Review and submit", icon: Landmark },
-] as const
+const MERCHANT_KO: Record<string, string> = {
+  "Bukchon Craft House": "북촌 공방",
+  "Seoul Living Mobility": "서울 생활 모빌리티",
+  "Suwon Local Culture Lab": "수원 로컬문화연구소",
+  "Yeonhui Table": "연희 테이블",
+  "Euljiro Design Market": "을지로 디자인 마켓",
+  "Insadong Tea Room": "인사동 찻집",
+}
 
 export function PartnerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { demoJourney } = useApp()
+  const { lang, toggle } = useLang()
+  const ko = lang === "ko"
+  const merchant = ko ? (MERCHANT_KO[demoJourney.merchantDisplay] ?? demoJourney.merchantDisplay) : demoJourney.merchantDisplay
+  const nav = [
+    { href: "/partner/verify", label: ko ? "혜택 확인" : "Benefit check", sub: ko ? "QR 요청과 결과 확인" : "Scan and confirm", icon: ScanLine },
+    { href: "/partner/settlements", label: ko ? "정산" : "Payouts", sub: ko ? "내역 확인과 제출" : "Review and submit", icon: Landmark },
+  ] as const
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto grid min-h-screen w-full max-w-[1480px] lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="hidden border-r border-border bg-card/70 px-5 py-6 lg:flex lg:flex-col">
-          <PartnerBrand />
+          <PartnerBrand ko={ko} />
           <div className="mt-8 rounded-2xl border border-border bg-surface-2 p-3.5">
-            <p className="text-[12px] font-bold uppercase tracking-[0.1em] text-muted-foreground">Current merchant</p>
-            <p className="mt-2 text-[14px] font-bold">{demoJourney.merchantDisplay}</p>
-            <p className="mt-1 break-all text-[12px] leading-relaxed text-muted-foreground">{demoJourney.campaignId} · current transaction</p>
+            <p className="text-[12px] font-bold text-muted-foreground">{ko ? "현재 가맹점" : "Current merchant"}</p>
+            <p className="mt-2 text-[14px] font-bold">{merchant}</p>
+            <p className="mt-1 break-all text-[12px] leading-relaxed text-muted-foreground">{demoJourney.campaignId} · {ko ? "현재 거래" : "current transaction"}</p>
           </div>
 
-          <nav aria-label="Partner console" className="mt-5 space-y-1.5">
-            {NAV.map(({ href, label, sub, icon: Icon }) => {
+          <nav aria-label={ko ? "가맹점 콘솔" : "Partner console"} className="mt-5 space-y-1.5">
+            {nav.map(({ href, label, sub, icon: Icon }) => {
               const active = pathname.startsWith(href)
               return (
                 <Link
@@ -53,25 +65,33 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <p className="mt-auto px-2 text-[12px] leading-relaxed text-muted-foreground">K-Tour ID merchant operations</p>
+          <p className="mt-auto px-2 text-[12px] leading-relaxed text-muted-foreground">{ko ? "K-Tour ID 가맹점 운영" : "K-Tour ID merchant operations"}</p>
         </aside>
 
         <div className="min-w-0">
           <header className="sticky top-0 z-40 border-b border-border bg-background/90 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
             <div className="flex items-center justify-between gap-3 lg:justify-end">
-              <div className="lg:hidden"><PartnerBrand /></div>
+              <div className="lg:hidden"><PartnerBrand ko={ko} /></div>
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggle}
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-border bg-card px-4 text-[12px] font-extrabold text-foreground"
+                  aria-label={ko ? "영어로 보기" : "View in Korean"}
+                >
+                  {ko ? "EN" : "한국어"}
+                </button>
                 <span
                   className="grid h-11 w-11 place-items-center rounded-full border border-border bg-card text-foreground"
                   role="img"
-                  aria-label={`${demoJourney.merchantDisplay} account`}
+                  aria-label={`${merchant} ${ko ? "계정" : "account"}`}
                 >
                   <Building2 className="h-[18px] w-[18px]" />
                 </span>
               </div>
             </div>
-            <nav aria-label="Partner console mobile" className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
-              {NAV.map(({ href, label, icon: Icon }) => {
+            <nav aria-label={ko ? "모바일 가맹점 콘솔" : "Partner console mobile"} className="mt-3 grid grid-cols-2 gap-2 lg:hidden">
+              {nav.map(({ href, label, icon: Icon }) => {
                 const active = pathname.startsWith(href)
                 return (
                   <Link
@@ -97,13 +117,13 @@ export function PartnerShell({ children }: { children: React.ReactNode }) {
   )
 }
 
-function PartnerBrand() {
+function PartnerBrand({ ko }: { ko: boolean }) {
   return (
     <div className="flex items-center gap-3">
       <Seal size={38} />
       <div>
         <p className="text-[15px] font-extrabold tracking-tight">K-Tour ID</p>
-        <p className="text-[12px] font-bold uppercase tracking-[0.12em] text-muted-foreground">Merchant workspace</p>
+        <p className="text-[12px] font-bold text-muted-foreground">{ko ? "가맹점 업무 공간" : "Merchant workspace"}</p>
       </div>
     </div>
   )
@@ -127,7 +147,7 @@ export function Panel({
       {(title || eyebrow || action) && (
         <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
           <div>
-            {eyebrow && <p className="text-[12px] font-extrabold uppercase tracking-[0.12em] text-primary">{eyebrow}</p>}
+            {eyebrow && <p className="text-[12px] font-extrabold tracking-[0.03em] text-primary">{eyebrow}</p>}
             {title && <h2 className="mt-0.5 text-[16px] font-extrabold tracking-tight">{title}</h2>}
           </div>
           {action}
@@ -142,7 +162,7 @@ export function PageIntro({ eyebrow, title, body, children }: { eyebrow: string;
   return (
     <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
       <div className="max-w-3xl">
-        <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-primary">{eyebrow}</p>
+        <p className="text-[12px] font-extrabold tracking-[0.03em] text-primary">{eyebrow}</p>
         <h1 className="mt-1 text-[clamp(26px,4vw,38px)] font-extrabold leading-tight tracking-[-0.035em]">{title}</h1>
         <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-muted-foreground sm:text-[14px]">{body}</p>
       </div>

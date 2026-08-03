@@ -8,9 +8,10 @@ import { AppIcon, type IconKey } from "@/lib/icon-map"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { formatWon } from "@/lib/format"
-import { pickContext, type CopilotCommand, D_DAY } from "@/lib/copilot/context"
+import { pickContext, type CopilotCommand } from "@/lib/copilot/context"
 import { STAY, TRIP_BUDGET_KRW } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
+import { credentialDaysRemaining, isCredentialUsable } from "@/lib/credential-status"
 
 type Phase = "idle" | "confirm" | "processing" | "done" | "error"
 
@@ -51,13 +52,21 @@ export function SealCopilot() {
   const contextLine = (() => {
     const bal = money(session.wallet.balanceKRW)
     if (pathname === "/") {
-      if (session.userType === "foreigner") return `${STAY.cityKo && lang === "ko" ? STAY.cityKo : STAY.city} · D-${D_DAY} · ${bal}`
+      if (session.userType === "foreigner") {
+        const remaining = session.capsule ? credentialDaysRemaining(session.capsule) : Math.max(0, STAY.total - STAY.day)
+        return `${STAY.cityKo && lang === "ko" ? STAY.cityKo : STAY.city} · ${lang === "ko" ? `${remaining}일 남음` : `${remaining} days left`} · ${bal}`
+      }
       if (session.userType === "long-term") return `${lang === "ko" ? "서울 생활 혜택" : "Seoul resident benefits"} · ${bal}`
       return `${lang === "ko" ? "국내 여행 혜택" : "Local travel benefits"} · ${bal}`
     }
     if (pathname.startsWith("/wallet")) return `${t("wallet.budgetLeft")} ${tripRemainingPct}% · ${bal}`
-    if (pathname.startsWith("/pass")) return session.capsule ? `${session.capsule.stayPeriod} · ${t("pass.statusActive")}` : ""
-    if (pathname.startsWith("/alerts")) return `${notifications.filter((n) => !n.read).length} unread`
+    if (pathname.startsWith("/pass")) {
+      if (!session.capsule) return ""
+      const remaining = credentialDaysRemaining(session.capsule)
+      if (!isCredentialUsable(session.capsule)) return lang === "ko" ? "K-Tour ID 갱신 필요" : "K-Tour ID renewal needed"
+      return lang === "ko" ? `${remaining}일 남음 · ${t("pass.statusActive")}` : `${remaining} days left · ${t("pass.statusActive")}`
+    }
+    if (pathname.startsWith("/alerts")) return lang === "ko" ? `읽지 않은 알림 ${notifications.filter((n) => !n.read).length}개` : `${notifications.filter((n) => !n.read).length} unread`
     return bal
   })()
 
@@ -101,7 +110,7 @@ export function SealCopilot() {
       let failure = ""
       if (c.kind === "pay" && c.merchant && c.amountKRW != null) {
         succeeded = await pay(c.merchant, c.amountKRW, (c.category as never) ?? "shopping")
-        if (!succeeded) failure = lang === "ko" ? "여행 잔액이 부족해요. 지갑에서 충전한 뒤 다시 시도해 주세요." : "Your travel balance is too low. Top up in Wallet and try again."
+        if (!succeeded) failure = lang === "ko" ? "여행 잔액이 부족해요. ID·지갑에서 충전한 뒤 다시 시도해 주세요." : "Your travel balance is too low. Top up in ID · Wallet and try again."
       } else if (c.kind === "topup" && c.amountKRW != null) await topUp(c.amountKRW)
       else if (c.kind === "convert" && c.amountKRW != null) {
         const result = await convertLeftover(c.amountKRW)
@@ -149,6 +158,7 @@ export function SealCopilot() {
           </div>
 
           {/* commands */}
+          <p className="mb-2 text-[12px] font-semibold text-primary">{lang === "ko" ? "AI 제안 · 지금 할 수 있는 일" : "AI suggestions · actions you can take"}</p>
           <div className="space-y-2">
             {ctx.commands.map((c) => {
               const ph = phase[c.id] ?? "idle"
@@ -176,7 +186,7 @@ export function SealCopilot() {
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="break-words text-[13px] font-semibold leading-snug text-foreground">{c.label ?? t(c.labelKey ?? "")}</p>
+                    <p className="break-words text-[13px] font-semibold leading-snug text-foreground">{lang === "ko" ? (c.label ?? t(c.labelKey ?? "")) : (c.labelEn ?? c.label ?? t(c.labelKey ?? ""))}</p>
                     <p className={cn("break-words text-[12px] leading-snug", confirming ? "font-semibold text-primary" : "text-muted-foreground")}>
                       {ph === "done"
                         ? doneSubtitle(c.kind)
@@ -186,7 +196,7 @@ export function SealCopilot() {
                           ? c.kind === "convert"
                             ? lang === "ko" ? "사용자 재원 · 365일 유효 · 미사용 시 전액 복귀 · 다시 눌러 확인" : "User-funded · valid for 365 days · fully returnable while unused · tap again"
                             : lang === "ko" ? "한 번 더 눌러 확인" : "Tap again to confirm"
-                          : c.reason ?? ""}
+                          : lang === "ko" ? (c.reason ?? "") : (c.reasonEn ?? c.reason ?? "")}
                     </p>
                   </div>
                   {c.amountKRW != null && ph !== "done" && (

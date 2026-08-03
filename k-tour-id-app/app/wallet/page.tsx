@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import { PERSONA_CONFIG } from "@/lib/catalog"
 import { instantPassState } from "@/lib/commerce-policy"
 import { effectiveVoucherStatus, isVoucherAvailable } from "@/lib/voucher-policy"
+import { credentialDaysRemaining, isCredentialUsable } from "@/lib/credential-status"
 
 const DEMO_PAY: PayItem = { merchant: "GS25 Convenience", amountKRW: 4_500, category: "shopping" }
 
@@ -29,7 +30,7 @@ const STATUS_LABEL = {
 function voucherTitle(voucher: Voucher, ko: boolean) {
   if (!ko) return voucher.title.replace(" · demo merchant", "")
   if (voucher.id === "voucher-bukchon-10") return "북촌 공예 체험 10% 할인"
-  if (voucher.id === "voucher-welcome-10") return "K-Tour 웰컴 쿠폰"
+  if (voucher.id === "voucher-welcome-10") return "K-Tour ID 웰컴 쿠폰"
   if (voucher.id === "voucher-resident-transit") return "서울 생활 교통 웰컴 혜택"
   if (voucher.id === "voucher-local-culture") return "지역 문화 주간 혜택"
   return voucher.title
@@ -73,6 +74,12 @@ export default function WalletPage() {
   }, [hydrated, router, session.onboarded])
   if (!session.onboarded) return null
   const persona = PERSONA_CONFIG[session.userType ?? "foreigner"]
+  const credentialDays = credentialDaysRemaining(session.capsule)
+  const journeyStatus = !isCredentialUsable(session.capsule)
+    ? (lang === "ko" ? "K-Tour ID 갱신 필요" : "K-Tour ID renewal needed")
+    : session.userType === "foreigner"
+    ? (lang === "ko" ? `${credentialDays}일 남음` : `${credentialDays} days left`)
+    : persona.statusDetail[lang]
 
   const actions = [
     { label: lang === "ko" ? "QR 결제" : "QR pay", icon: QrCode, onClick: () => setShowPay(true) },
@@ -82,7 +89,7 @@ export default function WalletPage() {
 
   return (
     <PhoneFrame>
-      <header className="safe-top flex items-center justify-between px-6 pb-5"><div><p className="text-[12px] font-semibold text-primary">IDENTITY · MONEY · BENEFITS</p><h1 className="font-display mt-1 text-[30px] font-semibold tracking-[-0.03em]">{t("wallet.title")}</h1></div><div className="flex items-center gap-1"><LangToggle /><Link href="/alerts" aria-label={lang === "ko" ? "알림" : "Alerts"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><Bell className="h-[18px] w-[18px]" /></Link></div></header>
+      <header className="safe-top flex items-center justify-between px-6 pb-5"><div><p className="text-[13px] font-semibold text-primary">{lang === "ko" ? "ID · 잔액 · 혜택" : "ID · BALANCE · BENEFITS"}</p><h1 className="font-display mt-1 text-[30px] font-semibold tracking-[-0.03em]">{t("wallet.title")}</h1></div><div className="flex items-center gap-1"><LangToggle /><Link href="/alerts" aria-label={lang === "ko" ? "알림" : "Alerts"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><Bell className="h-[18px] w-[18px]" /></Link></div></header>
 
       <div className="space-y-8 px-6">
         <WalletCard
@@ -111,13 +118,16 @@ export default function WalletPage() {
         <section>
           <SectionTitle>{lang === "ko" ? "나의 여정" : "My journey"}</SectionTitle>
           <div className="rounded-[20px] bg-surface-2 p-5 ring-1 ring-border">
-            <div className="flex items-start gap-3"><MapPinned className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" /><div><p className="text-[14px] font-semibold">{persona.statusDetail[lang]}</p><p className="mt-1 text-[12px] leading-5 text-muted-foreground">{lang === "ko" ? `K-Tour ID 발급 · 주문 ${orders.length}건 · 사용한 혜택 ${vouchers.filter((voucher) => voucher.status === "redeemed").length}건` : `K-Tour ID issued · ${orders.length} orders · ${vouchers.filter((voucher) => voucher.status === "redeemed").length} benefits used`}</p></div></div>
-            {vouchers.some((voucher) => voucher.funding === "user-converted" && isVoucherAvailable(voucher)) && <Link href={`/explore/${vouchers.find((voucher) => voucher.funding === "user-converted" && isVoucherAvailable(voucher))?.itemId ?? "insadong-tea"}`} className="pressable mt-4 flex min-h-11 items-center justify-between border-t border-foreground/10 pt-3 text-[13px] font-semibold text-primary"><span>{lang === "ko" ? "다음 방문 바우처 사용하기" : "Use my return-trip voucher"}</span><TicketCheck className="h-4 w-4" /></Link>}
+            <div className="flex items-start gap-3"><MapPinned className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary" /><div><p className="text-[14px] font-semibold">{journeyStatus}</p><p className="mt-1 text-[13px] leading-5 text-muted-foreground">{lang === "ko" ? `K-Tour ID 발급 · 주문 ${orders.length}건 · 사용한 혜택 ${vouchers.filter((voucher) => voucher.status === "redeemed").length}건` : `K-Tour ID issued · ${orders.length} ${orders.length === 1 ? "order" : "orders"} · ${vouchers.filter((voucher) => voucher.status === "redeemed").length} benefits used`}</p></div></div>
+            <div className="mt-4 border-t border-foreground/10 pt-2">
+              <Link href="/journey" className="pressable flex min-h-11 items-center justify-between text-[13px] font-semibold text-primary"><span>{lang === "ko" ? "여행 기록·스탬프 보기" : "Journey history & stamps"}</span><MapPinned className="h-4 w-4" /></Link>
+              {vouchers.some((voucher) => voucher.funding === "user-converted" && isVoucherAvailable(voucher)) && <Link href={`/explore/${vouchers.find((voucher) => voucher.funding === "user-converted" && isVoucherAvailable(voucher))?.itemId ?? "insadong-tea"}`} className="pressable flex min-h-11 items-center justify-between text-[13px] font-semibold text-primary"><span>{lang === "ko" ? "재방문 바우처 사용하기" : "Use my return-trip voucher"}</span><TicketCheck className="h-4 w-4" /></Link>}
+            </div>
           </div>
         </section>
 
         <div>
-          <SectionTitle>{lang === "ko" ? "바우처 지갑" : "Voucher wallet"}</SectionTitle>
+          <SectionTitle>{lang === "ko" ? "보유 바우처" : "My vouchers"}</SectionTitle>
           <div className="divide-y divide-foreground/10 border-y border-foreground/10">
             {vouchers.map((voucher) => (
               <div key={voucher.id} className="py-5">
@@ -163,7 +173,7 @@ export default function WalletPage() {
               {orders.map((order) => (
                 <Link key={order.id} href={`/orders/${order.id}`} className="pressable flex min-h-[76px] items-center justify-between gap-4 py-4">
                   <div className="min-w-0"><p className="truncate text-[14px] font-semibold">{lang === "ko" ? order.title : order.titleEn}</p><p className="mt-1 text-[12px] text-muted-foreground">{lang === "ko" ? order.optionLabel : order.optionLabelEn} · {orderStatusLabel(order, lang === "ko")}</p></div>
-                  <p className="tabular flex-shrink-0 text-[13px] font-semibold">{order.status === "refunded" ? "+" : ""}₩{(order.status === "refunded" ? order.refundedKRW ?? order.paidKRW : order.paidKRW).toLocaleString()}</p>
+                  <p className="tabular flex-shrink-0 text-[13px] font-semibold">{order.status === "refunded" ? "+" : ""}₩{(order.status === "refunded" ? (order.refundedKRW ?? order.paidKRW) + (order.voucherFunding === "user-converted" ? order.discountKRW : 0) : order.paidKRW).toLocaleString()}</p>
                 </Link>
               ))}
             </div>
