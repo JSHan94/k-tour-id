@@ -75,7 +75,7 @@ export default function WalletPage() {
   const persona = PERSONA_CONFIG[session.userType ?? "foreigner"]
 
   const actions = [
-    { label: lang === "ko" ? "데모 QR 결제" : "Demo QR pay", icon: QrCode, onClick: () => setShowPay(true) },
+    { label: lang === "ko" ? "QR 결제" : "QR pay", icon: QrCode, onClick: () => setShowPay(true) },
     { label: t("wallet.receive"), icon: ArrowDownLeft, onClick: () => setShowReceive(true) },
     { label: t("wallet.topup"), icon: Plus, onClick: () => setShowTopUp(true) },
   ]

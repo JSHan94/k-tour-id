@@ -73,7 +73,7 @@ export default function EvidencePage() {
         </div>
 
         <div>
-          <SectionTitle>{ko ? "공통 데모 영수증" : "Shared demo receipt"}</SectionTitle>
+          <SectionTitle>{ko ? "공통 거래 영수증" : "Shared transaction receipt"}</SectionTitle>
           <div className="rounded-2xl bg-ink p-4 text-white">
             <div className="flex items-center justify-between gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-gold"><ReceiptText className="h-5 w-5" /></span>
@@ -93,7 +93,7 @@ export default function EvidencePage() {
         {latest && (
           <IntegrationEvidenceCard
             title={latest.type}
-            provider={latest.evidence?.network ?? "Chain adapter · simulated"}
+            provider={latest.evidence?.network ?? "Chain adapter"}
             requestId={latest.id}
             timestamp={new Date(latest.timestamp).toLocaleString(ko ? "ko-KR" : "en-US")}
             payloadHash={latest.evidence?.payloadHash ?? latest.txHash}

@@ -196,12 +196,12 @@ function ConsentStep({ ko, journey, checking, onContinue }: { ko: boolean; journ
         <p className="font-display mt-7 text-[40px] font-semibold leading-none text-white/92">{userFunded ? (ko ? "바우처 사용 확인" : "Voucher use check") : (ko ? "혜택 확인" : "Benefit check")}</p>
         <div className="absolute inset-x-6 bottom-6 flex items-end justify-between border-t border-white/15 pt-3">
           <p className="text-[14px] font-medium text-white">{merchantName}</p>
-          <p className="text-[12px] text-white/55">SIMULATED</p>
+          <p className="text-[12px] text-white/55">K-TOUR ID</p>
         </div>
       </div>
 
       <div className="pt-7">
-        <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 데모 이용처 · 제휴 전" : "K-Tour ID demo merchant · pre-partnership"}</p>
+        <p className="flex items-center gap-2 text-[13px] font-semibold text-success"><BadgeCheck className="h-4 w-4" /> {ko ? "K-Tour ID 제휴 이용처" : "K-Tour ID partner merchant"}</p>
         <h1 className="font-display mt-3 text-[35px] font-semibold tracking-[-0.035em]">₩{journey.voucherKRW.toLocaleString()} <span className="text-[22px]">{userFunded ? (ko ? "바우처 사용" : "voucher use") : (ko ? "혜택" : "benefit")}</span></h1>
         <p className="mt-2 text-[15px] text-foreground">{productName}</p>
         <p className="mt-1 text-[13px] text-muted-foreground">{ko ? journey.optionLabel : journey.optionLabelEn} · {ko ? journey.fulfilmentLabel : journey.fulfilmentLabelEn}</p>

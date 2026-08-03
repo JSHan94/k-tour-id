@@ -41,7 +41,7 @@ export function JourneyProgress() {
           <p className="text-[9px] font-extrabold uppercase tracking-[0.14em] text-primary">90-sec demo journey</p>
           <p className="mt-0.5 text-[13px] font-bold">{refunded ? (ko ? "환불 완료 · 거래 종료" : "Refunded · transaction closed") : complete ? (ko ? "하나의 영수증으로 전체 흐름 완료" : "One receipt completed the full journey") : (ko ? "다음 단계까지 이어서 시연" : "Continue the same transaction")}</p>
         </div>
-        {complete && <button type="button" onClick={resetDemoJourney} aria-label={ko ? "데모 초기화" : "Reset demo"} className="pressable grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground"><RotateCcw className="h-4 w-4" /></button>}
+        {complete && <button type="button" onClick={resetDemoJourney} aria-label={ko ? "여정 초기화" : "Reset journey"} className="pressable grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-secondary text-muted-foreground"><RotateCcw className="h-4 w-4" /></button>}
       </div>
       <div className="grid grid-cols-4 gap-1 px-3 pb-3">
         {STEPS.map(({ icon: Icon, ko: koLabel, en }, index) => {

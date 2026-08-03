@@ -24,8 +24,8 @@ const MODE_META: Record<IntegrationMode, { label: string; detail: string; tone: 
     tone: "bg-[#f6ecd6] text-[#7b5b20] ring-[#b88a3d]/25",
   },
   simulated: {
-    label: "DEMO",
-    detail: "Interactive demo · no real identity or payment",
+    label: "PREVIEW",
+    detail: "Product preview response",
     tone: "bg-primary/8 text-primary ring-primary/20",
   },
 }
@@ -46,7 +46,7 @@ export function SimulationStrip() {
   return (
     <div className="mx-4 mb-1 flex min-h-9 items-center justify-between gap-3 rounded-xl bg-primary/7 px-3 py-2 ring-1 ring-primary/15">
       <span className="min-w-0 flex-1 text-[12px] font-semibold leading-snug text-primary">
-        {lang === "ko" ? "인터랙티브 데모 · 실제 신분증이나 결제가 사용되지 않아요" : "Interactive demo · no real ID or payment is used"}
+        {lang === "ko" ? "제품 미리보기" : "Product preview"}
       </span>
       <IntegrationModeBadge compact />
     </div>

@@ -101,7 +101,7 @@ export default function OrderReceiptPage() {
               <Row label={refunded ? (ko ? "실제 환불액" : "Refunded amount") : (ko ? "현재 예상 환불액" : "Refundable now")} value={`₩${(refunded ? refundAmount : refundableNow).toLocaleString()}`} />
               {refunded && order.refundedAt && <Row label={ko ? "환불 완료 시각" : "Refunded at"} value={formatDate(order.refundedAt, ko)} />}
               <Row label={ko ? "영수증 번호" : "Receipt"} value={order.receiptId} />
-              <Link href="/evidence" className="pressable inline-flex min-h-10 items-center text-[12px] font-semibold text-primary underline underline-offset-4">{ko ? "시뮬레이션 증거 보기" : "View simulation evidence"}</Link>
+              <Link href="/evidence" className="pressable inline-flex min-h-10 items-center text-[12px] font-semibold text-primary underline underline-offset-4">{ko ? "거래 증거 보기" : "View transaction evidence"}</Link>
               {!refunded && <>
                 <p className="text-[12px] leading-5">{ko ? order.cancellation : order.cancellationEn}</p>
                 {refundStep === "confirm" && <p role="alert" className="border-l-2 border-gold pl-3 text-[12px] leading-5">{order.status === "used" || activeInstantPass ? (ko ? `이미 개시되어 ₩${refundableNow.toLocaleString()}이 환불되고 사용한 혜택은 복구되지 않아요.` : `This pass is active: ₩${refundableNow.toLocaleString()} is refundable and the used benefit is not restored.`) : userFunded ? (ko ? "이용 전 취소라 사용한 금액이 재방문 바우처로 돌아와요." : "Cancelling before use restores the value to your return-trip voucher.") : (ko ? "이용 전 취소라 결제 금액과 사용한 혜택이 함께 복구돼요." : "Before use, cancelling restores both the payment and benefit.")}</p>}
@@ -121,15 +121,15 @@ function FulfilmentCard({ order, ko }: { order: CommerceOrder; ko: boolean }) {
   const passState = instantPassState(order)
   const entryCode = `KT-${order.id.slice(-6).toUpperCase()}`
   if (order.fulfilment === "booking") {
-    return <section className="mt-8 rounded-[24px] bg-ink p-5 text-white"><div className="flex items-center justify-between"><span className="text-[11px] font-semibold tracking-[0.12em] text-white/55">MOBILE TICKET · DEMO</span><QrCode className="h-6 w-6 text-gold" /></div><div className="mt-5 flex items-center gap-5"><QRCode value={`k-tour-id://admit/${order.id}`} size={96} ariaLabel={ko ? "데모 입장 코드" : "Demo admission code"} className="shrink-0 border-0" /><div className="min-w-0"><p className="font-display text-[20px] font-semibold">{ko ? order.title : order.titleEn}</p><p className="mt-2 text-[12px] text-white/58">{ko ? "현장에서 이 데모 코드를 제시하세요" : "Present this demo code at admission"}</p><p className="font-mono mt-2 text-[13px] font-semibold tracking-[0.08em] text-gold">{entryCode}</p></div></div><div className="mt-5 border-t border-white/12 pt-4"><p className="text-[12px] text-white/62">{ko ? order.optionLabel : order.optionLabelEn}</p></div></section>
+    return <section className="mt-8 rounded-[24px] bg-ink p-5 text-white"><div className="flex items-center justify-between"><span className="text-[11px] font-semibold tracking-[0.12em] text-white/55">MOBILE TICKET</span><QrCode className="h-6 w-6 text-gold" /></div><div className="mt-5 flex items-center gap-5"><QRCode value={`k-tour-id://admit/${order.id}`} size={96} ariaLabel={ko ? "모바일 입장 코드" : "Mobile admission code"} className="shrink-0 border-0" /><div className="min-w-0"><p className="font-display text-[20px] font-semibold">{ko ? order.title : order.titleEn}</p><p className="mt-2 text-[12px] text-white/58">{ko ? "현장에서 이 코드를 제시하세요" : "Present this code at admission"}</p><p className="font-mono mt-2 text-[13px] font-semibold tracking-[0.08em] text-gold">{entryCode}</p></div></div><div className="mt-5 border-t border-white/12 pt-4"><p className="text-[12px] text-white/62">{ko ? order.optionLabel : order.optionLabelEn}</p></div></section>
   }
   const meta = order.fulfilment === "delivery"
-    ? { label: reached ? "DELIVERED · DEMO" : "PREPARING DELIVERY · DEMO", Icon: PackageCheck, detail: order.deliveryAddress ?? (ko ? "주소 확인 필요" : "Address required") }
+    ? { label: reached ? "DELIVERED" : "PREPARING DELIVERY", Icon: PackageCheck, detail: order.deliveryAddress ?? (ko ? "주소 확인 필요" : "Address required") }
     : order.fulfilment === "instant"
-      ? passState === "expired" ? { label: "EXPIRED PASS · DEMO", Icon: BusFront, detail: ko ? "30일 이용 기간 종료" : "30-day period ended" } : { label: "DIGITAL PASS · DEMO", Icon: BusFront, detail: passState === "scheduled" ? (ko ? "개시 예정" : "Scheduled to start") : (ko ? "지금부터 이용 가능" : "Ready to use now") }
+      ? passState === "expired" ? { label: "EXPIRED PASS", Icon: BusFront, detail: ko ? "30일 이용 기간 종료" : "30-day period ended" } : { label: "DIGITAL PASS", Icon: BusFront, detail: passState === "scheduled" ? (ko ? "개시 예정" : "Scheduled to start") : (ko ? "지금부터 이용 가능" : "Ready to use now") }
       : order.fulfilment === "pickup"
-        ? { label: reached ? "READY FOR PICKUP · DEMO" : "PREPARING PICKUP · DEMO", Icon: ShoppingBag, detail: ko ? `픽업 번호 ${order.id.slice(-6)}` : `Pickup no. ${order.id.slice(-6)}` }
-        : { label: "MOBILE TICKET · DEMO", Icon: QrCode, detail: ko ? order.optionLabel : order.optionLabelEn }
+        ? { label: reached ? "READY FOR PICKUP" : "PREPARING PICKUP", Icon: ShoppingBag, detail: ko ? `픽업 번호 ${order.id.slice(-6)}` : `Pickup no. ${order.id.slice(-6)}` }
+        : { label: "MOBILE TICKET", Icon: QrCode, detail: ko ? order.optionLabel : order.optionLabelEn }
   return <section className="mt-8 rounded-[24px] bg-ink p-5 text-white"><div className="flex items-center justify-between"><span className="text-[11px] font-semibold tracking-[0.12em] text-white/55">{meta.label}</span><meta.Icon className="h-6 w-6 text-gold" /></div><p className="font-display mt-8 text-[22px] font-semibold">{ko ? order.title : order.titleEn}</p><p className="mt-2 text-[13px] text-white/62">{meta.detail}</p><div className="mt-5 border-t border-white/12 pt-4"><p className="font-mono text-[12px] text-white/72">{order.id}</p></div></section>
 }
 
@@ -149,5 +149,5 @@ function Row({ label, value, accent, strong }: { label: string; value: string; a
 }
 
 function MissingOrder({ ko }: { ko: boolean }) {
-  return <PhoneFrame hideNav><PageHeader title={ko ? "주문" : "Order"} back="/wallet" /><main className="px-6 py-20 text-center"><h1 className="font-display text-[26px] font-semibold">{ko ? "주문을 찾지 못했어요" : "Order not found"}</h1><p className="mt-3 text-[13px] text-muted-foreground">{ko ? "다른 데모 시나리오를 시작하면 이전 주문은 초기화될 수 있어요." : "Starting another demo scenario may reset previous orders."}</p><Link href="/explore" className="mt-5 inline-flex min-h-11 items-center text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "탐색으로 이동" : "Go to Explore"}</Link></main></PhoneFrame>
+  return <PhoneFrame hideNav><PageHeader title={ko ? "주문" : "Order"} back="/wallet" /><main className="px-6 py-20 text-center"><h1 className="font-display text-[26px] font-semibold">{ko ? "주문을 찾지 못했어요" : "Order not found"}</h1><p className="mt-3 text-[13px] text-muted-foreground">{ko ? "주문 내역에서 이용 가능한 항목을 다시 확인해 주세요." : "Check your order history for available items."}</p><Link href="/explore" className="mt-5 inline-flex min-h-11 items-center text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "탐색으로 이동" : "Go to Explore"}</Link></main></PhoneFrame>
 }

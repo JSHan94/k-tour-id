@@ -105,7 +105,7 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null)
 
-const STORAGE_KEY = "k-tour-id-state-v6"
+const STORAGE_KEY = "k-tour-id-state-v7"
 const requiresPresentation = (voucher?: Voucher): boolean => voucher != null
 
 interface PersistShape {
@@ -269,7 +269,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       })
     } else {
       const wallet = await walletService.create(capsule.holderName)
-      const linkedEvent = await chainService.log("WalletLinked", "Demo KRW travel balance linked to the K-Tour credential holder")
+      const linkedEvent = await chainService.log("WalletLinked", "KRW travel balance linked to the K-Tour credential holder")
       setSession((current) => ({ ...current, onboarded: true, userType, identity, capsule, wallet: { ...wallet, balanceKRW: PERSONA_BALANCES[userType] } }))
       setEvents([identityEvent, issuedEvent, linkedEvent])
       setVouchers(vouchersForUserType(userType))
@@ -299,7 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications((items) => [{
       id: Date.now(),
       type: "transaction",
-      title: "Demo balance topped up",
+      title: "Travel balance topped up",
       message: `₩${amountKRW.toLocaleString()} was added to your demo KRW balance`,
       time: "Just now",
       read: false,
@@ -338,7 +338,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setNotifications((items) => [{
         id: Date.now(),
         type: "transaction",
-        title: "Demo payment complete",
+        title: "Payment complete",
         message: `You paid ₩${Math.abs(amountKRW).toLocaleString()} to ${merchant}`,
         time: "Just now",
         read: false,
@@ -859,7 +859,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTransactions((t) => [
       {
         id: `tx-${evt.id}`,
-        merchant: "Demo balance → return-trip voucher",
+        merchant: "Travel balance → return-trip voucher",
         category: "benefit",
         amountKRW: -normalized,
         date: new Date().toISOString(),

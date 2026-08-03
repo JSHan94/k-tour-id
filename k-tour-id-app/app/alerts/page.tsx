@@ -114,8 +114,8 @@ function notificationCopy(notification: AppNotification, ko: boolean) {
   if (!ko) return notification
   if (notification.title.includes("Bukchon workshop paid")) return { title: "북촌 공예 체험 결제 완료", message: "여행자 할인이 적용됐어요", time: "방금" }
   if (notification.title.includes("Workshop refund complete")) return { title: "북촌 공예 체험 환불 완료", message: "결제 금액과 여행자 혜택이 복구됐어요", time: "방금" }
-  if (notification.title.includes("Demo payment complete")) return { title: "결제 완료", message: "결제가 완료됐어요", time: "방금" }
-  if (notification.title.includes("Demo top-up complete")) return { title: "여행 잔액 충전 완료", message: "여행 잔액이 충전됐어요", time: "방금" }
+  if (notification.title.includes("Payment complete")) return { title: "결제 완료", message: "결제가 완료됐어요", time: "방금" }
+  if (notification.title.includes("Travel balance topped up")) return { title: "여행 잔액 충전 완료", message: "여행 잔액이 충전됐어요", time: "방금" }
   if (notification.title.includes("Voucher returned")) return { title: "바우처 전환 취소", message: "금액이 여행 잔액으로 돌아왔어요", time: "방금" }
   if (notification.title.includes("Return-trip voucher")) return { title: "귀국·재방문 바우처 준비 완료", message: "바우처 지갑에서 확인할 수 있어요", time: "방금" }
   return { ...notification, time: notification.time === "Just now" ? "방금" : notification.time }

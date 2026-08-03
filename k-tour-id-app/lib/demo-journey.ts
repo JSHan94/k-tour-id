@@ -15,7 +15,7 @@ export const DEFAULT_DEMO_JOURNEY: DemoJourney = {
   optionLabelEn: "Today 18:30",
   fulfilmentLabel: "예약 후 모바일 입장권",
   fulfilmentLabelEn: "Mobile ticket after booking",
-  merchant: "Bukchon Craft House · demo merchant",
+  merchant: "Bukchon Craft House",
   merchantDisplay: "Bukchon Craft House",
   product: "Mother-of-pearl workshop",
   productKo: "자개 공예 체험",

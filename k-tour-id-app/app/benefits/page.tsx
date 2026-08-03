@@ -180,7 +180,7 @@ function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boole
             <div className="space-y-3 pb-5 pt-2">
               <Row label={ko ? "결제 시각" : "Paid at"} value="2026. 07. 30 · 14:32" />
               <Row label={ko ? "영수증 번호" : "Receipt"} value={demoJourney.receiptId} />
-              <Link href="/evidence" className="pressable inline-flex min-h-10 items-center font-semibold text-primary underline underline-offset-4">{ko ? "시뮬레이션 증거 확인" : "Open simulation evidence"}<ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link href="/evidence" className="pressable inline-flex min-h-10 items-center font-semibold text-primary underline underline-offset-4">{ko ? "거래 증거 확인" : "Open transaction evidence"}<ArrowRight className="ml-1 h-4 w-4" /></Link>
               {!refunded && (
                 <>
                   {refundStep === "confirm" && <p role="alert" className="border-l-2 border-gold pl-3 text-[12px] leading-5">{ko ? "이용 전 주문을 취소하면 결제 금액과 할인 혜택이 모두 복구돼요." : "Cancel before use to restore the payment and benefit."}</p>}

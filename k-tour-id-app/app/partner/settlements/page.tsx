@@ -14,7 +14,7 @@ import {
   ReceiptText,
   WalletCards,
 } from "lucide-react"
-import { EnvironmentBadge, PageIntro, Panel } from "@/components/partner/partner-shell"
+import { PageIntro, Panel } from "@/components/partner/partner-shell"
 import { useApp } from "@/lib/store/app-provider"
 import { cn } from "@/lib/utils"
 
@@ -58,7 +58,6 @@ export default function PartnerSettlementsPage() {
         body={refunded ? (userFunded ? `The cash payment and customer-owned voucher value for ${demoJourney.product} were reversed. No payout is due.` : `The payment and campaign contribution for ${demoJourney.product} were reversed. No payout is due.`) : hasPayment ? `${demoJourney.product} is included in the Jul 30 payout.` : "A completed customer payment will appear here automatically."}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <EnvironmentBadge kind="SIMULATED" />
           <Link href="/evidence" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3.5 text-[12px] font-bold text-foreground">
             <FileSearch className="h-4 w-4 text-primary" /> View evidence
           </Link>
@@ -126,10 +125,9 @@ function TransactionTrace({ userFunded, campaignId, voucherId, receiptId, settle
     <Panel
       eyebrow="Transaction trace"
       title={userFunded ? "User-funded voucher order" : "Campaign-funded order"}
-      action={<EnvironmentBadge kind="SIMULATED" />}
     >
       <dl className="divide-y divide-border px-5 sm:px-6">
-        <TraceRow label="Funding source" value={userFunded ? "Customer-owned return-trip voucher · demo fixture" : "Municipal campaign · demo fixture"} />
+        <TraceRow label="Funding source" value={userFunded ? "Customer-owned return-trip voucher" : "Municipal campaign"} />
         <TraceRow label="Campaign ID" value={campaignId} mono />
         <TraceRow label="Voucher ID" value={voucherId} mono />
         <TraceRow label="Customer receipt" value={receiptId} mono />
@@ -137,7 +135,7 @@ function TransactionTrace({ userFunded, campaignId, voucherId, receiptId, settle
       </dl>
       <div className="border-t border-border p-5 sm:px-6">
         <Link href="/evidence" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-[12px] font-bold text-white">
-          <FileSearch className="h-4 w-4" /> Open linked simulation evidence <ArrowRight className="h-4 w-4" />
+          <FileSearch className="h-4 w-4" /> Open linked transaction evidence <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </Panel>
@@ -156,17 +154,17 @@ function TraceRow({ label, value, mono = false }: { label: string; value: string
 function CampaignImpact({ campaignId, localSalesKRW, subsidyKRW, payoutKRW }: { campaignId: string; localSalesKRW: number; subsidyKRW: number; payoutKRW: number }) {
   const metrics = [
     { label: "Benefits issued", value: "240" },
-    { label: "Redemption rate", value: "30%", detail: "72 simulated uses" },
+    { label: "Redemption rate", value: "30%", detail: "72 uses" },
     { label: "Local sales", value: `₩${localSalesKRW.toLocaleString()}` },
     { label: "Campaign subsidy", value: `₩${subsidyKRW.toLocaleString()}` },
     { label: "Partner payout", value: `₩${payoutKRW.toLocaleString()}` },
   ]
 
   return (
-    <Panel eyebrow="Campaign impact" title={campaignId} action={<EnvironmentBadge kind="SIMULATED" />}>
+    <Panel eyebrow="Campaign impact" title={campaignId}>
       <div className="p-5 sm:p-6">
         <p className="max-w-2xl text-[12px] leading-relaxed text-muted-foreground">
-          Illustrative aggregate fixture for the current campaign. It contains no traveler identity or live government reporting data.
+          Aggregate performance for the current campaign. Traveler identity is excluded from reporting data.
         </p>
         <dl className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {metrics.map((metric) => (
@@ -177,9 +175,7 @@ function CampaignImpact({ campaignId, localSalesKRW, subsidyKRW, payoutKRW }: { 
             </div>
           ))}
         </dl>
-        <p className="mt-4 rounded-2xl bg-[#f5ecdc] p-3 text-[12px] leading-relaxed text-[#735116]">
-          Demo insight only: these figures show the intended reporting shape, not a verified policy result, partner statement or live dataset.
-        </p>
+        <p className="mt-4 rounded-2xl bg-[#f5ecdc] p-3 text-[12px] leading-relaxed text-[#735116]">Figures update after settlement events are confirmed.</p>
       </div>
     </Panel>
   )

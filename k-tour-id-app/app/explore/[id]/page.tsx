@@ -9,6 +9,7 @@ import { LangToggle, PageHeader, PhoneFrame } from "@/components/app/shell"
 import { itemById, itemsForUserType } from "@/lib/catalog"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
+import { proximityLabel, useNearbyLocation } from "@/lib/location/location-provider"
 import { cn } from "@/lib/utils"
 import { isVoucherAvailable } from "@/lib/voucher-policy"
 
@@ -17,6 +18,7 @@ export default function ProductDetailPage() {
   const router = useRouter()
   const { session, vouchers, purchaseServiceItem, prepareDemoPurchase, hydrated } = useApp()
   const { lang } = useLang()
+  const { location, status: locationStatus } = useNearbyLocation()
   const ko = lang === "ko"
   const item = itemById(params.id)
   const configuredVoucher = vouchers.find((candidate) => candidate.id === item?.voucherId)
@@ -29,7 +31,7 @@ export default function ProductDetailPage() {
   const [error, setError] = useState("")
   const [errorCode, setErrorCode] = useState("")
   const [soldOut, setSoldOut] = useState(false)
-  const [deliveryAddress, setDeliveryAddress] = useState(ko ? "서울 서대문구 연희로 00 · 데모 주소" : "00 Yeonhui-ro, Seodaemun-gu, Seoul · demo address")
+  const [deliveryAddress, setDeliveryAddress] = useState(ko ? "서울 서대문구 연희로 00" : "00 Yeonhui-ro, Seodaemun-gu, Seoul")
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
@@ -44,7 +46,7 @@ export default function ProductDetailPage() {
     if (query.get("resume") === "checkout") setCheckoutOpen(true)
   }, [hydrated, item, router, session.onboarded, voucher?.status])
   useEffect(() => {
-    const defaults = ["서울 서대문구 연희로 00 · 데모 주소", "00 Yeonhui-ro, Seodaemun-gu, Seoul · demo address"]
+    const defaults = ["서울 서대문구 연희로 00", "00 Yeonhui-ro, Seodaemun-gu, Seoul"]
     setDeliveryAddress((current) => !current || defaults.includes(current) ? defaults[ko ? 0 : 1] : current)
   }, [ko])
   const option = soldOut ? undefined : item?.options.find((candidate) => candidate.id === optionId)
@@ -57,6 +59,7 @@ export default function ProductDetailPage() {
   const gross = item.priceKRW + (option?.priceDeltaKRW ?? 0)
   const final = gross - discount
   const benefitJourney = eligible && isVoucherAvailable(voucher) && useBenefit
+  const proximity = locationStatus === "granted" ? proximityLabel(item, location, lang) : undefined
   const moveOption = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
     if (!["ArrowDown", "ArrowUp", "ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key) || soldOut) return
     event.preventDefault()
@@ -96,14 +99,13 @@ export default function ProductDetailPage() {
       <main className="pb-8">
         <div className="relative mx-6 aspect-[4/3] overflow-hidden rounded-[24px] bg-secondary">
           <img src={item.image} alt="" className="h-full w-full object-cover" />
-          <span className="absolute bottom-3 right-3 rounded-full bg-ink/64 px-2.5 py-1 text-[10px] font-medium text-white/82 backdrop-blur">{ko ? "데모 예시 · 제휴 전" : "Demo concept · pre-partnership"}</span>
         </div>
         <section className="px-6 pt-6">
           <p className={cn("flex items-center gap-1.5 text-[12px] font-semibold", eligible ? "text-success" : "text-muted-foreground")}><BadgeCheck className="h-4 w-4" />{eligible ? (ko ? "내 K-Tour ID로 이용 가능" : "Available with your K-Tour ID") : (ko ? "현재 K-Tour ID의 이용 대상이 아닌 상품" : "This item is not available for your K-Tour ID")}</p>
           <h1 className="font-display text-balance mt-3 text-[31px] font-semibold leading-[1.2] tracking-[-0.03em]">{item.title[lang]}</h1>
           <p className="mt-3 text-[14px] leading-6 text-muted-foreground">{item.description[lang]}</p>
           <div className="mt-6 grid grid-cols-2 gap-x-5 gap-y-4 border-y border-foreground/10 py-5 text-[12px]">
-            <Fact icon={MapPin} label={item.location[lang]} />
+            <Fact icon={MapPin} label={proximity ? `${item.location[lang]} · ${proximity}` : item.location[lang]} />
             <Fact icon={Clock3} label={item.duration[lang]} />
             <Fact icon={CalendarDays} label={soldOut ? (ko ? "오늘 일정 마감" : "Sold out today") : item.availability[lang]} />
             <Fact icon={Languages} label={item.languageLabels.map((label) => label === "한국어" && !ko ? "Korean" : label).join(" · ")} />
@@ -130,7 +132,7 @@ export default function ProductDetailPage() {
           {soldOut ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "오늘은 예약할 수 없어요." : "No booking is available today."}</p><Link href="/explore" className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "가능한 다른 상품 보기" : "See available alternatives"}<ArrowRight className="h-4 w-4" /></Link></div> : !eligible ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "이 상품은 현재 K-Tour ID의 이용 대상이 아니에요." : "This item is not available for your current K-Tour ID."}</p><Link href="/explore" className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "이용 가능한 상품 보기" : "See available items"}<ArrowRight className="h-4 w-4" /></Link></div> : benefitJourney && option ? <Link href={`/present?step=consent&item=${item.id}&option=${option.id}`} onClick={() => prepareDemoPurchase(item.id, option.id)} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? `K-Tour ID로 ₩${discount.toLocaleString()} 혜택 확인` : `Verify ₩${discount.toLocaleString()} benefit`}<ArrowRight className="h-5 w-5" /></Link> : <button type="button" onClick={() => setCheckoutOpen(true)} disabled={!option} className="pressable flex min-h-14 w-full items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-45">{ko ? `₩${final.toLocaleString()} 결제 확인` : `Review ₩${final.toLocaleString()} payment`}<ArrowRight className="h-5 w-5" /></button>}
         </div>
 
-        {alternatives.length > 0 && <section className="mt-9 px-6"><p className="text-[12px] font-semibold text-primary">{ko ? "다른 선택" : "Other choices"}</p><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{alternatives.map((candidate) => <ServiceRow key={candidate.id} item={candidate} voucher={vouchers.find((entry) => entry.id === candidate.voucherId)} />)}</div></section>}
+        {alternatives.length > 0 && <section className="mt-9 px-6"><p className="text-[12px] font-semibold text-primary">{ko ? "다른 선택" : "Other choices"}</p><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{alternatives.map((candidate) => <ServiceRow key={candidate.id} item={candidate} voucher={vouchers.find((entry) => entry.id === candidate.voucherId)} proximity={locationStatus === "granted" ? proximityLabel(candidate, location, lang) : undefined} />)}</div></section>}
       </main>
 
       {checkoutOpen && option && <CommerceCheckoutSheet item={item} option={option} voucher={voucher} useBenefit={useBenefit} balanceKRW={session.wallet.balanceKRW} busy={busy} error={error} errorCode={errorCode} deliveryAddress={deliveryAddress} onDeliveryAddressChange={setDeliveryAddress} onClose={() => { if (!busy) { setCheckoutOpen(false); setError(""); setErrorCode("") } }} onConfirm={confirm} />}

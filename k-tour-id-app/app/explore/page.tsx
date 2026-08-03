@@ -5,10 +5,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Bell, Check, Search, SlidersHorizontal, X } from "lucide-react"
 import { BenefitTicket, EditorialFeature, ServiceRow } from "@/components/app/commerce"
+import { LocationControl } from "@/components/app/location-control"
 import { LangToggle, PhoneFrame } from "@/components/app/shell"
 import { itemById, itemsForUserType, PERSONA_CONFIG } from "@/lib/catalog"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
+import { proximityLabel, sortItemsByDistance, useNearbyLocation } from "@/lib/location/location-provider"
 import type { ServiceCategory } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -26,6 +28,7 @@ export default function ExplorePage() {
   const router = useRouter()
   const { session, vouchers, hydrated } = useApp()
   const { lang } = useLang()
+  const { location, status: locationStatus } = useNearbyLocation()
   const ko = lang === "ko"
   const [query, setQuery] = useState("")
   const [filter, setFilter] = useState<Filter>("all")
@@ -42,7 +45,11 @@ export default function ExplorePage() {
     : userType === "long-term"
       ? (ko ? "서울 생활 탐색" : "Explore everyday Seoul")
       : (ko ? "서울 탐색" : "Explore Seoul")
-  const catalog = useMemo(() => itemsForUserType(userType), [userType])
+  const baseCatalog = useMemo(() => itemsForUserType(userType), [userType])
+  const catalog = useMemo(
+    () => sortItemsByDistance(baseCatalog, locationStatus === "granted" ? location : null),
+    [baseCatalog, location, locationStatus],
+  )
   const shown = useMemo(() => {
     const normalized = query.trim().toLowerCase()
     return catalog.filter((item) => {
@@ -75,6 +82,7 @@ export default function ExplorePage() {
           <div className="flex items-center gap-1"><LangToggle /><Link href="/alerts" aria-label={ko ? "알림" : "Alerts"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><Bell className="h-[18px] w-[18px]" /></Link></div>
         </div>
         <p className="mt-3 max-w-[330px] text-[14px] leading-6 text-muted-foreground">{persona.homeBody[lang]} {ko ? `${catalog.length}가지 선택만 간결하게 모았어요.` : `${catalog.length} focused choices, without the clutter.`}</p>
+        <div className="mt-4"><LocationControl compact /></div>
         <label className="mt-5 flex min-h-12 items-center gap-3 rounded-[14px] bg-card px-4 ring-1 ring-foreground/10 focus-within:ring-primary/40">
           <Search className="h-[18px] w-[18px] text-muted-foreground" />
           <input aria-label={ko ? "상품·지역 검색" : "Search products and places"} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ko ? "체험, 교통, 동네 검색" : "Search experiences, transit, places"} className="min-w-0 flex-1 bg-transparent text-[14px] outline-none placeholder:text-muted-foreground" />
@@ -83,15 +91,15 @@ export default function ExplorePage() {
         <div className="no-scrollbar -mx-6 mt-4 flex gap-2 overflow-x-auto px-6 pb-1">
           {filterOrder.map((key) => <button key={key} type="button" aria-pressed={filter === key} onClick={() => setFilter(key)} className={cn("pressable inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-full px-4 text-[13px] font-semibold", filter === key ? "bg-ink text-white" : "bg-secondary text-muted-foreground")}>{filter === key && <Check className="h-3.5 w-3.5" />}{FILTERS[key][lang]}</button>)}
         </div>
-        <p className="mt-3 flex items-center gap-2 text-[12px] text-success"><SlidersHorizontal className="h-3.5 w-3.5" />{ko ? "내 K-Tour ID로 이용 가능한 순서" : "Eligible for your K-Tour ID first"}</p>
+        <p className="mt-3 flex items-center gap-2 text-[12px] text-success"><SlidersHorizontal className="h-3.5 w-3.5" />{locationStatus === "granted" ? (ko ? "내 위치에서 가까운 순 · 이용 가능한 항목만" : "Closest to you · eligible items only") : (ko ? "내 K-Tour ID로 이용 가능한 순서" : "Eligible for your K-Tour ID first")}</p>
       </header>
 
       <main className="px-6 pb-8 pt-4">
         {feature ? (
           <>
-            <section><p className="mb-4 text-[13px] font-semibold text-primary">{ko ? "나를 위한 첫 선택" : "First pick for you"}</p><EditorialFeature item={feature} voucher={vouchers.find((voucher) => voucher.id === feature.voucherId)} /></section>
+            <section><p className="mb-4 text-[13px] font-semibold text-primary">{locationStatus === "granted" ? (ko ? "내 위치에서 가장 가까워요" : "Closest to you") : (ko ? "나를 위한 첫 선택" : "First pick for you")}</p><EditorialFeature item={feature} voucher={vouchers.find((voucher) => voucher.id === feature.voucherId)} proximity={proximityLabel(feature, location, lang)} /></section>
             {benefitPairs.length > 0 && filter === "all" && !query && <section className="mt-11"><div className="flex items-end justify-between"><div><p className="text-[12px] font-semibold text-success">K-TOUR ID</p><h2 className="font-display mt-1 text-[24px] font-semibold">{ko ? "지금 쓸 수 있는 혜택" : "Benefits ready now"}</h2></div><span className="text-[12px] text-muted-foreground">{benefitPairs.length}{ko ? "개" : " available"}</span></div><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{benefitPairs.map(({ item, voucher }) => <BenefitTicket key={voucher.id} item={item} voucher={voucher} />)}</div></section>}
-            {visibleRows.length > 0 && <section className="mt-11"><p className="text-[12px] font-semibold text-primary">{ko ? "이어서 둘러보기" : "Keep exploring"}</p><h2 className="font-display mt-1 text-[24px] font-semibold">{ko ? "오늘 가능한 선택" : "Available today"}</h2><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{visibleRows.slice(0, 5).map((item) => <ServiceRow key={item.id} item={item} voucher={vouchers.find((voucher) => voucher.id === item.voucherId)} />)}</div></section>}
+            {visibleRows.length > 0 && <section className="mt-11"><p className="text-[12px] font-semibold text-primary">{ko ? "이어서 둘러보기" : "Keep exploring"}</p><h2 className="font-display mt-1 text-[24px] font-semibold">{ko ? "오늘 가능한 선택" : "Available today"}</h2><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{visibleRows.slice(0, 5).map((item) => <ServiceRow key={item.id} item={item} voucher={vouchers.find((voucher) => voucher.id === item.voucherId)} proximity={proximityLabel(item, location, lang)} />)}</div></section>}
           </>
         ) : (
           <section className="mt-12 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary"><Search className="h-5 w-5 text-muted-foreground" /></span><h2 className="font-display mt-5 text-[24px] font-semibold">{ko ? "맞는 선택을 찾지 못했어요" : "No matching choices"}</h2><p className="mt-2 text-[13px] leading-6 text-muted-foreground">{ko ? "검색어나 필터를 지우면 지금 이용할 수 있는 추천을 다시 보여드려요." : "Clear your search or filters to see available recommendations again."}</p><button type="button" onClick={() => { setQuery(""); setFilter("all") }} className="mt-5 min-h-11 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "필터 초기화" : "Reset filters"}</button></section>

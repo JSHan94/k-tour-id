@@ -5,6 +5,7 @@ import "@fontsource-variable/noto-serif-kr"
 import "./globals.css"
 import { AppProvider } from "@/lib/store/app-provider"
 import { LangProvider } from "@/lib/i18n/lang-provider"
+import { LocationProvider } from "@/lib/location/location-provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -16,14 +17,14 @@ export const metadata: Metadata = {
   generator: "K-Tour ID",
   openGraph: {
     title: "K-Tour ID",
-    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits · Simulation build",
+    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits",
     type: "website",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "K-Tour ID · Prove less. Travel more." }],
   },
   twitter: {
     card: "summary_large_image",
     title: "K-Tour ID",
-    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits · Simulation build",
+    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits",
     images: ["/og.png"],
   },
 }
@@ -44,7 +45,9 @@ export default function RootLayout({
     <html lang="ko" className="antialiased">
       <body className="font-sans">
         <LangProvider>
-          <AppProvider>{children}</AppProvider>
+          <LocationProvider>
+            <AppProvider>{children}</AppProvider>
+          </LocationProvider>
         </LangProvider>
       </body>
     </html>

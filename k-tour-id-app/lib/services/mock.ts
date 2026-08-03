@@ -142,7 +142,7 @@ export const mockVerifierService: VerifierService = {
     return {
       id: `pr:${fakeHash("museum-request").slice(2, 14)}`,
       verifierDid: "did:omn:merchant:national-museum-demo",
-      verifierName: "National Museum of Korea · demo merchant",
+      verifierName: "National Museum of Korea",
       purpose: "Apply the foreign visitor admission benefit",
       retention: "none",
       nonce: fakeHash("nonce").slice(2, 26),
@@ -232,13 +232,13 @@ export const mockVoucherService: VoucherService = {
       data: {
         id: `voucher:converted:${Date.now().toString(36)}:${fakeHash(String(amountKRW)).slice(2, 8)}`,
         title: "Return-trip Insadong voucher",
-        partner: "Insadong Tea Room · demo concept",
+        partner: "Insadong Tea Room",
         valueKRW: amountKRW,
         expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60_000).toISOString(),
         status: "available",
         eligibilityClaim: "tripActive",
         funding: "user-converted",
-        applicableMerchant: "Insadong Tea Room · demo concept",
+        applicableMerchant: "Insadong Tea Room",
         applicableService: "reservation",
         redemption: "stored-value",
         eligibleUserTypes: ["foreigner", "long-term", "korean"],
@@ -277,7 +277,7 @@ export const mockChainService: ChainService = {
       summary,
       integrationMode: "simulated",
       evidence: {
-        network: "OmniOne Chain adapter · simulated",
+        network: "OmniOne Chain adapter",
         payloadHash: fakeHash(`payload:${type}:${summary}`),
       },
     }

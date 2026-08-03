@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { Seal } from "@/components/app/seal"
 import { SealCopilot } from "@/components/app/seal-copilot"
-import { APP_INTEGRATION_MODE, IntegrationModeBadge } from "@/components/app/integration-status"
 
 export function PhoneFrame({
   children,
@@ -22,7 +21,6 @@ export function PhoneFrame({
   return (
     <div className="paper-grain min-h-screen w-full bg-background flex justify-center">
       <div className="relative w-full max-w-[420px] min-h-screen bg-background md:shadow-[0_0_50px_rgba(25,24,22,0.08)] overflow-hidden">
-        {APP_INTEGRATION_MODE === "simulated" && <div title="Interactive demo · no real identity or payment" className="pointer-events-none fixed left-1/2 top-[max(0.35rem,env(safe-area-inset-top))] z-[80] -translate-x-1/2 opacity-90"><IntegrationModeBadge compact /></div>}
         <div className={cn("min-h-screen", hideNav ? "" : "pb-24", className)}>
           {children}
         </div>

@@ -268,6 +268,11 @@ export interface MarketplaceItem {
   title: LocalizedText
   description: LocalizedText
   location: LocalizedText
+  /** Approximate venue coordinate used only for on-device nearby ranking. */
+  geo?: {
+    latitude: number
+    longitude: number
+  }
   availability: LocalizedText
   duration: LocalizedText
   fulfilment: "booking" | "delivery" | "pickup" | "instant"
@@ -357,6 +362,10 @@ export interface Activity {
   trustLevel: TrustLevel
   place: string
   placeEn?: string
+  geo?: {
+    latitude: number
+    longitude: number
+  }
   time: string
   timeEn?: string
   capacity: number

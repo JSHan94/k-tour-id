@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { BadgeCheck, Check, ChevronRight, Dices, Landmark, Languages, MessageCircle, ShieldCheck, UsersRound, Utensils, X } from "lucide-react"
+import { BadgeCheck, Check, ChevronRight, Dices, Landmark, Languages, MapPin, MessageCircle, ShieldCheck, UsersRound, Utensils, X } from "lucide-react"
 import { PhoneFrame, LangToggle } from "@/components/app/shell"
+import { LocationControl } from "@/components/app/location-control"
 import { Seal } from "@/components/app/seal"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { formatWon } from "@/lib/format"
@@ -12,6 +13,7 @@ import { ACTIVITIES } from "@/lib/mock-data"
 import type { Activity, ActivityCategory } from "@/lib/types"
 import { useApp } from "@/lib/store/app-provider"
 import { useActivityMembership } from "@/app/connect/use-activity-membership"
+import { distanceKm, pointProximityLabel, useNearbyLocation } from "@/lib/location/location-provider"
 
 const CAT_ICON: Record<ActivityCategory, React.ComponentType<{ className?: string }>> = {
   food: Utensils,
@@ -33,11 +35,19 @@ export default function ConnectPage() {
   const router = useRouter()
   const { session, hydrated } = useApp()
   const { t, lang } = useLang()
+  const { location, status: locationStatus } = useNearbyLocation()
   const [selected, setSelected] = useState<Activity | null>(null)
   const [joinError, setJoinError] = useState<"full" | "not-ready" | "storage" | null>(null)
   const currentName = session.identity?.displayName
   const currentPhoto = session.identity?.photoUrl
-  const activities = ACTIVITIES.filter((activity) => activity.host !== currentName)
+  const activities = ACTIVITIES
+    .filter((activity) => activity.host !== currentName)
+    .sort((a, b) => {
+      if (locationStatus !== "granted" || !location) return 0
+      const aDistance = a.geo ? distanceKm(location, a.geo) : Number.POSITIVE_INFINITY
+      const bDistance = b.geo ? distanceKm(location, b.geo) : Number.POSITIVE_INFINITY
+      return aDistance - bDistance
+    })
   const { joinedActivityIds, ready: membershipsReady, isJoined, joinActivity, leaveActivity } = useActivityMembership(session.identity?.did)
   const myActivities = activities.filter((activity) => joinedActivityIds.includes(activity.id))
 
@@ -78,6 +88,8 @@ export default function ConnectPage() {
         <LangToggle />
       </header>
 
+      <div className="px-6 pb-5"><LocationControl compact /></div>
+
       <section className="mx-6 border-y border-foreground/10 py-5">
         <div className="flex items-start gap-3">
           <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-secondary"><Seal size={27} /></span>
@@ -113,17 +125,17 @@ export default function ConnectPage() {
         </div>
         <div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">
           {activities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} currentPhoto={currentPhoto} joined={isJoined(activity.id)} onOpen={() => openActivity(activity)} />
+            <ActivityCard key={activity.id} activity={activity} currentPhoto={currentPhoto} joined={isJoined(activity.id)} proximity={activity.geo && locationStatus === "granted" ? pointProximityLabel(activity.geo, location, lang) : undefined} onOpen={() => openActivity(activity)} />
           ))}
         </div>
       </section>
 
-      {selected && <JoinSheet activity={selected} error={joinError} onClose={() => { setSelected(null); setJoinError(null) }} onJoin={confirmJoin} />}
+      {selected && <JoinSheet activity={selected} proximity={selected.geo && locationStatus === "granted" ? pointProximityLabel(selected.geo, location, lang) : undefined} error={joinError} onClose={() => { setSelected(null); setJoinError(null) }} onJoin={confirmJoin} />}
     </PhoneFrame>
   )
 }
 
-function ActivityCard({ activity, currentPhoto, joined, onOpen }: { activity: Activity; currentPhoto?: string; joined: boolean; onOpen: () => void }) {
+function ActivityCard({ activity, currentPhoto, joined, proximity, onOpen }: { activity: Activity; currentPhoto?: string; joined: boolean; proximity?: string; onOpen: () => void }) {
   const { t, lang } = useLang()
   const Icon = CAT_ICON[activity.category]
   const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
@@ -139,6 +151,7 @@ function ActivityCard({ activity, currentPhoto, joined, onOpen }: { activity: Ac
         <span className="truncate">{t(`connect.cat.${activity.category}`)} · {place}</span>
         <span className="ml-auto flex-shrink-0">{time}</span>
       </div>
+      {proximity && <p className="mt-2 flex items-center gap-1 text-[11px] font-medium text-success"><MapPin className="h-3 w-3" />{proximity}</p>}
 
       <h3 className="mt-3 text-[16px] font-bold text-foreground">{title}</h3>
       <div className="mt-2 flex items-center gap-2">
@@ -183,7 +196,7 @@ function MyActivityCard({ activity, onCancel }: { activity: Activity; onCancel: 
   )
 }
 
-function JoinSheet({ activity, error, onClose, onJoin }: { activity: Activity; error: "full" | "not-ready" | "storage" | null; onClose: () => void; onJoin: () => void }) {
+function JoinSheet({ activity, proximity, error, onClose, onJoin }: { activity: Activity; proximity?: string; error: "full" | "not-ready" | "storage" | null; onClose: () => void; onJoin: () => void }) {
   const { lang } = useLang()
   const ko = lang === "ko"
   const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
@@ -197,7 +210,7 @@ function JoinSheet({ activity, error, onClose, onJoin }: { activity: Activity; e
       <button type="button" aria-label={ko ? "닫기" : "Close"} className="absolute inset-0" onClick={onClose} />
       <section role="dialog" aria-modal="true" aria-labelledby="join-title" className="safe-bottom fixed bottom-0 left-1/2 w-full max-w-[420px] -translate-x-1/2 rounded-t-[30px] bg-background px-6 pb-7 pt-5 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
-          <div><p className="text-[12px] font-semibold text-primary">{ko ? "가벼운 참가 확인" : "Quick join"}</p><h2 id="join-title" className="font-display mt-1 text-[24px] font-semibold leading-tight">{title}</h2><p className="mt-2 text-[12px] text-muted-foreground">{place} · {time}</p></div>
+          <div><p className="text-[12px] font-semibold text-primary">{ko ? "가벼운 참가 확인" : "Quick join"}</p><h2 id="join-title" className="font-display mt-1 text-[24px] font-semibold leading-tight">{title}</h2><p className="mt-2 text-[12px] text-muted-foreground">{place} · {proximity ? `${proximity} · ` : ""}{time}</p></div>
           <button type="button" onClick={onClose} aria-label={ko ? "닫기" : "Close"} className="pressable grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-secondary"><X className="h-4 w-4" /></button>
         </div>
 

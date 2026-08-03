@@ -66,7 +66,7 @@ export const ASK_FAQ: Faq[] = [
   },
   {
     keys: ["zkp", "영지식", "zero", "선택적", "selective", "bbs", "unlink"],
-    a: "Privacy Edge는 'Selective Disclosure · ZKP-ready'로 설계됐어요(PDF 표기). 값을 안 까고 술어만 증명(나이≥19, 체류>0)하거나 고른 속성만 공개하고, ZKP-friendly 서명(예: BBS+)은 비연결성도 지향할 수 있어요. 다만 OmniOne이 BBS+/ZKP를 기본 제공하는지는 공개 문서로 미확정이라 단정하지 않고, 구체 스킴은 표준 라이브러리로 결선에 붙이는 걸 목표로 합니다. 데모엔 실제 ZKP 연산은 아직 없어요.",
+    a: "Privacy Edge는 'Selective Disclosure · ZKP-ready'로 설계됐어요(PDF 표기). 값을 안 까고 술어만 증명(나이≥19, 체류>0)하거나 고른 속성만 공개하고, ZKP-friendly 서명(예: BBS+)은 비연결성도 지향할 수 있어요. 다만 OmniOne이 BBS+/ZKP를 기본 제공하는지는 공개 문서로 미확정이라 단정하지 않고, 구체 스킴은 표준 라이브러리로 연결하는 걸 목표로 합니다. 현재 목업에는 실제 ZKP 연산이 포함되지 않았어요.",
     aEn: "Privacy Edge is designed as 'Selective Disclosure · ZKP-ready' (the PDF's term). The holder can reveal only chosen attributes or prove a predicate (age ≥ 19, stay > 0) without originals, and ZKP-friendly signatures (e.g., BBS+) can target unlinkability. We don't assert OmniOne ships BBS+/ZKP (unconfirmed in public docs); the specific scheme is a finals goal via standard libraries. The demo doesn't run real ZKP yet.",
   },
   {
@@ -105,7 +105,7 @@ export function matchFaq(question: string): string {
   if (GREETING.test(question.trim())) {
     return en
       ? "Hi! I'm the K-Tour ID technical assistant. Ask me about the architecture (OmniOne · Open DID · OmniOne Chain), DID vs VC, merchant VP verification, on-chain privacy, revocation, ZKP, or what changes for the finals."
-      : "안녕하세요! K-Tour ID 기술 어시스턴트예요. 아키텍처(OmniOne · Open DID · OmniOne Chain), DID/VC 차이, 가맹점 VP 검증, 온체인 프라이버시, 폐기, ZKP, 데모→결선 계획 등 무엇이든 편하게 물어보세요."
+      : "안녕하세요! K-Tour ID 기술 어시스턴트예요. 아키텍처(OmniOne · Open DID · OmniOne Chain), DID/VC 차이, 가맹점 VP 검증, 온체인 프라이버시, 폐기, ZKP, 목업→개발 연결 계획 등 무엇이든 편하게 물어보세요."
   }
   let best: { score: number; f: Faq } | null = null
   for (const f of ASK_FAQ) {

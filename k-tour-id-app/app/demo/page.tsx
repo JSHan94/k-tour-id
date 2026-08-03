@@ -27,6 +27,7 @@ export default function DemoHubPage() {
   const { reset, loadDemoAccount, loadDemoPersona, demoJourney } = useApp()
 
   const startOnboarding = (userType: UserType) => {
+    try { localStorage.removeItem("k-tour-id-first-guide-v1") } catch { /* unavailable */ }
     reset()
     router.push(`/onboarding?persona=${userType}&demo=1`)
   }
@@ -96,7 +97,7 @@ export default function DemoHubPage() {
 
         <details className="mt-4 rounded-[24px] border border-border bg-card p-5">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Business operations</p><h2 className="mt-1 text-lg font-extrabold">Merchant, settlement and evidence</h2></div><ChevronDown className="h-5 w-5 text-muted-foreground" /></summary>
-          <section className="mt-5 grid gap-4 sm:grid-cols-3"><RoleCard href="/partner/verify" icon={Building2} eyebrow="Merchant" title="Store counter" copy="Eligibility, discount and payment" /><RoleCard href="/partner/settlements" icon={Landmark} eyebrow="Settlement" title="Payout desk" copy="Reconciliation and refund adjustments" /><RoleCard href="/evidence" icon={FileSearch} eyebrow="Appendix" title="Technical evidence" copy="Simulation references outside the app UI" /></section>
+          <section className="mt-5 grid gap-4 sm:grid-cols-3"><RoleCard href="/partner/verify" icon={Building2} eyebrow="Merchant" title="Store counter" copy="Eligibility, discount and payment" /><RoleCard href="/partner/settlements" icon={Landmark} eyebrow="Settlement" title="Payout desk" copy="Reconciliation and refund adjustments" /><RoleCard href="/evidence" icon={FileSearch} eyebrow="Appendix" title="Technical evidence" copy="Transaction references outside the app UI" /></section>
         </details>
       </div>
     </main>
