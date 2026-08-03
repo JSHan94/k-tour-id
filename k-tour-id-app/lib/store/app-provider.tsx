@@ -118,6 +118,16 @@ interface PersistShape {
   dismissedNudges: string[]
 }
 
+function migratePersistedSession(session: Session): Session {
+  if (!session.userType || !session.identity) return session
+  const currentPhotoUrl = demoSessionForUserType(session.userType).identity?.photoUrl
+  if (!currentPhotoUrl || session.identity.photoUrl === currentPhotoUrl) return session
+  return {
+    ...session,
+    identity: { ...session.identity, photoUrl: currentPhotoUrl },
+  }
+}
+
 export function AppProvider({ children }: { children: React.ReactNode }) {
   // Start as a GUEST so a fresh browser sees the K-Pass issuance ceremony (the
   // Track-2 thesis) — never someone else's pre-filled account. Returning users
@@ -151,7 +161,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<PersistShape>
-        if (parsed.session) setSession(parsed.session)
+        if (parsed.session) setSession(migratePersistedSession(parsed.session))
         if (parsed.transactions) setTransactions(parsed.transactions)
         if (parsed.events) setEvents(parsed.events)
         if (parsed.notifications) setNotifications(parsed.notifications)

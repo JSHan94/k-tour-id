@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Utensils, Landmark, Languages, Dices, BadgeCheck, MessageCircle, ChevronRight } from "lucide-react"
+import { Utensils, Landmark, Languages, Dices, BadgeCheck, MessageCircle, ChevronRight, ShieldCheck } from "lucide-react"
 import { PhoneFrame, LangToggle } from "@/components/app/shell"
 import { Seal } from "@/components/app/seal"
 import { useLang } from "@/lib/i18n/lang-provider"
@@ -46,23 +46,25 @@ export default function ConnectPage() {
 
   return (
     <PhoneFrame>
-      <header className="flex items-center justify-between px-5 pb-2 pt-3">
-        <h1 className="text-[24px] font-extrabold tracking-tight text-foreground">{t("connect.title")}</h1>
+      <header className="safe-top flex items-end justify-between px-6 pb-5">
+        <div>
+          <p className="text-[12px] font-semibold text-primary">PEOPLE · PLANS · TRUST</p>
+          <h1 className="font-display mt-1 text-[30px] font-semibold tracking-[-0.03em] text-foreground">{t("connect.title")}</h1>
+        </div>
         <LangToggle />
       </header>
 
-      {/* trust hero */}
-      <div className="mx-5 mb-4 flex items-center gap-3 rounded-2xl bg-surface-2 p-3 ring-1 ring-border">
-        <Seal size={30} />
+      <div className="mx-6 mb-5 flex items-center gap-3 border-y border-foreground/10 py-4">
+        <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-secondary"><Seal size={27} /></span>
         <div className="min-w-0">
           <p className="text-[13px] font-semibold text-foreground">{t("connect.hero")}</p>
           <p className="text-[12px] leading-snug text-muted-foreground">{t("connect.heroSub")}</p>
         </div>
       </div>
-      <p className="mx-5 mb-4 rounded-xl bg-[#fbf2d9] px-3 py-2.5 text-[12px] leading-relaxed text-[#735116] ring-1 ring-[#ead59d]">{t("connect.conceptNotice")}</p>
+      <p className="mx-6 mb-5 flex items-start gap-2 text-[12px] leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-success" />{t("connect.conceptNotice")}</p>
 
       {/* tabs */}
-      <div className="mx-5 mb-4 flex gap-5 border-b border-border">
+      <div className="mx-6 flex gap-6 border-b border-border">
         {(["activities", "people"] as const).map((tb) => {
           const active = tab === tb
           return (
@@ -83,7 +85,7 @@ export default function ConnectPage() {
         })}
       </div>
 
-      <div className="space-y-3 px-5">
+      <div className="mx-6 divide-y divide-foreground/10 border-b border-foreground/10">
         {tab === "activities"
           ? activities.map((a) => (
               <ActivityCard key={a.id} a={a} currentPhoto={currentPhoto} onOpen={() => router.push(`/connect/chat?with=${encodeURIComponent(a.host)}`)} />
@@ -100,7 +102,7 @@ function ActivityCard({ a, currentPhoto, onOpen }: { a: Activity; currentPhoto?:
   const { t, lang } = useLang()
   const Icon = CAT_ICON[a.category]
   return (
-    <button type="button" onClick={onOpen} className="pressable w-full rounded-2xl bg-card p-4 text-left ring-1 ring-border">
+    <button type="button" onClick={onOpen} className="pressable w-full py-5 text-left">
       <div className="mb-2 flex flex-wrap items-center gap-2 text-[12px] text-muted-foreground">
         <span className="grid h-7 w-7 flex-shrink-0 place-items-center rounded-lg bg-secondary text-primary">
           <Icon className="h-4 w-4" />
@@ -145,7 +147,7 @@ function ActivityCard({ a, currentPhoto, onOpen }: { a: Activity; currentPhoto?:
 function PeerCard({ p, onOpen }: { p: Peer; onOpen: () => void }) {
   const { t, lang } = useLang()
   return (
-    <button type="button" onClick={onOpen} className="pressable flex w-full items-center gap-3 rounded-2xl bg-card p-4 text-left ring-1 ring-border">
+    <button type="button" onClick={onOpen} className="pressable flex w-full items-center gap-3 py-5 text-left">
       <img src={p.photo} alt={p.name} className="h-12 w-12 flex-shrink-0 rounded-full object-cover ring-1 ring-border" />
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
