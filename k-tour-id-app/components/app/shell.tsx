@@ -51,7 +51,9 @@ export function BottomNav() {
             ? pathname === "/"
             : href === "/wallet"
               ? pathname.startsWith("/wallet") || pathname.startsWith("/pass") || pathname.startsWith("/present")
-              : pathname.startsWith(href)
+              : href === "/explore"
+                ? pathname.startsWith("/explore") || pathname.startsWith("/services")
+                : pathname.startsWith(href)
           return (
             <Link
               key={href}

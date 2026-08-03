@@ -103,7 +103,16 @@ export function FirstRunGuide() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/58 px-0 backdrop-blur-[2px]" role="presentation">
-      <section ref={dialogRef} tabIndex={-1} onKeyDown={(event) => { if (event.key === "Escape") close() }} role="dialog" aria-modal="true" aria-labelledby="first-guide-title" className="safe-bottom max-h-[94vh] w-full max-w-[420px] overflow-y-auto rounded-t-[30px] bg-background px-6 pb-6 pt-4 outline-none shadow-[0_-24px_70px_rgba(0,0,0,.24)]">
+      <section ref={dialogRef} tabIndex={-1} onKeyDown={(event) => {
+        if (event.key === "Escape") { close(); return }
+        if (event.key !== "Tab") return
+        const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])') ?? [])
+        const first = focusable[0]
+        const last = focusable[focusable.length - 1]
+        if (!first || !last) { event.preventDefault(); dialogRef.current?.focus(); return }
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+      }} role="dialog" aria-modal="true" aria-labelledby="first-guide-title" className="safe-bottom max-h-[94vh] w-full max-w-[420px] overflow-y-auto rounded-t-[30px] bg-background px-6 pb-6 pt-4 outline-none shadow-[0_-24px_70px_rgba(0,0,0,.24)]">
         <div className="mx-auto h-1 w-9 rounded-full bg-foreground/15" />
         <div className="mt-5 flex items-center justify-between">
           <div className="flex gap-1.5" aria-label={`${step + 1} / ${STEPS.length}`}>

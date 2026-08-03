@@ -1,9 +1,10 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Sheet, SheetContent } from "@/components/app/sheet"
 import { QRCode } from "@/components/qr-code"
-import { Check, Loader2 } from "lucide-react"
+import { Check, CreditCard, Landmark, Loader2, ShieldCheck } from "lucide-react"
+import { BrandMark } from "@/components/app/brand"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { formatKRW, formatUSD, formatWon } from "@/lib/format"
@@ -51,27 +52,34 @@ export function ReceiveModal({ open, onOpenChange }: { open: boolean; onOpenChan
 }
 
 const TOPUP_AMOUNTS = [50_000, 100_000, 300_000]
+type FundingSource = "kakaopay" | "card" | "bank"
 
-export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; onOpenChange: (v: boolean) => void; onComplete?: () => void }) {
+export function TopUpModal({ open, onOpenChange, onComplete, minimumAmountKRW = 0 }: { open: boolean; onOpenChange: (v: boolean) => void; onComplete?: () => void; minimumAmountKRW?: number }) {
   const { topUp } = useApp()
   const { t, lang } = useLang()
   const [amount, setAmount] = useState(TOPUP_AMOUNTS[1])
+  const [source, setSource] = useState<FundingSource>("kakaopay")
   const [phase, setPhase] = useState<"choose" | "processing" | "done" | "error">("choose")
   const busy = useRef(false)
+  const minimumRounded = Math.ceil(minimumAmountKRW / 10_000) * 10_000
+  const availableAmounts = Array.from(new Set([minimumRounded, ...TOPUP_AMOUNTS])).filter((value) => value > 0 && value >= minimumAmountKRW).sort((a, b) => a - b).slice(0, 3)
+
+  useEffect(() => {
+    if (!open || phase !== "choose") return
+    const rounded = Math.ceil(minimumAmountKRW / 10_000) * 10_000
+    const choices = Array.from(new Set([rounded, ...TOPUP_AMOUNTS])).filter((value) => value > 0 && value >= minimumAmountKRW).sort((a, b) => a - b)
+    setAmount(choices[0] ?? TOPUP_AMOUNTS[1])
+  }, [minimumAmountKRW, open, phase])
 
   const confirm = async () => {
     if (busy.current) return
     busy.current = true
     setPhase("processing")
     try {
-      await topUp(amount)
+      const sourceLabel = source === "kakaopay" ? "KakaoPay preview" : source === "card" ? "Overseas card preview" : "Bank transfer preview"
+      await topUp(amount, sourceLabel)
       setPhase("done")
-      setTimeout(() => {
-        busy.current = false
-        setPhase("choose")
-        onOpenChange(false)
-        onComplete?.()
-      }, 1200)
+      busy.current = false
     } catch {
       setPhase("error")
       busy.current = false
@@ -89,14 +97,24 @@ export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; 
     >
       <SheetContent title={phase === "done" ? t("modal.topupDone") : t("modal.topup")}>
         {phase === "done" ? (
-          <div className="flex flex-col items-center gap-2 py-3">
+          <div role="status" aria-live="assertive" tabIndex={-1} className="flex flex-col items-center gap-2 py-3">
             <SuccessCheck />
-            <p className="tabular text-[13px] font-semibold">+{lang === "ko" ? formatWon(amount) : formatKRW(amount)}</p>
+            <p className="tabular text-[14px] font-semibold">+{lang === "ko" ? formatWon(amount) : formatKRW(amount)}</p>
+            <p className="text-[12px] text-muted-foreground">{source === "kakaopay" ? "KakaoPay" : source === "card" ? (lang === "ko" ? "해외 발급 카드" : "Overseas card") : (lang === "ko" ? "국내 계좌이체" : "Korean bank transfer")}</p>
+            <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">{lang === "ko" ? "시나리오 여행 잔액에 반영했어요. 실제 출금은 일어나지 않았습니다." : "Added to the scenario travel balance. No real debit occurred."}</p>
+            <button type="button" onClick={() => { setPhase("choose"); onOpenChange(false); onComplete?.() }} className="pressable mt-3 min-h-12 w-full rounded-xl bg-primary px-4 text-[14px] font-semibold text-white">{onComplete ? (lang === "ko" ? "서비스로 돌아가기" : "Return to service") : (lang === "ko" ? "완료" : "Done")}</button>
           </div>
         ) : (
           <div className="space-y-4">
+            <div>
+              <p className="mb-2 text-[12px] font-semibold text-muted-foreground">{lang === "ko" ? "충전 수단" : "Funding source"}</p>
+              <div className="space-y-2">
+                <button type="button" aria-pressed={source === "kakaopay"} onClick={() => setSource("kakaopay")} className={`pressable flex min-h-14 w-full items-center gap-3 rounded-[14px] border px-3 text-left ${source === "kakaopay" ? "border-primary bg-primary/5" : "border-border"}`}><BrandMark brand="kakaopay" size={34} decorative /><span className="min-w-0 flex-1"><strong className="block text-[13px]">KakaoPay</strong><span className="mt-0.5 block text-[12px] text-muted-foreground">{lang === "ko" ? "간편결제 연결 예시" : "Payment connection preview"}</span></span>{source === "kakaopay" && <Check className="h-4 w-4 text-primary" />}</button>
+                <div className="grid grid-cols-2 gap-2"><button type="button" aria-pressed={source === "card"} onClick={() => setSource("card")} className={`pressable flex min-h-14 items-center gap-2 rounded-[14px] border px-3 text-left ${source === "card" ? "border-primary bg-primary/5" : "border-border"}`}><CreditCard className="h-4 w-4" /><span className="text-[12px] font-semibold">{lang === "ko" ? "해외 카드" : "Overseas card"}</span></button><button type="button" aria-pressed={source === "bank"} onClick={() => setSource("bank")} className={`pressable flex min-h-14 items-center gap-2 rounded-[14px] border px-3 text-left ${source === "bank" ? "border-primary bg-primary/5" : "border-border"}`}><Landmark className="h-4 w-4" /><span className="text-[12px] font-semibold">{lang === "ko" ? "계좌이체" : "Bank transfer"}</span></button></div>
+              </div>
+            </div>
             <div className="grid grid-cols-3 gap-2">
-              {TOPUP_AMOUNTS.map((a) => (
+              {availableAmounts.map((a) => (
                 <button
                   key={a}
                   type="button"
@@ -110,9 +128,10 @@ export function TopUpModal({ open, onOpenChange, onComplete }: { open: boolean; 
                 </button>
               ))}
             </div>
-            <p aria-live="polite" role={phase === "error" ? "alert" : "status"} className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>
-              {phase === "error" ? (lang === "ko" ? "충전 요청을 완료하지 못했습니다. 다시 시도해 주세요." : "Top-up could not be completed. Please try again.") : t("modal.topupNote")}
-            </p>
+            {minimumAmountKRW > 0 && <p className="text-center text-[12px] font-medium text-primary">{lang === "ko" ? `이용을 계속하려면 최소 ₩${minimumAmountKRW.toLocaleString()} 충전이 필요해요.` : `Top up at least ₩${minimumAmountKRW.toLocaleString()} to continue.`}</p>}
+            <div className="rounded-xl bg-secondary px-3 py-2.5 text-[12px]"><div className="flex justify-between"><span className="text-muted-foreground">{lang === "ko" ? "충전 반영액" : "Balance credit"}</span><strong className="tabular">₩{amount.toLocaleString()}</strong></div><div className="mt-1.5 flex justify-between"><span className="text-muted-foreground">{lang === "ko" ? "예상 수수료" : "Estimated fee"}</span><span>{lang === "ko" ? "실연동 시 확정" : "Confirmed at live integration"}</span></div></div>
+            <p aria-live="polite" role={phase === "error" ? "alert" : "status"} className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>{phase === "error" ? (lang === "ko" ? "충전 요청을 완료하지 못했습니다. 다시 시도해 주세요." : "Top-up could not be completed. Please try again.") : t("modal.topupNote")}</p>
+            <p className="flex items-start gap-2 rounded-xl bg-secondary px-3 py-2.5 text-[11px] leading-4 text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />{lang === "ko" ? "연동 전 제품 시나리오로 실제 출금·환전은 일어나지 않아요. 수수료는 실연동 계약 후 최종 고지합니다." : "This is a pre-integration product scenario. No real debit or exchange occurs; fees are confirmed after a live integration agreement."}</p>
             <button
               type="button"
               onClick={confirm}

@@ -38,6 +38,7 @@ export default function DemoHubPage() {
         "k-tour-id:activity-memberships:",
         "k-tour-id:activity-safety:",
         "k-tour-id:journey-checkin:",
+        "k-tour-id:external-orders:",
         "k-tour-id:ledger-",
         "k-tour-id:ledger-operation:",
         "k-tour-id-location-",
@@ -102,6 +103,13 @@ export default function DemoHubPage() {
           </div>
         </section>
 
+        <section className="mt-6 rounded-[28px] border border-border bg-card p-5 sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">Commercial service handoff</p>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-xl font-extrabold">Familiar services, with a complete return state</h2><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">Proposal-core entrypoints show benefit, consent, provider handoff, success, cancel and connection failure without implying a live partnership.</p></div><Link href="/services" onClick={loadDemoAccount} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-bold text-white">All services <ArrowRight className="h-4 w-4" /></Link></div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3"><PreviewLink href="/services/tmoney-visitor-pass" label="T-money visitor pass" copy="Pass · benefit · issuance return" icon={Smartphone} onClick={loadDemoAccount} /><PreviewLink href="/services/kakao-t-airport" label="Kakao T airport ride" copy="Route · consent · provider return" icon={Smartphone} onClick={loadDemoAccount} /><PreviewLink href="/services/baemin-local-meal" label="Baemin local meal" copy="Address · discount · order return" icon={Smartphone} onClick={loadDemoAccount} /></div>
+          <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold text-muted-foreground"><span className="rounded-full bg-surface-2 px-3 py-1.5">Proposal brands · T-money · KakaoTaxi · Baemin</span><span className="rounded-full bg-surface-2 px-3 py-1.5">Proposal category example · GS25</span><span className="rounded-full bg-surface-2 px-3 py-1.5">Expansion · Uber · Coupang Eats · Olive Young</span></div>
+        </section>
+
         <details className="mt-6 rounded-[24px] border border-border bg-card p-5">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Recovery states</p><h2 className="mt-1 text-lg font-extrabold">Eligibility, network and refund recovery</h2></div><ChevronDown className="h-5 w-5 text-muted-foreground" /></summary>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -110,6 +118,7 @@ export default function DemoHubPage() {
             <PreviewLink href="/explore/seoul-transit-30?preview=soldout" label="Sold out" copy="Show available alternatives" icon={CircleAlert} onClick={startSoldOut} />
             <PreviewLink href="/explore/bukchon-workshop" label="Not eligible" copy="Explain why and reroute" icon={ShieldCheck} onClick={startIneligible} />
             <PreviewLink href="/explore/seoul-transit-30" label="Insufficient balance" copy="Top up without losing the order" icon={Smartphone} onClick={startInsufficient} />
+            <PreviewLink href="/services/kakao-t-airport?preview=failed" label="Service handoff failure" copy="No charge · retry safely" icon={CircleAlert} onClick={loadDemoAccount} />
             <PreviewLink href="/partner/verify?preview=refunded" label="Refunded" copy="Customer and merchant view" icon={RefreshCcw} onClick={loadDemoAccount} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">{[["/partner/verify?preview=waiting", "QR waiting"], ["/partner/verify?preview=submitted", "Checking"], ["/partner/verify?preview=verified", "Approved"], ["/partner/verify?preview=failed", "Not approved"], ["/partner/verify?preview=offline", "Offline"]].map(([href, label]) => <Link key={href} href={href} onClick={loadDemoAccount} className="inline-flex min-h-10 items-center rounded-full bg-surface-2 px-3 text-xs font-bold ring-1 ring-border">{label}</Link>)}</div>

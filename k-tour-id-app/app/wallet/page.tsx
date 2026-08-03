@@ -17,6 +17,7 @@ import { PERSONA_CONFIG } from "@/lib/catalog"
 import { instantPassState } from "@/lib/commerce-policy"
 import { effectiveVoucherStatus, isVoucherAvailable } from "@/lib/voucher-policy"
 import { credentialDaysRemaining, isCredentialUsable } from "@/lib/credential-status"
+import { useExternalServiceOrders } from "@/lib/external-service-orders"
 
 const DEMO_PAY: PayItem = { merchant: "GS25 Convenience", amountKRW: 4_500, category: "shopping" }
 
@@ -62,15 +63,20 @@ export default function WalletPage() {
   const [showPay, setShowPay] = useState(false)
   const [returningVoucherId, setReturningVoucherId] = useState("")
   const [returnAfterTopUp, setReturnAfterTopUp] = useState("")
+  const [minimumTopUp, setMinimumTopUp] = useState(0)
+  const externalOrders = useExternalServiceOrders(session.identity?.did ?? "guest")
   const spentKRW = Math.max(0, transactions.filter((tx) => tx.category !== "topup").reduce((sum, tx) => sum - tx.amountKRW, 0))
   const showBudgetFixture = session.identity?.did === DEFAULT_SESSION.identity?.did
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
+    if (!hydrated) return
     const params = new URLSearchParams(window.location.search)
     const requestedReturn = params.get("returnTo")
+    const requiredBalance = Number(params.get("requiredKRW") ?? 0)
+    if (Number.isFinite(requiredBalance) && requiredBalance > 0) setMinimumTopUp(Math.max(0, requiredBalance - session.wallet.balanceKRW))
     if (params.get("topup") === "1") setShowTopUp(true)
-    if (requestedReturn?.startsWith("/explore/") || requestedReturn?.startsWith("/present")) setReturnAfterTopUp(requestedReturn)
+    if (requestedReturn?.startsWith("/explore/") || requestedReturn?.startsWith("/present") || requestedReturn?.startsWith("/services/")) setReturnAfterTopUp(requestedReturn)
   }, [hydrated, router, session.onboarded])
   if (!session.onboarded) return null
   const persona = PERSONA_CONFIG[session.userType ?? "foreigner"]
@@ -180,6 +186,20 @@ export default function WalletPage() {
           </div>
         )}
 
+        {externalOrders.length > 0 && (
+          <div>
+            <SectionTitle>{lang === "ko" ? "연결 서비스 내역" : "Connected services"}</SectionTitle>
+            <div className="divide-y divide-foreground/10 border-y border-foreground/10">
+              {externalOrders.map((order) => (
+                <Link key={order.id} href={`/services/orders/${order.id}`} className="pressable flex min-h-[76px] items-center justify-between gap-4 py-4">
+                  <div className="min-w-0"><p className="truncate text-[14px] font-semibold">{lang === "ko" ? order.title : order.titleEn}</p><p className="mt-1 text-[12px] text-muted-foreground">{order.provider} · {lang === "ko" ? "연결 예시" : "Preview"} · {order.status === "confirmed" ? (lang === "ko" ? "이용 확인" : "Confirmed") : order.status === "cancelled" ? (lang === "ko" ? "취소" : "Cancelled") : order.status === "pending" ? (lang === "ko" ? "확인 필요" : "Review needed") : (lang === "ko" ? "연결 실패" : "Connection failed")}</p></div>
+                  <p className="tabular flex-shrink-0 text-[13px] font-semibold">₩{order.paidKRW.toLocaleString()}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
           <SectionTitle>{t("wallet.lastTx")}</SectionTitle>
           <div className="-mx-1">
@@ -196,7 +216,7 @@ export default function WalletPage() {
       </div>
 
       <ReceiveModal open={showReceive} onOpenChange={setShowReceive} />
-      <TopUpModal open={showTopUp} onOpenChange={setShowTopUp} onComplete={() => { if (returnAfterTopUp) router.push(returnAfterTopUp) }} />
+      <TopUpModal open={showTopUp} onOpenChange={setShowTopUp} minimumAmountKRW={minimumTopUp} onComplete={returnAfterTopUp ? () => router.push(returnAfterTopUp) : undefined} />
       <PayModal open={showPay} onOpenChange={setShowPay} item={DEMO_PAY} />
     </PhoneFrame>
   )

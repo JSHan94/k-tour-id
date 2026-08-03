@@ -23,6 +23,9 @@ export const BRANDS = {
   coupang: { name: "쿠팡", logo: "/logos/coupang.png", color: "#e02020" },
   omnione: { name: "OmniOne", logo: "/logos/omnione.png", color: "#1f3a5f" },
   raonsecure: { name: "RaonSecure", logo: "/logos/raonsecure.png", color: "#0a3d91" },
+  kakaot: { name: "카카오 T", color: "#181600", mono: "T" },
+  uber: { name: "Uber", color: "#111111", mono: "U" },
+  gs25: { name: "GS25", color: "#1675bc", mono: "25" },
 } as const
 
 export type BrandKey = keyof typeof BRANDS

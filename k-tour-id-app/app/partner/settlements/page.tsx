@@ -18,6 +18,7 @@ import { PageIntro, Panel } from "@/components/partner/partner-shell"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { cn } from "@/lib/utils"
+import { useExternalServiceOrders, type ExternalServiceOrder } from "@/lib/external-service-orders"
 
 const MERCHANT_KO: Record<string, string> = {
   "Bukchon Craft House": "북촌 공방",
@@ -29,11 +30,15 @@ const MERCHANT_KO: Record<string, string> = {
 }
 
 export default function PartnerSettlementsPage() {
-  const { demoJourney, submitDemoSettlement, anchorDemoSettlement } = useApp()
+  const { demoJourney, submitDemoSettlement, anchorDemoSettlement, session } = useApp()
   const { lang } = useLang()
   const ko = lang === "ko"
   const [running, setRunning] = useState(false)
   const [finishAfterSubmit, setFinishAfterSubmit] = useState(false)
+  const externalOrders = useExternalServiceOrders(session.identity?.did ?? "guest")
+  const connectedOrders = externalOrders.filter((order) => order.status === "confirmed")
+  const hasConnectedPayments = connectedOrders.length > 0
+  const connectedPayoutKRW = connectedOrders.reduce((sum, order) => sum + order.providerReceivableKRW, 0)
   const finishingRef = useRef(false)
   const hasPayment = ["paid", "settlement-submitted", "anchored"].includes(demoJourney.stage)
   const complete = demoJourney.stage === "anchored"
@@ -79,7 +84,9 @@ export default function PartnerSettlementsPage() {
             ? complete
               ? (ko ? "다음 영업일 정산 예정입니다." : "Payout is scheduled for the next business day.")
               : (ko ? `정산 예정 금액은 ₩${demoJourney.merchantDueKRW.toLocaleString()}입니다.` : `₩${demoJourney.merchantDueKRW.toLocaleString()} is ready for payout.`)
-            : (ko ? "정산할 거래가 아직 없습니다." : "No payout is ready yet.")}
+            : hasConnectedPayments
+              ? (ko ? `연결 서비스 ${connectedOrders.length}건 · 정산 계산 ₩${connectedPayoutKRW.toLocaleString()}` : `${connectedOrders.length} connected ${connectedOrders.length === 1 ? "service" : "services"} · ₩${connectedPayoutKRW.toLocaleString()} calculated`)
+              : (ko ? "정산할 거래가 아직 없습니다." : "No payout is ready yet.")}
         body={refunded
           ? partialRefund
             ? (ko ? `${product}의 사용 기간을 제외한 금액만 고객에게 반환되어 남은 이용분은 정산됩니다.` : `Only the unused portion of ${product} was returned; the consumed portion remains payable.`)
@@ -88,7 +95,9 @@ export default function PartnerSettlementsPage() {
             : (ko ? `${product}의 결제 금액과 예시 캠페인 지원금이 모두 취소되어 정산할 금액이 없습니다.` : `The payment and illustrative campaign contribution for ${product} were reversed. No payout is due.`)
           : hasPayment
             ? (ko ? `${product} 주문이 현재 정산 건에 포함됐습니다.` : `${product} is included in the current payout.`)
-            : (ko ? "방문객 결제가 완료되면 이 화면에 정산 내역이 자동으로 표시됩니다." : "A completed customer payment will appear here automatically.")}
+            : hasConnectedPayments
+              ? (ko ? "연결 예시 거래의 재원·수수료·제공자 정산액 계산이 완료됐습니다. 실제 지급은 제휴 연동 후 진행됩니다." : "Funding, fees, and provider receivables are calculated for connection-preview records. Live payout starts after partnership integration.")
+              : (ko ? "방문객 결제가 완료되면 이 화면에 정산 내역이 자동으로 표시됩니다." : "A completed customer payment will appear here automatically.")}
       >
         <div className="flex flex-wrap items-center gap-2">
           <Link href="/evidence" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-3.5 text-[12px] font-bold text-foreground">
@@ -105,13 +114,17 @@ export default function PartnerSettlementsPage() {
               ? (ko ? "다음 영업일 정산 예정" : "Payout scheduled for the next business day")
               : hasPayment
                 ? (ko ? "정산 제출 가능" : "Payout ready to submit")
-                : (ko ? "정산할 거래 없음" : "No payout ready")}
+                : hasConnectedPayments
+                  ? (ko ? `연결 서비스 ${connectedOrders.length}건 정산 계산 완료` : `${connectedOrders.length} connected-service payout calculations ready`)
+                  : (ko ? "정산할 거래 없음" : "No payout ready")}
       </p>
+
+      {hasConnectedPayments && <ConnectedServicePayout orders={connectedOrders} />}
 
       {refunded ? (
         <RefundedPayout gross={demoJourney.grossKRW} cashReturned={refundCashKRW} voucherReturned={refundVoucherKRW} benefitReversed={reversedBenefitKRW} payout={demoJourney.merchantDueKRW} adjustedPayout={adjustedPayoutKRW} settledUsageDays={demoJourney.settledUsageDays} userFunded={userFunded} />
       ) : !hasPayment ? (
-        <EmptyPayout />
+        hasConnectedPayments ? null : <EmptyPayout />
       ) : (
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
           <div className="space-y-5">
@@ -145,7 +158,7 @@ export default function PartnerSettlementsPage() {
         </div>
       )}
 
-      <div className={cn("mt-5 grid gap-5", !userFunded && "xl:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]")}>
+      {(hasPayment || refunded) && <div className={cn("mt-5 grid gap-5", !userFunded && "xl:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]")}>
         <TransactionTrace
           userFunded={userFunded}
           campaignId={demoJourney.campaignId}
@@ -159,9 +172,20 @@ export default function PartnerSettlementsPage() {
           subsidyKRW={360_000}
           payoutKRW={3_551_400}
         />}
-      </div>
+      </div>}
     </>
   )
+}
+
+function ConnectedServicePayout({ orders }: { orders: ExternalServiceOrder[] }) {
+  const { lang } = useLang()
+  const ko = lang === "ko"
+  const gross = orders.reduce((sum, order) => sum + order.grossKRW, 0)
+  const paid = orders.reduce((sum, order) => sum + order.paidKRW, 0)
+  const externalFunding = orders.reduce((sum, order) => sum + (order.benefitFunding === "tourism-campaign" ? order.benefitAppliedKRW : 0), 0)
+  const fees = orders.reduce((sum, order) => sum + order.platformFeeKRW, 0)
+  const receivable = orders.reduce((sum, order) => sum + order.providerReceivableKRW, 0)
+  return <div className="mb-5"><Panel eyebrow={ko ? "연결 서비스 정산 예시" : "Connected-service payout preview"} title={ko ? `${orders.length}건의 정산 계산 완료` : `${orders.length} payout ${orders.length === 1 ? "calculation" : "calculations"} ready`}><div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,.8fr)]"><div><p className="text-[13px] leading-6 text-muted-foreground">{ko ? "사용자 앱의 연결 예시 이용 내역 전체를 합산했습니다. 실제 제휴 계약과 정산 API가 연결된 상태는 아닙니다." : "All consumer connection-preview records are included. No live partnership or settlement API is connected."}</p><div className="mt-4 divide-y divide-border">{orders.map((order) => <div key={order.id} className="grid gap-1 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-4"><div><strong className="text-[12px]">{order.provider} · {ko ? order.title : order.titleEn}</strong><p className="mt-1 font-mono text-[11px] text-muted-foreground">{order.id}</p></div><div className="text-left sm:text-right"><p className="tabular text-[12px] font-bold">₩{order.providerReceivableKRW.toLocaleString()}</p><p className="mt-1 text-[11px] text-muted-foreground">{order.benefitFunding === "provider" ? (ko ? "제공자 부담 혜택" : "Provider-funded benefit") : (ko ? "관광 캠페인 보전" : "Tourism campaign reimbursement")}</p></div></div>)}</div></div><div className="rounded-2xl bg-surface-2 p-4 ring-1 ring-border"><MoneyRow label={ko ? "서비스 총액" : "Service total"} value={gross} /><MoneyRow label={ko ? "사용자 결제" : "Customer payment"} value={paid} />{externalFunding > 0 && <MoneyRow label={ko ? "외부 캠페인 보전" : "External campaign funding"} value={externalFunding} prefix="+" accent />}<MoneyRow label={ko ? "플랫폼 수수료" : "Platform fee"} value={fees} prefix="−" /><div className="mt-3 border-t border-border pt-3"><MoneyRow label={ko ? "제공자 정산 계산액" : "Provider receivable"} value={receivable} strong /></div><p className="mt-3 text-[11px] leading-5 text-muted-foreground">{ko ? "제공자 부담 혜택은 외부 보전액에 포함하지 않습니다." : "Provider-funded benefits are not counted as external reimbursement."}</p></div></div></Panel></div>
 }
 
 function TransactionTrace({ userFunded, campaignId, voucherId, receiptId, settlementId }: { userFunded: boolean; campaignId: string; voucherId: string; receiptId: string; settlementId: string }) {

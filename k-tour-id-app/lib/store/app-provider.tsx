@@ -62,8 +62,8 @@ interface AppContextValue {
   verifyIdentity: (userType: UserType, method: IdentityMethod) => Promise<Identity>
   issueCapsule: (identity: Identity, userType: UserType) => Promise<KPassCapsule>
   // wallet
-  topUp: (amountKRW: number) => Promise<void>
-  pay: (merchant: string, amountKRW: number, category: Transaction["category"]) => Promise<boolean>
+  topUp: (amountKRW: number, source?: string) => Promise<void>
+  pay: (merchant: string, amountKRW: number, category: Transaction["category"], operationId?: string) => Promise<boolean>
   purchaseServiceItem: (input: { itemId: string; optionId: string; useBenefit: boolean; deliveryAddress?: string }) => Promise<OperationResult<CommerceOrder>>
   refundCommerceOrder: (orderId: string) => Promise<boolean>
   prepareDemoPurchase: (itemId: string, optionId: string) => boolean
@@ -396,18 +396,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return capsule
   }, [])
 
-  const topUp = useCallback(async (amountKRW: number) => {
+  const topUp = useCallback(async (amountKRW: number, source = "Travel balance funding") => {
     return withLedgerLock(async () => {
     if (walletTopUpBusyRef.current) throw new Error("TOPUP_IN_PROGRESS")
     walletTopUpBusyRef.current = true
     try {
       const updated = await walletService.topUp(sessionRef.current.wallet, amountKRW)
-      const evt = await chainService.log("WalletFunded", `Top-up of ₩${amountKRW.toLocaleString()} authorised`)
+      const evt = await chainService.log("WalletFunded", `Top-up of ₩${amountKRW.toLocaleString()} via ${source} authorised`)
       setSession((s) => ({ ...s, wallet: updated }))
       setTransactions((t) => [
         {
           id: `tx-${evt.id}`,
-          merchant: "Top up",
+          merchant: `Top up · ${source}`,
           category: "topup",
           amountKRW,
           date: new Date().toISOString(),
@@ -423,7 +423,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         id: Date.now(),
         type: "transaction",
         title: "Travel balance topped up",
-        message: `₩${amountKRW.toLocaleString()} was added to your travel balance`,
+        message: `₩${amountKRW.toLocaleString()} was added via ${source}`,
         time: "Just now",
         read: false,
         icon: "topup",
@@ -436,15 +436,21 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const pay = useCallback(
-    async (merchant: string, amountKRW: number, category: Transaction["category"]) => {
+    async (merchant: string, amountKRW: number, category: Transaction["category"], operationId?: string) => {
       return withLedgerLock(async () => {
+      const ledgerOperationId = operationId ? `external-payment:${operationId}` : ""
+      if (ledgerOperationId && !claimLedgerOperation(ledgerOperationId)) return true
+      let operationCompleted = false
       // never confirm a spend the wallet can't fund (no ghost-spend / phantom chain event)
-      if (walletPayBusyRef.current || Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) return false
+      if (walletPayBusyRef.current || Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) {
+        if (ledgerOperationId) releaseLedgerOperation(ledgerOperationId)
+        return false
+      }
       walletPayBusyRef.current = true
       try {
         const evt = await chainService.log(
           "PaymentAuthorized",
-          `Payment of ₩${amountKRW.toLocaleString()} to ${merchant}`,
+          `Payment of ₩${amountKRW.toLocaleString()} to ${merchant}${operationId ? ` · operation ${operationId}` : ""}`,
         )
         setSession((s) => ({
           ...s,
@@ -452,7 +458,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }))
         setTransactions((t) => [
           {
-            id: `tx-${evt.id}`,
+            id: operationId ? `tx-${operationId}` : `tx-${crypto.randomUUID()}`,
             merchant,
             category,
             amountKRW: -Math.abs(amountKRW),
@@ -475,9 +481,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           icon: "check",
           iconBg: "#e7ede4",
         }, ...items])
+        operationCompleted = true
         return true
       } finally {
         walletPayBusyRef.current = false
+        if (ledgerOperationId && !operationCompleted) releaseLedgerOperation(ledgerOperationId)
       }
       })
     },

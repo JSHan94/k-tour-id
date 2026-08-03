@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, Check, Search, SlidersHorizontal, X } from "lucide-react"
+import { ArrowRight, Bell, Check, Search, SlidersHorizontal, Store, X } from "lucide-react"
 import { BenefitTicket, EditorialFeature, ServiceRow } from "@/components/app/commerce"
 import { LocationControl } from "@/components/app/location-control"
 import { LangToggle, PhoneFrame } from "@/components/app/shell"
@@ -76,10 +76,10 @@ export default function ExplorePage() {
   ].filter(Boolean).join(" · ") : ""
   const rows = shown.slice(1)
   const filterOrder: Filter[] = userType === "long-term"
-    ? ["all", "mobility", "food", "experience"]
+    ? ["all", "mobility", "food", "experience", "shopping"]
     : userType === "korean"
-      ? ["all", "experience", "mobility", "food"]
-      : ["all", "experience", "food", "mobility"]
+      ? ["all", "experience", "mobility", "food", "shopping"]
+      : ["all", "experience", "food", "mobility", "shopping"]
   const benefitPairs = vouchers
     .filter((voucher) => voucher.itemId)
     .map((voucher) => ({ voucher, item: itemById(voucher.itemId!) }))
@@ -95,6 +95,7 @@ export default function ExplorePage() {
           <div className="flex items-center gap-1"><LangToggle /><Link href="/alerts" aria-label={ko ? "알림" : "Alerts"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><Bell className="h-[18px] w-[18px]" /></Link></div>
         </div>
         <p className="mt-3 max-w-[330px] text-[14px] leading-6 text-muted-foreground">{persona.homeBody[lang]} {ko ? `${catalog.length}가지 선택만 간결하게 모았어요.` : `${catalog.length} focused choices, without the clutter.`}</p>
+        <Link href="/services?from=explore" className="pressable mt-4 flex min-h-14 items-center gap-3 rounded-[16px] bg-ink px-4 text-white"><span className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-gold"><Store className="h-4 w-4" /></span><span className="min-w-0 flex-1"><strong className="block text-[13px]">{ko ? "이동·배달·쇼핑 연결" : "Mobility, delivery & shopping"}</strong><span className="mt-0.5 block text-[12px] text-white/60">{ko ? "한국에서 자주 쓰는 서비스" : "Common services in Korea"}</span></span><ArrowRight className="h-4 w-4" /></Link>
         <div className="mt-4"><LocationControl compact /></div>
         <label className="mt-5 flex min-h-12 items-center gap-3 rounded-[14px] bg-card px-4 ring-1 ring-foreground/10 focus-within:ring-primary/40">
           <Search className="h-[18px] w-[18px] text-muted-foreground" />

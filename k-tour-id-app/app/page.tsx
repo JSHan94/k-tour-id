@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, BadgeCheck, ChevronRight, Sparkles, Wallet } from "lucide-react"
+import { ArrowRight, BadgeCheck, CalendarDays, CarFront, ChevronRight, ShoppingBag, Sparkles, Store, Utensils, Wallet } from "lucide-react"
 import { EditorialFeature, ServiceRow } from "@/components/app/commerce"
 import { FirstRunGuide } from "@/components/app/first-run-guide"
 import { LocationControl } from "@/components/app/location-control"
@@ -70,6 +70,19 @@ export default function HomePage() {
         <section aria-label={ko ? "이용 상태" : "Account status"} className="mt-7 grid grid-cols-2 divide-x divide-foreground/10 border-y border-foreground/10 py-5">
           <Link href={credentialUnavailable ? "/onboarding?mode=renew" : "/pass"} className="pressable pr-5"><span className="flex items-center gap-2 text-[13px] text-muted-foreground"><BadgeCheck className={`h-4 w-4 ${credentialUnavailable ? "text-primary" : "text-success"}`} />K-Tour ID</span><strong className="mt-2 block text-[17px] font-semibold">{credentialUnavailable ? (ko ? "갱신 필요" : "Renewal needed") : (ko ? "사용 가능" : "Active")}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{credentialUnavailable ? (ko ? "다시 확인해 주세요" : "Verify again") : session.userType === "foreigner" ? (ko ? `${remainingDays}일 남음` : `${remainingDays} days left`) : persona.statusDetail[lang]}</span></Link>
           <Link href="/wallet" className="pressable pl-5"><span className="flex items-center gap-2 text-[13px] text-muted-foreground"><Wallet className="h-4 w-4" />{persona.balanceLabel[lang]}</span><strong className="tabular mt-2 block text-[17px] font-semibold">₩{session.wallet.balanceKRW.toLocaleString()}</strong><span className="mt-1 block text-[12px] text-muted-foreground">KRW</span></Link>
+        </section>
+
+        <section className="mt-9">
+          <div className="flex items-end justify-between"><div><p className="text-[12px] font-semibold text-primary">{ko ? "한국 생활 바로가기" : "EVERYDAY KOREA"}</p><h2 className="font-display mt-1 text-[23px] font-semibold">{ko ? "지금 필요한 서비스" : "What do you need?"}</h2></div><Link href="/services" className="pressable inline-flex min-h-11 items-center gap-1 text-[12px] font-semibold text-muted-foreground">{ko ? "전체" : "All"}<ChevronRight className="h-4 w-4" /></Link></div>
+          <div className="mt-3 grid grid-cols-5 gap-1 border-y border-foreground/10 py-3">
+            {[
+              { href: "/services?category=mobility", label: ko ? "이동" : "Move", icon: CarFront },
+              { href: "/services?category=delivery", label: ko ? "배달" : "Food", icon: Utensils },
+              { href: "/services?category=shopping", label: ko ? "쇼핑" : "Shop", icon: ShoppingBag },
+              { href: "/explore?focus=experience", label: ko ? "예약" : "Book", icon: CalendarDays },
+              { href: "/services?category=convenience", label: ko ? "편의점" : "Daily", icon: Store },
+            ].map(({ href, label, icon: Icon }) => <Link key={href} href={href} className="pressable flex min-h-[70px] flex-col items-center justify-center gap-2 rounded-[12px] text-[12px] font-medium text-muted-foreground hover:bg-secondary"><span className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground"><Icon className="h-[17px] w-[17px]" /></span>{label}</Link>)}
+          </div>
         </section>
 
         {feature && <section className="mt-11"><p className="text-[13px] font-semibold text-primary">{locationStatus === "granted" ? (ko ? "지금 가장 가까운 선택" : "Closest to you now") : (ko ? "나를 위한 오늘의 선택" : "Today's pick for you")}</p><div className="mt-4"><EditorialFeature item={feature} voucher={vouchers.find((voucher) => voucher.id === feature.voucherId)} proximity={proximityLabel(feature, location, lang)} reason={featureReason} /></div></section>}
