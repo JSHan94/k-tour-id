@@ -40,7 +40,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,18,28,.68)_0%,rgba(11,18,28,.10)_38%,rgba(11,18,28,.16)_55%,rgba(8,12,18,.90)_100%)]" />
         <header className="safe-top relative z-10 flex items-center justify-between px-6">
           <div><p className="font-display text-[20px] font-semibold tracking-[-0.02em]">K-Tour ID</p><p className="mt-0.5 text-[12px] text-white/62">{homeContext}</p></div>
-          <div className="flex items-center gap-2 text-white"><LangToggle /><Link href="/profile" aria-label={ko ? "내 정보" : "Profile"} className="pressable"><img src={session.identity?.photoUrl ?? "/portraits/peter.jpg"} alt="" className="h-11 w-11 rounded-full border border-white/35 object-cover" /></Link></div>
+          <div className="flex items-center gap-2 text-white"><LangToggle /><Link href="/profile" aria-label={ko ? "내 정보" : "Profile"} className="pressable"><img src={session.identity?.photoUrl ?? "/portraits/daniel-v2.jpg"} alt="" className="h-11 w-11 rounded-full border border-white/35 object-cover" /></Link></div>
         </header>
         <div className="absolute inset-x-0 bottom-0 z-10 px-6 pb-7">
           <p className="text-[13px] font-medium text-white/68">{name}{ko ? "님, " : ", "}{persona.homeBody[lang]}</p>

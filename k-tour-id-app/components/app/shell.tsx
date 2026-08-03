@@ -110,7 +110,7 @@ export function HomeHeader({ name, avatar }: { name: string; avatar?: string }) 
           <Bell className="h-[18px] w-[18px]" />
         </Link>
         <Link href="/profile" aria-label={t("nav.profile")} className="pressable">
-          <img src={avatar ?? "/portraits/peter.jpg"} alt="Profile" className="h-11 w-11 rounded-full object-cover ring-1 ring-border" />
+          <img src={avatar ?? "/portraits/daniel-v2.jpg"} alt={`${name} profile`} className="h-11 w-11 rounded-full object-cover ring-1 ring-border" />
         </Link>
       </div>
     </header>

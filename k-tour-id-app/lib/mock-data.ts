@@ -20,21 +20,21 @@ import { vouchersForUserType } from "@/lib/catalog"
 
 export const USD_RATE = 1381.7
 
-// ---- Default onboarded session (Peter Parker, foreign tourist) -------------
+// ---- Default onboarded session (Daniel Miller, foreign tourist) ------------
 
 export const DEFAULT_IDENTITY: Identity = {
   method: "passport-did",
-  displayName: "Peter Parker",
+  displayName: "Daniel Miller",
   nationality: "United States",
   nationalityFlag: "🇺🇸",
-  photoUrl: "/portraits/peter.jpg",
+  photoUrl: "/portraits/daniel-v2.jpg",
   verified: true,
   did: "did:omn:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
 }
 
 export const DEFAULT_CAPSULE: KPassCapsule = {
   id: "kpass:7d2a1f9c4b3e",
-  holderName: "Peter Parker",
+  holderName: "Daniel Miller",
   userType: "foreigner",
   did: DEFAULT_IDENTITY.did,
   issuedAt: "2026-06-12T09:20:00+09:00",
@@ -290,16 +290,16 @@ export const ACTIVITIES: Activity[] = [
     titleEn: "Hangang Chicken & Beer 🍗",
     host: "김민준",
     hostFlag: "🇰🇷",
-    hostPhoto: "/portraits/minjun.jpg",
+    hostPhoto: "/portraits/minjun-v2.jpg",
     hostType: "korean",
-    trustLevel: "premium",
+    trustLevel: "verified",
     place: "여의도 한강공원",
     placeEn: "Yeouido Hangang Park",
     time: "오늘 19:00",
     timeEn: "Today 19:00",
     capacity: 6,
     joined: 3,
-    participants: ["/portraits/minjun.jpg", "/portraits/peter.jpg", "/portraits/emma.jpg"],
+    participants: ["/portraits/minjun-v2.jpg", "/portraits/daniel-v2.jpg", "/portraits/emma-v2.jpg"],
     costKRW: 18000,
   },
   {
@@ -309,7 +309,7 @@ export const ACTIVITIES: Activity[] = [
     titleEn: "Korean ↔ English Language Exchange",
     host: "이지은",
     hostFlag: "🇰🇷",
-    hostPhoto: "/portraits/jieun.jpg",
+    hostPhoto: "/portraits/jieun-v2.jpg",
     hostType: "korean",
     trustLevel: "verified",
     place: "홍대 앞 카페",
@@ -318,16 +318,16 @@ export const ACTIVITIES: Activity[] = [
     timeEn: "Sat 15:00",
     capacity: 8,
     joined: 5,
-    participants: ["/portraits/jieun.jpg", "/portraits/peter.jpg", "/portraits/amara.jpg", "/portraits/emma.jpg"],
+    participants: ["/portraits/jieun-v2.jpg", "/portraits/daniel-v2.jpg", "/portraits/amara-v2.jpg", "/portraits/emma-v2.jpg"],
   },
   {
     id: "act-3",
     category: "tour",
     title: "경복궁 한복 투어",
     titleEn: "Gyeongbokgung Hanbok Tour",
-    host: "Nguyen Van A",
+    host: "Nguyen Van An",
     hostFlag: "🇻🇳",
-    hostPhoto: "/portraits/nguyen.jpg",
+    hostPhoto: "/portraits/nguyen-v2.jpg",
     hostType: "long-term",
     trustLevel: "verified",
     place: "경복궁 정문",
@@ -336,7 +336,7 @@ export const ACTIVITIES: Activity[] = [
     timeEn: "Tomorrow 14:00",
     capacity: 4,
     joined: 2,
-    participants: ["/portraits/nguyen.jpg", "/portraits/amara.jpg"],
+    participants: ["/portraits/nguyen-v2.jpg", "/portraits/amara-v2.jpg"],
   },
   {
     id: "act-4",
@@ -345,25 +345,25 @@ export const ACTIVITIES: Activity[] = [
     titleEn: "Gangnam Board Game Meetup",
     host: "김민준",
     hostFlag: "🇰🇷",
-    hostPhoto: "/portraits/minjun.jpg",
+    hostPhoto: "/portraits/minjun-v2.jpg",
     hostType: "korean",
-    trustLevel: "premium",
+    trustLevel: "verified",
     place: "강남역 보드게임카페",
     placeEn: "Board Game Café, Gangnam",
     time: "일 16:00",
     timeEn: "Sun 16:00",
     capacity: 6,
     joined: 4,
-    participants: ["/portraits/minjun.jpg", "/portraits/emma.jpg"],
+    participants: ["/portraits/minjun-v2.jpg", "/portraits/emma-v2.jpg"],
   },
   {
     id: "act-5",
     category: "tour",
     title: "남산 야경 산책",
     titleEn: "Namsan Night Walk",
-    host: "Emma",
-    hostFlag: "🇺🇸",
-    hostPhoto: "/portraits/emma.jpg",
+    host: "Emma Clarke",
+    hostFlag: "🇬🇧",
+    hostPhoto: "/portraits/emma-v2.jpg",
     hostType: "foreigner",
     trustLevel: "verified",
     place: "남산서울타워",
@@ -372,16 +372,16 @@ export const ACTIVITIES: Activity[] = [
     timeEn: "Fri 20:00",
     capacity: 5,
     joined: 2,
-    participants: ["/portraits/emma.jpg", "/portraits/peter.jpg"],
+    participants: ["/portraits/emma-v2.jpg", "/portraits/daniel-v2.jpg"],
   },
 ]
 
 export const PEERS: Peer[] = [
-  { id: "p-1", name: "김민준", flag: "🇰🇷", photo: "/portraits/minjun.jpg", userType: "korean", trustLevel: "premium", role: "guide", bio: "서울 토박이 — 맛집·교통·행정 도와드려요", bioEn: "Seoul native — food, transit & admin help", langs: ["KO", "EN"] },
-  { id: "p-2", name: "이지은", flag: "🇰🇷", photo: "/portraits/jieun.jpg", userType: "korean", trustLevel: "verified", role: "tutor", bio: "한국어 튜터 · 카페에서 편하게 언어교환", bioEn: "Korean tutor · easy language exchange at a café", langs: ["KO", "EN"] },
-  { id: "p-3", name: "Nguyen Van A", flag: "🇻🇳", photo: "/portraits/nguyen.jpg", userType: "long-term", trustLevel: "verified", role: "buddy", bio: "5년차 서울러 · 동남아 친구 환영", bioEn: "5 years in Seoul · Southeast-Asian friends welcome", langs: ["VI", "KO", "EN"] },
-  { id: "p-4", name: "Amara", flag: "🇺🇸", photo: "/portraits/amara.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "K-pop·전시 좋아해요 · 같이 다녀요", bioEn: "Love K-pop & exhibitions · let's explore together", langs: ["EN"] },
-  { id: "p-5", name: "Peter Parker", flag: "🇺🇸", photo: "/portraits/peter.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "여행 3주차 · 같이 다닐 사람 찾아요", bioEn: "3 weeks traveling · looking for travel buddies", langs: ["EN", "KO"] },
+  { id: "p-1", name: "김민준", flag: "🇰🇷", photo: "/portraits/minjun-v2.jpg", userType: "korean", trustLevel: "verified", role: "guide", bio: "서울 토박이 — 맛집·교통·행정 도와드려요", bioEn: "Seoul native — food, transit & admin help", langs: ["KO", "EN"] },
+  { id: "p-2", name: "이지은", flag: "🇰🇷", photo: "/portraits/jieun-v2.jpg", userType: "korean", trustLevel: "verified", role: "tutor", bio: "한국어 튜터 · 카페에서 편하게 언어교환", bioEn: "Korean tutor · easy language exchange at a café", langs: ["KO", "EN"] },
+  { id: "p-3", name: "Nguyen Van An", flag: "🇻🇳", photo: "/portraits/nguyen-v2.jpg", userType: "long-term", trustLevel: "verified", role: "buddy", bio: "5년차 서울러 · 베트남어·한국어로 도와드려요", bioEn: "5 years in Seoul · happy to help in Vietnamese or Korean", langs: ["VI", "KO", "EN"] },
+  { id: "p-4", name: "Amara Lewis", flag: "🇺🇸", photo: "/portraits/amara-v2.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "K-pop·전시 좋아해요 · 같이 다녀요", bioEn: "Love K-pop & exhibitions · let's explore together", langs: ["EN"] },
+  { id: "p-5", name: "Daniel Miller", flag: "🇺🇸", photo: "/portraits/daniel-v2.jpg", userType: "foreigner", trustLevel: "verified", role: "buddy", bio: "여행 3주차 · 같이 다닐 사람 찾아요", bioEn: "3 weeks traveling · looking for travel buddies", langs: ["EN", "KO"] },
 ]
 
 /** Seeded demo chat room (with the 한강 치맥 host). */

@@ -170,7 +170,7 @@ export function KPassCard({
 
         <div className="mt-5 grid grid-cols-2 gap-y-3 text-[12px]">
           <Field label={t("pass.stayPeriod")} value={localizeStayPeriod(capsule.stayPeriod, lang)} />
-          <Field label={t("pass.paymentLimit")} value={formatManwon(capsule.paymentLimitKRW)} />
+          <Field label={t("pass.paymentLimit")} value={lang === "ko" ? formatManwon(capsule.paymentLimitKRW) : `₩${capsule.paymentLimitKRW.toLocaleString("en-US")}`} />
           <Field label={t("pass.status")} value={capsule.status === "active" ? t("pass.statusActive") : capsule.status} className="capitalize" />
           <Field label={t("pass.validUntil")} value={formatPassDate(capsule.expiresAt)} />
         </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ChevronRight, CreditCard, ShieldCheck, Bell, HelpCircle, LogOut, BadgeCheck } from "lucide-react"
@@ -18,13 +19,19 @@ const MENU = [
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { session, transactions, vouchers, reset } = useApp()
+  const { session, transactions, vouchers, reset, hydrated } = useApp()
   const { t, lang } = useLang()
   const { capsule, identity } = session
 
   const name = capsule?.holderName ?? identity?.displayName ?? t("home.guest")
-  const spent = transactions.filter((tx) => tx.amountKRW < 0).reduce((a, tx) => a + Math.abs(tx.amountKRW), 0)
+  const spent = Math.max(0, transactions.filter((tx) => tx.category !== "topup").reduce((sum, tx) => sum - tx.amountKRW, 0))
   const saved = vouchers.filter((voucher) => voucher.status === "redeemed").reduce((sum, voucher) => sum + voucher.valueKRW, 0)
+
+  useEffect(() => {
+    if (hydrated && !session.onboarded) router.replace("/onboarding")
+  }, [hydrated, router, session.onboarded])
+
+  if (!hydrated || !session.onboarded) return null
 
   const stats = [
     { label: t("profile.spent"), value: formatKRW(spent) },
@@ -44,14 +51,15 @@ export default function ProfilePage() {
       <div className="space-y-8 px-6 pt-2">
         <div>
           <div className="flex items-center gap-3">
-            <img src={identity?.photoUrl ?? "/portraits/peter.jpg"} alt={name} className="h-14 w-14 rounded-full object-cover ring-1 ring-border" />
+            <img src={identity?.photoUrl ?? "/abstract-profile.png"} alt={name} className="h-14 w-14 rounded-full object-cover ring-1 ring-border" />
             <div className="min-w-0 flex-1">
               <h2 className="font-display break-words text-[23px] font-semibold leading-tight text-foreground">{name}</h2>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success">
+                {identity?.verified && <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-success">
                   <BadgeCheck className="h-3.5 w-3.5" /> {lang === "ko" ? "신원 확인 완료" : "Identity checked"}
-                </span>
+                </span>}
               </div>
+              {identity && <p className="mt-1 text-[12px] text-muted-foreground">{identity.nationalityFlag} {identity.nationality} · {identity.method === "mobile-id" ? (lang === "ko" ? "모바일 신분증 확인" : "Mobile ID") : identity.method === "foreigner-id" ? (lang === "ko" ? "외국인등록 확인" : "Residence ID") : (lang === "ko" ? "여권 확인" : "Passport check")}</p>}
             </div>
           </div>
 

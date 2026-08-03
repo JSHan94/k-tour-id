@@ -264,9 +264,9 @@ export const PERSONA_BALANCES: Record<UserType, number> = {
 
 export function demoSessionForUserType(userType: UserType): Session {
   const identityByType: Record<UserType, Identity> = {
-    foreigner: { method: "passport-did", displayName: "Peter Parker", nationality: "United States", nationalityFlag: "🇺🇸", photoUrl: "/portraits/peter.jpg", verified: true, did: "did:omn:z6Mk-demo-visitor" },
-    "long-term": { method: "foreigner-id", displayName: "Nguyen Van A", nationality: "Viet Nam", nationalityFlag: "🇻🇳", photoUrl: "/portraits/nguyen.jpg", verified: true, did: "did:omn:z6Mk-demo-resident" },
-    korean: { method: "mobile-id", displayName: "김민준", nationality: "Republic of Korea", nationalityFlag: "🇰🇷", photoUrl: "/portraits/minjun.jpg", verified: true, did: "did:omn:z6Mk-demo-domestic" },
+    foreigner: { method: "passport-did", displayName: "Daniel Miller", nationality: "United States", nationalityFlag: "🇺🇸", photoUrl: "/portraits/daniel-v2.jpg", verified: true, did: "did:omn:z6Mk-demo-visitor" },
+    "long-term": { method: "foreigner-id", displayName: "Nguyen Van An", nationality: "Viet Nam", nationalityFlag: "🇻🇳", photoUrl: "/portraits/nguyen-v2.jpg", verified: true, did: "did:omn:z6Mk-demo-resident" },
+    korean: { method: "mobile-id", displayName: "김민준", nationality: "Republic of Korea", nationalityFlag: "🇰🇷", photoUrl: "/portraits/minjun-v2.jpg", verified: true, did: "did:omn:z6Mk-demo-domestic" },
   }
   const identity = identityByType[userType]
   const capsule: KPassCapsule = {
@@ -278,7 +278,7 @@ export function demoSessionForUserType(userType: UserType): Session {
     expiresAt: userType === "long-term" ? "2027-08-01T09:00:00+09:00" : userType === "korean" ? "2026-09-01T09:00:00+09:00" : "2026-10-30T09:00:00+09:00",
     stayPeriod: userType === "long-term" ? "Resident service cycle · 12 months" : userType === "korean" ? "Domestic trip · 30 days" : "Visitor service window · 90 days",
     paymentLimitKRW: userType === "long-term" ? 2_000_000 : 5_000_000,
-    trustLevel: userType === "korean" ? "premium" : "verified",
+    trustLevel: "verified",
     status: "active",
     issuer: "K-Tour ID",
     credentialType: "KTourServiceCredential",

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Utensils, Landmark, Languages, Dices, BadgeCheck, MessageCircle, ChevronRight } from "lucide-react"
 import { PhoneFrame, LangToggle } from "@/components/app/shell"
@@ -10,6 +10,7 @@ import { formatWon } from "@/lib/format"
 import { ACTIVITIES, PEERS } from "@/lib/mock-data"
 import type { Activity, ActivityCategory, Peer } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { useApp } from "@/lib/store/app-provider"
 
 const CAT_ICON: Record<ActivityCategory, React.ComponentType<{ className?: string }>> = {
   food: Utensils,
@@ -29,8 +30,19 @@ function VerifiedBadge() {
 
 export default function ConnectPage() {
   const router = useRouter()
+  const { session, hydrated } = useApp()
   const { t } = useLang()
   const [tab, setTab] = useState<"activities" | "people">("activities")
+  const currentName = session.identity?.displayName
+  const currentPhoto = session.identity?.photoUrl
+  const activities = ACTIVITIES.filter((activity) => activity.host !== currentName)
+  const peers = PEERS.filter((peer) => peer.name !== currentName)
+
+  useEffect(() => {
+    if (hydrated && !session.onboarded) router.replace("/onboarding")
+  }, [hydrated, router, session.onboarded])
+
+  if (!hydrated || !session.onboarded) return null
 
   return (
     <PhoneFrame>
@@ -73,10 +85,10 @@ export default function ConnectPage() {
 
       <div className="space-y-3 px-5">
         {tab === "activities"
-          ? ACTIVITIES.map((a) => (
-              <ActivityCard key={a.id} a={a} onOpen={() => router.push(`/connect/chat?with=${encodeURIComponent(a.host)}`)} />
+          ? activities.map((a) => (
+              <ActivityCard key={a.id} a={a} currentPhoto={currentPhoto} onOpen={() => router.push(`/connect/chat?with=${encodeURIComponent(a.host)}`)} />
             ))
-          : PEERS.map((p) => (
+          : peers.map((p) => (
               <PeerCard key={p.id} p={p} onOpen={() => router.push(`/connect/chat?with=${encodeURIComponent(p.name)}`)} />
             ))}
       </div>
@@ -84,7 +96,7 @@ export default function ConnectPage() {
   )
 }
 
-function ActivityCard({ a, onOpen }: { a: Activity; onOpen: () => void }) {
+function ActivityCard({ a, currentPhoto, onOpen }: { a: Activity; currentPhoto?: string; onOpen: () => void }) {
   const { t, lang } = useLang()
   const Icon = CAT_ICON[a.category]
   return (
@@ -109,7 +121,7 @@ function ActivityCard({ a, onOpen }: { a: Activity; onOpen: () => void }) {
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center">
           <div className="flex -space-x-2">
-            {a.participants.slice(0, 4).map((p, i) => (
+            {a.participants.filter((photo) => photo !== currentPhoto).slice(0, 4).map((p, i) => (
               <img key={i} src={p} alt="" className="h-6 w-6 rounded-full object-cover ring-2 ring-card" />
             ))}
           </div>

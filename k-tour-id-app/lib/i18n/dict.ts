@@ -18,7 +18,7 @@ export const dict: Record<Lang, Record<string, string>> = {
     "common.close": "닫기",
     "common.seeAll": "전체보기",
     "common.verifyOmnione": "OmniOne 체인에서 검증",
-    "common.issuedBy": "K-Tour ID에서 안전하게 준비하고 있어요",
+    "common.issuedBy": "K-Tour ID가 발급한 서비스 자격증명",
     // home
     "home.hello": "안녕하세요,",
     "home.guest": "게스트",
@@ -257,7 +257,7 @@ export const dict: Record<Lang, Record<string, string>> = {
     "common.close": "Close",
     "common.seeAll": "See all",
     "common.verifyOmnione": "Verify on OmniOne Chain",
-    "common.issuedBy": "Preparing your K-Tour ID securely",
+    "common.issuedBy": "Service credential issued by K-Tour ID",
     "home.hello": "Hello,",
     "home.guest": "Guest",
     "home.verifiedStrip.title": "Identity verified",

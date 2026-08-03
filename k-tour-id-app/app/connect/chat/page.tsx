@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Send, ShieldCheck, BadgeCheck, Receipt } from "lucide-react"
 import { PhoneFrame, PageHeader } from "@/components/app/shell"
 import { useApp } from "@/lib/store/app-provider"
@@ -13,11 +14,13 @@ const SPLIT_KRW = 18000
 const SPLIT_MERCHANT = "한강 치맥 (1/n)"
 
 export default function ConnectChatPage() {
-  const { pay, transactions } = useApp()
+  const router = useRouter()
+  const { pay, transactions, session, hydrated } = useApp()
   const { t, lang } = useLang()
   const [title, setTitle] = useState("김민준")
   const [rich, setRich] = useState(true)
-  const [hostPhoto, setHostPhoto] = useState("/portraits/minjun.jpg")
+  const [hostPhoto, setHostPhoto] = useState("/portraits/minjun-v2.jpg")
+  const [selfTarget, setSelfTarget] = useState(false)
   const [messages, setMessages] = useState<ConnectMessage[]>(CONNECT_MESSAGES)
   const [input, setInput] = useState("")
   // derive paid-state from the persisted ledger so a refresh can't double-charge
@@ -28,9 +31,18 @@ export default function ConnectChatPage() {
   const touched = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    if (hydrated && !session.onboarded) router.replace("/onboarding")
+  }, [hydrated, router, session.onboarded])
+
   // entry context: match the avatar + thread to whoever was tapped (?with=)
   useEffect(() => {
     const w = new URLSearchParams(window.location.search).get("with")
+    if (w && w === session.identity?.displayName) {
+      setSelfTarget(true)
+      router.replace("/connect")
+      return
+    }
     const who =
       PEERS.find((p) => p.name === w) ??
       ACTIVITIES.map((a) => ({ name: a.host, photo: a.hostPhoto })).find((a) => a.name === w)
@@ -47,7 +59,7 @@ export default function ConnectChatPage() {
         ])
       }
     }
-  }, [lang])
+  }, [lang, router, session.identity?.displayName])
 
   useEffect(() => {
     requestAnimationFrame(() => endRef.current?.scrollIntoView({ behavior: "smooth" }))
@@ -72,12 +84,20 @@ export default function ConnectChatPage() {
   const executeSplit = async () => {
     if (splitState !== "confirming" || splitBusy.current) return
     splitBusy.current = true
-    setSplitState("done")
     touched.current = true
+    const paid = await pay(SPLIT_MERCHANT, SPLIT_KRW, "delivery")
+    if (!paid) {
+      setSplitState("idle")
+      splitBusy.current = false
+      push({ fromMe: false, text: lang === "ko" ? "잔액이 부족해요. 여행 잔액을 충전한 뒤 다시 시도해 주세요." : "Your balance is too low. Add funds and try again." })
+      return
+    }
+    setSplitState("done")
     push({ fromMe: true, text: lang === "ko" ? `같이 결제 ${formatWon(SPLIT_KRW)} 완료 ✓` : `Split pay ₩${SPLIT_KRW.toLocaleString("en-US")} done ✓` })
-    await pay(SPLIT_MERCHANT, SPLIT_KRW, "delivery")
     setTimeout(() => push({ fromMe: false, text: lang === "ko" ? "확인했어요! 결제 영수증도 저장됐어요 🙆" : "Got it — your payment receipt is saved 🙆" }), 700)
   }
+
+  if (!hydrated || !session.onboarded || selfTarget) return null
 
   return (
     <PhoneFrame>

@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ChevronDown, Gift, RefreshCcw, RotateCcw, ShieldCheck } from "lucide-react"
 import { PhoneFrame, PageHeader } from "@/components/app/shell"
 import { useLang } from "@/lib/i18n/lang-provider"
+import { useApp } from "@/lib/store/app-provider"
 
 const FAQS = [
   {
@@ -51,8 +52,10 @@ const FAQS = [
 
 export default function HelpPage() {
   const { lang } = useLang()
+  const { orders } = useApp()
   const ko = lang === "ko"
   const [back, setBack] = useState("/profile")
+  const recentOrderHref = orders[0] ? `/orders/${orders[0].id}` : "/wallet"
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("from") === "receipt") setBack("/benefits")
@@ -79,7 +82,7 @@ export default function HelpPage() {
               </summary>
               <div className="border-t border-border px-4 pb-4 pt-3">
                 <p className="text-[13px] leading-relaxed text-muted-foreground">{ko ? bodyKo : bodyEn}</p>
-                <Link href={href} className="pressable mt-3 inline-flex min-h-11 items-center rounded-xl bg-surface-2 px-3 text-[13px] font-bold text-primary ring-1 ring-border">
+                <Link href={href === "/benefits" ? recentOrderHref : href} className="pressable mt-3 inline-flex min-h-11 items-center rounded-xl bg-surface-2 px-3 text-[13px] font-bold text-primary ring-1 ring-border">
                   {ko ? ctaKo : ctaEn}
                 </Link>
               </div>

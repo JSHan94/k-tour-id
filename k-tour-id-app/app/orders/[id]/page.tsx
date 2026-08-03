@@ -10,6 +10,7 @@ import { useLang } from "@/lib/i18n/lang-provider"
 import type { CommerceOrder } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { instantPassState } from "@/lib/commerce-policy"
+import { QRCode } from "@/components/qr-code"
 
 export default function OrderReceiptPage() {
   const params = useParams<{ id: string }>()
@@ -115,6 +116,10 @@ export default function OrderReceiptPage() {
 function FulfilmentCard({ order, ko }: { order: CommerceOrder; ko: boolean }) {
   const reached = Date.now() >= new Date(order.activationAt).getTime()
   const passState = instantPassState(order)
+  const entryCode = `KT-${order.id.slice(-6).toUpperCase()}`
+  if (order.fulfilment === "booking") {
+    return <section className="mt-8 rounded-[24px] bg-ink p-5 text-white"><div className="flex items-center justify-between"><span className="text-[11px] font-semibold tracking-[0.12em] text-white/55">MOBILE TICKET · DEMO</span><QrCode className="h-6 w-6 text-gold" /></div><div className="mt-5 flex items-center gap-5"><QRCode value={`k-tour-id://admit/${order.id}`} size={96} ariaLabel={ko ? "데모 입장 코드" : "Demo admission code"} className="shrink-0 border-0" /><div className="min-w-0"><p className="font-display text-[20px] font-semibold">{ko ? order.title : order.titleEn}</p><p className="mt-2 text-[12px] text-white/58">{ko ? "현장에서 이 데모 코드를 제시하세요" : "Present this demo code at admission"}</p><p className="font-mono mt-2 text-[13px] font-semibold tracking-[0.08em] text-gold">{entryCode}</p></div></div><div className="mt-5 border-t border-white/12 pt-4"><p className="text-[12px] text-white/62">{ko ? order.optionLabel : order.optionLabelEn}</p></div></section>
+  }
   const meta = order.fulfilment === "delivery"
     ? { label: reached ? "DELIVERED · DEMO" : "PREPARING DELIVERY · DEMO", Icon: PackageCheck, detail: order.deliveryAddress ?? (ko ? "주소 확인 필요" : "Address required") }
     : order.fulfilment === "instant"

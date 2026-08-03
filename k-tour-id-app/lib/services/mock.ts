@@ -79,7 +79,7 @@ export const mockIdentityService: IdentityService = {
     await delay(1400)
     const nat = NATIONALITY[userType]
     const displayName =
-      userType === "korean" ? "김민준" : userType === "long-term" ? "Nguyen Van A" : "Peter Parker"
+      userType === "korean" ? "김민준" : userType === "long-term" ? "Nguyen Van An" : "Daniel Miller"
     return {
       method,
       displayName,
@@ -87,10 +87,10 @@ export const mockIdentityService: IdentityService = {
       nationalityFlag: nat.flag,
       photoUrl:
         userType === "korean"
-          ? "/portraits/minjun.jpg"
+          ? "/portraits/minjun-v2.jpg"
           : userType === "long-term"
-            ? "/portraits/nguyen.jpg"
-            : "/portraits/peter.jpg",
+            ? "/portraits/nguyen-v2.jpg"
+            : "/portraits/daniel-v2.jpg",
       verified: true,
       did: fakeDid(`${method}:${displayName}`),
     }
@@ -122,7 +122,7 @@ export const mockCapsuleService: CapsuleService = {
           ? "Resident service cycle · 12 months"
           : "Visitor service window · 90 days",
       paymentLimitKRW: userType === "long-term" ? 2_000_000 : 5_000_000,
-      trustLevel: userType === "korean" ? "premium" : "verified",
+      trustLevel: "verified",
       status: "active",
       issuer: "K-Tour ID",
       credentialType: "KTourServiceCredential",

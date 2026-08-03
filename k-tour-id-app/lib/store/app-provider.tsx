@@ -56,14 +56,14 @@ interface AppContextValue {
   hydrated: boolean
   // onboarding
   reset: () => void
-  /** load the populated demo identity (Peter Parker) — presenter "skip the ceremony" path */
+  /** load the populated demo identity (Daniel Miller) — presenter "skip the ceremony" path */
   loadDemoAccount: () => void
   loadDemoPersona: (userType: UserType, balanceKRW?: number) => void
   verifyIdentity: (userType: UserType, method: IdentityMethod) => Promise<Identity>
   issueCapsule: (identity: Identity, userType: UserType) => Promise<KPassCapsule>
   // wallet
   topUp: (amountKRW: number) => Promise<void>
-  pay: (merchant: string, amountKRW: number, category: Transaction["category"]) => Promise<void>
+  pay: (merchant: string, amountKRW: number, category: Transaction["category"]) => Promise<boolean>
   purchaseServiceItem: (input: { itemId: string; optionId: string; useBenefit: boolean; deliveryAddress?: string }) => Promise<OperationResult<CommerceOrder>>
   refundCommerceOrder: (orderId: string) => Promise<boolean>
   prepareDemoPurchase: (itemId: string, optionId: string) => void
@@ -299,7 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const pay = useCallback(
     async (merchant: string, amountKRW: number, category: Transaction["category"]) => {
       // never confirm a spend the wallet can't fund (no ghost-spend / phantom chain event)
-      if (Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) return
+      if (Math.abs(amountKRW) > sessionRef.current.wallet.balanceKRW) return false
       const evt = await chainService.log(
         "PaymentAuthorized",
         `Payment of ₩${amountKRW.toLocaleString()} to ${merchant}`,
@@ -333,6 +333,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         icon: "check",
         iconBg: "#e7ede4",
       }, ...items])
+      return true
     },
     [],
   )

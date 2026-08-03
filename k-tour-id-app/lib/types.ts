@@ -12,7 +12,7 @@ export interface Identity {
   displayName: string
   nationality: string
   nationalityFlag: string
-  /** portrait lifted from the ID, confirmed by the user, carried onto the K-Pass */
+  /** User-approved profile portrait; synthetic assets are used only in this demo. */
   photoUrl?: string
   verified: boolean
   /** Open DID identifier (did:omn:...) */
