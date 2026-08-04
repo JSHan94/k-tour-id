@@ -71,6 +71,7 @@ export type ChainEventType =
   | "PresentationVerified"
   | "BenefitApplied"
   | "PaymentAuthorized"
+  | "PaymentCaptured"
   | "PaymentRefunded"
   | "VoucherIssued"
   | "VoucherRedeemed"

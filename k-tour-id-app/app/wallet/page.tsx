@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowRight,
   Bell,
+  Clock3,
   QrCode,
   ArrowDownLeft,
   Gift,
@@ -41,7 +43,11 @@ import {
   credentialDaysRemaining,
   isCredentialUsable,
 } from "@/lib/credential-status";
-import { useExternalServiceOrders } from "@/lib/external-service-orders";
+import {
+  effectiveExternalOrderStatus,
+  useExternalServiceOrders,
+} from "@/lib/external-service-orders";
+import { flowForService } from "@/lib/service-flow";
 
 const DEMO_PAY: PayItem = {
   merchant: "GS25 Convenience",
@@ -174,15 +180,25 @@ export default function WalletPage() {
       amount: `${order.status === "refunded" ? "+" : ""}₩${(order.status === "refunded" ? (order.refundedKRW ?? order.paidKRW) + (order.voucherFunding === "user-converted" ? order.discountKRW : 0) : order.paidKRW).toLocaleString()}`,
       timestamp: new Date(order.paidAt).getTime(),
     })),
-    ...externalOrders.map((order) => ({
-      key: `service-${order.id}`,
-      href: `/services/orders/${order.id}`,
-      title: lang === "ko" ? order.title : order.titleEn,
-      detail: `${order.provider} · ${externalStatusLabel(order.status, lang === "ko")}`,
-      amount: `${order.status === "refunded" ? "+" : ""}₩${order.paidKRW.toLocaleString()}`,
-      timestamp: new Date(order.statusUpdatedAt ?? order.createdAt).getTime(),
-    })),
+    ...externalOrders.map((order) => {
+      const steps = flowForService(order.serviceId)?.fulfilment.length ?? 1;
+      const effectiveStatus = effectiveExternalOrderStatus(order, steps);
+      return {
+        key: `service-${order.id}`,
+        href: `/services/orders/${order.id}`,
+        title: lang === "ko" ? order.title : order.titleEn,
+        detail: `${order.provider} · ${externalStatusLabel(effectiveStatus, lang === "ko")}`,
+        amount: `${["refunded", "partially-refunded"].includes(order.status) ? "+" : ""}₩${(["refunded", "partially-refunded"].includes(order.status) ? (order.refundedKRW ?? order.paidKRW) : order.paidKRW).toLocaleString()}`,
+        timestamp: new Date(order.statusUpdatedAt ?? order.createdAt).getTime(),
+      };
+    }),
   ].sort((a, b) => b.timestamp - a.timestamp);
+  const activeExternalOrder = externalOrders.find((order) => {
+    const steps = flowForService(order.serviceId)?.fulfilment.length ?? 1;
+    return ["pending", "confirmed", "refund-pending"].includes(
+      effectiveExternalOrderStatus(order, steps),
+    );
+  });
 
   const actions = [
     {
@@ -255,6 +271,42 @@ export default function WalletPage() {
             ))}
           </div>
         </WalletCard>
+
+        {activeExternalOrder && (
+          <section>
+            <SectionTitle>
+              {lang === "ko" ? "진행 중인 서비스" : "Active service"}
+            </SectionTitle>
+            <Link
+              href={`/services/orders/${activeExternalOrder.id}?from=wallet`}
+              className="pressable flex min-h-[96px] items-center gap-4 rounded-[20px] bg-ink p-4 text-white"
+            >
+              <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-white/10">
+                <Clock3 className="h-5 w-5 text-gold" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-semibold text-white/55">
+                  {activeExternalOrder.provider} ·{" "}
+                  {externalStatusLabel(
+                    activeExternalOrder.status,
+                    lang === "ko",
+                  )}
+                </span>
+                <strong className="mt-1 block truncate text-[14px]">
+                  {lang === "ko"
+                    ? activeExternalOrder.title
+                    : activeExternalOrder.titleEn}
+                </strong>
+                <span className="mt-1 block text-[12px] text-white/70">
+                  {lang === "ko"
+                    ? "예상 상태와 도착 흐름을 확인하세요"
+                    : "Check the expected status and arrival flow"}
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 flex-shrink-0 text-white/65" />
+            </Link>
+          </section>
+        )}
 
         <section>
           <SectionTitle>
@@ -529,6 +581,8 @@ function externalStatusLabel(
   if (status === "cancelled") return ko ? "취소" : "Cancelled";
   if (status === "refund-pending")
     return ko ? "환불 요청 중" : "Refund pending";
+  if (status === "partially-refunded")
+    return ko ? "부분 환불 완료" : "Partially refunded";
   if (status === "refunded") return ko ? "환불 완료" : "Refunded";
   return ko ? "연결 실패" : "Connection failed";
 }

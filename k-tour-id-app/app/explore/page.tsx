@@ -29,7 +29,11 @@ import {
   type CommercialService,
 } from "@/lib/commercial-services";
 import { isCredentialUsable } from "@/lib/credential-status";
-import { useExternalServiceOrders } from "@/lib/external-service-orders";
+import {
+  effectiveExternalOrderStatus,
+  effectiveFulfilmentStep,
+  useExternalServiceOrders,
+} from "@/lib/external-service-orders";
 import { useLang } from "@/lib/i18n/lang-provider";
 import {
   distanceKm,
@@ -169,6 +173,40 @@ export default function ExplorePage() {
 
   if (!session.onboarded) return null;
   const activeIntent = filter === "all" ? null : CORE_INTENTS[filter];
+  const activeOrder = externalOrders.find((order) => {
+    const steps = flowForService(order.serviceId)?.fulfilment.length ?? 1;
+    return ["pending", "confirmed", "refund-pending"].includes(
+      effectiveExternalOrderStatus(order, steps),
+    );
+  });
+  const activeOrderFlow = activeOrder
+    ? flowForService(activeOrder.serviceId)
+    : undefined;
+  const activeOrderStatus = activeOrder
+    ? activeOrder.status === "confirmed"
+      ? activeOrder.configuration?.kind === "transit-pass"
+        ? Date.now() <
+          new Date(activeOrder.configuration.activationAt).getTime()
+          ? ko
+            ? `${activeOrder.configuration.activationKo} 예정`
+            : `${activeOrder.configuration.activationEn} · scheduled`
+          : ko
+            ? "교통패스 이용 중"
+            : "Transit pass active"
+        : activeOrderFlow?.fulfilment[
+            effectiveFulfilmentStep(
+              activeOrder,
+              activeOrderFlow.fulfilment.length,
+            )
+          ]?.[lang] ?? (ko ? "진행 중" : "In progress")
+      : activeOrder.status === "refund-pending"
+        ? ko
+          ? "환불 확인 중"
+          : "Refund pending"
+        : ko
+          ? "제공자 확인 중"
+          : "Provider checking"
+    : "";
 
   const chooseIntent = (intent: CoreIntent) => {
     setFilter(intent);
@@ -295,6 +333,29 @@ export default function ExplorePage() {
       </header>
 
       <main className="px-6 pb-8">
+        {activeOrder && (
+          <Link
+            href={`/services/orders/${activeOrder.id}?from=explore`}
+            className="pressable mb-5 flex min-h-[88px] items-center gap-4 rounded-[20px] bg-ink p-4 text-white"
+          >
+            <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-white/10">
+              <Clock3 className="h-5 w-5 text-gold" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[11px] font-semibold text-white/55">
+                {ko ? "연동 상태 미리보기" : "STATUS PREVIEW"} ·{" "}
+                {activeOrder.provider}
+              </span>
+              <strong className="mt-1 block truncate text-[14px]">
+                {ko ? activeOrder.title : activeOrder.titleEn}
+              </strong>
+              <span className="mt-1 block text-[12px] text-white/70">
+                {activeOrderStatus}
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 flex-shrink-0 text-white/65" />
+          </Link>
+        )}
         <section className="border-t border-foreground/10 pt-6">
           <div className="flex items-end justify-between gap-4">
             <div>

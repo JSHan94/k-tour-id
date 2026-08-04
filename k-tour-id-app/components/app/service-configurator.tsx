@@ -17,7 +17,6 @@ const PICKUP_TIMES = [
 export function ServiceConfigurator({
   flow,
   lang,
-  locationLabel,
   onChange,
 }: {
   serviceId: string;
@@ -28,13 +27,10 @@ export function ServiceConfigurator({
 }) {
   const ko = lang === "ko";
   const [quantity, setQuantity] = useState(1);
-  const [address, setAddress] = useState(locationLabel);
   const [pickupTimeIndex, setPickupTimeIndex] = useState(1);
 
   useEffect(() => {
-    if (flow.intent === "food")
-      onChange({ kind: "food-delivery", address, quantity });
-    else if (flow.intent === "shopping") {
+    if (flow.intent === "shopping") {
       const pickupTime = PICKUP_TIMES[pickupTimeIndex] ?? PICKUP_TIMES[1];
       onChange({
         kind: "store-pickup",
@@ -43,57 +39,7 @@ export function ServiceConfigurator({
         quantity,
       });
     } else onChange(null);
-  }, [address, flow.intent, onChange, pickupTimeIndex, quantity]);
-
-  if (flow.intent === "food") {
-    const invalid = address.trim().length < 4;
-    return (
-      <section className="mt-6 rounded-[20px] bg-surface-2 p-5 ring-1 ring-border">
-        <p className="text-[12px] font-semibold text-primary">
-          {ko ? "배달 상세" : "Delivery details"}
-        </p>
-        <label
-          className="mt-4 block text-[12px] font-semibold"
-          htmlFor="delivery-address"
-        >
-          {ko ? "받는 주소" : "Delivery address"}
-        </label>
-        <input
-          id="delivery-address"
-          required
-          aria-invalid={invalid}
-          value={address}
-          onChange={(event) => setAddress(event.target.value)}
-          className="mt-2 min-h-12 w-full rounded-[12px] bg-card px-3 text-[13px] ring-1 ring-border"
-        />
-        {invalid && (
-          <p
-            role="alert"
-            className="mt-2 text-[11px] font-semibold text-destructive"
-          >
-            {ko ? "받는 주소를 입력해 주세요." : "Enter a delivery address."}
-          </p>
-        )}
-        <div className="mt-4 flex items-center justify-between border-t border-foreground/10 pt-4">
-          <div>
-            <p className="text-[13px] font-semibold">
-              {ko ? "수량" : "Quantity"}
-            </p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {ko
-                ? "선택한 수량이 견적에 반영돼요"
-                : "Quantity updates your quote"}
-            </p>
-          </div>
-          <QuantityControl
-            value={quantity}
-            onChange={setQuantity}
-            label={ko ? "메뉴 수량" : "Menu quantity"}
-          />
-        </div>
-      </section>
-    );
-  }
+  }, [flow.intent, onChange, pickupTimeIndex, quantity]);
 
   if (flow.intent === "shopping") {
     return (

@@ -11,6 +11,7 @@ export type ExternalOrderStatus =
   | "cancelled"
   | "failed"
   | "refund-pending"
+  | "partially-refunded"
   | "refunded";
 
 export interface ExternalServiceOrder {
@@ -24,6 +25,8 @@ export interface ExternalServiceOrder {
   category: CommercialCategory;
   status: ExternalOrderStatus;
   integrationMode: "simulated";
+  paymentStatus?: "not-started" | "captured" | "refunded";
+  providerStatus?: "not-requested" | "pending" | "accepted" | "rejected" | "unknown";
   benefitId: string;
   benefitFunding: "provider" | "tourism-campaign";
   grossKRW: number;
@@ -39,11 +42,21 @@ export interface ExternalServiceOrder {
   quoteExpiresAt: string;
   fulfilmentStep: number;
   operationId: string;
-  executionState: "user-returned" | "provider-confirmed" | "status-unknown";
+  executionState:
+    | "user-returned"
+    | "provider-confirmed"
+    | "status-unknown"
+    | "reference-simulated";
   configuration: ServiceConfiguration | null;
   refundedKRW?: number;
   refundedAt?: string;
   refundReference?: string;
+  refundRequestedKRW?: number;
+  refundReason?: "cancel" | "missing-item" | "service-issue";
+  refundQuoteId?: string;
+  refundQuoteExpiresAt?: string;
+  refundProviderStatus?: "pending" | "approved" | "rejected";
+  refundReturnStatus?: "confirmed" | "completed";
 }
 
 const prefix = "k-tour-id:external-orders:v1:";
@@ -113,4 +126,48 @@ export function useExternalServiceOrders(did: string) {
     };
   }, [did]);
   return orders;
+}
+
+export function externalPassPhase(
+  order: ExternalServiceOrder,
+  now = Date.now(),
+): "scheduled" | "active" | "expired" | null {
+  if (order.configuration?.kind !== "transit-pass") return null;
+  const activationAt = new Date(order.configuration.activationAt).getTime();
+  const expiresAt = new Date(order.configuration.expiresAt).getTime();
+  if (now < activationAt) return "scheduled";
+  if (now >= expiresAt) return "expired";
+  return "active";
+}
+
+export function effectiveFulfilmentStep(
+  order: ExternalServiceOrder,
+  stepCount: number,
+  now = Date.now(),
+) {
+  const lastStep = Math.max(0, stepCount - 1);
+  const passPhase = externalPassPhase(order, now);
+  if (passPhase)
+    return passPhase === "scheduled" ? 1 : passPhase === "active" ? 2 : lastStep;
+  if (order.integrationMode === "simulated" && order.status === "confirmed") {
+    const startedAt = new Date(order.statusUpdatedAt || order.createdAt).getTime();
+    const elapsedSteps = Number.isFinite(startedAt)
+      ? Math.floor(Math.max(0, now - startedAt) / 4_800)
+      : 0;
+    return Math.min(lastStep, Math.max(order.fulfilmentStep ?? 0, elapsedSteps));
+  }
+  return Math.min(lastStep, order.fulfilmentStep ?? 0);
+}
+
+export function effectiveExternalOrderStatus(
+  order: ExternalServiceOrder,
+  stepCount: number,
+  now = Date.now(),
+): ExternalOrderStatus {
+  if (order.status !== "confirmed") return order.status;
+  const passPhase = externalPassPhase(order, now);
+  if (passPhase === "expired") return "completed";
+  if (!passPhase && effectiveFulfilmentStep(order, stepCount, now) >= stepCount - 1)
+    return "completed";
+  return order.status;
 }

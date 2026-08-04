@@ -613,7 +613,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         walletPayBusyRef.current = true;
         try {
           const evt = await chainService.log(
-            "PaymentAuthorized",
+            "PaymentCaptured",
             `Payment of ₩${amountKRW.toLocaleString()} to ${merchant}${operationId ? ` · operation ${operationId}` : ""}`,
           );
           setSession((s) => ({
@@ -637,7 +637,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               date: new Date().toISOString(),
               icon: "card",
               iconBg: "#ece6da",
-              chainEvent: "PaymentAuthorized",
+              chainEvent: "PaymentCaptured",
               txHash: evt.txHash,
             },
             ...t,
@@ -679,7 +679,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const amountKRW = Math.abs(input.amountKRW);
         if (amountKRW <= 0) return false;
         const ledgerOperationId = `external-refund:${input.operationId}`;
-        if (!claimLedgerOperation(ledgerOperationId)) return false;
+        if (!claimLedgerOperation(ledgerOperationId)) return true;
         let operationCompleted = false;
         try {
           const event = await chainService.log(

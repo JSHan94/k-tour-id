@@ -66,7 +66,48 @@ export interface ServiceFlowDefinition {
 }
 
 export type ServiceConfiguration =
-  | { kind: "food-delivery"; address: string; quantity: number }
+  | {
+      kind: "ride";
+      pickupKo: string;
+      pickupEn: string;
+      destinationKo: string;
+      destinationEn: string;
+      vehicleKo: string;
+      vehicleEn: string;
+      fareDeltaKRW: number;
+      luggage: number;
+      pickupVerification: "device" | "reference-checked" | "unchecked" | "unavailable";
+      pickupCheckId: string;
+    }
+  | {
+      kind: "transit-pass";
+      activationKo: string;
+      activationEn: string;
+      activationAt: string;
+      expiresAt: string;
+      durationDays: number;
+      fareDeltaKRW: number;
+    }
+  | {
+      kind: "food-delivery";
+      address: string;
+      deliveryMethodKo: string;
+      deliveryMethodEn: string;
+      deliverability: "available" | "unchecked" | "unavailable";
+      addressCheckId: string;
+      minimumOrderKRW: number;
+      items: Array<{
+        id: string;
+        nameKo: string;
+        nameEn: string;
+        optionId: string;
+        optionKo: string;
+        optionEn: string;
+        unitPriceKRW: number;
+        quantity: number;
+      }>;
+      deliveryFeeKRW: number;
+    }
   | {
       kind: "store-pickup";
       pickupTimeKo: string;
@@ -88,15 +129,61 @@ export function formatServiceConfiguration(
   lang: "ko" | "en",
 ) {
   if (!configuration) return "";
-  if (configuration.kind === "food-delivery")
-    return `${configuration.address} · ${configuration.quantity}${lang === "ko" ? "개" : " item(s)"}`;
+  if (configuration.kind === "ride") {
+    const pickup = lang === "ko" ? configuration.pickupKo : configuration.pickupEn;
+    const destination =
+      lang === "ko" ? configuration.destinationKo : configuration.destinationEn;
+    const vehicle = lang === "ko" ? configuration.vehicleKo : configuration.vehicleEn;
+    return `${pickup} → ${destination} · ${vehicle}`;
+  }
+  if (configuration.kind === "transit-pass")
+    return `${lang === "ko" ? configuration.activationKo : configuration.activationEn} · ${configuration.durationDays}${lang === "ko" ? "일권" : "-day pass"}`;
+  if (configuration.kind === "food-delivery") {
+    const quantity = configuration.items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const method =
+      lang === "ko"
+        ? configuration.deliveryMethodKo
+        : configuration.deliveryMethodEn;
+    return `${configuration.address} · ${method} · ${quantity} ${lang === "ko" ? "개" : quantity === 1 ? "item" : "items"}`;
+  }
   return `${lang === "ko" ? configuration.pickupTimeKo : configuration.pickupTimeEn} · ${configuration.quantity}${lang === "ko" ? "개" : " item(s)"}`;
 }
 
 export function configurationQuantity(
   configuration: ServiceConfiguration | null,
 ) {
+  if (configuration?.kind === "food-delivery")
+    return configuration.items.reduce((sum, item) => sum + item.quantity, 0);
+  if (
+    configuration?.kind === "ride" ||
+    configuration?.kind === "transit-pass"
+  )
+    return 1;
   return configuration?.quantity ?? 1;
+}
+
+export function configurationGrossKRW(
+  configuration: ServiceConfiguration | null,
+  fallbackKRW: number,
+) {
+  if (!configuration) return fallbackKRW;
+  if (configuration.kind === "ride")
+    return fallbackKRW + configuration.fareDeltaKRW;
+  if (configuration.kind === "transit-pass")
+    return fallbackKRW + configuration.fareDeltaKRW;
+  if (configuration.kind === "food-delivery") {
+    const itemsTotalKRW = configuration.items.reduce(
+      (sum, item) => sum + item.unitPriceKRW * item.quantity,
+      0,
+    );
+    return itemsTotalKRW > 0
+      ? itemsTotalKRW + configuration.deliveryFeeKRW
+      : fallbackKRW;
+  }
+  return fallbackKRW * configuration.quantity;
 }
 
 export const SERVICE_FLOWS: Record<string, ServiceFlowDefinition> = {

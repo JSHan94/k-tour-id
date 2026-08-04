@@ -43,7 +43,13 @@ export default function PartnerSettlementsPage() {
     session.identity?.did ?? "guest",
   );
   const connectedOrders = externalOrders.filter((order) =>
-    ["confirmed", "completed"].includes(order.status),
+    [
+      "confirmed",
+      "completed",
+      "refund-pending",
+      "partially-refunded",
+      "refunded",
+    ].includes(order.status),
   );
   const hasConnectedPayments = connectedOrders.length > 0;
   const connectedPayoutKRW = connectedOrders.reduce(
@@ -340,6 +346,10 @@ function ConnectedServicePayout({
   const ko = lang === "ko";
   const gross = orders.reduce((sum, order) => sum + order.grossKRW, 0);
   const paid = orders.reduce((sum, order) => sum + order.paidKRW, 0);
+  const refunds = orders.reduce(
+    (sum, order) => sum + (order.refundedKRW ?? 0),
+    0,
+  );
   const externalFunding = orders.reduce(
     (sum, order) =>
       sum +
@@ -385,6 +395,12 @@ function ConnectedServicePayout({
                     <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                       {order.id}
                     </p>
+                    {order.refundedKRW != null && order.refundedKRW > 0 && (
+                      <p className="mt-1 text-[11px] font-semibold text-primary">
+                        {ko ? "환불 조정" : "Refund adjustment"} −₩
+                        {order.refundedKRW.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                   <div className="text-left sm:text-right">
                     <p className="tabular text-[12px] font-bold">
@@ -413,6 +429,13 @@ function ConnectedServicePayout({
               label={ko ? "사용자 결제" : "Customer payment"}
               value={paid}
             />
+            {refunds > 0 && (
+              <MoneyRow
+                label={ko ? "환불 조정" : "Refund adjustments"}
+                value={refunds}
+                prefix="−"
+              />
+            )}
             {externalFunding > 0 && (
               <MoneyRow
                 label={ko ? "외부 캠페인 보전" : "External campaign funding"}
