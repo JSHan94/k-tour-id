@@ -1,6 +1,6 @@
 # K-Tour ID 발표·기술 Q&A
 
-이 문서는 현재 구현 상태에 맞춰 답하기 위한 크립시트다. `LIVE`, `SANDBOX`, `SIMULATED`는 데모 직전 [Integration Evidence](./DEVELOPER_HANDOFF.md#9-실행-증거-live--sandbox--simulated)에서 확인하고 실제 상태로 읽는다.
+이 문서는 현재 구현 상태에 맞춰 답하기 위한 크립시트다. `LIVE`, `SANDBOX`, `SIMULATED`는 데모 직전 루트 [개발 명세의 실행 증거 기준](../../docs/DEVELOPMENT_SPEC.md#f-100-실행-증거)과 앱의 Integration Evidence에서 확인하고 실제 상태로 읽는다.
 
 ## 20초 피치
 

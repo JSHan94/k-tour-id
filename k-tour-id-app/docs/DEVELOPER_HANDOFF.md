@@ -1,10 +1,13 @@
 # K-Tour ID 개발 핸드오프 명세
 
-상태: `v1.0`
+> **보관 문서 · v1.0**
+> 이 문서는 목업 초기의 기술 상세를 보존한다. 생산 개발의 기준은 루트 [개발 명세](../../docs/DEVELOPMENT_SPEC.md), [스코프 메모리](../../docs/PROJECT_SCOPE_MEMORY.md), [Sui 연동 브리프](../../docs/SUI_INTEGRATION_BRIEF.md), [요구사항 추적표](../../docs/REQUIREMENTS_TRACEABILITY.md)다. 충돌 시 루트 v2 문서를 따른다.
+
+상태: `v1.0 · superseded`
 대상: 제품·디자인·프론트엔드·백엔드·모바일·DID·결제·보안·QA 담당자
 목표: 해커톤 결선에서 `Mobile ID -> K-Tour VC -> 선택적 공개 VP -> 혜택 사용/정산 증거`가 실제로 닫히는 MVP를 구현한다.
 
-이 문서가 제품 범위와 기술 계약의 기준 문서다. 구현과 발표가 다를 경우 구현 상태를 낮춰 표시하며, 화면이나 발표 문구로 미구현 기능을 실제 연동처럼 표현하지 않는다.
+이 문서는 과거 설계 배경과 API 예시다. 제품 범위와 기술 계약은 루트 v2 문서를 따른다. 구현과 발표가 다를 경우 구현 상태를 낮춰 표시하며, 화면이나 발표 문구로 미구현 기능을 실제 연동처럼 표현하지 않는다.
 
 ## 0. 변하지 않는 사실과 용어
 
@@ -181,7 +184,7 @@ Operator
   Environment & integration health
 ```
 
-`Verified Connect`, 소셜 채팅, 1/n 결제는 P2 확장이다. P0 데모 내비게이션에서는 숨긴다.
+이 문서 작성 당시 `Verified Connect`와 1/n 결제는 P2였다. 현재 v2에서는 참여 확정자 전용 액티비티·그룹 채팅·안전 기능이 P1이며, 1/n 실결제는 결제·규제 설계 전까지 P2다.
 
 ### 4.2 공통 상태 규칙
 
@@ -817,7 +820,7 @@ queued -> submitted -> confirmed
 | `Recorded on OmniOne` 고정 | confirmed receipt, anchor pending, local simulation 분기 |
 | T-money/Baemin 등 Linked/partner 표현 | 계약 전 `연동 예시` 또는 제거 |
 | `/pass` 정보 전용 | Present/Scan, consent, VP result, renew/revoke 추가 |
-| `/connect`가 주요 내비게이션 | P2로 이동, P0 데모에서 숨김 |
+| `/connect`가 주요 내비게이션 | v2에서는 참여 확정형 친구 만들기 기능으로 P1 유지; 공개 DM·소개팅·성별 매칭은 제외 |
 | 하나의 consent checkbox | 목적·속성·보관기간별 동의와 전문/철회 |
 | 고정 2026-06-24 시각 | 서버 시각과 provider receipt 시각 사용 |
 | architecture/발표에서 CX가 여권도 처리 | CX와 Passport eKYC를 명확히 분리 |

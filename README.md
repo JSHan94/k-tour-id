@@ -2,7 +2,7 @@
 
 K-Tour ID is a privacy-preserving tourist trust wallet prototype for the 2026 Blockchain & AI Hackathon. It turns a verified identity source into a private travel-service credential, lets the holder present only the eligibility a merchant needs, then connects that proof to a benefit, payment, voucher lifecycle and partner settlement evidence.
 
-> This repository is currently a clickable mock. Every integration is labelled `LIVE`, `SANDBOX` or `SIMULATION`; the current credential, payment and chain receipts are simulations unless a screen explicitly says otherwise.
+> This repository is currently a clickable mock. Every integration is labelled `LIVE`, `SANDBOX` or `SIMULATED`; the current credential, payment and chain receipts are simulations unless a screen explicitly says otherwise.
 
 ## Live mock
 
@@ -70,12 +70,18 @@ OmniOne CX is the Mobile ID transport/verification layer. OpenDID is the VC, VP 
 
 ## Canonical specifications
 
-- [Complete developer handoff](./k-tour-id-app/docs/DEVELOPER_HANDOFF.md)
-- [Corrected architecture summary](./k-tour-id-app/docs/ARCHITECTURE.md)
+Phase 2 has started: the clickable mock remains the usability sample, while the production requirements live in the root `docs/` set.
+
+- [Project scope memory](./docs/PROJECT_SCOPE_MEMORY.md)
+- [Production development specification](./docs/DEVELOPMENT_SPEC.md)
+- [Requirements traceability](./docs/REQUIREMENTS_TRACEABILITY.md)
+- [Developer decisions required before implementation](./docs/DEVELOPER_DECISIONS_REQUIRED.md)
+- [Mandatory Sui integration brief](./docs/SUI_INTEGRATION_BRIEF.md)
+- [Current mock architecture summary](./k-tour-id-app/docs/ARCHITECTURE.md)
 - [Presenter and judge Q&A](./k-tour-id-app/docs/PRESENTER_QA.md)
 - [AI integration notes](./k-tour-id-app/docs/AI_INTEGRATION.md)
 
-The developer handoff is the source of truth for screens, states, APIs, chain event envelopes, privacy rules, idempotency, recovery, P0/P1/P2 backlog, acceptance criteria and the 90-second demo.
+The root development specification is the source of truth for production scope. The older app-level handoff is retained as a historical implementation draft and must not override the v2 scope.
 
 ## Run locally
 
@@ -93,5 +99,6 @@ The current UI uses Next.js 16, React 19, TypeScript and Tailwind CSS v4. Its vi
 ## Repository boundaries
 
 - `k-tour-id-app/` is the active K-Tour ID product mock.
+- `docs/` contains the canonical v2 product, development, Sui and traceability specifications.
 - `legacy-contracts/` contains earlier experimental contracts and is not part of the golden-path production architecture. It must not be deployed or presented as audited product code.
 - Brand logos in the mock are target-integration examples, not evidence of partnership.

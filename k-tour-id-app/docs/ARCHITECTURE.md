@@ -1,6 +1,6 @@
 # K-Tour ID 아키텍처 요약
 
-상세 구현 기준은 [DEVELOPER_HANDOFF.md](./DEVELOPER_HANDOFF.md)다. 이 문서는 발표·리뷰용 요약이며, 상세 문서와 충돌할 경우 상세 문서를 따른다.
+생산 구현 기준은 루트 [개발 명세](../../docs/DEVELOPMENT_SPEC.md)와 [Sui 연동 브리프](../../docs/SUI_INTEGRATION_BRIEF.md)다. 이 문서는 현재 목업의 발표·리뷰용 요약이며, 충돌할 경우 루트 v2 문서를 따른다.
 
 ## 1. 핵심 구조
 
@@ -92,6 +92,12 @@ sequenceDiagram
 | Holder / identity provider | VC, holder key, 필요 시 원본 신원 자료 | 앱 서버 로그로 개인키·원본 유출 |
 
 해시도 재식별 위험이 있으므로 PII를 직접 해시해 올리지 않는다. 먼저 비식별 이벤트를 만들고 그 payload를 canonicalize/hash한다.
+
+### Sui 추가 필수 레이어
+
+Sui는 OmniOne/OpenDID를 대체하지 않는 별도 해커톤 바운티 범위다. 개발자는 Move package를 Testnet/Mainnet에 배포하고 `zkLogin`, `PTB`, `Walrus`, `DeepBook` 중 2개 이상을 실제 사용자 흐름에 통합한다. 정확한 객체·권한·가스·온체인 경계는 ADR-SUI-001에서 개발자가 정의한다.
+
+권장 검토안은 사용자 친화적 Sui 계정에 `zkLogin`, 사용자 승인 후 AI decision/benefit execution을 한 transaction으로 묶는 `PTB`다. Walrus는 공개 가능하거나 안전하게 암호화된 비식별 provenance artifact가 필요할 때만 사용하고, DeepBook은 실제 liquidity/FX 요구가 있을 때만 사용한다. Sui/Walrus에는 PII, VC 원문, 여권·생체, 사람이 읽는 민감 결제 원문을 저장하지 않는다.
 
 ## 5. 상태와 신뢰성
 
