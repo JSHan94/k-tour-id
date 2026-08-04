@@ -100,7 +100,7 @@ export default function OnboardingPage() {
     const renew = params.get("mode") === "renew"
     const seeded = params.get("persona") as UserType | null
     const requestedReturn = params.get("returnTo")
-    if (requestedReturn && (requestedReturn.startsWith("/present") || requestedReturn.startsWith("/explore/") || requestedReturn.startsWith("/connect") || requestedReturn.startsWith("/journey"))) setReturnTo(requestedReturn)
+    if (requestedReturn && (requestedReturn.startsWith("/present") || requestedReturn.startsWith("/explore/") || requestedReturn.startsWith("/services/") || requestedReturn.startsWith("/connect") || requestedReturn.startsWith("/journey"))) setReturnTo(requestedReturn)
     if (!seededPersonaApplied.current && seeded && METHODS.some((item) => item.key === seeded)) {
       setSelected(seeded)
       seededPersonaApplied.current = true

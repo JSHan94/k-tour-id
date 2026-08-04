@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, BadgeCheck, CalendarDays, CarFront, ChevronRight, ShoppingBag, Sparkles, Store, Utensils, Wallet } from "lucide-react"
+import { ArrowRight, BadgeCheck, CalendarDays, CarFront, ChevronRight, ShoppingBag, Sparkles, Utensils, Wallet } from "lucide-react"
 import { EditorialFeature, ServiceRow } from "@/components/app/commerce"
 import { FirstRunGuide } from "@/components/app/first-run-guide"
 import { LocationControl } from "@/components/app/location-control"
@@ -73,14 +73,13 @@ export default function HomePage() {
         </section>
 
         <section className="mt-9">
-          <div className="flex items-end justify-between"><div><p className="text-[12px] font-semibold text-primary">{ko ? "한국 생활 바로가기" : "EVERYDAY KOREA"}</p><h2 className="font-display mt-1 text-[23px] font-semibold">{ko ? "지금 필요한 서비스" : "What do you need?"}</h2></div><Link href="/services" className="pressable inline-flex min-h-11 items-center gap-1 text-[12px] font-semibold text-muted-foreground">{ko ? "전체" : "All"}<ChevronRight className="h-4 w-4" /></Link></div>
-          <div className="mt-3 grid grid-cols-5 gap-1 border-y border-foreground/10 py-3">
+          <div className="flex items-end justify-between"><div><p className="text-[12px] font-semibold text-primary">{ko ? "한국 생활 바로가기" : "EVERYDAY KOREA"}</p><h2 className="font-display mt-1 text-[23px] font-semibold">{ko ? "지금 필요한 서비스" : "What do you need?"}</h2></div><Link href="/explore" className="pressable inline-flex min-h-11 items-center gap-1 text-[12px] font-semibold text-muted-foreground">{ko ? "전체" : "All"}<ChevronRight className="h-4 w-4" /></Link></div>
+          <div className="mt-3 grid grid-cols-4 gap-1 border-y border-foreground/10 py-3">
             {[
-              { href: "/services?category=mobility", label: ko ? "이동" : "Move", icon: CarFront },
-              { href: "/services?category=delivery", label: ko ? "배달" : "Food", icon: Utensils },
-              { href: "/services?category=shopping", label: ko ? "쇼핑" : "Shop", icon: ShoppingBag },
-              { href: "/explore?focus=experience", label: ko ? "예약" : "Book", icon: CalendarDays },
-              { href: "/services?category=convenience", label: ko ? "편의점" : "Daily", icon: Store },
+              { href: "/explore?focus=mobility", label: ko ? "교통" : "Move", icon: CarFront },
+              { href: "/explore?focus=food", label: ko ? "음식" : "Eat", icon: Utensils },
+              { href: "/explore?focus=shopping", label: ko ? "쇼핑·생활" : "Shop", icon: ShoppingBag },
+              { href: "/explore?focus=experience", label: ko ? "예약·체험" : "Experience", icon: CalendarDays },
             ].map(({ href, label, icon: Icon }) => <Link key={href} href={href} className="pressable flex min-h-[70px] flex-col items-center justify-center gap-2 rounded-[12px] text-[12px] font-medium text-muted-foreground hover:bg-secondary"><span className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground"><Icon className="h-[17px] w-[17px]" /></span>{label}</Link>)}
           </div>
         </section>

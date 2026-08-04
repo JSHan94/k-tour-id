@@ -21,7 +21,9 @@ export default function JourneyPage() {
   const { joinedActivityIds, ready: membershipsReady, isJoined } = useActivityMembership(session.identity?.did)
   const ko = lang === "ko"
   const credentialActive = isCredentialUsable(session.capsule)
-  const activity = useMemo(() => ACTIVITIES.find((item) => joinedActivityIds.includes(item.id)), [joinedActivityIds])
+  const joinedActivities = useMemo(() => ACTIVITIES.filter((item) => joinedActivityIds.includes(item.id)), [joinedActivityIds])
+  const [selectedActivityId, setSelectedActivityId] = useState("")
+  const activity = joinedActivities.find((item) => item.id === selectedActivityId) ?? joinedActivities[0]
   const storageKey = session.identity?.did && activity ? `${CHECKIN_PREFIX}:${encodeURIComponent(session.identity.did)}:${activity.id}` : null
   const [step, setStep] = useState<"ready" | "confirm" | "done">("ready")
 
@@ -84,6 +86,7 @@ export default function JourneyPage() {
     <PhoneFrame hideNav>
       <PageHeader title={ko ? "여행 기록" : "Journey"} back="/wallet" />
       <main className="safe-bottom px-6 pb-10">
+        {joinedActivities.length > 1 && <section className="no-scrollbar -mx-6 mb-5 overflow-x-auto px-6" aria-label={ko ? "내 액티비티 선택" : "Choose an activity"}><div className="flex gap-2">{joinedActivities.map((item) => <button key={item.id} type="button" aria-pressed={item.id === activity.id} onClick={() => setSelectedActivityId(item.id)} className={`pressable min-h-11 flex-shrink-0 rounded-full px-4 text-[12px] font-semibold ${item.id === activity.id ? "bg-ink text-white" : "bg-secondary text-muted-foreground"}`}>{ko ? item.title : item.titleEn ?? item.title}</button>)}</div></section>}
         <div className="relative overflow-hidden rounded-[28px] bg-ink text-white">
           <img src={activity.image} alt="" style={{ objectPosition: activity.imagePosition ?? "center" }} className="h-[230px] w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/15 to-transparent" />
