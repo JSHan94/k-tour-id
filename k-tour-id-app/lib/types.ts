@@ -376,6 +376,8 @@ export interface Activity {
   }
   time: string
   timeEn?: string
+  /** Languages participants can comfortably use in this activity. */
+  languages: string[]
   capacity: number
   joined: number
   participants: string[]

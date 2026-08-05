@@ -3,7 +3,7 @@
 import type React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BadgeCheck, Bell, Home, ChevronLeft, Compass, UsersRound } from "lucide-react"
+import { BadgeCheck, Bell, ChevronLeft, Map, Route } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { Seal } from "@/components/app/seal"
@@ -12,16 +12,18 @@ import { SealCopilot } from "@/components/app/seal-copilot"
 export function PhoneFrame({
   children,
   hideNav = false,
+  fullBleed = false,
   className,
 }: {
   children: React.ReactNode
   hideNav?: boolean
+  fullBleed?: boolean
   className?: string
 }) {
   return (
     <div className="paper-grain min-h-screen w-full bg-background flex justify-center">
       <div className="relative w-full max-w-[420px] min-h-screen bg-background md:shadow-[0_0_50px_rgba(25,24,22,0.08)] overflow-hidden">
-        <div className={cn("min-h-screen", hideNav ? "" : "pb-24", className)}>
+        <div className={cn(fullBleed ? "h-[100dvh] overflow-hidden" : "min-h-screen", hideNav || fullBleed ? "" : "pb-24", className)}>
           {children}
         </div>
         {!hideNav && <BottomNav />}
@@ -32,28 +34,25 @@ export function PhoneFrame({
 }
 
 const NAV_ITEMS = [
-  { href: "/", labelKey: "nav.home", icon: Home },
-  { href: "/explore", labelKey: "nav.explore", icon: Compass },
-  { href: "/connect", labelKey: "nav.connect", icon: UsersRound },
-  { href: "/wallet", labelKey: "nav.wallet", labelKo: "ID·지갑", labelEn: "ID · Wallet", icon: BadgeCheck },
+  { href: "/", labelKo: "지도", labelEn: "Map", icon: Map },
+  { href: "/journey", labelKo: "여정", labelEn: "Journey", icon: Route },
+  { href: "/wallet", labelKo: "ID·지갑", labelEn: "ID · Wallet", icon: BadgeCheck },
 ] as const
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { t, lang } = useLang()
+  const { lang } = useLang()
   return (
     <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-foreground/[0.07] bg-background/92 backdrop-blur-xl">
-      <div className="grid grid-cols-4 px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
+      <div className="grid grid-cols-3 px-6 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
         {NAV_ITEMS.map((item) => {
-          const { href, labelKey, icon: Icon } = item
-          const label = "labelKo" in item ? (lang === "ko" ? item.labelKo : item.labelEn) : t(labelKey)
+          const { href, icon: Icon } = item
+          const label = lang === "ko" ? item.labelKo : item.labelEn
           const active = href === "/"
-            ? pathname === "/"
+            ? pathname === "/" || pathname.startsWith("/explore") || pathname.startsWith("/services") || pathname === "/connect"
             : href === "/wallet"
-              ? pathname.startsWith("/wallet") || pathname.startsWith("/pass") || pathname.startsWith("/present")
-              : href === "/explore"
-                ? pathname.startsWith("/explore") || pathname.startsWith("/services")
-                : pathname.startsWith(href)
+              ? pathname.startsWith("/wallet") || pathname.startsWith("/pass") || pathname.startsWith("/present") || pathname.startsWith("/profile")
+              : pathname.startsWith("/journey") || pathname.startsWith("/orders") || pathname.startsWith("/connect/chat")
           return (
             <Link
               key={href}

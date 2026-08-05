@@ -265,6 +265,207 @@
   0%, 100% { top: 18%; opacity: 0.4; }
   50% { top: 80%; opacity: 1; }
 }
+
+/* Variant B — a contemporary travel atlas informed by Daedongyeojido's
+   connected terrain, route marks and modular paper sheets. The historic
+   grammar is an optional reading layer; the modern map remains the truth. */
+@layer components {
+  .atlas-map {
+    background-color: #e9e5d8;
+    background-image:
+      linear-gradient(28deg, transparent 47.5%, rgba(84, 92, 78, .13) 48%, rgba(84, 92, 78, .13) 48.4%, transparent 49%),
+      linear-gradient(118deg, transparent 47.5%, rgba(84, 92, 78, .10) 48%, rgba(84, 92, 78, .10) 48.35%, transparent 49%),
+      radial-gradient(circle at 72% 31%, rgba(255, 253, 246, .85), transparent 23%),
+      radial-gradient(circle at 25% 70%, rgba(195, 181, 144, .18), transparent 30%);
+    background-size: 96px 96px, 112px 112px, 100% 100%, 100% 100%;
+  }
+
+  .atlas-map::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(35, 34, 28, .09) .55px, transparent .55px);
+    background-size: 5px 5px;
+    opacity: .38;
+    mix-blend-mode: multiply;
+  }
+
+  .atlas-fold {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(62, 55, 41, .11), rgba(255,255,255,.22), transparent);
+  }
+  .atlas-fold-one { inset-block: 0; left: 34%; width: 8px; }
+  .atlas-fold-two { inset-inline: 0; top: 56%; height: 8px; transform: rotate(-1deg); background: linear-gradient(0deg, transparent, rgba(62, 55, 41, .10), rgba(255,255,255,.25), transparent); }
+
+  .atlas-river {
+    position: absolute;
+    z-index: 1;
+    left: -10%;
+    top: 55%;
+    width: 122%;
+    height: 42px;
+    border-block: 1px solid rgba(39, 83, 101, .36);
+    background: rgba(82, 139, 157, .17);
+    transform: rotate(-5deg) skewX(-22deg);
+    box-shadow: inset 0 10px 15px rgba(255,255,255,.18);
+  }
+  .atlas-river::before,
+  .atlas-river::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    height: 1px;
+    background: rgba(42, 90, 105, .22);
+  }
+  .atlas-river::before { top: 13px; }
+  .atlas-river::after { bottom: 11px; }
+  .atlas-river span {
+    position: absolute;
+    left: 57%;
+    top: 12px;
+    color: rgba(26, 65, 78, .58);
+    font: 700 9px/1 var(--font-sans);
+    letter-spacing: .16em;
+    transform: skewX(22deg);
+  }
+
+  .atlas-road {
+    position: absolute;
+    z-index: 1;
+    height: 0;
+    transform-origin: 0 50%;
+    border-top: 2px dotted rgba(78, 66, 46, .48);
+  }
+  .atlas-road-one { left: 5%; top: 46%; width: 87%; transform: rotate(11deg); }
+  .atlas-road-two { left: 22%; top: 78%; width: 73%; transform: rotate(-48deg); }
+  .atlas-road-three { left: 44%; top: 25%; width: 63%; transform: rotate(72deg); }
+
+  .atlas-ridge {
+    position: absolute;
+    z-index: 1;
+    width: 180px;
+    height: 62px;
+    pointer-events: none;
+    opacity: .42;
+    background:
+      radial-gradient(70% 85% at 12% 100%, transparent 50%, #53614f 51%, #53614f 53%, transparent 54%) 0 0 / 54px 50px repeat-x;
+    filter: drop-shadow(0 4px 0 rgba(185, 154, 92, .10));
+  }
+  .atlas-ridge-one { left: -3%; top: 29%; transform: rotate(-17deg); }
+  .atlas-ridge-two { right: -12%; top: 39%; transform: rotate(67deg) scale(.9); }
+  .atlas-ridge-three { left: 24%; bottom: 15%; transform: rotate(12deg) scale(.75); }
+
+  .atlas-place-label {
+    position: absolute;
+    z-index: 2;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(237, 232, 217, .66);
+    color: rgba(47, 44, 35, .58);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .atlas-pin {
+    position: absolute;
+    z-index: 8;
+    display: grid;
+    width: 37px;
+    height: 37px;
+    place-items: center;
+    border: 2px solid rgba(255, 253, 247, .94);
+    border-radius: 50% 50% 50% 10px;
+    color: #fff;
+    box-shadow: 0 7px 15px rgba(36, 31, 23, .22);
+    transform: translate(-50%, -86%) rotate(-45deg);
+  }
+  .atlas-pin svg { transform: rotate(45deg); }
+  .atlas-pin-experience { background: #ad4438; }
+  .atlas-pin-food { background: #b37932; }
+  .atlas-pin-mobility { background: #2b5872; }
+  .atlas-pin-essentials { background: #67547e; }
+  .atlas-pin-together { background: #456c59; }
+  .atlas-pin-active {
+    z-index: 12;
+    width: 46px;
+    height: 46px;
+    box-shadow: 0 0 0 5px rgba(255, 253, 247, .56), 0 11px 22px rgba(36, 31, 23, .28);
+  }
+  .atlas-pin-benefit {
+    position: absolute;
+    right: -3px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #fffdf7;
+    border-radius: 50%;
+    background: #e1ba58;
+    transform: rotate(45deg);
+  }
+
+  .atlas-user-marker {
+    position: absolute;
+    z-index: 15;
+    width: 20px;
+    height: 20px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    background: #3478c4;
+    box-shadow: 0 0 0 1px rgba(32, 77, 126, .32), 0 4px 10px rgba(32, 77, 126, .35);
+    transform: translate(-50%, -50%);
+  }
+  .atlas-user-marker::before {
+    content: "";
+    position: absolute;
+    inset: -11px;
+    z-index: -1;
+    border-radius: 50%;
+    background: rgba(52, 120, 196, .16);
+  }
+
+  .atlas-route-line {
+    position: absolute;
+    z-index: 7;
+    height: 4px;
+    border-radius: 999px;
+    transform-origin: 0 50%;
+    background: repeating-linear-gradient(90deg, #263e4c 0 7px, transparent 7px 12px);
+    filter: drop-shadow(0 1px 0 rgba(255,255,255,.7));
+  }
+
+  .atlas-list-icon,
+  .atlas-card-icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 14px;
+    color: #fff;
+  }
+  .atlas-list-icon { width: 38px; height: 38px; }
+  .atlas-card-icon { width: 48px; height: 48px; }
+  .atlas-list-icon-experience, .atlas-card-icon-experience { background: #ad4438; }
+  .atlas-list-icon-food, .atlas-card-icon-food { background: #b37932; }
+  .atlas-list-icon-mobility, .atlas-card-icon-mobility { background: #2b5872; }
+  .atlas-list-icon-essentials, .atlas-card-icon-essentials { background: #67547e; }
+  .atlas-list-icon-together, .atlas-card-icon-together { background: #456c59; }
+
+  .atlas-sheet {
+    max-height: min(54vh, 490px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .atlas-tools,
+  .atlas-results {
+    top: max(190px, calc(env(safe-area-inset-top) + 166px));
+  }
+}
 /* calm, real-app motion — gentle fade + slight scale, no bounce/overshoot */
 @keyframes pop-in {
   0% { opacity: 0; transform: scale(0.96); }

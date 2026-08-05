@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { BadgeCheck, Check, ChevronRight, Gift, MapPin, QrCode, Sparkles, Stamp, UsersRound } from "lucide-react"
+import { BadgeCheck, Check, ChevronRight, Gift, MapPin, MessageCircle, Navigation, QrCode, Sparkles, Stamp, UsersRound, Utensils } from "lucide-react"
 import { useActivityMembership } from "@/app/connect/use-activity-membership"
 import { PageHeader, PhoneFrame } from "@/components/app/shell"
 import { PERSONA_CONFIG } from "@/lib/catalog"
@@ -11,16 +11,34 @@ import { useLang } from "@/lib/i18n/lang-provider"
 import { ACTIVITIES } from "@/lib/mock-data"
 import { useApp } from "@/lib/store/app-provider"
 import { isCredentialUsable } from "@/lib/credential-status"
+import { useExternalServiceOrders } from "@/lib/external-service-orders"
 
 const CHECKIN_PREFIX = "k-tour-id:journey-checkin:v2"
 
 export default function JourneyPage() {
   const router = useRouter()
-  const { session, hydrated } = useApp()
+  const { session, orders, hydrated } = useApp()
   const { lang } = useLang()
   const { joinedActivityIds, ready: membershipsReady, isJoined } = useActivityMembership(session.identity?.did)
   const ko = lang === "ko"
   const credentialActive = isCredentialUsable(session.capsule)
+  const externalOrders = useExternalServiceOrders(session.identity?.did ?? "guest")
+  const journeyRecords = useMemo(() => [
+    ...orders.map((order) => ({
+      id: `order-${order.id}`,
+      href: `/orders/${order.id}`,
+      title: lang === "ko" ? order.title : order.titleEn,
+      detail: lang === "ko" ? order.optionLabel : order.optionLabelEn,
+      status: order.status,
+    })),
+    ...externalOrders.map((order) => ({
+      id: `service-${order.id}`,
+      href: `/services/orders/${order.id}`,
+      title: lang === "ko" ? order.title : order.titleEn,
+      detail: order.provider,
+      status: order.status,
+    })),
+  ].slice(0, 3), [externalOrders, lang, orders])
   const joinedActivities = useMemo(() => ACTIVITIES.filter((item) => joinedActivityIds.includes(item.id)), [joinedActivityIds])
   const [selectedActivityId, setSelectedActivityId] = useState("")
   const activity = joinedActivities.find((item) => item.id === selectedActivityId) ?? joinedActivities[0]
@@ -42,8 +60,8 @@ export default function JourneyPage() {
 
   if (!credentialActive) {
     return (
-      <PhoneFrame hideNav>
-        <PageHeader title={ko ? "여행 기록" : "Journey"} back="/wallet" />
+      <PhoneFrame>
+        <PageHeader title={ko ? "내 여정" : "My journey"} back="/" />
         <main className="safe-bottom flex min-h-[calc(100dvh-72px)] flex-col px-6 pb-10 pt-8">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-secondary text-primary"><BadgeCheck className="h-6 w-6" /></span>
           <p className="mt-7 text-[13px] font-semibold text-primary">K-Tour ID</p>
@@ -57,14 +75,15 @@ export default function JourneyPage() {
 
   if (!activity) {
     return (
-      <PhoneFrame hideNav>
-        <PageHeader title={ko ? "여행 기록" : "Journey"} back="/wallet" />
+      <PhoneFrame>
+        <PageHeader title={ko ? "내 여정" : "My journey"} back="/" />
         <main className="safe-bottom flex min-h-[calc(100dvh-72px)] flex-col px-6 pb-10 pt-8">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-secondary text-primary"><UsersRound className="h-6 w-6" /></span>
           <p className="mt-7 text-[13px] font-semibold text-primary">{ko ? "액티비티에서 시작하는 기록" : "A journey that starts with an activity"}</p>
           <h1 className="font-display text-balance mt-2 text-[30px] font-semibold leading-[1.22]">{ko ? "함께할 액티비티를 먼저 골라주세요." : "Choose an activity to begin your journey."}</h1>
           <p className="mt-4 text-[14px] leading-6 text-muted-foreground">{ko ? "참여가 확인된 액티비티만 QR 체크인과 여행 스탬프로 이어져요. 공개 프로필이나 모르는 사람의 DM 없이 시작합니다." : "Only a confirmed activity unlocks QR check-in and a journey stamp. There are no public profiles or open DMs."}</p>
-          <Link href="/connect" className="pressable mt-auto flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span>{ko ? "액티비티 둘러보기" : "Browse activities"}</span><ChevronRight className="h-5 w-5" /></Link>
+          {journeyRecords.length > 0 && <JourneyRecordList records={journeyRecords} ko={ko} />}
+          <Link href="/?focus=together" className="pressable mt-auto flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span>{ko ? "지도에서 액티비티 찾기" : "Find activities on the map"}</span><ChevronRight className="h-5 w-5" /></Link>
         </main>
       </PhoneFrame>
     )
@@ -83,8 +102,8 @@ export default function JourneyPage() {
   }
 
   return (
-    <PhoneFrame hideNav>
-      <PageHeader title={ko ? "여행 기록" : "Journey"} back="/wallet" />
+    <PhoneFrame>
+      <PageHeader title={ko ? "내 여정" : "My journey"} back="/" />
       <main className="safe-bottom px-6 pb-10">
         {joinedActivities.length > 1 && <section className="no-scrollbar -mx-6 mb-5 overflow-x-auto px-6" aria-label={ko ? "내 액티비티 선택" : "Choose an activity"}><div className="flex gap-2">{joinedActivities.map((item) => <button key={item.id} type="button" aria-pressed={item.id === activity.id} onClick={() => setSelectedActivityId(item.id)} className={`pressable min-h-11 flex-shrink-0 rounded-full px-4 text-[12px] font-semibold ${item.id === activity.id ? "bg-ink text-white" : "bg-secondary text-muted-foreground"}`}>{ko ? item.title : item.titleEn ?? item.title}</button>)}</div></section>}
         <div className="relative overflow-hidden rounded-[28px] bg-ink text-white">
@@ -95,6 +114,17 @@ export default function JourneyPage() {
             <h1 className="font-display mt-1 text-[27px] font-semibold leading-tight">{title}</h1>
           </div>
         </div>
+
+        <section className="mt-5" aria-labelledby="journey-actions-title">
+          <div className="flex items-center justify-between"><h2 id="journey-actions-title" className="text-[13px] font-semibold">{ko ? "이 액티비티의 다음 행동" : "Next for this activity"}</h2><span className="text-[11px] text-muted-foreground">{ko ? "참여자 전용" : "Participants only"}</span></div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            <Link href={`/connect/chat?activity=${activity.id}`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[11px] font-semibold ring-1 ring-border"><MessageCircle className="h-5 w-5 text-primary" />{ko ? "그룹 채팅" : "Group chat"}</Link>
+            <Link href={`/?contextId=${encodeURIComponent(activity.id)}&branch=mobility`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[11px] font-semibold ring-1 ring-border"><Navigation className="h-5 w-5 text-primary" />{ko ? "가는 방법" : "Get there"}</Link>
+            <Link href={`/?contextId=${encodeURIComponent(activity.id)}&branch=food`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[11px] font-semibold ring-1 ring-border"><Utensils className="h-5 w-5 text-primary" />{ko ? "전후 식사" : "Food nearby"}</Link>
+          </div>
+        </section>
+
+        {journeyRecords.length > 0 && <JourneyRecordList records={journeyRecords} ko={ko} />}
 
         <section className="mt-7">
           <p className="text-[13px] font-semibold text-primary">{ko ? "참여가 확인된 액티비티" : "Confirmed activity"}</p>
@@ -115,5 +145,16 @@ export default function JourneyPage() {
         </section>}
       </main>
     </PhoneFrame>
+  )
+}
+
+function JourneyRecordList({ records, ko }: { records: Array<{ id: string; href: string; title: string; detail: string; status: string }>; ko: boolean }) {
+  return (
+    <section className="mt-6" aria-labelledby="journey-records-title">
+      <div className="flex items-center justify-between"><h2 id="journey-records-title" className="text-[13px] font-semibold">{ko ? "예약·이용 중" : "Bookings and services"}</h2><span className="text-[11px] text-muted-foreground">{records.length}{ko ? "건" : " items"}</span></div>
+      <div className="mt-2 divide-y divide-foreground/10 border-y border-foreground/10">
+        {records.map((record) => <Link key={record.id} href={record.href} className="pressable flex min-h-16 items-center gap-3 py-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-primary"><BadgeCheck className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{record.title}</span><span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{record.detail} · {record.status}</span></span><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link>)}
+      </div>
+    </section>
   )
 }

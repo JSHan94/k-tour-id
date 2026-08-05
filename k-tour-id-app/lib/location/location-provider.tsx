@@ -101,7 +101,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY)
+      const raw = sessionStorage.getItem(STORAGE_KEY)
       if (!raw) return
       const saved = JSON.parse(raw) as NearbyLocation
       if (Number.isFinite(saved.latitude) && Number.isFinite(saved.longitude)) {
@@ -109,7 +109,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
         setStatus("granted")
       }
     } catch {
-      localStorage.removeItem(STORAGE_KEY)
+      sessionStorage.removeItem(STORAGE_KEY)
     }
   }, [])
 
@@ -134,7 +134,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
           }
           setLocation(next)
           setStatus("granted")
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch { /* unavailable */ }
+          try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch { /* unavailable */ }
           resolve(true)
         },
         (error) => {
@@ -149,7 +149,7 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const clearLocation = useCallback(() => {
     setLocation(null)
     setStatus("idle")
-    try { localStorage.removeItem(STORAGE_KEY) } catch { /* unavailable */ }
+    try { sessionStorage.removeItem(STORAGE_KEY) } catch { /* unavailable */ }
   }, [])
 
   const value = useMemo(() => ({ location, status, requestLocation, clearLocation }), [clearLocation, location, requestLocation, status])

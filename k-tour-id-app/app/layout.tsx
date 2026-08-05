@@ -9,7 +9,8 @@ import { LocationProvider } from "@/lib/location/location-provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://k-tour-id.vercel.app"),
   ),
   alternates: { canonical: "/" },
   title: "K-Tour ID — Prove less. Travel more.",
@@ -18,15 +19,15 @@ export const metadata: Metadata = {
   generator: "K-Tour ID",
   openGraph: {
     title: "K-Tour ID",
-    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits",
+    description: "A map-first travel atlas connecting places, activities, mobility and K-Tour ID benefits across Korea.",
     type: "website",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "K-Tour ID · Prove less. Travel more." }],
+    images: [{ url: "/og-map-first.png", width: 1731, height: 909, alt: "K-Tour ID · 한국을 여행하는 새로운 지도" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "K-Tour ID",
-    description: "Persona-aware onboarding, curated local services and K-Tour ID benefits",
-    images: ["/og.png"],
+    description: "A map-first travel atlas connecting places, activities, mobility and K-Tour ID benefits across Korea.",
+    images: ["/og-map-first.png"],
   },
 }
 

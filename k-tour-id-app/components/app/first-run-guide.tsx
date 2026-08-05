@@ -13,10 +13,10 @@ const STEPS = [
     icon: LocateFixed,
     eyebrowKo: "지금 여기에서 시작",
     eyebrowEn: "START WHERE YOU ARE",
-    titleKo: "가까운 선택부터\n보여드릴게요.",
-    titleEn: "See what’s closest\nright now.",
-    bodyKo: "위치를 허용하면 이용 가능한 혜택을 거리와 이동시간 순으로 정리해요. 대략적 위치는 이 기기에만 보관해요.",
-    bodyEn: "Enable location to rank eligible benefits by distance and travel time. Your approximate location stays on this device.",
+    titleKo: "한국 여행의 맥을\n지도에서 펼쳐보세요.",
+    titleEn: "Open your map\nfor traveling Korea.",
+    bodyKo: "위치를 허용하면 가까운 장소·액티비티·혜택을 하나의 지도에서 보여줘요. 대략적 위치는 이 기기에만 보관해요.",
+    bodyEn: "Enable location to see nearby places, activities and benefits on one map. Your approximate location stays on this device.",
   },
   {
     icon: BadgeCheck,
@@ -24,8 +24,8 @@ const STEPS = [
     eyebrowEn: "VERIFY ONCE",
     titleKo: "가능한 혜택만\n먼저 골라드려요.",
     titleEn: "Only see benefits\nyou can actually use.",
-    bodyKo: "K-Tour ID가 체류 유형과 이용 자격에 맞는 교통·문화·생활 서비스를 먼저 보여줘요. ID와 여행 잔액은 한 탭에서 확인할 수 있어요.",
-    bodyEn: "K-Tour ID prioritizes transit, culture and everyday services that fit your stay. Your ID and travel balance live in one place.",
+    bodyKo: "장소를 고르면 내 자격에 맞는 혜택과 예약을 붙여줘요. 교통·식사는 별도 쇼핑몰이 아니라 지금 여정에 필요한 순간에 나타나요.",
+    bodyEn: "Choose a place and your eligible benefits and booking options appear. Mobility and food branch from the trip only when needed.",
   },
   {
     icon: UsersRound,
@@ -128,7 +128,7 @@ export function FirstRunGuide() {
         {step === 0 && <div className="mt-5 flex items-start gap-3 rounded-[14px] bg-success-surface px-4 py-3 text-[12px] leading-5 text-success"><Check className="mt-0.5 h-4 w-4 flex-shrink-0" /><span>{ko ? "위치를 켜지 않아도 서울 중심 추천으로 계속 이용할 수 있어요." : "You can continue with central Seoul recommendations without enabling location."}</span></div>}
         {step === 0 && locationError && <p role="alert" className="mt-3 rounded-[14px] bg-destructive/10 px-4 py-3 text-[12px] font-medium leading-5 text-destructive">{ko ? "위치를 확인하지 못했어요. 기기 설정에서 위치 권한을 켜고 다시 시도하거나, 위치 없이 계속할 수 있어요." : "We couldn't access your location. Enable location in your device settings and try again, or continue without it."}</p>}
         <button type="button" onClick={step === 0 ? () => void useLocation() : advance} disabled={status === "requesting"} className="pressable mt-7 flex min-h-14 w-full items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-50">
-          <span>{step === 0 ? (status === "requesting" ? (ko ? "현재 위치 확인 중…" : "Finding your location…") : locationError ? (ko ? "위치 다시 확인" : "Try location again") : (ko ? "현재 위치로 시작" : "Use my current location")) : step === STEPS.length - 1 ? (ko ? "홈 시작하기" : "Start exploring") : (ko ? "다음" : "Next")}</span>
+          <span>{step === 0 ? (status === "requesting" ? (ko ? "현재 위치 확인 중…" : "Finding your location…") : locationError ? (ko ? "위치 다시 확인" : "Try location again") : (ko ? "현재 위치로 시작" : "Use my current location")) : step === STEPS.length - 1 ? (ko ? "내 여행 지도 열기" : "Open my travel map") : (ko ? "다음" : "Next")}</span>
           <ArrowRight className="h-5 w-5" />
         </button>
         {step === 0 && <button type="button" onClick={() => { setLocationError(false); advance() }} className="pressable mt-2 min-h-11 w-full text-[13px] font-medium text-muted-foreground">{ko ? "위치 없이 계속" : "Continue without location"}</button>}

@@ -41,6 +41,7 @@ export default function ConnectPage() {
   const [selected, setSelected] = useState<Activity | null>(null)
   const [joinError, setJoinError] = useState<"full" | "not-ready" | "storage" | "credential" | null>(null)
   const activityTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const deepLinkHandledRef = useRef(false)
   const currentName = session.identity?.displayName
   const currentPhoto = session.identity?.photoUrl
   const activities = ACTIVITIES
@@ -58,6 +59,21 @@ export default function ConnectPage() {
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
   }, [hydrated, router, session.onboarded])
+
+  useEffect(() => {
+    if (!hydrated || !session.onboarded || !membershipsReady || deepLinkHandledRef.current) return
+    const id = new URLSearchParams(window.location.search).get("activity")
+    if (!id) return
+    deepLinkHandledRef.current = true
+    const activity = activities.find((candidate) => candidate.id === id)
+    if (!activity) return
+    if (isJoined(activity.id) && credentialActive) {
+      router.replace(`/connect/chat?activity=${activity.id}`)
+      return
+    }
+    setJoinError(credentialActive ? null : "credential")
+    setSelected(activity)
+  }, [activities, credentialActive, hydrated, isJoined, membershipsReady, router, session.onboarded])
 
   if (!hydrated || !session.onboarded || !membershipsReady) return null
 
@@ -95,6 +111,9 @@ export default function ConnectPage() {
   const closeJoinSheet = () => {
     setSelected(null)
     setJoinError(null)
+    const params = new URLSearchParams(window.location.search)
+    params.delete("activity")
+    window.history.replaceState({}, "", `${window.location.pathname}${params.size ? `?${params}` : ""}`)
     window.requestAnimationFrame(() => activityTriggerRef.current?.focus())
   }
 
@@ -238,13 +257,13 @@ function JoinSheet({ activity, credentialActive, proximity, error, onClose, onJo
 
         <div className="mt-6 divide-y divide-foreground/10 border-y border-foreground/10">
           <div className="flex items-center gap-3 py-4"><BadgeCheck className={`h-5 w-5 ${credentialActive ? "text-success" : "text-destructive"}`} /><div><p className="text-[13px] font-semibold">K-Tour ID {credentialActive ? (ko ? "활성 상태" : "active") : (ko ? "갱신 필요" : "renewal required")}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{credentialActive ? (ko ? "별도 인터뷰 없이 활성 K-Tour ID로 참여할 수 있어요" : "Join with an active K-Tour ID—no extra interview") : (ko ? "참여하려면 K-Tour ID를 먼저 갱신해 주세요" : "Renew your K-Tour ID before joining")}</p></div></div>
-          <div className="flex items-center gap-3 py-4"><UsersRound className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? `${activity.joined}명 참여 중` : `${activity.joined} people are joining`}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? `남은 자리 ${spots}개 · 관심사와 언어로 연결돼요` : `${spots} spots left · meet through shared interests and language`}</p></div></div>
+          <div className="flex items-center gap-3 py-4"><UsersRound className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? `${activity.joined}명 참여 중` : `${activity.joined} people are joining`}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? `남은 자리 ${spots}개 · ${activity.languages.join(" · ")}` : `${spots} spots left · ${activity.languages.join(" · ")}`}</p></div></div>
           <div className="flex items-center gap-3 py-4"><ShieldCheck className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? "참여자 전용 그룹 채팅" : "Group chat for participants"}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? "참여 후 장소와 준비물을 함께 이야기해요" : "Coordinate the place and what to bring after joining"}</p></div></div>
         </div>
 
         {activity.costKRW != null && <p className="mt-4 text-center text-[12px] text-muted-foreground">{ko ? "예상 1인 비용" : "Estimated per person"} · <strong className="text-foreground">{lang === "ko" ? formatWon(activity.costKRW) : `₩${activity.costKRW.toLocaleString("en-US")}`}</strong></p>}
         {error && <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-center text-[12px] font-semibold text-destructive">{error === "full" ? (ko ? "방금 정원이 마감됐어요. 다른 액티비티를 골라 주세요." : "This activity just filled up. Choose another one.") : error === "storage" ? (ko ? "참여 상태를 저장하지 못했어요. 브라우저 저장 설정을 확인해 주세요." : "We couldn't save your participation. Check your browser storage settings.") : error === "credential" ? (ko ? "K-Tour ID가 만료됐거나 현재 사용할 수 없어요." : "Your K-Tour ID is expired or unavailable.") : (ko ? "참여 상태를 불러오는 중이에요. 잠시 후 다시 시도해 주세요." : "Membership is still loading. Try again in a moment.")}</p>}
-        {!credentialActive && <Link href="/onboarding?mode=renew&returnTo=%2Fconnect" className="pressable mt-5 flex min-h-14 w-full items-center justify-center rounded-[15px] bg-primary px-4 text-[15px] font-semibold text-white">{ko ? "K-Tour ID 갱신하기" : "Renew K-Tour ID"}</Link>}
+        {!credentialActive && <Link href={`/onboarding?mode=renew&returnTo=${encodeURIComponent(`/connect?activity=${activity.id}`)}`} className="pressable mt-5 flex min-h-14 w-full items-center justify-center rounded-[15px] bg-primary px-4 text-[15px] font-semibold text-white">{ko ? "K-Tour ID 갱신하기" : "Renew K-Tour ID"}</Link>}
         {credentialActive && <button type="button" onClick={onJoin} disabled={full} className="bg-brand-gradient pressable mt-5 min-h-14 w-full rounded-[15px] text-[15px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45">{full ? (ko ? "정원 마감" : "Activity full") : (ko ? "참여하고 채팅방 들어가기" : "Join and enter group chat")}</button>}
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>

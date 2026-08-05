@@ -11,7 +11,6 @@ import {
   ChevronRight,
   CircleAlert,
   Clock3,
-  ExternalLink,
   Loader2,
   MapPin,
   RotateCcw,
@@ -47,6 +46,7 @@ import {
 import { useApp } from "@/lib/store/app-provider";
 
 type Step = "configure" | "review" | "processing" | "result";
+type EntryContext = { contextId: string; returnTo: string };
 type ResultKind =
   | "payment-failed"
   | "payment-reversed"
@@ -72,13 +72,19 @@ export default function CommercialServiceDetailPage() {
   const [consented, setConsented] = useState(false);
   const [result, setResult] = useState<ResultKind | null>(null);
   const [receiptId, setReceiptId] = useState("");
+  const [entryContext, setEntryContext] = useState<EntryContext | null>(null);
   const operationIdRef = useRef("");
   const busyRef = useRef(false);
   const stageRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding");
-    if (new URLSearchParams(window.location.search).get("preview") === "failed") {
+    const search = new URLSearchParams(window.location.search);
+    const contextId = search.get("contextId") ?? "";
+    const requestedReturn = search.get("returnTo") ?? "";
+    if (contextId && requestedReturn.startsWith("/"))
+      setEntryContext({ contextId, returnTo: requestedReturn });
+    if (search.get("preview") === "failed") {
       setResult("payment-failed");
       setStep("result");
     }
@@ -114,8 +120,10 @@ export default function CommercialServiceDetailPage() {
     );
 
   const flow = flowForService(service.id);
-  const listHref = `/explore?focus=${commercialCategoryToIntent(service.category)}`;
-  const returnHref = `/services/${service.id}?from=explore`;
+  const listHref = entryContext?.returnTo ?? `/explore?focus=${commercialCategoryToIntent(service.category)}`;
+  const returnHref = entryContext
+    ? `/services/${service.id}?contextId=${encodeURIComponent(entryContext.contextId)}&returnTo=${encodeURIComponent(entryContext.returnTo)}`
+    : `/services/${service.id}?from=explore`;
   const configurationSummary = formatServiceConfiguration(configuration, lang);
   const configurationSummaryKo = formatServiceConfiguration(configuration, "ko");
   const configurationSummaryEn = formatServiceConfiguration(configuration, "en");
@@ -380,6 +388,12 @@ export default function CommercialServiceDetailPage() {
           </div>
         </header>
       ) : null}
+      {step === "configure" && entryContext && (
+        <div className="mx-6 mb-4 flex items-start gap-2 rounded-[14px] bg-success-surface px-3 py-2.5 text-[11px] leading-4 text-success">
+          <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+          <span>{ko ? "선택한 장소·액티비티의 이동과 식사 문맥을 이어받았어요. 완료 후 원래 여행 지도로 돌아갑니다." : "This request keeps the selected place or activity context and returns to your travel map when complete."}</span>
+        </div>
+      )}
 
       <main ref={stageRef} tabIndex={-1} className="pb-8 outline-none">
         {step === "configure" && (
@@ -642,7 +656,7 @@ export default function CommercialServiceDetailPage() {
               {ko
                 ? `₩${quote.totalKRW.toLocaleString()} 결제하고 요청`
                 : `Pay ₩${quote.totalKRW.toLocaleString()} & request`}
-              <ExternalLink className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5" />
             </button>
             <button
               type="button"
@@ -675,8 +689,8 @@ export default function CommercialServiceDetailPage() {
               </h1>
               <p className="mx-auto mt-2 max-w-[310px] text-[13px] leading-6 text-muted-foreground">
                 {ko
-                  ? "목업용 파트너 응답을 먼저 확인한 뒤 결제를 진행하고, 두 결과를 하나의 이용 내역으로 연결해요."
-                  : "This reference flow checks a mock partner response before payment and links both results in one record."}
+                  ? "파트너의 제공 가능 여부를 먼저 확인한 뒤 결제를 진행하고, 두 결과를 하나의 이용 내역으로 연결해요."
+                  : "We check provider availability before payment and link both results in one service record."}
               </p>
             </div>
           </section>
