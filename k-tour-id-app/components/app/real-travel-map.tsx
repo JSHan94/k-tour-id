@@ -1,13 +1,18 @@
 "use client"
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
-import maplibregl from "maplibre-gl"
-import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
+import type {
+  CircleMarker,
+  LatLngExpression,
+  Map as LeafletMap,
+  Marker as LeafletMarker,
+  Polyline,
+} from "leaflet"
 import type { NearbyLocation } from "@/lib/location/location-provider"
 import { cn } from "@/lib/utils"
 
-const MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
-const DEFAULT_CENTER: [number, number] = [126.978, 37.5665]
+const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+const DEFAULT_CENTER: LatLngExpression = [37.5665, 126.978]
 
 type PointLayer = "experience" | "food" | "mobility" | "essentials" | "together"
 
@@ -45,17 +50,6 @@ const MARKER_SYMBOLS: Record<PointLayer, string> = {
   together: "◎",
 }
 
-function isWebglSupported() {
-  if (!("WebGLRenderingContext" in window)) return false
-  try {
-    const canvas = document.createElement("canvas")
-    const context = canvas.getContext("webgl2") ?? canvas.getContext("webgl")
-    return Boolean(context && typeof context.getParameter === "function")
-  } catch {
-    return false
-  }
-}
-
 function markerLabel(point: RealTravelMapPoint, lang: "ko" | "en") {
   const category = {
     experience: lang === "ko" ? "할 거리" : "Things to do",
@@ -67,21 +61,34 @@ function markerLabel(point: RealTravelMapPoint, lang: "ko" | "en") {
   return `${category}, ${point.title}, ${point.subtitle}`
 }
 
-function createRouteData(
-  from: Pick<NearbyLocation, "latitude" | "longitude">,
-  to: RealTravelMapPoint["geo"],
-) {
-  return {
-    type: "Feature" as const,
-    properties: {},
-    geometry: {
-      type: "LineString" as const,
-      coordinates: [
-        [from.longitude, from.latitude],
-        [to.longitude, to.latitude],
-      ],
-    },
+function markerElement(point: RealTravelMapPoint, active: boolean, lang: "ko" | "en") {
+  const element = document.createElement("button")
+  element.type = "button"
+  element.className = cn(
+    "atlas-map-marker",
+    `atlas-map-marker-${point.layer}`,
+    active && "atlas-map-marker-active",
+  )
+  element.setAttribute("aria-label", markerLabel(point, lang))
+  element.setAttribute("aria-pressed", String(active))
+
+  const glyph = document.createElement("span")
+  glyph.className = "atlas-map-marker-glyph"
+  glyph.textContent = MARKER_SYMBOLS[point.layer]
+  element.appendChild(glyph)
+
+  if (point.benefitLabel) {
+    const benefit = document.createElement("span")
+    benefit.className = "atlas-map-marker-benefit"
+    benefit.setAttribute("aria-hidden", "true")
+    element.appendChild(benefit)
   }
+  return element
+}
+
+function cameraCenterAboveSheet(map: LeafletMap, point: RealTravelMapPoint, zoom: number) {
+  const markerPixel = map.project([point.geo.latitude, point.geo.longitude], zoom)
+  return map.unproject(markerPixel.add([0, 70]), zoom)
 }
 
 export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>(function RealTravelMap(
@@ -89,70 +96,94 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef = useRef<MapLibreMap | null>(null)
-  const markersRef = useRef<Array<{ id: string; marker: Marker; element: HTMLButtonElement }>>([])
-  const locationMarkerRef = useRef<Marker | null>(null)
+  const mapRef = useRef<LeafletMap | null>(null)
+  const leafletRef = useRef<typeof import("leaflet") | null>(null)
+  const markersRef = useRef<LeafletMarker[]>([])
+  const locationMarkerRef = useRef<CircleMarker | null>(null)
+  const routeLineRef = useRef<Polyline | null>(null)
   const onSelectRef = useRef(onSelect)
   const onUnavailableRef = useRef(onUnavailable)
   const [mapStarted, setMapStarted] = useState(false)
-  const [styleReady, setStyleReady] = useState(false)
 
   onSelectRef.current = onSelect
   onUnavailableRef.current = onUnavailable
 
   useImperativeHandle(ref, () => ({
-    zoomIn: () => mapRef.current?.zoomIn({ duration: 260 }),
-    zoomOut: () => mapRef.current?.zoomOut({ duration: 260 }),
+    zoomIn: () => mapRef.current?.zoomIn(1, { animate: true }),
+    zoomOut: () => mapRef.current?.zoomOut(1, { animate: true }),
     flyToLocation: (location) => {
-      mapRef.current?.flyTo({
-        center: [location.longitude, location.latitude],
-        zoom: Math.max(mapRef.current.getZoom(), 13.5),
-        essential: true,
-      })
+      const map = mapRef.current
+      if (!map) return
+      map.flyTo(
+        [location.latitude, location.longitude],
+        Math.max(map.getZoom(), 13),
+        { animate: true, duration: 0.5 },
+      )
     },
   }), [])
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
-    if (!isWebglSupported()) {
-      onUnavailableRef.current()
-      return
+
+    let disposed = false
+    let startedMap: LeafletMap | null = null
+    let animationFrame: number | null = null
+    let invalidateSize: (() => void) | null = null
+
+    const startMap = async () => {
+      try {
+        const L = await import("leaflet")
+        if (disposed || !containerRef.current) return
+
+        const firstPoint = points.find((point) => point.id === selectedId) ?? points[0]
+        const map = L.map(containerRef.current, {
+          zoomControl: false,
+          attributionControl: true,
+          preferCanvas: false,
+          zoomAnimation: true,
+          fadeAnimation: true,
+          markerZoomAnimation: true,
+        }).setView(
+          firstPoint ? [firstPoint.geo.latitude, firstPoint.geo.longitude] : DEFAULT_CENTER,
+          12,
+        )
+
+        L.tileLayer(TILE_URL, {
+          minZoom: 3,
+          maxZoom: 19,
+          maxNativeZoom: 19,
+          detectRetina: false,
+          crossOrigin: true,
+          updateWhenIdle: true,
+          keepBuffer: 2,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        }).addTo(map)
+        map.attributionControl.setPrefix(false)
+
+        startedMap = map
+        mapRef.current = map
+        leafletRef.current = L
+        invalidateSize = () => map.invalidateSize({ animate: false })
+        animationFrame = window.requestAnimationFrame(invalidateSize)
+        window.addEventListener("resize", invalidateSize)
+        setMapStarted(true)
+      } catch {
+        if (!disposed) onUnavailableRef.current()
+      }
     }
 
-    const firstPoint = points.find((point) => point.id === selectedId) ?? points[0]
-    let map: MapLibreMap
-    try {
-      map = new maplibregl.Map({
-        container: containerRef.current,
-        style: MAP_STYLE_URL,
-        center: firstPoint
-          ? [firstPoint.geo.longitude, firstPoint.geo.latitude]
-          : DEFAULT_CENTER,
-        zoom: 12.2,
-        minZoom: 6,
-        maxZoom: 18,
-        attributionControl: false,
-        dragRotate: false,
-        pitchWithRotate: false,
-      })
-    } catch {
-      onUnavailableRef.current()
-      return
-    }
-
-    map.touchZoomRotate.disableRotation()
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left")
-    map.on("style.load", () => setStyleReady(true))
-    mapRef.current = map
-    setMapStarted(true)
+    void startMap()
 
     return () => {
-      markersRef.current.forEach(({ marker }) => marker.remove())
+      disposed = true
+      if (animationFrame !== null) window.cancelAnimationFrame(animationFrame)
+      if (invalidateSize) window.removeEventListener("resize", invalidateSize)
       markersRef.current = []
-      locationMarkerRef.current?.remove()
       locationMarkerRef.current = null
-      map.remove()
+      routeLineRef.current = null
+      startedMap?.remove()
       mapRef.current = null
+      leafletRef.current = null
     }
     // The map instance owns its initial camera. Later point changes are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,126 +191,102 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !mapStarted) return
+    const L = leafletRef.current
+    if (!map || !L || !mapStarted) return
 
-    markersRef.current.forEach(({ marker }) => marker.remove())
+    markersRef.current.forEach((marker) => marker.remove())
     markersRef.current = points.map((point) => {
-      const element = document.createElement("button")
-      element.type = "button"
-      element.className = cn(
-        "atlas-map-marker",
-        `atlas-map-marker-${point.layer}`,
-        point.id === selectedId && "atlas-map-marker-active",
-      )
-      element.setAttribute("aria-label", markerLabel(point, lang))
-      element.setAttribute("aria-pressed", String(point.id === selectedId))
-
-      const glyph = document.createElement("span")
-      glyph.className = "atlas-map-marker-glyph"
-      glyph.textContent = MARKER_SYMBOLS[point.layer]
-      element.appendChild(glyph)
-
-      if (point.benefitLabel) {
-        const benefit = document.createElement("span")
-        benefit.className = "atlas-map-marker-benefit"
-        benefit.setAttribute("aria-hidden", "true")
-        element.appendChild(benefit)
-      }
-
-      element.addEventListener("click", (event) => {
-        event.stopPropagation()
-        onSelectRef.current(point.id)
+      const active = point.id === selectedId
+      const size = active ? 46 : 38
+      const icon = L.divIcon({
+        className: "atlas-leaflet-icon",
+        html: markerElement(point, active, lang),
+        iconSize: [size, size + 7],
+        iconAnchor: [size / 2, size + 7],
       })
-
-      const marker = new maplibregl.Marker({ element, anchor: "bottom" })
-        .setLngLat([point.geo.longitude, point.geo.latitude])
-        .addTo(map)
-      return { id: point.id, marker, element }
+      const marker = L.marker([point.geo.latitude, point.geo.longitude], {
+        icon,
+        keyboard: true,
+        title: markerLabel(point, lang),
+        riseOnHover: true,
+        zIndexOffset: active ? 1000 : 0,
+      }).addTo(map)
+      marker.on("click", () => onSelectRef.current(point.id))
+      return marker
     })
   }, [lang, mapStarted, points, selectedId])
 
   useEffect(() => {
-    markersRef.current.forEach(({ id, element }) => {
-      const active = id === selectedId
-      element.classList.toggle("atlas-map-marker-active", active)
-      element.setAttribute("aria-pressed", String(active))
-    })
-
     const map = mapRef.current
     const selected = points.find((point) => point.id === selectedId)
     if (!map || !mapStarted || !selected) return
-    map.easeTo({
-      center: [selected.geo.longitude, selected.geo.latitude],
-      zoom: Math.max(map.getZoom(), 12.2),
-      offset: [0, -64],
-      duration: 520,
-      essential: true,
+
+    const zoom = Math.max(map.getZoom(), 12)
+    map.flyTo(cameraCenterAboveSheet(map, selected, zoom), zoom, {
+      animate: true,
+      duration: 0.45,
     })
   }, [mapStarted, points, selectedId])
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !mapStarted) return
+    const L = leafletRef.current
+    if (!map || !L || !mapStarted) return
 
     locationMarkerRef.current?.remove()
     locationMarkerRef.current = null
     if (!currentLocation) return
 
-    const element = document.createElement("div")
-    element.className = "atlas-map-user-marker"
-    element.setAttribute("role", "img")
-    element.setAttribute("aria-label", lang === "ko" ? "내 위치" : "My location")
-    locationMarkerRef.current = new maplibregl.Marker({ element })
-      .setLngLat([currentLocation.longitude, currentLocation.latitude])
-      .addTo(map)
-    map.flyTo({
-      center: [currentLocation.longitude, currentLocation.latitude],
-      zoom: Math.max(map.getZoom(), 13.2),
-      duration: 620,
-      essential: true,
-    })
-  }, [currentLocation, lang, mapStarted])
+    locationMarkerRef.current = L.circleMarker(
+      [currentLocation.latitude, currentLocation.longitude],
+      {
+        radius: 9,
+        color: "#ffffff",
+        weight: 4,
+        fillColor: "#3478c4",
+        fillOpacity: 1,
+        className: "atlas-leaflet-user-marker",
+      },
+    ).addTo(map)
+    map.flyTo(
+      [currentLocation.latitude, currentLocation.longitude],
+      Math.max(map.getZoom(), 13),
+      { animate: true, duration: 0.5 },
+    )
+  }, [currentLocation, mapStarted])
 
   useEffect(() => {
     const map = mapRef.current
+    const L = leafletRef.current
     const selected = points.find((point) => point.id === selectedId)
-    if (!map || !styleReady || !map.isStyleLoaded()) return
+    if (!map || !L || !mapStarted) return
 
-    const sourceId = "k-tour-preview-route"
-    const layerId = "k-tour-preview-route-line"
-    const shouldShow = Boolean(routePreview && currentLocation && selected)
+    routeLineRef.current?.remove()
+    routeLineRef.current = null
+    if (!routePreview || !currentLocation || !selected) return
 
-    if (!shouldShow) {
-      if (map.getLayer(layerId)) map.removeLayer(layerId)
-      if (map.getSource(sourceId)) map.removeSource(sourceId)
-      return
-    }
-
-    const data = createRouteData(currentLocation!, selected!.geo)
-    const existingSource = map.getSource(sourceId) as GeoJSONSource | undefined
-    if (existingSource) {
-      existingSource.setData(data)
-      return
-    }
-
-    map.addSource(sourceId, { type: "geojson", data })
-    map.addLayer({
-      id: layerId,
-      type: "line",
-      source: sourceId,
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": "#263e4c",
-        "line-width": 4,
-        "line-dasharray": [1.4, 1.2],
-        "line-opacity": 0.88,
+    routeLineRef.current = L.polyline(
+      [
+        [currentLocation.latitude, currentLocation.longitude],
+        [selected.geo.latitude, selected.geo.longitude],
+      ],
+      {
+        color: "#263e4c",
+        weight: 4,
+        opacity: 0.88,
+        dashArray: "7 6",
+        lineCap: "round",
       },
-    })
-  }, [currentLocation, points, routePreview, selectedId, styleReady])
+    ).addTo(map)
+  }, [currentLocation, mapStarted, points, routePreview, selectedId])
 
   return (
     <div className={cn("atlas-real-map absolute inset-0", heritageLayer && "atlas-real-map-heritage")}>
-      <div ref={containerRef} className="absolute inset-0" aria-label={lang === "ko" ? "인터랙티브 서울 여행 지도" : "Interactive Seoul travel map"} />
+      <div
+        ref={containerRef}
+        className="absolute inset-0"
+        aria-label={lang === "ko" ? "인터랙티브 서울 여행 지도" : "Interactive Seoul travel map"}
+      />
     </div>
   )
 })
