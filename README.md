@@ -6,7 +6,7 @@ K-Tour ID is a privacy-preserving tourist trust wallet prototype for the 2026 Bl
 
 ## Live mock
 
-[Open the private K-Tour ID deployment](https://k-tour-id.phenixnet-jl.chatgpt.site)
+[Open the K-Tour ID deployment](https://k-tour-id.vercel.app)
 
 ## Golden flow
 

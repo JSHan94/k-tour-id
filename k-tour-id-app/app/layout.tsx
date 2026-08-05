@@ -9,8 +9,9 @@ import { LocationProvider } from "@/lib/location/location-provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id.phenixnet-jl.chatgpt.site",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id.vercel.app",
   ),
+  alternates: { canonical: "/" },
   title: "K-Tour ID — Prove less. Travel more.",
   description:
     "One K-Tour ID for tailored travel, everyday services, local benefits and privacy-preserving payments in Korea.",
