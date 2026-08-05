@@ -9,8 +9,7 @@ import { LocationProvider } from "@/lib/location/location-provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ??
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://k-tour-id.vercel.app"),
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id-app.vercel.app",
   ),
   alternates: { canonical: "/" },
   title: "K-Tour ID — Prove less. Travel more.",
