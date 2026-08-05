@@ -339,6 +339,7 @@ export function TravelAtlasMap() {
             heritageLayer={heritageLayer}
             lang={lang}
             onSelect={selectPointById}
+            onUnavailable={() => setListMode(true)}
           />
         </div>
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
-import * as maplibregl from "maplibre-gl"
+import maplibregl from "maplibre-gl"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
 import type { NearbyLocation } from "@/lib/location/location-provider"
 import { cn } from "@/lib/utils"
@@ -34,6 +34,7 @@ interface RealTravelMapProps {
   heritageLayer: boolean
   lang: "ko" | "en"
   onSelect: (id: string) => void
+  onUnavailable: () => void
 }
 
 const MARKER_SYMBOLS: Record<PointLayer, string> = {
@@ -42,6 +43,17 @@ const MARKER_SYMBOLS: Record<PointLayer, string> = {
   mobility: "↗",
   essentials: "■",
   together: "◎",
+}
+
+function isWebglSupported() {
+  if (!("WebGLRenderingContext" in window)) return false
+  try {
+    const canvas = document.createElement("canvas")
+    const context = canvas.getContext("webgl2") ?? canvas.getContext("webgl")
+    return Boolean(context && typeof context.getParameter === "function")
+  } catch {
+    return false
+  }
 }
 
 function markerLabel(point: RealTravelMapPoint, lang: "ko" | "en") {
@@ -73,7 +85,7 @@ function createRouteData(
 }
 
 export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>(function RealTravelMap(
-  { points, selectedId, currentLocation, routePreview, heritageLayer, lang, onSelect },
+  { points, selectedId, currentLocation, routePreview, heritageLayer, lang, onSelect, onUnavailable },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -81,10 +93,12 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
   const markersRef = useRef<Array<{ id: string; marker: Marker; element: HTMLButtonElement }>>([])
   const locationMarkerRef = useRef<Marker | null>(null)
   const onSelectRef = useRef(onSelect)
-  const [ready, setReady] = useState(false)
-  const [timedOut, setTimedOut] = useState(false)
+  const onUnavailableRef = useRef(onUnavailable)
+  const [mapStarted, setMapStarted] = useState(false)
+  const [styleReady, setStyleReady] = useState(false)
 
   onSelectRef.current = onSelect
+  onUnavailableRef.current = onUnavailable
 
   useImperativeHandle(ref, () => ({
     zoomIn: () => mapRef.current?.zoomIn({ duration: 260 }),
@@ -100,30 +114,39 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return
+    if (!isWebglSupported()) {
+      onUnavailableRef.current()
+      return
+    }
 
     const firstPoint = points.find((point) => point.id === selectedId) ?? points[0]
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: MAP_STYLE_URL,
-      center: firstPoint
-        ? [firstPoint.geo.longitude, firstPoint.geo.latitude]
-        : DEFAULT_CENTER,
-      zoom: 12.2,
-      minZoom: 6,
-      maxZoom: 18,
-      attributionControl: false,
-      dragRotate: false,
-      pitchWithRotate: false,
-    })
+    let map: MapLibreMap
+    try {
+      map = new maplibregl.Map({
+        container: containerRef.current,
+        style: MAP_STYLE_URL,
+        center: firstPoint
+          ? [firstPoint.geo.longitude, firstPoint.geo.latitude]
+          : DEFAULT_CENTER,
+        zoom: 12.2,
+        minZoom: 6,
+        maxZoom: 18,
+        attributionControl: false,
+        dragRotate: false,
+        pitchWithRotate: false,
+      })
+    } catch {
+      onUnavailableRef.current()
+      return
+    }
 
     map.touchZoomRotate.disableRotation()
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left")
-    map.on("load", () => setReady(true))
+    map.on("style.load", () => setStyleReady(true))
     mapRef.current = map
+    setMapStarted(true)
 
-    const timeout = window.setTimeout(() => setTimedOut(true), 12_000)
     return () => {
-      window.clearTimeout(timeout)
       markersRef.current.forEach(({ marker }) => marker.remove())
       markersRef.current = []
       locationMarkerRef.current?.remove()
@@ -136,12 +159,8 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
   }, [])
 
   useEffect(() => {
-    if (ready) setTimedOut(false)
-  }, [ready])
-
-  useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready) return
+    if (!map || !mapStarted) return
 
     markersRef.current.forEach(({ marker }) => marker.remove())
     markersRef.current = points.map((point) => {
@@ -177,7 +196,7 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
         .addTo(map)
       return { id: point.id, marker, element }
     })
-  }, [lang, points, ready, selectedId])
+  }, [lang, mapStarted, points, selectedId])
 
   useEffect(() => {
     markersRef.current.forEach(({ id, element }) => {
@@ -188,7 +207,7 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
 
     const map = mapRef.current
     const selected = points.find((point) => point.id === selectedId)
-    if (!map || !ready || !selected) return
+    if (!map || !mapStarted || !selected) return
     map.easeTo({
       center: [selected.geo.longitude, selected.geo.latitude],
       zoom: Math.max(map.getZoom(), 12.2),
@@ -196,11 +215,11 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
       duration: 520,
       essential: true,
     })
-  }, [points, ready, selectedId])
+  }, [mapStarted, points, selectedId])
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !ready) return
+    if (!map || !mapStarted) return
 
     locationMarkerRef.current?.remove()
     locationMarkerRef.current = null
@@ -219,12 +238,12 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
       duration: 620,
       essential: true,
     })
-  }, [currentLocation, lang, ready])
+  }, [currentLocation, lang, mapStarted])
 
   useEffect(() => {
     const map = mapRef.current
     const selected = points.find((point) => point.id === selectedId)
-    if (!map || !ready || !map.isStyleLoaded()) return
+    if (!map || !styleReady || !map.isStyleLoaded()) return
 
     const sourceId = "k-tour-preview-route"
     const layerId = "k-tour-preview-route-line"
@@ -256,20 +275,11 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
         "line-opacity": 0.88,
       },
     })
-  }, [currentLocation, points, ready, routePreview, selectedId])
+  }, [currentLocation, points, routePreview, selectedId, styleReady])
 
   return (
     <div className={cn("atlas-real-map absolute inset-0", heritageLayer && "atlas-real-map-heritage")}>
       <div ref={containerRef} className="absolute inset-0" aria-label={lang === "ko" ? "인터랙티브 서울 여행 지도" : "Interactive Seoul travel map"} />
-      {!ready && (
-        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center bg-[#e9e5d8]" role="status">
-          <div className="rounded-full bg-[#fbfaf6]/94 px-4 py-2 text-[11px] font-semibold text-foreground shadow-sm ring-1 ring-black/5">
-            {timedOut
-              ? (lang === "ko" ? "지도를 불러오지 못했어요. 연결을 확인해 주세요." : "Map unavailable. Check your connection.")
-              : (lang === "ko" ? "실제 지도를 불러오는 중…" : "Loading the live map…")}
-          </div>
-        </div>
-      )}
     </div>
   )
 })
