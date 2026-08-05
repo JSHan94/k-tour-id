@@ -255,4 +255,4 @@ Test both variants with the same persona and tasks.
 
 ## 10. Prototype boundary
 
-This branch tests product structure, wording, interaction hierarchy and visual direction. Its map geometry, quotes, routes and partner availability are simulated. Production architecture, real map provider, routing engine, OpenDID/OpenCX contracts and Sui implementation remain developer-owned decisions governed by the development specification.
+This branch tests product structure, wording, interaction hierarchy and visual direction. The B variant now renders a real interactive OpenStreetMap-derived vector basemap with MapLibre GL JS and OpenFreeMap; K-Tour places are positioned from their mock coordinates. Search results, route estimates, quotes and partner availability remain simulated. OpenFreeMap is a no-key prototype provider without an SLA, so the production tile/search/routing provider, OpenDID/OpenCX contracts and Sui implementation remain developer-owned decisions governed by the development specification.

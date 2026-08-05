@@ -94,7 +94,7 @@ pnpm dev
 
 Set `NEXT_PUBLIC_SITE_URL` to the deployed origin so social-preview URLs resolve to the K-Tour ID deployment.
 
-The current UI uses Next.js 16, React 19, TypeScript and Tailwind CSS v4. Its visual language combines hanji paper, ink, seal red, dancheong navy and gold.
+The current UI uses Next.js 16, React 19, TypeScript, Tailwind CSS v4 and MapLibre GL JS. The map-first experiment uses OpenFreeMap's OpenStreetMap-derived vector tiles without an API key; this is a prototype basemap, not the final production provider. Its visual language combines hanji paper, ink, seal red, dancheong navy and gold.
 
 ## Repository boundaries
 

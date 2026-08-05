@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import {
@@ -28,6 +28,7 @@ import {
   ZoomOut,
 } from "lucide-react"
 import { LangToggle, Logo } from "@/components/app/shell"
+import { RealTravelMap, type RealTravelMapHandle } from "@/components/app/real-travel-map"
 import { COMMERCIAL_SERVICES } from "@/lib/commercial-services"
 import { credentialDaysRemaining, isCredentialUsable } from "@/lib/credential-status"
 import { formatWon } from "@/lib/format"
@@ -118,39 +119,6 @@ function pointLayerFromCategory(category: string): PointLayer {
   if (category === "mobility") return "mobility"
   if (category === "shopping" || category === "convenience") return "essentials"
   return "experience"
-}
-
-function stableOffset(id: string) {
-  return [...id].reduce((sum, character) => sum + character.charCodeAt(0), 0)
-}
-
-function projectPoint(point: Pick<TravelMapPoint, "id" | "geo">, index: number) {
-  const longitudeRatio =
-    (point.geo.longitude - SEOUL_BOUNDS.minLongitude) /
-    (SEOUL_BOUNDS.maxLongitude - SEOUL_BOUNDS.minLongitude)
-  const latitudeRatio =
-    (SEOUL_BOUNDS.maxLatitude - point.geo.latitude) /
-    (SEOUL_BOUNDS.maxLatitude - SEOUL_BOUNDS.minLatitude)
-  const seed = stableOffset(point.id)
-  const jitterX = ((seed % 7) - 3) * 0.7 + (index % 2 ? 0.7 : -0.7)
-  const jitterY = (((seed >> 2) % 7) - 3) * 0.55
-  return {
-    x: Math.min(91, Math.max(8, 8 + longitudeRatio * 84 + jitterX)),
-    y: Math.min(76, Math.max(22, 20 + latitudeRatio * 58 + jitterY)),
-  }
-}
-
-function routeStyle(from: { x: number; y: number }, to: { x: number; y: number }) {
-  const dx = to.x - from.x
-  const dy = to.y - from.y
-  const length = Math.sqrt(dx * dx + dy * dy)
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI)
-  return {
-    left: `${from.x}%`,
-    top: `${from.y}%`,
-    width: `${length}%`,
-    transform: `rotate(${angle}deg)`,
-  }
 }
 
 function pointsForPersona(
@@ -256,8 +224,8 @@ export function TravelAtlasMap() {
   const [listMode, setListMode] = useState(false)
   const [heritageLayer, setHeritageLayer] = useState(true)
   const [routePreview, setRoutePreview] = useState(false)
-  const [zoom, setZoom] = useState(1)
   const [contextBranch, setContextBranch] = useState<ContextBranch>(null)
+  const realMapRef = useRef<RealTravelMapHandle>(null)
 
   const shownPoints = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -285,14 +253,9 @@ export function TravelAtlasMap() {
   const selected = shownPoints.length > 0
     ? shownPoints.find((point) => point.id === selectedId) ?? shownPoints[0]
     : undefined
-  const selectedIndex = Math.max(0, shownPoints.findIndex((point) => point.id === selected?.id))
-  const selectedPosition = selected ? projectPoint(selected, selectedIndex) : { x: 66, y: 48 }
   const locationInView = locationStatus === "granted" && location &&
     location.latitude >= SEOUL_BOUNDS.minLatitude && location.latitude <= SEOUL_BOUNDS.maxLatitude &&
     location.longitude >= SEOUL_BOUNDS.minLongitude && location.longitude <= SEOUL_BOUNDS.maxLongitude
-  const originPosition = locationInView
-    ? projectPoint({ id: "current-location", geo: location }, 0)
-    : { x: 47, y: 57 }
   const remainingDays = credentialDaysRemaining(session.capsule)
   const credentialActive = isCredentialUsable(session.capsule)
   const selectedVoucher = selected?.kind === "marketplace"
@@ -321,6 +284,11 @@ export function TravelAtlasMap() {
     setExpanded(false)
     setRoutePreview(false)
     setContextBranch(null)
+  }
+
+  const selectPointById = (id: string) => {
+    const point = shownPoints.find((candidate) => candidate.id === id)
+    if (point) selectPoint(point)
   }
 
   const contextualPartners = contextBranch
@@ -361,62 +329,17 @@ export function TravelAtlasMap() {
   return (
     <main className="relative h-[100dvh] overflow-hidden bg-[#e7e3d8]" data-experiment-variant="map-first-b">
       <div className="absolute inset-0 bottom-[calc(72px+env(safe-area-inset-bottom))] overflow-hidden">
-        <div
-          className={cn("atlas-map absolute inset-0", heritageLayer && "atlas-map-heritage")}
-          aria-label={ko ? "서울·경기 여행 지도" : "Seoul and Gyeonggi travel map"}
-        >
-          <div className="atlas-fold atlas-fold-one" aria-hidden="true" />
-          <div className="atlas-fold atlas-fold-two" aria-hidden="true" />
-          <div className="atlas-river" aria-hidden="true"><span>{ko ? "한강" : "HAN RIVER"}</span></div>
-          <div className="atlas-road atlas-road-one" aria-hidden="true" />
-          <div className="atlas-road atlas-road-two" aria-hidden="true" />
-          <div className="atlas-road atlas-road-three" aria-hidden="true" />
-          {heritageLayer && (
-            <>
-              <div className="atlas-ridge atlas-ridge-one" aria-hidden="true" />
-              <div className="atlas-ridge atlas-ridge-two" aria-hidden="true" />
-              <div className="atlas-ridge atlas-ridge-three" aria-hidden="true" />
-            </>
-          )}
-          <span className="atlas-place-label left-[58%] top-[33%]">북촌 · Bukchon</span>
-          <span className="atlas-place-label left-[18%] top-[43%]">홍대 · Hongdae</span>
-          <span className="atlas-place-label left-[66%] top-[58%]">남산 · Namsan</span>
-          <span className="atlas-place-label left-[73%] top-[75%]">강남 · Gangnam</span>
-
-          {!listMode && (
-            <div
-              className="absolute inset-0 transition-transform duration-300 ease-out motion-reduce:transition-none"
-              style={{ transform: `scale(${zoom})`, transformOrigin: `${selectedPosition.x}% ${selectedPosition.y}%` }}
-            >
-              {routePreview && selected && (
-                <div className="atlas-route-line" style={routeStyle(originPosition, selectedPosition)} aria-hidden="true" />
-              )}
-              {locationInView && (
-                <div className="atlas-user-marker" style={{ left: `${originPosition.x}%`, top: `${originPosition.y}%` }} aria-label={ko ? "내 위치" : "My location"}>
-                  <span />
-                </div>
-              )}
-              {shownPoints.map((point, index) => {
-                const position = projectPoint(point, index)
-                const Icon = POINT_ICONS[point.layer]
-                const active = point.id === selected?.id
-                return (
-                  <button
-                    key={`${point.kind}:${point.id}`}
-                    type="button"
-                    onClick={() => selectPoint(point)}
-                    aria-pressed={active}
-                    aria-label={`${ko ? LAYERS.find((item) => item.id === point.layer)?.ko : LAYERS.find((item) => item.id === point.layer)?.en}, ${point.title}, ${point.subtitle}`}
-                    className={cn("atlas-pin pressable", `atlas-pin-${point.layer}`, active && "atlas-pin-active")}
-                    style={{ left: `${position.x}%`, top: `${position.y}%` }}
-                  >
-                    <Icon className="h-[15px] w-[15px]" strokeWidth={2.2} />
-                    {point.benefitLabel && <span className="atlas-pin-benefit" aria-hidden="true" />}
-                  </button>
-                )
-              })}
-            </div>
-          )}
+        <div className={cn("atlas-map absolute inset-0", heritageLayer && "atlas-map-heritage")}>
+          <RealTravelMap
+            ref={realMapRef}
+            points={shownPoints}
+            selectedId={selected?.id}
+            currentLocation={locationStatus === "granted" ? location : null}
+            routePreview={routePreview}
+            heritageLayer={heritageLayer}
+            lang={lang}
+            onSelect={selectPointById}
+          />
         </div>
 
         <header className="safe-top pointer-events-none absolute inset-x-0 top-0 z-30 px-4">
@@ -465,8 +388,8 @@ export function TravelAtlasMap() {
             {listMode ? <MapPinned className="h-[18px] w-[18px]" /> : <List className="h-[18px] w-[18px]" />}
           </button>
           <button type="button" onClick={() => setHeritageLayer((value) => !value)} aria-pressed={heritageLayer} className={cn("pressable grid h-11 w-11 place-items-center rounded-[14px] shadow-md ring-1", heritageLayer ? "bg-ink text-[#e7c16d] ring-ink" : "bg-[#fbfaf6]/94 text-foreground ring-black/5")} aria-label={ko ? "산수의 맥 레이어" : "Landscape layer"}><Layers3 className="h-[18px] w-[18px]" /></button>
-          {!listMode && <div className="overflow-hidden rounded-[14px] bg-[#fbfaf6]/94 shadow-md ring-1 ring-black/5"><button type="button" onClick={() => setZoom((value) => Math.min(1.22, Number((value + 0.11).toFixed(2))))} className="pressable grid h-10 w-11 place-items-center border-b border-black/5" aria-label={ko ? "확대" : "Zoom in"}><ZoomIn className="h-[17px] w-[17px]" /></button><button type="button" onClick={() => setZoom((value) => Math.max(0.94, Number((value - 0.11).toFixed(2))))} className="pressable grid h-10 w-11 place-items-center" aria-label={ko ? "축소" : "Zoom out"}><ZoomOut className="h-[17px] w-[17px]" /></button></div>}
-          <button type="button" onClick={() => void requestLocation()} disabled={locationStatus === "requesting"} className="pressable grid h-11 w-11 place-items-center rounded-[14px] bg-primary text-white shadow-md disabled:opacity-55" aria-label={ko ? "내 위치로 이동" : "Use my location"}><LocateFixed className={cn("h-[18px] w-[18px]", locationStatus === "requesting" && "animate-pulse")} /></button>
+          {!listMode && <div className="overflow-hidden rounded-[14px] bg-[#fbfaf6]/94 shadow-md ring-1 ring-black/5"><button type="button" onClick={() => realMapRef.current?.zoomIn()} className="pressable grid h-10 w-11 place-items-center border-b border-black/5" aria-label={ko ? "확대" : "Zoom in"}><ZoomIn className="h-[17px] w-[17px]" /></button><button type="button" onClick={() => realMapRef.current?.zoomOut()} className="pressable grid h-10 w-11 place-items-center" aria-label={ko ? "축소" : "Zoom out"}><ZoomOut className="h-[17px] w-[17px]" /></button></div>}
+          <button type="button" onClick={async () => { if (locationStatus === "granted" && location) realMapRef.current?.flyToLocation(location); else await requestLocation() }} disabled={locationStatus === "requesting"} className="pressable grid h-11 w-11 place-items-center rounded-[14px] bg-primary text-white shadow-md disabled:opacity-55" aria-label={ko ? "내 위치로 이동" : "Use my location"}><LocateFixed className={cn("h-[18px] w-[18px]", locationStatus === "requesting" && "animate-pulse")} /></button>
         </div>
 
         {!listMode && shownPoints.length === 0 && (

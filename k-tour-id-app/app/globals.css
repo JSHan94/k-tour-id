@@ -287,8 +287,111 @@
     pointer-events: none;
     background-image: radial-gradient(rgba(35, 34, 28, .09) .55px, transparent .55px);
     background-size: 5px 5px;
-    opacity: .38;
+    z-index: 3;
+    opacity: 0;
     mix-blend-mode: multiply;
+    transition: opacity 220ms ease;
+  }
+
+  .atlas-map-heritage::after { opacity: .24; }
+
+  .atlas-real-map {
+    background: #e9e5d8;
+  }
+
+  .atlas-real-map .maplibregl-canvas {
+    cursor: grab;
+    outline: none;
+  }
+
+  .atlas-real-map .maplibregl-canvas:active { cursor: grabbing; }
+
+  .atlas-real-map-heritage .maplibregl-canvas {
+    filter: sepia(.10) saturate(.88) contrast(.98);
+  }
+
+  .atlas-map .maplibregl-ctrl-bottom-left {
+    bottom: auto;
+    left: 8px;
+    top: max(196px, calc(env(safe-area-inset-top) + 172px));
+    z-index: 4;
+  }
+
+  .atlas-map .maplibregl-ctrl-attrib {
+    border-radius: 7px;
+    background: rgba(251, 250, 246, .88);
+    color: rgba(35, 34, 28, .65);
+    font: 500 8px/1.25 var(--font-sans);
+    backdrop-filter: blur(8px);
+  }
+
+  .atlas-map-marker {
+    position: relative;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    place-items: center;
+    appearance: none;
+    border: 2px solid rgba(255, 253, 247, .96);
+    border-radius: 50%;
+    color: #fff;
+    box-shadow: 0 7px 16px rgba(36, 31, 23, .24);
+    cursor: pointer;
+    transition: width 180ms ease, height 180ms ease, box-shadow 180ms ease;
+  }
+
+  .atlas-map-marker::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -5px;
+    width: 9px;
+    height: 9px;
+    border-right: 2px solid rgba(255, 253, 247, .96);
+    border-bottom: 2px solid rgba(255, 253, 247, .96);
+    background: inherit;
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .atlas-map-marker-glyph {
+    position: relative;
+    z-index: 2;
+    font: 800 16px/1 var(--font-sans);
+  }
+
+  .atlas-map-marker-experience { background: #ad4438; }
+  .atlas-map-marker-food { background: #b37932; }
+  .atlas-map-marker-mobility { background: #2b5872; }
+  .atlas-map-marker-essentials { background: #67547e; }
+  .atlas-map-marker-together { background: #456c59; }
+
+  .atlas-map-marker-active {
+    z-index: 2;
+    width: 46px;
+    height: 46px;
+    box-shadow: 0 0 0 5px rgba(255, 253, 247, .66), 0 12px 24px rgba(36, 31, 23, .30);
+  }
+
+  .atlas-map-marker-benefit {
+    position: absolute;
+    z-index: 3;
+    right: -3px;
+    top: -4px;
+    width: 11px;
+    height: 11px;
+    border: 2px solid #fffdf7;
+    border-radius: 50%;
+    background: #e1ba58;
+  }
+
+  .atlas-map-user-marker {
+    width: 21px;
+    height: 21px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    background: #3478c4;
+    box-shadow: 0 0 0 9px rgba(52, 120, 196, .17), 0 4px 11px rgba(32, 77, 126, .38);
   }
 
   .atlas-fold {

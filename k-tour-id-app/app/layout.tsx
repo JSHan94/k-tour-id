@@ -1,5 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
+import "maplibre-gl/dist/maplibre-gl.css"
 import "@fontsource-variable/noto-sans-kr"
 import "@fontsource-variable/noto-serif-kr"
 import "./globals.css"
