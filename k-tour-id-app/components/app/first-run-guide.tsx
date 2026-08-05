@@ -125,13 +125,13 @@ export function FirstRunGuide() {
         <p className={step === 0 ? "mt-4 text-[13px] font-semibold tracking-[0.04em] text-primary" : "mt-6 text-[13px] font-semibold tracking-[0.04em] text-primary"}>{ko ? current.eyebrowKo : current.eyebrowEn}</p>
         <h2 id="first-guide-title" className="font-display text-balance mt-2 whitespace-pre-line text-[30px] font-semibold leading-[1.2] tracking-[-0.03em]">{ko ? current.titleKo : current.titleEn}</h2>
         <p className="mt-4 text-[14px] leading-6 text-muted-foreground">{ko ? current.bodyKo : current.bodyEn}</p>
-        {step === 0 && <div className="mt-5 flex items-start gap-3 rounded-[14px] bg-success-surface px-4 py-3 text-[12px] leading-5 text-success"><Check className="mt-0.5 h-4 w-4 flex-shrink-0" /><span>{ko ? "위치를 켜지 않아도 서울 중심 추천으로 계속 이용할 수 있어요." : "You can continue with central Seoul recommendations without enabling location."}</span></div>}
+        {step === 0 && <div className="mt-5 flex items-start gap-3 rounded-[14px] bg-success-surface px-4 py-3 text-[12px] leading-5 text-success"><Check className="mt-0.5 h-4 w-4 flex-shrink-0" /><span>{ko ? "위치를 켜지 않아도 대한민국 지도에서 여행 지역을 골라 시작할 수 있어요." : "You can choose a region from the Korea map without enabling location."}</span></div>}
         {step === 0 && locationError && <p role="alert" className="mt-3 rounded-[14px] bg-destructive/10 px-4 py-3 text-[12px] font-medium leading-5 text-destructive">{ko ? "위치를 확인하지 못했어요. 기기 설정에서 위치 권한을 켜고 다시 시도하거나, 위치 없이 계속할 수 있어요." : "We couldn't access your location. Enable location in your device settings and try again, or continue without it."}</p>}
         <button type="button" onClick={step === 0 ? () => void useLocation() : advance} disabled={status === "requesting"} className="pressable mt-7 flex min-h-14 w-full items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-50">
           <span>{step === 0 ? (status === "requesting" ? (ko ? "현재 위치 확인 중…" : "Finding your location…") : locationError ? (ko ? "위치 다시 확인" : "Try location again") : (ko ? "현재 위치로 시작" : "Use my current location")) : step === STEPS.length - 1 ? (ko ? "내 여행 지도 열기" : "Open my travel map") : (ko ? "다음" : "Next")}</span>
           <ArrowRight className="h-5 w-5" />
         </button>
-        {step === 0 && <button type="button" onClick={() => { setLocationError(false); advance() }} className="pressable mt-2 min-h-11 w-full text-[13px] font-medium text-muted-foreground">{ko ? "위치 없이 계속" : "Continue without location"}</button>}
+        {step === 0 && <button type="button" onClick={() => { setLocationError(false); advance() }} className="pressable mt-2 min-h-11 w-full text-[13px] font-medium text-muted-foreground">{ko ? "지역을 골라 시작" : "Choose a region instead"}</button>}
       </section>
     </div>
   )
