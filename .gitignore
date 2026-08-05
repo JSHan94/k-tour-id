@@ -50,7 +50,8 @@ k-tour-id-app/out/
 k-tour-id-app/.vinext/
 
 # Other build artifacts
-k-tour-id-app/build/
+k-tour-id-app/build/*
+!k-tour-id-app/build/sites-vite-plugin.ts
 k-tour-id-app/dist/
 k-tour-id-app/.wrangler/
 
