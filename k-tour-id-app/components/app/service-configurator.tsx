@@ -98,7 +98,7 @@ function QuantityControl({
         aria-label={`${label} −1`}
         disabled={value <= 1}
         onClick={() => onChange(Math.max(1, value - 1))}
-        className="pressable grid h-10 w-10 place-items-center rounded-full bg-card ring-1 ring-border disabled:opacity-35"
+        className="pressable grid h-11 w-11 place-items-center rounded-full bg-card ring-1 ring-border disabled:opacity-35"
       >
         <Minus className="h-4 w-4" />
       </button>
@@ -110,7 +110,7 @@ function QuantityControl({
         aria-label={`${label} +1`}
         disabled={value >= 5}
         onClick={() => onChange(Math.min(5, value + 1))}
-        className="pressable grid h-10 w-10 place-items-center rounded-full bg-card ring-1 ring-border disabled:opacity-35"
+        className="pressable grid h-11 w-11 place-items-center rounded-full bg-card ring-1 ring-border disabled:opacity-35"
       >
         <Plus className="h-4 w-4" />
       </button>

@@ -104,6 +104,7 @@ interface AppContextValue {
     optionId: string;
     useBenefit: boolean;
     deliveryAddress?: string;
+    entryContext?: CommerceOrder["entryContext"];
   }) => Promise<OperationResult<CommerceOrder>>;
   refundCommerceOrder: (orderId: string) => Promise<boolean>;
   prepareDemoPurchase: (itemId: string, optionId: string) => boolean;
@@ -739,6 +740,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       optionId: string;
       useBenefit: boolean;
       deliveryAddress?: string;
+      entryContext?: CommerceOrder["entryContext"];
     }): Promise<OperationResult<CommerceOrder>> => {
       return withLedgerLock(async () => {
         if (commercePaymentBusyRef.current) {
@@ -954,6 +956,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
             refundableKRW: timing.refundableKRW,
             paidAt: new Date().toISOString(),
             transactionId,
+            entryContext: input.entryContext,
           };
           setSession((current) => ({
             ...current,

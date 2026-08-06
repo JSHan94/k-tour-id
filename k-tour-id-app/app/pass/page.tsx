@@ -78,9 +78,16 @@ export default function PassPage() {
         <p className="border-l-2 border-gold pl-3 text-[13px] leading-5 text-muted-foreground">{ko ? "K-Tour ID는 민간 여행 서비스 자격이며 정부 신분증·비자·체류 허가를 대신하지 않아요." : "K-Tour ID is a private travel-service credential, not a government ID, visa or immigration status."}</p>
 
         {!unavailable && (
-          <Link href={capsule.userType === "foreigner" ? "/present?auto=1" : `/explore/${persona.firstItemId}`} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-white">
-            <span className="flex items-center gap-3 text-[16px] font-semibold"><ScanLine className="h-5 w-5" /> {persona.primaryCta[lang]}</span>
+          <Link href={`/explore/${persona.firstItemId}`} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-white">
+            <span className="flex items-center gap-3 text-[16px] font-semibold"><BadgeCheck className="h-5 w-5" /> {persona.primaryCta[lang]}</span>
             <ArrowRight className="h-5 w-5" />
+          </Link>
+        )}
+
+        {!unavailable && (
+          <Link href="/present" className="pressable flex min-h-13 items-center justify-between border-y border-foreground/10 px-1 py-3 text-[14px] font-semibold">
+            <span className="flex items-center gap-3"><ScanLine className="h-5 w-5 text-primary" />{ko ? "매장 QR로 자격 제시" : "Present eligibility at a merchant QR"}</span>
+            <ArrowRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         )}
 

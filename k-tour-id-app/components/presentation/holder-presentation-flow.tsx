@@ -54,6 +54,7 @@ export function HolderPresentationFlow() {
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState("")
   const [recovery, setRecovery] = useState<PaymentRecovery>(null)
+  const [returnQuery, setReturnQuery] = useState("")
   const initialized = useRef(false)
 
   useEffect(() => {
@@ -64,6 +65,12 @@ export function HolderPresentationFlow() {
     const requestedStep = params.get("step")
     const requestedItem = params.get("item")
     const requestedOption = params.get("option")
+    const preserved = new URLSearchParams()
+    for (const key of ["contextId", "contextLabel", "region", "contextLat", "contextLng", "returnTo"]) {
+      const value = params.get(key)
+      if (value) preserved.set(key, value)
+    }
+    setReturnQuery(preserved.toString())
     if (requestedItem && requestedOption && !prepareDemoPurchase(requestedItem, requestedOption)) {
       router.replace(`/explore/${encodeURIComponent(requestedItem)}`)
       return
@@ -143,7 +150,7 @@ export function HolderPresentationFlow() {
         setPaying(false)
         return
       }
-      router.push("/benefits")
+      router.push(returnQuery ? `/benefits?${returnQuery}` : "/benefits")
     } catch {
       setError(ko ? "결제를 완료하지 못했어요. 다시 시도해 주세요." : "We couldn't complete the payment. Please try again.")
       setPaying(false)
@@ -152,8 +159,9 @@ export function HolderPresentationFlow() {
 
   const goBack = () => {
     if (step === "result") setStep("consent")
-    else if (step === "consent") window.history.back()
-    else window.history.back()
+    else if (step === "consent") setStep("scan")
+    else if (window.history.length > 1) window.history.back()
+    else router.push("/pass")
   }
 
   return (

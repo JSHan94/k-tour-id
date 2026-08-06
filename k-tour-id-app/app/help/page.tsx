@@ -1,18 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  CheckCircle2,
   ChevronDown,
+  Clock3,
   Gift,
+  LifeBuoy,
+  Phone,
   RefreshCcw,
   RotateCcw,
+  Send,
   ShieldCheck,
 } from "lucide-react";
 import { PhoneFrame, PageHeader } from "@/components/app/shell";
 import { useExternalServiceOrders } from "@/lib/external-service-orders";
 import { useLang } from "@/lib/i18n/lang-provider";
 import { useApp } from "@/lib/store/app-provider";
+import {
+  createSupportCase,
+  readSupportCases,
+  type SupportCase,
+  type SupportTopic,
+} from "@/lib/support-cases";
+
+const SUPPORT_TOPICS: Array<{
+  id: SupportTopic;
+  ko: string;
+  en: string;
+}> = [
+  { id: "payment", ko: "결제·주문", en: "Payment or order" },
+  { id: "refund", ko: "취소·환불", en: "Cancellation or refund" },
+  { id: "id", ko: "K-Tour ID", en: "K-Tour ID" },
+  { id: "safety", ko: "안전·긴급 도움", en: "Safety or emergency" },
+  { id: "other", ko: "기타", en: "Something else" },
+];
 
 const FAQS = [
   {
@@ -71,12 +94,25 @@ export default function HelpPage() {
   const ko = lang === "ko";
   const [back, setBack] = useState("/profile");
   const [requestedOrderId, setRequestedOrderId] = useState("");
+  const [topic, setTopic] = useState<SupportTopic>("other");
+  const [message, setMessage] = useState("");
+  const [cases, setCases] = useState<SupportCase[]>([]);
+  const [receipt, setReceipt] = useState<SupportCase | null>(null);
+  const [submitError, setSubmitError] = useState(false);
   const externalOrders = useExternalServiceOrders(
     session.identity?.did ?? "guest",
   );
   const requestedOrder = externalOrders.find(
     (order) => order.id === requestedOrderId,
   );
+  const requestedCommerceOrder = orders.find(
+    (order) => order.id === requestedOrderId,
+  );
+  const requestedOrderLabel = requestedOrder
+    ? `${requestedOrder.provider} · ${ko ? requestedOrder.title : requestedOrder.titleEn}`
+    : requestedCommerceOrder
+      ? `${requestedCommerceOrder.merchant} · ${ko ? requestedCommerceOrder.title : requestedCommerceOrder.titleEn}`
+      : "";
   const recentOrderHref = requestedOrder
     ? `/services/orders/${requestedOrder.id}`
     : externalOrders[0]
@@ -88,10 +124,45 @@ export default function HelpPage() {
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const orderId = query.get("order") ?? "";
+    const requestedTopic = normalizeTopic(query.get("topic"));
     setRequestedOrderId(orderId);
-    if (orderId) setBack(`/services/orders/${orderId}`);
+    setTopic(requestedTopic ?? (orderId ? "payment" : "other"));
+    setCases(readSupportCases(session.identity?.did ?? "guest"));
+    if (orderId) setBack(query.get("source") === "commerce" ? `/orders/${orderId}` : `/services/orders/${orderId}`);
     else if (query.get("from") === "receipt") setBack("/benefits");
-  }, []);
+  }, [session.identity?.did]);
+
+  useEffect(() => {
+    if (!requestedCommerceOrder || requestedOrder) return;
+    setBack(`/orders/${requestedCommerceOrder.id}`);
+  }, [requestedCommerceOrder, requestedOrder]);
+
+  const selectedTopic = useMemo(
+    () => SUPPORT_TOPICS.find((candidate) => candidate.id === topic)!,
+    [topic],
+  );
+
+  const submitCase = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSubmitError(false);
+    if (message.trim().length < 5) {
+      setSubmitError(true);
+      return;
+    }
+    const next = createSupportCase(session.identity?.did ?? "guest", {
+      topic,
+      message: message.trim(),
+      orderId: requestedOrderId || undefined,
+      orderLabel: requestedOrderLabel || undefined,
+    });
+    if (!next) {
+      setSubmitError(true);
+      return;
+    }
+    setReceipt(next);
+    setCases((current) => [next, ...current].slice(0, 12));
+    setMessage("");
+  };
 
   return (
     <PhoneFrame>
@@ -108,24 +179,147 @@ export default function HelpPage() {
           </p>
         </div>
 
-        {requestedOrder && (
+        {(requestedOrder || requestedCommerceOrder) && (
           <section className="mb-5 rounded-2xl bg-surface-2 p-4 ring-1 ring-border">
-            <p className="text-[11px] font-bold text-primary">
+            <p className="text-[12px] font-bold text-primary">
               {ko ? "문의할 이용 내역" : "SERVICE IN QUESTION"}
             </p>
             <h2 className="mt-2 text-[14px] font-bold">
-              {requestedOrder.provider} ·{" "}
-              {ko ? requestedOrder.title : requestedOrder.titleEn}
+              {requestedOrderLabel}
             </h2>
-            <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-              {requestedOrder.providerReference ?? requestedOrder.id}
+            <p className="mt-1 font-mono text-[12px] text-muted-foreground">
+              {requestedOrder?.providerReference ?? requestedCommerceOrder?.receiptId ?? requestedOrderId}
             </p>
             <Link
-              href={`/services/orders/${requestedOrder.id}`}
+              href={requestedOrder ? `/services/orders/${requestedOrder.id}` : `/orders/${requestedCommerceOrder!.id}`}
               className="pressable mt-3 inline-flex min-h-11 items-center rounded-xl bg-card px-3 text-[12px] font-bold text-primary ring-1 ring-border"
             >
               {ko ? "이용 내역으로 돌아가기" : "Back to service record"}
             </Link>
+          </section>
+        )}
+
+        <section className="mb-6 rounded-[22px] bg-card p-4 ring-1 ring-border" aria-labelledby="support-case-title">
+          <div className="flex items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
+              <LifeBuoy className="h-5 w-5" />
+            </span>
+            <div>
+              <h2 id="support-case-title" className="text-[16px] font-bold">
+                {ko ? "담당자에게 문의하기" : "Contact support"}
+              </h2>
+              <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                {ko
+                  ? "접수하면 이 화면에서 접수번호와 예상 답변 시각을 바로 확인할 수 있어요."
+                  : "Submit a case to receive a case number and expected response time here."}
+              </p>
+            </div>
+          </div>
+
+          {receipt ? (
+            <div role="status" className="mt-4 rounded-2xl bg-success/10 p-4 ring-1 ring-success/20">
+              <div className="flex items-center gap-2 text-success">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="text-[14px] font-bold">{ko ? "문의가 접수됐어요" : "Your case is received"}</p>
+              </div>
+              <p className="mt-3 font-mono text-[13px] font-semibold text-foreground">{receipt.id}</p>
+              <p className="mt-2 flex items-center gap-2 text-[12px] leading-5 text-muted-foreground">
+                <Clock3 className="h-4 w-4 shrink-0" />
+                {ko ? "예상 답변" : "Expected reply"} · {formatCaseDate(receipt.expectedReplyAt, ko)}
+              </p>
+              <button
+                type="button"
+                onClick={() => setReceipt(null)}
+                className="pressable mt-3 min-h-11 text-[13px] font-bold text-primary underline underline-offset-4"
+              >
+                {ko ? "새 문의 작성" : "Create another case"}
+              </button>
+            </div>
+          ) : (
+            <form className="mt-4" onSubmit={submitCase}>
+              <label htmlFor="support-topic" className="text-[12px] font-bold text-foreground">
+                {ko ? "문의 유형" : "Topic"}
+              </label>
+              <select
+                id="support-topic"
+                value={topic}
+                onChange={(event) => setTopic(event.target.value as SupportTopic)}
+                className="mt-2 min-h-12 w-full rounded-[14px] border border-border bg-background px-3 text-[14px] font-semibold outline-none focus:border-primary"
+              >
+                {SUPPORT_TOPICS.map((candidate) => (
+                  <option key={candidate.id} value={candidate.id}>{ko ? candidate.ko : candidate.en}</option>
+                ))}
+              </select>
+
+              {topic === "safety" && (
+                <div className="mt-3 rounded-[14px] bg-primary/8 p-3">
+                  <p className="text-[12px] font-bold text-foreground">
+                    {ko ? "지금 위험하다면 앱 답변을 기다리지 마세요." : "If you are in immediate danger, do not wait for an app reply."}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <a href="tel:112" className="pressable flex min-h-12 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-[13px] font-bold text-white">
+                      <Phone className="h-4 w-4" />{ko ? "경찰 112" : "Police 112"}
+                    </a>
+                    <a href="tel:1330" className="pressable flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink px-3 text-[13px] font-bold text-white">
+                      <Phone className="h-4 w-4" />{ko ? "여행 1330" : "Travel 1330"}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <label htmlFor="support-message" className="mt-4 block text-[12px] font-bold text-foreground">
+                {ko ? `${selectedTopic.ko}에 필요한 내용을 알려주세요` : `Tell us about your ${selectedTopic.en.toLowerCase()} issue`}
+              </label>
+              <textarea
+                id="support-message"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                required
+                minLength={5}
+                maxLength={600}
+                rows={4}
+                placeholder={ko ? "문제가 발생한 시각과 원하는 해결 방법을 적어주세요." : "Include when it happened and what outcome you need."}
+                className="mt-2 w-full resize-none rounded-[14px] border border-border bg-background p-3 text-[14px] leading-6 outline-none placeholder:text-muted-foreground focus:border-primary"
+              />
+              <div className="mt-1 flex items-center justify-between text-[12px] text-muted-foreground">
+                <span>{supportSla(topic, ko)}</span>
+                <span>{message.length}/600</span>
+              </div>
+              {submitError && <p role="alert" className="mt-2 text-[12px] font-semibold text-destructive">{ko ? "문의 내용을 5자 이상 입력한 뒤 다시 시도해 주세요." : "Enter at least 5 characters, then try again."}</p>}
+              <button
+                type="submit"
+                className="pressable mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-primary px-4 text-[14px] font-bold text-white"
+              >
+                <Send className="h-4 w-4" />{ko ? "문의 접수" : "Submit case"}
+              </button>
+            </form>
+          )}
+
+          <div className="mt-4 border-t border-border pt-4">
+            <p className="text-[12px] leading-5 text-muted-foreground">
+              {ko ? "전화 안내가 필요하면 한국관광공사 여행안내 1330으로 연결할 수 있어요." : "For phone assistance, call the Korea Travel Hotline at 1330."}
+            </p>
+            <a href="tel:1330" className="pressable mt-2 inline-flex min-h-11 items-center gap-2 text-[13px] font-bold text-primary underline underline-offset-4">
+              <Phone className="h-4 w-4" />{ko ? "여행안내 1330 전화" : "Call Travel Hotline 1330"}
+            </a>
+          </div>
+        </section>
+
+        {cases.length > 0 && (
+          <section className="mb-6" aria-labelledby="case-history-title">
+            <h2 id="case-history-title" className="text-[14px] font-bold">{ko ? "최근 문의" : "Recent cases"}</h2>
+            <div className="mt-2 space-y-2">
+              {cases.slice(0, 3).map((item) => (
+                <div key={item.id} className="rounded-2xl bg-surface-2 p-3 ring-1 ring-border">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-mono text-[12px] font-semibold">{item.id}</p>
+                    <span className="rounded-full bg-success/10 px-2 py-1 text-[12px] font-bold text-success">{ko ? "접수" : "Received"}</span>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-[12px] leading-5 text-muted-foreground">{item.message}</p>
+                  <p className="mt-1 text-[12px] text-muted-foreground">{ko ? "예상 답변" : "Expected reply"} · {formatCaseDate(item.expectedReplyAt, ko)}</p>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
@@ -172,4 +366,28 @@ export default function HelpPage() {
       </main>
     </PhoneFrame>
   );
+}
+
+function normalizeTopic(value: string | null): SupportTopic | null {
+  if (value === "order" || value === "payment") return "payment";
+  if (value === "refund" || value === "cancel") return "refund";
+  if (value === "id" || value === "credential") return "id";
+  if (value === "safety" || value === "emergency") return "safety";
+  if (value === "other" || value === "general") return "other";
+  return null;
+}
+
+function formatCaseDate(value: string, ko: boolean) {
+  return new Intl.DateTimeFormat(ko ? "ko-KR" : "en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function supportSla(topic: SupportTopic, ko: boolean) {
+  if (topic === "safety") return ko ? "안전 문의: 1시간 이내 답변" : "Safety cases: reply within 1 hour";
+  if (topic === "refund") return ko ? "환불 문의: 4시간 이내 답변" : "Refund cases: reply within 4 hours";
+  return ko ? "보통 2시간 이내 답변" : "Usually replies within 2 hours";
 }

@@ -13,6 +13,7 @@ import { proximityLabel, useNearbyLocation } from "@/lib/location/location-provi
 import { cn } from "@/lib/utils"
 import { isCredentialUsable } from "@/lib/credential-status"
 import { isVoucherAvailable } from "@/lib/voucher-policy"
+import type { CommerceEntryContext } from "@/lib/types"
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>()
@@ -33,12 +34,34 @@ export default function ProductDetailPage() {
   const [errorCode, setErrorCode] = useState("")
   const [soldOut, setSoldOut] = useState(false)
   const [backHref, setBackHref] = useState("/explore")
+  const [entryContext, setEntryContext] = useState<CommerceEntryContext | null>(null)
+  const [contextQuery, setContextQuery] = useState("")
   const [deliveryAddress, setDeliveryAddress] = useState(ko ? "서울 서대문구 연희로 00" : "00 Yeonhui-ro, Seodaemun-gu, Seoul")
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
     const query = new URLSearchParams(window.location.search)
-    if (query.get("from") === "map") setBackHref("/")
+    const contextId = query.get("contextId") ?? ""
+    const contextLabel = query.get("contextLabel") ?? ""
+    const region = query.get("region") ?? ""
+    const returnTo = query.get("returnTo") ?? ""
+    const preserved = new URLSearchParams()
+    for (const key of ["contextId", "contextLabel", "region", "contextLat", "contextLng", "returnTo"]) {
+      const value = query.get(key)
+      if (value) preserved.set(key, value)
+    }
+    setContextQuery(preserved.toString())
+    if (contextId && returnTo.startsWith("/")) {
+      const nextContext = {
+        contextId,
+        contextLabel: contextLabel || undefined,
+        region: region || undefined,
+        returnTo,
+      }
+      setEntryContext(nextContext)
+      setBackHref(returnTo)
+      try { sessionStorage.setItem(`k-tour-entry-context:${params.id}`, JSON.stringify(nextContext)) } catch { /* keep current navigation context */ }
+    } else if (query.get("from") === "map") setBackHref("/")
     setSoldOut(query.get("preview") === "soldout")
     const requestedOption = query.get("option")
     if (requestedOption && item?.options.some((candidate) => candidate.id === requestedOption && candidate.available)) setOptionId(requestedOption)
@@ -63,7 +86,7 @@ export default function ProductDetailPage() {
   const discount = useBenefit && isVoucherAvailable(voucher) ? Math.min(voucher.valueKRW, item.priceKRW + (option?.priceDeltaKRW ?? 0)) : 0
   const gross = item.priceKRW + (option?.priceDeltaKRW ?? 0)
   const final = gross - discount
-  const detailReturnHref = backHref === "/" ? `/explore/${item.id}?from=map` : `/explore/${item.id}`
+  const detailReturnHref = `/explore/${item.id}?${new URLSearchParams({ ...(backHref === "/" ? { from: "map" } : {}), ...(contextQuery ? Object.fromEntries(new URLSearchParams(contextQuery)) : {}) }).toString()}`
   const benefitJourney = eligible && isVoucherAvailable(voucher) && useBenefit
   const proximity = locationStatus === "granted" ? proximityLabel(item, location, lang) : undefined
   const moveOption = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -86,7 +109,7 @@ export default function ProductDetailPage() {
     setError("")
     setErrorCode("")
     try {
-      const result = await purchaseServiceItem({ itemId: item.id, optionId: option.id, useBenefit, deliveryAddress })
+      const result = await purchaseServiceItem({ itemId: item.id, optionId: option.id, useBenefit, deliveryAddress, entryContext: entryContext ?? undefined })
       if (result.ok && result.data) {
         sessionStorage.removeItem(`k-tour-checkout-draft:${item.id}`)
         router.push(`/orders/${result.data.id}`)
@@ -135,13 +158,13 @@ export default function ProductDetailPage() {
         <section className="mt-8 px-6"><h2 className="text-[14px] font-semibold">{ko ? "이용과 취소" : "Fulfilment & cancellation"}</h2><div className="mt-3 space-y-2 text-[13px] leading-6 text-muted-foreground"><p>· {item.fulfilmentLabel[lang]}</p><p>· {item.cancellation[lang]}</p><p>· {ko ? "최종 금액과 선택 가능 여부는 결제 확인 화면에서 다시 보여드려요." : "The review screen shows the final price and option availability again."}</p></div></section>
 
         <div className="sticky bottom-[76px] mt-9 bg-background/94 px-6 py-3 backdrop-blur-xl">
-          {soldOut ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "오늘은 예약할 수 없어요." : "No booking is available today."}</p><Link href={backHref} className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "가능한 다른 상품 보기" : "See available alternatives"}<ArrowRight className="h-4 w-4" /></Link></div> : credentialUnavailable ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "K-Tour ID를 갱신하면 이 상품을 계속 확인할 수 있어요." : "Renew K-Tour ID to continue with this item."}</p><Link href={`/onboarding?mode=renew&returnTo=${encodeURIComponent(detailReturnHref)}`} className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "갱신하고 돌아오기" : "Renew and return"}<ArrowRight className="h-4 w-4" /></Link></div> : !personaEligible ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "이 상품은 현재 K-Tour ID의 이용 대상이 아니에요." : "This item is not available for your current K-Tour ID."}</p><Link href={backHref} className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "이용 가능한 상품 보기" : "See available items"}<ArrowRight className="h-4 w-4" /></Link></div> : benefitJourney && option ? <Link href={`/present?step=consent&item=${item.id}&option=${option.id}`} onClick={() => prepareDemoPurchase(item.id, option.id)} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? `K-Tour ID로 ₩${discount.toLocaleString()} 혜택 확인` : `Verify ₩${discount.toLocaleString()} benefit`}<ArrowRight className="h-5 w-5" /></Link> : <button type="button" onClick={() => setCheckoutOpen(true)} disabled={!option} className="pressable flex min-h-14 w-full items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-45">{ko ? `₩${final.toLocaleString()} 결제 확인` : `Review ₩${final.toLocaleString()} payment`}<ArrowRight className="h-5 w-5" /></button>}
+          {soldOut ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "오늘은 예약할 수 없어요." : "No booking is available today."}</p><Link href={backHref} className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "가능한 다른 상품 보기" : "See available alternatives"}<ArrowRight className="h-4 w-4" /></Link></div> : credentialUnavailable ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "K-Tour ID를 갱신하면 이 상품을 계속 확인할 수 있어요." : "Renew K-Tour ID to continue with this item."}</p><Link href={`/onboarding?mode=renew&returnTo=${encodeURIComponent(detailReturnHref)}`} className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "갱신하고 돌아오기" : "Renew and return"}<ArrowRight className="h-4 w-4" /></Link></div> : !personaEligible ? <div className="rounded-[14px] bg-secondary p-4"><p className="text-[13px] font-semibold">{ko ? "이 상품은 현재 K-Tour ID의 이용 대상이 아니에요." : "This item is not available for your current K-Tour ID."}</p><Link href={backHref} className="mt-2 inline-flex min-h-10 items-center gap-2 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "이용 가능한 상품 보기" : "See available items"}<ArrowRight className="h-4 w-4" /></Link></div> : benefitJourney && option ? <Link href={`/present?step=consent&item=${item.id}&option=${option.id}${contextQuery ? `&${contextQuery}` : ""}`} onClick={() => prepareDemoPurchase(item.id, option.id)} className="pressable flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? `K-Tour ID로 ₩${discount.toLocaleString()} 혜택 확인` : `Verify ₩${discount.toLocaleString()} benefit`}<ArrowRight className="h-5 w-5" /></Link> : <button type="button" onClick={() => setCheckoutOpen(true)} disabled={!option} className="pressable flex min-h-14 w-full items-center justify-between rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-45">{ko ? `₩${final.toLocaleString()} 결제 확인` : `Review ₩${final.toLocaleString()} payment`}<ArrowRight className="h-5 w-5" /></button>}
         </div>
 
         {alternatives.length > 0 && <section className="mt-9 px-6"><p className="text-[12px] font-semibold text-primary">{ko ? "다른 선택" : "Other choices"}</p><div className="mt-3 divide-y divide-foreground/10 border-y border-foreground/10">{alternatives.map((candidate) => <ServiceRow key={candidate.id} item={candidate} voucher={vouchers.find((entry) => entry.id === candidate.voucherId)} proximity={locationStatus === "granted" ? proximityLabel(candidate, location, lang) : undefined} />)}</div></section>}
       </main>
 
-      {checkoutOpen && option && <CommerceCheckoutSheet item={item} option={option} voucher={voucher} useBenefit={useBenefit} balanceKRW={session.wallet.balanceKRW} busy={busy} error={error} errorCode={errorCode} deliveryAddress={deliveryAddress} onDeliveryAddressChange={setDeliveryAddress} onClose={() => { if (!busy) { setCheckoutOpen(false); setError(""); setErrorCode("") } }} onConfirm={confirm} />}
+      {checkoutOpen && option && <CommerceCheckoutSheet item={item} option={option} voucher={voucher} useBenefit={useBenefit} balanceKRW={session.wallet.balanceKRW} busy={busy} error={error} errorCode={errorCode} deliveryAddress={deliveryAddress} returnQuery={contextQuery} onDeliveryAddressChange={setDeliveryAddress} onClose={() => { if (!busy) { setCheckoutOpen(false); setError(""); setErrorCode("") } }} onConfirm={confirm} />}
     </PhoneFrame>
   )
 }

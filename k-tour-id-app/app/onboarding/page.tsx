@@ -323,7 +323,7 @@ export default function OnboardingPage() {
                 <input type="checkbox" checked={consentChecked} onChange={(event) => setConsentChecked(event.target.checked)} className="mt-0.5 h-5 w-5 flex-shrink-0 accent-[var(--primary)]" />
                 <span>{ko ? "[필수] 위 내용을 확인했고 확인 제공자 연결에 동의해요." : "[Required] I reviewed the details and agree to connect to the verification provider."}</span>
               </label>
-              <button type="button" onClick={leaveVerification} className="pressable mt-1 min-h-10 w-full text-[13px] font-medium text-muted-foreground underline decoration-foreground/25 underline-offset-4">{ko ? "동의하지 않고 돌아가기" : "Decline and go back"}</button>
+              <button type="button" onClick={leaveVerification} className="pressable mt-1 min-h-11 w-full text-[13px] font-medium text-muted-foreground underline decoration-foreground/25 underline-offset-4">{ko ? "동의하지 않고 돌아가기" : "Decline and go back"}</button>
             </section>
           )}
           {busy && !identityPreview && (
@@ -346,7 +346,7 @@ export default function OnboardingPage() {
             </section>
           )}
           {busy && identityPreview && <p role="status" aria-live="polite" className="mb-3 text-center text-[13px] text-muted-foreground">{ko ? "K-Tour ID를 발급하고 있어요." : "Issuing your K-Tour ID."}</p>}
-          {error && <div role="alert" className="mb-3 border-l-2 border-destructive pl-3"><p className="text-[13px] leading-5 text-destructive">{error}</p><div className="mt-1 flex flex-wrap gap-x-4"><button type="button" onClick={identityPreview ? issueVerifiedIdentity : completeVerification} disabled={busy || (!identityPreview && !consentChecked)} className="min-h-9 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-40">{ko ? "같은 방식으로 다시 시도" : "Retry the same method"}</button><button type="button" onClick={changeIdentityType} disabled={busy} className="min-h-9 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-40">{ko ? "확인 유형 변경" : "Change verification type"}</button></div></div>}
+          {error && <div role="alert" className="mb-3 border-l-2 border-destructive pl-3"><p className="text-[13px] leading-5 text-destructive">{error}</p><div className="mt-1 flex flex-wrap gap-x-4"><button type="button" onClick={identityPreview ? issueVerifiedIdentity : completeVerification} disabled={busy || (!identityPreview && !consentChecked)} className="min-h-11 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-40">{ko ? "같은 방식으로 다시 시도" : "Retry the same method"}</button><button type="button" onClick={changeIdentityType} disabled={busy} className="min-h-11 text-[12px] font-semibold underline underline-offset-4 disabled:opacity-40">{ko ? "확인 유형 변경" : "Change verification type"}</button></div></div>}
           <button type="button" onClick={identityPreview ? issueVerifiedIdentity : completeVerification} disabled={busy || (!identityPreview && !consentChecked)} className="pressable flex min-h-14 items-center justify-center gap-3 rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white disabled:opacity-40">
             {busy ? <><Loader2 className="h-5 w-5 animate-spin" /> {identityPreview ? (ko ? "발급하고 있어요…" : "Issuing…") : (ko ? "본인확인 진행 중…" : "Verifying identity…")}</> : identityPreview ? <>{ko ? "확인하고 K-Tour ID 만들기" : "Confirm and create K-Tour ID"}<ArrowRight className="h-5 w-5" /></> : <>{ko ? verificationJourney.actionKo : verificationJourney.actionEn} <ArrowRight className="h-5 w-5" /></>}
           </button>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Sheet, SheetContent } from "@/components/app/sheet"
 import { QRCode } from "@/components/qr-code"
-import { Check, CreditCard, Landmark, Loader2, ShieldCheck } from "lucide-react"
+import { Check, CreditCard, Landmark, Loader2, ScanLine, ShieldCheck } from "lucide-react"
 import { BrandMark } from "@/components/app/brand"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
@@ -76,7 +76,7 @@ export function TopUpModal({ open, onOpenChange, onComplete, minimumAmountKRW = 
     busy.current = true
     setPhase("processing")
     try {
-      const sourceLabel = source === "kakaopay" ? "KakaoPay preview" : source === "card" ? "Overseas card preview" : "Bank transfer preview"
+      const sourceLabel = source === "kakaopay" ? "KakaoPay" : source === "card" ? "Overseas card" : "Bank transfer"
       await topUp(amount, sourceLabel)
       setPhase("done")
       busy.current = false
@@ -101,7 +101,7 @@ export function TopUpModal({ open, onOpenChange, onComplete, minimumAmountKRW = 
             <SuccessCheck />
             <p className="tabular text-[14px] font-semibold">+{lang === "ko" ? formatWon(amount) : formatKRW(amount)}</p>
             <p className="text-[12px] text-muted-foreground">{source === "kakaopay" ? "KakaoPay" : source === "card" ? (lang === "ko" ? "해외 발급 카드" : "Overseas card") : (lang === "ko" ? "국내 계좌이체" : "Korean bank transfer")}</p>
-            <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">{lang === "ko" ? "시나리오 여행 잔액에 반영했어요. 실제 출금은 일어나지 않았습니다." : "Added to the scenario travel balance. No real debit occurred."}</p>
+            <p className="mt-2 text-center text-[12px] leading-5 text-muted-foreground">{lang === "ko" ? "여행 잔액에 반영했어요. 거래 내역에서 다시 확인할 수 있어요." : "Your travel balance is updated. You can review it in transactions."}</p>
             <button type="button" onClick={() => { setPhase("choose"); onOpenChange(false); onComplete?.() }} className="pressable mt-3 min-h-12 w-full rounded-xl bg-primary px-4 text-[14px] font-semibold text-white">{onComplete ? (lang === "ko" ? "서비스로 돌아가기" : "Return to service") : (lang === "ko" ? "완료" : "Done")}</button>
           </div>
         ) : (
@@ -109,7 +109,7 @@ export function TopUpModal({ open, onOpenChange, onComplete, minimumAmountKRW = 
             <div>
               <p className="mb-2 text-[12px] font-semibold text-muted-foreground">{lang === "ko" ? "충전 수단" : "Funding source"}</p>
               <div className="space-y-2">
-                <button type="button" aria-pressed={source === "kakaopay"} onClick={() => setSource("kakaopay")} className={`pressable flex min-h-14 w-full items-center gap-3 rounded-[14px] border px-3 text-left ${source === "kakaopay" ? "border-primary bg-primary/5" : "border-border"}`}><BrandMark brand="kakaopay" size={34} decorative /><span className="min-w-0 flex-1"><strong className="block text-[13px]">KakaoPay</strong><span className="mt-0.5 block text-[12px] text-muted-foreground">{lang === "ko" ? "간편결제 연결 예시" : "Payment connection preview"}</span></span>{source === "kakaopay" && <Check className="h-4 w-4 text-primary" />}</button>
+                <button type="button" aria-pressed={source === "kakaopay"} onClick={() => setSource("kakaopay")} className={`pressable flex min-h-14 w-full items-center gap-3 rounded-[14px] border px-3 text-left ${source === "kakaopay" ? "border-primary bg-primary/5" : "border-border"}`}><BrandMark brand="kakaopay" size={34} decorative /><span className="min-w-0 flex-1"><strong className="block text-[13px]">KakaoPay</strong><span className="mt-0.5 block text-[12px] text-muted-foreground">{lang === "ko" ? "간편결제" : "Quick payment"}</span></span>{source === "kakaopay" && <Check className="h-4 w-4 text-primary" />}</button>
                 <div className="grid grid-cols-2 gap-2"><button type="button" aria-pressed={source === "card"} onClick={() => setSource("card")} className={`pressable flex min-h-14 items-center gap-2 rounded-[14px] border px-3 text-left ${source === "card" ? "border-primary bg-primary/5" : "border-border"}`}><CreditCard className="h-4 w-4" /><span className="text-[12px] font-semibold">{lang === "ko" ? "해외 카드" : "Overseas card"}</span></button><button type="button" aria-pressed={source === "bank"} onClick={() => setSource("bank")} className={`pressable flex min-h-14 items-center gap-2 rounded-[14px] border px-3 text-left ${source === "bank" ? "border-primary bg-primary/5" : "border-border"}`}><Landmark className="h-4 w-4" /><span className="text-[12px] font-semibold">{lang === "ko" ? "계좌이체" : "Bank transfer"}</span></button></div>
               </div>
             </div>
@@ -120,7 +120,7 @@ export function TopUpModal({ open, onOpenChange, onComplete, minimumAmountKRW = 
                   type="button"
                   aria-pressed={amount === a}
                   onClick={() => setAmount(a)}
-                  className={`pressable rounded-xl border py-2.5 text-[13px] font-semibold tabular-nums ${
+                  className={`pressable min-h-11 rounded-xl border px-1 text-[13px] font-semibold tabular-nums ${
                     amount === a ? "border-primary bg-primary/5 text-primary" : "border-border text-foreground hover:bg-secondary"
                   }`}
                 >
@@ -129,14 +129,14 @@ export function TopUpModal({ open, onOpenChange, onComplete, minimumAmountKRW = 
               ))}
             </div>
             {minimumAmountKRW > 0 && <p className="text-center text-[12px] font-medium text-primary">{lang === "ko" ? `이용을 계속하려면 최소 ₩${minimumAmountKRW.toLocaleString()} 충전이 필요해요.` : `Top up at least ₩${minimumAmountKRW.toLocaleString()} to continue.`}</p>}
-            <div className="rounded-xl bg-secondary px-3 py-2.5 text-[12px]"><div className="flex justify-between"><span className="text-muted-foreground">{lang === "ko" ? "충전 반영액" : "Balance credit"}</span><strong className="tabular">₩{amount.toLocaleString()}</strong></div><div className="mt-1.5 flex justify-between"><span className="text-muted-foreground">{lang === "ko" ? "예상 수수료" : "Estimated fee"}</span><span>{lang === "ko" ? "실연동 시 확정" : "Confirmed at live integration"}</span></div></div>
+            <div className="rounded-xl bg-secondary px-3 py-2.5 text-[12px]"><div className="flex justify-between"><span className="text-muted-foreground">{lang === "ko" ? "충전 반영액" : "Balance credit"}</span><strong className="tabular">₩{amount.toLocaleString()}</strong></div><div className="mt-1.5 flex justify-between"><span className="text-muted-foreground">{lang === "ko" ? "예상 수수료" : "Estimated fee"}</span><span>{lang === "ko" ? "결제 전에 안내" : "Shown before confirmation"}</span></div></div>
             <p aria-live="polite" role={phase === "error" ? "alert" : "status"} className={`text-center text-[12px] ${phase === "error" ? "font-medium text-primary" : "text-muted-foreground"}`}>{phase === "error" ? (lang === "ko" ? "충전 요청을 완료하지 못했습니다. 다시 시도해 주세요." : "Top-up could not be completed. Please try again.") : t("modal.topupNote")}</p>
-            <p className="flex items-start gap-2 rounded-xl bg-secondary px-3 py-2.5 text-[11px] leading-4 text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />{lang === "ko" ? "연동 전 제품 시나리오로 실제 출금·환전은 일어나지 않아요. 수수료는 실연동 계약 후 최종 고지합니다." : "This is a pre-integration product scenario. No real debit or exchange occurs; fees are confirmed after a live integration agreement."}</p>
+            <p className="flex items-start gap-2 rounded-xl bg-secondary px-3 py-2.5 text-[12px] leading-5 text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />{lang === "ko" ? "결제 전에 적용 환율·수수료·최종 충전액을 확인할 수 있어요." : "Review the exchange rate, fee and final balance credit before payment."}</p>
             <button
               type="button"
               onClick={confirm}
               disabled={phase === "processing"}
-              className="bg-brand-gradient pressable flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[14px] font-semibold text-white disabled:opacity-70"
+              className="bg-brand-gradient pressable flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-4 text-[14px] font-semibold text-white disabled:opacity-70"
             >
               {phase === "processing" && <Loader2 className="h-4 w-4 animate-spin" />}
               {phase === "processing" ? t("modal.processing") : t("modal.topupBtn", { x: `₩${amount.toLocaleString()}` })}
@@ -168,7 +168,7 @@ export function PayModal({
 }) {
   const { pay, session } = useApp()
   const { t, lang } = useLang()
-  const [phase, setPhase] = useState<"confirm" | "processing" | "done" | "error">("confirm")
+  const [phase, setPhase] = useState<"scan" | "confirm" | "processing" | "done" | "error">("scan")
   const busy = useRef(false)
 
   const amount = item?.amountKRW ?? 0
@@ -189,7 +189,7 @@ export function PayModal({
       setPhase("done")
       setTimeout(() => {
         busy.current = false
-        setPhase("confirm")
+        setPhase("scan")
         onOpenChange(false)
       }, 1400)
     } catch {
@@ -204,11 +204,21 @@ export function PayModal({
       onOpenChange={(v) => {
         if (!v && busy.current) return
         onOpenChange(v)
-        if (!v) setPhase("confirm")
+        if (!v) setPhase("scan")
       }}
     >
-      <SheetContent title={phase === "done" ? t("modal.payDone") : t("modal.pay")}>
-        {phase === "done" ? (
+      <SheetContent title={phase === "scan" ? (lang === "ko" ? "상점 QR 스캔" : "Scan merchant QR") : phase === "done" ? t("modal.payDone") : t("modal.pay")}>
+        {phase === "scan" ? (
+          <div className="space-y-4">
+            <div className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-2xl bg-ink text-white">
+              <span className="absolute inset-8 rounded-[18px] border-2 border-gold/80" />
+              <ScanLine className="h-12 w-12 text-white/75" />
+              <p className="absolute inset-x-4 bottom-4 text-center text-[13px] leading-5 text-white/75">{lang === "ko" ? "상점이 제시한 결제 QR을 프레임 안에 맞춰주세요." : "Align the payment QR shown by the merchant inside the frame."}</p>
+            </div>
+            <p className="text-[13px] leading-5 text-muted-foreground">{lang === "ko" ? "QR을 읽은 뒤 상점명과 요청 금액을 다시 확인하고 결제해요." : "After scanning, verify the merchant and requested amount before paying."}</p>
+            <button type="button" onClick={() => setPhase("confirm")} className="bg-brand-gradient pressable flex min-h-12 w-full items-center justify-center gap-2 rounded-xl text-[14px] font-semibold text-white"><ScanLine className="h-4 w-4" />{lang === "ko" ? "QR 인식" : "Detect QR"}</button>
+          </div>
+        ) : phase === "done" ? (
           <div className="flex flex-col items-center gap-2 py-3 text-center">
             <SuccessCheck />
             <p className="text-[13px] font-semibold">{item?.merchant}</p>

@@ -156,8 +156,17 @@ export default function ServiceReceiptPage() {
                     label: ko ? "연결 실패" : "Failed",
                   };
   const Icon = statusMeta.icon;
-  const backHref =
-    searchParams.get("from") === "explore" ? "/explore" : "/wallet";
+  const backHref = order.entryContext?.returnTo ??
+    (searchParams.get("from") === "explore" ? "/explore" : "/wallet");
+  const replayHref = order.entryContext
+    ? `/services/${order.serviceId}?${new URLSearchParams({
+        contextId: order.entryContext.contextId,
+        ...(order.entryContext.contextLabel ? { contextLabel: order.entryContext.contextLabel } : {}),
+        ...(order.entryContext.region ? { region: order.entryContext.region } : {}),
+        ...(order.entryContext.branch ? { branch: order.entryContext.branch } : {}),
+        returnTo: order.entryContext.returnTo,
+      }).toString()}`
+    : `/services/${order.serviceId}?from=explore`;
   const foodConfiguration =
     order.configuration?.kind === "food-delivery"
       ? order.configuration
@@ -244,8 +253,8 @@ export default function ServiceReceiptPage() {
       });
       setActionError(
         ko
-          ? "목업 제공자가 이 환불 조건을 승인하지 않았어요. 문의에서 다시 검토할 수 있어요."
-          : "The reference provider rejected this refund quote. You can ask support for another review.",
+          ? "제공자가 이 환불 조건을 승인하지 않았어요. 문의에서 다시 검토할 수 있어요."
+          : "The provider rejected this refund quote. You can ask support for another review.",
       );
       setRefunding(false);
       return;
@@ -406,8 +415,8 @@ export default function ServiceReceiptPage() {
           <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0" />
           <p className="text-[12px] leading-5">
             {ko
-              ? "이 목업은 결제·혜택·서비스 상태가 한 기록에 연결되는 방식을 보여줘요. 실제 연동에서는 제공자 이벤트로 상태를 갱신합니다."
-              : "This mockup shows payment, benefit, and service status in one record. A real integration would update it from provider events."}
+              ? "결제·혜택·서비스 상태가 하나의 이용 기록으로 이어져요. 제공자 상태가 바뀌면 이 화면도 함께 갱신됩니다."
+              : "Payment, benefit and service status stay connected in one service record and update with provider events."}
           </p>
         </div>
 
@@ -490,7 +499,7 @@ export default function ServiceReceiptPage() {
                 ₩{proposedRefundKRW.toLocaleString()}
               </strong>
             </div>
-            <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
+            <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
               {ko
                 ? "실제 연동에서는 제공자 환불 견적과 취소 수수료를 먼저 받은 뒤 확정해요."
                 : "A real integration confirms a provider refund quote and any cancellation fee first."}
@@ -532,8 +541,8 @@ export default function ServiceReceiptPage() {
                 ? "환불 확인 중…"
                 : "Checking refund…"
               : ko
-                ? "목업 제공자 결과 확인"
-                : "Check reference provider result"}
+                ? "제공자 결과 확인"
+                : "Check provider result"}
           </button>
         )}
         {actionError && (
@@ -546,14 +555,14 @@ export default function ServiceReceiptPage() {
         )}
         <div className="mt-2 grid grid-cols-2 gap-2">
           <Link
-            href={`/help?order=${encodeURIComponent(order.id)}`}
+            href={`/help?order=${encodeURIComponent(order.id)}&topic=${order.status === "refund-pending" ? "refund" : "payment"}`}
             className="pressable flex min-h-12 items-center justify-center gap-2 rounded-[14px] bg-card text-[13px] font-semibold ring-1 ring-border"
           >
             <MessageCircle className="h-4 w-4" />
             {ko ? "문의하기" : "Get help"}
           </Link>
           <Link
-            href={`/services/${order.serviceId}?from=explore`}
+            href={replayHref}
             className="pressable flex min-h-12 items-center justify-center rounded-[14px] bg-ink px-3 text-center text-[13px] font-semibold text-white"
           >
             {ko ? "다시 보기" : "View again"}

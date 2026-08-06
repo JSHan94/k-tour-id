@@ -49,8 +49,8 @@ export function LocationControl({ compact = false }: { compact?: boolean }) {
       </button>
       {granted && manageOpen && (
         <div className="mt-2 flex items-center justify-end gap-4 px-2 text-[12px] font-medium">
-          <button type="button" onClick={() => void requestLocation()} className="pressable min-h-10 text-primary underline decoration-primary/30 underline-offset-4">{ko ? "위치 새로고침" : "Refresh location"}</button>
-          <button type="button" onClick={() => { clearLocation(); setManageOpen(false) }} className="pressable min-h-10 text-muted-foreground underline decoration-foreground/20 underline-offset-4">{ko ? "위치 사용 끄기" : "Turn location off"}</button>
+          <button type="button" onClick={() => void requestLocation()} className="pressable min-h-11 text-primary underline decoration-primary/30 underline-offset-4">{ko ? "위치 새로고침" : "Refresh location"}</button>
+          <button type="button" onClick={() => { clearLocation(); setManageOpen(false) }} className="pressable min-h-11 text-muted-foreground underline decoration-foreground/20 underline-offset-4">{ko ? "위치 사용 끄기" : "Turn location off"}</button>
         </div>
       )}
     </div>

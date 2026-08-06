@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { AlertTriangle, BadgeCheck, Ban, CircleHelp, LogOut, MapPin, MoreHorizontal, Receipt, Send, ShieldCheck, UsersRound, X } from "lucide-react"
@@ -27,6 +28,7 @@ export default function ConnectChatPage() {
   const [activity, setActivity] = useState<Activity | null>(null)
   const { blockedHost, reports, ready: safetyReady, blockHost, reportHost } = useActivitySafety(session.identity?.did, activity?.id)
   const [messages, setMessages] = useState<ConnectMessage[]>([])
+  const [messagesReadyKey, setMessagesReadyKey] = useState<string | null>(null)
   const [input, setInput] = useState("")
   const [splitState, setSplitState] = useState<"idle" | "confirming" | "failed" | "done">("idle")
   const [safetyMenuOpen, setSafetyMenuOpen] = useState(false)
@@ -35,10 +37,12 @@ export default function ConnectChatPage() {
   const [safetyError, setSafetyError] = useState(false)
   const [reportReceiptId, setReportReceiptId] = useState<string | null>(null)
   const splitBusy = useRef(false)
-  const touched = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
   const safetyTriggerRef = useRef<HTMLButtonElement>(null)
   const credentialActive = isCredentialUsable(session.capsule)
+  const messageStorageKey = activity && session.identity?.did
+    ? `k-tour-id:activity-chat:v1:${encodeURIComponent(session.identity.did)}:${activity.id}`
+    : null
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding")
@@ -63,18 +67,37 @@ export default function ConnectChatPage() {
   }, [completedSafetyAction, hydrated, isJoined, joinedActivityIds, membershipsReady, router, session.onboarded])
 
   useEffect(() => {
-    if (!activity || touched.current) return
-    if (activity.id === DEFAULT_ACTIVITY.id) {
-      setMessages(CONNECT_MESSAGES)
-      return
-    }
+    if (!activity || !messageStorageKey) return
     const ko = lang === "ko"
-    setMessages([
-      { id: "g1", fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: ko ? "어서 오세요! 참여가 확인돼 그룹 채팅방이 열렸어요 🙂" : "Welcome! Your spot is confirmed, so the group chat is now open 🙂", time: ko ? "방금" : "Just now" },
-      { id: "g2", fromMe: true, text: ko ? "안녕하세요! 같이하게 되어 반가워요." : "Hi everyone! Glad to join you.", time: ko ? "방금" : "Just now" },
-      { id: "g3", fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: ko ? "반가워요. 시작 10분 전에 장소에서 만나요!" : "Great to meet you. Let's meet at the place 10 minutes early!", time: ko ? "방금" : "Just now" },
-    ])
-  }, [activity, lang])
+    const initialMessages: ConnectMessage[] = activity.id === DEFAULT_ACTIVITY.id
+      ? CONNECT_MESSAGES
+      : [
+          { id: "g1", fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: ko ? "어서 오세요! 참여가 확인돼 그룹 채팅방이 열렸어요 🙂" : "Welcome! Your spot is confirmed, so the group chat is now open 🙂", time: ko ? "방금" : "Just now" },
+          { id: "g2", fromMe: true, text: ko ? "안녕하세요! 같이하게 되어 반가워요." : "Hi everyone! Glad to join you.", time: ko ? "방금" : "Just now" },
+          { id: "g3", fromMe: false, senderName: activity.host, senderPhoto: activity.hostPhoto, text: ko ? "반가워요. 시작 10분 전에 장소에서 만나요!" : "Great to meet you. Let's meet at the place 10 minutes early!", time: ko ? "방금" : "Just now" },
+        ]
+    let nextMessages = initialMessages
+    try {
+      const saved = window.localStorage.getItem(messageStorageKey)
+      const parsed: unknown = saved ? JSON.parse(saved) : null
+      if (Array.isArray(parsed) && parsed.every((message) => message && typeof message === "object" && typeof (message as ConnectMessage).id === "string" && typeof (message as ConnectMessage).text === "string")) {
+        nextMessages = parsed as ConnectMessage[]
+      }
+    } catch {
+      // A private or full browser store should not prevent the chat from opening.
+    }
+    setMessages(nextMessages)
+    setMessagesReadyKey(messageStorageKey)
+  }, [activity, lang, messageStorageKey])
+
+  useEffect(() => {
+    if (!messageStorageKey || messagesReadyKey !== messageStorageKey) return
+    try {
+      window.localStorage.setItem(messageStorageKey, JSON.stringify(messages))
+    } catch {
+      // The current chat remains usable for this session when storage is unavailable.
+    }
+  }, [messageStorageKey, messages, messagesReadyKey])
 
   useEffect(() => {
     if (!activity || activity.id !== DEFAULT_ACTIVITY.id) {
@@ -95,13 +118,12 @@ export default function ConnectChatPage() {
     : messages
 
   const push = (message: Omit<ConnectMessage, "id" | "time">) =>
-    setMessages((current) => [...current, { ...message, id: `m-${current.length + 1}`, time: lang === "ko" ? "지금" : "now" }])
+    setMessages((current) => [...current, { ...message, id: `m-${crypto.randomUUID()}`, time: lang === "ko" ? "지금" : "now" }])
 
   const send = (text: string) => {
     const value = text.trim()
     if (!value || !activity) return
     const currentActivity = activity
-    touched.current = true
     setInput("")
     push({ fromMe: true, text: value })
     setTimeout(() => push({ fromMe: false, senderName: currentActivity.host, senderPhoto: currentActivity.hostPhoto, text: lang === "ko" ? "좋아요! 그때 같이 봬요 🙂" : "Great — see you all then! 🙂" }), 800)
@@ -114,7 +136,6 @@ export default function ConnectChatPage() {
     }
     if (splitState !== "confirming" || splitBusy.current) return
     splitBusy.current = true
-    touched.current = true
     try {
       const paid = await pay(SPLIT_MERCHANT, SPLIT_KRW, "delivery")
       if (!paid) {
@@ -180,7 +201,7 @@ export default function ConnectChatPage() {
       <div className="mx-5 mb-3 flex shrink-0 items-start gap-2 text-[12px] leading-relaxed text-muted-foreground"><ShieldCheck className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" />{ko ? "같은 액티비티 참여가 확정된 사람들에게만 보이는 그룹 채팅이에요" : "This group chat is visible only to confirmed participants in the same activity"}</div>
 
       {hostBlocked && <div role="status" className="mx-5 mb-3 shrink-0 rounded-xl bg-secondary px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">{ko ? `${activity.host}님의 메시지를 숨겼어요. 다른 참여자에게는 계속 메시지를 보낼 수 있어요.` : `Messages from ${activity.host} are hidden. You can keep messaging other participants.`}</div>}
-      {latestReport && <div role="status" className="mx-5 mb-3 shrink-0 rounded-xl bg-success-surface px-3 py-2 text-[12px] font-medium text-success">{ko ? "최근 안전 신고 접수" : "Latest safety report"} · <span className="tabular-nums">{latestReport.id}</span></div>}
+      {latestReport && <div role="status" className="mx-5 mb-3 shrink-0 rounded-xl bg-success-surface px-3 py-2 text-[13px] font-medium text-success">{ko ? "최근 안전 신고 접수" : "Latest safety report"} · <span className="tabular-nums">{latestReport.id}</span></div>}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-3">
         <div className="space-y-3">
@@ -201,7 +222,7 @@ export default function ConnectChatPage() {
       {rich && <div className="shrink-0 px-5 pb-2">
         {splitState === "idle" && <button type="button" onClick={() => setSplitState("confirming")} className="pressable flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold text-foreground ring-1 ring-border"><Receipt className="h-3.5 w-3.5 text-primary" />{`${ko ? "비용 나누기" : t("connect.split")} · ${ko ? formatWon(SPLIT_KRW) : `₩${SPLIT_KRW.toLocaleString("en-US")}`}`}</button>}
         {splitState === "confirming" && <div className="flex gap-2"><button type="button" onClick={() => setSplitState("idle")} className="pressable min-h-11 flex-1 rounded-xl bg-surface-2 py-2.5 text-[12px] font-semibold ring-1 ring-border">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={executeSplit} className="pressable min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[12px] font-semibold text-white">{ko ? `₩${SPLIT_KRW.toLocaleString("ko-KR")} 결제 확인` : `Confirm ₩${SPLIT_KRW.toLocaleString("en-US")}`}</button></div>}
-        {splitState === "failed" && <div role="alert" className="rounded-xl bg-destructive/10 p-3 text-center"><p className="text-[12px] font-semibold text-destructive">{ko ? "결제가 완료되지 않았어요" : "Payment was not completed"}</p><button type="button" onClick={() => setSplitState("confirming")} className="pressable mt-2 min-h-10 text-[12px] font-semibold text-primary underline underline-offset-4">{ko ? "잔액 확인 후 다시 시도" : "Check balance and retry"}</button></div>}
+        {splitState === "failed" && <div role="alert" className="rounded-xl bg-destructive/10 p-3 text-center"><p className="text-[13px] font-semibold text-destructive">{ko ? "결제가 완료되지 않았어요" : "Payment was not completed"}</p><button type="button" onClick={() => setSplitState("confirming")} className="pressable mt-2 min-h-11 text-[13px] font-semibold text-primary underline underline-offset-4">{ko ? "잔액 확인 후 다시 시도" : "Check balance and retry"}</button></div>}
         {splitState === "done" && <div className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-2 px-3 py-2.5 text-center text-[12px] font-semibold text-muted-foreground ring-1 ring-border"><Receipt className="h-3.5 w-3.5 flex-shrink-0 text-primary" />{ko ? "결제 완료 · ID·지갑 거래 내역에 저장" : "Payment complete · saved to ID · Wallet transaction history"}</div>}
       </div>}
 
@@ -308,7 +329,20 @@ function SafetyLayer({
         <p className="mt-4 text-[12px] font-semibold text-success">{ko ? "완료" : "DONE"}</p>
         <DialogPrimitive.Title className="font-display mt-1 text-[24px] font-semibold">{ko ? copy.label : copy.labelEn}</DialogPrimitive.Title>
         <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">{completed === "help" ? (ko ? "위급한 상황은 112, 여행 통역과 안내는 1330을 이용하세요." : "Call 112 for emergencies or 1330 for travel interpretation and assistance.") : completed === "leave" ? (ko ? "내 액티비티와 채팅 목록에서 제거했어요." : "The activity and chat were removed from your list.") : completed === "report" ? (ko ? "안전 검토 대상으로 접수했어요." : "Your report was submitted for a safety review.") : (ko ? `${targetName}님의 메시지를 숨겼어요. 다른 참여자와는 계속 대화할 수 있어요.` : `Messages from ${targetName} are hidden. You can keep chatting with other participants.`)}</p>
-        {completed === "report" && reportReceiptId && <p className="tabular-nums mt-3 rounded-xl bg-success-surface px-3 py-2 text-[12px] font-semibold text-success">{ko ? "신고 접수 ID" : "Report receipt ID"} · {reportReceiptId}</p>}
+        {completed === "report" && reportReceiptId && <p className="tabular-nums mt-3 rounded-xl bg-success-surface px-3 py-2 text-[13px] font-semibold text-success">{ko ? "신고 접수 ID" : "Report receipt ID"} · {reportReceiptId}</p>}
+        {completed === "help" && (
+          <div className="mt-5 grid gap-2 text-left">
+            <a href="tel:112" className="pressable flex min-h-12 items-center justify-between rounded-xl bg-destructive px-4 text-[14px] font-semibold text-white">
+              <span>{ko ? "긴급 신고" : "Emergency police"}</span><span className="tabular-nums">112</span>
+            </a>
+            <a href="tel:1330" className="pressable flex min-h-12 items-center justify-between rounded-xl bg-ink px-4 text-[14px] font-semibold text-white">
+              <span>{ko ? "여행 통역·안내" : "Travel hotline"}</span><span className="tabular-nums">1330</span>
+            </a>
+            <Link href="/help?topic=safety" className="pressable flex min-h-12 items-center justify-center rounded-xl bg-surface-2 px-4 text-[14px] font-semibold text-primary ring-1 ring-border">
+              {ko ? "앱 안전 도움 보기" : "Open in-app safety help"}
+            </Link>
+          </div>
+        )}
         <button type="button" onClick={onCloseCompleted} className="pressable mt-6 min-h-12 w-full rounded-xl bg-primary text-[13px] font-semibold text-white">{completed === "leave" ? (ko ? "액티비티 목록으로" : "Back to activities") : (ko ? "확인" : "Done")}</button>
       </div>}
       </DialogPrimitive.Content>

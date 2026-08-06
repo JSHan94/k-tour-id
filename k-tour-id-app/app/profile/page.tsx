@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ChevronRight, CreditCard, Bell, HelpCircle, LogOut, BadgeCheck } from "lucide-react"
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const { session, transactions, vouchers, reset, hydrated } = useApp()
   const { t, lang } = useLang()
   const { capsule, identity } = session
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
 
   const name = capsule?.holderName ?? identity?.displayName ?? t("home.guest")
   const spent = Math.max(0, transactions.filter((tx) => tx.category !== "topup").reduce((sum, tx) => sum - tx.amountKRW, 0))
@@ -107,12 +109,26 @@ export default function ProfilePage() {
 
         <button
           type="button"
-          onClick={signOut}
+          onClick={() => setConfirmSignOut(true)}
           className="pressable flex min-h-12 w-full items-center justify-center gap-2 border-t border-foreground/10 py-3 text-[14px] font-semibold text-foreground/70"
         >
           <LogOut className="h-4 w-4" /> {t("profile.signout")}
         </button>
       </div>
+      <DialogPrimitive.Root open={confirmSignOut} onOpenChange={setConfirmSignOut}>
+        <DialogPrimitive.Portal>
+          <DialogPrimitive.Overlay className="fixed inset-0 z-[80] bg-black/35" />
+          <DialogPrimitive.Content className="safe-bottom fixed bottom-0 left-1/2 z-[81] w-full max-w-[420px] -translate-x-1/2 rounded-t-[28px] bg-background px-6 pb-7 pt-6 shadow-2xl">
+            <p className="text-[13px] font-semibold text-primary">{lang === "ko" ? "로그아웃 확인" : "SIGN OUT"}</p>
+            <DialogPrimitive.Title className="font-display mt-1 text-[25px] font-semibold">{lang === "ko" ? "이 기기의 여행 상태를 초기화할까요?" : "Reset this device's travel state?"}</DialogPrimitive.Title>
+            <DialogPrimitive.Description className="mt-3 text-[14px] leading-6 text-muted-foreground">{lang === "ko" ? "현재 ID·지갑·예약·여정은 이 기기에 보관돼요. 로그아웃하면 이 기기의 상태가 모두 초기화됩니다." : "ID, wallet, bookings and journeys are stored on this device. Signing out clears that local state."}</DialogPrimitive.Description>
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              <DialogPrimitive.Close asChild><button type="button" className="pressable min-h-12 rounded-[14px] bg-card text-[14px] font-semibold ring-1 ring-border">{lang === "ko" ? "취소" : "Cancel"}</button></DialogPrimitive.Close>
+              <button type="button" onClick={signOut} className="pressable min-h-12 rounded-[14px] bg-destructive text-[14px] font-semibold text-white">{lang === "ko" ? "로그아웃·초기화" : "Sign out & reset"}</button>
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Portal>
+      </DialogPrimitive.Root>
     </PhoneFrame>
   )
 }

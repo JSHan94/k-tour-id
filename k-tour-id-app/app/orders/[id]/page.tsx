@@ -7,7 +7,7 @@ import { BusFront, Check, ChevronDown, Loader2, PackageCheck, QrCode, RefreshCcw
 import { PageHeader, PhoneFrame } from "@/components/app/shell"
 import { useApp } from "@/lib/store/app-provider"
 import { useLang } from "@/lib/i18n/lang-provider"
-import type { CommerceOrder } from "@/lib/types"
+import type { CommerceEntryContext, CommerceOrder } from "@/lib/types"
 import { cn } from "@/lib/utils"
 import { instantPassState } from "@/lib/commerce-policy"
 import { QRCode } from "@/components/qr-code"
@@ -20,8 +20,16 @@ export default function OrderReceiptPage() {
   const ko = lang === "ko"
   const order = orders.find((candidate) => candidate.id === params.id)
   const [refundStep, setRefundStep] = useState<"idle" | "confirm" | "busy" | "error">("idle")
+  const [fallbackEntryContext, setFallbackEntryContext] = useState<CommerceEntryContext | null>(null)
 
   useEffect(() => { if (hydrated && !session.onboarded) router.replace("/onboarding") }, [hydrated, router, session.onboarded])
+  useEffect(() => {
+    if (!order || order.entryContext) return
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem(`k-tour-entry-context:${order.itemId}`) ?? "null") as CommerceEntryContext | null
+      if (parsed?.contextId && parsed.returnTo?.startsWith("/")) setFallbackEntryContext(parsed)
+    } catch { setFallbackEntryContext(null) }
+  }, [order])
   if (!session.onboarded) return null
   if (!order) return <MissingOrder ko={ko} />
   const userFunded = order.voucherFunding === "user-converted"
@@ -39,6 +47,7 @@ export default function OrderReceiptPage() {
     ? Math.max(0, Math.floor((order.paidKRW * Math.max(0, 30 - elapsedDays)) / 30))
     : beforeDeadline ? order.paidKRW + (userFunded ? order.discountKRW : 0) : 0
   const partialRefund = refunded && refundAmount < order.paidKRW
+  const entryContext = order.entryContext ?? fallbackEntryContext
 
   const refund = async () => {
     if (refundStep === "idle") { setRefundStep("confirm"); return }
@@ -96,7 +105,8 @@ export default function OrderReceiptPage() {
         <div className="mt-5 flex items-center justify-center gap-2 text-[13px] text-muted-foreground"><Wallet className="h-4 w-4" />{userFunded ? (ko ? "재방문 바우처" : "Return-trip voucher") : (ko ? "남은 잔액" : "Balance")} · <strong className="tabular font-semibold text-foreground">₩{(userFunded ? returnVoucher?.valueKRW ?? 0 : session.wallet.balanceKRW).toLocaleString()}</strong></div>
 
         <div className="mt-auto pt-8">
-          {refunded ? <Link href="/" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? "홈으로" : "Back home"}</Link> : <><Link href="/wallet" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{walletCta(order, ko)}</Link><Link href="/" className="pressable mt-2 flex min-h-11 items-center justify-center text-[13px] font-medium text-muted-foreground">{ko ? "홈으로" : "Back home"}</Link></>}
+          {entryContext ? <><Link href={entryContext.returnTo} className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? `${entryContext.contextLabel ?? "원래 여행"}으로 돌아가기` : `Return to ${entryContext.contextLabel ?? "your trip"}`}</Link><Link href="/wallet" className="pressable mt-2 flex min-h-11 items-center justify-center text-[13px] font-medium text-muted-foreground">{walletCta(order, ko)}</Link></> : refunded ? <Link href="/" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{ko ? "홈으로" : "Back home"}</Link> : <><Link href="/wallet" className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{walletCta(order, ko)}</Link><Link href="/" className="pressable mt-2 flex min-h-11 items-center justify-center text-[13px] font-medium text-muted-foreground">{ko ? "홈으로" : "Back home"}</Link></>}
+          <Link href={`/help?order=${encodeURIComponent(order.id)}&source=commerce&topic=${refunded ? "refund" : "payment"}`} className="pressable mt-2 flex min-h-11 items-center justify-center text-[13px] font-semibold text-primary">{ko ? "이 주문 문의하기" : "Get help with this order"}</Link>
           <details className="mt-3 border-b border-foreground/10 text-[13px] text-muted-foreground">
             <summary className="pressable flex min-h-12 cursor-pointer list-none items-center justify-center gap-2 font-medium">{ko ? "영수증·주문 관리" : "Receipt & order management"}<ChevronDown className="h-4 w-4" /></summary>
             <div className="space-y-3 pb-5 pt-2">

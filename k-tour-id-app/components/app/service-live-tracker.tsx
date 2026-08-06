@@ -108,8 +108,8 @@ function TrackerShell({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold text-primary">
-            {ko ? "연동 상태 미리보기" : "INTEGRATION STATUS PREVIEW"}
+          <p className="text-[12px] font-semibold text-primary">
+            {ko ? "현재 이용 상태" : "CURRENT SERVICE STATUS"}
           </p>
           <h2
             id="service-live-status-title"
@@ -118,7 +118,7 @@ function TrackerShell({
             {ko ? order.title : order.titleEn}
           </h2>
         </div>
-        <p className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-secondary px-3 text-[11px] font-semibold text-muted-foreground">
+        <p className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-secondary px-3 text-[12px] font-semibold text-muted-foreground">
           <Clock3 className="h-3.5 w-3.5" aria-hidden="true" />
           <span>{ko ? "최근 갱신" : "Updated"}</span>
           <time dateTime={updatedAt}>{formatTime(updatedAt, lang)}</time>
@@ -127,7 +127,7 @@ function TrackerShell({
 
       <div className="mt-5">{children}</div>
 
-      <p className="mt-5 border-t border-foreground/10 pt-4 text-[11px] leading-5 text-muted-foreground">
+      <p className="mt-5 border-t border-foreground/10 pt-4 text-[12px] leading-5 text-muted-foreground">
         {ko
           ? "현재 상태는 목업용 예상 흐름이에요. 실제 연동에서는 파트너가 서명한 이벤트만 K‑Tour ID 이용 내역에 기록해요."
           : "This is a reference status flow. A real integration records only partner-signed events in K‑Tour ID history."}
@@ -187,7 +187,7 @@ function RideTracker({
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-[11px] font-medium text-muted-foreground">
+            <p className="text-[12px] font-medium text-muted-foreground">
               {ko ? "출발" : "Pickup"}
             </p>
             <p className="mt-0.5 break-words text-[13px] font-semibold">
@@ -199,7 +199,7 @@ function RideTracker({
             aria-hidden="true"
           />
           <div className="min-w-0">
-            <p className="text-[11px] font-medium text-muted-foreground">
+            <p className="text-[12px] font-medium text-muted-foreground">
               {ko ? "도착" : "Destination"}
             </p>
             <p className="mt-0.5 break-words text-[13px] font-semibold">
@@ -269,7 +269,7 @@ function FoodTracker({
     <div className="rounded-[20px] bg-surface-2 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-medium text-muted-foreground">
+          <p className="text-[12px] font-medium text-muted-foreground">
             {ko ? "현재 상태" : "Current status"}
           </p>
           <p className="mt-1 text-[18px] font-semibold">
@@ -323,7 +323,7 @@ function TransitPassTracker({
     <div className="rounded-[20px] bg-ink p-5 text-white">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-medium text-white/65">
+          <p className="text-[12px] font-medium text-white/65">
             {ko ? "모바일 교통패스" : "Mobile transit pass"}
           </p>
           <p className="mt-1 text-[20px] font-semibold">
@@ -472,7 +472,7 @@ function StatusFact({
       </span>
       <div className="min-w-0 pt-0.5">
         <p
-          className={`text-[11px] ${dark ? "text-white/60" : "text-muted-foreground"}`}
+          className={`text-[12px] ${dark ? "text-white/60" : "text-muted-foreground"}`}
         >
           {label}
         </p>

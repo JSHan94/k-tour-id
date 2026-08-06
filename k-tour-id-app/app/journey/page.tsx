@@ -30,6 +30,7 @@ export default function JourneyPage() {
       title: lang === "ko" ? order.title : order.titleEn,
       detail: lang === "ko" ? order.optionLabel : order.optionLabelEn,
       status: order.status,
+      timestamp: order.activationAt,
     })),
     ...externalOrders.map((order) => ({
       id: `service-${order.id}`,
@@ -37,13 +38,14 @@ export default function JourneyPage() {
       title: lang === "ko" ? order.title : order.titleEn,
       detail: order.provider,
       status: order.status,
+      timestamp: order.createdAt,
     })),
-  ].slice(0, 3), [externalOrders, lang, orders])
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()), [externalOrders, lang, orders])
   const joinedActivities = useMemo(() => ACTIVITIES.filter((item) => joinedActivityIds.includes(item.id)), [joinedActivityIds])
   const [selectedActivityId, setSelectedActivityId] = useState("")
   const activity = joinedActivities.find((item) => item.id === selectedActivityId) ?? joinedActivities[0]
   const storageKey = session.identity?.did && activity ? `${CHECKIN_PREFIX}:${encodeURIComponent(session.identity.did)}:${activity.id}` : null
-  const [step, setStep] = useState<"ready" | "confirm" | "done">("ready")
+  const [step, setStep] = useState<"ready" | "scanning" | "confirm" | "done">("ready")
 
   useEffect(() => {
     if (!hydrated) return
@@ -67,6 +69,7 @@ export default function JourneyPage() {
           <p className="mt-7 text-[13px] font-semibold text-primary">K-Tour ID</p>
           <h1 className="font-display text-balance mt-2 text-[30px] font-semibold leading-[1.22]">{ko ? "ID를 갱신하면 여행 기록을 이어갈 수 있어요." : "Renew your ID to continue your journey."}</h1>
           <p className="mt-4 text-[14px] leading-6 text-muted-foreground">{ko ? "기존 액티비티 참여와 스탬프 기록은 그대로 보관돼요. 갱신 후 이 화면으로 돌아옵니다." : "Your activity membership and stamps stay saved. You will return here after renewal."}</p>
+          {journeyRecords.length > 0 && <JourneyRecordList records={journeyRecords} ko={ko} />}
           <Link href="/onboarding?mode=renew&returnTo=%2Fjourney" className="pressable mt-auto flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span>{ko ? "K-Tour ID 갱신하기" : "Renew K-Tour ID"}</span><ChevronRight className="h-5 w-5" /></Link>
         </main>
       </PhoneFrame>
@@ -116,11 +119,11 @@ export default function JourneyPage() {
         </div>
 
         <section className="mt-5" aria-labelledby="journey-actions-title">
-          <div className="flex items-center justify-between"><h2 id="journey-actions-title" className="text-[13px] font-semibold">{ko ? "이 액티비티의 다음 행동" : "Next for this activity"}</h2><span className="text-[11px] text-muted-foreground">{ko ? "참여자 전용" : "Participants only"}</span></div>
+          <div className="flex items-center justify-between"><h2 id="journey-actions-title" className="text-[13px] font-semibold">{ko ? "이 액티비티의 다음 행동" : "Next for this activity"}</h2><span className="text-[12px] text-muted-foreground">{ko ? "참여자 전용" : "Participants only"}</span></div>
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <Link href={`/connect/chat?activity=${activity.id}`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[11px] font-semibold ring-1 ring-border"><MessageCircle className="h-5 w-5 text-primary" />{ko ? "그룹 채팅" : "Group chat"}</Link>
-            <Link href={`/?contextId=${encodeURIComponent(activity.id)}&branch=mobility`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[11px] font-semibold ring-1 ring-border"><Navigation className="h-5 w-5 text-primary" />{ko ? "가는 방법" : "Get there"}</Link>
-            <Link href={`/?contextId=${encodeURIComponent(activity.id)}&branch=food`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[11px] font-semibold ring-1 ring-border"><Utensils className="h-5 w-5 text-primary" />{ko ? "전후 식사" : "Food nearby"}</Link>
+            <Link href={`/connect/chat?activity=${activity.id}`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[13px] font-semibold ring-1 ring-border"><MessageCircle className="h-5 w-5 text-primary" />{ko ? "그룹 채팅" : "Group chat"}</Link>
+            <Link href={`/?contextId=${encodeURIComponent(activity.id)}&branch=mobility`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[13px] font-semibold ring-1 ring-border"><Navigation className="h-5 w-5 text-primary" />{ko ? "가는 방법" : "Get there"}</Link>
+            <Link href={`/?contextId=${encodeURIComponent(activity.id)}&branch=food`} className="pressable flex min-h-[76px] flex-col items-center justify-center gap-2 rounded-[16px] bg-surface-2 px-2 text-center text-[13px] font-semibold ring-1 ring-border"><Utensils className="h-5 w-5 text-primary" />{ko ? "전후 식사" : "Food nearby"}</Link>
           </div>
         </section>
 
@@ -128,7 +131,7 @@ export default function JourneyPage() {
 
         <section className="mt-7">
           <p className="text-[13px] font-semibold text-primary">{ko ? "참여가 확인된 액티비티" : "Confirmed activity"}</p>
-          <h2 className="font-display text-balance mt-2 text-[26px] font-semibold leading-[1.25]">{step === "done" ? (ko ? "여행 스탬프를 모았어요." : "Your journey stamp is saved.") : (ko ? "현장의 액티비티 QR로 체크인하세요." : "Check in with the activity QR.")}</h2>
+          <h2 className="font-display text-balance mt-2 text-[26px] font-semibold leading-[1.25]">{step === "done" ? (ko ? "여행 스탬프를 모았어요." : "Your journey stamp is saved.") : step === "scanning" ? (ko ? "액티비티 체크인 코드를 비춰주세요." : "Point at the activity check-in code.") : (ko ? "현장의 액티비티 QR로 체크인하세요." : "Check in with the activity QR.")}</h2>
           <p className="mt-3 text-[14px] leading-6 text-muted-foreground">{step === "done" ? (ko ? "참여 기록을 바탕으로 다음 여행 혜택과 기념 카드를 열었어요." : "Your participation unlocked the next benefit and a keepsake card.") : (ko ? "이 액티비티의 참여자만 체크인할 수 있어요. 신분증 원문이나 정밀 위치는 다른 참여자에게 공개하지 않아요." : "Only confirmed participants can check in. Your identity document and precise location are not shared with other participants.")}</p>
         </section>
 
@@ -141,20 +144,31 @@ export default function JourneyPage() {
           <Link href={`/explore/${persona.firstItemId}`} className="pressable mt-6 flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4" />{ko ? "다음 추천 혜택 보기" : "See the next recommended benefit"}</span><ChevronRight className="h-5 w-5" /></Link>
         </> : <section className="mt-7 rounded-[24px] bg-surface-2 p-5 ring-1 ring-border">
           <div className="flex items-start gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-card text-primary ring-1 ring-border"><MapPin className="h-5 w-5" /></span><div><p className="text-[14px] font-semibold">{title}</p><p className="mt-1 text-[13px] leading-5 text-muted-foreground">{place} · {time}</p><p className="mt-1 text-[12px] font-semibold text-success">{ko ? "내 액티비티 참여 확인됨" : "Your participation is confirmed"}</p></div></div>
-          {step === "confirm" ? <div className="mt-5 border-t border-foreground/10 pt-4"><p className="text-[13px] leading-5 text-muted-foreground">{ko ? "참여 중인 액티비티의 현장 QR과 일치해요. 기록을 남길까요?" : "This matches your confirmed activity QR. Save the check-in?"}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-card text-[14px] font-semibold ring-1 ring-border">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={complete} className="pressable flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-primary text-[14px] font-semibold text-white"><Check className="h-4 w-4" />{ko ? "체크인" : "Check in"}</button></div></div> : <button type="button" onClick={() => setStep("confirm")} className="pressable mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink px-4 text-[14px] font-semibold text-white"><QrCode className="h-5 w-5 text-gold" />{ko ? "현장 QR 확인" : "Check venue QR"}</button>}
+          {step === "scanning" ? <div className="mt-5 overflow-hidden rounded-[18px] bg-ink p-4 text-white"><div className="relative grid aspect-[4/3] place-items-center rounded-[14px] border border-white/15 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_60%)]"><span className="absolute inset-8 rounded-[18px] border-2 border-gold/80" /><QrCode className="h-12 w-12 text-white/70" /><p className="absolute inset-x-3 bottom-3 text-center text-[13px] text-white/75">{ko ? "카메라 권한을 허용한 뒤 코드를 프레임 안에 맞춰주세요." : "Allow camera access, then align the code inside the frame."}</p></div><div className="mt-3 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-white/10 text-[14px] font-semibold">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={() => setStep("confirm")} className="pressable min-h-12 rounded-[12px] bg-primary text-[14px] font-semibold">{ko ? "코드 인식" : "Recognize code"}</button></div></div> : step === "confirm" ? <div className="mt-5 border-t border-foreground/10 pt-4"><p className="text-[13px] leading-5 text-muted-foreground">{ko ? "참여 중인 액티비티의 현장 QR과 일치해요. 기록을 남길까요?" : "This matches your confirmed activity QR. Save the check-in?"}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-card text-[14px] font-semibold ring-1 ring-border">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={complete} className="pressable flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-primary text-[14px] font-semibold text-white"><Check className="h-4 w-4" />{ko ? "체크인" : "Check in"}</button></div></div> : <button type="button" onClick={() => setStep("scanning")} className="pressable mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink px-4 text-[14px] font-semibold text-white"><QrCode className="h-5 w-5 text-gold" />{ko ? "QR 스캔 시작" : "Start QR scan"}</button>}
         </section>}
       </main>
     </PhoneFrame>
   )
 }
 
-function JourneyRecordList({ records, ko }: { records: Array<{ id: string; href: string; title: string; detail: string; status: string }>; ko: boolean }) {
+function JourneyRecordList({ records, ko }: { records: Array<{ id: string; href: string; title: string; detail: string; status: string; timestamp: string }>; ko: boolean }) {
   return (
     <section className="mt-6" aria-labelledby="journey-records-title">
-      <div className="flex items-center justify-between"><h2 id="journey-records-title" className="text-[13px] font-semibold">{ko ? "예약·이용 중" : "Bookings and services"}</h2><span className="text-[11px] text-muted-foreground">{records.length}{ko ? "건" : " items"}</span></div>
+      <div className="flex items-center justify-between"><h2 id="journey-records-title" className="text-[13px] font-semibold">{ko ? "여행 일정·이용 기록" : "Trip schedule & services"}</h2><span className="text-[12px] text-muted-foreground">{records.length}{ko ? "건" : " items"}</span></div>
       <div className="mt-2 divide-y divide-foreground/10 border-y border-foreground/10">
-        {records.map((record) => <Link key={record.id} href={record.href} className="pressable flex min-h-16 items-center gap-3 py-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-primary"><BadgeCheck className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{record.title}</span><span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{record.detail} · {record.status}</span></span><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link>)}
+        {records.map((record) => <Link key={record.id} href={record.href} className="pressable flex min-h-16 items-center gap-3 py-3"><span className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-primary"><BadgeCheck className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[13px] font-semibold">{record.title}</span><span className="mt-0.5 block truncate text-[12px] text-muted-foreground">{formatJourneyDate(record.timestamp, ko)} · {record.detail} · {journeyStatusLabel(record.status, ko)}</span></span><ChevronRight className="h-4 w-4 text-muted-foreground" /></Link>)}
       </div>
     </section>
   )
+}
+
+function formatJourneyDate(value: string, ko: boolean) {
+  return new Intl.DateTimeFormat(ko ? "ko-KR" : "en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(value))
+}
+
+function journeyStatusLabel(status: string, ko: boolean) {
+  const labels: Record<string, [string, string]> = {
+    paid: ["예약 완료", "Booked"], used: ["이용 중", "Active"], confirmed: ["진행 중", "In progress"], completed: ["이용 완료", "Completed"], pending: ["확인 중", "Checking"], cancelled: ["취소", "Cancelled"], failed: ["실패", "Failed"], "refund-pending": ["환불 확인 중", "Refund pending"], "partially-refunded": ["부분 환불", "Partially refunded"], refunded: ["환불 완료", "Refunded"],
+  }
+  return labels[status]?.[ko ? 0 : 1] ?? status
 }

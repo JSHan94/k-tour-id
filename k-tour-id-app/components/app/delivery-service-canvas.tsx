@@ -265,7 +265,7 @@ export function DeliveryServiceCanvas({
       <div className="bg-ink px-5 py-5 text-white">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-semibold text-white/60">
+            <p className="text-[13px] font-semibold text-white/70">
               {ko ? "배달 주문" : "Delivery order"}
             </p>
             <h2
@@ -275,7 +275,7 @@ export function DeliveryServiceCanvas({
               {ko ? "숙소에서 편하게 받아요" : "Delivered to your stay"}
             </h2>
           </div>
-          <span className="inline-flex min-h-8 flex-shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-[11px] font-semibold text-white/80">
+          <span className="inline-flex min-h-9 flex-shrink-0 items-center gap-1.5 rounded-full bg-white/10 px-3 text-[13px] font-semibold text-white/80">
             <Clock3 className="h-3.5 w-3.5" />
             {ko ? "예상 25–35분" : "25–35 min est."}
           </span>
@@ -300,19 +300,19 @@ export function DeliveryServiceCanvas({
             )}
             {deliverability === "available"
               ? ko
-                ? "목업 제공 범위 확인 완료"
-                : "Reference delivery coverage confirmed"
+                ? "배달 제공 범위 확인 완료"
+                : "Delivery coverage confirmed"
               : deliverability === "unavailable"
                 ? ko
-                  ? "현재 목업 제공 범위 밖이에요"
-                  : "Outside the reference delivery area"
+                  ? "현재 배달 제공 범위 밖이에요"
+                  : "Outside the delivery area"
               : ko
                 ? "주소를 입력한 뒤 제공 범위를 확인해 주세요"
                 : "Enter an address and check coverage"}
           </div>
           <label
             htmlFor="delivery-stay-address"
-            className="mt-3 block text-[11px] font-semibold text-foreground/65"
+            className="mt-3 block text-[13px] font-semibold text-foreground/65"
           >
             {ko ? "받는 주소" : "Delivery address"}
           </label>
@@ -349,13 +349,13 @@ export function DeliveryServiceCanvas({
                   ? "배달 가능 · 다시 확인"
                   : "Available · check again"
                 : ko
-                  ? "목업 제공 범위 확인"
-                  : "Check reference coverage"}
+                  ? "배달 제공 범위 확인"
+                  : "Check delivery coverage"}
           </button>
-          <p className="mt-2 text-[10px] leading-4 text-foreground/55">
+          <p className="mt-2 text-[13px] leading-5 text-foreground/60">
             {ko
-              ? "여기서는 목업용 제공 범위를 확인해요. 실제 배달 가능 여부와 시간은 제공자 견적으로 확정돼요."
-              : "This checks reference coverage only. A provider quote confirms actual availability and timing."}
+              ? "현재 제공 범위를 먼저 확인해요. 실제 배달 가능 여부와 시간은 제공자 견적으로 확정돼요."
+              : "Check current coverage first. A provider quote confirms final availability and timing."}
           </p>
         </div>
 
@@ -369,7 +369,7 @@ export function DeliveryServiceCanvas({
                 ? "한국 전화번호 없이 주문 가능"
                 : "Order without a Korean phone number"}
             </strong>
-            <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+            <p className="mt-1 text-[13px] leading-5 text-muted-foreground">
               {ko
                 ? "가게·배달 기사와 필요한 연락만 K‑Tour ID가 중계해요."
                 : "K‑Tour ID relays only the contact needed for the store and courier."}
@@ -379,14 +379,14 @@ export function DeliveryServiceCanvas({
 
         <div className="mt-7 flex items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-semibold text-primary">
+            <p className="text-[13px] font-semibold text-primary">
               {ko ? "오늘의 메뉴" : "Today’s menu"}
             </p>
             <h3 className="font-display mt-1 text-[21px] font-semibold">
               {ko ? "무엇을 드실래요?" : "What would you like?"}
             </h3>
           </div>
-          <span className="text-[11px] text-muted-foreground">
+          <span className="text-[13px] text-muted-foreground">
             {ko ? "최대 5개씩" : "Up to 5 each"}
           </span>
         </div>
@@ -412,7 +412,7 @@ export function DeliveryServiceCanvas({
                       className="object-cover"
                     />
                     {item.soldOut && (
-                      <span className="absolute inset-0 grid place-items-center bg-ink/60 text-[11px] font-bold text-white">
+                      <span className="absolute inset-0 grid place-items-center bg-ink/60 text-[13px] font-bold text-white">
                         {ko ? "품절" : "Sold out"}
                       </span>
                     )}
@@ -421,7 +421,7 @@ export function DeliveryServiceCanvas({
                     <strong className="text-[14px]">
                       {ko ? item.nameKo : item.nameEn}
                     </strong>
-                    <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-muted-foreground">
+                    <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-muted-foreground">
                       {ko ? item.descriptionKo : item.descriptionEn}
                     </p>
                     <div className="mt-2 flex min-h-11 items-center justify-between gap-2">
@@ -456,7 +456,7 @@ export function DeliveryServiceCanvas({
                             aria-label={
                               ko ? "수량 줄이기" : "Decrease quantity"
                             }
-                            className="pressable grid h-10 w-10 place-items-center rounded-full"
+                            className="pressable grid h-11 w-11 place-items-center rounded-full"
                           >
                             <Minus className="h-3.5 w-3.5" />
                           </button>
@@ -470,7 +470,7 @@ export function DeliveryServiceCanvas({
                             aria-label={
                               ko ? "수량 늘리기" : "Increase quantity"
                             }
-                            className="pressable grid h-10 w-10 place-items-center rounded-full disabled:opacity-35"
+                            className="pressable grid h-11 w-11 place-items-center rounded-full disabled:opacity-35"
                           >
                             <Plus className="h-3.5 w-3.5" />
                           </button>
@@ -482,7 +482,7 @@ export function DeliveryServiceCanvas({
 
                 {expanded && (
                   <div className="mt-3 rounded-[16px] bg-surface-2 p-3 ring-1 ring-border">
-                    <p className="text-[11px] font-semibold">
+                    <p className="text-[13px] font-semibold">
                       {ko ? "메뉴 옵션" : "Menu option"}
                     </p>
                     <div
@@ -501,7 +501,7 @@ export function DeliveryServiceCanvas({
                               [item.id]: index,
                             }))
                           }
-                          className={`pressable flex min-h-11 items-center justify-between rounded-[11px] px-3 text-left text-[11px] font-semibold ring-1 ${optionIndex === index ? "bg-ink text-white ring-ink" : "bg-card ring-border"}`}
+                          className={`pressable flex min-h-11 items-center justify-between rounded-[11px] px-3 text-left text-[13px] font-semibold ring-1 ${optionIndex === index ? "bg-ink text-white ring-ink" : "bg-card ring-border"}`}
                         >
                           <span>
                             {ko ? candidate.nameKo : candidate.nameEn}
@@ -524,7 +524,7 @@ export function DeliveryServiceCanvas({
         </ul>
 
         <div className="mt-5 border-t border-foreground/10 pt-5">
-          <p className="text-[11px] font-semibold text-primary">
+          <p className="text-[13px] font-semibold text-primary">
             {ko ? "받는 방법" : "Delivery method"}
           </p>
           <div
@@ -551,7 +551,7 @@ export function DeliveryServiceCanvas({
                     {ko ? method.nameKo : method.nameEn}
                   </strong>
                   <span
-                    className={`mt-1 block text-[10px] ${selected ? "text-white/60" : "text-muted-foreground"}`}
+                    className={`mt-1 block text-[13px] leading-5 ${selected ? "text-white/70" : "text-muted-foreground"}`}
                   >
                     {ko ? method.detailKo : method.detailEn}
                   </span>
@@ -572,7 +572,7 @@ export function DeliveryServiceCanvas({
                 {ko ? "장바구니" : "Your cart"}
               </strong>
             </div>
-            <span className="text-[11px] text-white/55">
+            <span className="text-[13px] text-white/65">
               {ko ? `${totalQuantity}개` : `${totalQuantity} items`}
             </span>
           </div>
@@ -584,7 +584,7 @@ export function DeliveryServiceCanvas({
             </p>
           ) : (
             <>
-              <div className="mt-4 space-y-2 border-t border-white/10 pt-4 text-[11px]">
+              <div className="mt-4 space-y-2 border-t border-white/10 pt-4 text-[13px]">
                 {selectedItems.map((item) => (
                   <div key={item.id} className="flex justify-between gap-4">
                     <span className="min-w-0 truncate text-white/65">
@@ -618,13 +618,13 @@ export function DeliveryServiceCanvas({
                 </div>
               </div>
               {itemsTotalKRW < minimumOrderKRW && (
-                <p className="mt-3 rounded-[10px] bg-gold/12 px-3 py-2 text-[11px] font-semibold text-gold">
+                <p className="mt-3 rounded-[10px] bg-gold/12 px-3 py-2 text-[13px] font-semibold text-gold">
                   {ko
                     ? `최소 주문 금액까지 ₩${(minimumOrderKRW - itemsTotalKRW).toLocaleString()} 남았어요.`
                     : `Add ₩${(minimumOrderKRW - itemsTotalKRW).toLocaleString()} to reach the minimum order.`}
                 </p>
               )}
-              <p className="mt-3 text-[10px] leading-4 text-white/50">
+              <p className="mt-3 text-[13px] leading-5 text-white/60">
                 {ko
                   ? "K‑Tour ID 혜택과 최종 결제액은 다음 단계에서 확인해요."
                   : "Review your K‑Tour ID benefit and final total next."}

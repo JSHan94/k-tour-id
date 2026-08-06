@@ -75,6 +75,7 @@ export function CommerceCheckoutSheet({
   error,
   errorCode,
   deliveryAddress,
+  returnQuery,
   onDeliveryAddressChange,
   onClose,
   onConfirm,
@@ -88,6 +89,7 @@ export function CommerceCheckoutSheet({
   error: string
   errorCode?: string
   deliveryAddress?: string
+  returnQuery?: string
   onDeliveryAddressChange?: (value: string) => void
   onClose: () => void
   onConfirm: () => void
@@ -97,7 +99,11 @@ export function CommerceCheckoutSheet({
   const [acceptedNoRefund, setAcceptedNoRefund] = useState(false)
   const amount = price(item, useBenefit ? voucher : undefined, option)
   const insufficient = amount.final > balanceKRW
-  const returnPath = `/explore/${item.id}?option=${option.id}&benefit=${useBenefit ? "1" : "0"}&resume=checkout`
+  const returnParams = new URLSearchParams(returnQuery ?? "")
+  returnParams.set("option", option.id)
+  returnParams.set("benefit", useBenefit ? "1" : "0")
+  returnParams.set("resume", "checkout")
+  const returnPath = `/explore/${item.id}?${returnParams.toString()}`
   const addressMissing = item.fulfilment === "delivery" && !deliveryAddress?.trim()
   const timing = timingForOrder(item.id, item.fulfilment, option.id, amount.final)
   const freeCancellationClosed = item.fulfilment !== "instant" && Date.now() > new Date(timing.cancelDeadline).getTime()

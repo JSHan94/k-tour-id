@@ -328,6 +328,14 @@ export interface CommerceOrder {
   settledUsageDays?: number
   paidAt: string
   transactionId: string
+  entryContext?: CommerceEntryContext
+}
+
+export interface CommerceEntryContext {
+  contextId: string
+  contextLabel?: string
+  region?: string
+  returnTo: string
 }
 
 export interface BenefitOffer {

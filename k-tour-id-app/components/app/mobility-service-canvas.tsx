@@ -49,7 +49,19 @@ const ACTIVATIONS: LocalizedOption[] = [
   { ko: "내일 개시", en: "Start tomorrow", fareDeltaKRW: 0 },
 ];
 
-function destinationsFor(serviceId: string): LocalizedOption[] {
+function destinationsFor(
+  serviceId: string,
+  contextDestination?: string,
+): LocalizedOption[] {
+  if (contextDestination?.trim()) {
+    return [
+      {
+        ko: contextDestination.trim(),
+        en: contextDestination.trim(),
+        fareDeltaKRW: 0,
+      },
+    ];
+  }
   if (serviceId === "kakao-t-airport") {
     return [
       {
@@ -79,12 +91,14 @@ export function MobilityServiceCanvas({
   lang,
   locationLabel,
   locationGranted,
+  contextDestination,
   onChange,
 }: {
   serviceId: string;
   lang: Lang;
   locationLabel: string;
   locationGranted: boolean;
+  contextDestination?: string;
   onChange: (configuration: ServiceConfiguration) => void;
 }) {
   if (serviceId === "tmoney-visitor-pass") {
@@ -97,6 +111,7 @@ export function MobilityServiceCanvas({
       lang={lang}
       locationLabel={locationLabel}
       locationGranted={locationGranted}
+      contextDestination={contextDestination}
       onChange={onChange}
     />
   );
@@ -107,16 +122,21 @@ function RideCanvas({
   lang,
   locationLabel,
   locationGranted,
+  contextDestination,
   onChange,
 }: {
   serviceId: string;
   lang: Lang;
   locationLabel: string;
   locationGranted: boolean;
+  contextDestination?: string;
   onChange: (configuration: ServiceConfiguration) => void;
 }) {
   const ko = lang === "ko";
-  const destinations = useMemo(() => destinationsFor(serviceId), [serviceId]);
+  const destinations = useMemo(
+    () => destinationsFor(serviceId, contextDestination),
+    [contextDestination, serviceId],
+  );
   const [destinationIndex, setDestinationIndex] = useState(0);
   const [vehicleIndex, setVehicleIndex] = useState(0);
   const [luggage, setLuggage] = useState(1);
@@ -219,7 +239,7 @@ function RideCanvas({
         <div className="absolute right-[18%] top-[18%] grid h-10 w-10 place-items-center rounded-full bg-destructive text-white shadow-sm">
           <MapPin className="h-5 w-5" aria-hidden="true" />
         </div>
-        <span className="absolute right-3 top-3 rounded-full bg-ink px-3 py-1.5 text-[11px] font-semibold text-white">
+        <span className="absolute right-3 top-3 rounded-full bg-ink px-3 py-1.5 text-[13px] font-semibold text-white">
           {ko ? `약 ${tripMinutes}분` : `About ${tripMinutes} min`}
         </span>
       </div>
@@ -229,7 +249,7 @@ function RideCanvas({
           <div className="grid grid-cols-[12px_1fr] gap-x-3 gap-y-4">
             <span className="mt-1.5 h-3 w-3 rounded-full bg-success" />
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground">
+              <p className="text-[13px] font-semibold text-muted-foreground">
                 {ko ? "출발" : "PICKUP"}
               </p>
               {locationGranted ? (
@@ -237,7 +257,7 @@ function RideCanvas({
                   <strong className="mt-1 block text-[14px]">
                     {ko ? "현재 위치" : "Current location"}
                   </strong>
-                  <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">
+                  <span className="mt-1 block text-[13px] leading-5 text-muted-foreground">
                     {locationLabel}
                   </span>
                 </>
@@ -279,44 +299,44 @@ function RideCanvas({
                           ? "출발 가능 · 다시 확인"
                           : "Pickup available · check again"
                         : ko
-                          ? "목업 제공 범위 확인"
-                          : "Check reference coverage"}
+                          ? "호출 제공 범위 확인"
+                          : "Check ride coverage"}
                   </button>
                   <span
                     id="pickup-coverage-status"
                     role="status"
                     aria-live="polite"
                     aria-atomic="true"
-                    className={`mt-2 block text-[11px] font-semibold ${pickupVerification === "unavailable" ? "text-destructive" : "text-muted-foreground"}`}
+                    className={`mt-2 block text-[13px] font-semibold ${pickupVerification === "unavailable" ? "text-destructive" : "text-muted-foreground"}`}
                   >
                     {checkingPickup
                       ? ko
-                        ? "목업 제공 범위를 확인하고 있어요."
-                        : "Checking reference coverage."
+                        ? "현재 호출 제공 범위를 확인하고 있어요."
+                        : "Checking current ride coverage."
                       : pickupVerification === "reference-checked"
                         ? ko
-                          ? "목업 제공 범위 안의 출발지예요."
-                          : "Pickup is within the reference coverage."
+                          ? "현재 호출 가능한 출발지예요."
+                          : "Pickup is within the current ride area."
                         : pickupVerification === "unavailable"
                           ? ko
-                            ? "이 주소는 현재 목업 제공 범위 밖이에요. 서울 주소를 입력해 주세요."
-                            : "This address is outside the reference coverage. Enter a Seoul address."
+                            ? "이 주소는 현재 호출 제공 범위 밖이에요. 서울 주소를 입력해 주세요."
+                            : "This address is outside the current ride area. Enter a Seoul address."
                           : ko
-                            ? "주소 입력 후 목업 제공 범위를 확인해 주세요."
-                            : "Enter an address, then check reference coverage."}
+                            ? "주소 입력 후 호출 제공 범위를 확인해 주세요."
+                            : "Enter an address, then check ride coverage."}
                   </span>
                 </label>
               )}
             </div>
             <span className="mt-1.5 h-3 w-3 rounded-[3px] bg-destructive" />
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground">
+              <p className="text-[13px] font-semibold text-muted-foreground">
                 {ko ? "도착" : "DESTINATION"}
               </p>
               <strong className="mt-1 block text-[14px]">
                 {destination[lang]}
               </strong>
-              <span className="mt-1 block text-[11px] text-muted-foreground">
+              <span className="mt-1 block text-[13px] text-muted-foreground">
                 {ko ? destination.en : destination.ko}
               </span>
             </div>
@@ -342,7 +362,7 @@ function RideCanvas({
             >
               <span>
                 {option[lang]}
-                <small className="ml-2 text-[11px] font-normal opacity-70">
+                <small className="ml-2 text-[13px] font-normal opacity-70">
                   {ko ? option.en : option.ko}
                 </small>
               </span>
@@ -385,7 +405,7 @@ function RideCanvas({
             >
               <span>
                 <strong className="block text-[13px]">{option[lang]}</strong>
-                <small className="mt-1 block text-[11px] text-muted-foreground">
+                <small className="mt-1 block text-[13px] text-muted-foreground">
                   {ko ? option.noteKo : option.noteEn} · {option.etaMinutes}
                   {ko ? "분 후" : " min"}
                 </small>
@@ -408,7 +428,7 @@ function RideCanvas({
               <p className="text-[13px] font-semibold">
                 {ko ? "캐리어" : "Luggage"}
               </p>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
                 {ko ? "차량 공간 확인용" : "Helps check vehicle space"}
               </p>
             </div>
@@ -441,7 +461,7 @@ function RideCanvas({
             </button>
           </div>
         </div>
-        <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
+        <p className="mt-4 text-[13px] leading-5 text-muted-foreground">
           {ko
             ? "시간과 요금은 호출 전 예상값이며 교통 상황과 제휴사 조건에 따라 달라질 수 있어요."
             : "Times and fares are estimates before request and may change with traffic and provider conditions."}
@@ -579,7 +599,7 @@ function TransitPassCanvas({
               ? `${activation.ko} · 3일 연속`
               : `${activation.en} · 3 consecutive days`}
           </strong>
-          <p className="mt-1 text-[11px] leading-5">
+          <p className="mt-1 text-[13px] leading-5">
             {ko
               ? "결제가 끝나면 Wallet에서 패스와 만료 시각을 확인할 수 있어요."
               : "After payment, find the pass and its expiry time in Wallet."}

@@ -19,6 +19,7 @@ export default function BenefitsPage() {
   const [presentationId, setPresentationId] = useState("")
   const [phase, setPhase] = useState<"ready" | "processing" | "error">("ready")
   const [error, setError] = useState("")
+  const [returnTo, setReturnTo] = useState("")
   const journeyPaid = ["paid", "settlement-submitted", "anchored", "refunded"].includes(demoJourney.stage)
 
   useEffect(() => {
@@ -32,6 +33,8 @@ export default function BenefitsPage() {
       return
     }
     const params = new URLSearchParams(window.location.search)
+    const requestedReturn = params.get("returnTo") ?? ""
+    setReturnTo(requestedReturn.startsWith("/") ? requestedReturn : "")
     const requestedPresentation = params.get("presentation")
     const verified = params.get("verified") === "1"
       && requestedPresentation === demoJourney.presentationId
@@ -52,7 +55,7 @@ export default function BenefitsPage() {
       presentationId: demoJourney.presentationId,
       eventIds: [],
       integrationMode: "simulated",
-    }} ko={ko} />
+    }} ko={ko} returnTo={returnTo} />
   }
 
   const complete = async () => {
@@ -136,7 +139,7 @@ function BenefitDiscovery({ ko }: { ko: boolean }) {
   )
 }
 
-function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boolean }) {
+function BenefitReceipt({ receipt, ko, returnTo }: { receipt: SettlementReceipt; ko: boolean; returnTo: string }) {
   const { demoJourney, session, orders, vouchers, refundDemoPurchase } = useApp()
   const [refundStep, setRefundStep] = useState<"idle" | "confirm" | "processing" | "error">("idle")
   const refunded = demoJourney.stage === "refunded"
@@ -194,7 +197,8 @@ function BenefitReceipt({ receipt, ko }: { receipt: SettlementReceipt; ko: boole
         <p className="mt-5 text-center text-[13px] text-muted-foreground">{userFunded ? (ko ? "남은 재방문 바우처" : "Return-trip voucher balance") : (ko ? "남은 여행 잔액" : "Travel balance")} · <strong className="font-semibold text-foreground">₩{(userFunded ? returnVoucher?.valueKRW ?? 0 : session.wallet.balanceKRW).toLocaleString()}</strong></p>
 
         <div className="mt-auto pt-8">
-          <Link href={!refunded && order ? `/orders/${order.id}` : "/"} className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{!refunded && order ? (ko ? "모바일 입장권 열기" : "Open mobile ticket") : (ko ? "완료" : "Done")}</Link>
+          <Link href={!refunded && order ? `/orders/${order.id}` : returnTo || "/"} className="pressable flex min-h-14 items-center justify-center rounded-[14px] bg-primary px-5 text-[16px] font-semibold text-white">{!refunded && order ? (ko ? "모바일 입장권 열기" : "Open mobile ticket") : returnTo ? (ko ? "원래 여행으로 돌아가기" : "Return to your trip") : (ko ? "완료" : "Done")}</Link>
+          {returnTo && !refunded && <Link href={returnTo} className="pressable mt-2 flex min-h-11 items-center justify-center text-[13px] font-semibold text-primary">{ko ? "원래 여행으로 돌아가기" : "Return to your trip"}</Link>}
           <details className="mt-3 border-b border-foreground/10 text-[13px] text-muted-foreground">
             <summary className="pressable flex min-h-12 cursor-pointer list-none items-center justify-center gap-2 font-medium">{ko ? "영수증·주문 관리" : "Receipt & order management"}<ChevronDown className="h-4 w-4" /></summary>
             <div className="space-y-3 pb-5 pt-2">

@@ -46,7 +46,7 @@ import {
 import { useApp } from "@/lib/store/app-provider";
 
 type Step = "configure" | "review" | "processing" | "result";
-type EntryContext = { contextId: string; returnTo: string };
+type EntryContext = NonNullable<ExternalServiceOrder["entryContext"]>;
 type ResultKind =
   | "payment-failed"
   | "payment-reversed"
@@ -81,9 +81,18 @@ export default function CommercialServiceDetailPage() {
     if (hydrated && !session.onboarded) router.replace("/onboarding");
     const search = new URLSearchParams(window.location.search);
     const contextId = search.get("contextId") ?? "";
+    const contextLabel = search.get("contextLabel") ?? "";
+    const region = search.get("region") ?? "";
+    const branch = search.get("branch");
     const requestedReturn = search.get("returnTo") ?? "";
     if (contextId && requestedReturn.startsWith("/"))
-      setEntryContext({ contextId, returnTo: requestedReturn });
+      setEntryContext({
+        contextId,
+        contextLabel: contextLabel || undefined,
+        region: region || undefined,
+        branch: branch === "mobility" || branch === "food" ? branch : undefined,
+        returnTo: requestedReturn,
+      });
     if (search.get("preview") === "failed") {
       setResult("payment-failed");
       setStep("result");
@@ -122,7 +131,7 @@ export default function CommercialServiceDetailPage() {
   const flow = flowForService(service.id);
   const listHref = entryContext?.returnTo ?? `/explore?focus=${commercialCategoryToIntent(service.category)}`;
   const returnHref = entryContext
-    ? `/services/${service.id}?contextId=${encodeURIComponent(entryContext.contextId)}&returnTo=${encodeURIComponent(entryContext.returnTo)}`
+    ? `/services/${service.id}?contextId=${encodeURIComponent(entryContext.contextId)}${entryContext.contextLabel ? `&contextLabel=${encodeURIComponent(entryContext.contextLabel)}` : ""}${entryContext.region ? `&region=${encodeURIComponent(entryContext.region)}` : ""}${entryContext.branch ? `&branch=${entryContext.branch}` : ""}&returnTo=${encodeURIComponent(entryContext.returnTo)}`
     : `/services/${service.id}?from=explore`;
   const configurationSummary = formatServiceConfiguration(configuration, lang);
   const configurationSummaryKo = formatServiceConfiguration(configuration, "ko");
@@ -132,7 +141,7 @@ export default function CommercialServiceDetailPage() {
     service.benefitEligibleUserTypes.includes(session.userType);
   const benefitUsed = priorOrders.some(
     (order) =>
-      ["pending", "confirmed", "completed", "refund-pending"].includes(
+      ["pending", "confirmed", "completed", "refund-pending", "partially-refunded"].includes(
         order.status,
       ) &&
       order.benefitId === service.benefitId &&
@@ -234,6 +243,7 @@ export default function CommercialServiceDetailPage() {
       operationId,
       executionState: "status-unknown",
       configuration: quote.configuration,
+      entryContext: entryContext ?? undefined,
     };
 
     let paymentCaptured = false;
@@ -389,9 +399,9 @@ export default function CommercialServiceDetailPage() {
         </header>
       ) : null}
       {step === "configure" && entryContext && (
-        <div className="mx-6 mb-4 flex items-start gap-2 rounded-[14px] bg-success-surface px-3 py-2.5 text-[11px] leading-4 text-success">
+        <div className="mx-6 mb-4 flex items-start gap-2 rounded-[14px] bg-success-surface px-3 py-3 text-[13px] leading-5 text-success">
           <MapPin className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
-          <span>{ko ? "선택한 장소·액티비티의 이동과 식사 문맥을 이어받았어요. 완료 후 원래 여행 지도로 돌아갑니다." : "This request keeps the selected place or activity context and returns to your travel map when complete."}</span>
+          <span>{ko ? `${entryContext.contextLabel ? `${entryContext.contextLabel}에서 ` : ""}선택한 여행 문맥을 이어받았어요. 완료 후 원래 위치로 돌아갑니다.` : `This request keeps${entryContext.contextLabel ? ` ${entryContext.contextLabel}` : " the selected trip"} in context and returns you there when complete.`}</span>
         </div>
       )}
 
@@ -403,7 +413,7 @@ export default function CommercialServiceDetailPage() {
                 <BrandMark brand={service.brand} size={42} decorative />
                 <div className="min-w-0">
                   <p className="text-[12px] font-semibold text-primary">
-                  {ko ? "제휴 연동 레퍼런스" : "PARTNER UX REFERENCE"} ·{" "}
+                  {ko ? "K-Tour ID로 이어서 이용" : "CONTINUE WITH K-TOUR ID"} ·{" "}
                   {service.name[lang]}
                   </p>
                   <h1 className="font-display mt-0.5 text-[23px] font-semibold leading-tight">
@@ -420,6 +430,11 @@ export default function CommercialServiceDetailPage() {
                   lang={lang}
                   locationLabel={locationContext}
                   locationGranted={locationStatus === "granted"}
+                  contextDestination={
+                    entryContext?.branch === "mobility"
+                      ? entryContext.contextLabel
+                      : undefined
+                  }
                   onChange={setConfiguration}
                 />
               </div>
@@ -605,12 +620,31 @@ export default function CommercialServiceDetailPage() {
                 value={quote.totalKRW}
                 strong
               />
-              <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <p className="mt-3 flex items-center gap-1.5 text-[12px] text-muted-foreground">
                 <Clock3 className="h-3.5 w-3.5" />
                 {ko
                   ? "견적은 10분 동안 유효하며 변경 시 다시 확인해요."
                   : "This quote is valid for 10 minutes and changes require review."}
               </p>
+              <div className="mt-4 border-t border-foreground/10 pt-4 text-[13px] leading-5 text-muted-foreground">
+                <p className="font-semibold text-foreground">
+                  {ko ? "취소·환불 조건" : "Cancellation & refund"}
+                </p>
+                <p className="mt-1">
+                  {service.category === "mobility"
+                    ? ko
+                      ? "호출 또는 이용권 개시 전에는 전액 취소할 수 있어요. 배차·개시 후에는 제공자 이용분과 취소 수수료를 제외한 금액이 여행 잔액으로 돌아옵니다."
+                      : "Cancel for a full refund before dispatch or pass activation. After that, used service and provider cancellation fees are deducted before the balance is returned."
+                    : service.category === "delivery"
+                      ? ko
+                        ? "가게가 조리를 시작하기 전에는 전액 취소할 수 있어요. 조리 이후에는 누락·품질 문제를 주문별로 검토하고 승인 금액을 여행 잔액으로 돌려드려요."
+                        : "Cancel for a full refund before preparation starts. After preparation, missing-item and quality issues are reviewed per order and approved amounts return to your travel balance."
+                      : ko
+                        ? "제공자가 준비를 시작하기 전에는 전액 취소할 수 있어요. 준비 이후에는 제공자 정책에 따라 승인된 금액이 여행 잔액으로 돌아옵니다."
+                        : "Cancel for a full refund before fulfilment begins. After that, the approved amount follows the provider policy and returns to your travel balance."}
+                </p>
+                <p className="mt-1">{ko ? "환불 상태와 예상 완료 시각은 내 이용에서 확인하며, 문제가 있으면 주문 번호가 포함된 문의를 만들 수 있어요." : "Track refund status and ETA in My services. If something goes wrong, create a support case with the order reference attached."}</p>
+              </div>
             </div>
 
             <details className="group mt-4 rounded-[18px] bg-card ring-1 ring-border">
@@ -665,7 +699,7 @@ export default function CommercialServiceDetailPage() {
             >
               {ko ? "이용 조건 다시 보기" : "Edit service details"}
             </button>
-            <p className="mt-3 text-center text-[11px] leading-5 text-muted-foreground">
+            <p className="mt-3 text-center text-[12px] leading-5 text-muted-foreground">
               {ko
                 ? "표시된 화면과 상태는 실제 연동 시 제공되는 예상 경험입니다."
                 : "Screens and statuses illustrate the expected connected experience."}
@@ -831,7 +865,7 @@ function ReviewRow({
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] text-muted-foreground">{label}</p>
+        <p className="text-[12px] text-muted-foreground">{label}</p>
         <strong className="mt-1 block text-[13px] leading-5">{value}</strong>
       </div>
       {last && <Check className="mt-2 h-4 w-4 text-success" />}

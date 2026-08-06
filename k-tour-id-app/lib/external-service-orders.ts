@@ -34,7 +34,14 @@ export interface ExternalServiceOrder {
   paidKRW: number;
   platformFeeKRW: number;
   providerReceivableKRW: number;
-  settlementStatus: "pending";
+  settlementStatus: "pending" | "ready" | "settled";
+  entryContext?: {
+    contextId: string;
+    contextLabel?: string;
+    region?: string;
+    branch?: "mobility" | "food";
+    returnTo: string;
+  };
   createdAt: string;
   statusUpdatedAt: string;
   providerReference: string;

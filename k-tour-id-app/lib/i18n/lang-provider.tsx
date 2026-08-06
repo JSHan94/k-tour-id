@@ -14,12 +14,19 @@ const LangContext = createContext<LangContextValue | null>(null)
 const STORAGE_KEY = "k-tour-id-lang"
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
-  // Default to Korean — the judging panel is Korean. Tourists toggle to EN.
   const [lang, setLangState] = useState<Lang>("ko")
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved === "ko" || saved === "en") setLangState(saved)
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved === "ko" || saved === "en") {
+        setLangState(saved)
+        return
+      }
+    } catch {
+      /* use device language */
+    }
+    setLangState(navigator.language.toLowerCase().startsWith("ko") ? "ko" : "en")
   }, [])
 
   useEffect(() => {

@@ -49,7 +49,7 @@ import {
 } from "@/lib/external-service-orders";
 import { flowForService } from "@/lib/service-flow";
 
-const DEMO_PAY: PayItem = {
+const QR_PAY_REQUEST: PayItem = {
   merchant: "GS25 Convenience",
   amountKRW: 4_500,
   category: "shopping",
@@ -285,7 +285,7 @@ export default function WalletPage() {
                 <Clock3 className="h-5 w-5 text-gold" />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-[11px] font-semibold text-white/55">
+                <span className="block text-[12px] font-semibold text-white/65">
                   {activeExternalOrder.provider} ·{" "}
                   {externalStatusLabel(
                     activeExternalOrder.status,
@@ -521,7 +521,7 @@ export default function WalletPage() {
           returnAfterTopUp ? () => router.push(returnAfterTopUp) : undefined
         }
       />
-      <PayModal open={showPay} onOpenChange={setShowPay} item={DEMO_PAY} />
+      <PayModal open={showPay} onOpenChange={setShowPay} item={QR_PAY_REQUEST} />
     </PhoneFrame>
   );
 }

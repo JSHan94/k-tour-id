@@ -49,11 +49,19 @@ import {
   type CoreIntent,
 } from "@/lib/service-flow";
 import { useApp } from "@/lib/store/app-provider";
+import { KOREA_REGIONS, type KoreaRegionId } from "@/lib/map/korea-atlas-data";
 import type { MarketplaceItem, Voucher } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { isVoucherAvailable } from "@/lib/voucher-policy";
 
 type Filter = "all" | CoreIntent;
+type MapEntryContext = {
+  id: string;
+  label: string;
+  region: KoreaRegionId;
+  geo?: { latitude: number; longitude: number };
+  returnTo: string;
+};
 type UnifiedOffer =
   | {
       kind: "marketplace";
@@ -81,6 +89,25 @@ const INTENT_ICONS = {
   experience: CalendarDays,
 } satisfies Record<CoreIntent, ComponentType<{ className?: string }>>;
 
+function regionForGeo(geo?: { latitude: number; longitude: number }) {
+  if (!geo) return undefined;
+  return KOREA_REGIONS.find((region) => {
+    const [[south, west], [north, east]] = region.bounds;
+    return geo.latitude >= south && geo.latitude <= north
+      && geo.longitude >= west && geo.longitude <= east;
+  })?.id;
+}
+
+function contextDistanceLabel(
+  point: { latitude: number; longitude: number },
+  origin: { latitude: number; longitude: number },
+  lang: "ko" | "en",
+) {
+  const km = distanceKm(origin, point);
+  const value = km < 1 ? `${Math.max(100, Math.round(km * 10) * 100)}m` : `${km.toFixed(1)}km`;
+  return lang === "ko" ? `선택 장소에서 ${value}` : `${value} from selected place`;
+}
+
 export default function ExplorePage() {
   const router = useRouter();
   const { session, vouchers, hydrated } = useApp();
@@ -89,13 +116,15 @@ export default function ExplorePage() {
   const ko = lang === "ko";
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
+  const [mapContext, setMapContext] = useState<MapEntryContext | null>(null);
   const externalOrders = useExternalServiceOrders(
     session.identity?.did ?? "guest",
   );
 
   useEffect(() => {
     if (hydrated && !session.onboarded) router.replace("/onboarding");
-    const focus = new URLSearchParams(window.location.search).get("focus");
+    const params = new URLSearchParams(window.location.search);
+    const focus = params.get("focus");
     const normalized =
       focus === "delivery"
         ? "food"
@@ -104,12 +133,34 @@ export default function ExplorePage() {
           : focus;
     if (normalized && INTENT_ORDER.includes(normalized as CoreIntent))
       setFilter(normalized as CoreIntent);
+    const contextId = params.get("contextId");
+    const contextLabel = params.get("contextLabel");
+    const region = params.get("region");
+    if (contextId && contextLabel && KOREA_REGIONS.some((candidate) => candidate.id === region)) {
+      const latitude = Number(params.get("contextLat"));
+      const longitude = Number(params.get("contextLng"));
+      const fallbackReturn = `/?${new URLSearchParams({ contextId, contextLabel, region: region!, focus: "experience" }).toString()}`;
+      const requestedReturn = params.get("returnTo");
+      setMapContext({
+        id: contextId,
+        label: contextLabel,
+        region: region as KoreaRegionId,
+        geo: Number.isFinite(latitude) && Number.isFinite(longitude)
+          ? { latitude, longitude }
+          : undefined,
+        returnTo: requestedReturn?.startsWith("/") ? requestedReturn : fallbackReturn,
+      });
+    } else {
+      setMapContext(null);
+    }
   }, [hydrated, router, session.onboarded]);
 
   const userType = session.userType ?? "foreigner";
   const offers = useMemo<UnifiedOffer[]>(() => {
-    const nearby = locationStatus === "granted" ? location : null;
-    const marketplace: UnifiedOffer[] = itemsForUserType(userType).map(
+    const nearby = mapContext?.geo ?? (locationStatus === "granted" ? location : null);
+    const marketplace: UnifiedOffer[] = itemsForUserType(userType)
+      .filter((item) => !mapContext || regionForGeo(item.geo) === mapContext.region)
+      .map(
       (item, index) => ({
         kind: "marketplace",
         item,
@@ -131,7 +182,7 @@ export default function ExplorePage() {
       }),
     ).filter((offer) => !nearby || offer.distance <= offer.service.coverageKm);
     return [...marketplace, ...partner];
-  }, [location, locationStatus, userType]);
+  }, [location, locationStatus, mapContext, userType]);
 
   const shown = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -210,8 +261,34 @@ export default function ExplorePage() {
 
   const chooseIntent = (intent: CoreIntent) => {
     setFilter(intent);
-    window.history.replaceState(null, "", `/explore?focus=${intent}`);
+    const params = new URLSearchParams(window.location.search);
+    params.set("focus", intent);
+    window.history.replaceState(null, "", `/explore?${params.toString()}`);
   };
+  const clearIntent = () => {
+    setFilter("all");
+    const params = new URLSearchParams(window.location.search);
+    params.delete("focus");
+    const next = params.toString();
+    window.history.replaceState(null, "", next ? `/explore?${next}` : "/explore");
+  };
+  const contextQuery = (() => {
+    if (!mapContext) return "";
+    const params = new URLSearchParams({
+      contextId: mapContext.id,
+      contextLabel: mapContext.label,
+      region: mapContext.region,
+      returnTo: mapContext.returnTo,
+    });
+    if (mapContext.geo) {
+      params.set("contextLat", String(mapContext.geo.latitude));
+      params.set("contextLng", String(mapContext.geo.longitude));
+    }
+    return params.toString();
+  })();
+  const contextRegion = mapContext
+    ? KOREA_REGIONS.find((region) => region.id === mapContext.region)
+    : undefined;
 
   return (
     <PhoneFrame>
@@ -236,6 +313,19 @@ export default function ExplorePage() {
             </Link>
           </div>
         </div>
+
+        {mapContext && (
+          <section className="mt-5 flex items-center gap-3 rounded-[18px] bg-success-surface px-4 py-3 text-success ring-1 ring-success/10" aria-label={ko ? "지도에서 선택한 여행지" : "Destination selected on the map"}>
+            <span className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-white/70"><MapPin className="h-[18px] w-[18px]" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[12px] font-semibold">{ko ? `${contextRegion?.name.ko ?? "선택 지역"}에서 이어보기` : `Continue in ${contextRegion?.name.en ?? "this region"}`}</span>
+              <strong className="mt-0.5 block truncate text-[14px] text-foreground">{mapContext.label}</strong>
+            </span>
+            <Link href={mapContext.returnTo} className="pressable inline-flex min-h-11 items-center gap-1 rounded-full bg-white/70 px-3 text-[12px] font-semibold" aria-label={ko ? `${mapContext.label} 지도 돌아가기` : `Return to ${mapContext.label} on the map`}>
+              {ko ? "지도" : "Map"}<ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </section>
+        )}
 
         {filter === "all" ? (
           <div
@@ -274,10 +364,7 @@ export default function ExplorePage() {
           >
             <button
               type="button"
-              onClick={() => {
-                setFilter("all");
-                window.history.replaceState(null, "", "/explore");
-              }}
+              onClick={clearIntent}
               className="pressable min-h-11 flex-shrink-0 rounded-full bg-secondary px-4 text-[12px] font-semibold text-muted-foreground"
             >
               {ko ? "전체" : "All"}
@@ -324,7 +411,7 @@ export default function ExplorePage() {
               type="button"
               onClick={() => setQuery("")}
               aria-label={ko ? "검색어 지우기" : "Clear search"}
-              className="grid h-9 w-9 place-items-center"
+              className="grid h-11 w-11 place-items-center"
             >
               <X className="h-4 w-4" />
             </button>
@@ -342,8 +429,8 @@ export default function ExplorePage() {
               <Clock3 className="h-5 w-5 text-gold" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[11px] font-semibold text-white/55">
-                {ko ? "연동 상태 미리보기" : "STATUS PREVIEW"} ·{" "}
+              <span className="block text-[12px] font-semibold text-white/65">
+                {ko ? "진행 중인 이용" : "ACTIVE SERVICE"} ·{" "}
                 {activeOrder.provider}
               </span>
               <strong className="mt-1 block truncate text-[14px]">
@@ -398,6 +485,8 @@ export default function ExplorePage() {
                       (voucher) => voucher.id === offer.item.voucherId,
                     )}
                     proximity={proximityLabel(offer.item, location, lang)}
+                    contextProximity={mapContext?.geo && offer.item.geo ? contextDistanceLabel(offer.item.geo, mapContext.geo, lang) : undefined}
+                    contextQuery={contextQuery}
                   />
                 ) : (
                   <PartnerOfferCard
@@ -419,10 +508,13 @@ export default function ExplorePage() {
                       )
                       .map((order) => order.benefitId)}
                     proximity={
-                      locationStatus === "granted"
+                      mapContext?.geo
+                        ? contextDistanceLabel(offer.service.geo, mapContext.geo, lang)
+                        : locationStatus === "granted"
                         ? pointProximityLabel(offer.service.geo, location, lang)
                         : undefined
                     }
+                    contextQuery={contextQuery}
                   />
                 ),
               )}
@@ -437,7 +529,7 @@ export default function ExplorePage() {
                 type="button"
                 onClick={() => {
                   setQuery("");
-                  setFilter("all");
+                  clearIntent();
                 }}
                 className="mt-4 min-h-11 text-[13px] font-semibold text-primary underline underline-offset-4"
               >
@@ -477,10 +569,14 @@ function MarketplaceOfferCard({
   item,
   voucher,
   proximity,
+  contextProximity,
+  contextQuery,
 }: {
   item: MarketplaceItem;
   voucher?: Voucher;
   proximity?: string;
+  contextProximity?: string;
+  contextQuery: string;
 }) {
   const { lang } = useLang();
   const ko = lang === "ko";
@@ -506,7 +602,7 @@ function MarketplaceOfferCard({
             : "Mobile pass";
   return (
     <Link
-      href={`/explore/${item.id}`}
+      href={`/explore/${item.id}${contextQuery ? `?${contextQuery}` : ""}`}
       className="pressable block rounded-[20px] bg-card p-4 ring-1 ring-border"
     >
       <div className="flex items-start gap-3.5">
@@ -525,7 +621,7 @@ function MarketplaceOfferCard({
             {item.title[lang]}
           </h3>
           <p className="mt-1.5 truncate text-[12px] text-muted-foreground">
-            {item.merchant} · {proximity ?? item.location[lang]}
+            {item.merchant} · {contextProximity ?? proximity ?? item.location[lang]}
           </p>
         </div>
       </div>
@@ -560,12 +656,14 @@ function PartnerOfferCard({
   credentialActive,
   usedBenefitIds,
   proximity,
+  contextQuery,
 }: {
   service: CommercialService;
   userType?: "foreigner" | "long-term" | "korean";
   credentialActive: boolean;
   usedBenefitIds: string[];
   proximity?: string;
+  contextQuery: string;
 }) {
   const { lang } = useLang();
   const ko = lang === "ko";
@@ -580,7 +678,7 @@ function PartnerOfferCard({
     flowForService(service.id)?.subtype[lang] ?? intent.label[lang];
   return (
     <Link
-      href={`/services/${service.id}?from=explore`}
+      href={`/services/${service.id}?${new URLSearchParams({ from: "explore", ...(contextQuery ? Object.fromEntries(new URLSearchParams(contextQuery)) : {}) }).toString()}`}
       className="pressable block rounded-[20px] bg-card p-4 ring-1 ring-border"
     >
       <div className="flex items-start gap-3.5">

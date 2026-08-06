@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { BadgeCheck, Check, ChevronRight, Dices, Landmark, Languages, MapPin, MessageCircle, ShieldCheck, UsersRound, Utensils, X } from "lucide-react"
+import { BadgeCheck, Check, ChevronRight, Clock3, Dices, Landmark, Languages, MapPin, MessageCircle, ShieldCheck, UsersRound, Utensils, X } from "lucide-react"
 import { PhoneFrame, LangToggle } from "@/components/app/shell"
 import { LocationControl } from "@/components/app/location-control"
 import { Seal } from "@/components/app/seal"
@@ -24,6 +24,11 @@ const CAT_ICON: Record<ActivityCategory, React.ComponentType<{ className?: strin
   play: Dices,
 }
 
+function activityLanguageLabel(value: string, ko: boolean) {
+  if (ko) return value
+  return ({ 한국어: "Korean", 영어: "English", 일본어: "Japanese", 중국어: "Chinese", 베트남어: "Vietnamese" } as Record<string, string>)[value] ?? value
+}
+
 function IdentityBadge() {
   const { t } = useLang()
   return (
@@ -39,8 +44,11 @@ export default function ConnectPage() {
   const { t, lang } = useLang()
   const { location, status: locationStatus } = useNearbyLocation()
   const [selected, setSelected] = useState<Activity | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<Activity | null>(null)
+  const [cancelError, setCancelError] = useState(false)
   const [joinError, setJoinError] = useState<"full" | "not-ready" | "storage" | "credential" | null>(null)
   const activityTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const cancelTriggerRef = useRef<HTMLButtonElement | null>(null)
   const deepLinkHandledRef = useRef(false)
   const currentName = session.identity?.displayName
   const currentPhoto = session.identity?.photoUrl
@@ -117,6 +125,21 @@ export default function ConnectPage() {
     window.requestAnimationFrame(() => activityTriggerRef.current?.focus())
   }
 
+  const closeCancelSheet = () => {
+    setCancelTarget(null)
+    setCancelError(false)
+    window.requestAnimationFrame(() => cancelTriggerRef.current?.focus())
+  }
+
+  const confirmCancel = () => {
+    if (!cancelTarget) return
+    if (!leaveActivity(cancelTarget.id)) {
+      setCancelError(true)
+      return
+    }
+    closeCancelSheet()
+  }
+
   return (
     <PhoneFrame>
       <header className="safe-top flex items-end justify-between px-6 pb-5">
@@ -152,7 +175,7 @@ export default function ConnectPage() {
           </div>
         ) : (
           <div className="mt-3 space-y-3">
-            {myActivities.map((activity) => <MyActivityCard key={activity.id} activity={activity} credentialActive={credentialActive} onCancel={() => leaveActivity(activity.id)} />)}
+            {myActivities.map((activity) => <MyActivityCard key={activity.id} activity={activity} credentialActive={credentialActive} onCancel={(trigger) => { cancelTriggerRef.current = trigger; setCancelError(false); setCancelTarget(activity) }} />)}
           </div>
         )}
       </section>
@@ -170,6 +193,7 @@ export default function ConnectPage() {
       </section>
 
       {selected && <JoinSheet activity={selected} credentialActive={credentialActive} proximity={selected.geo && locationStatus === "granted" ? pointProximityLabel(selected.geo, location, lang) : undefined} error={joinError} onClose={closeJoinSheet} onJoin={confirmJoin} />}
+      {cancelTarget && <CancelActivitySheet activity={cancelTarget} error={cancelError} onClose={closeCancelSheet} onConfirm={confirmCancel} />}
     </PhoneFrame>
   )
 }
@@ -214,7 +238,7 @@ function ActivityCard({ activity, currentPhoto, joined, proximity, onOpen }: { a
   )
 }
 
-function MyActivityCard({ activity, credentialActive, onCancel }: { activity: Activity; credentialActive: boolean; onCancel: () => void }) {
+function MyActivityCard({ activity, credentialActive, onCancel }: { activity: Activity; credentialActive: boolean; onCancel: (trigger: HTMLButtonElement) => void }) {
   const { lang } = useLang()
   const ko = lang === "ko"
   const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
@@ -228,10 +252,36 @@ function MyActivityCard({ activity, credentialActive, onCancel }: { activity: Ac
         <UsersRound className="h-5 w-5 flex-shrink-0 text-primary" />
       </div>
       <div className="mt-4 flex gap-2">
-        <button type="button" onClick={onCancel} className="pressable min-h-11 rounded-xl px-3 text-[12px] font-semibold text-muted-foreground ring-1 ring-border">{ko ? "참여 취소" : "Cancel"}</button>
-        <Link href={credentialActive ? `/connect/chat?activity=${activity.id}` : `/onboarding?mode=renew&returnTo=${encodeURIComponent(`/connect/chat?activity=${activity.id}`)}`} className="pressable flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-[12px] font-semibold text-white"><MessageCircle className="h-4 w-4" />{credentialActive ? (ko ? "채팅방 들어가기" : "Enter group chat") : (ko ? "ID 갱신 후 입장" : "Renew ID to enter")}</Link>
+        <button type="button" onClick={(event) => onCancel(event.currentTarget)} className="pressable min-h-11 rounded-xl px-3 text-[13px] font-semibold text-muted-foreground ring-1 ring-border">{ko ? "참여 취소" : "Cancel"}</button>
+        <Link href={credentialActive ? `/connect/chat?activity=${activity.id}` : `/onboarding?mode=renew&returnTo=${encodeURIComponent(`/connect/chat?activity=${activity.id}`)}`} className="pressable flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-[13px] font-semibold text-white"><MessageCircle className="h-4 w-4" />{credentialActive ? (ko ? "채팅방 들어가기" : "Enter group chat") : (ko ? "ID 갱신 후 입장" : "Renew ID to enter")}</Link>
       </div>
     </article>
+  )
+}
+
+function CancelActivitySheet({ activity, error, onClose, onConfirm }: { activity: Activity; error: boolean; onClose: () => void; onConfirm: () => void }) {
+  const { lang } = useLang()
+  const ko = lang === "ko"
+  const title = lang === "en" ? activity.titleEn ?? activity.title : activity.title
+  const time = lang === "en" ? activity.timeEn ?? activity.time : activity.time
+
+  return (
+    <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-[80] bg-black/35" />
+        <DialogPrimitive.Content className="safe-bottom fixed bottom-0 left-1/2 z-[81] max-h-[calc(100dvh-2rem)] w-full max-w-[420px] -translate-x-1/2 overflow-y-auto rounded-t-[28px] bg-background px-6 pb-7 pt-5 shadow-2xl">
+          <DialogPrimitive.Description className="sr-only">{ko ? "참여 취소 결과와 다시 참여할 수 있는 조건을 확인합니다." : "Confirm cancellation and review rejoining conditions."}</DialogPrimitive.Description>
+          <p className="text-[13px] font-semibold text-destructive">{ko ? "참여 취소 확인" : "CONFIRM CANCELLATION"}</p>
+          <DialogPrimitive.Title className="font-display mt-1 text-[24px] font-semibold leading-tight">{title}</DialogPrimitive.Title>
+          <p className="mt-3 text-[14px] leading-relaxed text-muted-foreground">{ko ? `${time} 일정에서 나가면 채팅방도 내 목록에서 사라져요. 자리가 남아 있으면 다시 참여할 수 있어요.` : `Leaving the ${time} activity also removes its chat from your list. You can rejoin later if a spot is available.`}</p>
+          {error && <p role="alert" className="mt-4 rounded-xl bg-destructive/10 px-3 py-2 text-[13px] font-semibold text-destructive">{ko ? "참여 상태를 저장하지 못했어요. 잠시 후 다시 시도해 주세요." : "We couldn't save this change. Try again shortly."}</p>}
+          <div className="mt-6 flex gap-2">
+            <button type="button" onClick={onClose} className="pressable min-h-12 flex-1 rounded-xl bg-surface-2 text-[13px] font-semibold ring-1 ring-border">{ko ? "계속 참여" : "Keep my spot"}</button>
+            <button type="button" onClick={onConfirm} className="pressable min-h-12 flex-1 rounded-xl bg-destructive text-[13px] font-semibold text-white">{ko ? "참여 취소" : "Leave activity"}</button>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }
 
@@ -243,6 +293,7 @@ function JoinSheet({ activity, credentialActive, proximity, error, onClose, onJo
   const time = lang === "en" ? activity.timeEn ?? activity.time : activity.time
   const spots = Math.max(0, activity.capacity - activity.joined)
   const full = spots === 0
+  const duration = activity.category === "play" ? 150 : activity.category === "tour" || activity.category === "language" ? 120 : 90
 
   return (
     <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) onClose() }}>
@@ -257,8 +308,9 @@ function JoinSheet({ activity, credentialActive, proximity, error, onClose, onJo
 
         <div className="mt-6 divide-y divide-foreground/10 border-y border-foreground/10">
           <div className="flex items-center gap-3 py-4"><BadgeCheck className={`h-5 w-5 ${credentialActive ? "text-success" : "text-destructive"}`} /><div><p className="text-[13px] font-semibold">K-Tour ID {credentialActive ? (ko ? "활성 상태" : "active") : (ko ? "갱신 필요" : "renewal required")}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{credentialActive ? (ko ? "별도 인터뷰 없이 활성 K-Tour ID로 참여할 수 있어요" : "Join with an active K-Tour ID—no extra interview") : (ko ? "참여하려면 K-Tour ID를 먼저 갱신해 주세요" : "Renew your K-Tour ID before joining")}</p></div></div>
-          <div className="flex items-center gap-3 py-4"><UsersRound className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? `${activity.joined}명 참여 중` : `${activity.joined} people are joining`}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? `남은 자리 ${spots}개 · ${activity.languages.join(" · ")}` : `${spots} spots left · ${activity.languages.join(" · ")}`}</p></div></div>
+          <div className="flex items-center gap-3 py-4"><UsersRound className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? `${activity.joined}명 참여 중` : `${activity.joined} people are joining`}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? `남은 자리 ${spots}개 · ${activity.languages.join(" · ")}` : `${spots} spots left · ${activity.languages.map((value) => activityLanguageLabel(value, false)).join(" · ")}`}</p></div></div>
           <div className="flex items-center gap-3 py-4"><ShieldCheck className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? "참여자 전용 그룹 채팅" : "Group chat for participants"}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? "참여 후 장소와 준비물을 함께 이야기해요" : "Coordinate the place and what to bring after joining"}</p></div></div>
+          <div className="flex items-center gap-3 py-4"><Clock3 className="h-5 w-5 text-primary" /><div><p className="text-[13px] font-semibold">{ko ? `예상 ${duration}분 · 시작 1시간 전까지 취소` : `About ${duration} min · cancel until 1 hour before`}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{activity.costKRW != null ? (ko ? "표시된 금액은 현장 주문 후 채팅방에서 비용 나누기로 결제해요" : "The shown estimate is paid through cost split in the chat after the group order") : (ko ? "별도 참가비는 없어요" : "No participation fee")}</p></div></div>
         </div>
 
         {activity.costKRW != null && <p className="mt-4 text-center text-[12px] text-muted-foreground">{ko ? "예상 1인 비용" : "Estimated per person"} · <strong className="text-foreground">{lang === "ko" ? formatWon(activity.costKRW) : `₩${activity.costKRW.toLocaleString("en-US")}`}</strong></p>}

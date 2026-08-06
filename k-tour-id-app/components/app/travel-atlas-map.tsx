@@ -58,6 +58,8 @@ interface TravelMapPoint {
   image?: string
   href: string
   geo: { latitude: number; longitude: number }
+  region: KoreaRegionId
+  coverageKm?: number
   timing: string
   priceLabel: string
   benefitLabel?: string
@@ -93,60 +95,92 @@ const SEOUL_BOUNDS = {
 
 const DESTINATION_PLACES = [
   {
-    id: "place-bukchon", geo: { latitude: 37.5826, longitude: 126.983 },
+    id: "place-bukchon", region: "capital", geo: { latitude: 37.5826, longitude: 126.983 },
     title: { ko: "북촌 한옥마을", en: "Bukchon Hanok Village" },
     subtitle: { ko: "서울 종로구 · 골목과 공예", en: "Jongno, Seoul · alleys and craft" },
     description: { ko: "한옥 골목과 작은 공방을 따라 천천히 걷기 좋은 여행 시작점이에요.", en: "A calm starting point for hanok alleys, small studios and local stories." },
   },
   {
-    id: "place-hongdae", geo: { latitude: 37.557, longitude: 126.924 },
+    id: "place-hongdae", region: "capital", geo: { latitude: 37.557, longitude: 126.924 },
     title: { ko: "홍대·연남", en: "Hongdae · Yeonnam" },
     subtitle: { ko: "서울 마포구 · 음악과 동네 산책", en: "Mapo, Seoul · music and neighborhood walks" },
     description: { ko: "작은 공연, 카페, 언어교환과 늦은 식사가 한 동선에 이어지는 지역이에요.", en: "A district where small shows, cafés, language exchange and late meals connect naturally." },
   },
   {
-    id: "place-hangang", geo: { latitude: 37.528, longitude: 126.934 },
+    id: "place-hangang", region: "capital", geo: { latitude: 37.528, longitude: 126.934 },
     title: { ko: "여의도 한강공원", en: "Yeouido Hangang Park" },
     subtitle: { ko: "서울 영등포구 · 강변 피크닉", en: "Yeongdeungpo, Seoul · riverside picnic" },
     description: { ko: "걷기, 자전거, 피크닉과 소규모 액티비티가 강을 따라 연결되는 장소예요.", en: "A riverside place for walks, bikes, picnics and small group activities." },
   },
   {
-    id: "place-namsan", geo: { latitude: 37.551, longitude: 126.988 },
+    id: "place-namsan", region: "capital", geo: { latitude: 37.551, longitude: 126.988 },
     title: { ko: "남산", en: "Namsan" },
     subtitle: { ko: "서울 중구 · 산책과 야경", en: "Jung-gu, Seoul · walks and night views" },
     description: { ko: "도심의 길과 능선을 함께 읽으며 낮과 밤을 모두 즐길 수 있는 축이에요.", en: "An urban ridge connecting city walks, viewpoints and night scenery." },
   },
   {
-    id: "place-gangneung", geo: { latitude: 37.752, longitude: 128.876 },
+    id: "place-gangneung", region: "gangwon", geo: { latitude: 37.752, longitude: 128.876 },
     title: { ko: "강릉 월화거리", en: "Gangneung Wolhwa Street" },
     subtitle: { ko: "강원 강릉 · 바다와 오래된 길", en: "Gangneung · coast and old town" },
     description: { ko: "동해의 바람, 시장, 오래된 철길 산책을 한 흐름으로 만나는 여행 시작점이에요.", en: "A starting point linking East Sea breezes, markets and an old railway walk." },
   },
   {
-    id: "place-jeonju", geo: { latitude: 35.814, longitude: 127.153 },
+    id: "place-jeonju", region: "jeonju", geo: { latitude: 35.814, longitude: 127.153 },
     title: { ko: "전주 한옥마을", en: "Jeonju Hanok Village" },
     subtitle: { ko: "전북 전주 · 한옥과 음식", en: "Jeonju · hanok and local food" },
     description: { ko: "골목의 공예, 지역 음식, 야간 산책을 천천히 이어가기 좋은 권역이에요.", en: "A district for craft alleys, regional food and slow evening walks." },
   },
   {
-    id: "place-gyeongju", geo: { latitude: 35.838, longitude: 129.211 },
+    id: "place-gyeongju", region: "gyeongju", geo: { latitude: 35.838, longitude: 129.211 },
     title: { ko: "경주 황리단길", en: "Gyeongju Hwangnidan-gil" },
     subtitle: { ko: "경북 경주 · 신라 유산과 산책", en: "Gyeongju · Silla heritage and walks" },
     description: { ko: "고분과 골목, 박물관과 저녁 산책을 한 지역 안에서 연결할 수 있어요.", en: "Connect royal tombs, museums, alleys and an evening walk in one area." },
   },
   {
-    id: "place-busan", geo: { latitude: 35.097, longitude: 129.031 },
+    id: "place-busan", region: "busan", geo: { latitude: 35.097, longitude: 129.031 },
     title: { ko: "부산 자갈치·남포", en: "Busan Jagalchi · Nampo" },
     subtitle: { ko: "부산 중구 · 바다와 시장", en: "Busan · sea and markets" },
     description: { ko: "항구 풍경과 시장 음식, 원도심 골목을 도보와 대중교통으로 이어가는 지역이에요.", en: "A harbor district linking market food, old-town alleys and waterfront views." },
   },
   {
-    id: "place-jeju", geo: { latitude: 33.458, longitude: 126.942 },
+    id: "place-jeju", region: "jeju", geo: { latitude: 33.458, longitude: 126.942 },
     title: { ko: "제주 성산", en: "Jeju Seongsan" },
     subtitle: { ko: "제주 동부 · 오름과 바다", en: "East Jeju · oreum and coast" },
     description: { ko: "일출, 오름, 해안 마을과 로컬 액티비티를 하루 동선으로 묶기 좋아요.", en: "A base for sunrise, oreum trails, coastal villages and local activities." },
   },
 ] as const
+
+function regionForGeo(geo: TravelMapPoint["geo"]): KoreaRegionId {
+  return KOREA_REGIONS.find((region) => {
+    const [[south, west], [north, east]] = region.bounds
+    return geo.latitude >= south && geo.latitude <= north
+      && geo.longitude >= west && geo.longitude <= east
+  })?.id ?? "capital"
+}
+
+function mapReturnHref(point: TravelMapPoint, branch?: ContextBranch) {
+  const params = new URLSearchParams({
+    contextId: point.id,
+    contextLabel: point.title,
+    region: point.region,
+    focus: point.layer,
+  })
+  if (branch) params.set("branch", branch)
+  return `/?${params.toString()}`
+}
+
+function contextualHref(href: string, point: TravelMapPoint, branch?: ContextBranch) {
+  const [pathname, rawQuery = ""] = href.split("?")
+  const params = new URLSearchParams(rawQuery)
+  params.set("contextId", point.id)
+  params.set("contextLabel", point.title)
+  params.set("region", point.region)
+  params.set("contextLat", String(point.geo.latitude))
+  params.set("contextLng", String(point.geo.longitude))
+  if (branch) params.set("branch", branch)
+  params.set("returnTo", mapReturnHref(point, branch))
+  return `${pathname}?${params.toString()}`
+}
 
 function pointLayerFromCategory(category: string): PointLayer {
   if (category === "food" || category === "delivery") return "food"
@@ -178,6 +212,7 @@ function pointsForPersona(
       image: item.image,
       href: `/explore/${item.id}?from=map`,
       geo: item.geo ?? { latitude: 37.5665, longitude: 126.978 },
+      region: regionForGeo(item.geo ?? { latitude: 37.5665, longitude: 126.978 }),
       timing: item.availability[lang],
       priceLabel: formatWon(item.priceKRW),
       benefitLabel: item.voucherId ? (ko ? "K-Tour 혜택 적용" : "K-Tour benefit") : undefined,
@@ -198,6 +233,8 @@ function pointsForPersona(
       description: service.description[lang],
       href: `/services/${service.id}`,
       geo: service.geo,
+      region: regionForGeo(service.geo),
+      coverageKm: service.coverageKm,
       timing: service.option[lang],
       priceLabel: formatWon(netPrice),
       benefitLabel: eligible ? service.benefit[lang] : undefined,
@@ -221,6 +258,7 @@ function pointsForPersona(
     image: activity.image,
     href: `/connect?activity=${activity.id}`,
     geo: activity.geo ?? { latitude: 37.5665, longitude: 126.978 },
+    region: regionForGeo(activity.geo ?? { latitude: 37.5665, longitude: 126.978 }),
     timing: ko
       ? `${activity.languages.join("/")} · ${activity.joined}/${activity.capacity}명`
       : `${activity.languages.map((language) => localizedLanguage(language, lang)).join("/")} · ${activity.joined}/${activity.capacity} joined`,
@@ -239,6 +277,7 @@ function pointsForPersona(
     description: place.description[lang],
     href: "/explore?focus=experience",
     geo: place.geo,
+    region: place.region,
     timing: ko ? "지금 둘러보기 좋아요" : "Good to explore now",
     priceLabel: ko ? "여행 시작점" : "Trip starting point",
     eligible: true,
@@ -265,6 +304,7 @@ export function TravelAtlasMap() {
   const [selectedId, setSelectedId] = useState(persona.firstItemId)
   const [expanded, setExpanded] = useState(false)
   const [listMode, setListMode] = useState(false)
+  const [mapUnavailable, setMapUnavailable] = useState(false)
   const [heritageLayer, setHeritageLayer] = useState(true)
   const [routePreview, setRoutePreview] = useState(false)
   const [contextBranch, setContextBranch] = useState<ContextBranch>(null)
@@ -278,6 +318,8 @@ export function TravelAtlasMap() {
   const [topChromeHeight, setTopChromeHeight] = useState(205)
   const [bottomChromeHeight, setBottomChromeHeight] = useState(220)
   const [locationNoticeDismissed, setLocationNoticeDismissed] = useState(false)
+  const [searchScope, setSearchScope] = useState<"nation" | "region">("nation")
+  const searchingNationwide = query.trim().length > 0 && searchScope === "nation"
 
   useEffect(() => {
     const element = headerRef.current
@@ -318,7 +360,7 @@ export function TravelAtlasMap() {
     const activeRegion = mapRegionId
       ? KOREA_REGIONS.find((region) => region.id === mapRegionId)
       : undefined
-    const scoped = activeRegion && mapLevel !== "nation"
+    const scoped = activeRegion && mapLevel !== "nation" && !searchingNationwide
       ? filteredPoints.filter((point) => {
         const [[south, west], [north, east]] = activeRegion.bounds
         return point.geo.latitude >= south && point.geo.latitude <= north
@@ -336,7 +378,7 @@ export function TravelAtlasMap() {
       return Number(Boolean(b.benefitLabel)) - Number(Boolean(a.benefitLabel))
     })
     return prioritized
-  }, [filteredPoints, layer, location, locationStatus, mapLevel, mapRegionId, persona.firstItemId, query])
+  }, [filteredPoints, layer, location, locationStatus, mapLevel, mapRegionId, persona.firstItemId, searchingNationwide])
 
   const regionCounts = useMemo(() => Object.fromEntries(
     KOREA_REGIONS.map((region) => {
@@ -393,8 +435,24 @@ export function TravelAtlasMap() {
     if (point) selectPoint(point)
   }
 
-  const contextualPartners = contextBranch
-    ? allPoints.filter((point) => point.kind === "partner" && point.layer === contextBranch).slice(0, 2)
+  useEffect(() => {
+    if (!searchingNationwide) return
+    realMapRef.current?.showKorea()
+    setHasMapSelection(false)
+    setExpanded(false)
+    setRoutePreview(false)
+    setContextBranch(null)
+  }, [searchingNationwide])
+
+  const contextualPartners = contextBranch && selected
+    ? allPoints
+      .filter((point) => point.kind === "partner" && point.layer === contextBranch)
+      .filter((point) => contextBranch !== "mobility" || point.id !== "kakao-t-airport" || /(공항|airport)/i.test(`${selected.title} ${selected.subtitle}`))
+      .map((point) => ({ point, distance: distanceKm(selected.geo, point.geo) }))
+      .filter(({ point, distance }) => distance <= (point.coverageKm ?? 0))
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 2)
+      .map(({ point }) => point)
     : []
   const selectedDistanceKm = selected && locationStatus === "granted" && location
     ? distanceKm(location, selected.geo)
@@ -410,7 +468,14 @@ export function TravelAtlasMap() {
     const contextId = params.get("contextId")
     const branch = params.get("branch")
     const focus = params.get("focus")
+    const requestedRegion = params.get("region")
     if (focus && LAYERS.some((item) => item.id === focus)) setLayer(focus as MapLayer)
+    if (requestedRegion && KOREA_REGIONS.some((region) => region.id === requestedRegion)) {
+      const regionId = requestedRegion as KoreaRegionId
+      setMapLevel("region")
+      setMapRegionId(regionId)
+      window.requestAnimationFrame(() => realMapRef.current?.showRegion(regionId))
+    }
     if (!contextId || !allPoints.some((point) => point.id === contextId)) return
     if (!focus) setLayer("nearby")
     setSelectedId(contextId)
@@ -433,6 +498,7 @@ export function TravelAtlasMap() {
 
   const showNation = () => {
     realMapRef.current?.showKorea()
+    setSearchScope("nation")
     setHasMapSelection(false)
     setExpanded(false)
     setRoutePreview(false)
@@ -459,9 +525,13 @@ export function TravelAtlasMap() {
             onViewLevelChange={(level, regionId) => {
               setMapLevel(level)
               setMapRegionId(regionId)
+              if (query.trim()) setSearchScope(level === "nation" ? "nation" : "region")
               if (level !== "place") setHasMapSelection(false)
             }}
-            onUnavailable={() => setListMode(true)}
+            onUnavailable={() => {
+              setMapUnavailable(true)
+              setListMode(true)
+            }}
           />
         </div>
 
@@ -471,7 +541,7 @@ export function TravelAtlasMap() {
               <Logo size={25} />
               <div className="min-w-0">
                 <p className="truncate font-display text-[15px] font-semibold leading-none">{ko ? "K-Tour ID 여행지도" : "K-Tour Korea Atlas"}</p>
-                <p className="mt-1 truncate text-[11px] font-semibold tracking-[0.02em] text-muted-foreground">{mapContext}</p>
+                <p className="mt-1 truncate text-[12px] font-semibold tracking-[0.02em] text-muted-foreground">{mapContext}</p>
               </div>
               <MapPinned className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
             </button>
@@ -486,12 +556,16 @@ export function TravelAtlasMap() {
             <Search className="h-5 w-5 flex-shrink-0 text-primary" />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                const next = event.target.value
+                if (!query.trim() && next.trim()) setSearchScope("nation")
+                setQuery(next)
+              }}
               placeholder={ko ? "어디서 무엇을 해볼까요?" : "Where to, and what shall we do?"}
               aria-label={ko ? "장소와 액티비티 검색" : "Search places and activities"}
               className="h-12 min-w-0 flex-1 bg-transparent text-[14px] font-medium outline-none placeholder:text-muted-foreground"
             />
-            {query && <button type="button" onClick={() => setQuery("")} aria-label={ko ? "검색어 지우기" : "Clear search"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><X className="h-4 w-4" /></button>}
+            {query ? <button type="button" onClick={() => setQuery("")} aria-label={ko ? "검색어 지우기" : "Clear search"} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary"><X className="h-4 w-4" /></button> : mapLevel !== "nation" ? <button type="button" onClick={showNation} className="pressable min-h-11 rounded-full bg-secondary px-3 text-[12px] font-semibold text-foreground">{ko ? "전국" : "All Korea"}</button> : null}
           </div>
 
           <div className="no-scrollbar pointer-events-auto -mx-4 mt-2.5 flex gap-2 overflow-x-auto px-4 pb-2">
@@ -530,19 +604,19 @@ export function TravelAtlasMap() {
           <section className="absolute inset-x-12 top-[46%] z-20 -translate-y-1/2 rounded-[22px] bg-[#fbfaf6]/96 px-5 py-6 text-center shadow-xl ring-1 ring-black/5" role="status">
             <Search className="mx-auto h-6 w-6 text-primary" />
             <h2 className="mt-3 text-[16px] font-semibold">{ko ? "이 조건에 맞는 장소가 없어요" : "No places match this search"}</h2>
-            <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{ko ? "검색어와 지도 레이어를 초기화해 보세요." : "Clear the search and map layer to see nearby choices."}</p>
-            <button type="button" onClick={() => { setQuery(""); selectLayer("nearby") }} className="pressable mt-4 min-h-11 rounded-full bg-ink px-5 text-[12px] font-semibold text-white">{ko ? "주변 지도 다시 보기" : "Reset nearby map"}</button>
+            <p className="mt-1 text-[12px] leading-5 text-muted-foreground">{ko ? "검색어와 지도 레이어를 초기화하고 전국 지도로 돌아가 보세요." : "Clear the search and layer, then return to the whole Korea map."}</p>
+            <button type="button" onClick={() => { setQuery(""); selectLayer("nearby"); showNation() }} className="pressable mt-4 min-h-11 rounded-full bg-ink px-5 text-[12px] font-semibold text-white">{ko ? "전국 지도에서 다시 찾기" : "Search all Korea again"}</button>
           </section>
         )}
 
         {listMode && (
           <section className="atlas-results absolute inset-x-3 bottom-3 z-10 overflow-hidden rounded-[24px] bg-[#fbfaf6]/96 shadow-[0_18px_50px_rgba(24,24,20,.18)] backdrop-blur-xl ring-1 ring-black/5" style={{ top: topChromeHeight }} aria-label={ko ? "지도 결과 목록" : "Map results list"}>
-            <div className="flex items-center justify-between border-b border-foreground/10 px-5 py-4"><div><p className="text-[11px] font-semibold tracking-[0.06em] text-primary">{ko ? "같은 필터 · 목록 보기" : "SAME FILTER · LIST VIEW"}</p><h2 className="mt-1 text-[18px] font-semibold">{shownPoints.length}{ko ? "개의 선택" : " choices"}</h2></div><button type="button" onClick={() => setListMode(false)} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary" aria-label={ko ? "지도 돌아가기" : "Back to map"}><X className="h-4 w-4" /></button></div>
+                <div className="flex items-center justify-between border-b border-foreground/10 px-5 py-4"><div><p className="text-[12px] font-semibold tracking-[0.06em] text-primary">{searchingNationwide ? (ko ? "전국 검색 · 목록 보기" : "ALL KOREA · LIST VIEW") : (ko ? "같은 필터 · 목록 보기" : "SAME FILTER · LIST VIEW")}</p><h2 className="mt-1 text-[18px] font-semibold">{shownPoints.length}{ko ? "개의 선택" : " choices"}</h2></div><button type="button" onClick={() => setListMode(false)} className="pressable grid h-11 w-11 place-items-center rounded-full bg-secondary" aria-label={ko ? "지도 돌아가기" : "Back to map"}><X className="h-4 w-4" /></button></div>
             <div className="h-[calc(100%-77px)] overflow-y-auto px-5 pb-6">
               {shownPoints.length === 0 ? <p className="py-10 text-center text-[13px] text-muted-foreground">{ko ? "이 조건에 맞는 장소가 없어요. 필터를 바꿔보세요." : "No places match these filters yet."}</p> : shownPoints.map((point) => {
                 const Icon = POINT_ICONS[point.layer]
                 const proximity = pointProximityLabel(point.geo, locationStatus === "granted" ? location : null, lang)
-                return <button key={`${point.kind}:${point.id}`} type="button" onClick={() => { selectPoint(point); setListMode(false) }} className="pressable flex w-full items-start gap-3 border-b border-foreground/10 py-4 text-left"><span className={cn("atlas-list-icon", `atlas-list-icon-${point.layer}`)}><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-semibold">{point.title}</span><span className="mt-1 block truncate text-[12px] text-muted-foreground">{point.subtitle}</span><span className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">{proximity && <span className="font-semibold text-success">{proximity}</span>}<span className="font-medium text-foreground">{point.timing}</span>{point.benefitLabel && <span className="rounded-full bg-primary/8 px-2 py-0.5 font-semibold text-primary">{point.benefitLabel}</span>}</span></span><ChevronRight className="mt-2 h-4 w-4 flex-shrink-0 text-muted-foreground" /></button>
+                return <button key={`${point.kind}:${point.id}`} type="button" onClick={() => { selectPoint(point); setListMode(false) }} className="pressable flex w-full items-start gap-3 border-b border-foreground/10 py-4 text-left"><span className={cn("atlas-list-icon", `atlas-list-icon-${point.layer}`)}><Icon className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-semibold">{point.title}</span><span className="mt-1 block truncate text-[12px] text-muted-foreground">{point.subtitle}</span><span className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px]">{proximity && <span className="font-semibold text-success">{proximity}</span>}<span className="font-medium text-foreground">{point.timing}</span>{point.benefitLabel && <span className="rounded-full bg-primary/8 px-2 py-0.5 font-semibold text-primary">{point.benefitLabel}</span>}</span></span><ChevronRight className="mt-2 h-4 w-4 flex-shrink-0 text-muted-foreground" /></button>
               })}
             </div>
           </section>
@@ -551,7 +625,7 @@ export function TravelAtlasMap() {
         {!listMode && selected && hasMapSelection && (
           <section ref={sheetRef} className={cn("atlas-sheet absolute inset-x-3 z-30 rounded-[26px] bg-[#fbfaf6]/97 px-5 shadow-[0_22px_60px_rgba(24,24,20,.24)] backdrop-blur-xl ring-1 ring-black/5 transition-all duration-300 motion-reduce:transition-none", expanded ? "bottom-3" : "bottom-3")} aria-live="polite">
             <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className="pressable flex min-h-11 w-full items-center justify-center" aria-label={expanded ? (ko ? "정보 접기" : "Collapse details") : (ko ? "정보 펼치기" : "Expand details")}><span className="sheet-grabber" /></button>
-            {routePreview && <div className="mb-3 flex items-center gap-3 rounded-[14px] bg-[#edf2ef] px-3 py-2.5"><span className="grid h-8 w-8 place-items-center rounded-full bg-success text-white"><Navigation className="h-4 w-4" /></span><div className="min-w-0 flex-1"><p className="text-[12px] font-semibold text-success">{routeSummary}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{ko ? "방향 참고선 · 실제 도보 경로가 아니에요" : "Direction guide · not a walking route"}</p></div><button type="button" onClick={() => setRoutePreview(false)} className="pressable grid h-11 w-11 place-items-center rounded-full"><X className="h-4 w-4" /></button></div>}
+            {routePreview && <div className="mb-3 flex items-center gap-3 rounded-[14px] bg-[#edf2ef] px-3 py-2.5"><span className="grid h-8 w-8 place-items-center rounded-full bg-success text-white"><Navigation className="h-4 w-4" /></span><div className="min-w-0 flex-1"><p className="text-[13px] font-semibold text-success">{routeSummary}</p><p className="mt-0.5 text-[12px] text-muted-foreground">{ko ? "방향 참고선 · 실제 도보 경로가 아니에요" : "Direction guide · not a walking route"}</p></div><button type="button" onClick={() => setRoutePreview(false)} className="pressable grid h-11 w-11 place-items-center rounded-full"><X className="h-4 w-4" /></button></div>}
             <div className="flex items-start gap-3">
               {expanded && selected.image ? <img src={selected.image} alt="" className="h-20 w-20 flex-shrink-0 rounded-[16px] object-cover" /> : <span className={cn("atlas-card-icon", `atlas-card-icon-${selected.layer}`)}>{(() => { const Icon = POINT_ICONS[selected.layer]; return <Icon className="h-5 w-5" /> })()}</span>}
               <div className="min-w-0 flex-1">
@@ -566,20 +640,20 @@ export function TravelAtlasMap() {
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {selected.benefitLabel && <span className="inline-flex items-center gap-1 rounded-full bg-primary/8 px-2.5 py-1 text-[12px] font-semibold text-primary"><Gift className="h-3 w-3" />{selectedVoucher ? `${selectedVoucher.title}` : selected.benefitLabel}</span>}
               {selected.eligible && <span className="inline-flex items-center gap-1 rounded-full bg-success-surface px-2.5 py-1 text-[12px] font-semibold text-success"><BadgeCheck className="h-3 w-3" />{credentialActive ? (ko ? "내 ID로 이용 가능" : "Available with my ID") : (ko ? "혜택 적용 전 ID 갱신" : "Renew ID before applying benefits")}</span>}
-              {expanded && <span className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-muted-foreground">{selected.sourceLabel}</span>}
+              {expanded && <span className="rounded-full bg-secondary px-2.5 py-1 text-[12px] font-medium text-muted-foreground">{selected.sourceLabel}</span>}
             </div>
 
             {expanded && selected.kind !== "partner" && (
               <section className="mt-4 border-t border-foreground/10 pt-3" aria-label={ko ? "이 장소에서 이어지는 서비스" : "Services branching from this place"}>
-                <p className="text-[11px] font-semibold text-foreground">{ko ? "이 여행에서 바로 이어가기" : "Continue from this trip context"}</p>
+                <p className="text-[13px] font-semibold text-foreground">{ko ? "이 여행에서 바로 이어가기" : "Continue from this trip context"}</p>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setContextBranch((value) => value === "mobility" ? null : "mobility")} aria-pressed={contextBranch === "mobility"} className={cn("pressable flex min-h-11 items-center gap-2 rounded-[13px] px-3 text-left text-[11px] font-semibold ring-1", contextBranch === "mobility" ? "bg-ink text-white ring-ink" : "bg-card ring-border")}><TrainFront className="h-4 w-4" />{ko ? "가는 방법" : "How to get there"}</button>
-                  <button type="button" onClick={() => setContextBranch((value) => value === "food" ? null : "food")} aria-pressed={contextBranch === "food"} className={cn("pressable flex min-h-11 items-center gap-2 rounded-[13px] px-3 text-left text-[11px] font-semibold ring-1", contextBranch === "food" ? "bg-ink text-white ring-ink" : "bg-card ring-border")}><Utensils className="h-4 w-4" />{ko ? "전후 식사" : "Before or after meal"}</button>
+                  <button type="button" onClick={() => setContextBranch((value) => value === "mobility" ? null : "mobility")} aria-pressed={contextBranch === "mobility"} className={cn("pressable flex min-h-11 items-center gap-2 rounded-[13px] px-3 text-left text-[13px] font-semibold ring-1", contextBranch === "mobility" ? "bg-ink text-white ring-ink" : "bg-card ring-border")}><TrainFront className="h-4 w-4" />{ko ? "가는 방법" : "How to get there"}</button>
+                  <button type="button" onClick={() => setContextBranch((value) => value === "food" ? null : "food")} aria-pressed={contextBranch === "food"} className={cn("pressable flex min-h-11 items-center gap-2 rounded-[13px] px-3 text-left text-[13px] font-semibold ring-1", contextBranch === "food" ? "bg-ink text-white ring-ink" : "bg-card ring-border")}><Utensils className="h-4 w-4" />{ko ? "전후 식사" : "Before or after meal"}</button>
                 </div>
-                {contextBranch && (
+                {contextBranch && contextualPartners.length > 0 && (
                   <div className="mt-2 divide-y divide-foreground/10 rounded-[14px] bg-secondary/65 px-3">
                     {contextualPartners.map((partner) => (
-                      <Link key={partner.id} href={`${partner.href}?contextId=${encodeURIComponent(selected.id)}&returnTo=${encodeURIComponent("/")}`} className="pressable flex min-h-14 items-center gap-3 py-2.5">
+                      <Link key={partner.id} href={contextualHref(partner.href, selected, contextBranch)} className="pressable flex min-h-14 items-center gap-3 py-2.5">
                         <span className={cn("atlas-list-icon h-9 w-9", `atlas-list-icon-${partner.layer}`)}>{(() => { const Icon = POINT_ICONS[partner.layer]; return <Icon className="h-4 w-4" /> })()}</span>
                         <span className="min-w-0 flex-1"><span className="block truncate text-[12px] font-semibold">{partner.title}</span><span className="mt-0.5 block truncate text-[12px] text-muted-foreground">{partner.subtitle} · {partner.priceLabel}</span></span>
                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -587,23 +661,31 @@ export function TravelAtlasMap() {
                     ))}
                   </div>
                 )}
+                {contextBranch && contextualPartners.length === 0 && (
+                  <div className="mt-2 rounded-[14px] bg-secondary/65 px-3 py-3 text-[12px] font-medium leading-5 text-muted-foreground" role="status">
+                    {contextBranch === "food"
+                      ? (ko ? "이 장소까지 배달 가능한 연동 파트너가 아직 없어요. 지역 체험은 계속 둘러볼 수 있어요." : "No connected delivery partner covers this place yet. You can still explore local activities.")
+                      : (ko ? "이 장소를 출발지로 지원하는 연동 이동 서비스가 아직 없어요. 지도에서 지역 교통 정보를 확인해 주세요." : "No connected mobility service supports this starting point yet. Check local transport information on the map.")}
+                  </div>
+                )}
               </section>
             )}
 
-            {expanded && <div className="mt-3 flex items-start gap-2 border-t border-foreground/10 pt-3 text-[11px] leading-4 text-muted-foreground"><Route className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" /><span>{ko ? "장소를 고른 뒤 이동·예약·결제 제공자가 필요한 순간에만 이어져요. 대략적 위치는 이 기기에 저장되며 ID에는 들어가지 않아요." : "Mobility, booking and payment appear only after you choose a place. Approximate location stays on this device and is not written to your ID."}</span></div>}
+            {expanded && <div className="mt-3 flex items-start gap-2 border-t border-foreground/10 pt-3 text-[13px] leading-5 text-muted-foreground"><Route className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-primary" /><span>{ko ? "장소를 고른 뒤 이동·예약·결제 제공자가 필요한 순간에만 이어져요. 대략적 위치는 이 기기에 저장되며 ID에는 들어가지 않아요." : "Mobility, booking and payment appear only after you choose a place. Approximate location stays on this device and is not written to your ID."}</span></div>}
 
             <div className="mt-4 grid grid-cols-[44px_1fr] gap-2 pb-4">
               <button type="button" onClick={async () => { if (locationStatus !== "granted") await requestLocation(); setRoutePreview(true) }} aria-label={ko ? "직선거리와 방향 보기" : "Show straight-line distance and direction"} className={cn("pressable grid min-h-12 place-items-center rounded-[14px] ring-1", routePreview ? "bg-ink text-white ring-ink" : "bg-card text-foreground ring-border")}><Navigation className="h-[18px] w-[18px]" /></button>
-              <Link href={selected.kind === "partner" ? `${selected.href}?contextId=${encodeURIComponent(selected.id)}&returnTo=${encodeURIComponent("/")}` : selected.href} className="pressable flex min-h-12 items-center justify-between rounded-[14px] bg-primary px-4 text-[13px] font-semibold text-white"><span>{selected.kind === "activity" ? (ko ? "참여 조건 보기" : "Review and join") : selected.kind === "place" ? (ko ? "주변 체험 보기" : "See nearby experiences") : selected.kind === "partner" ? (ko ? "옵션·예상 금액 보기" : "See options and estimate") : selected.layer === "mobility" ? (ko ? "이용권 상세 보기" : "See pass details") : selected.layer === "food" ? (ko ? "주문 조건 보기" : "See order details") : (ko ? "예약·혜택 보기" : "See booking and benefit")}</span><ChevronRight className="h-4 w-4" /></Link>
+              <Link href={contextualHref(selected.href, selected)} className="pressable flex min-h-12 items-center justify-between rounded-[14px] bg-primary px-4 text-[13px] font-semibold text-white"><span>{selected.kind === "activity" ? (ko ? "참여 조건 보기" : "Review and join") : selected.kind === "place" ? (ko ? "이 지역 체험 보기" : "See experiences in this region") : selected.kind === "partner" ? (ko ? "옵션·예상 금액 보기" : "See options and estimate") : selected.layer === "mobility" ? (ko ? "이용권 상세 보기" : "See pass details") : selected.layer === "food" ? (ko ? "주문 조건 보기" : "See order details") : (ko ? "예약·혜택 보기" : "See booking and benefit")}</span><ChevronRight className="h-4 w-4" /></Link>
             </div>
           </section>
         )}
 
-        {!listMode && !expanded && <button type="button" onClick={openCopilot} className="pressable absolute bottom-[205px] left-3 z-20 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-3.5 text-[11px] font-semibold text-white shadow-lg ring-1 ring-white/10"><Sparkles className="h-3.5 w-3.5 text-[#e7c16d]" />{ko ? "30분 코스 추천" : "Build a 30-min route"}</button>}
+        {!listMode && !expanded && <button type="button" onClick={openCopilot} className="pressable absolute bottom-[205px] left-3 z-20 inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-3.5 text-[12px] font-semibold text-white shadow-lg ring-1 ring-white/10"><Sparkles className="h-3.5 w-3.5 text-[#e7c16d]" />{ko ? "AI 여행 도우미" : "Ask the travel helper"}</button>}
       </div>
 
       <div className="sr-only" aria-live="polite">{selected && hasMapSelection ? `${selected.title}. ${selected.subtitle}. ${selected.timing}.` : ko ? "대한민국 여행지도" : "Korea travel map"}</div>
-      <div className="pointer-events-none absolute bottom-[calc(76px+env(safe-area-inset-bottom))] left-4 z-20 text-[11px] font-medium text-foreground/55">{ko ? `K-Tour ID ${remainingDays}일 · 위치 원문은 ID에 저장하지 않음` : `K-Tour ID ${remainingDays}d · raw location is not stored in your ID`}</div>
+      {mapUnavailable && <div className="sr-only" role="status" aria-live="assertive">{ko ? "지도를 사용할 수 없어 여행지 목록으로 전환했어요." : "The map is unavailable, so the destination list is now shown."}</div>}
+      <div className="pointer-events-none absolute bottom-[calc(76px+env(safe-area-inset-bottom))] left-4 z-20 text-[12px] font-medium text-foreground/55">{ko ? `K-Tour ID ${remainingDays}일 · 위치 원문은 ID에 저장하지 않음` : `K-Tour ID ${remainingDays}d · raw location is not stored in your ID`}</div>
     </main>
   )
 }
