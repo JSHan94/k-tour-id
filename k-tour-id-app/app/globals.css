@@ -60,8 +60,8 @@
   --sidebar-border: #e4ddcf;
   --sidebar-ring: #c2392f;
 
-  --font-sans: "Noto Sans KR Variable", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Noto Serif KR Variable", "AppleMyungjo", Georgia, serif;
+  --font-sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Noto Serif KR", "AppleMyungjo", Georgia, serif;
 }
 
 .dark {
@@ -95,7 +95,7 @@
 }
 
 @theme inline {
-  --font-sans: "Noto Sans KR Variable", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: var(--font-display);
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
