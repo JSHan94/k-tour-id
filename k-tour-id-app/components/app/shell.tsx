@@ -43,8 +43,8 @@ export function BottomNav() {
   const pathname = usePathname()
   const { lang } = useLang()
   return (
-    <nav className="fixed bottom-0 left-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 border-t border-foreground/[0.07] bg-background/92 backdrop-blur-xl">
-      <div className="grid grid-cols-3 px-6 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1">
+    <nav className="fixed bottom-3 left-1/2 z-50 w-[calc(100%-24px)] max-w-[396px] -translate-x-1/2 rounded-[24px] bg-[#fbfaf6]/96 shadow-[0_14px_38px_rgba(28,25,20,.15)] ring-1 ring-black/[0.06] backdrop-blur-xl">
+      <div className="grid grid-cols-3 gap-1 px-1.5 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1.5">
         {NAV_ITEMS.map((item) => {
           const { href, icon: Icon } = item
           const label = lang === "ko" ? item.labelKo : item.labelEn
@@ -59,7 +59,10 @@ export function BottomNav() {
               href={href}
               aria-current={active ? "page" : undefined}
               aria-label={label}
-              className="pressable relative flex min-h-[58px] flex-col items-center justify-center gap-1"
+              className={cn(
+                "pressable relative flex min-h-[54px] flex-col items-center justify-center gap-0.5 rounded-[18px]",
+                active && "bg-[#ebe9e3]",
+              )}
             >
               <Icon className={cn("h-[21px] w-[21px]", active ? "text-foreground" : "text-muted-foreground")} strokeWidth={active ? 2.1 : 1.7} />
               <span className={cn("text-[12px] font-medium", active ? "text-foreground" : "text-muted-foreground")}>{label}</span>

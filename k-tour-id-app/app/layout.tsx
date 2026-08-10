@@ -10,24 +10,24 @@ import { LocationProvider } from "@/lib/location/location-provider"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id-app.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id.vercel.app",
   ),
   alternates: { canonical: "/" },
-  title: "K-Tour ID — Prove less. Travel more.",
+  title: "K-Tour Map — 여행할수록 채워지는 대한민국 지도",
   description:
     "One K-Tour ID for tailored travel, everyday services, local benefits and privacy-preserving payments in Korea.",
   generator: "K-Tour ID",
   openGraph: {
-    title: "K-Tour ID",
-    description: "A map-first travel atlas connecting places, activities, mobility and K-Tour ID benefits across Korea.",
+    title: "K-Tour Map",
+    description: "여행할수록 채워지는 나만의 대한민국 지도. 장소, 액티비티, 이동과 K-Tour ID 혜택을 한 여정으로 연결합니다.",
     type: "website",
-    images: [{ url: "/og-map-first.png", width: 1731, height: 909, alt: "K-Tour ID · 한국을 여행하는 새로운 지도" }],
+    images: [{ url: "/og-modern-atlas.png", width: 1672, height: 941, alt: "K-Tour Map · 여행할수록 채워지는 나만의 대한민국 지도" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "K-Tour ID",
-    description: "A map-first travel atlas connecting places, activities, mobility and K-Tour ID benefits across Korea.",
-    images: ["/og-map-first.png"],
+    title: "K-Tour Map",
+    description: "여행할수록 채워지는 나만의 대한민국 지도.",
+    images: ["/og-modern-atlas.png"],
   },
 }
 
