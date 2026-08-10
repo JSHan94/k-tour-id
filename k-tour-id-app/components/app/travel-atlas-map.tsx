@@ -555,7 +555,7 @@ export function TravelAtlasMap() {
               <Logo size={24} />
               <div className="min-w-0">
                 <p className="truncate font-display text-[15px] font-semibold leading-none">{ko ? "K-Tour Map" : "K-Tour Map"}</p>
-                <p className="mt-1 truncate text-[11px] font-medium text-muted-foreground">{mapContext}</p>
+                <p className="mt-1 truncate text-[12px] font-medium text-muted-foreground">{mapContext}</p>
               </div>
             </button>
             <div className="pointer-events-auto rounded-full bg-[#fbfaf6]/94 text-foreground shadow-sm ring-1 ring-black/5"><LangToggle /></div>

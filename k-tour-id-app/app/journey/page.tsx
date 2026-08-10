@@ -7,7 +7,7 @@ import { BadgeCheck, Check, ChevronRight, Gift, MapPin, MessageCircle, Navigatio
 import { useActivityMembership } from "@/app/connect/use-activity-membership"
 import { ModernKoreaAtlas } from "@/components/app/modern-korea-atlas"
 import { PageHeader, PhoneFrame } from "@/components/app/shell"
-import { PERSONA_CONFIG } from "@/lib/catalog"
+import { MARKETPLACE_ITEMS, PERSONA_CONFIG } from "@/lib/catalog"
 import { useLang } from "@/lib/i18n/lang-provider"
 import { ACTIVITIES } from "@/lib/mock-data"
 import { useApp } from "@/lib/store/app-provider"
@@ -16,6 +16,14 @@ import { useExternalServiceOrders } from "@/lib/external-service-orders"
 import { KOREA_REGIONS, type KoreaRegionId } from "@/lib/map/korea-atlas-data"
 
 const CHECKIN_PREFIX = "k-tour-id:journey-checkin:v2"
+
+function nearestTravelRegion(latitude: number, longitude: number): KoreaRegionId {
+  return KOREA_REGIONS.reduce((nearest, candidate) => {
+    const distance = ((latitude - candidate.center[0]) ** 2)
+      + ((longitude - candidate.center[1]) ** 2)
+    return distance < nearest.distance ? { id: candidate.id, distance } : nearest
+  }, { id: "capital" as KoreaRegionId, distance: Number.POSITIVE_INFINITY }).id
+}
 
 export default function JourneyPage() {
   const router = useRouter()
@@ -44,24 +52,50 @@ export default function JourneyPage() {
     })),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()), [externalOrders, lang, orders])
   const joinedActivities = useMemo(() => ACTIVITIES.filter((item) => joinedActivityIds.includes(item.id)), [joinedActivityIds])
+  const [checkedInActivityIds, setCheckedInActivityIds] = useState<string[]>([])
+
+  useEffect(() => {
+    const did = session.identity?.did
+    if (!did) {
+      setCheckedInActivityIds([])
+      return
+    }
+    try {
+      setCheckedInActivityIds(ACTIVITIES.map((item) => item.id).filter((activityId) => (
+        localStorage.getItem(`${CHECKIN_PREFIX}:${encodeURIComponent(did)}:${activityId}`) === "done"
+      )))
+    } catch {
+      setCheckedInActivityIds([])
+    }
+  }, [session.identity?.did])
+
+  const checkedInActivities = useMemo(
+    () => ACTIVITIES.filter((item) => checkedInActivityIds.includes(item.id)),
+    [checkedInActivityIds],
+  )
+
   const visitedRegionIds = useMemo(() => {
     const ids = new Set<KoreaRegionId>()
-    joinedActivities.forEach((item) => {
+    checkedInActivities.forEach((item) => {
       if (!item.geo) return
-      const region = KOREA_REGIONS.reduce((nearest, candidate) => {
-        const distance = ((item.geo!.latitude - candidate.center[0]) ** 2)
-          + ((item.geo!.longitude - candidate.center[1]) ** 2)
-        return distance < nearest.distance ? { id: candidate.id, distance } : nearest
-      }, { id: "capital" as KoreaRegionId, distance: Number.POSITIVE_INFINITY })
-      ids.add(region.id)
+      ids.add(nearestTravelRegion(item.geo.latitude, item.geo.longitude))
     })
-    if (journeyRecords.length > 0) ids.add("capital")
+    orders.filter((order) => order.status === "used").forEach((order) => {
+      const item = MARKETPLACE_ITEMS.find((candidate) => candidate.id === order.itemId)
+      if (!item?.geo) return
+      ids.add(nearestTravelRegion(item.geo.latitude, item.geo.longitude))
+    })
+    externalOrders.filter((order) => order.status === "completed").forEach((order) => {
+      const region = order.entryContext?.region
+      if (region && KOREA_REGIONS.some((candidate) => candidate.id === region)) ids.add(region as KoreaRegionId)
+    })
     return Array.from(ids)
-  }, [joinedActivities, journeyRecords.length])
+  }, [checkedInActivities, externalOrders, orders])
   const [selectedActivityId, setSelectedActivityId] = useState("")
   const activity = joinedActivities.find((item) => item.id === selectedActivityId) ?? joinedActivities[0]
   const storageKey = session.identity?.did && activity ? `${CHECKIN_PREFIX}:${encodeURIComponent(session.identity.did)}:${activity.id}` : null
   const [step, setStep] = useState<"ready" | "scanning" | "confirm" | "done">("ready")
+  const [checkInError, setCheckInError] = useState(false)
 
   useEffect(() => {
     if (!hydrated) return
@@ -69,6 +103,7 @@ export default function JourneyPage() {
   }, [hydrated, router, session.onboarded])
 
   useEffect(() => {
+    setCheckInError(false)
     if (!storageKey) { setStep("ready"); return }
     try { setStep(localStorage.getItem(storageKey) === "done" ? "done" : "ready") }
     catch { setStep("ready") }
@@ -81,10 +116,11 @@ export default function JourneyPage() {
       <PhoneFrame>
         <PageHeader title={ko ? "내 여정" : "My journey"} back="/" />
         <main className="safe-bottom px-6 pb-10">
-          <JourneyFootprintOverview lang={lang} visitedRegionIds={visitedRegionIds} activityCount={joinedActivities.length} recordCount={journeyRecords.length} />
+          <JourneyFootprintOverview lang={lang} visitedRegionIds={visitedRegionIds} activityCount={checkedInActivityIds.length} recordCount={journeyRecords.length} />
           <p className="mt-8 text-[13px] font-semibold text-primary">K-Tour ID</p>
           <h1 className="font-display text-balance mt-2 text-[27px] font-semibold leading-[1.24]">{ko ? "ID를 갱신하면 여행 기록을 이어갈 수 있어요." : "Renew your ID to continue your journey."}</h1>
           <p className="mt-4 text-[14px] leading-6 text-muted-foreground">{ko ? "기존 액티비티 참여와 스탬프 기록은 그대로 보관돼요. 갱신 후 이 화면으로 돌아옵니다." : "Your activity membership and stamps stay saved. You will return here after renewal."}</p>
+          <CompletedFootprintList activities={checkedInActivities} lang={lang} />
           {journeyRecords.length > 0 && <JourneyRecordList records={journeyRecords} ko={ko} />}
           <Link href="/onboarding?mode=renew&returnTo=%2Fjourney" className="pressable mt-7 flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span>{ko ? "K-Tour ID 갱신하기" : "Renew K-Tour ID"}</span><ChevronRight className="h-5 w-5" /></Link>
         </main>
@@ -101,6 +137,7 @@ export default function JourneyPage() {
           <p className="mt-8 text-[13px] font-semibold text-primary">{ko ? "다음 발자취" : "YOUR NEXT FOOTPRINT"}</p>
           <h1 className="font-display text-balance mt-2 text-[27px] font-semibold leading-[1.24]">{ko ? "함께할 액티비티를 골라 여행을 시작하세요." : "Choose an activity and begin your journey."}</h1>
           <p className="mt-4 text-[14px] leading-6 text-muted-foreground">{ko ? "참여가 확인된 액티비티만 QR 체크인과 여행 스탬프로 이어져요. 공개 프로필이나 모르는 사람의 DM 없이 시작합니다." : "Only a confirmed activity unlocks QR check-in and a journey stamp. There are no public profiles or open DMs."}</p>
+          <CompletedFootprintList activities={checkedInActivities} lang={lang} />
           {journeyRecords.length > 0 && <JourneyRecordList records={journeyRecords} ko={ko} />}
           <Link href="/?focus=experience" className="pressable mt-7 flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span>{ko ? "지도에서 액티비티 찾기" : "Find activities on the map"}</span><ChevronRight className="h-5 w-5" /></Link>
         </main>
@@ -116,7 +153,15 @@ export default function JourneyPage() {
 
   const complete = () => {
     if (!credentialActive || !storageKey || !isJoined(activity.id)) return
-    try { localStorage.setItem(storageKey, "done") } catch { /* keep the in-session result */ }
+    setCheckInError(false)
+    try {
+      localStorage.setItem(storageKey, "done")
+      if (localStorage.getItem(storageKey) !== "done") throw new Error("CHECKIN_NOT_SAVED")
+    } catch {
+      setCheckInError(true)
+      return
+    }
+    setCheckedInActivityIds((previous) => previous.includes(activity.id) ? previous : [...previous, activity.id])
     setStep("done")
   }
 
@@ -124,7 +169,7 @@ export default function JourneyPage() {
     <PhoneFrame>
       <PageHeader title={ko ? "내 여정" : "My journey"} back="/" />
       <main className="safe-bottom px-6 pb-10">
-        <JourneyFootprintOverview lang={lang} visitedRegionIds={visitedRegionIds} activityCount={joinedActivities.length} recordCount={journeyRecords.length} />
+        <JourneyFootprintOverview lang={lang} visitedRegionIds={visitedRegionIds} activityCount={checkedInActivityIds.length} recordCount={journeyRecords.length} />
         {joinedActivities.length > 1 && <section className="no-scrollbar -mx-6 mb-5 overflow-x-auto px-6" aria-label={ko ? "내 액티비티 선택" : "Choose an activity"}><div className="flex gap-2">{joinedActivities.map((item) => <button key={item.id} type="button" aria-pressed={item.id === activity.id} onClick={() => setSelectedActivityId(item.id)} className={`pressable min-h-11 flex-shrink-0 rounded-full px-4 text-[12px] font-semibold ${item.id === activity.id ? "bg-ink text-white" : "bg-secondary text-muted-foreground"}`}>{ko ? item.title : item.titleEn ?? item.title}</button>)}</div></section>}
         <section className="mt-7" aria-labelledby="current-journey-title">
           <div className="flex items-center justify-between"><p className="text-[13px] font-semibold text-primary">{ko ? "오늘의 여정" : "TODAY'S JOURNEY"}</p><span className="text-[12px] text-muted-foreground">{time}</span></div>
@@ -143,6 +188,7 @@ export default function JourneyPage() {
           </div>
         </section>
 
+        <CompletedFootprintList activities={checkedInActivities.filter((item) => item.id !== activity.id)} lang={lang} />
         {journeyRecords.length > 0 && <JourneyRecordList records={journeyRecords} ko={ko} />}
 
         <section className="mt-7">
@@ -160,7 +206,8 @@ export default function JourneyPage() {
           <Link href={`/explore/${persona.firstItemId}`} className="pressable mt-6 flex min-h-14 items-center justify-between rounded-[14px] bg-primary px-5 text-[15px] font-semibold text-white"><span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4" />{ko ? "다음 추천 혜택 보기" : "See the next recommended benefit"}</span><ChevronRight className="h-5 w-5" /></Link>
         </> : <section className="mt-7 rounded-[24px] bg-surface-2 p-5 ring-1 ring-border">
           <div className="flex items-start gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-card text-primary ring-1 ring-border"><MapPin className="h-5 w-5" /></span><div><p className="text-[14px] font-semibold">{title}</p><p className="mt-1 text-[13px] leading-5 text-muted-foreground">{place} · {time}</p><p className="mt-1 text-[12px] font-semibold text-success">{ko ? "내 액티비티 참여 확인됨" : "Your participation is confirmed"}</p></div></div>
-          {step === "scanning" ? <div className="mt-5 overflow-hidden rounded-[18px] bg-ink p-4 text-white"><div className="relative grid aspect-[4/3] place-items-center rounded-[14px] border border-white/15 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_60%)]"><span className="absolute inset-8 rounded-[18px] border-2 border-gold/80" /><QrCode className="h-12 w-12 text-white/70" /><p className="absolute inset-x-3 bottom-3 text-center text-[13px] text-white/75">{ko ? "카메라 권한을 허용한 뒤 코드를 프레임 안에 맞춰주세요." : "Allow camera access, then align the code inside the frame."}</p></div><div className="mt-3 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-white/10 text-[14px] font-semibold">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={() => setStep("confirm")} className="pressable min-h-12 rounded-[12px] bg-primary text-[14px] font-semibold">{ko ? "코드 인식" : "Recognize code"}</button></div></div> : step === "confirm" ? <div className="mt-5 border-t border-foreground/10 pt-4"><p className="text-[13px] leading-5 text-muted-foreground">{ko ? "참여 중인 액티비티의 현장 QR과 일치해요. 기록을 남길까요?" : "This matches your confirmed activity QR. Save the check-in?"}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-card text-[14px] font-semibold ring-1 ring-border">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={complete} className="pressable flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-primary text-[14px] font-semibold text-white"><Check className="h-4 w-4" />{ko ? "체크인" : "Check in"}</button></div></div> : <button type="button" onClick={() => setStep("scanning")} className="pressable mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink px-4 text-[14px] font-semibold text-white"><QrCode className="h-5 w-5 text-gold" />{ko ? "QR 스캔 시작" : "Start QR scan"}</button>}
+          {checkInError && <p role="alert" className="mt-4 rounded-[12px] bg-destructive/10 px-3 py-2.5 text-[12px] font-semibold leading-5 text-destructive">{ko ? "체크인 기록을 저장하지 못했어요. 브라우저 저장 설정을 확인한 뒤 다시 시도해 주세요." : "We couldn't save this check-in. Check your browser storage settings and try again."}</p>}
+          {step === "scanning" ? <div className="mt-5 overflow-hidden rounded-[18px] bg-ink p-4 text-white"><div className="relative grid aspect-[4/3] place-items-center rounded-[14px] border border-white/15 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_60%)]"><span className="absolute inset-8 rounded-[18px] border-2 border-gold/80" /><QrCode className="h-12 w-12 text-white/70" /><p className="absolute inset-x-3 bottom-3 text-center text-[13px] text-white/75">{ko ? "카메라 권한을 허용한 뒤 코드를 프레임 안에 맞춰주세요." : "Allow camera access, then align the code inside the frame."}</p></div><div className="mt-3 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-white/10 text-[14px] font-semibold">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={() => setStep("confirm")} className="pressable min-h-12 rounded-[12px] bg-primary text-[14px] font-semibold">{ko ? "코드 인식" : "Recognize code"}</button></div></div> : step === "confirm" ? <div className="mt-5 border-t border-foreground/10 pt-4"><p className="text-[13px] leading-5 text-muted-foreground">{ko ? "참여 중인 액티비티의 현장 QR과 일치해요. 기록을 남길까요?" : "This matches your confirmed activity QR. Save the check-in?"}</p><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setStep("ready")} className="pressable min-h-12 rounded-[12px] bg-card text-[14px] font-semibold ring-1 ring-border">{ko ? "취소" : "Cancel"}</button><button type="button" onClick={complete} className="pressable flex min-h-12 items-center justify-center gap-2 rounded-[12px] bg-primary text-[14px] font-semibold text-white"><Check className="h-4 w-4" />{ko ? "체크인" : "Check in"}</button></div></div> : <button type="button" onClick={() => { setCheckInError(false); setStep("scanning") }} className="pressable mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-ink px-4 text-[14px] font-semibold text-white"><QrCode className="h-5 w-5 text-gold" />{ko ? "QR 스캔 시작" : "Start QR scan"}</button>}
         </section>}
       </main>
     </PhoneFrame>
@@ -193,13 +240,37 @@ function JourneyFootprintOverview({
         variant="footprint"
         compact
         visitedRegionIds={visitedRegionIds}
-        currentRegionId={visitedRegionIds.length === 0 ? "capital" : undefined}
         className="-mb-7 -mt-3"
       />
       <div className="grid grid-cols-3 divide-x divide-foreground/10 border-t border-foreground/10 pt-4 text-center">
-        <div><strong className="tabular block text-[20px] font-medium">{visitedRegionIds.length}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{ko ? "방문 지역" : "Regions"}</span></div>
-        <div><strong className="tabular block text-[20px] font-medium">{activityCount}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{ko ? "액티비티" : "Activities"}</span></div>
+        <div><strong className="tabular block text-[20px] font-medium">{visitedRegionIds.length}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{ko ? "기록된 권역" : "Regions logged"}</span></div>
+        <div><strong className="tabular block text-[20px] font-medium">{activityCount}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{ko ? "체크인" : "Check-ins"}</span></div>
         <div><strong className="tabular block text-[20px] font-medium">{recordCount}</strong><span className="mt-1 block text-[12px] text-muted-foreground">{ko ? "이용 기록" : "Records"}</span></div>
+      </div>
+    </section>
+  )
+}
+
+function CompletedFootprintList({ activities, lang }: { activities: typeof ACTIVITIES[number][]; lang: "ko" | "en" }) {
+  if (activities.length === 0) return null
+  const ko = lang === "ko"
+  return (
+    <section className="mt-6" aria-labelledby="completed-footprints-title">
+      <div className="flex items-center justify-between">
+        <h2 id="completed-footprints-title" className="text-[13px] font-semibold">{ko ? "완료한 발자취" : "Completed footprints"}</h2>
+        <span className="text-[12px] text-muted-foreground">{activities.length}{ko ? "개" : " saved"}</span>
+      </div>
+      <div className="mt-2 divide-y divide-foreground/10 border-y border-foreground/10">
+        {activities.map((item) => (
+          <Link key={item.id} href={`/?contextId=${encodeURIComponent(item.id)}&focus=experience`} className="pressable flex min-h-16 items-center gap-3 py-3">
+            <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full bg-[#f3eadb] text-primary"><Stamp className="h-4 w-4" /></span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-semibold">{ko ? item.title : item.titleEn ?? item.title}</span>
+              <span className="mt-0.5 block truncate text-[12px] text-muted-foreground">{ko ? item.place : item.placeEn ?? item.place} · {ko ? "현장 확인 완료" : "Venue check-in confirmed"}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+          </Link>
+        ))}
       </div>
     </section>
   )

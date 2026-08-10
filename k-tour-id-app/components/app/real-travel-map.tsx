@@ -250,6 +250,7 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
   const onUnavailableRef = useRef(onUnavailable)
   const onViewLevelChangeRef = useRef(onViewLevelChange)
   const activeRegionRef = useRef<KoreaRegionId | undefined>(undefined)
+  const pendingRegionIdRef = useRef<KoreaRegionId | undefined>(undefined)
   const chromeInsetsRef = useRef({ top: topChromeHeight, bottom: bottomChromeHeight })
   const [mapStarted, setMapStarted] = useState(false)
   const [viewLevel, setViewLevel] = useState<MapViewLevel>("nation")
@@ -262,6 +263,7 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
   chromeInsetsRef.current = { top: topChromeHeight, bottom: bottomChromeHeight }
 
   const showKorea = (map: LeafletMap) => {
+    pendingRegionIdRef.current = undefined
     activeRegionRef.current = undefined
     setViewLevel("nation")
     setViewRegionId(undefined)
@@ -275,6 +277,7 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
   }
 
   const showRegion = (map: LeafletMap, region: KoreaRegion) => {
+    pendingRegionIdRef.current = region.id
     activeRegionRef.current = region.id
     setViewLevel("region")
     setViewRegionId(region.id)
@@ -289,9 +292,11 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
     zoomOut: () => mapRef.current?.zoomOut(0.5, { animate: !prefersReducedMotion() }),
     showKorea: () => {
       if (mapRef.current) showKorea(mapRef.current)
+      else pendingRegionIdRef.current = undefined
     },
     showRegion: (regionId) => {
       const region = KOREA_REGIONS.find((candidate) => candidate.id === regionId)
+      pendingRegionIdRef.current = regionId
       if (mapRef.current && region) showRegion(mapRef.current, region)
     },
     flyToLocation: (location) => {
@@ -490,7 +495,9 @@ export const RealTravelMap = forwardRef<RealTravelMapHandle, RealTravelMapProps>
         }
 
         map.on("zoomend", updateViewLevel)
-        showKorea(map)
+        const requestedRegion = KOREA_REGIONS.find((region) => region.id === pendingRegionIdRef.current)
+        if (requestedRegion) showRegion(map, requestedRegion)
+        else showKorea(map)
         updateViewLevel()
 
         startedMap = map
