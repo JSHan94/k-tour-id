@@ -1,8 +1,8 @@
 # ONDO Autonomous Run Status
 
 최종 갱신: `2026-08-19`
-현재 Gate: `SPEC READY`
-Clock: `NOT STARTED`
+현재 Gate: `BUILDING`
+Clock: `STARTED · 2026-08-19 04:15 KST`
 Release target: `ONDO Frontend Demo Candidate v2`
 
 이 파일은 실행 중 현재 상태의 유일한 source of truth다. 각 wave와 gate가 끝날 때 Root Integrator만 갱신한다.
@@ -17,20 +17,20 @@ Release target: `ONDO Frontend Demo Candidate v2`
 | Execution pack | Frozen · Ready |
 | Execution policy | Initial 9h Wave + automatic 2h Quality Extension until Candidate Gate |
 | Latest read-only audit SHA / time | immutable spec docs `00`~`11` + `13` checksum `247a8cf77091f6c5fff40ebde0154c70fc8a463c39f60652267604ef198aebc2` · `2026-08-19 04:15:14 KST`; reviewer full-pack snapshot `124f861a270a49538aca0598752c0350ca0f70b1017ce58ab535967618dcf246` |
-| SPEC SHA | This freeze commit; concrete Git SHA recorded at BUILD START |
-| Current shared-contract SHA | Not frozen |
-| Integration branch | Not created |
-| Integration worktree | Not created |
-| Baseline typecheck | Not run for execution |
-| Baseline build | Not run for execution |
-| Baseline screenshots | Not captured |
-| Durable evidence manifest | Not created |
-| Playwright harness | Not installed/configured |
+| SPEC SHA | `53a431d1b4c70332b47ab02aa420c812ab883980` |
+| Current shared-contract SHA | `44f65b1a0cc8eafe88ec9f9c4db4940fcb7650da` |
+| Integration branch | `codex/ondo-integration-20260819` |
+| Integration worktree | protected run worktree · `/tmp/ondo-run-20260819-yWyHW2/integration` |
+| Baseline typecheck | PASS · Node `25.9.0`, pnpm `10.8.0` |
+| Baseline build | PASS · Next production build + Sites build · `/ondo` static prerender |
+| Baseline screenshots | CAPTURED · 390×844 / 1440×1000 · guide + map · staging hashes in manifest |
+| Durable evidence manifest | Initialized · `./evidence/RUN-20260819-0415-KST/manifest.md` |
+| Playwright harness | Installed/configured · Chromium · contract suite 16/16 PASS |
 | QA Loop 1 | Not started |
 | QA Loop 2 | Not started |
 | Deployment | Not authorized / Not started |
 
-실행팩은 동결 준비를 마쳤다. 구현 clock은 SPEC commit과 보호된 integration worktree가 생성된 뒤 시작한다.
+실행팩은 동결됐고 구현 clock이 시작됐다. 세 Worker는 같은 SPEC SHA와 shared-contract SHA에서 병렬 작업한다. 기존 `/ondo`는 첫 meaningful preview Gate 전까지 rollback 가능한 fallback으로 유지한다.
 
 ---
 
@@ -64,17 +64,17 @@ Release target: `ONDO Frontend Demo Candidate v2`
 
 ### BUILD START
 
-- [ ] 사용자 명시적 구현 시작 지시
-- [ ] 기존 사용자 변경 보존 확인
-- [ ] SPEC SHA 기록
-- [ ] integration branch/worktree 생성
-- [ ] worker branch/worktree 생성
-- [ ] baseline typecheck 통과
-- [ ] baseline production build 통과
-- [ ] baseline screenshots 저장
-- [ ] agent owner와 소유 경로 확인
-- [ ] 세 Worker가 같은 SPEC SHA와 Current shared-contract SHA를 확인
-- [ ] durable evidence manifest 초기화
+- [x] 사용자 명시적 구현 시작 지시
+- [x] 기존 사용자 변경 보존 확인
+- [x] SPEC SHA 기록
+- [x] integration branch/worktree 생성
+- [x] worker branch/worktree 생성
+- [x] baseline typecheck 통과
+- [x] baseline production build 통과
+- [x] baseline screenshots 저장
+- [x] agent owner와 소유 경로 확인
+- [x] 세 Worker가 같은 SPEC SHA와 Current shared-contract SHA를 확인
+- [x] durable evidence manifest 초기화
 
 ### CANDIDATE
 
@@ -98,10 +98,10 @@ Release target: `ONDO Frontend Demo Candidate v2`
 | Wave | 시작 | 종료 | Owner | 결과 | Commit/Artifact | Blocker |
 |---|---|---|---|---|---|---|
 | Spec | 2026-08-19 | 2026-08-19 04:15 KST | Root + 3 reviewers | SPEC READY · Sev-1 0 · Sev-2 0 | immutable audit `247a8cf77091f6c5fff40ebde0154c70fc8a463c39f60652267604ef198aebc2` | — |
-| Baseline | — | — | Root | Not started | — | — |
-| Build A · Map | — | — | Map Agent | Not started | — | — |
-| Build B · Identity | — | — | Identity Agent | Not started | — | — |
-| Build C · Connect | — | — | Connect Agent | Not started | — | — |
+| Baseline | 2026-08-19 04:15 KST | 2026-08-19 04:26 KST | Root | PASS · typecheck/build/Sites build/4 screenshots | shared scaffold `a640365`; evidence `RUN-20260819-0415-KST` | — |
+| Build A · Map | 2026-08-19 04:27 KST | — | Map Agent | In progress | `codex/ondo-map-20260819` | — |
+| Build B · Identity | 2026-08-19 04:27 KST | — | Identity Agent | In progress | `codex/ondo-identity-20260819` | — |
+| Build C · Connect | 2026-08-19 04:27 KST | — | Connect Agent | In progress | `codex/ondo-connect-20260819` | — |
 | Integration 1 | — | — | Root | Not started | — | — |
 | QA 1 | — | — | Cross-review | Not started | — | — |
 | Fix 1 | — | — | Owners | Not started | — | — |
@@ -117,7 +117,7 @@ Release target: `ONDO Frontend Demo Candidate v2`
 
 | Issue ID | Severity | REQ/Flow | 발견 wave | Owner | 상태 | 결정/Fix commit |
 |---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — |
+| CCR-001 | Connect Agent | ActivityEvent → reputation seam | first mission/meetup 중복 적용 방지 및 producer→reducer 경계 보존 | Root approved | `44f65b1` | contract 16/16 PASS · Worker cherry-pick requested |
 
 Severity 정의는 [QA Plan](./08_QA_ACCEPTANCE_PLAN.md)을 따른다.
 
