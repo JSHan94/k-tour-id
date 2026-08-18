@@ -16,9 +16,33 @@ import styles from "./connect.module.css"
 
 type ChatItem = { id: string; kind: "text" | "image"; text?: string; previewUrl?: string; status: MessageStatus }
 type StoredChatItem = Omit<ChatItem, "previewUrl">
+type TableOutcome = { feedbackSubmitted: boolean; reportReceipt: string | null; participantBlocked: boolean }
 
 const CHAT_SESSION_KEY = "ondo.chat.v2"
+const TABLE_OUTCOME_SESSION_KEY = "ondo.table-outcomes.v2"
 const chatMemory = new Map<string, ChatItem[]>()
+
+function readTableOutcome(tableId: string): TableOutcome {
+  const fallback = { feedbackSubmitted: false, reportReceipt: null, participantBlocked: false }
+  if (typeof window === "undefined") return fallback
+  try {
+    const outcomes = JSON.parse(window.sessionStorage.getItem(TABLE_OUTCOME_SESSION_KEY) ?? "{}") as Record<string, Partial<TableOutcome>>
+    return { ...fallback, ...(outcomes[tableId] ?? {}) }
+  } catch {
+    return fallback
+  }
+}
+
+function persistTableOutcome(tableId: string, outcome: TableOutcome) {
+  if (typeof window === "undefined") return
+  try {
+    const outcomes = JSON.parse(window.sessionStorage.getItem(TABLE_OUTCOME_SESSION_KEY) ?? "{}") as Record<string, TableOutcome>
+    outcomes[tableId] = outcome
+    window.sessionStorage.setItem(TABLE_OUTCOME_SESSION_KEY, JSON.stringify(outcomes))
+  } catch {
+    // The visible session still remains correct if browser storage is unavailable.
+  }
+}
 
 function readChatMessages(tableId: string): ChatItem[] {
   const cached = chatMemory.get(tableId)
@@ -187,13 +211,12 @@ function TableChat({ tableId }: { tableId: string }) {
   const [messages, setMessages] = useState<ChatItem[]>(() => readChatMessages(tableId))
   const [confirm, setConfirm] = useState<"leave" | "report" | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false)
+  const [outcome, setOutcome] = useState<TableOutcome>(() => readTableOutcome(tableId))
   const [helpful, setHelpful] = useState<boolean | null>(null)
   const [respectful, setRespectful] = useState<boolean | null>(null)
   const [privateNote, setPrivateNote] = useState("")
   const [reportReason, setReportReason] = useState("")
-  const [blockParticipant, setBlockParticipant] = useState(false)
-  const [reportReceipt, setReportReceipt] = useState<string | null>(null)
+  const [blockParticipant, setBlockParticipant] = useState(() => outcome.participantBlocked)
   const ownedObjectUrls = useRef(new Set<string>())
 
   useEffect(() => () => {
@@ -207,6 +230,14 @@ function TableChat({ tableId }: { tableId: string }) {
     setMessages((current) => {
       const next = update(current)
       persistChatMessages(tableId, next)
+      return next
+    })
+  }
+
+  function updateOutcome(update: Partial<TableOutcome>) {
+    setOutcome((current) => {
+      const next = { ...current, ...update }
+      persistTableOutcome(tableId, next)
       return next
     })
   }
@@ -275,14 +306,14 @@ function TableChat({ tableId }: { tableId: string }) {
     if (helpful) events.push({ id: `feedback:${activeTable.id}`, kind: "contribution", subjectRef: "account:fixture", evidenceRef: `feedback:${activeTable.id}:2026-08-19`, occurredAt: "2026-08-19T22:01:00+09:00" })
     actions.recordActivityEvents(events)
     setFeedbackOpen(false)
-    setFeedbackSubmitted(true)
+    updateOutcome({ feedbackSubmitted: true })
     actions.notify(locale === "ko" ? "피드백을 분리된 활동 이력에 반영했어요." : "Feedback updated the separate activity histories.")
   }
 
   function submitReport() {
     if (!reportReason) return
     const receipt = `REPORT-${activeTable.id}-${Date.now().toString(36).toUpperCase()}`
-    setReportReceipt(receipt)
+    updateOutcome({ reportReceipt: receipt, participantBlocked: blockParticipant })
     setConfirm(null)
     actions.notify(blockParticipant
       ? locale === "ko" ? "신고를 접수하고 이 참가자를 차단했어요." : "Report recorded and this participant was blocked."
@@ -300,7 +331,7 @@ function TableChat({ tableId }: { tableId: string }) {
 
         <div className={styles.messageList} aria-live="polite">
           <div className={styles.systemMessage}>{locale === "ko" ? "사진과 메시지는 이 세션의 시뮬레이션에만 남습니다." : "Photos and messages remain only in this session simulation."}</div>
-          <div className={styles.received}><strong>Jieun</strong><p>{locale === "ko" ? "입구 오른쪽에서 만나요!" : "Let’s meet to the right of the entrance!"}</p><time>8:12 PM</time></div>
+          {outcome.participantBlocked ? <div className={styles.systemMessage}>{locale === "ko" ? "이 미리보기에서 신고한 참가자를 차단했어요." : "The reported participant is blocked in this preview."}</div> : <div className={styles.received}><strong>Jieun</strong><p>{locale === "ko" ? "입구 오른쪽에서 만나요!" : "Let’s meet to the right of the entrance!"}</p><time>8:12 PM</time></div>}
           {messages.map((message) => (
             <div key={message.id} className={`${styles.sent} ${message.status === "MSG-FAILED" ? styles.failedMessage : ""}`} data-message-status={message.status}>
               {message.kind === "image" ? message.previewUrl ? <img src={message.previewUrl} alt={locale === "ko" ? "대화 사진 로컬 미리보기" : "Chat photo local preview"} /> : <p>{locale === "ko" ? "이 기기의 사진 미리보기가 종료됐어요." : "This device-local photo preview has expired."}</p> : <p>{message.text}</p>}
@@ -311,7 +342,7 @@ function TableChat({ tableId }: { tableId: string }) {
         </div>
 
         <div className={styles.chatTools}>
-          {reportReceipt ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "신고 접수 증거" : "Report receipt"} · <code>{reportReceipt}</code></span></InlineNotice> : null}
+          {outcome.reportReceipt ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "신고 접수 증거" : "Report receipt"} · <code>{outcome.reportReceipt}</code></span></InlineNotice> : null}
           {feedbackOpen ? (
             <section className={styles.feedbackPanel} data-testid="table-feedback">
               <h3>{locale === "ko" ? "오늘의 Table은 어땠나요?" : "How was today’s Table?"}</h3>
@@ -323,7 +354,7 @@ function TableChat({ tableId }: { tableId: string }) {
               <button type="button" className={styles.primary} onClick={submitFeedback} disabled={helpful == null || respectful == null} data-testid="feedback-submit">{locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button>
             </section>
           ) : null}
-          {feedbackSubmitted ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "피드백을 남겼어요. 종합 점수는 만들지 않아요." : "Feedback recorded. No overall score was created."}</span></InlineNotice> : null}
+          {outcome.feedbackSubmitted ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "피드백을 남겼어요. 종합 점수는 만들지 않아요." : "Feedback recorded. No overall score was created."}</span></InlineNotice> : null}
           <LocalPhotoPicker locale={locale} purpose="chat_image" value={photo} onChange={setPhoto} disabled={photo?.state === "UPL-SENDING"} />
           {photo ? <button type="button" className={styles.secondary} onClick={sendImage} disabled={photo.state === "UPL-SENDING"}><ImagePlus size={17} /> {photo.state === "UPL-FAILED" ? locale === "ko" ? "사진 다시 보내기" : "Retry photo" : locale === "ko" ? "사진 보내기" : "Send photo"}</button> : null}
           <div className={styles.composer}>
@@ -334,7 +365,7 @@ function TableChat({ tableId }: { tableId: string }) {
           <div className={styles.chatActions}>
             {membership === "TMB-CONFIRMED" ? <button type="button" onClick={checkIn} data-testid="table-check-in">{locale === "ko" ? "현장 체크인" : "Check in"}</button> : null}
             {membership === "TMB-CHECKED-IN" ? <button type="button" onClick={openFeedback} data-testid="table-finish-meal">{locale === "ko" ? "식사 완료 · 피드백" : "Finish meal · Feedback"}</button> : null}
-            {membership === "TMB-COMPLETED" && !feedbackOpen && !feedbackSubmitted ? <button type="button" onClick={() => setFeedbackOpen(true)}>{locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button> : null}
+            {membership === "TMB-COMPLETED" && !feedbackOpen && !outcome.feedbackSubmitted ? <button type="button" onClick={() => setFeedbackOpen(true)}>{locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button> : null}
             <button type="button" onClick={() => setConfirm("report")} data-testid="table-report">{locale === "ko" ? "신고하기" : "Report"}</button>
             <button type="button" onClick={() => setConfirm("leave")} data-testid="table-leave">{locale === "ko" ? "Table 나가기" : "Leave Table"}</button>
           </div>

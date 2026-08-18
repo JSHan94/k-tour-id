@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import { useOndo } from "../shared/state/ondo-provider"
 import { MAP_VENUE_BY_ID } from "../../../lib/ondo/map/fixtures"
-import { CONFIDENCE_LABELS, FRESHNESS_LABELS, HEAT_COLORS, HEAT_LABELS } from "../../../lib/ondo/map/heat"
+import { CONFIDENCE_LABELS, FRESHNESS_LABELS, HEAT_COLORS, HEAT_LABELS, resolveFreshness } from "../../../lib/ondo/map/heat"
 import { readDiscoveryUrl, writeDiscoveryUrl } from "../../../lib/ondo/map/url-state"
 import type { MapVenue } from "../../../lib/ondo/map/models"
 import styles from "./place.module.css"
@@ -136,6 +136,7 @@ export function PlaceOverlay() {
 
   const selectedVenueId = venue.id
   const palette = HEAT_COLORS[venue.heatLevel]
+  const freshness = resolveFreshness(venue)
   const opening = venue.openingStatus === "open" ? copy.open : venue.openingStatus === "closed" ? copy.closed : copy.unknown
 
   function close() {
@@ -168,7 +169,7 @@ export function PlaceOverlay() {
         <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={19} /></button>
         <div className={styles.peekHeat}>
           <span style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>ONDO <b>{venue.ondoScore}</b></span>
-          <small>{HEAT_LABELS[locale][venue.heatLevel]} · {FRESHNESS_LABELS[locale][venue.freshness]}</small>
+          <small>{HEAT_LABELS[locale][venue.heatLevel]} · {FRESHNESS_LABELS[locale][freshness]}</small>
         </div>
         <h2>{venue.name[locale]}</h2>
         <p>{venue.name[locale === "en" ? "ko" : "en"]} · {opening} · {venue.priceLabel}</p>
@@ -219,7 +220,7 @@ export function PlaceOverlay() {
               <p>{copy.ondoExplain}</p>
               <div>
                 <span>{HEAT_LABELS[locale][venue.heatLevel]}</span>
-                <span><Clock3 size={13} />{FRESHNESS_LABELS[locale][venue.freshness]}</span>
+                <span><Clock3 size={13} />{FRESHNESS_LABELS[locale][freshness]}</span>
               </div>
             </div>
             <dl className={styles.signalMetrics}>

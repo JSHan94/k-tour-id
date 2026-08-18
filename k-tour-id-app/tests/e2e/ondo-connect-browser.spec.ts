@@ -2,20 +2,24 @@ import { expect, test, type Page } from "@playwright/test"
 
 async function seedPrepared(page: Page, overrides: Record<string, unknown> = {}) {
   await page.addInitScript((next) => {
-    localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
-    sessionStorage.setItem("ondo.session.v3", JSON.stringify({
-      onboarding: "ONB-COMPLETE",
-      persona: "short_term",
-      account: "ACC-ACTIVE",
-      person: "PER-VERIFIED",
-      age: "AGE-VERIFIED",
-      ageExpiresAt: "2026-08-20T20:00:00+09:00",
-      paymentKyc: "PKY-VERIFIED",
-      tableMembershipById: {},
-      stamps: 9,
-      ...next,
-    }))
-    sessionStorage.removeItem("ondo.chat.v2")
+    if (!localStorage.getItem("ondo.preferences.v3")) {
+      localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
+    }
+    if (!sessionStorage.getItem("ondo.session.v3")) {
+      sessionStorage.setItem("ondo.session.v3", JSON.stringify({
+        onboarding: "ONB-COMPLETE",
+        persona: "short_term",
+        account: "ACC-ACTIVE",
+        person: "PER-VERIFIED",
+        age: "AGE-VERIFIED",
+        ageExpiresAt: "2026-08-20T20:00:00+09:00",
+        paymentKyc: "PKY-VERIFIED",
+        tableMembershipById: {},
+        stamps: 9,
+        ...next,
+      }))
+      sessionStorage.removeItem("ondo.chat.v2")
+    }
   }, overrides)
 }
 
@@ -23,7 +27,7 @@ async function openTable(page: Page, query = "") {
   await page.goto(`/ondo${query}`)
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
   await page.getByRole("button", { name: "Tables", exact: true }).click()
-  await page.locator("[data-table-id='table-seongsu-dinner']").first().click()
+  await page.getByRole("region", { name: "Tables by place" }).locator("[data-table-id='table-seongsu-dinner']").click()
   await expect(page.getByRole("dialog", { name: "First gukbap together" })).toBeVisible()
 }
 
@@ -51,6 +55,12 @@ test("@core FL-003 Table request visibly resolves, image chat works, and private
   await page.getByTestId("feedback-submit").click()
   await expect(chat).toContainText("Feedback recorded. No overall score was created.")
   await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}").reputation)).toMatchObject({ meetup: "reliable", contribution: "helpful" })
+
+  await page.reload()
+  await page.getByRole("button", { name: "Tables", exact: true }).click()
+  await page.getByRole("region", { name: "Joined" }).locator("[data-table-id='table-seongsu-dinner']").click()
+  await expect(page.getByTestId("table-chat")).toContainText("Feedback recorded. No overall score was created.")
+  await expect(page.getByRole("button", { name: "Submit feedback" })).toHaveCount(0)
 })
 
 test("FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled", async ({ page }) => {
@@ -67,6 +77,13 @@ test("FL-003 report requires a reason, supports blocking, returns a receipt, and
   await page.getByTestId("report-block").check()
   await report.getByRole("button", { name: "Record report" }).click()
   await expect(page.getByTestId("table-chat")).toContainText("Report receipt")
+
+  await page.reload()
+  await page.getByRole("button", { name: "Tables", exact: true }).click()
+  await page.getByRole("region", { name: "Joined" }).locator("[data-table-id='table-seongsu-dinner']").click()
+  await expect(page.getByTestId("table-chat")).toContainText("Report receipt")
+  await expect(page.getByTestId("table-chat")).toContainText("The reported participant is blocked in this preview.")
+  await expect(page.getByTestId("table-chat")).not.toContainText("Let’s meet to the right of the entrance!")
 
   await page.getByTestId("table-leave").click()
   await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click()

@@ -29,6 +29,7 @@ const COPY = {
     boundary: "Checks confirm specific eligibility. They do not guarantee safety, character, or expertise.",
     jitTitle: "Checks appear only when needed",
     jitBody: "Explore without an account. Saving, joining a Table, After 19, and checkout ask only for their minimum checks and return you to the same task.",
+    jitBodyReady: "Your account is ready. Joining a Table, After 19, and checkout still ask only for the additional checks each action needs, then return you to the same task.",
     routes: "Preview flow",
     routePreview: "When a protected experience needs a person check, ONDO opens the route prepared for your selected intent—Mobile ID, Mobile Residence Card availability, or a neutral passport provider—and then returns to the same task.",
     routeTruth: "Preview only · No request is sent to an external provider.",
@@ -56,6 +57,7 @@ const COPY = {
     boundary: "확인은 특정 자격만 확인하며, 안전·성품·전문성을 보증하지 않습니다.",
     jitTitle: "확인은 필요한 순간에만",
     jitBody: "계정 없이 먼저 둘러보세요. 저장·Table·After 19·결제는 각 행동에 필요한 최소 확인만 요청하고 같은 작업으로 돌아옵니다.",
+    jitBodyReady: "계정은 준비됐어요. Table·After 19·결제는 각 행동에 추가로 필요한 확인만 요청한 뒤 같은 작업으로 돌아옵니다.",
     routes: "확인 흐름 미리보기",
     routePreview: "보호된 경험에 사람 확인이 필요하면 선택한 이용 목적에 맞춰 모바일 신분증, 모바일 외국인등록증 지원 확인 또는 중립 Passport provider 경로를 열고 같은 작업으로 돌아옵니다.",
     routeTruth: "미리보기 · 외부 인증기관으로 요청을 보내지 않습니다.",
@@ -94,7 +96,7 @@ export function IdentityEntry() {
 
       <section className={styles.jitCard}>
         <div className={styles.jitMark}><Globe2 size={22} /></div>
-        <div><h2>{t.jitTitle}</h2><p>{t.jitBody}</p></div>
+        <div><h2>{t.jitTitle}</h2><p>{state.account === "ACC-ACTIVE" ? t.jitBodyReady : t.jitBody}</p></div>
       </section>
 
       <section className={styles.routes}>

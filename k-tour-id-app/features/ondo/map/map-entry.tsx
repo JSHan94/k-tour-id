@@ -19,7 +19,7 @@ import {
 import { useOndo } from "../shared/state/ondo-provider"
 import type { Locale } from "../contracts/domain"
 import { MAP_NEIGHBORHOODS, MAP_REGIONS, MAP_VENUE_BY_ID, MAP_VENUES, isStableVenueId } from "../../../lib/ondo/map/fixtures"
-import { CONFIDENCE_LABELS, FRESHNESS_LABELS, HEAT_COLORS, HEAT_LABELS, confidenceClass, heatAccessibleName } from "../../../lib/ondo/map/heat"
+import { CONFIDENCE_LABELS, FRESHNESS_LABELS, HEAT_COLORS, HEAT_LABELS, confidenceClass, heatAccessibleName, resolveFreshness } from "../../../lib/ondo/map/heat"
 import type { DiscoveryFilters, DiscoveryLevel, DiscoveryUrlState, MapNeighborhood, MapRegion, MapVenue } from "../../../lib/ondo/map/models"
 import { DEFAULT_FILTERS, readDiscoveryUrl, writeDiscoveryUrl } from "../../../lib/ondo/map/url-state"
 import styles from "./map.module.css"
@@ -113,6 +113,14 @@ function markerHtml(entity: MarkerEntity, locale: Locale, selected: boolean) {
   return `<span class="ondoMarker ${confidence} ${selected ? "isSelected" : ""} ${entity.heatLevel === "limited" ? "isLimited" : ""}" style="--marker-fill:${palette.fill};--marker-text:${palette.text};--marker-stroke:${palette.stroke}"><b>${escapeHtml(score)}</b>${ageBadge}<small>${escapeHtml(name)}</small></span>`
 }
 
+function currentFreshness(entity: MarkerEntity) {
+  return resolveFreshness({
+    freshness: entity.freshness,
+    updatedAt: "updatedAt" in entity ? entity.updatedAt : undefined,
+    provenance: entity.provenance,
+  })
+}
+
 function regionHeading(level: DiscoveryLevel, city: "seoul" | "busan" | undefined, locale: Locale) {
   const copy = MAP_COPY[locale]
   if (level === "nation") return copy.nation
@@ -135,7 +143,9 @@ function VenueList({ venues, locale, selectedId, onSelect }: { venues: MapVenue[
   const copy = MAP_COPY[locale]
   return (
     <ul className={styles.venueList} data-testid="venue-list">
-      {venues.map((venue) => (
+      {venues.map((venue) => {
+        const freshness = currentFreshness(venue)
+        return (
         <li key={venue.id}>
           <button
             type="button"
@@ -152,13 +162,14 @@ function VenueList({ venues, locale, selectedId, onSelect }: { venues: MapVenue[
               <em>{venue.name[locale === "en" ? "ko" : "en"]}</em>
               <span className={styles.venueCardMeta}>
                 <b style={{ background: HEAT_COLORS[venue.heatLevel].fill, color: HEAT_COLORS[venue.heatLevel].text }}>ONDO {venue.ondoScore}</b>
-                <span><Clock3 size={12} /> {FRESHNESS_LABELS[locale][venue.freshness]}</span>
+                <span><Clock3 size={12} /> {FRESHNESS_LABELS[locale][freshness]}</span>
               </span>
             </span>
             <ChevronRight size={18} aria-hidden="true" />
           </button>
         </li>
-      ))}
+        )
+      })}
     </ul>
   )
 }
@@ -318,7 +329,7 @@ export function MapEntry() {
 
     const addMarker = (entity: MarkerEntity, kind: "region" | "neighborhood" | "venue") => {
       const name = entity.name[locale]
-      const accessibleName = `${heatAccessibleName({ score: entity.ondoScore, level: entity.heatLevel, signalCount: entity.signalCount, confidence: entity.confidence, freshness: entity.freshness, name, locale })}${kind === "venue" && (entity as MapVenue).alcohol ? locale === "ko" ? ", 주류 이용 19+ 조건" : ", 19+ condition for alcohol" : ""}`
+      const accessibleName = `${heatAccessibleName({ score: entity.ondoScore, level: entity.heatLevel, signalCount: entity.signalCount, confidence: entity.confidence, freshness: currentFreshness(entity), name, locale })}${kind === "venue" && (entity as MapVenue).alcohol ? locale === "ko" ? ", 주류 이용 19+ 조건" : ", 19+ condition for alcohol" : ""}`
       const selected = kind === "venue" && entity.id === selectedId
       const size = kind === "region" ? 52 : selected ? 48 : kind === "venue" ? 44 : 48
       const icon = leaflet.divIcon({

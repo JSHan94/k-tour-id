@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { MAP_NEIGHBORHOODS, MAP_REGIONS } from "../../lib/ondo/map/fixtures"
 
 async function seedGuest(page: Page, locale: "en" | "ko" = "en", account = false) {
   await page.addInitScript(({ locale, account }) => {
@@ -41,6 +42,11 @@ test.describe("ONDO map discovery", () => {
     await page.goto("/ondo?city=seoul&view=list")
 
     await expect(page.getByTestId("venue-list")).toBeVisible()
+    const listBox = await page.getByTestId("map-list-panel").boundingBox()
+    const autoBox = await page.getByLabel("Open automatically when eligible").boundingBox()
+    expect(listBox).not.toBeNull()
+    expect(autoBox).not.toBeNull()
+    expect(listBox!.y + listBox!.height).toBeLessThanOrEqual(autoBox!.y)
     await page.getByTestId("map-search").fill("gukbap")
     await expect(page.getByTestId("venue-card-seoul-seongsu-gukbap")).toBeVisible()
     await expect(page.getByTestId("venue-card-seoul-euljiro-nogari")).toHaveCount(0)
@@ -101,4 +107,26 @@ test.describe("ONDO map discovery", () => {
     await expect(page.getByTestId("region-marker-region-busan")).toHaveAttribute("aria-label", /ONDO 84.*12 recent signals.*Limited sample/)
     await expect(page.getByTestId("region-marker-region-jeju")).toHaveAttribute("aria-label", /no ONDO score.*more signals needed/)
   })
+
+  test("expired fixture signals are shown as older instead of updated today", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-08-22T12:00:00+09:00"))
+    await seedGuest(page)
+    await page.goto("/ondo?city=seoul&view=list")
+
+    await expect(page.getByTestId("venue-card-seoul-seongsu-gukbap")).toContainText("Older signals")
+    await page.getByTestId("venue-card-seoul-seongsu-gukbap").click()
+    await expect(page.getByTestId("place-peek")).toContainText("Older signals")
+    await expect(page.getByTestId("place-peek")).not.toContainText("Updated today")
+  })
+})
+
+test("aggregate heat fixtures keep sample, reason and provenance evidence separate from the score", () => {
+  for (const aggregate of [...MAP_REGIONS, ...MAP_NEIGHBORHOODS]) {
+    expect(typeof aggregate.minSampleMet).toBe("boolean")
+    expect(aggregate.reasonCodes.length).toBeGreaterThan(0)
+    expect(Number.isNaN(Date.parse(aggregate.computedAt))).toBeFalsy()
+    expect(aggregate.provenance.fixtureId).toMatch(/^FX-MAP-/)
+    expect(aggregate.provenance.truth).toBe("SIMULATED")
+    if (!aggregate.minSampleMet) expect(aggregate.ondoScore).toBeNull()
+  }
 })

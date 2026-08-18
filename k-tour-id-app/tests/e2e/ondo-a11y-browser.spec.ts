@@ -56,3 +56,24 @@ test("@a11y Tables and ID remain accessible at mobile width", async ({ page }) =
   await page.getByRole("button", { name: "ID", exact: true }).click()
   await expectNoSeriousViolations(page, "[data-testid='ondo-identity-entry']")
 })
+
+test("@a11y active public profile and four separate activity axes meet WCAG AA", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
+    sessionStorage.setItem("ondo.session.v3", JSON.stringify({
+      onboarding: "ONB-COMPLETE",
+      persona: "short_term",
+      account: "ACC-ACTIVE",
+      person: "PER-VERIFIED",
+      age: "AGE-VERIFIED",
+      ageExpiresAt: "2026-08-20T20:00:00+09:00",
+      paymentKyc: "PKY-VERIFIED",
+      reputation: { identity: "complete", visit: "repeat", contribution: "helpful", meetup: "reliable" },
+    }))
+  })
+  await page.goto("/ondo")
+  await page.getByRole("button", { name: "ID", exact: true }).click()
+  await expect(page.getByTestId("ondo-profile-panel")).toBeVisible()
+  await expect(page.getByTestId("ondo-trust-panel")).toBeVisible()
+  await expectNoSeriousViolations(page, "[data-testid='ondo-identity-entry']")
+})

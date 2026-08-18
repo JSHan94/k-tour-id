@@ -1,5 +1,5 @@
 import type { LocalizedText, Provenance, VenueFact } from "../../../features/ondo/contracts/domain"
-import type { MapNeighborhood, MapRegion, MapVenue } from "./models"
+import type { HeatReasonCode, MapNeighborhood, MapRegion, MapVenue } from "./models"
 
 const at = "2026-08-19T11:10:00.000Z"
 
@@ -12,6 +12,10 @@ function provenance(fixtureId: string): Provenance {
     expiresAt: "2026-08-20T11:10:00.000Z",
     isSimulation: true,
   }
+}
+
+function heatEvidence(fixtureId: string, minSampleMet: boolean, reasonCodes: HeatReasonCode[]) {
+  return { minSampleMet, computedAt: at, reasonCodes, provenance: provenance(fixtureId) }
 }
 
 function text(en: string, ko: string): LocalizedText {
@@ -42,6 +46,7 @@ export const MAP_REGIONS: MapRegion[] = [
     signalCount: 142,
     confidence: "high",
     freshness: "today",
+    ...heatEvidence("FX-MAP-SEOUL-RECENT", true, ["local_visits", "local_saves", "recent_contributions"]),
   },
   {
     id: "region-busan",
@@ -57,6 +62,7 @@ export const MAP_REGIONS: MapRegion[] = [
     confidence: "low",
     freshness: "today",
     nextExpansionLabel: text("Early coverage", "먼저 채워지는 지역"),
+    ...heatEvidence("FX-MAP-BUSAN-SEED", true, ["local_visits", "editorial_signal"]),
   },
   {
     id: "region-jeju",
@@ -71,6 +77,7 @@ export const MAP_REGIONS: MapRegion[] = [
     confidence: "limited",
     freshness: "unknown",
     nextExpansionLabel: text("Growing signals", "신호를 모으는 중"),
+    ...heatEvidence("FX-MAP-GROWING", false, ["insufficient_sample"]),
   },
   {
     id: "region-gangwon",
@@ -85,6 +92,7 @@ export const MAP_REGIONS: MapRegion[] = [
     confidence: "limited",
     freshness: "unknown",
     nextExpansionLabel: text("Growing signals", "신호를 모으는 중"),
+    ...heatEvidence("FX-MAP-GROWING", false, ["insufficient_sample"]),
   },
   {
     id: "region-jeonju",
@@ -99,6 +107,7 @@ export const MAP_REGIONS: MapRegion[] = [
     confidence: "limited",
     freshness: "unknown",
     nextExpansionLabel: text("Growing signals", "신호를 모으는 중"),
+    ...heatEvidence("FX-MAP-GROWING", false, ["insufficient_sample"]),
   },
   {
     id: "region-gyeongju",
@@ -113,14 +122,15 @@ export const MAP_REGIONS: MapRegion[] = [
     confidence: "limited",
     freshness: "unknown",
     nextExpansionLabel: text("Growing signals", "신호를 모으는 중"),
+    ...heatEvidence("FX-MAP-GROWING", false, ["insufficient_sample"]),
   },
 ]
 
 export const MAP_NEIGHBORHOODS: MapNeighborhood[] = [
-  { id: "seongsu", cityId: "seoul", name: text("Seongsu", "성수"), latitude: 37.5446, longitude: 127.0559, ondoScore: 92, heatLevel: "peak", signalCount: 38, confidence: "high", freshness: "today" },
-  { id: "euljiro", cityId: "seoul", name: text("Euljiro", "을지로"), latitude: 37.566, longitude: 126.9917, ondoScore: 81, heatLevel: "hot", signalCount: 24, confidence: "high", freshness: "today" },
-  { id: "mangwon", cityId: "seoul", name: text("Mangwon", "망원"), latitude: 37.5561, longitude: 126.9055, ondoScore: 58, heatLevel: "warming", signalCount: 11, confidence: "medium", freshness: "today" },
-  { id: "jagalchi", cityId: "busan", name: text("Jagalchi", "자갈치"), latitude: 35.0967, longitude: 129.0306, ondoScore: 84, heatLevel: "hot", signalCount: 12, confidence: "low", freshness: "today" },
+  { id: "seongsu", cityId: "seoul", name: text("Seongsu", "성수"), latitude: 37.5446, longitude: 127.0559, ondoScore: 92, heatLevel: "peak", signalCount: 38, confidence: "high", freshness: "today", ...heatEvidence("FX-MAP-SEOUL-RECENT", true, ["local_visits", "local_saves", "recent_contributions"]) },
+  { id: "euljiro", cityId: "seoul", name: text("Euljiro", "을지로"), latitude: 37.566, longitude: 126.9917, ondoScore: 81, heatLevel: "hot", signalCount: 24, confidence: "high", freshness: "today", ...heatEvidence("FX-MAP-SEOUL-RECENT", true, ["local_visits", "recent_contributions"]) },
+  { id: "mangwon", cityId: "seoul", name: text("Mangwon", "망원"), latitude: 37.5561, longitude: 126.9055, ondoScore: 58, heatLevel: "warming", signalCount: 11, confidence: "medium", freshness: "today", ...heatEvidence("FX-MAP-SEOUL-RECENT", true, ["local_visits", "local_saves"]) },
+  { id: "jagalchi", cityId: "busan", name: text("Jagalchi", "자갈치"), latitude: 35.0967, longitude: 129.0306, ondoScore: 84, heatLevel: "hot", signalCount: 12, confidence: "low", freshness: "today", ...heatEvidence("FX-MAP-BUSAN-SEED", true, ["local_visits", "editorial_signal"]) },
 ]
 
 export const MAP_VENUES: MapVenue[] = [

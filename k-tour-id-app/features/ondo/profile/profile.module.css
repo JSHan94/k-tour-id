@@ -8,7 +8,7 @@
 .summary { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; margin-top: 14px; }
 .summary > span { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; background: #bd4636; color: white; font-family: var(--font-display); font-size: 18px; font-weight: 780; }
 .summary strong { display: block; font-size: 12px; }
-.summary p { margin: 4px 0 0; color: #81776c; font-size: 12px; }
+.summary p { margin: 4px 0 0; color: #655d54; font-size: 12px; }
 .truth { margin: 13px 0 0; color: #8a8177; font-size: 12px; line-height: 1.55; }
 .form { display: grid; gap: 12px; margin-top: 16px; }
 .form label > span, .field label > span { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; color: #665d53; font-size: 12px; font-weight: 750; }

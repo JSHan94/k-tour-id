@@ -16,5 +16,6 @@ test("public profile and four-axis history remain visually separate", async ({ p
   await page.getByRole("button", { name: "ID", exact: true }).click()
   await expect(page.getByTestId("ondo-profile-panel")).toBeVisible()
   await expect(page.getByTestId("ondo-trust-panel")).toBeVisible()
+  await page.getByTestId("ondo-trust-panel").scrollIntoViewIfNeeded()
   await expect(page).toHaveScreenshot("profile-and-four-axes-en.png", { animations: "disabled", fullPage: true })
 })

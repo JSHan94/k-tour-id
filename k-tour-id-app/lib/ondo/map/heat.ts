@@ -1,4 +1,5 @@
 import type { Locale } from "../../../features/ondo/contracts/domain"
+import type { Provenance } from "../../../features/ondo/contracts/domain"
 import type { ConfidenceBand, FreshnessBand, HeatDisplay } from "./models"
 
 export const HEAT_COLORS = {
@@ -23,6 +24,22 @@ export const CONFIDENCE_LABELS: Record<Locale, Record<ConfidenceBand, string>> =
 export const FRESHNESS_LABELS: Record<Locale, Record<FreshnessBand, string>> = {
   en: { recent: "Updated recently", today: "Updated today", aging: "Check update time", stale: "Older signals", unknown: "Update pending" },
   ko: { recent: "방금 업데이트", today: "오늘 업데이트", aging: "업데이트 시각 확인", stale: "오래된 신호", unknown: "업데이트 확인 중" },
+}
+
+export function resolveFreshness(
+  input: { freshness: FreshnessBand; updatedAt?: string; provenance: Provenance },
+  now = Date.now(),
+): FreshnessBand {
+  if (input.freshness === "unknown") return "unknown"
+  const expiresAt = input.provenance.expiresAt ? Date.parse(input.provenance.expiresAt) : Number.NaN
+  if (Number.isFinite(expiresAt) && now > expiresAt) return "stale"
+  const sourceTime = Date.parse(input.updatedAt ?? input.provenance.fetchedAt)
+  if (!Number.isFinite(sourceTime)) return "unknown"
+  const ageHours = Math.max(0, now - sourceTime) / 3_600_000
+  if (ageHours <= 2) return "recent"
+  if (ageHours <= 24) return "today"
+  if (ageHours <= 72) return "aging"
+  return "stale"
 }
 
 export function heatAccessibleName(input: HeatDisplay & { name: string; locale: Locale }) {

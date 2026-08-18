@@ -1,12 +1,20 @@
-import type { HeatLevel, LocalizedText, Venue } from "../../../features/ondo/contracts/domain"
+import type { HeatLevel, LocalizedText, Provenance, Venue } from "../../../features/ondo/contracts/domain"
 
 export type CoverageTier = "complete" | "seed" | "growing"
 export type FreshnessBand = "recent" | "today" | "aging" | "stale" | "unknown"
 export type ConfidenceBand = "high" | "medium" | "low" | "unknown" | "limited"
 export type DiscoveryLevel = "nation" | "city" | "neighborhood" | "venue"
 export type TimeFilter = "now" | "dinner" | "late"
+export type HeatReasonCode = "local_visits" | "local_saves" | "recent_contributions" | "editorial_signal" | "partner_signal" | "insufficient_sample"
 
-export type MapRegion = {
+export type AggregateHeatEvidence = {
+  minSampleMet: boolean
+  computedAt: string
+  reasonCodes: HeatReasonCode[]
+  provenance: Provenance
+}
+
+export type MapRegion = AggregateHeatEvidence & {
   id: string
   cityId?: "seoul" | "busan"
   name: LocalizedText
@@ -22,7 +30,7 @@ export type MapRegion = {
   nextExpansionLabel?: LocalizedText
 }
 
-export type MapNeighborhood = {
+export type MapNeighborhood = AggregateHeatEvidence & {
   id: string
   cityId: "seoul" | "busan"
   name: LocalizedText
