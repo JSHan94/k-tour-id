@@ -56,6 +56,7 @@ export type OndoState = {
     languages: string[]
     shareFrom: boolean
     shareLivesIn: boolean
+    shareLanguages: boolean
   }
   toast: string | null
 }
@@ -122,6 +123,7 @@ const initialState: OndoState = {
     languages: ["English"],
     shareFrom: false,
     shareLivesIn: false,
+    shareLanguages: false,
   },
   toast: null,
 }
@@ -204,7 +206,11 @@ export function OndoProvider({ children }: { children: ReactNode }) {
         reputation: session.reputation ?? current.reputation,
         acceptedActivityEventKeys: Array.isArray(session.acceptedActivityEventKeys) ? session.acceptedActivityEventKeys : [],
         stamps: typeof session.stamps === "number" ? session.stamps : 9,
-        profile: session.profile ?? current.profile,
+        profile: {
+          ...current.profile,
+          ...(session.profile ?? {}),
+          shareLanguages: session.profile?.shareLanguages === true,
+        },
         hydrated: true,
       }))
     } catch {
