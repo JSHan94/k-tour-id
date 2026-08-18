@@ -1,0 +1,26 @@
+.body { display: grid; gap: 14px; padding: 28px 18px calc(28px + env(safe-area-inset-bottom)); color: #211a14; }
+.eyebrow { margin: 0; color: #a34735; font-size: 11px; font-weight: 800; letter-spacing: .09em; }
+.body h2 { margin: 0; font-size: 24px; letter-spacing: -.04em; }
+.priceCard { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 4px; padding: 16px; border-radius: 18px; background: #211a14; color: #fffdf8; }
+.priceCard > div { display: flex; align-items: center; gap: 7px; grid-column: 1 / -1; color: #d9d0c4; font-size: 12px; }
+.priceCard strong { font-size: 26px; }
+.priceCard small { font-size: 12px; }
+.settlement { padding: 14px; border: 1px dashed rgb(33 26 20 / 24%); border-radius: 17px; background: #f3eee5; }
+.settlement > div { display: flex; align-items: center; gap: 7px; }
+.settlement > span { display: block; margin-top: 7px; color: #79294e; font-size: 12px; font-weight: 750; }
+.settlement p { margin: 5px 0 0; color: #72695f; font-size: 12px; line-height: 1.5; }
+.kycRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 13px; border: 1px solid rgb(33 26 20 / 11%); border-radius: 16px; }
+.kycRow > div { display: flex; align-items: center; gap: 7px; color: #6d655c; font-size: 12px; }
+.kycRow strong { font-size: 12px; text-align: right; }
+.primary, .secondary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 16px; font-size: 14px; font-weight: 750; }
+.primary { border: 0; background: #211a14; color: #fffdf8; }
+.primary:disabled { opacity: .45; }
+.secondary { border: 1px solid rgb(33 26 20 / 16%); background: #fffdf8; color: #211a14; }
+.receipt { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 16px; border-radius: 18px; background: #e7f1ea; color: #285f45; }
+.receipt div { display: grid; gap: 2px; }
+.receipt span { font-size: 12px; }
+.receipt code { grid-column: 2; color: #4b695a; font-size: 11px; }
+.visitProof { display: grid; gap: 10px; padding: 15px; border: 1px solid rgb(33 26 20 / 11%); border-radius: 18px; }
+.visitProof p { display: grid; gap: 4px; margin: 0; }
+.visitProof span { color: #71695f; font-size: 12px; line-height: 1.5; }
+.textButton { min-height: 44px; border: 0; background: transparent; color: #6f675d; font-size: 13px; font-weight: 700; }

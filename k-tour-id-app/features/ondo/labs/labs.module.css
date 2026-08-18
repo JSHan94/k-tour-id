@@ -1,0 +1,49 @@
+.boundary, .body { display: grid; gap: 14px; padding: 28px 18px calc(32px + env(safe-area-inset-bottom)); color: #211a14; }
+.boundary { min-height: min(84dvh, 720px); align-content: center; text-align: center; }
+.labMark { display: grid; width: 58px; height: 58px; margin: 0 auto; place-items: center; border-radius: 20px; background: #211a14; color: #fffdf8; box-shadow: 0 14px 32px rgb(33 26 20 / 18%); }
+.eyebrow { margin: 0; color: #a34735; font-size: 11px; font-weight: 800; letter-spacing: .09em; }
+.boundary h2, .header h2 { margin: 0; font-size: 26px; letter-spacing: -.045em; }
+.boundary > p:not(.eyebrow) { max-width: 34rem; margin: 0 auto; color: #6f675d; font-size: 14px; line-height: 1.6; }
+.header { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 9px; }
+.header > button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #f0e9df; color: #211a14; }
+.header > div { display: grid; gap: 2px; }
+.truthBadge { align-self: start; padding: 6px 8px; border-radius: 999px; background: #f2e4c8; color: #795628; font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+.card { display: grid; gap: 12px; padding: 16px; border: 1px solid rgb(33 26 20 / 11%); border-radius: 20px; background: #fffdf8; box-shadow: 0 9px 28px rgb(55 41 25 / 6%); }
+.sectionHeading { display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 10px; }
+.sectionHeading > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 13px; background: #f0e9df; color: #75365a; }
+.sectionHeading > div { display: grid; gap: 2px; }
+.sectionHeading h3 { margin: 0; font-size: 15px; }
+.sectionHeading p { margin: 0; color: #756d63; font-size: 11px; line-height: 1.4; }
+.bodyCopy, .finePrint { margin: 0; color: #71695f; line-height: 1.55; }
+.bodyCopy { font-size: 13px; }
+.finePrint { font-size: 11px; }
+.primary, .secondary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 7px; border-radius: 16px; font-size: 14px; font-weight: 750; }
+.primary { border: 0; background: #211a14; color: #fffdf8; }
+.secondary { border: 1px solid rgb(33 26 20 / 16%); background: #fffdf8; color: #211a14; }
+.primary:disabled, .secondary:disabled { opacity: .45; }
+.textButton, .inlineLink { min-height: 44px; border: 0; background: transparent; color: #70685f; font-size: 12px; font-weight: 700; }
+.inlineLink { min-height: 40px; text-decoration: underline; text-underline-offset: 3px; }
+.address { display: block; overflow: hidden; padding: 11px; border-radius: 12px; background: #211a14; color: #f4cfe2; font-size: 11px; text-overflow: ellipsis; }
+.assetList { display: grid; gap: 1px; overflow: hidden; border: 1px solid rgb(33 26 20 / 9%); border-radius: 15px; background: rgb(33 26 20 / 9%); }
+.assetRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px; background: #fffdf8; }
+.assetRow > div { display: grid; gap: 2px; }
+.assetRow > div:last-child { text-align: right; }
+.assetRow strong { font-size: 13px; }
+.assetRow span { color: #756d63; font-size: 10px; }
+.route { display: grid; grid-template-columns: 1fr 24px 1fr; align-items: center; gap: 7px; padding: 13px; border-radius: 15px; background: #f3eee5; font-size: 12px; font-weight: 750; text-align: center; }
+.route svg { color: #9b7360; }
+.quote { display: grid; grid-template-columns: 1fr auto; gap: 4px; padding: 12px; border: 1px dashed rgb(33 26 20 / 22%); border-radius: 14px; }
+.quote span, .quote small { color: #72695f; font-size: 11px; }
+.quote small { grid-column: 1 / -1; }
+.progress { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 12px; border-radius: 14px; background: #f3eee5; font-size: 12px; }
+.pendingDot, .completeDot { width: 10px; height: 10px; border-radius: 50%; }
+.pendingDot { background: #e6843b; box-shadow: 0 0 0 4px rgb(230 132 59 / 18%); }
+.completeDot { background: #3f6c55; box-shadow: 0 0 0 4px rgb(63 108 85 / 18%); }
+.evidenceList { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.evidenceList article { display: grid; gap: 4px; padding: 12px; border-radius: 14px; background: #f3eee5; }
+.evidenceList span { color: #75365a; font-size: 10px; font-weight: 800; }
+.evidenceList strong { font-size: 12px; }
+.evidenceList small { color: #746c62; font-size: 9px; line-height: 1.4; }
+.consent { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 9px; min-height: 44px; padding: 11px; border: 1px solid rgb(33 26 20 / 12%); border-radius: 14px; font-size: 12px; line-height: 1.45; }
+.consent input { width: 18px; height: 18px; margin: 0; accent-color: #75365a; }
+@media (max-width: 360px) { .header { grid-template-columns: 44px 1fr; } .truthBadge { grid-column: 2; justify-self: start; } .evidenceList { grid-template-columns: 1fr; } }
