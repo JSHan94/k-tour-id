@@ -22,12 +22,12 @@ export function MyEntry() {
   ]
 
   return (
-    <main className={styles.screen}>
+    <main className={styles.screen} data-testid="ondo-my-entry">
       <header className={styles.header}><p>MY KOREA</p><h1>{locale === "ko" ? "나의 한국 여행" : "My Korea"}</h1><span>{locale === "ko" ? "저장한 장소와 분리된 활동 이력을 확인해요." : "Saved places and separate activity histories, in one quiet place."}</span></header>
 
       <section className={styles.section} aria-labelledby="saved-heading">
         <div className={styles.sectionTitle}><div><Bookmark size={18} /><h2 id="saved-heading">{locale === "ko" ? "저장한 장소" : "Saved places"}</h2></div><span>{state.savedVenueIds.length}</span></div>
-        {state.savedVenueIds.length ? <div className={styles.savedList}>{state.savedVenueIds.map((venueId) => <button key={venueId} type="button" onClick={() => actions.setSurface({ kind: "venue", venueId })}><MapPin size={17} /><span>{VENUE_NAMES[venueId]?.[locale] ?? venueId}</span><ChevronRight size={17} /></button>)}</div> : <div className={styles.empty}><Bookmark size={21} /><p>{locale === "ko" ? "ONDO 지도에서 다시 보고 싶은 식음료 장소를 저장해 보세요." : "Save a food or drink place from the ONDO map to find it here."}</p><button type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "ONDO 지도 보기" : "Open ONDO map"}</button></div>}
+        {state.savedVenueIds.length ? <div className={styles.savedList}>{state.savedVenueIds.map((venueId) => <button key={venueId} type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "venue", venueId }) }} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span>{VENUE_NAMES[venueId]?.[locale] ?? venueId}</span><ChevronRight size={17} /></button>)}</div> : <div className={styles.empty}><Bookmark size={21} /><p>{locale === "ko" ? "ONDO 지도에서 다시 보고 싶은 식음료 장소를 저장해 보세요." : "Save a food or drink place from the ONDO map to find it here."}</p><button type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "ONDO 지도 보기" : "Open ONDO map"}</button></div>}
       </section>
 
       <section className={styles.section} aria-labelledby="stamp-heading">
@@ -37,7 +37,7 @@ export function MyEntry() {
             {Array.from({ length: 10 }, (_, index) => <span key={index} className={index < state.stamps ? styles.stampFilled : styles.stampEmpty}>{index < state.stamps ? <Check size={16} /> : index + 1}</span>)}
           </div>
           <p>{state.stamps === 10 ? locale === "ko" ? "열 번째 방문을 남겼어요." : "You recorded your tenth visit." : locale === "ko" ? "결제가 아니라 별도로 확인된 방문이 하나씩 쌓여요." : "Each separate confirmed visit—not payment—adds one stamp."}</p>
-          {state.stamps === 10 ? <button type="button" className={styles.labsLink} onClick={() => actions.setSurface({ kind: "labs" })}><FlaskConical size={17} /><span>{locale === "ko" ? "원하면 Labs에서 기념 badge 시뮬레이션을 볼 수 있어요." : "If you choose, view a souvenir badge simulation in Labs."}</span><ChevronRight size={17} /></button> : null}
+          {state.stamps === 10 ? <button type="button" className={styles.labsLink} onClick={() => actions.setSurface({ kind: "labs" })} data-testid="open-labs-milestone"><FlaskConical size={17} /><span>{locale === "ko" ? "원하면 Labs에서 기념 badge 시뮬레이션을 볼 수 있어요." : "If you choose, view a souvenir badge simulation in Labs."}</span><ChevronRight size={17} /></button> : null}
         </div>
       </section>
 
@@ -48,7 +48,7 @@ export function MyEntry() {
       </section>
 
       <section className={styles.labsCard}>
-        <span><FlaskConical size={20} /></span><div><strong>Labs</strong><p>{locale === "ko" ? "지갑·bridge·증거 adapter 가설은 소비자 흐름과 분리되어 있어요." : "Wallet, bridge, and evidence-adapter hypotheses stay outside the consumer journey."}</p></div><button type="button" onClick={() => actions.setSurface({ kind: "labs" })} aria-label={locale === "ko" ? "Labs 열기" : "Open Labs"}><ChevronRight size={18} /></button>
+        <span><FlaskConical size={20} /></span><div><strong>Labs</strong><p>{locale === "ko" ? "지갑·bridge·증거 adapter 가설은 소비자 흐름과 분리되어 있어요." : "Wallet, bridge, and evidence-adapter hypotheses stay outside the consumer journey."}</p></div><button type="button" onClick={() => actions.setSurface({ kind: "labs" })} aria-label={locale === "ko" ? "Labs 열기" : "Open Labs"} data-testid="open-labs"><ChevronRight size={18} /></button>
       </section>
     </main>
   )

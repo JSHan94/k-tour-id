@@ -19,7 +19,7 @@
 .receipt { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 16px; border-radius: 18px; background: #e7f1ea; color: #285f45; }
 .receipt div { display: grid; gap: 2px; }
 .receipt span { font-size: 12px; }
-.receipt code { grid-column: 2; color: #4b695a; font-size: 11px; }
+.receipt code { grid-column: 2; color: #4b695a; font-size: 12px; }
 .visitProof { display: grid; gap: 10px; padding: 15px; border: 1px solid rgb(33 26 20 / 11%); border-radius: 18px; }
 .visitProof p { display: grid; gap: 4px; margin: 0; }
 .visitProof span { color: #71695f; font-size: 12px; line-height: 1.5; }

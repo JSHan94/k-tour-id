@@ -11,12 +11,12 @@
 .sectionCopy { margin: -3px 0 11px; color: #746c62; font-size: 12px; line-height: 1.5; }
 .empty { display: grid; justify-items: start; gap: 9px; padding: 16px; border: 1px dashed rgb(33 26 20 / 19%); border-radius: 18px; background: #fffdf8; color: #746c62; }
 .empty p { margin: 0; font-size: 13px; line-height: 1.5; }
-.empty button { min-height: 42px; padding: 0 13px; border: 0; border-radius: 12px; background: #211a14; color: #fffdf8; font-size: 12px; font-weight: 700; }
+.empty button { min-height: 44px; padding: 0 13px; border: 0; border-radius: 12px; background: #211a14; color: #fffdf8; font-size: 12px; font-weight: 700; }
 .savedList { display: grid; gap: 8px; }
 .savedList button { min-height: 54px; display: grid; grid-template-columns: 22px 1fr 22px; align-items: center; gap: 9px; padding: 0 13px; border: 1px solid rgb(33 26 20 / 10%); border-radius: 16px; background: #fffdf8; color: #211a14; font: inherit; font-size: 13px; text-align: left; }
 .stampCard { display: grid; gap: 13px; padding: 16px; border-radius: 20px; background: #211a14; color: #fffdf8; }
 .stampGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.stampGrid > span { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; font-size: 10px; font-weight: 750; }
+.stampGrid > span { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 750; }
 .stampFilled { background: #e6843b; color: #fffdf8; box-shadow: inset 0 0 0 2px rgb(255 255 255 / 25%); }
 .stampEmpty { border: 1px dashed rgb(255 255 255 / 30%); color: rgb(255 255 255 / 48%); }
 .stampCard > p { margin: 0; color: #d9d0c4; font-size: 12px; line-height: 1.55; }
@@ -25,10 +25,10 @@
 .historyList > div { min-height: 58px; display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 9px; padding: 10px 12px; background: #fffdf8; }
 .historyIcon { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 12px; background: #f0e9df; color: #754160; }
 .historyList strong { font-size: 13px; }
-.historyList > div > span:last-child { color: #70685f; font-size: 11px; font-weight: 650; }
+.historyList > div > span:last-child { color: #70685f; font-size: 12px; font-weight: 650; }
 .labsCard { min-height: 84px; display: grid; grid-template-columns: 40px 1fr 44px; align-items: center; gap: 10px; margin-top: 28px; padding: 14px; border: 1px solid rgb(33 26 20 / 11%); border-radius: 20px; background: #fffdf8; }
 .labsCard > span { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 14px; background: #211a14; color: #fffdf8; }
 .labsCard div { display: grid; gap: 4px; }
 .labsCard strong { font-size: 14px; }
-.labsCard p { margin: 0; color: #736b61; font-size: 11px; line-height: 1.45; }
+.labsCard p { margin: 0; color: #736b61; font-size: 12px; line-height: 1.45; }
 .labsCard button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #f0e9df; color: #211a14; }

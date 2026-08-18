@@ -3,7 +3,7 @@ import type { CanonicalEvidenceEnvelope, MerchantTraitReceipt } from "../contrac
 import { canAdvanceBridge, type BridgePhase } from "../contracts/commerce"
 
 export type WalletState = "WAL-DISCONNECTED" | "WAL-CONNECTING" | "WAL-READY" | "WAL-FAILED"
-export type BridgeState = "BRG-IDLE" | "BRG-QUOTED" | "BRG-CONFIRMING" | "BRG-PENDING" | "BRG-SIMULATED-SUCCESS" | "BRG-FAILED" | "BRG-CANCELLED"
+export type BridgeState = "BRG-IDLE" | "BRG-QUOTED" | "BRG-CONFIRMING" | "BRG-PENDING" | "BRG-SIMULATED-SUCCESS" | "BRG-FAILED" | "BRG-CANCELLED" | "BRG-EXPIRED"
 
 export const SIMULATED_PROVENANCE: Provenance = {
   truth: "SIMULATED",
