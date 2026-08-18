@@ -36,7 +36,7 @@
 .chips .chipActive { border-color: #191816; background: #191816; color: #fffdf8; }
 
 .contextCard { pointer-events: none; position: absolute; z-index: 12; bottom: calc(216px + env(safe-area-inset-bottom)); left: 12px; max-width: 234px; min-height: 62px; align-items: flex-start; flex-direction: column; justify-content: center; padding: 10px 13px; border: 1px solid rgb(25 24 22 / 10%); border-radius: 17px; background: rgb(255 253 248 / 89%); box-shadow: 0 10px 26px rgb(36 27 18 / 10%); backdrop-filter: blur(14px); }
-.contextCard span { color: #ad4434; font-size: 11px; font-weight: 800; letter-spacing: .1em; }
+.contextCard span { color: #ad4434; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
 .contextCard strong { margin-top: 3px; font-size: 14px; line-height: 1.25; letter-spacing: -.025em; }
 .contextCard small { margin-top: 4px; color: var(--muted); font-size: 12px; }
 .controls { position: absolute; z-index: 14; top: calc(164px + env(safe-area-inset-top)); right: 12px; flex-direction: column; gap: 7px; }
@@ -44,13 +44,13 @@
 .controls button:first-child { margin-bottom: 3px; background: #191816; color: #fffdf8; }
 .legendPill { position: absolute; z-index: 14; bottom: calc(142px + env(safe-area-inset-bottom)); left: 12px; min-height: 44px; gap: 7px; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 248 / 96%); color: var(--ink); box-shadow: 0 8px 22px rgb(35 27 19 / 13%); font-size: 12px; font-weight: 750; }
 .legendColors { width: 38px; height: 8px; border-radius: 99px; background: linear-gradient(90deg, #efe1b7 0 20%, #ebc463 20% 40%, #e6843b 40% 60%, #c94832 60% 80%, #7a2048 80%); }
-.attribution { position: absolute; z-index: 13; right: 12px; bottom: calc(146px + env(safe-area-inset-bottom)); padding: 3px 5px; border-radius: 5px; background: rgb(255 253 248 / 86%); color: #554f48; font-size: 10px; text-decoration: none; }
+.attribution { position: absolute; z-index: 13; right: 12px; bottom: calc(146px + env(safe-area-inset-bottom)); padding: 3px 5px; border-radius: 5px; background: rgb(255 253 248 / 86%); color: #554f48; font-size: 12px; text-decoration: none; }
 .tileSkeleton { position: absolute; z-index: 3; inset: 0; pointer-events: none; background: linear-gradient(110deg, transparent 22%, rgb(255 253 248 / 38%) 38%, transparent 54%); background-size: 220% 100%; animation: tileWash 1.4s ease-out 1; }
 
 .listPanel { position: absolute; z-index: 74; top: calc(214px + env(safe-area-inset-top)); right: 0; bottom: 150px; left: 0; overflow-y: auto; padding: 13px 16px 34px; border-radius: 25px 25px 0 0; background: var(--canvas); box-shadow: 0 -8px 35px rgb(35 27 19 / 8%); }
 .listHeading { justify-content: space-between; gap: 12px; }
 .listHeading > span { display: grid; min-width: 0; }
-.listHeading small { color: #ad4434; font-size: 10px; font-weight: 800; letter-spacing: .09em; }
+.listHeading small { color: #ad4434; font-size: 12px; font-weight: 800; letter-spacing: .07em; }
 .listHeading strong { margin-top: 3px; font-size: 17px; line-height: 1.25; }
 .listHeading button { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 5px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 700; }
 .resultCount { margin: 12px 2px 8px; color: var(--muted); font-size: 12px; }
@@ -60,12 +60,12 @@
 .venueCardSelected { border: 2px solid #c94832; }
 .venueCard img, .venueCardSelected img { width: 84px; height: 84px; flex: 0 0 auto; border-radius: 15px; object-fit: cover; }
 .venueCardBody { display: flex; min-width: 0; flex: 1; flex-direction: column; }
-.venueCardBody > small { color: #a34334; font-size: 11px; font-weight: 700; }
+.venueCardBody > small { color: #a34334; font-size: 12px; font-weight: 700; }
 .venueCardBody > strong { margin-top: 3px; overflow: hidden; font-size: 15px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .venueCardBody > em { margin-top: 1px; overflow: hidden; color: var(--muted); font-size: 12px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
 .venueCardMeta { flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 7px; }
-.venueCardMeta b { padding: 4px 7px; border-radius: 99px; font-size: 11px; }
-.venueCardMeta > span { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 11px; }
+.venueCardMeta b { padding: 4px 7px; border-radius: 99px; font-size: 12px; }
+.venueCardMeta > span { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; }
 .notice { gap: 10px; margin-bottom: 13px; padding: 12px; border: 1px solid rgb(180 62 49 / 18%); border-radius: 16px; background: #fff1ed; color: #732c26; }
 .notice > span { display: grid; flex: 1; }
 .notice strong { font-size: 13px; }
@@ -86,7 +86,7 @@
 .legendSheet { position: relative; width: 100%; padding: 10px 19px max(28px, env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0; background: var(--surface); box-shadow: 0 -18px 60px rgb(42 28 13 / 24%); }
 .legendGrabber { width: 38px; height: 4px; margin: 0 auto 10px; border-radius: 99px; background: #d5cec1; }
 .legendClose { position: absolute; top: 16px; right: 16px; display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #f3efe7; color: var(--ink); }
-.legendSheet > span { color: #ad4434; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.legendSheet > span { color: #ad4434; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
 .legendSheet h2 { margin: 5px 52px 6px 0; font-size: 23px; letter-spacing: -.045em; }
 .legendSheet > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .legendGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
@@ -94,7 +94,7 @@
 .legendGrid i { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; border-width: 2px; border-radius: 50%; color: #191816; font-size: 12px; font-style: normal; font-weight: 800; }
 .legendGrid span { display: grid; }
 .legendGrid strong { font-size: 12px; }
-.legendGrid small { margin-top: 2px; color: var(--muted); font-size: 10px; }
+.legendGrid small { margin-top: 2px; color: var(--muted); font-size: 12px; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 .root :global(.leaflet-container) { overflow: hidden; outline: 0; touch-action: none; -webkit-tap-highlight-color: transparent; }
@@ -114,8 +114,8 @@
 .root :global(.ondoLeafletIcon) { border: 0 !important; background: transparent !important; }
 .root :global(.ondoMarker) { --marker-fill: #cfcac0; --marker-text: #191816; --marker-stroke: #706b64; position: relative; display: grid; width: 100%; height: 100%; place-items: center; border: 2px solid var(--marker-stroke); border-radius: 50%; background: var(--marker-fill); color: var(--marker-text); box-shadow: 0 0 0 5px color-mix(in srgb, var(--marker-fill) 25%, transparent), 0 8px 20px rgb(28 22 16 / 18%); font-family: "Noto Sans KR", Inter, system-ui, sans-serif; }
 .root :global(.ondoMarker b) { font-size: 13px; line-height: 1; font-variant-numeric: tabular-nums; }
-.root :global(.ondoMarker > i) { position: absolute; top: -6px; right: -8px; display: grid; min-width: 23px; height: 18px; place-items: center; padding: 0 4px; border: 2px solid #fffdf8; border-radius: 99px; background: #191816; color: #fffdf8; font-size: 8px; font-style: normal; font-weight: 850; letter-spacing: -.02em; }
-.root :global(.ondoMarker small) { position: absolute; top: calc(100% + 5px); left: 50%; max-width: 100px; translate: -50% 0; overflow: hidden; padding: 3px 6px; border-radius: 6px; background: rgb(255 253 248 / 93%); box-shadow: 0 2px 8px rgb(35 27 19 / 12%); color: #191816; font-size: 11px; font-weight: 750; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.root :global(.ondoMarker > i) { position: absolute; top: -7px; right: -10px; display: grid; min-width: 27px; height: 20px; place-items: center; padding: 0 5px; border: 2px solid #fffdf8; border-radius: 99px; background: #191816; color: #fffdf8; font-size: 12px; font-style: normal; font-weight: 850; letter-spacing: -.02em; }
+.root :global(.ondoMarker small) { position: absolute; top: calc(100% + 5px); left: 50%; max-width: 112px; translate: -50% 0; overflow: hidden; padding: 3px 6px; border-radius: 6px; background: rgb(255 253 248 / 93%); box-shadow: 0 2px 8px rgb(35 27 19 / 12%); color: #191816; font-size: 12px; font-weight: 750; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .root :global(.ondoMarker.confidenceMedium) { border-color: color-mix(in srgb, var(--marker-stroke) 65%, transparent); }
 .root :global(.ondoMarker.confidenceLow) { border-style: dashed; }
 .root :global(.ondoMarker.confidenceUnknown) { border-width: 1px; border-style: dotted; }

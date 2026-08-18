@@ -37,6 +37,18 @@ test.describe("ONDO map discovery", () => {
     await expect(page.getByTestId("place-peek")).toBeVisible()
   })
 
+  test("live OSM tiles reach ready state and contain decoded pixels", async ({ page }) => {
+    await seedGuest(page)
+    await page.goto("/ondo")
+
+    await expect(page.getByTestId("ondo-map-entry")).toHaveAttribute("data-tile-state", "ready", { timeout: 15_000 })
+    const decodedTiles = await page.locator(".leaflet-tile-loaded").evaluateAll((tiles) => tiles.filter((tile) => {
+      const image = tile as HTMLImageElement
+      return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0
+    }).length)
+    expect(decodedTiles).toBeGreaterThan(0)
+  })
+
   test("E2E-MAP-02 search and filters change the synchronized result list", async ({ page }) => {
     await seedGuest(page)
     await page.goto("/ondo?city=seoul&view=list")
@@ -131,7 +143,7 @@ test.describe("ONDO map discovery", () => {
   })
 
   test("future-dated source signals are not silently called recent", async ({ page }) => {
-    await page.clock.setFixedTime(new Date("2026-08-19T08:00:00+09:00"))
+    await page.clock.setFixedTime(new Date("2026-08-18T22:00:00+09:00"))
     await seedGuest(page)
     await page.goto("/ondo?city=seoul&view=list")
     await expect(page.getByTestId("venue-card-seoul-seongsu-gukbap")).toContainText("Update pending")

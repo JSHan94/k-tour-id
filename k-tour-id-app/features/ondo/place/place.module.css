@@ -22,13 +22,13 @@
 .close, .detailClose, .save { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; }
 .close { position: absolute; top: 12px; right: 12px; background: #f2eee6; color: var(--ink); }
 .peekHeat { display: flex; align-items: center; gap: 8px; margin-right: 46px; }
-.peekHeat > span { display: inline-flex; min-height: 32px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.peekHeat > span { display: inline-flex; min-height: 32px; align-items: center; gap: 5px; padding: 0 10px; border: 1px solid; border-radius: 99px; font-size: 12px; font-weight: 700; }
 .peekHeat b { font-size: 15px; font-variant-numeric: tabular-nums; }
-.peekHeat small { color: var(--muted); font-size: 11px; }
+.peekHeat small { color: var(--muted); font-size: 12px; }
 .peek h2 { margin: 7px 44px 0 0; overflow: hidden; font-size: 18px; line-height: 1.25; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
 .peek > p:not(.saveGateHint) { margin: 2px 44px 7px 0; overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .peekFacts { display: flex; flex-wrap: wrap; gap: 7px; }
-.peekFacts span { display: inline-flex; min-height: 28px; max-width: 100%; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 14px; background: #edf3ee; color: #315f48; font-size: 10px; font-weight: 650; line-height: 1.25; }
+.peekFacts span { display: inline-flex; min-height: 30px; max-width: 100%; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 14px; background: #edf3ee; color: #315f48; font-size: 12px; font-weight: 650; line-height: 1.25; }
 .peekFacts span svg { flex: 0 0 auto; }
 .peekActions { display: grid; grid-template-columns: .9fr 1.1fr; gap: 8px; margin-top: 10px; }
 .peekActions a, .peekActions button { display: flex; min-height: 46px; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; font-size: 13px; font-weight: 750; text-decoration: none; }
@@ -48,34 +48,34 @@
 .save:disabled { opacity: 1; }
 .body { padding: 17px 18px calc(28px + env(safe-area-inset-bottom)); }
 .kicker { display: flex; align-items: center; justify-content: space-between; color: #6f6a63; font-size: 12px; }
-.open, .statusMuted { padding: 5px 8px; border-radius: 99px; font-size: 11px; font-weight: 750; }
+.open, .statusMuted { padding: 5px 8px; border-radius: 99px; font-size: 12px; font-weight: 750; }
 .open { background: #e6f2eb; color: #315f48; }
 .statusMuted { background: #efebe4; color: #6f6a63; }
 .body > h2 { margin: 8px 0 1px; font-size: 24px; line-height: 1.22; letter-spacing: -.05em; }
 .englishName { margin: 0; color: #6f6a63; font-size: 13px; }
 .address { display: flex; align-items: center; gap: 6px; margin: 10px 0 15px; color: #6f6a63; font-size: 12px; }
 .placeActions { margin: 0 0 14px; padding: 12px; border: 1px solid rgb(25 24 22 / 11%); border-radius: 19px; background: #f2eee5; }
-.placeActions h3 { margin: 0 0 9px; color: #6f6a63; font-size: 11px; font-weight: 750; letter-spacing: -.01em; }
+.placeActions h3 { margin: 0 0 9px; color: #6f6a63; font-size: 12px; font-weight: 750; letter-spacing: -.01em; }
 .placeActions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.placeActions button { display: grid; min-width: 0; min-height: 54px; grid-template-columns: 20px minmax(0, 1fr) 16px; align-items: center; gap: 6px; padding: 7px 8px 7px 10px; border: 1px solid rgb(25 24 22 / 12%); border-radius: 15px; background: #fffdf8; color: #191816; font-size: 11px; font-weight: 750; line-height: 1.25; text-align: left; }
+.placeActions button { display: grid; min-width: 0; min-height: 54px; grid-template-columns: 20px minmax(0, 1fr) 16px; align-items: center; gap: 6px; padding: 7px 8px 7px 10px; border: 1px solid rgb(25 24 22 / 12%); border-radius: 15px; background: #fffdf8; color: #191816; font-size: 12px; font-weight: 750; line-height: 1.25; text-align: left; }
 .placeActions button:last-child { border-color: #191816; background: #191816; color: #fffdf8; }
 .placeActions button span { min-width: 0; }
 .placeActions button svg:last-child { justify-self: end; }
 
 .ondoCard { display: grid; grid-template-columns: 58px 1fr; gap: 11px; padding: 14px; border: 1px solid rgb(25 24 22 / 12%); border-radius: 21px; background: #f7f3eb; }
 .score { display: grid; width: 58px; height: 58px; place-items: center; align-content: center; border: 2px solid; border-radius: 50%; box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 7%, transparent); }
-.score span { font-size: 8px; font-weight: 800; letter-spacing: .05em; }
+.score span { font-size: 12px; font-weight: 800; letter-spacing: .03em; }
 .score b { font-size: 21px; line-height: 1; }
 .ondoSummary h3 { margin: 2px 0 2px; font-size: 15px; }
-.ondoSummary p { margin: 0; color: #6f6a63; font-size: 11px; line-height: 1.4; }
+.ondoSummary p { margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.4; }
 .ondoSummary > div { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.ondoSummary > div span { display: inline-flex; align-items: center; gap: 3px; color: #5c554e; font-size: 10px; font-weight: 650; }
+.ondoSummary > div span { display: inline-flex; align-items: center; gap: 3px; color: #5c554e; font-size: 12px; font-weight: 650; }
 .signalMetrics { grid-column: 1 / -1; display: grid; grid-template-columns: .8fr 1.35fr 1fr; margin: 4px 0 0; padding-top: 11px; border-top: 1px solid rgb(25 24 22 / 10%); }
 .signalMetrics div { min-width: 0; padding: 0 8px; border-left: 1px solid rgb(25 24 22 / 10%); }
 .signalMetrics div:first-child { padding-left: 0; border-left: 0; }
-.signalMetrics dt { color: #625c55; font-size: 11px; font-weight: 600; line-height: 1.35; }
+.signalMetrics dt { color: #625c55; font-size: 12px; font-weight: 600; line-height: 1.35; }
 .signalMetrics dd { margin: 3px 0 0; color: #191816; font-size: 12px; font-weight: 750; line-height: 1.3; }
-.seed, .boundary { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 6px; margin: 0; padding: 9px; border-radius: 12px; font-size: 10px; line-height: 1.45; }
+.seed, .boundary { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 6px; margin: 0; padding: 9px; border-radius: 12px; font-size: 12px; line-height: 1.45; }
 .seed { background: #fff0d6; color: #845012; }
 .boundary { background: #ebe8e1; color: #625c55; }
 .seed svg, .boundary svg { flex: 0 0 auto; }
@@ -83,21 +83,21 @@
 .section { padding: 18px 0; border-bottom: 1px solid rgb(25 24 22 / 12%); }
 .section h3 { margin: 0; font-size: 15px; }
 .section > p { margin: 6px 0 0; color: #6f6a63; font-size: 12px; line-height: 1.55; }
-.sectionTitle small { color: #ad4434; font-size: 9px; font-weight: 800; letter-spacing: .1em; }
+.sectionTitle small { color: #ad4434; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
 .sectionTitle h3 { margin-top: 2px; font-size: 18px; }
 .factList { display: grid; gap: 7px; margin-top: 11px; }
 .fact { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 8px; min-height: 54px; padding: 7px 10px; border-radius: 15px; }
 .fact > svg { justify-self: center; }
 .fact span { display: grid; }
 .fact strong { font-size: 12px; }
-.fact small { margin-top: 2px; color: currentColor; font-size: 11px; opacity: 1; }
+.fact small { margin-top: 2px; color: currentColor; font-size: 12px; opacity: 1; }
 .fact_positive { background: #e8f2ec; color: #315f48; }
 .fact_notice { background: #fff0d6; color: #845012; }
 .fact_neutral { background: #efede7; color: #625c55; }
 .beforeNote { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px !important; }
 .beforeNote svg { flex: 0 0 auto; }
-.sourceMeta { font-size: 10px !important; font-variant-numeric: tabular-nums; }
-.saveGateHint { margin: 13px 0 0; padding: 10px 12px; border-radius: 13px; background: #fff0d6; color: #724713; font-size: 11px; line-height: 1.45; }
+.sourceMeta { font-size: 12px !important; font-variant-numeric: tabular-nums; }
+.saveGateHint { margin: 13px 0 0; padding: 10px 12px; border-radius: 13px; background: #fff0d6; color: #724713; font-size: 12px; line-height: 1.45; }
 .detailActions { position: sticky; bottom: 0; display: grid; grid-template-columns: .8fr 1.2fr; gap: 8px; margin-top: 18px; padding-top: 8px; background: linear-gradient(180deg, transparent, #fffdf8 18%); }
 .detailActions a, .detailActions button { display: flex; min-height: 50px; align-items: center; justify-content: center; gap: 6px; border-radius: 15px; font-size: 13px; font-weight: 750; text-decoration: none; }
 .detailActions a { border: 1px solid rgb(25 24 22 / 14%); background: #fffdf8; color: #191816; }

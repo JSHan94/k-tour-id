@@ -1,7 +1,7 @@
 import type { LocalizedText, Provenance, VenueFact } from "../../../features/ondo/contracts/domain"
 import type { HeatReasonCode, MapNeighborhood, MapRegion, MapVenue } from "./models"
 
-const at = "2026-08-19T02:10:00.000Z"
+const at = "2026-08-18T15:10:00.000Z"
 
 function provenance(fixtureId: string): Provenance {
   return {
@@ -152,7 +152,7 @@ export const MAP_VENUES: MapVenue[] = [
     signalCount: 14,
     confidence: "high",
     freshness: "today",
-    updatedAt: "2026-08-19T01:58:00.000Z",
+    updatedAt: "2026-08-18T15:58:00.000Z",
     reasons: [text("Local dinner saves and recent visits are rising.", "로컬 저녁 저장과 최근 방문 신호가 함께 늘고 있어요.")],
     facts: [
       fact("foreign_card", "Foreign-issued cards accepted", "해외 발급 카드 가능"),
@@ -186,7 +186,7 @@ export const MAP_VENUES: MapVenue[] = [
     signalCount: 18,
     confidence: "high",
     freshness: "today",
-    updatedAt: "2026-08-19T01:44:00.000Z",
+    updatedAt: "2026-08-18T15:44:00.000Z",
     reasons: [text("Evening contributions and local visits are rising.", "저녁 기여와 로컬 방문 신호가 늘고 있어요.")],
     facts: [
       fact("foreign_card", "Check card acceptance at the venue", "카드 이용 조건 현장 확인", "notice", "FX-MAP-SEOUL-RECENT"),
@@ -220,7 +220,7 @@ export const MAP_VENUES: MapVenue[] = [
     signalCount: 7,
     confidence: "medium",
     freshness: "today",
-    updatedAt: "2026-08-19T01:31:00.000Z",
+    updatedAt: "2026-08-18T15:31:00.000Z",
     reasons: [text("A steady local lunch signal with a calmer pace.", "차분한 흐름 속에서 로컬 점심 신호가 꾸준해요.")],
     facts: [
       fact("foreign_card", "Cash or Korean card preferred", "현금·국내카드 권장", "notice", "FX-MAP-SEOUL-RECENT"),
@@ -254,7 +254,7 @@ export const MAP_VENUES: MapVenue[] = [
     signalCount: 12,
     confidence: "low",
     freshness: "today",
-    updatedAt: "2026-08-19T01:42:00.000Z",
+    updatedAt: "2026-08-18T15:42:00.000Z",
     reasons: [text("A small but recent set of grilled-fish dinner signals.", "작지만 최근 확인된 생선구이 저녁 신호가 있어요.")],
     facts: [
       fact("foreign_card", "Foreign-issued cards accepted", "해외 발급 카드 가능", "positive", "FX-MAP-BUSAN-SEED"),
