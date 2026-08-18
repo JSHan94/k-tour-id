@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { canAutoEnterAfter19 } from "../../features/ondo/contracts/after19"
-import { firstMissionEvents, reduceReputation } from "../../features/ondo/contracts/activity"
+import { applyActivityEvents, firstMissionEvents, reduceReputation } from "../../features/ondo/contracts/activity"
 import { BRIDGE_PHASES, canAdvanceBridge, canIncrementStamp, estimatedUsdTotal } from "../../features/ondo/contracts/commerce"
 import type { AssetBalance, Provenance, PulseTable, Venue } from "../../features/ondo/contracts/domain"
 import { isEvidenceCurrent, isSimulated, type CanonicalEvidenceEnvelope, type MerchantTraitReceipt } from "../../features/ondo/contracts/evidence"
@@ -84,6 +84,10 @@ test("CONTRACT-DATA-009 first mission changes visit and contribution only", () =
   const after = events.reduce(reduceReputation, before)
   expect(events.map((event) => event.kind)).toEqual(["visit", "contribution"])
   expect(after.meetup).toBe("new")
+  const first = applyActivityEvents(before, [], events)
+  const duplicate = applyActivityEvents(first.reputation, first.acceptedKeys, events)
+  expect(duplicate.reputation).toEqual(first.reputation)
+  expect(duplicate.acceptedKeys).toEqual(first.acceptedKeys)
 })
 
 test("CONTRACT-DATA-010 checkout cannot increment a stamp", () => {

@@ -18,6 +18,22 @@ export function reduceReputation(current: ReputationSnapshot, event: ActivityEve
   return { ...current, meetup: current.meetup === "new" ? "reliable" : "established" }
 }
 
+export function applyActivityEvents(
+  current: ReputationSnapshot,
+  acceptedKeys: string[],
+  events: ActivityEvent[],
+) {
+  let reputation = current
+  const nextKeys = new Set(acceptedKeys)
+  for (const event of events) {
+    const key = activityIdempotencyKey(event)
+    if (nextKeys.has(key)) continue
+    nextKeys.add(key)
+    reputation = reduceReputation(reputation, event)
+  }
+  return { reputation, acceptedKeys: [...nextKeys] }
+}
+
 export function firstMissionEvents(input: { subjectRef: string; evidenceRef: string; occurredAt: string }): ActivityEvent[] {
   return [
     { id: `${input.evidenceRef}:visit`, kind: "visit", ...input },

@@ -21,6 +21,7 @@ import type {
   Surface,
 } from "../../contracts/domain"
 import { createReturnTo, isReturnToUsable } from "../../contracts/return-to"
+import { applyActivityEvents, type ActivityEvent } from "../../contracts/activity"
 
 export type TableMembershipState = "none" | "requesting" | "confirmed" | "checked_in" | "completed" | "left" | "failed"
 
@@ -45,6 +46,7 @@ export type OndoState = {
   saveStatusByVenue: Record<string, SaveStatus>
   tableMembershipById: Record<string, TableMembershipState>
   reputation: ReputationSnapshot
+  acceptedActivityEventKeys: string[]
   stamps: number
   unreadTables: number
   profile: {
@@ -83,6 +85,7 @@ type OndoActions = {
   setSaveStatus(venueId: string, status: SaveStatus): void
   setMembership(tableId: string, status: TableMembershipState): void
   updateReputation(next: Partial<ReputationSnapshot>): void
+  recordActivityEvents(events: ActivityEvent[]): void
   setStamps(count: number): void
   updateProfile(profile: Partial<OndoState["profile"]>): void
   notify(message: string): void
@@ -111,6 +114,7 @@ const initialState: OndoState = {
   saveStatusByVenue: {},
   tableMembershipById: {},
   reputation: { identity: "unverified", visit: "new", contribution: "new", meetup: "new" },
+  acceptedActivityEventKeys: [],
   stamps: 9,
   unreadTables: 0,
   profile: {
@@ -198,6 +202,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
         after19: session.after19 === "A19-MANUAL-OFF" ? "A19-MANUAL-OFF" : "A19-OFF",
         tableMembershipById: session.tableMembershipById ?? {},
         reputation: session.reputation ?? current.reputation,
+        acceptedActivityEventKeys: Array.isArray(session.acceptedActivityEventKeys) ? session.acceptedActivityEventKeys : [],
         stamps: typeof session.stamps === "number" ? session.stamps : 9,
         profile: session.profile ?? current.profile,
         hydrated: true,
@@ -226,6 +231,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       after19: state.after19,
       tableMembershipById: state.tableMembershipById,
       reputation: state.reputation,
+      acceptedActivityEventKeys: state.acceptedActivityEventKeys,
       stamps: state.stamps,
       profile: state.profile,
     }))
@@ -277,6 +283,14 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     setSaveStatus: (venueId, status) => setState((current) => ({ ...current, saveStatusByVenue: { ...current.saveStatusByVenue, [venueId]: status } })),
     setMembership: (tableId, status) => setState((current) => ({ ...current, tableMembershipById: { ...current.tableMembershipById, [tableId]: status } })),
     updateReputation: (next) => setState((current) => ({ ...current, reputation: { ...current.reputation, ...next } })),
+    recordActivityEvents: (events) => setState((current) => {
+      const applied = applyActivityEvents(current.reputation, current.acceptedActivityEventKeys, events)
+      return {
+        ...current,
+        reputation: applied.reputation,
+        acceptedActivityEventKeys: applied.acceptedKeys,
+      }
+    }),
     setStamps: (stamps) => setState((current) => ({ ...current, stamps: Math.max(0, Math.min(10, stamps)) })),
     updateProfile: (profile) => setState((current) => ({ ...current, profile: { ...current.profile, ...profile } })),
     notify,
