@@ -3,6 +3,13 @@ import { expect, test } from "@playwright/test"
 test("PX-008 · VIS-HEAT-03 auto After 19 banner", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-08-19T19:30:00+09:00"))
   await page.addInitScript(() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style")
+      style.textContent = "nextjs-portal { display: none !important; }"
+      document.head.append(style)
+    }, { once: true })
+  })
+  await page.addInitScript(() => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", autoNight: true, guideSeen: true }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T19:30:00+09:00", after19: "A19-OFF" }))
   })
@@ -13,6 +20,13 @@ test("PX-008 · VIS-HEAT-03 auto After 19 banner", async ({ page }) => {
 
 test("manual off survives remount in the same session", async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-08-19T19:30:00+09:00"))
+  await page.addInitScript(() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style")
+      style.textContent = "nextjs-portal { display: none !important; }"
+      document.head.append(style)
+    }, { once: true })
+  })
   await page.addInitScript(() => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", autoNight: true, guideSeen: true }))
     if (!sessionStorage.getItem("ondo.session.v3")) sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T19:30:00+09:00", after19: "A19-OFF" }))
