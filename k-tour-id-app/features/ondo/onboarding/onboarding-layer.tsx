@@ -141,7 +141,7 @@ export function OnboardingLayer() {
             <ChevronLeft size={21} />
           </button>
         ) : <span />}
-        <div className={styles.progress} aria-label={`${stepIndex} / 3`}>
+        <div className={styles.progress} role="progressbar" aria-label={state.locale === "ko" ? "온보딩 진행" : "Onboarding progress"} aria-valuemin={1} aria-valuemax={3} aria-valuenow={stepIndex}>
           {[1, 2, 3].map((item) => <i key={item} className={item <= stepIndex ? styles.progressActive : undefined} />)}
         </div>
         <button type="button" className={styles.language} onClick={() => actions.setLocale(state.locale === "en" ? "ko" : "en")}>

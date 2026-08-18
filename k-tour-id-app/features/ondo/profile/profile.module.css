@@ -1,9 +1,9 @@
 .panel { margin-top: 12px; border: 1px solid rgb(64 44 28 / 9%); border-radius: 22px; padding: 17px; background: #fffdf8; color: #281f18; }
 .panel header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .panel h2 { margin: 0; font-size: 14px; }
-.panel header p { display: flex; align-items: center; gap: 4px; margin: 5px 0 0; color: #837970; font-size: 12px; }
+.panel header p { display: flex; align-items: center; gap: 4px; margin: 5px 0 0; color: #655d54; font-size: 12px; }
 .panel header button { display: flex; min-height: 44px; align-items: center; gap: 5px; border: 0; border-radius: 11px; padding: 0 12px; background: #eee5da; color: #8f352a; font-size: 12px; font-weight: 760; }
-.locked { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 9px; margin-top: 14px; border-radius: 15px; padding: 12px; background: #f3eee7; color: #786f65; }
+.locked { display: grid; grid-template-columns: 30px 1fr; align-items: center; gap: 9px; margin-top: 14px; border-radius: 15px; padding: 12px; background: #f3eee7; color: #625a51; }
 .locked p { margin: 0; font-size: 12px; line-height: 1.5; }
 .summary { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; margin-top: 14px; }
 .summary > span { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 14px; background: #bd4636; color: white; font-family: var(--font-display); font-size: 18px; font-weight: 780; }

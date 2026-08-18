@@ -6,13 +6,13 @@
 .sectionTitle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .sectionTitle h2 { margin: 0; font-size: 17px; }
 .sectionTitle span { display: grid; min-width: 24px; height: 24px; place-items: center; border-radius: 99px; background: #211a14; color: #fffdf8; font-size: 12px; }
-.sectionTitle small { color: #7b7268; font-size: 12px; }
+.sectionTitle small { color: #655e56; font-size: 12px; }
 .tableList { display: grid; gap: 10px; }
 .tableCard { position: relative; width: 100%; min-height: 142px; padding: 15px 42px 15px 15px; border: 1px solid rgb(33 26 20 / 11%); border-radius: 20px; background: #fffdf8; color: #211a14; text-align: left; box-shadow: 0 10px 30px rgb(55 41 25 / 7%); cursor: pointer; }
 .tableCardTop { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
 .availability, .ageBadge { display: inline-flex; min-height: 26px; align-items: center; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 750; }
 .availability { background: #e7f0e9; color: #326149; }
-.availabilityMuted { background: #efebe4; color: #746b61; }
+.availabilityMuted { background: #efebe4; color: #625a51; }
 .ageBadge { background: #f6dfeb; color: #7a2048; }
 .tableCard > strong { display: block; font-size: 16px; line-height: 1.35; }
 .venueName { display: flex; align-items: center; gap: 5px; margin-top: 5px; color: #6e665c; font-size: 13px; }

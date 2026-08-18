@@ -75,7 +75,7 @@ export function TrustPanel() {
               <span className={styles.icon}><Icon size={17} /></span>
               <div className={styles.axisBody}>
                 <div><strong>{t[id]}</strong><small>{t[value]}</small></div>
-                <div className={styles.bar} aria-label={`${t[id]}: ${t[value]}`}>
+                <div className={styles.bar} role="img" aria-label={`${t[id]}: ${t[value]}`}>
                   {[1, 2, 3].map((unit) => <i key={unit} className={unit <= currentLevel ? styles.fill : undefined} />)}
                 </div>
               </div>

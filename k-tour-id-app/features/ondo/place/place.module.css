@@ -73,8 +73,8 @@
 .signalMetrics { grid-column: 1 / -1; display: grid; grid-template-columns: .8fr 1.35fr 1fr; margin: 4px 0 0; padding-top: 11px; border-top: 1px solid rgb(25 24 22 / 10%); }
 .signalMetrics div { min-width: 0; padding: 0 8px; border-left: 1px solid rgb(25 24 22 / 10%); }
 .signalMetrics div:first-child { padding-left: 0; border-left: 0; }
-.signalMetrics dt { color: #777068; font-size: 9px; }
-.signalMetrics dd { margin: 3px 0 0; color: #191816; font-size: 11px; font-weight: 750; line-height: 1.3; }
+.signalMetrics dt { color: #625c55; font-size: 11px; font-weight: 600; line-height: 1.35; }
+.signalMetrics dd { margin: 3px 0 0; color: #191816; font-size: 12px; font-weight: 750; line-height: 1.3; }
 .seed, .boundary { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 6px; margin: 0; padding: 9px; border-radius: 12px; font-size: 10px; line-height: 1.45; }
 .seed { background: #fff0d6; color: #845012; }
 .boundary { background: #ebe8e1; color: #625c55; }
@@ -90,7 +90,7 @@
 .fact > svg { justify-self: center; }
 .fact span { display: grid; }
 .fact strong { font-size: 12px; }
-.fact small { margin-top: 2px; color: currentColor; font-size: 10px; opacity: .72; }
+.fact small { margin-top: 2px; color: currentColor; font-size: 11px; opacity: 1; }
 .fact_positive { background: #e8f2ec; color: #315f48; }
 .fact_notice { background: #fff0d6; color: #845012; }
 .fact_neutral { background: #efede7; color: #625c55; }

@@ -490,6 +490,7 @@ export function MapEntry() {
 
   return (
     <section className={styles.root} data-testid="ondo-map-entry" data-map-level={level} data-tile-state={tileState}>
+      <h1 className={styles.srOnly}>{locale === "ko" ? "ONDO — 로컬이 지금 먹는 곳" : "ONDO — Where locals eat now"}</h1>
       <div ref={mapNodeRef} className={styles.mapCanvas} data-testid="leaflet-map" aria-label={locale === "ko" ? "실제 좌표 기반 ONDO 지도" : "ONDO map based on real coordinates"} />
       <div className={styles.paperTexture} aria-hidden="true" />
 
