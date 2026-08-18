@@ -27,8 +27,9 @@
 .peekHeat small { color: var(--muted); font-size: 11px; }
 .peek h2 { margin: 7px 44px 0 0; overflow: hidden; font-size: 18px; line-height: 1.25; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
 .peek > p:not(.saveGateHint) { margin: 2px 44px 7px 0; overflow: hidden; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.peekFacts { display: flex; gap: 7px; overflow: hidden; mask-image: linear-gradient(90deg, black 0, black calc(100% - 18px), transparent 100%); }
-.peekFacts span { display: inline-flex; min-height: 28px; flex: 0 0 auto; align-items: center; gap: 5px; padding: 0 8px; border-radius: 99px; background: #edf3ee; color: #315f48; font-size: 10px; font-weight: 650; }
+.peekFacts { display: flex; flex-wrap: wrap; gap: 7px; }
+.peekFacts span { display: inline-flex; min-height: 28px; max-width: 100%; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 14px; background: #edf3ee; color: #315f48; font-size: 10px; font-weight: 650; line-height: 1.25; }
+.peekFacts span svg { flex: 0 0 auto; }
 .peekActions { display: grid; grid-template-columns: .9fr 1.1fr; gap: 8px; margin-top: 10px; }
 .peekActions a, .peekActions button { display: flex; min-height: 46px; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; font-size: 13px; font-weight: 750; text-decoration: none; }
 .peekActions a { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
@@ -105,7 +106,6 @@
 
 @media (max-width: 370px) {
   .peek { right: 8px; left: 8px; padding-right: 13px; padding-left: 13px; }
-  .peekFacts span:nth-child(2) { display: none; }
   .signalMetrics { grid-template-columns: .7fr 1.3fr; }
   .signalMetrics div:last-child { display: none; }
 }

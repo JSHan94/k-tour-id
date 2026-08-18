@@ -30,7 +30,7 @@
 .search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; }
 .search input::placeholder { color: #817a72; opacity: 1; }
 .search button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
-.chips { gap: 7px; margin-top: 7px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; mask-image: linear-gradient(90deg, black 0, black calc(100% - 22px), transparent 100%); }
+.chips { gap: 7px; margin-top: 7px; overflow-x: auto; overscroll-behavior-inline: contain; padding: 0 30px 2px 0; scroll-padding-inline: 12px 30px; scrollbar-width: none; touch-action: pan-x; mask-image: linear-gradient(90deg, black 0, black calc(100% - 28px), transparent 100%); }
 .chips::-webkit-scrollbar { display: none; }
 .chips button { display: inline-flex; min-height: 40px; flex: 0 0 auto; align-items: center; gap: 5px; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 248 / 96%); color: #5e5851; font-size: 12px; font-weight: 700; box-shadow: 0 4px 13px rgb(35 29 23 / 5%); }
 .chips .chipActive { border-color: #191816; background: #191816; color: #fffdf8; }
