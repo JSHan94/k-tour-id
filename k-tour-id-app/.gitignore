@@ -26,3 +26,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local QA staging (durable evidence lives in docs/ondo-execution/evidence)
+/artifacts/qa/
+/playwright-report/
+/test-results/

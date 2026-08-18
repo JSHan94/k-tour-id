@@ -1,0 +1,106 @@
+.stage {
+  --ondo-paper: #f7f2e8;
+  --ondo-ink: #211a14;
+  --ondo-muted: #756c61;
+  --ondo-line: rgb(55 43 30 / 12%);
+  --ondo-red: #c84936;
+  --ondo-plum: #76294d;
+  min-height: 100dvh;
+  background: #ddd8cc;
+  color: var(--ondo-ink);
+}
+
+.canvas {
+  position: relative;
+  width: min(100vw, 430px);
+  min-height: 100dvh;
+  margin: 0 auto;
+  overflow: hidden;
+  background: var(--ondo-paper);
+  box-shadow: 0 20px 80px rgb(55 43 30 / 16%);
+}
+
+.content {
+  min-height: 100dvh;
+  padding-bottom: calc(82px + env(safe-area-inset-bottom));
+}
+
+.nav {
+  position: absolute;
+  z-index: 60;
+  right: 10px;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  left: 10px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  min-height: 66px;
+  padding: 6px;
+  border: 1px solid rgb(55 43 30 / 10%);
+  border-radius: 22px;
+  background: rgb(255 253 248 / 92%);
+  box-shadow: 0 12px 36px rgb(53 39 24 / 18%);
+  backdrop-filter: blur(18px);
+}
+
+.nav button {
+  position: relative;
+  display: grid;
+  min-width: 54px;
+  min-height: 54px;
+  place-items: center;
+  align-content: center;
+  gap: 3px;
+  border: 0;
+  border-radius: 17px;
+  background: transparent;
+  color: #766d63;
+}
+
+.nav button > span { display: grid; place-items: center; }
+.nav small { font-size: 10px; font-weight: 680; letter-spacing: -.01em; }
+.navActive { background: #211a14 !important; color: #fffdf8 !important; }
+.nav i {
+  position: absolute;
+  top: 6px;
+  right: 13px;
+  display: grid;
+  min-width: 16px;
+  height: 16px;
+  place-items: center;
+  border-radius: 99px;
+  background: #c84936;
+  color: white;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.toast {
+  position: absolute;
+  z-index: 100;
+  right: 20px;
+  bottom: calc(94px + env(safe-area-inset-bottom));
+  left: 20px;
+  border-radius: 16px;
+  padding: 13px 16px;
+  background: #211a14;
+  color: #fffdf8;
+  box-shadow: 0 15px 42px rgb(33 26 20 / 26%);
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .canvas { width: 100vw; box-shadow: none; }
+}
+
+@media (min-width: 801px) {
+  .stage { display: grid; min-height: 100vh; place-items: center; padding: 28px; }
+  .canvas { min-height: min(900px, calc(100vh - 56px)); height: min(900px, calc(100vh - 56px)); border-radius: 32px; }
+  .content { min-height: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav button, .toast { transition: none; }
+}
