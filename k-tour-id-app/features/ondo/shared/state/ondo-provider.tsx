@@ -137,6 +137,20 @@ const SESSION_KEY = "ondo.session.v3"
 const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "diet"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
+function restorePendingGate(value: unknown): ReturnToEnvelope | null {
+  if (!value || typeof value !== "object") return null
+  const candidate = value as Partial<ReturnToEnvelope>
+  if (
+    typeof candidate.tokenId !== "string"
+    || typeof candidate.cta !== "string"
+    || !Array.isArray(candidate.gateQueue)
+    || typeof candidate.activeGate !== "string"
+    || typeof candidate.createdAt !== "string"
+    || typeof candidate.expiresAt !== "string"
+  ) return null
+  return isReturnToUsable(candidate as ReturnToEnvelope) ? candidate as ReturnToEnvelope : null
+}
+
 function gateSatisfied(state: OndoState, gate: GateKind) {
   if (gate === "account") return state.account === "ACC-ACTIVE"
   if (gate === "person") return state.person === "PER-VERIFIED"
@@ -193,6 +207,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     try {
       const local = JSON.parse(window.localStorage.getItem(LOCAL_KEY) ?? "{}") as Partial<OndoState>
       const session = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? "{}") as Partial<OndoState>
+      const pendingGate = restorePendingGate(session.gate)
       setState((current) => ({
         ...current,
         locale: local.locale === "ko" ? "ko" : "en",
@@ -210,6 +225,10 @@ export function OndoProvider({ children }: { children: ReactNode }) {
         ageExpiresAt: session.ageExpiresAt,
         paymentKyc: session.paymentKyc ?? "PKY-NOT-STARTED",
         after19: session.after19 === "A19-MANUAL-OFF" ? "A19-MANUAL-OFF" : "A19-OFF",
+        gate: pendingGate,
+        gateState: pendingGate && ["pending", "failed", "unsupported"].includes(session.gateState ?? "")
+          ? session.gateState as GateState
+          : pendingGate ? "pending" : "idle",
         tableMembershipById: session.tableMembershipById ?? {},
         reputation: session.reputation ?? current.reputation,
         acceptedActivityEventKeys: Array.isArray(session.acceptedActivityEventKeys) ? session.acceptedActivityEventKeys : [],
@@ -244,6 +263,8 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       ageExpiresAt: state.ageExpiresAt,
       paymentKyc: state.paymentKyc,
       after19: state.after19,
+      gate: state.gate && isReturnToUsable(state.gate) ? state.gate : null,
+      gateState: state.gate && isReturnToUsable(state.gate) ? state.gateState : "idle",
       tableMembershipById: state.tableMembershipById,
       reputation: state.reputation,
       acceptedActivityEventKeys: state.acceptedActivityEventKeys,
