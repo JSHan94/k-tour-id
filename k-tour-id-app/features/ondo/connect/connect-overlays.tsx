@@ -27,8 +27,15 @@ function readChatMessages(tableId: string): ChatItem[] {
   try {
     const all = JSON.parse(window.sessionStorage.getItem(CHAT_SESSION_KEY) ?? "{}") as Record<string, StoredChatItem[]>
     const restored = Array.isArray(all[tableId]) ? all[tableId] : []
-    chatMemory.set(tableId, restored)
-    return restored
+    const normalized = restored.map((message) => message.status === "MSG-SENDING"
+      ? { ...message, status: "MSG-FAILED" as const }
+      : message)
+    if (normalized.some((message, index) => message.status !== restored[index]?.status)) {
+      all[tableId] = normalized
+      window.sessionStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(all))
+    }
+    chatMemory.set(tableId, normalized)
+    return normalized
   } catch {
     return []
   }

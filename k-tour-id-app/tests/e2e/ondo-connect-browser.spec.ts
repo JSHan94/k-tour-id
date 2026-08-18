@@ -83,6 +83,22 @@ test("FL-003 join failure is visible and retryable without unlocking chat", asyn
   await expect(page.getByRole("button", { name: "Open chat" })).toHaveCount(0)
 })
 
+test("FL-003 an interrupted sending message recovers as retryable after reload", async ({ page }) => {
+  await seedPrepared(page, { tableMembershipById: { "table-seongsu-dinner": "confirmed" } })
+  await page.addInitScript(() => {
+    sessionStorage.setItem("ondo.chat.v2", JSON.stringify({
+      "table-seongsu-dinner": [{ id: "text-interrupted", kind: "text", text: "Still there?", status: "MSG-SENDING" }],
+    }))
+  })
+  await openTable(page)
+  await page.getByRole("button", { name: "Open chat" }).click()
+
+  const recovered = page.locator("[data-message-status='MSG-FAILED']").filter({ hasText: "Still there?" })
+  await expect(recovered).toBeVisible()
+  await recovered.getByRole("button", { name: "Try again" }).click()
+  await expect(page.locator("[data-message-status='MSG-SENT']").filter({ hasText: "Still there?" })).toBeVisible()
+})
+
 test("@core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure", async ({ page }) => {
   await seedPrepared(page)
   await page.goto("/ondo?venueId=seoul-seongsu-gukbap")

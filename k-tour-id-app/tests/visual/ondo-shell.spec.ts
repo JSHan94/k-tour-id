@@ -13,6 +13,13 @@ test("ONDO shell keeps the map, place peek, After 19, and navigation inside the 
       after19: "A19-OFF",
     }))
   })
+  await page.addInitScript(() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style")
+      style.textContent = "nextjs-portal { display: none !important; }"
+      document.head.append(style)
+    }, { once: true })
+  })
   await page.goto("/ondo?venueId=seoul-seongsu-gukbap")
   await expect(page.getByTestId("place-peek")).toBeVisible()
   await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible()

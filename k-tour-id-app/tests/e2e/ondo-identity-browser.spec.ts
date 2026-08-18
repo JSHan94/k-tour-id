@@ -50,6 +50,25 @@ test("account JIT cancel preserves the unsaved venue and restores focus", async 
   await expect(page.getByTestId("venue-save")).toHaveAttribute("aria-label", "Save")
 })
 
+test("an unfinished account gate survives reload and resumes the original save once", async ({ page }) => {
+  await seedReady(page, {}, true)
+  await openVenue(page)
+  await page.getByTestId("venue-save").click()
+  await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Create an account to save this place")
+
+  await page.reload()
+  const gate = page.getByTestId("ondo-gate-overlay")
+  await expect(gate).toContainText("Create an account to save this place")
+  await page.getByRole("button", { name: "Create account · Simulated" }).click()
+  await page.getByRole("button", { name: "Complete account simulation" }).click()
+
+  await expect(gate).toBeHidden()
+  await expect(page.getByTestId("place-peek")).toBeVisible()
+  await page.getByTestId("place-details").click()
+  await expect(page.getByTestId("venue-save")).toHaveAttribute("aria-label", "Saved")
+  await expect(page.getByTestId("venue-save")).toBeDisabled()
+})
+
 test("account and person JIT failures retry, succeed, and return to the visit signal draft", async ({ page }) => {
   await seedReady(page, { persona: "short_term" })
   await openVenue(page)

@@ -37,9 +37,11 @@ export function Sheet({
     const dialog = dialogRef.current
     const preferred = dialog?.querySelector<HTMLElement>("[data-sheet-initial-focus]")
     const first = preferred ?? dialog?.querySelector<HTMLElement>(FOCUSABLE) ?? dialog
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => first?.focus({ preventScroll: true }))
-    })
+    const focusInitial = () => first?.focus({ preventScroll: true })
+    window.requestAnimationFrame(() => window.requestAnimationFrame(focusInitial))
+    const focusRecoveryTimer = window.setTimeout(() => {
+      if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) focusInitial()
+    }, 160)
 
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
@@ -52,6 +54,7 @@ export function Sheet({
     document.addEventListener("keydown", interceptEscape, true)
     return () => {
       document.removeEventListener("keydown", interceptEscape, true)
+      window.clearTimeout(focusRecoveryTimer)
       document.body.style.overflow = previousOverflow
       window.setTimeout(() => {
         const previous = returnFocusRef.current
