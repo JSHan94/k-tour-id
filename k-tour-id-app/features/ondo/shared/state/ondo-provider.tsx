@@ -134,6 +134,7 @@ const initialState: OndoState = {
 
 const LOCAL_KEY = "ondo.preferences.v3"
 const SESSION_KEY = "ondo.session.v3"
+const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.labs.v2", "ondo.accepted-visits.v2"] as const
 const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "diet"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
@@ -340,6 +341,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     notify,
     resetSession: () => {
       window.sessionStorage.removeItem(SESSION_KEY)
+      FEATURE_SESSION_KEYS.forEach((key) => window.sessionStorage.removeItem(key))
       setState((current) => ({ ...initialState, locale: current.locale, guideSeen: current.guideSeen, autoNight: current.autoNight, savedVenueIds: current.savedVenueIds, discoveryPreferences: current.discoveryPreferences, hydrated: true }))
     },
   }), [notify])
