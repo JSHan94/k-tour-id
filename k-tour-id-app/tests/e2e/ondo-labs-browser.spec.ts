@@ -1,5 +1,18 @@
 import { expect, test, type Page } from "@playwright/test"
 
+const runtimeFailures = new WeakMap<Page, string[]>()
+
+test.beforeEach(async ({ page }) => {
+  const failures: string[] = []
+  runtimeFailures.set(page, failures)
+  page.on("console", (message) => { if (message.type() === "error") failures.push(`console: ${message.text()}`) })
+  page.on("pageerror", (error) => failures.push(`pageerror: ${error.message}`))
+})
+
+test.afterEach(async ({ page }) => {
+  expect(runtimeFailures.get(page) ?? []).toEqual([])
+})
+
 async function seedLabs(page: Page, scenario = "") {
   await page.addInitScript(() => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
