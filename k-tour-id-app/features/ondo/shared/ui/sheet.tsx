@@ -1,8 +1,19 @@
 "use client"
 
-import type { ReactNode } from "react"
+import type { KeyboardEvent, ReactNode } from "react"
+import { useEffect, useRef } from "react"
 import { X } from "lucide-react"
+import { useOndo } from "../state/ondo-provider"
 import styles from "./ui.module.css"
+
+const FOCUSABLE = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled]):not([type='hidden'])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",")
 
 export function Sheet({
   children,
@@ -15,12 +26,81 @@ export function Sheet({
   onClose(): void
   size?: "peek" | "medium" | "full"
 }) {
+  const { state } = useOndo()
+  const dialogRef = useRef<HTMLElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+  const closeLabel = state.locale === "ko" ? "닫기" : "Close"
+
+  useEffect(() => {
+    const activeElement = document.activeElement
+    returnFocusRef.current = activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : null
+    const dialog = dialogRef.current
+    const preferred = dialog?.querySelector<HTMLElement>("[data-sheet-initial-focus]")
+    const first = preferred ?? dialog?.querySelector<HTMLElement>(FOCUSABLE) ?? dialog
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => first?.focus({ preventScroll: true }))
+    })
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const interceptEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || !dialogRef.current?.contains(document.activeElement)) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      onClose()
+    }
+    document.addEventListener("keydown", interceptEscape, true)
+    return () => {
+      document.removeEventListener("keydown", interceptEscape, true)
+      document.body.style.overflow = previousOverflow
+      window.setTimeout(() => {
+        const previous = returnFocusRef.current
+        if (previous?.isConnected) previous.focus({ preventScroll: true })
+        else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
+      }, 80)
+    }
+  }, [])
+
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
+      onClose()
+      return
+    }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
+      .filter((element) => element.offsetParent !== null)
+    if (!focusable.length) {
+      event.preventDefault()
+      dialogRef.current?.focus()
+      return
+    }
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
-    <div className={styles.layer} role="dialog" aria-modal="true" aria-label={label}>
-      <button type="button" className={styles.backdrop} onClick={onClose} aria-label="Close" />
-      <section className={`${styles.sheet} ${styles[size]}`}>
+    <div className={styles.layer}>
+      <button type="button" tabIndex={-1} className={styles.backdrop} onClick={onClose} aria-hidden="true" />
+      <section
+        ref={dialogRef}
+        className={`${styles.sheet} ${styles[size]}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+      >
         <div className={styles.grabber} aria-hidden="true" />
-        <button type="button" className={styles.close} onClick={onClose} aria-label="Close"><X size={19} /></button>
+        <button type="button" data-sheet-initial-focus className={styles.close} onClick={onClose} aria-label={closeLabel}><X size={19} /></button>
         {children}
       </section>
     </div>

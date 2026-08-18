@@ -1,5 +1,6 @@
 "use client"
 
+import type { KeyboardEvent } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AlertCircle, ArrowLeft, BadgeCheck, Check, ChevronRight, CircleUserRound, Clock3, CreditCard, FileKey2, LoaderCircle, ShieldCheck, X } from "lucide-react"
 import type { GateKind, Locale, Persona } from "../contracts/domain"
@@ -8,6 +9,8 @@ import { useOndo } from "../shared/state/ondo-provider"
 import styles from "./identity.module.css"
 
 type PersonRoute = "cx" | "residence" | "passport"
+
+const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
 const COPY = {
   en: {
@@ -121,6 +124,8 @@ export function GateOverlay() {
   const [started, setStarted] = useState(false)
   const [busy, setBusy] = useState(false)
   const completionLock = useRef(false)
+  const dialogRef = useRef<HTMLElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const t = COPY[state.locale]
   const gate = state.gate
 
@@ -142,6 +147,34 @@ export function GateOverlay() {
       actions.notify(t.invalid)
     }
   }, [actions, gate, t.invalid])
+
+  useEffect(() => {
+    if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+    }
+  }, [gate?.tokenId])
+
+  useEffect(() => {
+    if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return
+    const interceptEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      actions.cancelGate()
+    }
+    document.addEventListener("keydown", interceptEscape, true)
+    return () => document.removeEventListener("keydown", interceptEscape, true)
+  }, [actions, gate?.tokenId])
+
+  useEffect(() => {
+    if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return
+    window.requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[data-gate-initial-focus]")?.focus())
+  }, [gate?.activeGate, gate?.tokenId, state.gateState])
 
   const queue = useMemo(() => gate?.gateQueue ?? [], [gate?.gateQueue])
   if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return null
@@ -171,6 +204,32 @@ export function GateOverlay() {
     actions.setGateState("pending")
   }
 
+  function handleDialogKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
+      actions.cancelGate()
+      return
+    }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
+      .filter((element) => element.offsetParent !== null)
+    if (!focusable.length) {
+      event.preventDefault()
+      dialogRef.current?.focus()
+      return
+    }
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   const routeCopy = route === "cx"
     ? { title: t.cx, note: t.cxNote }
     : route === "residence"
@@ -188,11 +247,11 @@ export function GateOverlay() {
 
   return (
     <div className={styles.gateLayer} data-testid="ondo-gate-overlay">
-      <button type="button" className={styles.backdrop} onClick={actions.cancelGate} aria-label={t.close} />
-      <section className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="gate-title">
+      <button type="button" tabIndex={-1} className={styles.backdrop} onClick={actions.cancelGate} aria-hidden="true" />
+      <section ref={dialogRef} className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="gate-title" tabIndex={-1} onKeyDown={handleDialogKeyDown}>
         <div className={styles.grabber} aria-hidden="true" />
         <header className={styles.gateHeader}>
-          <button type="button" className={styles.close} onClick={actions.cancelGate} aria-label={t.close}><X size={19} /></button>
+          <button type="button" data-gate-initial-focus className={styles.close} onClick={actions.cancelGate} aria-label={t.close}><X size={19} /></button>
           <span className={styles.truth}><i />{state.gateState === "unsupported" ? t.unavailableTruth : t.simulation}</span>
         </header>
 

@@ -1,5 +1,6 @@
 "use client"
 
+import type { KeyboardEvent } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Clock3, Moon, ShieldCheck, Sunrise, X } from "lucide-react"
 import { canAutoEnterAfter19 } from "../contracts/after19"
@@ -48,6 +49,8 @@ const COPY = {
   },
 } satisfies Record<Locale, Record<string, string>>
 
+const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
+
 export function After19Layer({ now }: { now?: Date } = {}) {
   const { state, actions } = useOndo()
   const [clock, setClock] = useState(() => now ?? new Date())
@@ -55,6 +58,8 @@ export function After19Layer({ now }: { now?: Date } = {}) {
   const [showSessionNotice, setShowSessionNotice] = useState(false)
   const promptedToken = useRef<string | null>(null)
   const autoOpened = useRef(false)
+  const gateRef = useRef<HTMLElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const t = COPY[state.locale]
 
   useEffect(() => {
@@ -98,6 +103,15 @@ export function After19Layer({ now }: { now?: Date } = {}) {
     }
   }, [actions, autoEligible, clock, state.after19, state.age, state.ageExpiresAt, t.expired])
 
+  useEffect(() => {
+    if (!showGate) return
+    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    window.requestAnimationFrame(() => gateRef.current?.querySelector<HTMLElement>("[data-after19-initial-focus]")?.focus())
+    return () => {
+      window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+    }
+  }, [showGate])
+
   if (!state.hydrated) return null
 
   const manualOpen = () => {
@@ -115,6 +129,32 @@ export function After19Layer({ now }: { now?: Date } = {}) {
   const turnOff = () => {
     actions.setAfter19("A19-MANUAL-OFF")
     setShowSessionNotice(true)
+  }
+
+  function handleGateKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
+      setShowGate(false)
+      return
+    }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(gateRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
+      .filter((element) => element.offsetParent !== null)
+    if (!focusable.length) {
+      event.preventDefault()
+      gateRef.current?.focus()
+      return
+    }
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
   }
 
   if (state.tab !== "ondo" && !state.gate) return null
@@ -139,14 +179,14 @@ export function After19Layer({ now }: { now?: Date } = {}) {
 
       {showGate ? (
         <div className={styles.gateLayer}>
-          <button type="button" className={styles.backdrop} onClick={() => setShowGate(false)} aria-label={t.close} />
-          <section className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="after19-title">
+          <button type="button" tabIndex={-1} className={styles.backdrop} onClick={() => setShowGate(false)} aria-hidden="true" />
+          <section ref={gateRef} className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="after19-title" tabIndex={-1} onKeyDown={handleGateKeyDown}>
             <span className={styles.moon}><Moon size={28} /></span>
             <p className={styles.truth}><ShieldCheck size={13} />{t.simulation}</p>
             <h2 id="after19-title">{t.gateTitle}</h2>
             <p>{t.gateBody}</p>
             <div className={styles.fact}><Clock3 size={17} /><span>{state.locale === "ko" ? "한국 시간 19:00 이후 자동 전환은 19+ 확인과 자동 열기 설정이 모두 필요합니다." : "Automatic switching after 19:00 Korea time also requires a current 19+ check and auto-open setting."}</span></div>
-            <button type="button" className={styles.primary} onClick={beginAgeGate}>{t.gatePrimary}</button>
+            <button type="button" data-after19-initial-focus className={styles.primary} onClick={beginAgeGate}>{t.gatePrimary}</button>
             <button type="button" className={styles.secondary} onClick={() => setShowGate(false)}>{t.gateSecondary}</button>
           </section>
         </div>

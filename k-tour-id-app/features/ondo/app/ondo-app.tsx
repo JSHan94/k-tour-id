@@ -1,6 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
+import { useEffect, useRef } from "react"
 import { BadgeCheck, Map, MessageCircle, NotebookTabs } from "lucide-react"
 import { OndoProvider, useOndo } from "../shared/state/ondo-provider"
 import { COPY } from "../shared/i18n/copy"
@@ -24,8 +25,19 @@ const NAV: Array<{ id: OndoTab; icon: typeof Map }> = [
 
 function OndoShell({ slots }: { slots: OndoAppSlots }) {
   const { state, actions } = useOndo()
+  const previousSurface = useRef(state.surface)
   const copy = COPY[state.locale]
   const active = state.tab === "ondo" ? slots.map : state.tab === "my" ? slots.my : state.tab === "tables" ? slots.tables : slots.id
+
+  useEffect(() => {
+    const before = previousSurface.current
+    previousSurface.current = state.surface
+    if (before.kind === "map" || state.surface.kind !== "venue") return
+    const timer = window.setTimeout(() => {
+      document.querySelector<HTMLElement>("[data-testid='place-details']")?.focus({ preventScroll: true })
+    }, 100)
+    return () => window.clearTimeout(timer)
+  }, [state.surface])
 
   return (
     <main className={styles.stage} data-ondo-locale={state.locale}>

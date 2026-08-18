@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import type { KeyboardEvent } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowRight, Check, ChevronLeft, Compass, MapPin, Sparkles, Utensils } from "lucide-react"
 import type { DiscoveryPreference, Locale, Persona } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
 import styles from "./onboarding.module.css"
 
 type Step = "value" | "intent" | "preferences"
+
+const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
 const PERSONAS: Array<{
   id: Persona
@@ -76,11 +79,20 @@ export function OnboardingLayer() {
   const [step, setStep] = useState<Step>("value")
   const [preferences, setPreferences] = useState<DiscoveryPreference[]>([])
   const [failed, setFailed] = useState(false)
+  const dialogRef = useRef<HTMLElement>(null)
   const t = TEXT[state.locale]
 
   useEffect(() => {
     if (state.onboarding === "ONB-IN-PROGRESS" && step === "value") setStep("intent")
   }, [state.onboarding, step])
+
+  useEffect(() => {
+    if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return
+    window.requestAnimationFrame(() => {
+      const preferred = dialogRef.current?.querySelector<HTMLElement>("[data-onboarding-initial-focus]")
+      ;(preferred ?? dialogRef.current)?.focus()
+    })
+  }, [state.hydrated, state.onboarding, step])
 
   const stepIndex = useMemo(() => ({ value: 1, intent: 2, preferences: 3 })[step], [step])
   if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return null
@@ -100,8 +112,28 @@ export function OnboardingLayer() {
     actions.completeOnboarding()
   }
 
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key !== "Tab") return
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
+      .filter((element) => element.offsetParent !== null)
+    if (!focusable.length) {
+      event.preventDefault()
+      dialogRef.current?.focus()
+      return
+    }
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
   return (
-    <section className={styles.layer} data-testid="ondo-onboarding" aria-label={state.locale === "ko" ? "ONDO 시작 안내" : "ONDO onboarding"}>
+    <section ref={dialogRef} className={styles.layer} data-testid="ondo-onboarding" role="dialog" aria-modal="true" aria-label={state.locale === "ko" ? "ONDO 시작 안내" : "ONDO onboarding"} tabIndex={-1} onKeyDown={handleKeyDown}>
       <div className={styles.ambient} aria-hidden="true"><i /><i /><i /></div>
       <header className={styles.header}>
         {step !== "value" ? (
@@ -125,7 +157,7 @@ export function OnboardingLayer() {
           <p className={styles.lead}>{t.body}</p>
           <div className={styles.signal}><span>72</span><p>{t.signal}</p></div>
           <div className={styles.actions}>
-            <button type="button" className={styles.primary} onClick={() => { actions.beginOnboarding(); setStep("intent") }}>
+            <button type="button" data-onboarding-initial-focus className={styles.primary} onClick={() => { actions.beginOnboarding(); setStep("intent") }}>
               {t.start}<ArrowRight size={18} />
             </button>
             <button type="button" className={styles.secondary} onClick={skip}>{t.guest}</button>
@@ -141,7 +173,7 @@ export function OnboardingLayer() {
               const Icon = persona.icon
               const selected = state.persona === persona.id
               return (
-                <button key={persona.id} type="button" aria-pressed={selected} className={selected ? styles.personaSelected : styles.persona} onClick={() => actions.setPersona(persona.id)} data-testid={`persona-${persona.id}`}>
+                <button key={persona.id} type="button" data-onboarding-initial-focus={persona.id === "short_term" ? "true" : undefined} aria-pressed={selected} className={selected ? styles.personaSelected : styles.persona} onClick={() => actions.setPersona(persona.id)} data-testid={`persona-${persona.id}`}>
                   <span className={styles.personaIcon}><Icon size={21} /></span>
                   <span><strong>{state.locale === "ko" ? persona.ko : persona.en}</strong><small>{state.locale === "ko" ? persona.noteKo : persona.noteEn}</small></span>
                   <i>{selected ? <Check size={16} /> : null}</i>
@@ -170,7 +202,7 @@ export function OnboardingLayer() {
           </div>
           {failed ? <div className={styles.error} role="alert">{t.fallback}</div> : null}
           <div className={styles.actions}>
-            <button type="button" className={styles.primary} onClick={finish} data-testid="onboarding-finish">
+            <button type="button" data-onboarding-initial-focus className={styles.primary} onClick={finish} data-testid="onboarding-finish">
               {failed ? t.continueFallback : t.open}<ArrowRight size={18} />
             </button>
             <button type="button" className={styles.secondary} onClick={skip}>{preferences.length ? t.defaults : t.skip}</button>

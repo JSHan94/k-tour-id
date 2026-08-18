@@ -6,6 +6,8 @@
   --ondo-red: #c84936;
   --ondo-plum: #76294d;
   min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
   background: #ddd8cc;
   color: var(--ondo-ink);
 }
@@ -13,7 +15,9 @@
 .canvas {
   position: relative;
   width: min(100vw, 430px);
-  min-height: 100dvh;
+  min-height: 0;
+  height: 100dvh;
+  max-height: 100dvh;
   margin: 0 auto;
   overflow: hidden;
   background: var(--ondo-paper);
@@ -21,7 +25,11 @@
 }
 
 .content {
-  min-height: 100dvh;
+  box-sizing: border-box;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding-bottom: calc(82px + env(safe-area-inset-bottom));
 }
 
@@ -57,7 +65,7 @@
 }
 
 .nav button > span { display: grid; place-items: center; }
-.nav small { font-size: 10px; font-weight: 680; letter-spacing: -.01em; }
+.nav small { font-size: 12px; font-weight: 680; letter-spacing: -.01em; }
 .navActive { background: #211a14 !important; color: #fffdf8 !important; }
 .nav i {
   position: absolute;
@@ -70,7 +78,7 @@
   border-radius: 99px;
   background: #c84936;
   color: white;
-  font-size: 9px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 800;
 }
@@ -96,9 +104,9 @@
 }
 
 @media (min-width: 801px) {
-  .stage { display: grid; min-height: 100vh; place-items: center; padding: 28px; }
+  .stage { box-sizing: border-box; display: grid; min-height: 100vh; place-items: center; padding: 28px; }
   .canvas { min-height: min(900px, calc(100vh - 56px)); height: min(900px, calc(100vh - 56px)); border-radius: 32px; }
-  .content { min-height: 100%; }
+  .content { min-height: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
