@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { OndoPrototype } from "@/components/ondo/ondo-prototype"
+import { OndoProduct } from "@/features/ondo/app/ondo-product"
 
 export const metadata: Metadata = {
   title: "ONDO — Where locals eat now",
@@ -19,6 +19,5 @@ export const metadata: Metadata = {
 }
 
 export default function OndoPage() {
-  return <OndoPrototype />
+  return <OndoProduct />
 }
-

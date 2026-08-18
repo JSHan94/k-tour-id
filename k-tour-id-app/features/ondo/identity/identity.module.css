@@ -1,4 +1,4 @@
-.gateLayer { position: absolute; z-index: 88; inset: 0; display: flex; align-items: flex-end; justify-content: center; }
+.gateLayer { position: absolute; z-index: 110; inset: 0; display: flex; align-items: flex-end; justify-content: center; }
 .backdrop { position: absolute; inset: 0; border: 0; background: rgb(25 18 13 / 48%); backdrop-filter: blur(5px); }
 .gate { position: relative; width: 100%; max-height: 91%; overflow: auto; border: 1px solid rgb(59 42 27 / 9%); border-radius: 30px 30px 0 0; padding: 10px 22px calc(24px + env(safe-area-inset-bottom)); background: #fffdf8; color: #241b15; box-shadow: 0 -22px 70px rgb(32 21 12 / 28%); animation: gateIn 220ms cubic-bezier(.2,.8,.2,1); }
 .grabber { width: 42px; height: 4px; margin: 0 auto 4px; border-radius: 99px; background: #d5ccbf; }
