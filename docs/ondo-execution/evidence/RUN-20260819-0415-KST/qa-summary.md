@@ -17,6 +17,7 @@ Runner: Root Integrator · Node `25.9.0` · pnpm `10.8.0` · Playwright Chromium
 | Desktop visual | `pnpm exec playwright test tests/visual --project=desktop-chromium --workers=1` | 16/16 PASS |
 | Next production | `pnpm build` | PASS · `/ondo` static prerender |
 | Sites production | `pnpm build:sites` | PASS |
+| Remote production | authenticated private smoke on `/ondo` | HTTP 200 · 18,657 bytes |
 | Diff integrity | `git diff --check` | PASS |
 
 The E2E set includes Axe critical/serious scans, keyboard focus and Escape return, three-persona onboarding, map/tile/list fallback, live OSM decoded pixels, Account/Person/Age/Payment KYC returnTo, After19 guards, Table/chat/photo/feedback/report, Local Signal, checkout/stamp invariants, saved-place return, and Labs state recovery.

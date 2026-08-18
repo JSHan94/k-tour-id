@@ -1,7 +1,7 @@
 # ONDO Autonomous Run Status
 
 최종 갱신: `2026-08-19`
-현재 Gate: `CANDIDATE APPROVED · DEPLOYMENT PENDING`
+현재 Gate: `CANDIDATE APPROVED · DEPLOYED`
 Clock: `STARTED · 2026-08-19 04:15 KST`
 Release target: `ONDO Frontend Demo Candidate v2`
 
@@ -29,7 +29,7 @@ Release target: `ONDO Frontend Demo Candidate v2`
 | QA Loop 1 | PASS · fix through `beb79b7` |
 | QA Loop 2 | PASS · fix through `8b67acb` |
 | QA Loop 3 | PASS · focused closure `9678b2b` · S0/S1/S2 0 |
-| Deployment | Authorized · Sites publish pending |
+| Deployment | SUCCEEDED · private owner-only Sites · `/ondo` remote HTTP 200 |
 
 실행팩은 동결됐고 구현 clock이 시작됐다. 세 Worker는 같은 SPEC SHA와 shared-contract SHA에서 병렬 작업한다. 기존 `/ondo`는 첫 meaningful preview Gate 전까지 rollback 가능한 fallback으로 유지한다.
 

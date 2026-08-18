@@ -1,6 +1,6 @@
 # ONDO Frontend Demo Candidate v2 · As-built
 
-상태: `CANDIDATE APPROVED · DEPLOYMENT PENDING`
+상태: `CANDIDATE APPROVED · DEPLOYED`
 
 작성자: Root Integrator
 
@@ -10,7 +10,7 @@ RUN ID: `RUN-20260819-0415-KST`
 
 Candidate code SHA: `9678b2b`
 
-배포 URL: `배포 후 기록`
+배포 URL: `https://k-tour-id.phenixnet-jl.chatgpt.site/ondo`
 Evidence manifest: [RUN-20260819-0415-KST](./evidence/RUN-20260819-0415-KST/manifest.md)
 
 이 문서는 계획이 아니라 실제 구현 결과의 source of truth다. 화면에 보이는 외부 연동은 아래 표의 실행 등급보다 높게 해석하지 않는다.
@@ -261,6 +261,6 @@ pnpm build:sites
 판정자: Root + 3 independent reviewers
 
 Candidate code: `9678b2b`
-배포: `Sites publish 대기`
+배포: `https://k-tour-id.phenixnet-jl.chatgpt.site/ondo` · owner-only private access · remote HTTP 200
 
-최종 full-suite와 durable manifest는 통과했다. 공개 배포 smoke 통과 후 URL만 추가한다.
+최종 full-suite, durable manifest, private production deployment와 원격 `/ondo` smoke를 모두 통과했다.

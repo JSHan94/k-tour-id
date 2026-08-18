@@ -60,5 +60,5 @@ Gate source of truth: this manifest; `k-tour-id-app/artifacts/qa/**` is staging 
 | Critical / High | 0 / 0 |
 | Known gaps | external identity/KYC/payment/bridge/moderation/data operations remain deferred and truth-labeled |
 | Candidate | `APPROVED FOR FRONTEND DEMO DEPLOYMENT` |
-| Deployment | pending Sites publish and remote smoke |
+| Deployment | succeeded · `https://k-tour-id.phenixnet-jl.chatgpt.site/ondo` · owner-only private access · remote HTTP 200 |
 | Rollback | prior static `/ondo` prototype at source `1ca95f0` |
