@@ -40,7 +40,7 @@ Artifact rows are added only after Root reproduces them at the recorded integrat
 |---|---|---|---|---|---|
 | Map / Place | `codex/ondo-map-20260819` | `a640365` | — | — | running |
 | Identity / After19 | `codex/ondo-identity-20260819` | `a640365` | — | — | running |
-| Connect / Commerce / Labs | `codex/ondo-connect-20260819` | `a640365` | — | — | running |
+| Connect / Commerce / Labs | `codex/ondo-connect-20260819` | `a4232fa` | `8ecaf5d`, `5335008` → integration `d772a21`, `391958a` | accepted · integration typecheck + contract 16/16 PASS; route E2E pending | accepted |
 
 ## Release ledger
 

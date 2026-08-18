@@ -101,7 +101,7 @@ Release target: `ONDO Frontend Demo Candidate v2`
 | Baseline | 2026-08-19 04:15 KST | 2026-08-19 04:26 KST | Root | PASS · typecheck/build/Sites build/4 screenshots | shared scaffold `a640365`; evidence `RUN-20260819-0415-KST` | — |
 | Build A · Map | 2026-08-19 04:27 KST | — | Map Agent | In progress | `codex/ondo-map-20260819` | — |
 | Build B · Identity | 2026-08-19 04:27 KST | — | Identity Agent | In progress | `codex/ondo-identity-20260819` | — |
-| Build C · Connect | 2026-08-19 04:27 KST | — | Connect Agent | In progress | `codex/ondo-connect-20260819` | — |
+| Build C · Connect | 2026-08-19 04:27 KST | 2026-08-19 04:49 KST | Connect Agent | Accepted into integration · typecheck + contract 16/16 PASS | `d772a21`, `391958a` | route-level E2E waits for Root wiring |
 | Integration 1 | — | — | Root | Not started | — | — |
 | QA 1 | — | — | Cross-review | Not started | — | — |
 | Fix 1 | — | — | Owners | Not started | — | — |
@@ -141,7 +141,7 @@ Severity 정의는 [QA Plan](./08_QA_ACCEPTANCE_PLAN.md)을 따른다.
 
 | Agent | Branch | Base SPEC / shared SHA | Commit | REQ/Flow | Tests/Evidence | Known issues | CCR | Ready |
 |---|---|---|---|---|---|---|---|---|
-| — | — | — | — | — | — | — | — | — |
+| Connect | `codex/ondo-connect-20260819` | `53a431d` / `a4232fa` | `8ecaf5d`, `5335008` → integration `d772a21`, `391958a` | REQ-004/006/008/010/014/016/017 · FL-003/004/011/012/016/017/018 | Worker 20/20; integration typecheck + contract 16/16 PASS | route-level visual/E2E pending | none | Yes |
 
 필수 상세:
 
