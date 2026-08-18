@@ -1,5 +1,18 @@
 import { expect, test, type Page } from "@playwright/test"
 
+const runtimeFailures = new WeakMap<Page, string[]>()
+
+test.beforeEach(async ({ page }) => {
+  const failures: string[] = []
+  runtimeFailures.set(page, failures)
+  page.on("console", (message) => { if (message.type() === "error") failures.push(`console: ${message.text()}`) })
+  page.on("pageerror", (error) => failures.push(`pageerror: ${error.message}`))
+})
+
+test.afterEach(async ({ page }) => {
+  expect(runtimeFailures.get(page) ?? []).toEqual([])
+})
+
 async function seedPrepared(page: Page, overrides: Record<string, unknown> = {}) {
   await page.addInitScript((next) => {
     if (!localStorage.getItem("ondo.preferences.v3")) {
@@ -55,6 +68,7 @@ test("@core FL-003 Table request visibly resolves, image chat works, and private
   await page.getByTestId("feedback-submit").click()
   await expect(chat).toContainText("Feedback recorded. No overall score was created.")
   await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}").reputation)).toMatchObject({ meetup: "reliable", contribution: "helpful" })
+  await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.table-outcomes.v2") ?? "{}")["table-seongsu-dinner"]?.feedbackReceipt)).toMatchObject({ helpful: true, respectful: true, privateNote: "Kept on this device for the preview." })
 
   await page.reload()
   await page.getByRole("button", { name: "Tables", exact: true }).click()
@@ -76,6 +90,9 @@ test("FL-003 report requires a reason, supports blocking, returns a receipt, and
   await page.getByTestId("report-reason").selectOption("harassment")
   await page.getByTestId("report-block").check()
   await report.getByRole("button", { name: "Record report" }).click()
+  await expect(page.getByTestId("table-report-receipt")).toContainText("Harassment")
+  await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.table-outcomes.v2") ?? "{}")["table-seongsu-dinner"])).toMatchObject({ reportReason: "harassment", participantBlocked: true })
+  await page.getByRole("button", { name: "Open chat" }).click()
   await expect(page.getByTestId("table-chat")).toContainText("Report receipt")
 
   await page.reload()

@@ -35,7 +35,9 @@ export function resolveFreshness(
   if (Number.isFinite(expiresAt) && now > expiresAt) return "stale"
   const sourceTime = Date.parse(input.updatedAt ?? input.provenance.fetchedAt)
   if (!Number.isFinite(sourceTime)) return "unknown"
-  const ageHours = Math.max(0, now - sourceTime) / 3_600_000
+  const ageMs = now - sourceTime
+  if (ageMs < -300_000) return "unknown"
+  const ageHours = Math.max(0, ageMs) / 3_600_000
   if (ageHours <= 2) return "recent"
   if (ageHours <= 24) return "today"
   if (ageHours <= 72) return "aging"

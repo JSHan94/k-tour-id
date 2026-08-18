@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test"
 
 async function ready(page: Page, locale: "en" | "ko" = "en") {
+  await page.clock.setFixedTime(new Date("2026-08-19T12:00:00+09:00"))
   await page.addInitScript(({ locale }) => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale, guideSeen: true, autoNight: true, savedVenueIds: [] }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-GUEST" }))

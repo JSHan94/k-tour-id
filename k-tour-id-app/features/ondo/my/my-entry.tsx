@@ -37,7 +37,7 @@ export function MyEntry() {
             {Array.from({ length: 10 }, (_, index) => <span key={index} className={index < state.stamps ? styles.stampFilled : styles.stampEmpty}>{index < state.stamps ? <Check size={16} /> : index + 1}</span>)}
           </div>
           <p>{state.stamps === 10 ? locale === "ko" ? "열 번째 방문을 남겼어요." : "You recorded your tenth visit." : locale === "ko" ? "결제가 아니라 별도로 확인된 방문이 하나씩 쌓여요." : "Each separate confirmed visit—not payment—adds one stamp."}</p>
-          {state.stamps === 10 ? <button type="button" className={styles.labsLink} onClick={() => actions.setSurface({ kind: "labs" })} data-testid="open-labs-milestone"><FlaskConical size={17} /><span>{locale === "ko" ? "원하면 Labs에서 기념 badge 시뮬레이션을 볼 수 있어요." : "If you choose, view a souvenir badge simulation in Labs."}</span><ChevronRight size={17} /></button> : null}
+          {state.stamps === 10 ? <button type="button" className={styles.labsLink} onClick={() => actions.setSurface({ kind: "labs" })} data-testid="open-labs-milestone"><FlaskConical size={17} /><span>{locale === "ko" ? "원하면 Labs에서 기념 배지 시뮬레이션을 볼 수 있어요." : "If you choose, view a souvenir badge simulation in Labs."}</span><ChevronRight size={17} /></button> : null}
         </div>
       </section>
 
@@ -48,7 +48,7 @@ export function MyEntry() {
       </section>
 
       <section className={styles.labsCard}>
-        <span><FlaskConical size={20} /></span><div><strong>Labs</strong><p>{locale === "ko" ? "지갑·bridge·증거 adapter 가설은 소비자 흐름과 분리되어 있어요." : "Wallet, bridge, and evidence-adapter hypotheses stay outside the consumer journey."}</p></div><button type="button" onClick={() => actions.setSurface({ kind: "labs" })} aria-label={locale === "ko" ? "Labs 열기" : "Open Labs"} data-testid="open-labs"><ChevronRight size={18} /></button>
+        <span><FlaskConical size={20} /></span><div><strong>Labs</strong><p>{locale === "ko" ? "지갑·체인 연결·증거 변환 가설은 소비자 흐름과 분리되어 있어요." : "Wallet, bridge, and evidence-adapter hypotheses stay outside the consumer journey."}</p></div><button type="button" onClick={() => actions.setSurface({ kind: "labs" })} aria-label={locale === "ko" ? "Labs 열기" : "Open Labs"} data-testid="open-labs"><ChevronRight size={18} /></button>
       </section>
     </main>
   )

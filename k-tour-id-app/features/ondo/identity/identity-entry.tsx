@@ -59,10 +59,10 @@ const COPY = {
     jitBody: "계정 없이 먼저 둘러보세요. 저장·Table·After 19·결제는 각 행동에 필요한 최소 확인만 요청하고 같은 작업으로 돌아옵니다.",
     jitBodyReady: "계정은 준비됐어요. Table·After 19·결제는 각 행동에 추가로 필요한 확인만 요청한 뒤 같은 작업으로 돌아옵니다.",
     routes: "확인 흐름 미리보기",
-    routePreview: "보호된 경험에 사람 확인이 필요하면 선택한 이용 목적에 맞춰 모바일 신분증, 모바일 외국인등록증 지원 확인 또는 중립 Passport provider 경로를 열고 같은 작업으로 돌아옵니다.",
+    routePreview: "보호된 경험에 사람 확인이 필요하면 선택한 이용 목적에 맞춰 모바일 신분증, 모바일 외국인등록증 지원 확인 또는 중립적인 여권 확인 경로를 열고 같은 작업으로 돌아옵니다.",
     routeTruth: "미리보기 · 외부 인증기관으로 요청을 보내지 않습니다.",
     labs: "Labs",
-    labsBody: "signer·asset·bridge·badge 기술 가설 실험 영역",
+    labsBody: "서명·자산·체인 연결·기념 배지 기술 가설 실험 영역",
   },
 } satisfies Record<Locale, Record<string, string>>
 

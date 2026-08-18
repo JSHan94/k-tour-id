@@ -45,6 +45,8 @@ const PLACE_COPY = {
     open: "Open",
     closed: "Closed",
     unknown: "Hours pending",
+    staleFact: "Previous signal · ",
+    staleFactsNotice: "These access details are outside their freshness window. Check the latest venue information.",
     seed: "Early coverage · smaller sample",
     scoreBoundary: "ONDO is a recent local food signal, not temperature, live crowding, or a safety score.",
   },
@@ -69,6 +71,8 @@ const PLACE_COPY = {
     open: "영업 중",
     closed: "영업 종료",
     unknown: "영업 정보 확인 중",
+    staleFact: "이전 신호 · ",
+    staleFactsNotice: "이용 정보의 최신 확인 시점이 지났어요. 방문 전 장소의 최신 안내를 확인해 주세요.",
     seed: "먼저 채워지는 지역 · 적은 표본",
     scoreBoundary: "ONDO는 최근 로컬 식음료 신호이며 기온·실시간 인파·안전 점수가 아니에요.",
   },
@@ -137,7 +141,14 @@ export function PlaceOverlay() {
   const selectedVenueId = venue.id
   const palette = HEAT_COLORS[venue.heatLevel]
   const freshness = resolveFreshness(venue)
-  const opening = venue.openingStatus === "open" ? copy.open : venue.openingStatus === "closed" ? copy.closed : copy.unknown
+  const venueCurrent = !["stale", "unknown"].includes(freshness)
+  const opening = !venueCurrent ? copy.unknown : venue.openingStatus === "open" ? copy.open : venue.openingStatus === "closed" ? copy.closed : copy.unknown
+  const factPresentation = (fact: MapVenue["facts"][number]) => {
+    const factFreshness = resolveFreshness({ freshness: "today", updatedAt: fact.provenance.fetchedAt, provenance: fact.provenance })
+    const current = !["stale", "unknown"].includes(factFreshness)
+    return { current, tone: current ? fact.tone : "neutral" as const, value: `${current ? "" : copy.staleFact}${fact.value[locale]}` }
+  }
+  const hasStaleFacts = venue.facts.some((fact) => !factPresentation(fact).current)
 
   function close() {
     actions.setSurface({ kind: "map" })
@@ -174,7 +185,10 @@ export function PlaceOverlay() {
         <h2>{venue.name[locale]}</h2>
         <p>{venue.name[locale === "en" ? "ko" : "en"]} · {opening} · {venue.priceLabel}</p>
         <div className={styles.peekFacts}>
-          {venue.facts.slice(0, 2).map((fact) => <span key={fact.id}><FactIcon tone={fact.tone} />{fact.value[locale]}</span>)}
+          {venue.facts.slice(0, 2).map((fact) => {
+            const presented = factPresentation(fact)
+            return <span key={fact.id} data-fact-freshness={presented.current ? "current" : "stale"}><FactIcon tone={presented.tone} />{presented.value}</span>
+          })}
         </div>
         {savePending ? <p className={styles.saveGateHint} role="status" data-testid="save-account-gate-hint">{copy.accountHint}</p> : null}
         <div className={styles.peekActions}>
@@ -198,7 +212,7 @@ export function PlaceOverlay() {
         </div>
         <div className={styles.body}>
           <div className={styles.kicker}>
-            <span className={venue.openingStatus === "open" ? styles.open : styles.statusMuted}>{opening}</span>
+            <span className={venueCurrent && venue.openingStatus === "open" ? styles.open : styles.statusMuted}>{opening}</span>
             <span>{venue.priceLabel}</span>
           </div>
           <h2 id="place-title">{venue.name[locale]}</h2>
@@ -234,13 +248,17 @@ export function PlaceOverlay() {
 
           <section className={styles.section} aria-labelledby="before-title">
             <div className={styles.sectionTitle}><span><small>VISIT NOTES</small><h3 id="before-title">{copy.before}</h3></span></div>
+            {hasStaleFacts ? <p className={styles.beforeNote} data-testid="stale-facts-notice"><AlertTriangle size={15} />{copy.staleFactsNotice}</p> : null}
             <div className={styles.factList}>
-              {venue.facts.map((fact) => (
-                <div key={fact.id} className={`${styles.fact} ${styles[`fact_${fact.tone}`]}`}>
-                  <FactIcon tone={fact.tone} />
-                  <span><strong>{fact.value[locale]}</strong><small>{fact.value[locale === "en" ? "ko" : "en"]}</small></span>
-                </div>
-              ))}
+              {venue.facts.map((fact) => {
+                const presented = factPresentation(fact)
+                return (
+                  <div key={fact.id} className={`${styles.fact} ${styles[`fact_${presented.tone}`]}`} data-fact-freshness={presented.current ? "current" : "stale"}>
+                    <FactIcon tone={presented.tone} />
+                    <span><strong>{presented.value}</strong><small>{fact.value[locale === "en" ? "ko" : "en"]}</small></span>
+                  </div>
+                )
+              })}
             </div>
             <p className={styles.beforeNote}><Info size={15} />{copy.beforeNote}</p>
           </section>

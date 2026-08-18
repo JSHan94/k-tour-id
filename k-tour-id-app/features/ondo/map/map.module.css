@@ -23,22 +23,22 @@
 .wordmark { min-height: 44px; gap: 7px; border: 0; background: transparent; color: var(--ink); }
 .wordmark i { width: 13px; height: 13px; border-radius: 50% 50% 50% 3px; rotate: -35deg; background: #c94832; box-shadow: 0 0 0 4px rgb(201 72 50 / 10%); }
 .wordmark strong { font-size: 23px; font-weight: 800; letter-spacing: -.055em; }
-.wordmark small { color: var(--muted); font-size: 11px; font-weight: 650; letter-spacing: -.02em; }
+.wordmark small { color: var(--muted); font-size: 12px; font-weight: 650; letter-spacing: -.02em; }
 .languageButton { display: inline-flex; min-width: 56px; min-height: 44px; align-items: center; justify-content: center; gap: 5px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 248 / 92%); color: var(--ink); font-size: 12px; font-weight: 750; box-shadow: 0 5px 18px rgb(41 33 24 / 7%); }
 .search { height: 48px; gap: 10px; margin-top: 3px; padding: 0 13px; border: 1px solid var(--line); border-radius: 18px; background: rgb(255 253 248 / 96%); box-shadow: 0 10px 26px rgb(42 32 22 / 8%); }
 .search svg { flex: 0 0 auto; color: #b43e31; }
 .search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; }
 .search input::placeholder { color: #817a72; opacity: 1; }
-.search button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
+.search button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
 .chips { gap: 7px; margin-top: 7px; overflow-x: auto; overscroll-behavior-inline: contain; padding: 0 30px 2px 0; scroll-padding-inline: 12px 30px; scrollbar-width: none; touch-action: pan-x; mask-image: linear-gradient(90deg, black 0, black calc(100% - 28px), transparent 100%); }
 .chips::-webkit-scrollbar { display: none; }
-.chips button { display: inline-flex; min-height: 40px; flex: 0 0 auto; align-items: center; gap: 5px; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 248 / 96%); color: #5e5851; font-size: 12px; font-weight: 700; box-shadow: 0 4px 13px rgb(35 29 23 / 5%); }
+.chips button { display: inline-flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 5px; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 253 248 / 96%); color: #5e5851; font-size: 12px; font-weight: 700; box-shadow: 0 4px 13px rgb(35 29 23 / 5%); }
 .chips .chipActive { border-color: #191816; background: #191816; color: #fffdf8; }
 
 .contextCard { pointer-events: none; position: absolute; z-index: 12; bottom: calc(216px + env(safe-area-inset-bottom)); left: 12px; max-width: 234px; min-height: 62px; align-items: flex-start; flex-direction: column; justify-content: center; padding: 10px 13px; border: 1px solid rgb(25 24 22 / 10%); border-radius: 17px; background: rgb(255 253 248 / 89%); box-shadow: 0 10px 26px rgb(36 27 18 / 10%); backdrop-filter: blur(14px); }
-.contextCard span { color: #ad4434; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.contextCard span { color: #ad4434; font-size: 11px; font-weight: 800; letter-spacing: .1em; }
 .contextCard strong { margin-top: 3px; font-size: 14px; line-height: 1.25; letter-spacing: -.025em; }
-.contextCard small { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.contextCard small { margin-top: 4px; color: var(--muted); font-size: 12px; }
 .controls { position: absolute; z-index: 14; top: calc(164px + env(safe-area-inset-top)); right: 12px; flex-direction: column; gap: 7px; }
 .controls button { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 14px; background: rgb(255 253 248 / 95%); color: var(--ink); box-shadow: 0 7px 20px rgb(35 27 19 / 12%); }
 .controls button:first-child { margin-bottom: 3px; background: #191816; color: #fffdf8; }
@@ -69,8 +69,8 @@
 .notice { gap: 10px; margin-bottom: 13px; padding: 12px; border: 1px solid rgb(180 62 49 / 18%); border-radius: 16px; background: #fff1ed; color: #732c26; }
 .notice > span { display: grid; flex: 1; }
 .notice strong { font-size: 13px; }
-.notice small { margin-top: 2px; font-size: 11px; line-height: 1.4; }
-.notice button { min-height: 38px; flex: 0 0 auto; padding: 0 10px; border: 0; border-radius: 11px; background: #191816; color: #fffdf8; font-size: 11px; font-weight: 700; }
+.notice small { margin-top: 2px; font-size: 12px; line-height: 1.4; }
+.notice button { min-height: 44px; flex: 0 0 auto; padding: 0 12px; border: 0; border-radius: 11px; background: #191816; color: #fffdf8; font-size: 12px; font-weight: 700; }
 .empty { display: grid; min-height: 280px; place-items: center; align-content: center; color: var(--muted); text-align: center; }
 .empty p { margin: 12px 0; font-size: 14px; }
 .empty button { min-height: 44px; padding: 0 15px; border: 0; border-radius: 99px; background: #191816; color: #fffdf8; font-weight: 700; }
@@ -78,8 +78,8 @@
 .floatingNotice { position: absolute; z-index: 18; right: 68px; bottom: calc(94px + env(safe-area-inset-bottom)); left: 12px; min-height: 58px; gap: 10px; padding: 10px 11px 10px 13px; border: 1px solid var(--line); border-radius: 16px; background: rgb(255 253 248 / 96%); box-shadow: 0 9px 26px rgb(35 27 19 / 14%); }
 .floatingNotice > span { display: grid; flex: 1; }
 .floatingNotice strong { font-size: 12px; }
-.floatingNotice small { margin-top: 2px; color: var(--muted); font-size: 11px; line-height: 1.35; }
-.floatingNotice button { display: grid; width: 36px; height: 36px; place-items: center; border: 0; border-radius: 50%; background: #f0ece3; }
+.floatingNotice small { margin-top: 2px; color: var(--muted); font-size: 12px; line-height: 1.35; }
+.floatingNotice button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #f0ece3; }
 
 .legendLayer { position: absolute; z-index: 100; inset: 0; display: flex; align-items: flex-end; }
 .legendBackdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgb(25 20 15 / 44%); backdrop-filter: blur(4px); }

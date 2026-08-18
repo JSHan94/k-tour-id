@@ -42,12 +42,17 @@ test.describe("ONDO map discovery", () => {
     await page.goto("/ondo?city=seoul&view=list")
 
     await expect(page.getByTestId("venue-list")).toBeVisible()
+    const filterButtons = page.getByLabel("Map filters").getByRole("button")
+    for (let index = 0; index < await filterButtons.count(); index += 1) {
+      expect((await filterButtons.nth(index).boundingBox())?.height).toBeGreaterThanOrEqual(44)
+    }
     const listBox = await page.getByTestId("map-list-panel").boundingBox()
     const autoBox = await page.getByLabel("Open automatically when eligible").boundingBox()
     expect(listBox).not.toBeNull()
     expect(autoBox).not.toBeNull()
     expect(listBox!.y + listBox!.height).toBeLessThanOrEqual(autoBox!.y)
     await page.getByTestId("map-search").fill("gukbap")
+    expect((await page.getByRole("button", { name: "Clear search" }).boundingBox())?.height).toBeGreaterThanOrEqual(44)
     await expect(page.getByTestId("venue-card-seoul-seongsu-gukbap")).toBeVisible()
     await expect(page.getByTestId("venue-card-seoul-euljiro-nogari")).toHaveCount(0)
 
@@ -111,12 +116,25 @@ test.describe("ONDO map discovery", () => {
   test("expired fixture signals are shown as older instead of updated today", async ({ page }) => {
     await page.clock.setFixedTime(new Date("2026-08-22T12:00:00+09:00"))
     await seedGuest(page)
-    await page.goto("/ondo?city=seoul&view=list")
+    await page.goto("/ondo?venueId=seoul-seongsu-gukbap")
 
-    await expect(page.getByTestId("venue-card-seoul-seongsu-gukbap")).toContainText("Older signals")
-    await page.getByTestId("venue-card-seoul-seongsu-gukbap").click()
     await expect(page.getByTestId("place-peek")).toContainText("Older signals")
+    await expect(page.getByTestId("place-peek")).toContainText("Hours pending")
+    await expect(page.getByTestId("place-peek").locator("[data-fact-freshness='stale']")).toHaveCount(2)
     await expect(page.getByTestId("place-peek")).not.toContainText("Updated today")
+    await page.getByTestId("place-details").click()
+    await expect(page.getByTestId("stale-facts-notice")).toBeVisible()
+    await expect(page.getByTestId("place-overlay").locator("[data-fact-freshness='stale']")).toHaveCount(5)
+
+    await page.goto("/ondo?city=seoul&view=list&open=1")
+    await expect(page.getByTestId("venue-list").locator("[data-testid^='venue-card-']")).toHaveCount(0)
+  })
+
+  test("future-dated source signals are not silently called recent", async ({ page }) => {
+    await page.clock.setFixedTime(new Date("2026-08-19T08:00:00+09:00"))
+    await seedGuest(page)
+    await page.goto("/ondo?city=seoul&view=list")
+    await expect(page.getByTestId("venue-card-seoul-seongsu-gukbap")).toContainText("Update pending")
   })
 })
 

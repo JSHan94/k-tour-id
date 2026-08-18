@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 
 test("PX-011 · VIS-FLOW-01 age gate truth", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-08-19T12:00:00+09:00"))
   await page.addInitScript(() => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "ko", guideSeen: true }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", persona: "korean_local", account: "ACC-GUEST", person: "PER-UNVERIFIED" }))

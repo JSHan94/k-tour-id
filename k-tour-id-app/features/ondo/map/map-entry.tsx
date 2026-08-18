@@ -41,7 +41,7 @@ const MAP_COPY = {
     now: "Now",
     dinner: "Dinner",
     late: "Late night",
-    nation: "Explore ONDO across Korea.",
+    nation: "Seoul and Busan first, with coverage growing across Korea.",
     seoul: "Neighborhoods heating up in Seoul",
     busan: "Busan starts with a smaller signal base",
     growing: "We’re growing signals in this area.",
@@ -71,7 +71,7 @@ const MAP_COPY = {
     now: "지금",
     dinner: "저녁",
     late: "야식",
-    nation: "한국의 ONDO를 둘러보세요.",
+    nation: "서울과 부산부터, 한국의 식음료 신호를 넓혀가고 있어요.",
     seoul: "서울에서 지금 뜨는 동네",
     busan: "부산은 작은 신호부터 시작해요",
     growing: "이 지역의 신호를 모으는 중이에요.",
@@ -134,7 +134,7 @@ function matchesFilters(venue: MapVenue, filters: DiscoveryFilters, locale: Loca
   if (query && !haystack.includes(query)) return false
   if (filters.hotOnly && (venue.ondoScore ?? 0) < 75) return false
   if (filters.calmOnly && (venue.ondoScore == null || venue.ondoScore >= 75)) return false
-  if (filters.openOnly && venue.openingStatus !== "open") return false
+  if (filters.openOnly && (venue.openingStatus !== "open" || ["stale", "unknown"].includes(currentFreshness(venue)))) return false
   if (filters.time === "late" && !venue.lateNight) return false
   return true
 }
@@ -531,11 +531,11 @@ export function MapEntry() {
 
       {viewMode === "map" ? (
         <>
-          <div className={styles.contextCard}>
+          {!selectedId ? <div className={styles.contextCard}>
             <span>{level === "nation" ? "KOREA · FOOD SIGNALS" : activeCity === "busan" ? "BUSAN · EARLY COVERAGE" : "SEOUL · LOCAL SIGNALS"}</span>
             <strong>{regionHeading(level, activeCity, locale)}</strong>
             {activeCity === "busan" ? <small>{copy.coverageSeed} · {MAP_REGIONS.find((region) => region.cityId === "busan")?.signalCount} {locale === "ko" ? "최근 신호" : "recent signals"}</small> : null}
-          </div>
+          </div> : null}
           <div className={styles.controls} aria-label={locale === "ko" ? "지도 제어" : "Map controls"}>
             <button type="button" onClick={() => setViewMode("list")} aria-label={copy.list}><List size={19} /></button>
             <button type="button" onClick={() => mapRef.current?.zoomIn()} aria-label={locale === "ko" ? "확대" : "Zoom in"}><Plus size={19} /></button>

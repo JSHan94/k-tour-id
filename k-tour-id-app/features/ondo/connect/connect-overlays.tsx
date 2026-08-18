@@ -16,14 +16,14 @@ import styles from "./connect.module.css"
 
 type ChatItem = { id: string; kind: "text" | "image"; text?: string; previewUrl?: string; status: MessageStatus }
 type StoredChatItem = Omit<ChatItem, "previewUrl">
-type TableOutcome = { feedbackSubmitted: boolean; reportReceipt: string | null; participantBlocked: boolean }
+type FeedbackReceipt = { helpful: boolean; respectful: boolean; privateNote: string | null; submittedAt: string }
+type TableOutcome = { feedbackSubmitted: boolean; feedbackReceipt: FeedbackReceipt | null; reportReceipt: string | null; reportReason: string | null; participantBlocked: boolean }
 
 const CHAT_SESSION_KEY = "ondo.chat.v2"
 const TABLE_OUTCOME_SESSION_KEY = "ondo.table-outcomes.v2"
-const chatMemory = new Map<string, ChatItem[]>()
 
 function readTableOutcome(tableId: string): TableOutcome {
-  const fallback = { feedbackSubmitted: false, reportReceipt: null, participantBlocked: false }
+  const fallback = { feedbackSubmitted: false, feedbackReceipt: null, reportReceipt: null, reportReason: null, participantBlocked: false }
   if (typeof window === "undefined") return fallback
   try {
     const outcomes = JSON.parse(window.sessionStorage.getItem(TABLE_OUTCOME_SESSION_KEY) ?? "{}") as Record<string, Partial<TableOutcome>>
@@ -45,8 +45,6 @@ function persistTableOutcome(tableId: string, outcome: TableOutcome) {
 }
 
 function readChatMessages(tableId: string): ChatItem[] {
-  const cached = chatMemory.get(tableId)
-  if (cached) return cached
   if (typeof window === "undefined") return []
   try {
     const all = JSON.parse(window.sessionStorage.getItem(CHAT_SESSION_KEY) ?? "{}") as Record<string, StoredChatItem[]>
@@ -58,7 +56,6 @@ function readChatMessages(tableId: string): ChatItem[] {
       all[tableId] = normalized
       window.sessionStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(all))
     }
-    chatMemory.set(tableId, normalized)
     return normalized
   } catch {
     return []
@@ -66,14 +63,13 @@ function readChatMessages(tableId: string): ChatItem[] {
 }
 
 function persistChatMessages(tableId: string, messages: ChatItem[]) {
-  chatMemory.set(tableId, messages)
   if (typeof window === "undefined") return
   try {
     const all = JSON.parse(window.sessionStorage.getItem(CHAT_SESSION_KEY) ?? "{}") as Record<string, StoredChatItem[]>
     all[tableId] = messages.map(({ previewUrl: _previewUrl, ...message }) => message)
     window.sessionStorage.setItem(CHAT_SESSION_KEY, JSON.stringify(all))
   } catch {
-    // Memory continuity remains available when browser storage is unavailable.
+    // The visible component state remains usable; nothing is retained beyond it.
   }
 }
 
@@ -99,6 +95,7 @@ function TableDetail({ tableId }: { tableId: string }) {
   )
   const membership = toCanonicalMembership(state.tableMembershipById[tableId])
   const runtime = table ? { ...initialTableRuntime(table, state.tableMembershipById[tableId]), failure } : null
+  const tableOutcome = readTableOutcome(tableId)
   const locale = state.locale
 
   useEffect(() => {
@@ -180,6 +177,8 @@ function TableDetail({ tableId }: { tableId: string }) {
             : locale === "ko" ? "성별·국적을 맞추지 않습니다. 장소, 시간과 사용 언어를 보고 자발적으로 참여해요." : "There is no gender or nationality matching. Join based on the place, time, and languages."}</span>
         </InlineNotice>
 
+        {tableOutcome.reportReceipt ? <InlineNotice tone="success"><Check size={18} /><span data-testid="table-report-receipt">{locale === "ko" ? "신고 접수" : "Report recorded"} · {tableOutcome.reportReason === "harassment" ? locale === "ko" ? "불쾌한 언행" : "Harassment" : tableOutcome.reportReason === "no_show" ? locale === "ko" ? "약속 불참" : "No-show" : locale === "ko" ? "기타" : "Other"} · <code>{tableOutcome.reportReceipt}</code></span></InlineNotice> : null}
+
         {unavailable ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{unavailableCopy} {locale === "ko" ? "근처 다른 Table을 확인해 주세요." : "Choose another nearby Table."}</span></InlineNotice> : null}
         {retryableFailureCopy ? <InlineNotice tone="danger"><AlertTriangle size={18} /><span>{retryableFailureCopy}</span></InlineNotice> : null}
 
@@ -222,8 +221,6 @@ function TableChat({ tableId }: { tableId: string }) {
   useEffect(() => () => {
     ownedObjectUrls.current.forEach((url) => URL.revokeObjectURL(url))
     ownedObjectUrls.current.clear()
-    const cached = chatMemory.get(tableId)
-    if (cached) chatMemory.set(tableId, cached.map(({ previewUrl: _previewUrl, ...message }) => message))
   }, [tableId])
 
   function updateMessages(update: (current: ChatItem[]) => ChatItem[]) {
@@ -235,11 +232,9 @@ function TableChat({ tableId }: { tableId: string }) {
   }
 
   function updateOutcome(update: Partial<TableOutcome>) {
-    setOutcome((current) => {
-      const next = { ...current, ...update }
-      persistTableOutcome(tableId, next)
-      return next
-    })
+    const next = { ...outcome, ...update }
+    persistTableOutcome(tableId, next)
+    setOutcome(next)
   }
 
   if (!table || !allowed) {
@@ -306,15 +301,19 @@ function TableChat({ tableId }: { tableId: string }) {
     if (helpful) events.push({ id: `feedback:${activeTable.id}`, kind: "contribution", subjectRef: "account:fixture", evidenceRef: `feedback:${activeTable.id}:2026-08-19`, occurredAt: "2026-08-19T22:01:00+09:00" })
     actions.recordActivityEvents(events)
     setFeedbackOpen(false)
-    updateOutcome({ feedbackSubmitted: true })
+    updateOutcome({
+      feedbackSubmitted: true,
+      feedbackReceipt: { helpful, respectful, privateNote: privateNote.trim() || null, submittedAt: "2026-08-19T22:01:00+09:00" },
+    })
     actions.notify(locale === "ko" ? "피드백을 분리된 활동 이력에 반영했어요." : "Feedback updated the separate activity histories.")
   }
 
   function submitReport() {
     if (!reportReason) return
     const receipt = `REPORT-${activeTable.id}-${Date.now().toString(36).toUpperCase()}`
-    updateOutcome({ reportReceipt: receipt, participantBlocked: blockParticipant })
+    updateOutcome({ reportReceipt: receipt, reportReason, participantBlocked: blockParticipant })
     setConfirm(null)
+    actions.setSurface({ kind: "table", tableId })
     actions.notify(blockParticipant
       ? locale === "ko" ? "신고를 접수하고 이 참가자를 차단했어요." : "Report recorded and this participant was blocked."
       : locale === "ko" ? "신고를 접수했어요." : "Report recorded.")
@@ -354,7 +353,7 @@ function TableChat({ tableId }: { tableId: string }) {
               <button type="button" className={styles.primary} onClick={submitFeedback} disabled={helpful == null || respectful == null} data-testid="feedback-submit">{locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button>
             </section>
           ) : null}
-          {outcome.feedbackSubmitted ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "피드백을 남겼어요. 종합 점수는 만들지 않아요." : "Feedback recorded. No overall score was created."}</span></InlineNotice> : null}
+          {outcome.feedbackSubmitted ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "피드백을 남겼어요. 종합 점수는 만들지 않아요." : "Feedback recorded. No overall score was created."}{outcome.feedbackReceipt?.privateNote ? locale === "ko" ? " 비공개 메모는 이 기기 세션에만 남아요." : " The private note stays only in this device session." : ""}</span></InlineNotice> : null}
           <LocalPhotoPicker locale={locale} purpose="chat_image" value={photo} onChange={setPhoto} disabled={photo?.state === "UPL-SENDING"} />
           {photo ? <button type="button" className={styles.secondary} onClick={sendImage} disabled={photo.state === "UPL-SENDING"}><ImagePlus size={17} /> {photo.state === "UPL-FAILED" ? locale === "ko" ? "사진 다시 보내기" : "Retry photo" : locale === "ko" ? "사진 보내기" : "Send photo"}</button> : null}
           <div className={styles.composer}>

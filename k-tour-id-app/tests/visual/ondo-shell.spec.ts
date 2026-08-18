@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 
 test("ONDO shell keeps the map, place peek, After 19, and navigation inside the viewport", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-08-19T12:00:00+09:00"))
   await page.addInitScript(() => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({
