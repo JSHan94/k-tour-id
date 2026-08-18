@@ -181,8 +181,7 @@ function applyReturnTo(state: OndoState, envelope: ReturnToEnvelope): OndoState 
       gate: consumed,
       gateState: "idle",
       surface: { kind: "table", tableId: envelope.tableId },
-      tableMembershipById: { ...state.tableMembershipById, [envelope.tableId]: "confirmed" },
-      unreadTables: state.unreadTables + 1,
+      tableMembershipById: { ...state.tableMembershipById, [envelope.tableId]: "requesting" },
     }
   }
   if (envelope.cta === "OPEN_CHAT" && envelope.tableId) {
@@ -318,7 +317,15 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     setAfter19: (after19) => setState((current) => ({ ...current, after19 })),
     setAutoNight: (autoNight) => setState((current) => ({ ...current, autoNight })),
     setSaveStatus: (venueId, status) => setState((current) => ({ ...current, saveStatusByVenue: { ...current.saveStatusByVenue, [venueId]: status } })),
-    setMembership: (tableId, status) => setState((current) => ({ ...current, tableMembershipById: { ...current.tableMembershipById, [tableId]: status } })),
+    setMembership: (tableId, status) => setState((current) => {
+      const previous = current.tableMembershipById[tableId] ?? "none"
+      const becomesConfirmed = status === "confirmed" && previous !== "confirmed"
+      return {
+        ...current,
+        tableMembershipById: { ...current.tableMembershipById, [tableId]: status },
+        unreadTables: becomesConfirmed ? current.unreadTables + 1 : current.unreadTables,
+      }
+    }),
     updateReputation: (next) => setState((current) => ({ ...current, reputation: { ...current.reputation, ...next } })),
     recordActivityEvents: (events) => setState((current) => {
       const applied = applyActivityEvents(current.reputation, current.acceptedActivityEventKeys, events)
