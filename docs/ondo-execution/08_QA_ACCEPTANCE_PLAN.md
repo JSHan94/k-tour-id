@@ -365,6 +365,9 @@ artifacts/qa/
 | `PX-020` | `VIS-RWD-02` | 390×844 |
 | `PX-021` | `VIS-RWD-03` | 430×932 |
 | `PX-022` | `VIS-RWD-04` | 1440×900 |
+| `PX-023` | `VIS-CONNECT-01` | confirmed Table chat + local image/feedback entry |
+| `PX-024` | `VIS-COMMERCE-01` | simulated checkout receipt + settlement boundary |
+| `PX-025` | `VIS-LABS-01` | separated assets + simulated bridge/trait truth |
 
 ### Determinism
 

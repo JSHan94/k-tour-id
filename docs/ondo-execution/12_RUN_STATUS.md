@@ -1,7 +1,7 @@
 # ONDO Autonomous Run Status
 
 최종 갱신: `2026-08-19`
-현재 Gate: `BUILDING`
+현재 Gate: `CANDIDATE APPROVED · DEPLOYMENT PENDING`
 Clock: `STARTED · 2026-08-19 04:15 KST`
 Release target: `ONDO Frontend Demo Candidate v2`
 
@@ -26,9 +26,10 @@ Release target: `ONDO Frontend Demo Candidate v2`
 | Baseline screenshots | CAPTURED · 390×844 / 1440×1000 · guide + map · staging hashes in manifest |
 | Durable evidence manifest | Initialized · `./evidence/RUN-20260819-0415-KST/manifest.md` |
 | Playwright harness | Installed/configured · Chromium · contract suite 16/16 PASS |
-| QA Loop 1 | Not started |
-| QA Loop 2 | Not started |
-| Deployment | Not authorized / Not started |
+| QA Loop 1 | PASS · fix through `beb79b7` |
+| QA Loop 2 | PASS · fix through `8b67acb` |
+| QA Loop 3 | PASS · focused closure `9678b2b` · S0/S1/S2 0 |
+| Deployment | Authorized · Sites publish pending |
 
 실행팩은 동결됐고 구현 clock이 시작됐다. 세 Worker는 같은 SPEC SHA와 shared-contract SHA에서 병렬 작업한다. 기존 `/ondo`는 첫 meaningful preview Gate 전까지 rollback 가능한 fallback으로 유지한다.
 
@@ -78,18 +79,18 @@ Release target: `ONDO Frontend Demo Candidate v2`
 
 ### CANDIDATE
 
-- [ ] 19개 REQ 최종 상태 기록
-- [ ] 핵심 E2E 통과
-- [ ] typecheck 통과
-- [ ] production build 통과
-- [ ] visible dead CTA 0
-- [ ] console error 0
-- [ ] 지도 실패 목록 fallback
-- [ ] 핵심 KO/EN viewport 잘림 0
-- [ ] simulation truth violation 0
-- [ ] QA 1·2 기록과 fix commit
-- [ ] Critical/High 0
-- [ ] As-built 완료
+- [x] 19개 REQ 최종 상태 기록
+- [x] 핵심 E2E 통과 · mobile 79/79 · desktop 79/79
+- [x] typecheck 통과
+- [x] production build 통과
+- [x] visible dead CTA 0
+- [x] console error 0
+- [x] 지도 실패 목록 fallback
+- [x] 핵심 KO/EN viewport 잘림 0
+- [x] simulation truth violation 0
+- [x] QA 1·2·3 기록과 fix commit
+- [x] Critical/High 0
+- [x] As-built 완료
 
 ---
 
@@ -99,17 +100,15 @@ Release target: `ONDO Frontend Demo Candidate v2`
 |---|---|---|---|---|---|---|
 | Spec | 2026-08-19 | 2026-08-19 04:15 KST | Root + 3 reviewers | SPEC READY · Sev-1 0 · Sev-2 0 | immutable audit `247a8cf77091f6c5fff40ebde0154c70fc8a463c39f60652267604ef198aebc2` | — |
 | Baseline | 2026-08-19 04:15 KST | 2026-08-19 04:26 KST | Root | PASS · typecheck/build/Sites build/4 screenshots | shared scaffold `a640365`; evidence `RUN-20260819-0415-KST` | — |
-| Build A · Map | 2026-08-19 04:27 KST | — | Map Agent | In progress | `codex/ondo-map-20260819` | — |
-| Build B · Identity | 2026-08-19 04:27 KST | — | Identity Agent | In progress | `codex/ondo-identity-20260819` | — |
+| Build A · Map | 2026-08-19 04:27 KST | 2026-08-19 | Map Agent | Accepted | `b68e3ae`, `79e728d` | — |
+| Build B · Identity | 2026-08-19 04:27 KST | 2026-08-19 | Identity Agent | Accepted | `9622792`, `302b67b` | — |
 | Build C · Connect | 2026-08-19 04:27 KST | 2026-08-19 04:49 KST | Connect Agent | Accepted into integration · typecheck + contract 16/16 PASS | `d772a21`, `391958a` | route-level E2E waits for Root wiring |
-| Integration 1 | — | — | Root | Not started | — | — |
-| QA 1 | — | — | Cross-review | Not started | — | — |
-| Fix 1 | — | — | Owners | Not started | — | — |
-| Integration 2 | — | — | Root | Not started | — | — |
-| QA 2 | — | — | Adversarial | Not started | — | — |
-| Final Fix/Rollback | — | — | Root + Owner | Not started | — | — |
-| As-built | — | — | Root | Not started | — | — |
-| Quality Extension 1+ | — | — | Root + cross-reviewers | Starts automatically if Candidate Gate fails | — | — |
+| Integration 1 | 2026-08-19 | 2026-08-19 | Root | PASS | `dde0008` | — |
+| QA 1 | 2026-08-19 | 2026-08-19 | Cross-review | PASS · S0/S1 0 after fix | `beb79b7` | — |
+| QA 2 | 2026-08-19 | 2026-08-19 | Adversarial | PASS · S0/S1 0 after fix | `8b67acb`, `b2ed025` | — |
+| QA 3 | 2026-08-19 | 2026-08-19 06:38 KST | 3 independent reviewers | PASS · focused closure S0/S1/S2 0 | `9678b2b`; evidence manifest | — |
+| Final full suite | 2026-08-19 | 2026-08-19 06:38 KST | Root | E2E 158/158 · visual 32/32 · contract 16/16 · builds PASS | `qa-summary.md` | — |
+| As-built | 2026-08-19 | 2026-08-19 | Root | Complete | `13_AS_BUILT.md` | — |
 
 ---
 
@@ -173,7 +172,7 @@ Rollback commit or feature flag:
 
 ## 7. Final Release Decision
 
-현재 판정: `NOT EVALUATED`
+현재 판정: `CANDIDATE APPROVED`
 
 가능한 값:
 

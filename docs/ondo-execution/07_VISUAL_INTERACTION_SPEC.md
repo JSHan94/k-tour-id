@@ -675,6 +675,9 @@ visible CTA가 눌러도 상태가 바뀌지 않으면 Candidate blocker다.
 | `PX-020` | `VIS-RWD-02` | `SCN-001-GUEST-DISCOVER` | 390×844 | KO | primary mobile |
 | `PX-021` | `VIS-RWD-03` | `SCN-001-GUEST-DISCOVER` | 430×932 | EN | large mobile |
 | `PX-022` | `VIS-RWD-04` | `SCN-001-GUEST-DISCOVER` | 1440×900 | EN | centered shell, no review rail |
+| `PX-023` | `VIS-CONNECT-01` | `SCN-004-TABLE-CHAT` | 390×844 / 1440×1000 | EN | confirmed Table chat, local image preview, feedback entry |
+| `PX-024` | `VIS-COMMERCE-01` | `SCN-005-CHECKOUT-LABS` | 390×844 / 1440×1000 | EN | simulated checkout receipt, KRW price, OOKRW settlement boundary |
+| `PX-025` | `VIS-LABS-01` | `SCN-010-LABS-BRIDGE` | 390×844 / 1440×1000 | EN | separated assets, simulated bridge, merchant trait truth |
 
 ### Pass criteria
 
