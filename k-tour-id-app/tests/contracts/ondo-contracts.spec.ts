@@ -125,7 +125,8 @@ test("CONTRACT-DATA-015 truth and isSimulation remain aligned", () => {
 })
 
 test("CONTRACT-DATA-016 onboarding fixtures contain no verification mutation", () => {
-  const onboarding = { persona: "short_term", account: "ACC-GUEST", person: "PER-UNVERIFIED", age: "AGE-UNVERIFIED" }
+  const onboarding = { persona: "short_term", discoveryPreferences: ["late", "calm"], account: "ACC-GUEST", person: "PER-UNVERIFIED", age: "AGE-UNVERIFIED" }
   expect(onboarding).toMatchObject({ account: "ACC-GUEST", person: "PER-UNVERIFIED", age: "AGE-UNVERIFIED" })
+  expect(onboarding.discoveryPreferences).toEqual(["late", "calm"])
   expect(() => createFixtureRegistry({ neighborhoods: [], venues: [] as Venue[], tables: [] as PulseTable[] })).not.toThrow()
 })

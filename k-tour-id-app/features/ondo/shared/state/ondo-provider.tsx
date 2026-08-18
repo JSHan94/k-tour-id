@@ -6,6 +6,7 @@ import type {
   AccountStatus,
   After19Mode,
   AgeStatus,
+  DiscoveryPreference,
   GateKind,
   GateState,
   Locale,
@@ -32,6 +33,7 @@ export type OndoState = {
   surface: Surface
   onboarding: "ONB-NEW" | "ONB-IN-PROGRESS" | "ONB-COMPLETE"
   persona: Persona | null
+  discoveryPreferences: DiscoveryPreference[]
   guideSeen: boolean
   account: AccountStatus
   person: PersonStatus
@@ -73,6 +75,7 @@ type OndoActions = {
   setTab(tab: OndoTab): void
   setSurface(surface: Surface): void
   setPersona(persona: Persona): void
+  setDiscoveryPreferences(preferences: DiscoveryPreference[]): void
   beginOnboarding(): void
   completeOnboarding(): void
   markGuideSeen(): void
@@ -102,6 +105,7 @@ const initialState: OndoState = {
   surface: { kind: "map" },
   onboarding: "ONB-NEW",
   persona: null,
+  discoveryPreferences: [],
   guideSeen: false,
   account: "ACC-GUEST",
   person: "PER-UNVERIFIED",
@@ -130,6 +134,7 @@ const initialState: OndoState = {
 
 const LOCAL_KEY = "ondo.preferences.v3"
 const SESSION_KEY = "ondo.session.v3"
+const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "diet"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
 function gateSatisfied(state: OndoState, gate: GateKind) {
@@ -196,6 +201,9 @@ export function OndoProvider({ children }: { children: ReactNode }) {
         savedVenueIds: Array.isArray(local.savedVenueIds) ? local.savedVenueIds : [],
         onboarding: session.onboarding === "ONB-COMPLETE" ? "ONB-COMPLETE" : "ONB-NEW",
         persona: session.persona ?? null,
+        discoveryPreferences: Array.isArray(local.discoveryPreferences)
+          ? local.discoveryPreferences.filter((item): item is DiscoveryPreference => DISCOVERY_PREFERENCES.has(item as DiscoveryPreference))
+          : [],
         account: session.account ?? "ACC-GUEST",
         person: session.person ?? "PER-UNVERIFIED",
         age: session.age ?? "AGE-UNVERIFIED",
@@ -225,6 +233,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       guideSeen: state.guideSeen,
       autoNight: state.autoNight,
       savedVenueIds: state.savedVenueIds,
+      discoveryPreferences: state.discoveryPreferences,
     }))
     window.sessionStorage.setItem(SESSION_KEY, JSON.stringify({
       onboarding: state.onboarding,
@@ -253,6 +262,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     setTab: (tab) => setState((current) => ({ ...current, tab, surface: tab === "ondo" ? { kind: "map" } : current.surface })),
     setSurface: (surface) => setState((current) => ({ ...current, surface })),
     setPersona: (persona) => setState((current) => ({ ...current, persona })),
+    setDiscoveryPreferences: (discoveryPreferences) => setState((current) => ({ ...current, discoveryPreferences })),
     beginOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-IN-PROGRESS" })),
     completeOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } })),
     markGuideSeen: () => setState((current) => ({ ...current, guideSeen: true })),
@@ -302,7 +312,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     notify,
     resetSession: () => {
       window.sessionStorage.removeItem(SESSION_KEY)
-      setState((current) => ({ ...initialState, locale: current.locale, guideSeen: current.guideSeen, autoNight: current.autoNight, savedVenueIds: current.savedVenueIds, hydrated: true }))
+      setState((current) => ({ ...initialState, locale: current.locale, guideSeen: current.guideSeen, autoNight: current.autoNight, savedVenueIds: current.savedVenueIds, discoveryPreferences: current.discoveryPreferences, hydrated: true }))
     },
   }), [notify])
 
