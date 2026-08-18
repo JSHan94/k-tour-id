@@ -18,7 +18,7 @@ Release target: `ONDO Frontend Demo Candidate v2`
 | Execution policy | Initial 9h Wave + automatic 2h Quality Extension until Candidate Gate |
 | Latest read-only audit SHA / time | immutable spec docs `00`~`11` + `13` checksum `247a8cf77091f6c5fff40ebde0154c70fc8a463c39f60652267604ef198aebc2` · `2026-08-19 04:15:14 KST`; reviewer full-pack snapshot `124f861a270a49538aca0598752c0350ca0f70b1017ce58ab535967618dcf246` |
 | SPEC SHA | `53a431d1b4c70332b47ab02aa420c812ab883980` |
-| Current shared-contract SHA | `655fa4177b1b0d47993861aef0b0a08fedfc5715` |
+| Current shared-contract SHA | `a4232fa79b8ae2a037fc011c44bb616d75e1cccd` |
 | Integration branch | `codex/ondo-integration-20260819` |
 | Integration worktree | protected run worktree · `/tmp/ondo-run-20260819-yWyHW2/integration` |
 | Baseline typecheck | PASS · Node `25.9.0`, pnpm `10.8.0` |
@@ -119,6 +119,7 @@ Release target: `ONDO Frontend Demo Candidate v2`
 |---|---|---|---|---|---|---|
 | CCR-001 | Connect Agent | ActivityEvent → reputation seam | first mission/meetup 중복 적용 방지 및 producer→reducer 경계 보존 | Root approved | `44f65b1` | contract 16/16 PASS · Worker cherry-pick requested |
 | CCR-002 | Root review | Public profile consent | 기본 언어가 명시적 동의 없이 공개되는 상태를 차단하고 세션 migration 정규화 | Root approved | `655fa41` | typecheck + contract 16/16 PASS · Worker cherry-pick requested |
+| CCR-003 | Identity Agent / Root review | Onboarding → discovery preferences | 선택 UI가 화면 안에서 소실되지 않고 초기 지도 필터로 실제 연결되도록 typed state·local persistence 추가 | Root approved | `a4232fa` | typecheck + contract 16/16 PASS · Identity/Map cherry-pick requested |
 
 Severity 정의는 [QA Plan](./08_QA_ACCEPTANCE_PLAN.md)을 따른다.
 
