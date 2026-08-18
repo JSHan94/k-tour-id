@@ -363,7 +363,14 @@ export function MapEntry() {
     }
 
     if (level === "nation") MAP_REGIONS.forEach((region) => addMarker(region, "region"))
-    else if (level === "city") MAP_NEIGHBORHOODS.filter((item) => !activeCity || item.cityId === activeCity).forEach((item) => addMarker(item, "neighborhood"))
+    else if (level === "city") {
+      // Keep source coordinates exact. At city zoom, use a representative subset
+      // instead of visually displacing overlapping Euljiro and Seongsu markers.
+      MAP_NEIGHBORHOODS
+        .filter((item) => !activeCity || item.cityId === activeCity)
+        .filter((item) => activeCity !== "seoul" || item.id === "seongsu" || item.id === "mangwon")
+        .forEach((item) => addMarker(item, "neighborhood"))
+    }
     else filteredVenues.forEach((venue) => addMarker(venue, "venue"))
   }, [actions, activeCity, filteredVenues, level, locale, selectedId, zoom])
 

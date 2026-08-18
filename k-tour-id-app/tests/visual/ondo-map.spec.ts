@@ -5,6 +5,13 @@ async function ready(page: Page, locale: "en" | "ko" = "en") {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale, guideSeen: true, autoNight: true, savedVenueIds: [] }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-GUEST" }))
   }, { locale })
+  await page.addInitScript(() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style")
+      style.textContent = "nextjs-portal { display: none !important; }"
+      document.head.append(style)
+    }, { once: true })
+  })
 }
 
 test("VIS-MAP-01 nationwide ONDO", async ({ page }) => {

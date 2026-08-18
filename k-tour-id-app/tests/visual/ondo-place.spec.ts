@@ -5,6 +5,13 @@ test.beforeEach(async ({ page }) => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [] }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-GUEST" }))
   })
+  await page.addInitScript(() => {
+    window.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style")
+      style.textContent = "nextjs-portal { display: none !important; }"
+      document.head.append(style)
+    }, { once: true })
+  })
 })
 
 test("VIS-MAP-03 venue peek", async ({ page }) => {

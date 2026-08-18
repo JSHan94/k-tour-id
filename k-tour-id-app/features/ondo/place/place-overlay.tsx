@@ -7,9 +7,11 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
+  CreditCard,
   Heart,
   Info,
   MapPin,
+  MessageSquarePlus,
   Navigation,
   Users,
   X,
@@ -33,6 +35,9 @@ const PLACE_COPY = {
     directions: "Directions",
     details: "View details",
     table: "View Tables here",
+    actionTitle: "Continue at this place",
+    signal: "Share a visit signal",
+    checkout: "Checkout simulation",
     accountHint: "Create an account to save this place. You’ll return here afterwards; person verification is not required.",
     close: "Close place",
     back: "Back to place summary",
@@ -54,6 +59,9 @@ const PLACE_COPY = {
     directions: "길찾기",
     details: "상세 보기",
     table: "이 장소의 Table 보기",
+    actionTitle: "이 장소에서 이어서 하기",
+    signal: "방문 신호 남기기",
+    checkout: "결제 시뮬레이션",
     accountHint: "저장하려면 계정이 필요해요. 계정을 만든 뒤 이 장소로 돌아오며, 신원 확인은 아직 필요하지 않아요.",
     close: "장소 닫기",
     back: "장소 요약으로 돌아가기",
@@ -145,6 +153,14 @@ export function PlaceOverlay() {
     actions.setTab("tables")
   }
 
+  function showLocalSignal() {
+    actions.setSurface({ kind: "local_signal", venueId: selectedVenueId })
+  }
+
+  function showCheckout() {
+    actions.setSurface({ kind: "checkout", venueId: selectedVenueId })
+  }
+
   if (!expanded) {
     return (
       <aside className={styles.peek} role="dialog" aria-modal="false" aria-label={venue.name[locale]} data-testid="place-peek">
@@ -187,6 +203,14 @@ export function PlaceOverlay() {
           <h2 id="place-title">{venue.name[locale]}</h2>
           <p className={styles.englishName}>{venue.name[locale === "en" ? "ko" : "en"]}</p>
           <p className={styles.address}><MapPin size={15} />{venue.address[locale]}</p>
+
+          <section className={styles.placeActions} aria-labelledby="place-actions-title">
+            <h3 id="place-actions-title">{copy.actionTitle}</h3>
+            <div>
+              <button type="button" onClick={showLocalSignal} data-testid="venue-local-signal"><MessageSquarePlus size={18} /><span>{copy.signal}</span><ChevronRight size={16} /></button>
+              <button type="button" onClick={showCheckout} data-testid="venue-checkout"><CreditCard size={18} /><span>{copy.checkout}</span><ChevronRight size={16} /></button>
+            </div>
+          </section>
 
           <section className={styles.ondoCard} aria-labelledby="place-ondo-title">
             <div className={styles.score} style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}><span>ONDO</span><b>{venue.ondoScore}</b></div>
