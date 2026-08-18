@@ -3,7 +3,7 @@
 RUN_ID: `RUN-20260819-0415-KST`  
 SOURCE_SHA: `1ca95f0cb5d1da006bbefa6388c6ecd3ad5d2267`  
 SPEC_SHA: `53a431d1b4c70332b47ab02aa420c812ab883980`  
-CURRENT_SHARED_SHA: `44f65b1a0cc8eafe88ec9f9c4db4940fcb7650da`  
+CURRENT_SHARED_SHA: `655fa4177b1b0d47993861aef0b0a08fedfc5715`
 Integration branch: `codex/ondo-integration-20260819`  
 Execution started: `2026-08-19 04:15 KST`  
 Gate source of truth: this manifest. `k-tour-id-app/artifacts/qa/**` is staging only.
