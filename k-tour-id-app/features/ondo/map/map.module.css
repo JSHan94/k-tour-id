@@ -97,7 +97,7 @@
 .legendGrid small { margin-top: 2px; color: var(--muted); font-size: 10px; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
-.root :global(.leaflet-container) { position: relative; overflow: hidden; outline: 0; touch-action: none; -webkit-tap-highlight-color: transparent; }
+.root :global(.leaflet-container) { overflow: hidden; outline: 0; touch-action: none; -webkit-tap-highlight-color: transparent; }
 .root :global(.leaflet-pane), .root :global(.leaflet-tile), .root :global(.leaflet-marker-icon), .root :global(.leaflet-marker-shadow), .root :global(.leaflet-tile-container), .root :global(.leaflet-pane > svg), .root :global(.leaflet-pane > canvas), .root :global(.leaflet-zoom-box), .root :global(.leaflet-image-layer), .root :global(.leaflet-layer) { position: absolute; top: 0; left: 0; }
 .root :global(.leaflet-tile), .root :global(.leaflet-marker-icon), .root :global(.leaflet-marker-shadow) { user-select: none; -webkit-user-drag: none; }
 .root :global(.leaflet-tile) { visibility: hidden; filter: sepia(.1) saturate(.82) brightness(1.04) contrast(.92); }

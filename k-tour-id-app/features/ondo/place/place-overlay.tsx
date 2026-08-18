@@ -36,6 +36,7 @@ const PLACE_COPY = {
     accountHint: "Create an account to save this place. You’ll return here afterwards; person verification is not required.",
     close: "Close place",
     back: "Back to place summary",
+    dismissDetails: "Dismiss place details",
     open: "Open",
     closed: "Closed",
     unknown: "Hours pending",
@@ -56,6 +57,7 @@ const PLACE_COPY = {
     accountHint: "저장하려면 계정이 필요해요. 계정을 만든 뒤 이 장소로 돌아오며, 신원 확인은 아직 필요하지 않아요.",
     close: "장소 닫기",
     back: "장소 요약으로 돌아가기",
+    dismissDetails: "장소 상세 닫기",
     open: "영업 중",
     closed: "영업 종료",
     unknown: "영업 정보 확인 중",
@@ -168,7 +170,7 @@ export function PlaceOverlay() {
 
   return (
     <div className={styles.fullLayer} role="dialog" aria-modal="true" aria-labelledby="place-title" data-testid="place-overlay">
-      <button type="button" className={styles.backdrop} onClick={() => setExpanded(false)} aria-label={copy.back} tabIndex={-1} />
+      <button type="button" className={styles.backdrop} onClick={() => setExpanded(false)} aria-label={copy.dismissDetails} tabIndex={-1} />
       <article ref={detailRef} className={styles.detail}>
         <div className={styles.hero}>
           <img src={venue.image} alt="" />
