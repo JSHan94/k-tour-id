@@ -93,7 +93,7 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
           <section className={styles.receipt} data-testid="checkout-receipt">
             <Check size={22} />
             <div><strong>{locale === "ko" ? "시뮬레이션이 완료됐어요." : "Simulation complete."}</strong><span>{locale === "ko" ? "실제 결제는 발생하지 않았습니다." : "No real payment occurred."}</span></div>
-            <code>{checkout.receiptId}</code>
+            <code>{locale === "ko" ? "미리보기 참조" : "Preview reference"} · SIM-SG01</code>
           </section>
         ) : null}
 
