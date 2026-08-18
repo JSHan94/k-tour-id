@@ -8,13 +8,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: "ONDO — Where locals eat now",
     description: "See which Korean neighborhoods are heating up, then find a meal you can actually enjoy.",
-    images: [{ url: "/og-ondo.png", width: 1200, height: 630, alt: "ONDO food heat map of Korea" }],
+    images: [{ url: "/og-ondo-v2.png", width: 1731, height: 909, alt: "ONDO food heat signals across a modern Korean map" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "ONDO — Where locals eat now",
     description: "Fresh local food signals across Korea.",
-    images: ["/og-ondo.png"],
+    images: ["/og-ondo-v2.png"],
   },
 }
 
