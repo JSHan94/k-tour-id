@@ -54,11 +54,14 @@ const COPY = {
     officialPlaces: "official place records",
     previewPlaces: "preview signal places",
     inputSignals: "input signals",
-    confidence: "weighted confidence",
+    confidence: "illustrative confidence band",
     officialShort: "official",
     previewShort: "preview",
     inputShort: "inputs",
-    confidenceShort: "confidence",
+    confidenceShort: "preview band",
+    confidenceStrong: "Strong",
+    confidenceModerate: "Moderate",
+    confidenceLimited: "Limited",
     snapshot: "Aug 19 snapshot",
     simulated: "Simulated",
     clusterKey: "Places",
@@ -99,11 +102,14 @@ const COPY = {
     officialPlaces: "개 공식 장소 기록",
     previewPlaces: "개 프리뷰 신호 장소",
     inputSignals: "개 입력 신호",
-    confidence: "가중 신뢰도",
+    confidence: "예시 신뢰 구간",
     officialShort: "공식",
     previewShort: "프리뷰",
     inputShort: "입력",
-    confidenceShort: "신뢰도",
+    confidenceShort: "프리뷰 구간",
+    confidenceStrong: "강함",
+    confidenceModerate: "보통",
+    confidenceLimited: "제한적",
     snapshot: "8월 19일 스냅샷",
     simulated: "시뮬레이션",
     clusterKey: "공식 장소",
@@ -202,6 +208,13 @@ function cityPulse(cityId: CityId) {
   }
 }
 
+function previewConfidenceBand(value: number | null, locale: Locale) {
+  const copy = COPY[locale]
+  if (value !== null && value >= 0.8) return copy.confidenceStrong
+  if (value !== null && value >= 0.65) return copy.confidenceModerate
+  return copy.confidenceLimited
+}
+
 function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: CityId): void }) {
   const copy = COPY[locale]
   return (
@@ -230,7 +243,7 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
               data-signal-truth={region.truth}
               data-computed-at={region.computedAt ?? undefined}
               onClick={() => onSelect(cityId)}
-              aria-label={`${CITY[cityId].label[locale]} · ${region.officialVenueCount} ${copy.officialPlaces} · ${region.signalVenueCount} ${copy.previewPlaces} · ${region.signalCount} ${copy.inputSignals} · ${Math.round((region.confidence ?? 0) * 100)}% ${copy.confidence} · ${copy.simulated} ONDO ${region.ondoScore ?? "—"}`}
+              aria-label={`${CITY[cityId].label[locale]} · ${region.officialVenueCount} ${copy.officialPlaces} · ${region.signalVenueCount} ${copy.previewPlaces} · ${region.signalCount} ${copy.inputSignals} · ${previewConfidenceBand(region.confidence, locale)} ${copy.confidence} · ${copy.simulated} ONDO ${region.ondoScore ?? "—"}`}
             >
               <i style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{region.ondoScore ?? "—"}</i>
               <span>
@@ -244,7 +257,7 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
       <aside className={styles.cityTruthLegend} data-testid="ondo-b-city-truth-legend">
         {(["seoul", "busan"] as const).map((cityId) => {
           const region = cityPulse(cityId)
-          return <div key={cityId}><strong>{CITY[cityId].label[locale]}</strong><span>{region.officialVenueCount} {copy.officialShort} · {region.signalVenueCount} {copy.previewShort}</span><small>{region.signalCount} {copy.inputShort} · {Math.round((region.confidence ?? 0) * 100)}% {copy.confidenceShort}</small><small>{copy.snapshot} · {copy.simulated}</small></div>
+          return <div key={cityId}><strong>{CITY[cityId].label[locale]}</strong><span>{region.officialVenueCount} {copy.officialShort} · {region.signalVenueCount} {copy.previewShort}</span><small>{region.signalCount} {copy.inputShort} · {previewConfidenceBand(region.confidence, locale)} {copy.confidenceShort}</small><small>{copy.snapshot} · {copy.simulated}</small></div>
         })}
       </aside>
       <footer><span />{copy.source}</footer>

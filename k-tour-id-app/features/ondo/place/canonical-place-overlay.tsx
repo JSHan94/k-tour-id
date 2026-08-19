@@ -38,7 +38,10 @@ const COPY = {
     noEnglish: "Official English name unavailable · Korean source name shown",
     contributed: "Your visit signal is recorded. More local signals are needed before an ONDO score is calculated.",
     signalCount: "preview signals",
-    confidence: "confidence",
+    confidence: "Preview signal base",
+    confidenceStrong: "Strong · Simulated",
+    confidenceModerate: "Moderate · Simulated",
+    confidenceLimited: "Limited · Simulated",
     freshness: "Freshness",
     contributionIncluded: "Your session signal is recorded separately; the preview score is not recalculated.",
     after19Eyebrow: "AFTER 19 · PREVIEW",
@@ -79,7 +82,10 @@ const COPY = {
     noEnglish: "공식 영문명 미제공 · 공식 한글명 표시",
     contributed: "내 방문 신호가 기록됐어요. ONDO 점수를 산출하려면 로컬 신호가 더 필요해요.",
     signalCount: "개 프리뷰 신호",
-    confidence: "신뢰도",
+    confidence: "프리뷰 신호 기반",
+    confidenceStrong: "강함 · 시뮬레이션",
+    confidenceModerate: "보통 · 시뮬레이션",
+    confidenceLimited: "제한적 · 시뮬레이션",
     freshness: "최신성",
     contributionIncluded: "내 세션 신호는 별도로 기록되며 프리뷰 점수는 다시 계산하지 않아요.",
     after19Eyebrow: "AFTER 19 · 프리뷰",
@@ -124,6 +130,7 @@ export function CanonicalPlaceOverlay() {
   const signal = venueId ? B_DEMO_SIGNAL_BY_VENUE_ID.get(venueId) : undefined
   const locale = state.locale
   const copy = COPY[locale]
+  const confidenceBand = signal && signal.confidence >= 0.8 ? copy.confidenceStrong : signal && signal.confidence >= 0.65 ? copy.confidenceModerate : copy.confidenceLimited
 
   useEffect(() => {
     setExpanded(false)
@@ -260,7 +267,7 @@ export function CanonicalPlaceOverlay() {
 
           <section className={styles.signalDetail} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
             <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
-            <div><small>{signal ? copy.simulated : "ONDO"}</small><h3>{signal ? HEAT_LABELS[locale][signal.level] : copy.signalPending}</h3><p>{signal ? signal.reason[locale] : contributed ? copy.contributed : copy.signalPendingBody}</p>{signal ? <dl className={styles.signalEvidence}><div><dt>{copy.signalCount}</dt><dd>{signal.signalCount}</dd></div><div><dt>{copy.confidence}</dt><dd>{Math.round(signal.confidence * 100)}%</dd></div><div><dt>{copy.freshness}</dt><dd>{signal.freshness[locale]}</dd></div></dl> : null}{signal && contributed ? <p className={styles.contributionNote}>{copy.contributionIncluded}</p> : null}</div>
+            <div><small>{signal ? copy.simulated : "ONDO"}</small><h3>{signal ? HEAT_LABELS[locale][signal.level] : copy.signalPending}</h3><p>{signal ? signal.reason[locale] : contributed ? copy.contributed : copy.signalPendingBody}</p>{signal ? <dl className={styles.signalEvidence}><div><dt>{copy.signalCount}</dt><dd>{signal.signalCount}</dd></div><div><dt>{copy.confidence}</dt><dd>{confidenceBand}</dd></div><div><dt>{copy.freshness}</dt><dd>{signal.freshness[locale]}</dd></div></dl> : null}{signal && contributed ? <p className={styles.contributionNote}>{copy.contributionIncluded}</p> : null}</div>
           </section>
 
           {signal?.after19 ? (

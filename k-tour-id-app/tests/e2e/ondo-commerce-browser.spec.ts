@@ -47,7 +47,7 @@ test("@core FL-004 checkout success does not create a stamp; a separate unique v
   await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "9")
   await page.getByTestId("visit-proof-check").click()
   await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "10")
-  await expect(page.getByTestId("checkout-overlay")).toContainText("A unique proof from this on-site visit recorded your tenth stamp.")
+  await expect(page.getByTestId("checkout-overlay")).toContainText("A unique simulated visit fixture recorded your tenth stamp. It is not real on-site evidence.")
 })
 
 test("FL-004 checkout cancel and decline keep receipts and stamps unchanged", async ({ page }) => {
@@ -76,5 +76,5 @@ test("FL-004 an existing tenth stamp is not attributed to the current checkout",
   await page.getByTestId("checkout-start").click()
   await page.getByTestId("checkout-confirm").click()
   await expect(page.getByTestId("checkout-overlay")).toContainText("The tenth visit was confirmed separately before this checkout.")
-  await expect(page.getByTestId("checkout-overlay")).not.toContainText("A unique proof from this on-site visit")
+  await expect(page.getByTestId("checkout-overlay")).not.toContainText("A unique simulated visit fixture")
 })
