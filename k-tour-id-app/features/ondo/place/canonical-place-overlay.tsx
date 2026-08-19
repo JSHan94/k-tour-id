@@ -3,7 +3,8 @@
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, CreditCard, LockKeyhole, MapPin, MessageCircle, Moon, Navigation, Users, X } from "lucide-react"
-import { canonicalVenueById } from "@/lib/ondo/venues"
+import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
+import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
 import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
@@ -50,6 +51,8 @@ const COPY = {
     saveFailed: "This place was not saved. Your venue context is unchanged.",
     retrySave: "Retry save",
     dismissSave: "Not now",
+    detailLoading: "Loading official address evidence…",
+    detailUnavailable: "Official address evidence is temporarily unavailable",
   },
   ko: {
     active: "공식 장소 기록",
@@ -89,6 +92,8 @@ const COPY = {
     saveFailed: "장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지돼요.",
     retrySave: "저장 다시 시도",
     dismissSave: "나중에",
+    detailLoading: "공식 주소 근거를 불러오는 중…",
+    detailUnavailable: "공식 주소 근거를 잠시 불러올 수 없어요",
   },
 } as const
 
@@ -107,19 +112,23 @@ const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]),select:n
 export function CanonicalPlaceOverlay() {
   const { state, actions } = useOndo()
   const [expanded, setExpanded] = useState(false)
+  const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
+  const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
   const saveAttemptRef = useRef(0)
   const saveTimerRef = useRef<number | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
-  const venue = venueId ? canonicalVenueById(venueId) : undefined
+  const venue = venueId ? canonicalMapVenueById(venueId) : undefined
   const signal = venueId ? B_DEMO_SIGNAL_BY_VENUE_ID.get(venueId) : undefined
   const locale = state.locale
   const copy = COPY[locale]
 
   useEffect(() => {
     setExpanded(false)
+    setDetail(null)
+    setDetailState("idle")
     saveAttemptRef.current = 0
     if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = null
@@ -132,12 +141,33 @@ export function CanonicalPlaceOverlay() {
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
+  useEffect(() => {
+    if (!expanded || !venueId || detail?.id === venueId) return
+    const controller = new AbortController()
+    setDetailState("loading")
+    fetch(`/api/ondo/venues/${encodeURIComponent(venueId)}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Venue detail request failed: ${response.status}`)
+        return response.json() as Promise<CanonicalVenueDetailResponse>
+      })
+      .then((payload) => {
+        if (payload.venue.id !== venueId) throw new Error("Venue detail id mismatch")
+        setDetail(payload.venue)
+        setDetailState("ready")
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return
+        setDetailState("error")
+      })
+    return () => controller.abort()
+  }, [detail?.id, expanded, venueId])
 
   if (!venue || state.tab !== "ondo") return null
-  const koreanName = venue.name.ko.value ?? "—"
+  const koreanName = venue.name.ko
   const name = venueDisplayName(koreanName, locale)
   const district = venueDistrictLabel(venue.cityId, venue.districtId, locale)
-  const address = venue.address.road.value ?? venue.address.lot.value ?? copy.unknown
+  const addressEvidence = detail?.address.road.value ? detail.address.road : detail?.address.lot.value ? detail.address.lot : null
+  const address = addressEvidence?.value ?? (detailState === "error" ? copy.detailUnavailable : detailState === "ready" ? copy.unknown : copy.detailLoading)
   const saved = state.savedVenueIds.includes(venue.id)
   const saveStatus = state.saveStatusByVenue[venue.id] ?? "SAV-IDLE"
   const saving = saveStatus === "SAV-SAVING"
@@ -193,7 +223,7 @@ export function CanonicalPlaceOverlay() {
     }
     actions.beginAction({ cta: "OPEN_AFTER19", gates: ["age"], venueId: currentVenueId })
   }
-  const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.location.latitude},${venue.location.longitude}`)}`
+  const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
   if (!expanded) return (
     <aside className={styles.peek} role="dialog" aria-modal="false" aria-label={name} data-testid="canonical-place-peek">
@@ -226,7 +256,7 @@ export function CanonicalPlaceOverlay() {
           <p className={styles.eyebrow}>{district} · {CATEGORY[venue.primaryCategory][locale]}</p>
           <h2 id="canonical-place-title">{name}</h2>
           <p className={styles.secondaryName}>{locale === "en" ? `${koreanName} · Transliterated for navigation` : copy.noEnglish}</p>
-          <p className={styles.address}><MapPin size={16} />{address}</p>
+          <p className={styles.address} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
 
           <section className={styles.signalDetail} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
             <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
@@ -246,7 +276,7 @@ export function CanonicalPlaceOverlay() {
             {[[copy.hours, copy.unknown], [copy.card, copy.unknown], [copy.menu, copy.unknown], [copy.phone, copy.unknown]].map(([label, value]) => <div key={label}><CircleHelp size={17} /><span><strong>{label}</strong><small>{value}</small></span></div>)}
           </section>
 
-          <section className={styles.source}>
+          <section className={styles.source} data-detail-source={detail?.address.road.sourceRefId ?? detail?.address.lot.sourceRefId ?? "NOT_LOADED"}>
             <h3>{copy.source}</h3>
             <p>{copy.sourceBody}</p>
             <dl><div><dt>Snapshot</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div><div><dt>Record</dt><dd>{venue.id.slice(5, 15)}</dd></div></dl>

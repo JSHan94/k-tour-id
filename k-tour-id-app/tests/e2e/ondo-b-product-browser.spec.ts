@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
 import {
+  CANONICAL_VENUE_ID,
   expectBRuntimeClean,
   getBRuntimeEvidence,
   gotoB,
@@ -38,8 +39,19 @@ test.describe("ONDO B sourced discovery and external-map boundary", () => {
   }
 
   test("B-TRUTH-PLACE official-source place detail leaves unsupported fields unknown", async ({ page }) => {
+    const detailResponsePromise = page.waitForResponse((response) => response.url().includes(`/api/ondo/venues/${CANONICAL_VENUE_ID}`))
     await openCanonicalVenue(page)
+    const detailResponse = await detailResponsePromise
+    expect(detailResponse.ok()).toBeTruthy()
+    expect(await detailResponse.json()).toMatchObject({
+      venue: {
+        id: CANONICAL_VENUE_ID,
+        address: { road: { truth: "OFFICIAL_SOURCE", sourceRefId: "MOIS_LOCALDATA_GENERAL_RESTAURANTS" } },
+        facts: { openingHours: { value: null, truth: "UNKNOWN" } },
+      },
+    })
     const detail = page.getByTestId("canonical-place-overlay")
+    await expect(detail.locator("[data-detail-state='ready']")).toHaveAttribute("data-address-truth", "OFFICIAL_SOURCE")
     await expect(detail).toContainText("MOIS LOCALDATA")
     await expect(detail.getByText("Not confirmed by this source")).toHaveCount(4)
     await expect(detail).toContainText(/ONDO signal pending|Preview signal · Simulated/)
