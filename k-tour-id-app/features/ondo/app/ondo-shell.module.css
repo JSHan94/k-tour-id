@@ -68,7 +68,7 @@
 
 .nav button > span { display: grid; place-items: center; }
 .nav small { font-size: 12px; font-weight: 680; letter-spacing: -.01em; }
-.navActive { background: #292724 !important; color: #fff !important; }
+.navActive { background: #efeeeb !important; color: #22211f !important; }
 .nav i {
   position: absolute;
   top: 6px;
@@ -100,6 +100,10 @@
   font-size: 13px;
   font-weight: 650;
   text-align: center;
+}
+
+.canvas:has([data-testid="ondo-b-nation"]) [data-testid="ondo-after19-layer"] {
+  display: none;
 }
 
 @media (max-width: 800px) {

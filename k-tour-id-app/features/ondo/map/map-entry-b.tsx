@@ -4,16 +4,24 @@ import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "mapl
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
-import { MAP_REGIONS, MAP_VENUE_BY_ID, MAP_VENUES } from "@/lib/ondo/map/fixtures"
+import { MAP_REGIONS } from "@/lib/ondo/map/fixtures"
 import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
 import { ONDO_MAP_STYLE } from "@/lib/ondo/map/ondo-map-style"
-import type { MapVenue } from "@/lib/ondo/map/models"
+import { CANONICAL_MAP_VENUES } from "@/lib/ondo/venues"
+import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues"
+import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
+import type { HeatLevel } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
 import type { Locale } from "../contracts/domain"
 import styles from "./map-b.module.css"
 
 type CityId = "seoul" | "busan"
 type ViewMode = "map" | "list"
+type BMapVenue = Omit<CanonicalMapVenue, "ondoScore" | "heat"> & {
+  heatLevel: HeatLevel
+  ondoScore: number | null
+  signalTruth: "SIMULATED" | "UNKNOWN"
+}
 
 const CITY = {
   seoul: { center: [126.987, 37.565] as [number, number], zoom: 10.5, label: { en: "Seoul", ko: "서울" } },
@@ -38,6 +46,7 @@ const COPY = {
     places: "places in view",
     neutral: "Place only · signal pending",
     source: "Place coverage preview · ONDO signals are simulated",
+    more: "Load 30 more",
   },
   ko: {
     tagline: "로컬이 지금 먹는 곳",
@@ -56,8 +65,24 @@ const COPY = {
     places: "개 장소",
     neutral: "장소 정보만 · 신호 수집 중",
     source: "장소 커버리지 프리뷰 · ONDO 신호는 시뮬레이션",
+    more: "30개 더 보기",
   },
 } as const
+
+const CATEGORY: Record<VenuePrimaryCategory, { en: string; ko: string }> = {
+  korean: { en: "Korean food", ko: "한식" },
+  casual: { en: "Casual meal", ko: "간편식" },
+  japanese: { en: "Japanese food", ko: "일식" },
+  chinese: { en: "Chinese food", ko: "중식" },
+  global: { en: "Global food", ko: "세계 음식" },
+  night: { en: "Food & drink", ko: "식음료" },
+  specialty: { en: "Specialty", ko: "전문점" },
+}
+
+const B_MAP_VENUES: readonly BMapVenue[] = CANONICAL_MAP_VENUES.map((venue) => {
+  const signal = B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)
+  return { ...venue, ondoScore: signal?.score ?? null, heatLevel: signal?.level ?? "limited", signalTruth: signal ? "SIMULATED" : "UNKNOWN" }
+})
 
 const DOT_BOUNDS = { minLon: 125.72, maxLon: 130.95, minLat: 33.02, maxLat: 38.67 }
 
@@ -123,7 +148,7 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
   )
 }
 
-function toFeatureCollection(venues: MapVenue[]): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; score: number; heat: string; name: string }> {
+function toFeatureCollection(venues: readonly BMapVenue[]): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; score: number; heat: string; name: string }> {
   return {
     type: "FeatureCollection",
     features: venues.map((venue) => ({
@@ -139,19 +164,20 @@ function heatColorExpression() {
   return ["match", ["get", "heat"], "peak", "#7a2048", "hot", "#c94832", "rising", "#e6843b", "warming", "#ebc463", "low", "#efe1b7", "#cfcac0"] as never
 }
 
-function VenueList({ venues, locale, onSelect }: { venues: MapVenue[]; locale: Locale; onSelect(venue: MapVenue): void }) {
+function VenueList({ venues, locale, visibleCount, onMore, onSelect }: { venues: BMapVenue[]; locale: Locale; visibleCount: number; onMore(): void; onSelect(venue: BMapVenue): void }) {
   const copy = COPY[locale]
   return (
     <ul className={styles.venueList} data-testid="ondo-b-venue-list">
-      {venues.map((venue) => (
+      {venues.slice(0, visibleCount).map((venue) => (
         <li key={venue.id}>
           <button type="button" onClick={() => onSelect(venue)}>
             <span className={styles.score} data-level={venue.heatLevel}>{venue.ondoScore ?? "—"}</span>
-            <span><small>{venue.neighborhoodId} · {venue.category[locale]}</small><strong>{venue.name[locale]}</strong><em>{venue.name[locale === "ko" ? "en" : "ko"]}</em></span>
+            <span><small>{venue.districtId} · {CATEGORY[venue.primaryCategory][locale]}</small><strong>{venue.name[locale]}</strong><em>{venue.nameEnTruth === "UNKNOWN_FALLBACK_TO_KO" ? copy.neutral : venue.name[locale === "ko" ? "en" : "ko"]}</em></span>
             <ChevronRight size={17} />
           </button>
         </li>
       ))}
+      {visibleCount < venues.length ? <li className={styles.loadMore}><button type="button" onClick={onMore}>{copy.more}</button></li> : null}
       {!venues.length ? <li className={styles.empty}>{copy.neutral}</li> : null}
     </ul>
   )
@@ -169,16 +195,18 @@ export function MapEntryB() {
   const [heat, setHeat] = useState<"all" | "hot" | "calm">("all")
   const [time, setTime] = useState<"now" | "dinner" | "late">("now")
   const [mapState, setMapState] = useState<"idle" | "loading" | "ready" | "error">("idle")
+  const [visibleCount, setVisibleCount] = useState(30)
 
-  const venues = useMemo(() => MAP_VENUES.filter((venue) => {
+  const venues = useMemo(() => B_MAP_VENUES.filter((venue) => {
     if (!city || venue.cityId !== city) return false
-    const haystack = `${venue.name.ko} ${venue.name.en} ${venue.category.ko} ${venue.category.en} ${venue.neighborhoodId}`.toLowerCase()
+    const haystack = `${venue.name.ko} ${venue.name.en} ${CATEGORY[venue.primaryCategory].ko} ${CATEGORY[venue.primaryCategory].en} ${venue.districtId}`.toLowerCase()
     if (query && !haystack.includes(query.toLowerCase())) return false
     if (heat === "hot" && (venue.ondoScore ?? 0) < 75) return false
     if (heat === "calm" && (venue.ondoScore == null || venue.ondoScore >= 75)) return false
-    if (time === "late" && !venue.lateNight) return false
     return true
   }), [city, heat, query, time])
+
+  useEffect(() => { setVisibleCount(30) }, [city, heat, query, time])
 
   useEffect(() => {
     if (!city || !mapNode.current || mapRef.current) return
@@ -215,7 +243,7 @@ export function MapEntryB() {
         })
         instance.on("click", "ondo-points", (event: MapLayerMouseEvent) => {
           const id = event.features?.[0]?.properties?.id
-          if (typeof id === "string" && MAP_VENUE_BY_ID.has(id)) actions.setSurface({ kind: "venue", venueId: id })
+          if (typeof id === "string" && CANONICAL_MAP_VENUES.some((venue) => venue.id === id)) actions.setSurface({ kind: "venue", venueId: id })
         })
         instance.on("mouseenter", "ondo-clusters", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseenter", "ondo-points", () => { instance.getCanvas().style.cursor = "pointer" })
@@ -242,7 +270,7 @@ export function MapEntryB() {
     setView("map")
   }
 
-  function selectVenue(venue: MapVenue) {
+  function selectVenue(venue: BMapVenue) {
     actions.setSurface({ kind: "venue", venueId: venue.id })
     setView("map")
     mapRef.current?.easeTo({ center: [venue.longitude, venue.latitude], zoom: 15 })
@@ -280,7 +308,7 @@ export function MapEntryB() {
         <button type="button" onClick={() => setView(view === "map" ? "list" : "map")}>{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
       </div>
 
-      {view === "list" || mapState === "error" ? <div className={styles.listPanel}><VenueList venues={venues} locale={locale} onSelect={selectVenue} /></div> : null}
+      {view === "list" || mapState === "error" ? <div className={styles.listPanel}><VenueList venues={venues} locale={locale} visibleCount={visibleCount} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
 
       {view === "map" ? <button type="button" className={styles.locate} aria-label={locale === "ko" ? "내 위치" : "My location"} onClick={() => navigator.geolocation?.getCurrentPosition(({ coords }) => mapRef.current?.easeTo({ center: [coords.longitude, coords.latitude], zoom: 14 }), () => undefined)}><LocateFixed size={19} /></button> : null}
       <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a>

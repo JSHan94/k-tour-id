@@ -23,7 +23,7 @@ const NAV: Array<{ id: OndoTab; icon: typeof Map }> = [
   { id: "id", icon: BadgeCheck },
 ]
 
-function OndoShell({ slots }: { slots: OndoAppSlots }) {
+function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A" | "B" }) {
   const { state, actions } = useOndo()
   const previousSurface = useRef(state.surface)
   const copy = COPY[state.locale]
@@ -40,7 +40,13 @@ function OndoShell({ slots }: { slots: OndoAppSlots }) {
   }, [state.surface])
 
   return (
-    <main className={styles.stage} data-ondo-locale={state.locale}>
+    <main
+      className={styles.stage}
+      data-ondo-locale={state.locale}
+      data-testid={variant === "B" ? "ondo-b-root" : undefined}
+      data-variant={variant}
+      data-locale={state.locale}
+    >
       <section className={styles.canvas} aria-label="ONDO travel food app">
         <div className={styles.content}>{active}</div>
         <nav className={styles.nav} aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"}>
@@ -65,6 +71,6 @@ function OndoShell({ slots }: { slots: OndoAppSlots }) {
   )
 }
 
-export function OndoApp({ slots }: { slots: OndoAppSlots }) {
-  return <OndoProvider><OndoShell slots={slots} /></OndoProvider>
+export function OndoApp({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A" | "B" }) {
+  return <OndoProvider><OndoShell slots={slots} variant={variant} /></OndoProvider>
 }

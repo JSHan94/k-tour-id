@@ -56,6 +56,8 @@
 .score[data-level="rising"] { background: #e6843b; }
 .score[data-level="warming"] { background: #ebc463; }
 .empty { padding: 28px 0; color: #777169; font-size: 13px; text-align: center; }
+.venueList .loadMore { border: 0; }
+.venueList .loadMore button { display: flex; min-height: 52px; grid-template-columns: 1fr; justify-content: center; color: #3f3b36; font-size: 12px; font-weight: 750; text-align: center; }
 .locate { position: absolute; z-index: 5; right: 16px; bottom: calc(154px + env(safe-area-inset-bottom)); display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #dad6d0; border-radius: 50%; background: #faf9f6; color: #24221f; }
 .attribution { position: absolute; z-index: 5; bottom: calc(80px + env(safe-area-inset-bottom)); left: 16px; color: #716c65; font-size: 10px; text-decoration: none; }
 

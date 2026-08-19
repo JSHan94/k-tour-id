@@ -9,16 +9,17 @@ import { MapEntryB } from "../map/map-entry-b"
 import { MyEntry } from "../my/my-entry"
 import { OnboardingLayer } from "../onboarding/onboarding-layer"
 import { PlaceOverlay } from "../place/place-overlay"
+import { CanonicalPlaceOverlay } from "../place/canonical-place-overlay"
 import { OndoApp } from "./ondo-app"
 
 export function OndoProductB() {
   return (
-    <OndoApp slots={{
+    <OndoApp variant="B" slots={{
       map: <MapEntryB />,
       my: <MyEntry />,
       tables: <TablesEntry />,
       id: <IdentityEntry />,
-      overlays: <><PlaceOverlay /><ConnectOverlays /><After19Layer /><OnboardingLayer /><GateOverlay /></>,
+      overlays: <><CanonicalPlaceOverlay /><PlaceOverlay /><ConnectOverlays /><After19Layer /><OnboardingLayer /><GateOverlay /></>,
     }} />
   )
 }

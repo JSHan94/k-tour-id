@@ -1,6 +1,7 @@
 "use client"
 
 import { Bookmark, Check, ChevronRight, FlaskConical, MapPin, MessageCircle, ShieldCheck, Sparkles, Stamp } from "lucide-react"
+import { canonicalVenueById } from "@/lib/ondo/venues"
 import { useOndo } from "../shared/state/ondo-provider"
 import styles from "./my.module.css"
 
@@ -21,13 +22,19 @@ export function MyEntry() {
     { key: "meetup", icon: <MessageCircle size={17} />, label: locale === "ko" ? "완료한 Table" : "Completed Tables", value: state.reputation.meetup === "established" ? locale === "ko" ? "꾸준한 참여" : "Established" : state.reputation.meetup === "reliable" ? locale === "ko" ? "완료 이력 있음" : "Reliable" : locale === "ko" ? "새 활동" : "New" },
   ]
 
+  function savedVenueName(venueId: string) {
+    const legacyName = VENUE_NAMES[venueId]?.[locale]
+    if (legacyName) return legacyName
+    return canonicalVenueById(venueId)?.name.ko.value ?? (locale === "ko" ? "저장한 장소" : "Saved place")
+  }
+
   return (
     <main className={styles.screen} data-testid="ondo-my-entry">
       <header className={styles.header}><p>MY KOREA</p><h1>{locale === "ko" ? "나의 한국 여행" : "My Korea"}</h1><span>{locale === "ko" ? "저장한 장소와 분리된 활동 이력을 확인해요." : "Saved places and separate activity histories, in one quiet place."}</span></header>
 
       <section className={styles.section} aria-labelledby="saved-heading">
         <div className={styles.sectionTitle}><div><Bookmark size={18} /><h2 id="saved-heading">{locale === "ko" ? "저장한 장소" : "Saved places"}</h2></div><span>{state.savedVenueIds.length}</span></div>
-        {state.savedVenueIds.length ? <div className={styles.savedList}>{state.savedVenueIds.map((venueId) => <button key={venueId} type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "venue", venueId }) }} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span>{VENUE_NAMES[venueId]?.[locale] ?? venueId}</span><ChevronRight size={17} /></button>)}</div> : <div className={styles.empty}><Bookmark size={21} /><p>{locale === "ko" ? "ONDO 지도에서 다시 보고 싶은 식음료 장소를 저장해 보세요." : "Save a food or drink place from the ONDO map to find it here."}</p><button type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "ONDO 지도 보기" : "Open ONDO map"}</button></div>}
+        {state.savedVenueIds.length ? <div className={styles.savedList}>{state.savedVenueIds.map((venueId) => <button key={venueId} type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "venue", venueId }) }} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span>{savedVenueName(venueId)}</span><ChevronRight size={17} /></button>)}</div> : <div className={styles.empty}><Bookmark size={21} /><p>{locale === "ko" ? "ONDO 지도에서 다시 보고 싶은 식음료 장소를 저장해 보세요." : "Save a food or drink place from the ONDO map to find it here."}</p><button type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "ONDO 지도 보기" : "Open ONDO map"}</button></div>}
       </section>
 
       <section className={styles.section} aria-labelledby="stamp-heading">
