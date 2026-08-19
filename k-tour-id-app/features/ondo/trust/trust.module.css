@@ -1,15 +1,12 @@
-.panel { margin-top: 12px; border: 1px solid rgb(64 44 28 / 9%); border-radius: 22px; padding: 17px; background: #fffdf8; color: #291f18; }
-.panel header { display: flex; align-items: flex-start; justify-content: space-between; }
-.panel h2 { margin: 0; font-size: 14px; }
-.panel header p { margin: 4px 0 0; color: #877d73; font-size: 12px; }
-.panel header > span { border-radius: 99px; padding: 6px 8px; background: #eee8df; color: #766b61; font-size: 12px; font-weight: 850; letter-spacing: .05em; }
-.axes { display: grid; gap: 2px; margin-top: 13px; }
-.axes article { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 10px; min-height: 55px; border-top: 1px solid rgb(65 45 30 / 7%); }
-.icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 11px; background: #f0e6d9; color: #a23c2f; }
-.axisBody > div:first-child { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.panel { margin-top: 30px; padding-top: 22px; border-top: 1px solid #d9d7d1; color: #252523; }
+.panel header { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 12px; }
+.panel h2 { margin: 0; font-size: 16px; }
+.panel header p { margin: 4px 0 0; color: #77746e; font-size: 12px; line-height: 1.5; }
+.icon { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; color: #55524d; }
+.boundary { margin: 16px 0 0; padding: 12px 0; border-top: 1px solid #e5e3de; border-bottom: 1px solid #e5e3de; color: #77746e; font-size: 12px; line-height: 1.6; }
+.axes { display: grid; gap: 16px; margin-top: 20px; }
+.axisBody { display: grid; grid-template-columns: minmax(82px, auto) 1fr 34px; align-items: center; gap: 10px; }
 .axisBody strong { font-size: 12px; }
-.axisBody small { color: #82786e; font-size: 12px; }
-.bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-top: 7px; }
-.bar i { height: 4px; border-radius: 99px; background: #e6dfd5; }
-.bar .fill { background: linear-gradient(90deg, #c34a38, #d87845); }
-.boundary { margin: 12px 0 0; border-radius: 13px; padding: 10px; background: #f4f0e9; color: #7d746b; font-size: 12px; line-height: 1.5; }
+.axisBody span { color: #706d67; font-size: 12px; text-align: right; }
+.bar { height: 3px; overflow: hidden; background: #e1dfda; }
+.fill { display: block; height: 100%; background: #353431; }
