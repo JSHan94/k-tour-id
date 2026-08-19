@@ -1,4 +1,5 @@
 import type { HeatLevel, LocalizedText } from "@/features/ondo/contracts/domain"
+import type { VenuePrimaryCategory } from "./contracts"
 import { CANONICAL_MAP_VENUES_COMPACT } from "./map-data"
 
 export type BDemoSignal = {
@@ -24,6 +25,46 @@ function levelFor(score: number): HeatLevel {
   return "warming"
 }
 
+const CATEGORY_REASON: Record<VenuePrimaryCategory, LocalizedText> = {
+  korean: {
+    en: "A simulated local-classic pulse assembled from preview saves and visit signals.",
+    ko: "프리뷰 저장·방문 신호로 구성한 로컬 한식 열기 시뮬레이션이에요.",
+  },
+  casual: {
+    en: "A simulated casual-meal pulse assembled from preview saves and visit signals.",
+    ko: "프리뷰 저장·방문 신호로 구성한 간편식 열기 시뮬레이션이에요.",
+  },
+  japanese: {
+    en: "A simulated Japanese-food pulse assembled from preview saves and visit signals.",
+    ko: "프리뷰 저장·방문 신호로 구성한 일식 열기 시뮬레이션이에요.",
+  },
+  chinese: {
+    en: "A simulated Chinese-food pulse assembled from preview saves and visit signals.",
+    ko: "프리뷰 저장·방문 신호로 구성한 중식 열기 시뮬레이션이에요.",
+  },
+  global: {
+    en: "A simulated global-food pulse assembled from preview saves and visit signals.",
+    ko: "프리뷰 저장·방문 신호로 구성한 세계 음식 열기 시뮬레이션이에요.",
+  },
+  night: {
+    en: "A simulated food-and-drink pulse. Opening hours and alcohol service are not verified.",
+    ko: "식음료 열기 시뮬레이션이에요. 영업시간과 주류 제공 여부는 확인되지 않았어요.",
+  },
+  specialty: {
+    en: "A simulated specialty-food pulse assembled from preview saves and visit signals.",
+    ko: "프리뷰 저장·방문 신호로 구성한 전문 음식점 열기 시뮬레이션이에요.",
+  },
+}
+
+function reasonFor(category: VenuePrimaryCategory, after19: boolean): LocalizedText {
+  const base = CATEGORY_REASON[category]
+  if (!after19) return base
+  return {
+    en: `${base.en} This preview is in the After 19 subset; it does not confirm opening hours or age-restricted service.`,
+    ko: `${base.ko} After 19 프리뷰 대상이지만 영업시간이나 연령 제한 서비스는 확인하지 않아요.`,
+  }
+}
+
 function citySignals(venues: typeof CANONICAL_MAP_VENUES_COMPACT, cityOffset: number) {
   return venues
     .filter((_, index) => index % 5 === cityOffset)
@@ -39,12 +80,9 @@ function citySignals(venues: typeof CANONICAL_MAP_VENUES_COMPACT, cityOffset: nu
         signalCount,
         confidence,
         computedAt: "2026-08-19T03:00:00.000Z",
-        freshness: { en: "Updated for this preview", ko: "이 프리뷰 기준 업데이트" },
+        freshness: { en: "Preview snapshot · Aug 19, 2026 12:00 KST", ko: "프리뷰 스냅샷 · 2026. 8. 19. 12:00 KST" },
         modelVersion: "ONDO-DEMO-1",
-        reason: {
-          en: "A simulated food pulse based on recent local saves and visit signals.",
-          ko: "최근 로컬 저장·방문 신호로 구성한 식음료 열기 시뮬레이션이에요.",
-        },
+        reason: reasonFor(venue.primaryCategory, Boolean(after19)),
         truth: "SIMULATED",
         after19,
       }

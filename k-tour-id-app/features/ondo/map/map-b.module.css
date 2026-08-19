@@ -8,26 +8,31 @@
 .brand span { display: grid; line-height: 1; }
 .brand strong { font-size: 18px; letter-spacing: -.04em; }
 .brand small { margin-top: 5px; color: #76716a; font-size: 12px; }
-.language, .back { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; border: 0; background: transparent; color: #45413c; font-size: 12px; font-weight: 700; }
-.nation { box-sizing: border-box; display: grid; height: 100%; grid-template-rows: auto 1fr auto; padding: calc(94px + env(safe-area-inset-top)) 22px calc(94px + env(safe-area-inset-bottom)); }
+.language, .back { display: inline-flex; min-width: 44px; min-height: 44px; align-items: center; justify-content: center; gap: 6px; border: 0; background: transparent; color: #45413c; font-size: 12px; font-weight: 700; }
+.nation { box-sizing: border-box; display: grid; height: 100%; grid-template-rows: auto 1fr auto auto; padding: calc(94px + env(safe-area-inset-top)) 22px calc(88px + env(safe-area-inset-bottom)); }
 .nationIntro { max-width: 320px; }
 .nationIntro small { color: #8a847c; font-size: 12px; font-weight: 750; letter-spacing: .1em; }
 .nationIntro h2 { max-width: 290px; margin: 10px 0 8px; font-family: var(--font-noto-serif-kr), serif; font-size: 27px; line-height: 1.28; font-weight: 570; letter-spacing: -.045em; }
 .nationIntro p { max-width: 320px; margin: 0; color: #6d6861; font-size: 13px; line-height: 1.65; }
-.dotMap { position: relative; width: min(100%, 310px); height: min(45vh, 390px); align-self: center; justify-self: center; }
+.dotMap { position: relative; width: min(100%, 310px); height: min(35vh, 310px); align-self: center; justify-self: center; }
 .dotMap svg { width: 100%; height: 100%; overflow: visible; }
 .dotMap circle { fill: #2b2926; opacity: .48; }
-.cityNode { position: absolute; display: flex; min-width: 112px; min-height: 54px; align-items: center; gap: 9px; padding: 5px 10px 5px 5px; border: 0; border-radius: 28px; background: rgb(255 255 255 / 96%); color: inherit; text-align: left; box-shadow: 0 1px 0 rgb(34 33 31 / 16%); }
-.cityNode[data-city="seoul"] { top: 16%; left: 10%; }
-.cityNode[data-city="busan"] { right: -3%; bottom: 19%; }
+.cityNode { position: absolute; display: flex; width: 206px; min-height: 58px; align-items: center; gap: 9px; padding: 6px 10px 6px 6px; border: 1px solid rgb(34 33 31 / 10%); border-radius: 29px; background: rgb(255 255 255 / 97%); color: inherit; text-align: left; box-shadow: 0 3px 14px rgb(34 33 31 / 5%); }
+.cityNode[data-city="seoul"] { top: 13%; left: 2%; }
+.cityNode[data-city="busan"] { right: -1%; bottom: 15%; }
 .cityNode i { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid; border-radius: 50%; font-size: 13px; font-style: normal; font-weight: 800; }
-.cityNode span { display: grid; gap: 3px; }
-.cityNode strong { font-size: 14px; }
-.cityNode small { color: #777169; font-size: 12px; font-weight: 650; }
+.cityNode span { display: grid; width: 135px; min-width: 0; gap: 2px; }
+.cityNode strong { display: flex; align-items: baseline; gap: 7px; font-size: 14px; }
+.cityNode strong em { color: #6b665f; font-size: 12px; font-style: normal; font-weight: 650; }
+.cityNode small { overflow: hidden; max-width: 190px; color: #6f6a63; font-size: 12px; font-weight: 620; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.cityTruthLegend { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 2px 0 10px; padding-top: 10px; border-top: 1px solid #dedbd5; }
+.cityTruthLegend > div { display: grid; gap: 3px; min-width: 0; }
+.cityTruthLegend strong { font-size: 12px; }
+.cityTruthLegend span, .cityTruthLegend small { color: #6f6a63; font-size: 12px; line-height: 1.35; }
 .nation footer { display: flex; align-items: center; gap: 10px; color: #777169; font-size: 12px; line-height: 1.4; }
 .nation footer span { width: 28px; height: 1px; background: #bbb5ad; }
 .map { position: absolute; inset: 0; }
-.map :global(.maplibregl-canvas) { filter: saturate(.72) contrast(.96); }
+.map :global(.maplibregl-canvas) { filter: saturate(.56) contrast(.94) brightness(1.02); }
 .map :global(.maplibregl-ctrl-bottom-right) { right: 10px; bottom: 160px; }
 .map :global(.maplibregl-ctrl-group) { overflow: hidden; border: 1px solid #d9d6d0; border-radius: 15px; box-shadow: none; }
 .map :global(.maplibregl-ctrl button) { width: 44px; height: 44px; background-color: rgb(250 249 246 / 94%); }
@@ -36,12 +41,23 @@
 .topline strong { font-family: var(--font-noto-serif-kr), serif; font-size: 17px; font-weight: 600; }
 .topline .back { justify-self: start; }
 .topline .language { justify-self: end; }
-.search { display: flex; min-height: 50px; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #dededb; border-radius: 14px; background: rgb(255 255 255 / 96%); }
+.search { display: flex; min-height: 50px; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #e0dfdb; border-radius: 14px; background: rgb(255 255 255 / 94%); box-shadow: 0 3px 16px rgb(45 42 37 / 4%); }
 .search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 14px; }
 .search button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
-.rail { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
-.rail button { min-height: 44px; flex: 0 0 auto; padding: 0 14px; border: 1px solid #e3e3df; border-radius: 22px; background: rgb(255 255 255 / 94%); color: #68635c; font-size: 12px; font-weight: 680; }
-.rail button[aria-pressed="true"] { border-color: #2b2926; background: #2b2926; color: #fff; }
+.rail { display: flex; width: max-content; max-width: 100%; align-items: center; gap: 2px; overflow-x: auto; border: 1px solid #e1dfda; border-radius: 13px; padding: 2px; background: rgb(255 255 255 / 91%); scrollbar-width: none; }
+.rail button { min-height: 44px; flex: 0 0 auto; padding: 0 11px; border: 0; border-radius: 10px; background: transparent; color: #68635c; font-size: 12px; font-weight: 680; }
+.rail button[aria-pressed="true"] { background: #2b2926; color: #fff; }
+.preferenceSummary { position: absolute; z-index: 6; top: calc(170px + env(safe-area-inset-top)); left: 14px; display: grid; max-width: 202px; min-height: 44px; grid-template-columns: 18px minmax(0, 1fr) 16px; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #dedbd5; border-radius: 12px; background: rgb(255 255 255 / 94%); color: #514d47; font-size: 12px; font-weight: 700; line-height: 16px; text-align: left; }
+.preferenceSummary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.preferencePanel { position: absolute; z-index: 12; top: calc(222px + env(safe-area-inset-top)); right: 14px; left: 14px; padding: 16px; border: 1px solid #dcd9d3; border-radius: 16px; background: rgb(255 255 255 / 98%); color: #2b2926; box-shadow: 0 12px 34px rgb(34 33 31 / 12%); }
+.preferencePanel header { display: flex; align-items: center; justify-content: space-between; }
+.preferencePanel header strong { font-size: 14px; }
+.preferencePanel header button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
+.preferencePanel > p { margin: 2px 0 13px; color: #67625b; font-size: 12px; line-height: 1.55; }
+.preferencePanel > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.preferencePanel > div button { min-height: 44px; padding: 0 11px; border: 1px solid #dedbd5; border-radius: 10px; background: #fff; color: #5e5952; font-size: 12px; font-weight: 680; }
+.preferencePanel > div button[aria-pressed="true"] { border-color: #2b2926; background: #2b2926; color: #fff; }
+.preferencePanel .preferenceReset { min-height: 44px; margin-top: 10px; border: 0; background: transparent; color: #5e5952; font-size: 12px; font-weight: 720; text-decoration: underline; text-underline-offset: 3px; }
 .resultBar { position: absolute; z-index: 5; right: 14px; bottom: calc(95px + env(safe-area-inset-bottom)); left: 14px; display: flex; min-height: 48px; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; border: 1px solid #dededb; border-radius: 14px; background: rgb(255 255 255 / 96%); color: #69645d; font-size: 12px; }
 .resultBar b { color: #24221f; font-size: 14px; }
 .resultBar button { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; border: 0; background: transparent; color: #24221f; font-size: 12px; font-weight: 750; }
@@ -64,11 +80,17 @@
 .venueList .loadMore { border: 0; }
 .venueList .loadMore button { display: flex; min-height: 52px; grid-template-columns: 1fr; justify-content: center; color: #3f3b36; font-size: 12px; font-weight: 750; text-align: center; }
 .locate { position: absolute; z-index: 5; right: 16px; bottom: calc(154px + env(safe-area-inset-bottom)); display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #dededb; border-radius: 50%; background: #fff; color: #24221f; }
-.attribution { position: absolute; z-index: 5; bottom: calc(80px + env(safe-area-inset-bottom)); left: 16px; color: #625e58; font-size: 12px; text-decoration: none; }
+.mapKey { position: absolute; z-index: 5; bottom: calc(154px + env(safe-area-inset-bottom)); left: 14px; display: flex; min-height: 36px; align-items: center; gap: 5px; padding: 6px 9px; border: 1px solid #e0ddd8; border-radius: 11px; background: rgb(255 255 255 / 92%); color: #625d56; font-size: 12px; line-height: 16px; }
+.mapKey > span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.mapKey > b { color: #a5a098; font-weight: 400; }
+.mapKey i { display: grid; width: 28px; height: 22px; flex: 0 0 auto; place-items: center; border-radius: 11px; font-size: 10px; font-style: normal; font-weight: 800; }
+.clusterSwatch { border: 1px solid #6d6861; background: rgb(255 255 255 / 96%); color: #4c4842; }
+.scoreSwatch { background: #c94832; color: #fff; }
+.attribution { position: absolute; z-index: 5; bottom: calc(54px + env(safe-area-inset-bottom)); left: 16px; display: flex; min-height: 44px; align-items: center; color: #625e58; font-size: 12px; text-decoration: none; }
 
 @media (min-width: 801px) {
   .nation { padding-top: 78px; }
-  .dotMap { height: 390px; }
+  .dotMap { height: 310px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

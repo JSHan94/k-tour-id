@@ -23,7 +23,7 @@
 .body { padding: 24px 18px calc(30px + env(safe-area-inset-bottom)); }
 .eyebrow { margin: 0; color: #656059; font-size: 12px; font-weight: 750; letter-spacing: .06em; }
 .body > h2 { margin: 8px 0 1px; font-family: var(--font-noto-serif-kr), serif; font-size: 28px; font-weight: 600; letter-spacing: -.05em; }
-.secondaryName { margin: 0; color: #827c74; font-size: 12px; }
+.secondaryName { margin: 0; color: #716b64; font-size: 12px; }
 .address { display: flex; align-items: flex-start; gap: 7px; margin: 13px 0 22px; color: #625e58; font-size: 12px; line-height: 1.5; }
 .address svg { flex: 0 0 auto; margin-top: 1px; }
 .signalDetail { display: grid; grid-template-columns: 58px 1fr; gap: 14px; align-items: start; padding: 20px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
@@ -33,7 +33,7 @@
 .signalDetail p { margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.5; }
 .signalEvidence { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 13px 0 0; }
 .signalEvidence div { min-width: 0; padding-top: 8px; border-top: 1px solid #e4e1dc; }
-.signalEvidence dt { overflow: hidden; color: #817b73; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.signalEvidence dt { overflow: hidden; color: #6f6962; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .signalEvidence dd { margin: 3px 0 0; color: #2b2926; font-size: 12px; font-weight: 760; line-height: 1.35; }
 .contributionNote { margin-top: 10px !important; padding-left: 9px; border-left: 2px solid #c94832; }
 .before, .source { padding: 22px 0; border-bottom: 1px solid #dedbd5; }
@@ -41,11 +41,11 @@
 .before > div { display: grid; min-height: 55px; grid-template-columns: 28px 1fr; align-items: center; border-top: 1px solid #ece9e4; }
 .before > div span { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .before strong { font-size: 12px; }
-.before small { color: #817b73; font-size: 12px; text-align: right; }
+.before small { color: #6f6962; font-size: 12px; text-align: right; }
 .source p { margin: 0 0 12px; color: #6f6a63; font-size: 12px; line-height: 1.55; }
 .source dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
 .source dl div { padding-top: 8px; border-top: 1px solid #e7e4df; }
-.source dt { color: #817b73; font-size: 12px; }
+.source dt { color: #6f6962; font-size: 12px; }
 .source dd { margin: 3px 0 0; font-size: 12px; font-weight: 700; }
 .secondaryActions { display: grid; padding: 10px 0; }
 .secondaryActions button { display: grid; min-height: 54px; grid-template-columns: 24px 1fr 18px; align-items: center; gap: 8px; padding: 0; border: 0; border-bottom: 1px solid #e7e4df; background: transparent; color: #2b2926; font-size: 13px; font-weight: 680; text-align: left; }

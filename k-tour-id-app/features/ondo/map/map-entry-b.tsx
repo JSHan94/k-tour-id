@@ -2,15 +2,15 @@
 
 import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl"
 import { useEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
+import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, SlidersHorizontal, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
-import { ONDO_MAP_STYLE } from "@/lib/ondo/map/ondo-map-style"
+import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues"
 import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
-import type { HeatLevel } from "../contracts/domain"
+import type { DiscoveryPreference, HeatLevel } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
 import type { Locale } from "../contracts/domain"
 import styles from "./map-b.module.css"
@@ -51,6 +51,25 @@ const COPY = {
     locationUnavailable: "Your location was not used. Search or choose a place from the map.",
     after19Mode: "After 19 preview places",
     contributed: "Your visit signal is recorded · Score pending",
+    officialPlaces: "official place records",
+    previewPlaces: "preview signal places",
+    inputSignals: "input signals",
+    confidence: "weighted confidence",
+    officialShort: "official",
+    previewShort: "preview",
+    inputShort: "inputs",
+    confidenceShort: "confidence",
+    snapshot: "Aug 19 snapshot",
+    simulated: "Simulated",
+    clusterKey: "Places",
+    scoreKey: "Simulated score",
+    mapKeyLabel: "Outlined count means a sourced place group. Solid color means a simulated ONDO score.",
+    preferences: "Starting interests",
+    editPreferences: "Edit interests",
+    noPreferences: "Tune interests",
+    preferenceBoundary: "Saved as discovery context. Current official records cannot verify dietary fit, late hours, café type, or atmosphere, so results are not silently filtered.",
+    resetPreferences: "Reset interests",
+    closePreferences: "Close interests",
   },
   ko: {
     tagline: "로컬이 지금 먹는 곳",
@@ -74,8 +93,38 @@ const COPY = {
     locationUnavailable: "현재 위치를 사용하지 않았어요. 검색하거나 지도에서 장소를 골라보세요.",
     after19Mode: "After 19 프리뷰 장소",
     contributed: "내 방문 신호 기록됨 · 점수 산출 전",
+    officialPlaces: "개 공식 장소 기록",
+    previewPlaces: "개 프리뷰 신호 장소",
+    inputSignals: "개 입력 신호",
+    confidence: "가중 신뢰도",
+    officialShort: "공식",
+    previewShort: "프리뷰",
+    inputShort: "입력",
+    confidenceShort: "신뢰도",
+    snapshot: "8월 19일 스냅샷",
+    simulated: "시뮬레이션",
+    clusterKey: "공식 장소",
+    scoreKey: "시뮬레이션 점수",
+    mapKeyLabel: "테두리 숫자는 공식 장소 묶음, 단색 원은 ONDO 시뮬레이션 점수를 뜻합니다.",
+    preferences: "시작 관심사",
+    editPreferences: "관심사 수정",
+    noPreferences: "관심사 설정",
+    preferenceBoundary: "탐색 맥락으로만 저장해요. 현재 공식 장소 기록은 식이 적합성·심야 영업·카페 유형·분위기를 확인하지 못하므로 결과를 몰래 필터링하지 않아요.",
+    resetPreferences: "관심사 초기화",
+    closePreferences: "관심사 닫기",
   },
 } as const
+
+const PREFERENCE_COPY: Record<DiscoveryPreference, { en: string; ko: string }> = {
+  classic: { en: "Local classics", ko: "로컬의 익숙한 맛" },
+  cafe: { en: "Cafés and dessert", ko: "카페와 디저트" },
+  late: { en: "Late-night food", ko: "늦은 시간의 한 끼" },
+  lively: { en: "Lively", ko: "활기찬 분위기" },
+  calm: { en: "A little calmer", ko: "조금 여유롭게" },
+  diet: { en: "Dietary preferences", ko: "식이 선택" },
+}
+
+const ALL_PREFERENCES = Object.keys(PREFERENCE_COPY) as DiscoveryPreference[]
 
 const CATEGORY: Record<VenuePrimaryCategory, { en: string; ko: string }> = {
   korean: { en: "Korean food", ko: "한식" },
@@ -124,15 +173,27 @@ const KOREA_DOTS = (() => {
 })()
 
 function cityPulse(cityId: CityId) {
-  const signals = CANONICAL_MAP_VENUES_COMPACT
-    .filter((venue) => venue.cityId === cityId)
+  const officialVenues = CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === cityId)
+  const signals = officialVenues
     .flatMap((venue) => {
       const signal = B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)
       return signal ? [signal] : []
     })
-  const ondoScore = signals.length ? Math.round(signals.reduce((sum, signal) => sum + signal.score, 0) / signals.length) : null
+  const signalCount = signals.reduce((sum, signal) => sum + signal.signalCount, 0)
+  const ondoScore = signalCount ? Math.round(signals.reduce((sum, signal) => sum + signal.score * signal.signalCount, 0) / signalCount) : null
+  const confidence = signalCount ? signals.reduce((sum, signal) => sum + signal.confidence * signal.signalCount, 0) / signalCount : null
   const heatLevel: HeatLevel = ondoScore === null ? "limited" : ondoScore >= 88 ? "peak" : ondoScore >= 76 ? "hot" : ondoScore >= 62 ? "rising" : "warming"
-  return { ondoScore, heatLevel, venueCount: signals.length, signalCount: signals.reduce((sum, signal) => sum + signal.signalCount, 0) }
+  const computedAt = signals.reduce<string | null>((latest, signal) => latest == null || signal.computedAt > latest ? signal.computedAt : latest, null)
+  return {
+    ondoScore,
+    heatLevel,
+    officialVenueCount: officialVenues.length,
+    signalVenueCount: signals.length,
+    signalCount,
+    confidence,
+    computedAt,
+    truth: "SIMULATED" as const,
+  }
 }
 
 function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: CityId): void }) {
@@ -152,13 +213,34 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
           const region = cityPulse(cityId)
           const palette = HEAT_COLORS[region?.heatLevel ?? "limited"]
           return (
-            <button key={cityId} type="button" className={styles.cityNode} data-city={cityId} onClick={() => onSelect(cityId)} aria-label={`${CITY[cityId].label[locale]} · ${locale === "ko" ? "시뮬레이션 ONDO" : "Simulated ONDO"} ${region?.ondoScore ?? "—"}`}>
-              <i style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{region?.ondoScore ?? "—"}</i>
-              <span><strong>{CITY[cityId].label[locale]}</strong><small>{region.venueCount} {locale === "ko" ? "곳 ·" : "places ·"} {HEAT_LABELS[locale][region.heatLevel]} · {locale === "ko" ? "시뮬레이션" : "Simulated"}</small></span>
+            <button
+              key={cityId}
+              type="button"
+              className={styles.cityNode}
+              data-city={cityId}
+              data-official-count={region.officialVenueCount}
+              data-signal-venue-count={region.signalVenueCount}
+              data-sample-count={region.signalCount}
+              data-signal-truth={region.truth}
+              data-computed-at={region.computedAt ?? undefined}
+              onClick={() => onSelect(cityId)}
+              aria-label={`${CITY[cityId].label[locale]} · ${region.officialVenueCount} ${copy.officialPlaces} · ${region.signalVenueCount} ${copy.previewPlaces} · ${region.signalCount} ${copy.inputSignals} · ${Math.round((region.confidence ?? 0) * 100)}% ${copy.confidence} · ${copy.simulated} ONDO ${region.ondoScore ?? "—"}`}
+            >
+              <i style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{region.ondoScore ?? "—"}</i>
+              <span>
+                <strong>{CITY[cityId].label[locale]} <em>{HEAT_LABELS[locale][region.heatLevel]}</em></strong>
+                <small>{locale === "ko" ? `${region.officialVenueCount}곳 · 신호 ${region.signalVenueCount}` : `${region.officialVenueCount} places · ${region.signalVenueCount} signals`}</small>
+              </span>
             </button>
           )
         })}
       </div>
+      <aside className={styles.cityTruthLegend} data-testid="ondo-b-city-truth-legend">
+        {(["seoul", "busan"] as const).map((cityId) => {
+          const region = cityPulse(cityId)
+          return <div key={cityId}><strong>{CITY[cityId].label[locale]}</strong><span>{region.officialVenueCount} {copy.officialShort} · {region.signalVenueCount} {copy.previewShort}</span><small>{region.signalCount} {copy.inputShort} · {Math.round((region.confidence ?? 0) * 100)}% {copy.confidenceShort}</small><small>{copy.snapshot} · {copy.simulated}</small></div>
+        })}
+      </aside>
       <footer><span />{copy.source}</footer>
     </section>
   )
@@ -226,7 +308,12 @@ export function MapEntryB() {
   const [mapState, setMapState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [visibleCount, setVisibleCount] = useState(30)
   const [retryToken, setRetryToken] = useState(0)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
   const after19On = state.after19 === "A19-ON"
+  const preferenceLabels = state.discoveryPreferences.map((preference) => PREFERENCE_COPY[preference][locale])
+  const preferenceSummary = preferenceLabels.length
+    ? locale === "ko" ? `시작 관심사 ${preferenceLabels.length}개` : `${preferenceLabels.length} starting ${preferenceLabels.length === 1 ? "interest" : "interests"}`
+    : copy.noPreferences
   const contributedVenueIds = useMemo(() => new Set(state.acceptedActivityEventKeys.flatMap((key) => {
     const match = key.match(/local-signal:(mois-[a-z0-9]+):/)
     return match ? [match[1]] : []
@@ -270,12 +357,21 @@ export function MapEntryB() {
   useEffect(() => {
     if (!city || !mapNode.current || mapRef.current) return
     let disposed = false
+    let failed = false
+    let loadDeadline: number | undefined
+    const failMap = () => {
+      if (disposed || failed) return
+      failed = true
+      if (loadDeadline != null) window.clearTimeout(loadDeadline)
+      setMapState("error")
+    }
     setMapState("loading")
+    loadDeadline = window.setTimeout(failMap, 8_000)
     void import("maplibre-gl").then(({ Map, NavigationControl }) => {
       if (disposed || !mapNode.current) return
       const instance = new Map({
         container: mapNode.current,
-        style: ONDO_MAP_STYLE,
+        style: ondoMapStyle(locale),
         center: CITY[city].center,
         zoom: CITY[city].zoom,
         minZoom: 8.5,
@@ -284,18 +380,24 @@ export function MapEntryB() {
         cooperativeGestures: true,
       })
       mapRef.current = instance
+      instance.on("error", failMap)
       instance.addControl(new NavigationControl({ showCompass: false }), "bottom-right")
       instance.on("load", () => {
-        if (disposed) return
-        instance.addSource("ondo-venues", { type: "geojson", data: toFeatureCollection(venues), cluster: true, clusterRadius: 46, clusterMaxZoom: 13 })
-        instance.addSource("ondo-signals", { type: "geojson", data: toSignalFeatureCollection(venues) })
-        instance.addSource("ondo-contributions", { type: "geojson", data: toContributionFeatureCollection(venues, contributedVenueIds) })
-        instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-venues", filter: ["has", "point_count"], paint: { "circle-color": "#23211e", "circle-radius": ["step", ["get", "point_count"], 20, 15, 24, 50, 30], "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } })
-        instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-venues", filter: ["has", "point_count"], layout: { "text-field": ["get", "point_count_abbreviated"], "text-font": ["Noto Sans Bold"], "text-size": 12 }, paint: { "text-color": "#ffffff" } })
-        instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-venues", filter: ["!", ["has", "point_count"]], paint: { "circle-color": "#bdbdb8", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 5, 15, 9], "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
-        instance.addLayer({ id: "ondo-signal-points", type: "circle", source: "ondo-signals", paint: { "circle-color": heatColorExpression(), "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 14, 15, 18], "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } })
-        instance.addLayer({ id: "ondo-score", type: "symbol", source: "ondo-signals", layout: { "text-field": ["to-string", ["get", "score"]], "text-font": ["Noto Sans Bold"], "text-size": 12 }, paint: { "text-color": "#ffffff", "text-halo-color": "#2a2521", "text-halo-width": 0.4 } })
-        instance.addLayer({ id: "ondo-contribution-ring", type: "circle", source: "ondo-contributions", paint: { "circle-color": "rgba(0,0,0,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 18, 15, 22], "circle-stroke-color": "#c94832", "circle-stroke-width": 3 } })
+        if (disposed || failed) return
+        try {
+          instance.addSource("ondo-venues", { type: "geojson", data: toFeatureCollection(venues), cluster: true, clusterRadius: 48, clusterMaxZoom: 13 })
+          instance.addSource("ondo-signals", { type: "geojson", data: toSignalFeatureCollection(venues) })
+          instance.addSource("ondo-contributions", { type: "geojson", data: toContributionFeatureCollection(venues, contributedVenueIds) })
+          instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-venues", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,255,255,0.9)", "circle-radius": ["step", ["get", "point_count"], 15, 15, 18, 50, 22], "circle-stroke-color": "#6d6861", "circle-stroke-width": 1.5, "circle-opacity": 0.96 } })
+          instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-venues", filter: ["has", "point_count"], layout: { "text-field": ["concat", ["to-string", ["get", "point_count_abbreviated"]], "×"], "text-font": ["Noto Sans Bold"], "text-size": 11 }, paint: { "text-color": "#4c4842" } })
+          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-venues", filter: ["!", ["has", "point_count"]], paint: { "circle-color": "#9c9891", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3, 15, 6], "circle-opacity": 0.62, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } })
+          instance.addLayer({ id: "ondo-signal-points", type: "circle", source: "ondo-signals", paint: { "circle-color": heatColorExpression(), "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 13, 15, 17], "circle-stroke-color": "#ffffff", "circle-stroke-width": 2.5 } })
+          instance.addLayer({ id: "ondo-score", type: "symbol", source: "ondo-signals", layout: { "text-field": ["to-string", ["get", "score"]], "text-font": ["Noto Sans Bold"], "text-size": 12 }, paint: { "text-color": ["match", ["get", "heat"], "peak", "#ffffff", "hot", "#ffffff", "rising", "#3b2d20", "warming", "#3f3928", "#282521"], "text-halo-color": "rgba(255,255,255,0.28)", "text-halo-width": 0.35 } })
+          instance.addLayer({ id: "ondo-contribution-ring", type: "circle", source: "ondo-contributions", paint: { "circle-color": "rgba(0,0,0,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 17, 15, 21], "circle-stroke-color": "#c94832", "circle-stroke-width": 2.5 } })
+        } catch {
+          failMap()
+          return
+        }
         instance.on("click", "ondo-clusters", async (event: MapLayerMouseEvent) => {
           const feature = instance.queryRenderedFeatures(event.point, { layers: ["ondo-clusters"] })[0]
           const clusterId = feature?.properties?.cluster_id
@@ -318,16 +420,17 @@ export function MapEntryB() {
         instance.on("mouseleave", "ondo-clusters", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-points", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-signal-points", () => { instance.getCanvas().style.cursor = "" })
-        setMapState("ready")
+        if (loadDeadline != null) window.clearTimeout(loadDeadline)
+        if (!failed) setMapState("ready")
       })
-      instance.on("error", () => setMapState("error"))
-    }).catch(() => setMapState("error"))
+    }).catch(failMap)
     return () => {
       disposed = true
+      if (loadDeadline != null) window.clearTimeout(loadDeadline)
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [actions, city, retryToken])
+  }, [actions, city, locale, retryToken])
 
   useEffect(() => {
     const source = mapRef.current?.getSource("ondo-venues") as GeoJSONSource | undefined
@@ -357,6 +460,12 @@ export function MapEntryB() {
     setRetryToken((token) => token + 1)
   }
 
+  function togglePreference(preference: DiscoveryPreference) {
+    actions.setDiscoveryPreferences(state.discoveryPreferences.includes(preference)
+      ? state.discoveryPreferences.filter((item) => item !== preference)
+      : [...state.discoveryPreferences, preference])
+  }
+
   if (!city) return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
       <section className={styles.root} data-testid="ondo-b-map-entry">
@@ -371,7 +480,7 @@ export function MapEntryB() {
 
   return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
-      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState}>
+      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState} data-cluster-grammar="outlined-count" data-score-grammar="solid-heat">
         <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
         <div ref={mapNode} className={styles.map} data-testid="maplibre-map" aria-label={locale === "ko" ? "ONDO 식음료 지도" : "ONDO food map"} aria-describedby="ondo-b-map-instruction" />
         <header className={styles.cityHeader}>
@@ -386,6 +495,19 @@ export function MapEntryB() {
         </div>
         </header>
 
+        <button type="button" className={styles.preferenceSummary} aria-expanded={preferencesOpen} aria-controls="ondo-b-preference-panel" onClick={() => setPreferencesOpen((open) => !open)} data-testid="ondo-b-preference-summary"><SlidersHorizontal size={15} /><span>{preferenceSummary}</span><ChevronRight size={15} /></button>
+
+        {preferencesOpen ? (
+          <section id="ondo-b-preference-panel" className={styles.preferencePanel} aria-label={copy.preferences} data-testid="ondo-b-preference-panel">
+            <header><strong>{copy.preferences}</strong><button type="button" onClick={() => setPreferencesOpen(false)} aria-label={copy.closePreferences}><X size={17} /></button></header>
+            <p>{copy.preferenceBoundary}</p>
+            <div>
+              {ALL_PREFERENCES.map((preference) => <button key={preference} type="button" aria-pressed={state.discoveryPreferences.includes(preference)} onClick={() => togglePreference(preference)}>{PREFERENCE_COPY[preference][locale]}</button>)}
+            </div>
+            {state.discoveryPreferences.length ? <button type="button" className={styles.preferenceReset} onClick={() => actions.setDiscoveryPreferences([])}>{copy.resetPreferences}</button> : null}
+          </section>
+        ) : null}
+
         <div className={styles.resultBar}>
           <span><b>{venues.length}</b> {after19On ? copy.after19Mode : copy.places}</span>
           <button type="button" onClick={() => setView(view === "map" ? "list" : "map")}>{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
@@ -393,6 +515,7 @@ export function MapEntryB() {
 
         {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
 
+        {view === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={copy.mapKeyLabel}><span><i className={styles.clusterSwatch}>12×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>82</i>{copy.scoreKey}</span></div> : null}
         {view === "map" ? <button type="button" className={styles.locate} aria-label={locale === "ko" ? "내 위치" : "My location"} onClick={() => navigator.geolocation?.getCurrentPosition(({ coords }) => mapRef.current?.easeTo({ center: [coords.longitude, coords.latitude], zoom: 14 }), () => actions.notify(copy.locationUnavailable))}><LocateFixed size={19} /></button> : null}
         {view === "map" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}
       </section>
