@@ -12,7 +12,7 @@ import { useOndo } from "../shared/state/ondo-provider"
 import { CheckoutOverlay } from "../commerce/checkout-overlay"
 import { LabsEntry } from "../labs/labs-entry"
 import { TABLES, initialTableRuntime, joinFailureRuntime, tableStatusCopy, toCanonicalMembership, type TableFailureState } from "./table-model"
-import { VENUE_NAMES } from "./tables-entry"
+import { tableFixtureTruth, VENUE_NAMES } from "./tables-entry"
 import styles from "./connect.module.css"
 
 type ChatItem = { id: string; kind: "text" | "image"; text?: string; previewUrl?: string; status: MessageStatus }
@@ -112,7 +112,7 @@ function TableDetail({ tableId }: { tableId: string }) {
         return
       }
       actions.setMembership(table.id, "confirmed")
-      actions.notify(locale === "ko" ? "Table 참여가 확정됐어요." : "Your Table seat is confirmed.")
+      actions.notify(locale === "ko" ? "참여 미리보기가 확정됐어요." : "Your preview participation is confirmed.")
     }, 520)
     return () => window.clearTimeout(timer)
   }, [actions, locale, membership, table])
@@ -149,6 +149,7 @@ function TableDetail({ tableId }: { tableId: string }) {
   const unavailableCopy = failure === "TFR-FULL"
     ? locale === "ko" ? "요청하는 동안 마지막 자리가 찼어요." : "The last seat filled while your request was processing."
     : tableStatusCopy(table, locale)
+  const truth = tableFixtureTruth(locale)
 
   return (
     <Sheet label={table.title[locale]} onClose={() => actions.setSurface({ kind: "map" })} size="full">
@@ -156,6 +157,11 @@ function TableDetail({ tableId }: { tableId: string }) {
         <p className={styles.eyebrow}>{locale === "ko" ? "같이 먹는 한 끼" : "A meal shared locally"}</p>
         <h2>{table.title[locale]}</h2>
         <p className={styles.lead}>{locale === "ko" ? "같은 장소와 시간에 식사하고 싶은 사람들이 만나는 자리예요." : "A table for people who want to eat at the same place and time."}</p>
+
+        <InlineNotice tone="neutral">
+          <ShieldCheck size={18} />
+          <span><strong>{truth.title}</strong> · {truth.body}</span>
+        </InlineNotice>
 
         <div className={styles.placeStrip}><MapPin size={18} /><div><strong>{VENUE_NAMES[table.venueId]?.[locale] ?? table.venueId}</strong><span>{table.menu[locale]}</span></div></div>
         <dl className={styles.detailGrid}>
@@ -186,12 +192,12 @@ function TableDetail({ tableId }: { tableId: string }) {
         {confirmed ? (
           <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "chat", tableId })}><MessageCircle size={18} /> {locale === "ko" ? "대화 열기" : "Open chat"}</button>
         ) : membership === "TMB-REQUESTING" ? (
-          <button type="button" className={styles.primary} disabled data-testid="table-requesting">{locale === "ko" ? "자리 확인 중" : "Checking the seat"}</button>
+          <button type="button" className={styles.primary} disabled data-testid="table-requesting">{locale === "ko" ? "미리보기 확인 중" : "Checking the preview"}</button>
         ) : retryableFailureCopy ? (
-          <button type="button" className={styles.primary} onClick={join} data-testid="table-join-retry">{locale === "ko" ? "참여 다시 시도" : "Try joining again"}</button>
+          <button type="button" className={styles.primary} onClick={join} data-testid="table-join-retry">{locale === "ko" ? "참여 미리보기 다시 시도" : "Retry join preview"}</button>
         ) : (
           <button type="button" className={styles.primary} onClick={join} disabled={unavailable} data-testid="table-join">
-            {locale === "ko" ? "Table 참여하기" : "Join this Table"}
+            {locale === "ko" ? "참여 미리보기" : "Join preview"}
           </button>
         )}
         {unavailable ? <button type="button" className={styles.secondary} onClick={() => { actions.setTab("tables"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "근처 다른 Table 보기" : "View another Table nearby"}</button> : null}

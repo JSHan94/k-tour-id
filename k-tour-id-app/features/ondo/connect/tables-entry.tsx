@@ -1,8 +1,9 @@
 "use client"
 
-import { CalendarClock, ChevronRight, Languages, MapPin, Users } from "lucide-react"
+import { CalendarClock, ChevronRight, Languages, MapPin, ShieldCheck, Users } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
+import type { Locale } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
 import { TABLES, tableStatusCopy } from "./table-model"
 import styles from "./connect.module.css"
@@ -14,11 +15,27 @@ const VENUE_NAMES: Record<string, { en: string; ko: string }> = {
   "busan-jagalchi-grill": { en: "Jagalchi Charcoal Mackerel", ko: "자갈치 숯불 고등어" },
 }
 
+export function tableFixtureTruth(locale: Locale, venue?: string) {
+  if (locale === "ko") return {
+    title: "시뮬레이션 미리보기",
+    body: venue
+      ? `${venue}에는 실제 Table이 연결되어 있지 않습니다. 아래 항목에도 실제 호스트나 예약은 없으며, 참여해도 이 기기의 로컬 미리보기만 바뀝니다.`
+      : "실제 호스트나 예약은 없습니다. 참여해도 이 기기의 로컬 미리보기만 바뀝니다.",
+  }
+  return {
+    title: "Simulated fixture",
+    body: venue
+      ? `${venue} has no live Table attached. The entries below have no live host or reservation; joining changes only this local preview.`
+      : "No live host or reservation. Joining changes only this local preview.",
+  }
+}
+
 export function TablesEntry() {
   const { state, actions } = useOndo()
   const locale = state.locale
   const joined = TABLES.filter((table) => ["confirmed", "checked_in", "completed"].includes(state.tableMembershipById[table.id] ?? "none"))
   const selectedVenue = state.surface.kind === "venue" ? canonicalMapVenueById(state.surface.venueId) : undefined
+  const truth = tableFixtureTruth(locale, selectedVenue ? venueDisplayName(selectedVenue.name.ko, locale) : undefined)
 
   return (
     <div className={styles.screen} data-testid="tables-entry">
@@ -28,7 +45,7 @@ export function TablesEntry() {
         <span>{locale === "ko" ? "식사하고 싶은 사람들이 장소와 시간을 기준으로 만나는 자리예요." : "Meet people who want to eat at the same place and time."}</span>
       </header>
 
-      {selectedVenue ? <aside className={styles.contextNotice} data-testid="tables-canonical-context"><MapPin size={17} /><div><strong>{venueDisplayName(selectedVenue.name.ko, locale)}</strong><span>{locale === "ko" ? "이 공식 장소에 연결된 실제 Table은 아직 없어요. 아래는 전체 Table 흐름 프리뷰입니다." : "No live Table is attached to this sourced place yet. The list below previews the global Table flow."}</span></div></aside> : null}
+      <aside className={styles.contextNotice} data-testid="tables-truth-notice"><ShieldCheck size={17} /><div><strong>{truth.title}</strong><span data-testid={selectedVenue ? "tables-canonical-context" : undefined}>{truth.body}</span></div></aside>
 
       {joined.length ? (
         <section className={styles.section} aria-labelledby="joined-tables-title">
