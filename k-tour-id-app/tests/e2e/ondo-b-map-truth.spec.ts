@@ -10,6 +10,13 @@ async function seed(page: Page, discoveryPreferences: string[] = [], session: Re
 }
 
 test.describe("ONDO B map truth and failure boundary", () => {
+  test.beforeEach(async ({ page }) => {
+    // After19 is a KST-evening behavior. Pin the browser clock so this suite
+    // proves the product contract instead of inheriting the runner's wall
+    // clock and changing at midnight.
+    await page.clock.setFixedTime(new Date("2026-08-19T20:30:00+09:00"))
+  })
+
   test("source failure is latched into the list fallback and retry starts a fresh attempt", async ({ page }) => {
     await seed(page)
     let blockTiles = true
