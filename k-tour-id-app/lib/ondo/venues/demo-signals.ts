@@ -60,8 +60,8 @@ function reasonFor(category: VenuePrimaryCategory, after19: boolean): LocalizedT
   const base = CATEGORY_REASON[category]
   if (!after19) return base
   return {
-    en: `${base.en} This preview is in the After 19 subset; it does not confirm opening hours or age-restricted service.`,
-    ko: `${base.ko} After 19 프리뷰 대상이지만 영업시간이나 연령 제한 서비스는 확인하지 않아요.`,
+    en: `${base.en} ONDO includes this food-and-drink source category under its simulated night-preview policy. The official record does not confirm opening hours, alcohol service, or an age restriction.`,
+    ko: `${base.ko} ONDO의 시뮬레이션 야간 프리뷰 정책에 따라 이 식음료 출처 카테고리를 포함해요. 공식 기록은 영업시간·주류 제공·연령 제한을 확인하지 않습니다.`,
   }
 }
 
@@ -73,7 +73,7 @@ function citySignals(venues: typeof CANONICAL_MAP_VENUES_COMPACT, cityOffset: nu
       const score = 48 + ((index * 17 + cityOffset * 11) % 47)
       const signalCount = 7 + ((index * 7 + cityOffset) % 17)
       const confidence = Number((0.55 + ((index * 9 + cityOffset) % 34) / 100).toFixed(2))
-      const after19 = index % 4 === 0 ? true as const : undefined
+      const after19 = venue.primaryCategory === "night" ? true as const : undefined
       const signal: BDemoSignal = {
         score,
         level: levelFor(score),

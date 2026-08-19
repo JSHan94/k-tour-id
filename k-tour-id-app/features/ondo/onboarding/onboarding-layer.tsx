@@ -29,7 +29,7 @@ const TEXT = {
   en: {
     eyebrow: "A meal in Korea",
     title: "Find what you want to eat now, even if you do not know the neighborhood.",
-    body: "ONDO starts with dense food and drink signals in Seoul and early coverage in Busan, then grows across Korea.",
+    body: "ONDO starts with food and drink coverage in Seoul and Busan, then grows across Korea.",
     start: "Get started",
     guest: "Explore as a guest",
     signal: "ONDO is a recent local food signal, not the weather.",
@@ -48,7 +48,7 @@ const TEXT = {
   ko: {
     eyebrow: "한국에서의 한 끼",
     title: "지역 이름을 몰라도, 지금 먹고 싶은 분위기로 찾아보세요.",
-    body: "ONDO는 서울의 촘촘한 식음료 신호와 부산의 초기 정보부터 시작해 한국으로 넓혀갑니다.",
+    body: "ONDO는 서울과 부산의 식음료 정보부터 시작해 한국으로 넓혀갑니다.",
     start: "시작하기",
     guest: "먼저 둘러보기",
     signal: "숫자는 기온이 아니라 최근 로컬 식음료 신호예요.",
