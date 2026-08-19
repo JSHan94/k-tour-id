@@ -47,6 +47,7 @@ test.describe("Place detail browser journeys", () => {
 
     await expect(page.getByRole("dialog", { name: "Share a visit signal" })).toBeVisible()
     await expect(page.locator("[data-signal-status='draft']")).toContainText("Seongsu Dwaeji Gukbap")
+    await page.getByLabel("Helpful note · Add a note or photo").fill("The counter is beside the entrance.")
     await page.getByRole("button", { name: "Submit signal" }).click()
 
     const gate = page.getByTestId("ondo-gate-overlay")

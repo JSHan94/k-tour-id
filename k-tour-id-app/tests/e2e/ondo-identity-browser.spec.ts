@@ -33,6 +33,11 @@ async function openVenue(page: Page, venueId = "seoul-seongsu-gukbap") {
   await expect(page.getByTestId("place-overlay")).toBeVisible()
 }
 
+async function enterCityWhenVariantB(page: Page) {
+  const nation = page.getByTestId("ondo-b-nation")
+  if (await nation.count()) await page.locator("[data-city='seoul']").click()
+}
+
 test("account JIT cancel preserves the unsaved venue and restores focus", async ({ page }) => {
   await seedReady(page)
   await openVenue(page)
@@ -75,6 +80,7 @@ test("account and person JIT failures retry, succeed, and return to the visit si
   await page.getByTestId("venue-local-signal").click()
   const signal = page.getByRole("dialog", { name: "Share a visit signal" })
   await expect(signal).toBeVisible()
+  await page.getByLabel("Helpful note · Add a note or photo").fill("The menu is available at the counter.")
   await page.getByRole("button", { name: "Submit signal" }).click()
 
   const gate = page.getByTestId("ondo-gate-overlay")
@@ -104,6 +110,7 @@ test("account and person JIT failures retry, succeed, and return to the visit si
 test("age JIT cancel, failure, retry, and success are isolated from Payment KYC", async ({ page }) => {
   await seedReady(page, { account: "ACC-ACTIVE", person: "PER-VERIFIED" })
   await page.goto("/ondo")
+  await enterCityWhenVariantB(page)
 
   await page.getByRole("button", { name: "After 19", exact: true }).click()
   await expect(page.getByRole("button", { name: "Confirm 19+", exact: true })).toBeFocused()
@@ -138,12 +145,14 @@ test("After 19 manual-off survives a remount in the same browser session", async
     ageExpiresAt: "2026-08-20T19:30:00+09:00",
   }, true)
   await page.goto("/ondo")
+  await enterCityWhenVariantB(page)
 
   await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
   await page.getByRole("button", { name: "Return to the main map" }).click()
   await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}").after19)).toBe("A19-MANUAL-OFF")
 
   await page.reload()
+  await enterCityWhenVariantB(page)
   await expect(page.getByTestId("after19-auto-banner")).toHaveCount(0)
   await expect(page.getByRole("button", { name: "After 19", exact: true })).toBeVisible()
   await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}").after19)).toBe("A19-MANUAL-OFF")

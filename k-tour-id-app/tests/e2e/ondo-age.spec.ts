@@ -7,8 +7,13 @@ test.beforeEach(async ({ page }) => {
   })
 })
 
+async function enterCityWhenVariantB(page: import("@playwright/test").Page) {
+  if (await page.getByTestId("ondo-b-nation").count()) await page.locator("[data-city='seoul']").click()
+}
+
 test("manual After 19 entry uses an age-only JIT gate and can cancel", async ({ page }) => {
   await page.goto("/ondo")
+  await enterCityWhenVariantB(page)
   await page.getByRole("button", { name: "After 19", exact: true }).click()
   await expect(page.getByRole("dialog", { name: /Confirm 19\+/ })).toBeVisible()
   await page.getByRole("button", { name: "Confirm 19+", exact: true }).click()
@@ -22,6 +27,7 @@ test("manual After 19 entry uses an age-only JIT gate and can cancel", async ({ 
 
 test("age failure preserves the gate for retry", async ({ page }) => {
   await page.goto("/ondo")
+  await enterCityWhenVariantB(page)
   await page.getByRole("button", { name: "After 19", exact: true }).click()
   await page.getByRole("button", { name: "Confirm 19+", exact: true }).click()
   await page.getByRole("button", { name: "Simulate failure" }).click()

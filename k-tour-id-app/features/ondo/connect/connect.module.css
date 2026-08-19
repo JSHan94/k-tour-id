@@ -45,6 +45,7 @@
 .primary:disabled { cursor: not-allowed; opacity: .4; }
 .secondary { border: 1px solid #d6d3cd; background: transparent; color: #292927; }
 .fieldLabel { margin-bottom: -9px; color: #55524d; font-size: 12px; font-weight: 720; }
+.requirement { margin: -14px 0 -16px; color: #706d67; font-size: 12px; line-height: 1.5; }
 .sheetBody textarea { min-height: 104px; resize: vertical; padding: 13px 0; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; background: transparent; color: #20201e; font: inherit; font-size: 14px; }
 .chat { position: relative; min-height: min(88dvh, 760px); display: flex; flex-direction: column; color: #20201e; background: #fbfbfa; }
 .chatHeader { position: sticky; top: 0; z-index: 2; min-height: 64px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 7px; padding: 8px 12px; border-bottom: 1px solid #dedbd5; background: rgb(251 250 247 / 96%); }

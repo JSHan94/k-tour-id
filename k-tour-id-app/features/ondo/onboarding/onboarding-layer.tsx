@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowRight, Check, ChevronLeft, Compass, MapPin, Sparkles, Utensils } from "lucide-react"
 import type { DiscoveryPreference, Locale, Persona } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
+import { DISCOVERY_PREFERENCE_OPTIONS } from "./discovery-options"
 import styles from "./onboarding.module.css"
 
 type Step = "value" | "intent" | "preferences"
@@ -23,15 +24,6 @@ const PERSONAS: Array<{
   { id: "long_term_resident", icon: MapPin, ko: "한국에 거주하고 있어요", en: "I live in Korea", noteKo: "거주 지역과 장기 이용에 맞춘 경로", noteEn: "A route for residents and longer stays" },
   { id: "korean_local", icon: Sparkles, ko: "한국 로컬이에요", en: "I’m a local in Korea", noteKo: "내가 아는 식음료 신호와 Table 공유", noteEn: "Share local food signals and Tables" },
 ]
-
-const PREFERENCES = [
-  { id: "classic", ko: "로컬의 익숙한 맛", en: "Local classics" },
-  { id: "cafe", ko: "카페와 디저트", en: "Cafés and dessert" },
-  { id: "late", ko: "늦은 시간의 한 끼", en: "Late-night food" },
-  { id: "lively", ko: "활기찬 분위기", en: "Lively" },
-  { id: "calm", ko: "조금 여유롭게", en: "A little calmer" },
-  { id: "diet", ko: "식이 선택", en: "Dietary preferences" },
-] as const
 
 const TEXT = {
   en: {
@@ -195,9 +187,9 @@ export function OnboardingLayer() {
         <div className={styles.panel} data-testid="onboarding-step-preferences">
           <div className={styles.heading}><span>03</span><h1>{t.preferenceTitle}</h1><p>{t.preferenceBody}</p></div>
           <div className={styles.chips}>
-            {PREFERENCES.map((preference) => {
+            {DISCOVERY_PREFERENCE_OPTIONS.map((preference) => {
               const selected = preferences.includes(preference.id)
-              return <button key={preference.id} type="button" aria-pressed={selected} className={selected ? styles.chipSelected : styles.chip} onClick={() => setPreferences((current) => selected ? current.filter((id) => id !== preference.id) : [...current, preference.id])}>{state.locale === "ko" ? preference.ko : preference.en}</button>
+              return <button key={preference.id} type="button" aria-pressed={selected} className={selected ? styles.chipSelected : styles.chip} onClick={() => setPreferences((current) => selected ? current.filter((id) => id !== preference.id) : [...current, preference.id])}>{preference.label[state.locale]}</button>
             })}
           </div>
           {failed ? <div className={styles.error} role="alert">{t.fallback}</div> : null}

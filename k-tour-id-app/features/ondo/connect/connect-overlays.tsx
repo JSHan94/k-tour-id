@@ -393,8 +393,10 @@ function LocalSignal({ venueId }: { venueId: string }) {
   const before = useRef<null | { person: typeof state.person; age: typeof state.age; paymentKyc: typeof state.paymentKyc; stamps: number; meetup: typeof state.reputation.meetup }>(null)
   const venue = VENUE_NAMES[venueId]?.[locale] ?? venueLabelById(venueId, locale) ?? (locale === "ko" ? "선택한 장소" : "Selected place")
   const gatesReady = state.account === "ACC-ACTIVE" && state.person === "PER-VERIFIED"
+  const hasEvidence = note.trim().length > 0 || photo !== null
 
   function submit() {
+    if (!hasEvidence || status === "submitting") return
     if (!gatesReady) {
       actions.beginAction({ cta: "SUBMIT_LOCAL_SIGNAL", gates: ["account", "person"], venueId })
       return
@@ -428,18 +430,19 @@ function LocalSignal({ venueId }: { venueId: string }) {
 
   return (
     <Sheet label={locale === "ko" ? "방문 신호 남기기" : "Share a visit signal"} onClose={() => actions.setSurface({ kind: "venue", venueId })} size="full">
-      <div className={styles.sheetBody} data-signal-status={status} data-signal-invariants={invariantsHold ? "preserved" : "changed"} data-testid="local-signal-overlay">
+      <div className={styles.sheetBody} data-signal-status={status} data-signal-evidence={hasEvidence ? "ready" : "required"} data-signal-invariants={invariantsHold ? "preserved" : "changed"} data-testid="local-signal-overlay">
         <p className={styles.eyebrow}>{locale === "ko" ? "현장의 최신 한마디" : "A fresh note from here"}</p>
         <h2>{locale === "ko" ? "방문 신호 남기기" : "Share a visit signal"}</h2>
         <p className={styles.lead}>{venue}</p>
-        <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "최근 방문과 도움이 될 식음료 정보를 남겨주세요. 신원 등급, 19+, 결제 KYC, Meetup과 스탬프는 바뀌지 않아요." : "Share a recent visit and useful food information. Identity, 19+, Payment KYC, Meetup, and stamps do not change."}</span></InlineNotice>
-        <label className={styles.fieldLabel} htmlFor={`signal-note-${venueId}`}>{locale === "ko" ? "도움이 될 정보 · 선택 사항" : "Helpful note · Optional"}</label>
-        <textarea id={`signal-note-${venueId}`} value={note} onChange={(event) => setNote(event.target.value)} placeholder={locale === "ko" ? "메뉴, 주문 방법, 이용 팁을 남겨주세요." : "Share a menu, ordering, or access tip."} />
+        <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "이 데모 세션에는 시뮬레이션 기여만 남아요. Visit과 Contribution 이력 외의 신원·19+·결제 KYC·Meetup·스탬프는 바뀌지 않으며 공개 ONDO 점수도 즉시 바뀌지 않아요." : "This demo session records a simulated contribution only. Identity, 19+, Payment KYC, Meetup, and stamps stay unchanged, and the public ONDO score does not change immediately."}</span></InlineNotice>
+        <label className={styles.fieldLabel} htmlFor={`signal-note-${venueId}`}>{locale === "ko" ? "도움이 될 정보 · 메모 또는 사진 필수" : "Helpful note · Add a note or photo"}</label>
+        <p className={styles.requirement} id={`signal-requirement-${venueId}`}>{locale === "ko" ? "메모나 현장 사진 중 하나를 추가해야 제출할 수 있어요." : "Add either a note or an on-site photo before submitting."}</p>
+        <textarea id={`signal-note-${venueId}`} aria-describedby={`signal-requirement-${venueId}`} value={note} onChange={(event) => setNote(event.target.value)} placeholder={locale === "ko" ? "메뉴, 주문 방법, 이용 팁을 남겨주세요." : "Share a menu, ordering, or access tip."} />
         <LocalPhotoPicker locale={locale} purpose="local_signal" value={photo} onChange={setPhoto} disabled={status === "submitting"} />
         {status === "failed" ? <InlineNotice tone="danger"><AlertTriangle size={18} /><span>{locale === "ko" ? "신호를 남기지 못했어요. 초안은 유지됐어요." : "The signal could not be submitted. Your draft was kept."}</span></InlineNotice> : null}
-        {status === "submitted" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "방문 신호를 남겼어요. Visit과 Contribution 이력만 업데이트됐어요." : "Visit signal recorded. Only Visit and Contribution histories were updated."}</span></InlineNotice> : null}
-        {status === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{locale === "ko" ? "이미 반영된 방문이에요. 활동 이력은 다시 늘어나지 않아요." : "This visit was already recorded. Activity history did not increase again."}</span></InlineNotice> : null}
-        {status === "submitted" || status === "duplicate" ? <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "venue", venueId })}>{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button> : <button type="button" className={styles.primary} onClick={submit} disabled={status === "submitting"} data-testid="local-signal-submit">{status === "submitting" ? locale === "ko" ? "신호를 남기는 중" : "Submitting signal" : status === "failed" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "신호 남기기" : "Submit signal"}</button>}
+        {status === "submitted" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "데모 세션에 시뮬레이션 기여를 남겼어요. Visit과 Contribution 이력만 업데이트됐고 공개 ONDO 점수는 즉시 바뀌지 않아요." : "Simulated contribution recorded in this demo session. Only Visit and Contribution histories were updated; the public ONDO score did not change immediately."}</span></InlineNotice> : null}
+        {status === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{locale === "ko" ? "이미 반영된 데모 방문이에요. 활동 이력과 공개 ONDO 점수는 다시 바뀌지 않아요." : "This demo visit was already recorded. Activity history and the public ONDO score did not change again."}</span></InlineNotice> : null}
+        {status === "submitted" || status === "duplicate" ? <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "venue", venueId })}>{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button> : <button type="button" className={styles.primary} onClick={submit} disabled={status === "submitting" || !hasEvidence} data-testid="local-signal-submit">{status === "submitting" ? locale === "ko" ? "신호를 남기는 중" : "Submitting signal" : status === "failed" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "신호 남기기" : "Submit signal"}</button>}
         <button type="button" className={styles.secondary} onClick={() => actions.setSurface({ kind: "venue", venueId })}>{locale === "ko" ? "작성 취소" : "Cancel draft"}</button>
       </div>
     </Sheet>

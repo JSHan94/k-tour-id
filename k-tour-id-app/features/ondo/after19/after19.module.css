@@ -31,6 +31,16 @@
 .autoSetting i { display: block; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: 150ms ease; }
 .autoSetting input:checked + span { background: #5d2947; }
 .autoSetting input:checked + span i { transform: translateX(11px); }
+
+/* Variant B starts with a nation chooser. After 19 only has a useful target
+   after a city is open, so keep its controls out of the nation hero. */
+:global([data-variant="B"]:has([data-testid="ondo-b-nation"])) .chip,
+:global([data-variant="B"]:has([data-testid="ondo-b-nation"])) .chipOn,
+:global([data-variant="B"]:has([data-testid="ondo-b-nation"])) .banner,
+:global([data-variant="B"]:has([data-testid="ondo-b-nation"])) .sessionNotice {
+  display: none;
+}
+
 @keyframes bannerIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 @media (min-width: 700px) { .gate { max-width: 430px; margin: 0 auto; border: 1px solid #dedbd5; border-bottom: 0; } }
 @media (prefers-reduced-motion: reduce) { .banner { animation: none; } .autoSetting i { transition: none; } }
