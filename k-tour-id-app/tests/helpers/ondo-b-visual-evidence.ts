@@ -174,6 +174,55 @@ async function settle(page: Page) {
   })
 }
 
+async function stabilizeMobileEvidenceScroll(
+  page: Page,
+  target: Locator,
+  position: { kind: "bottom" } | { kind: "scrollTop", value: number },
+) {
+  if ((page.viewportSize()?.width ?? 0) > 430) {
+    await target.scrollIntoViewIfNeeded()
+    return
+  }
+  await settle(page)
+  const expected = await target.evaluate((element, nextPosition) => {
+    let scroller = element.parentElement
+    while (scroller) {
+      const overflowY = getComputedStyle(scroller).overflowY
+      if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) break
+      scroller = scroller.parentElement
+    }
+    if (!scroller) throw new Error("Visual evidence scroll container was not found")
+    if (nextPosition.kind === "scrollTop") scroller.scrollTop = nextPosition.value
+    else {
+      const targetRect = element.getBoundingClientRect()
+      const scrollerRect = scroller.getBoundingClientRect()
+      scroller.scrollTop += targetRect.bottom - Math.min(scrollerRect.bottom, window.innerHeight)
+    }
+    scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
+    return nextPosition.kind === "scrollTop"
+      ? { kind: nextPosition.kind, value: scroller.scrollTop }
+      : { kind: nextPosition.kind, value: Math.round(Math.min(scroller.getBoundingClientRect().bottom, window.innerHeight)) }
+  }, position)
+  await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+  if (expected.kind === "scrollTop") {
+    await expect.poll(() => target.evaluate((element) => {
+      let scroller = element.parentElement
+      while (scroller) {
+        const overflowY = getComputedStyle(scroller).overflowY
+        if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) return scroller.scrollTop
+        scroller = scroller.parentElement
+      }
+      return -1
+    })).toBe(expected.value)
+  } else {
+    await expect.poll(() => target.evaluate((element) => Math.round(element.getBoundingClientRect().bottom))).toBe(expected.value)
+  }
+}
+
+async function expectCanonicalDetailReady(page: Page) {
+  await expect(page.getByTestId("canonical-place-overlay").locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
+}
+
 async function openCity(page: Page) {
   await gotoB(page)
   await page.locator("[data-city='seoul']").click()
@@ -296,6 +345,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else if (state === "AFTER19-VENUE-LOCKED" || state === "AFTER19-VENUE-RETURN") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
     await openCanonicalVenue(page)
+    await expectCanonicalDetailReady(page)
     const access = page.getByTestId("canonical-after19-access")
     await expect(access).toHaveAttribute("data-after19-venue-status", "locked")
     await expect(page.getByTestId("canonical-place-overlay")).toContainText(locale === "ko" ? "공식 장소 출처" : "Official place source")
@@ -309,10 +359,12 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
       await expect(page).not.toHaveURL(/after19Return=/)
     }
-    await access.scrollIntoViewIfNeeded()
+    if (state === "AFTER19-VENUE-LOCKED") await stabilizeMobileEvidenceScroll(page, access, { kind: "bottom" })
+    else await access.scrollIntoViewIfNeeded()
   } else if (state === "SAVE-FAILURE" || state === "SAVE-RECOVERED") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE" } })
     await openCanonicalVenue(page, { query: "scenario=save-failed" })
+    await expectCanonicalDetailReady(page)
     await page.getByTestId("canonical-venue-save").click()
     await expect(page.getByTestId("canonical-save-error")).toBeVisible()
     if (state === "SAVE-RECOVERED") {
@@ -328,7 +380,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
       await page.getByTestId("canonical-venue-save").scrollIntoViewIfNeeded()
     } else {
-      await page.getByTestId("canonical-save-error").scrollIntoViewIfNeeded()
+      await stabilizeMobileEvidenceScroll(page, page.getByTestId("canonical-save-error"), { kind: "bottom" })
     }
   } else if (state === "GATE-ACCOUNT-FAIL") {
     await seedB(page, { locale, session: { account: "ACC-GUEST", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
@@ -428,8 +480,10 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await page.getByTestId("labs-bridge-submit").click()
       const advances = state === "LABS-BRIDGE-FAIL" ? 2 : 3
       for (let index = 0; index < advances; index += 1) await page.getByTestId("labs-bridge-advance").click()
-      await expect(page.getByTestId("labs-overlay")).toHaveAttribute("data-bridge-state", state === "LABS-BRIDGE-FAIL" ? "BRG-FAILED" : "BRG-SIMULATED-SUCCESS")
-      await page.getByTestId(state === "LABS-BRIDGE-FAIL" ? "labs-bridge-quote" : "labs-bridge-receipt").scrollIntoViewIfNeeded()
+      const labs = page.getByTestId("labs-overlay")
+      await expect(labs).toHaveAttribute("data-bridge-state", state === "LABS-BRIDGE-FAIL" ? "BRG-FAILED" : "BRG-SIMULATED-SUCCESS")
+      await expect(labs).toHaveAttribute("data-bridge-phase", state === "LABS-BRIDGE-FAIL" ? "source_confirmed" : "destination_confirmed")
+      await stabilizeMobileEvidenceScroll(page, page.getByTestId(state === "LABS-BRIDGE-FAIL" ? "labs-bridge-quote" : "labs-bridge-receipt"), { kind: "scrollTop", value: 657 })
     }
   }
 
