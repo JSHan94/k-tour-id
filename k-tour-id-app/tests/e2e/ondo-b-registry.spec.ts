@@ -36,13 +36,15 @@ test("B registry is exact, honest, and contains no synthetic qaCase adapter", ()
   expect(seam).toContain("actual product UI")
 })
 
-test("every gap and N/A is explicit and reasoned", () => {
+test("the honest registry has zero product gaps and every N/A is explicit and reasoned", () => {
   const trace = read("01_TRACE_MATRIX.md")
+  const gaps = B_FLOW_CONTRACTS.flatMap((flow) => flow.checkpoints.filter((item) => item.disposition === "gap"))
+  expect(gaps).toEqual([])
   const nonActual = B_FLOW_CONTRACTS.flatMap((flow) => flow.checkpoints.filter((item) => item.disposition !== "actual"))
   expect(nonActual.length).toBeGreaterThan(0)
   for (const item of nonActual) {
     expect(item.proof.length).toBeGreaterThan(30)
     expect(trace).toContain(item.id)
-    expect(trace).toContain(item.disposition === "gap" ? "`GAP`" : "`N/A`")
+    expect(trace).toContain("`N/A`")
   }
 })

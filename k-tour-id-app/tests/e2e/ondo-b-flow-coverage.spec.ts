@@ -22,7 +22,7 @@ import {
 
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
 const title = (flow: string) => B_FLOW_CONTRACTS.find((item) => item.flow === flow)!.testTitle
-const evidence = (flow: string, checkpoint: string) => `${flow}-${checkpoint}`
+const evidence = (flow: string, checkpoint: string) => `B-E2E-${flow}-${checkpoint}`
 
 test.describe("ONDO B canonical flow journeys", () => {
   test.beforeEach(async ({ page }) => {
@@ -60,23 +60,30 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-002"), async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
-    await gotoB(page, "?city=seoul")
     await test.step(evidence("FL-002", "ENTRY/CANCEL"), async () => {
-      await page.getByRole("button", { name: "After 19", exact: true }).click()
-      await expect(page.getByRole("dialog", { name: /Confirm 19\+/ })).toBeVisible()
-      await page.getByRole("button", { name: "Stay on the main map" }).click()
-      await expect(page.getByRole("dialog", { name: /Confirm 19\+/ })).toHaveCount(0)
+      await openCanonicalVenue(page)
+      await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "locked")
+      await expect(page.getByTestId("canonical-place-overlay")).toContainText("MOIS LOCALDATA")
+      await page.getByTestId("canonical-after19-unlock").click()
+      await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Confirm 19+ to continue")
+      await page.getByTestId("ondo-gate-overlay").getByRole("button", { name: "Return to previous screen" }).click()
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "locked")
     })
     await test.step(evidence("FL-002", "DECISION/ERROR/RETRY"), async () => {
-      await page.getByRole("button", { name: "After 19", exact: true }).click()
-      await page.getByRole("button", { name: "Confirm 19+", exact: true }).click()
+      await page.getByTestId("canonical-after19-unlock").click()
       await page.getByRole("button", { name: "Simulate failure" }).click()
       await expect(page.getByTestId("gate-failure")).toBeVisible()
       await page.getByRole("button", { name: "Try again", exact: true }).click()
       await finishAgeGate(page)
     })
-    await test.step(evidence("FL-002", "TERMINAL"), async () => {
+    await test.step(evidence("FL-002", "TERMINAL/RETURN"), async () => {
+      await expect(page.getByTestId("ondo-gate-overlay")).toBeHidden()
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "unlocked")
       await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
+      await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
+      await expect(page).not.toHaveURL(/after19Return=/)
       expect(await sessionState(page)).toMatchObject({ age: "AGE-VERIFIED", paymentKyc: "PKY-NOT-STARTED", after19: "A19-ON" })
     })
   })
@@ -258,10 +265,31 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-011"), async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE" } })
-    await test.step(evidence("FL-011", "ENTRY/DECISION/TERMINAL"), async () => {
-      await openCanonicalVenue(page)
+    await test.step(evidence("FL-011", "ENTRY/DECISION"), async () => {
+      await openCanonicalVenue(page, { query: "scenario=save-failed" })
       await page.getByTestId("canonical-venue-save").click()
       await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+      await expect(page.getByTestId("canonical-save-error")).toBeVisible()
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      await expect(page.getByTestId("canonical-venue-save")).toBeEnabled()
+    })
+    await test.step(evidence("FL-011", "CANCEL"), async () => {
+      await page.getByTestId("canonical-save-dismiss").click()
+      await expect(page.getByTestId("canonical-save-error")).toHaveCount(0)
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      await expect(page.getByTestId("canonical-venue-save")).toHaveText("Save")
+    })
+    await test.step(evidence("FL-011", "ERROR/RETRY"), async () => {
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await page.getByTestId("canonical-place-details").click()
+      await page.getByTestId("canonical-venue-save").click()
+      await expect(page.getByTestId("canonical-save-error")).toBeVisible()
+      await page.getByTestId("canonical-save-retry").click()
+      await expect(page.getByTestId("canonical-venue-save")).toHaveText("Saved")
+      await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+    })
+    await test.step(evidence("FL-011", "TERMINAL"), async () => {
       await page.reload({ waitUntil: "domcontentloaded" })
       await page.getByRole("button", { name: "My Korea", exact: true }).click()
       await expect(page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`)).toBeVisible()
@@ -430,8 +458,6 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-018", "ERROR/RETRY"), async () => {
       await gotoB(page, "?scenario=bridge-failed")
       await openLabs(page)
-      const acknowledge = page.getByTestId("labs-acknowledge")
-      if (await acknowledge.isVisible().catch(() => false)) await acknowledge.click()
       const connectWallet = page.getByTestId("labs-connect-wallet")
       if (await connectWallet.isVisible().catch(() => false)) await connectWallet.click()
       await page.getByTestId("labs-bridge-quote").click()

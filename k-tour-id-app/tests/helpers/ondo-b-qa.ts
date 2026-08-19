@@ -52,7 +52,6 @@ function flow(
 }
 
 const A = (proof: string) => ["actual", proof] as const
-const G = (proof: string) => ["gap", proof] as const
 const N = (proof: string) => ["not_applicable", proof] as const
 
 /**
@@ -64,12 +63,12 @@ const N = (proof: string) => ["not_applicable", proof] as const
 export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   flow("FL-001", "Guest Discover", {
     ENTRY: A("real /ondo-b nation surface"), DECISION: A("Seoul/List/place selection"), CANCEL: A("close place and preserve city"),
-    ERROR: G("OpenFreeMap requests can fail while MapLibre still reports ready, so the list fallback is not deterministically reached"), RETRY: G("Retry map is coupled to the unreachable map error state"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
+    ERROR: A("dedicated map-truth route abort latches data-map-state=error and keeps the sourced list usable"), RETRY: A("Retry map starts a fresh attempt and increments data-map-attempt to 2"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
   }),
   flow("FL-002", "Short-term KYC to After19", {
-    ENTRY: A("After 19 entry on B"), DECISION: A("age-only JIT explanation"), CANCEL: A("Escape returns to normal ONDO"),
-    ERROR: A("simulated age failure"), RETRY: A("same age task retry"), TERMINAL: A("verified After19 banner"),
-    RETURN: G("no locked venue/passport-provider return path is reachable; current B only returns to the general After19 layer"),
+    ENTRY: A("locked After19 card inside the exact canonical venue"), DECISION: A("age-only JIT explanation preserves venueId"), CANCEL: A("gate cancel returns to the same locked venue detail"),
+    ERROR: A("simulated age failure retains the venue-scoped return token"), RETRY: A("same venue age task retry"), TERMINAL: A("verified After19 venue card and banner"),
+    RETURN: A("consumed OPEN_AFTER19 action restores the exact venue detail with After19 on"),
   }),
   flow("FL-003", "Table to image chat to feedback", {
     ENTRY: A("shared Tables surface mounted in B"), DECISION: A("place/time join request"), CANCEL: A("leave confirmation cancel"),
@@ -104,8 +103,8 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ERROR: A("simulated account failure"), RETRY: A("same save task retry"), TERMINAL: A("ACC-ACTIVE and one saved venue"), RETURN: A("same canonical venue"),
   }),
   flow("FL-011", "Save and My Korea", {
-    ENTRY: A("canonical venue Save"), DECISION: A("saved state"), CANCEL: A("account gate cancel leaves unsaved"),
-    ERROR: G("Flow Catalog requires local-save failure, but fixed product SHA exposes no storage failure state"), RETRY: G("no save-failure retry is reachable"), TERMINAL: A("saved card in My Korea"), RETURN: A("saved card returns to exact venue"),
+    ENTRY: A("canonical venue Save"), DECISION: A("local save starts without losing venue context"), CANCEL: A("visible local-save error can be dismissed while remaining unsaved"),
+    ERROR: A("save-failed fixture exposes a visible local-save failure while preserving the venue and CTA"), RETRY: A("Retry save reaches the persisted Saved state"), TERMINAL: A("saved card persists through reload into My Korea"), RETURN: A("saved card returns to exact venue"),
   }),
   flow("FL-012", "Local signal first mission", {
     ENTRY: A("venue Local Signal"), DECISION: A("note/photo draft"), CANCEL: A("Cancel draft returns to venue"),
@@ -429,8 +428,13 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
     if (surface === "tables") return page.getByTestId("tables-entry")
     const joined = page.getByRole("region", { name: locale === "ko" ? "참여 중" : "Joined" })
     await joined.locator(`[data-table-id='${TABLE_ID}']`).click()
-    await page.getByRole("button", { name: locale === "ko" ? "대화 열기" : "Open chat" }).click()
-    return page.getByTestId("table-chat")
+    const chat = page.getByTestId("table-chat")
+    if (!(await chat.isVisible().catch(() => false))) {
+      const openChat = page.getByRole("button", { name: locale === "ko" ? "대화 열기" : "Open chat" })
+      if (await openChat.isVisible().catch(() => false)) await openChat.click()
+    }
+    await expect(chat).toBeVisible()
+    return chat
   }
   if (surface === "local-signal") {
     await openCanonicalVenue(page)

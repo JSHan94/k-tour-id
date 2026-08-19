@@ -1,11 +1,11 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `EXECUTABLE · PRODUCT GAP BLOCKED`
+상태: `EXECUTABLE · PRODUCT GAPS CLOSED · FULL RUN PENDING`
 
 ## 1. Fixed-SHA rule
 
-1. B product를 `70b5b7b130de0fa3102bbcc6239f334c1226e8fb`로 고정한다.
-2. QA branch는 제품 source/package/config를 수정하지 않는다.
+1. B product를 `7e36de257304dc057675566e7f3ef0c271528ffb`로 고정한다.
+2. 제품 fix commit 뒤의 QA evidence commit은 제품 source/package/config를 수정하지 않는다.
 3. `PLAYWRIGHT_BASE_URL`은 같은 product SHA를 serving하는 URL만 허용한다.
 4. 제품 SHA가 바뀌면 결과·pixel baseline·clean streak를 모두 무효화한다.
 
@@ -22,7 +22,7 @@ G6 runtime: product pageerror/console 0; external map failure separately recorde
 G7 5-role blind review
 ```
 
-`GAP`은 skip이나 N/A가 아니다. 현재 `FL-001 ERROR/RETRY`, `FL-002 RETURN`, `FL-011 ERROR/RETRY`가 해결되기 전에는 clean이 될 수 없다.
+`GAP`은 skip이나 N/A가 아니다. 현재 registry는 `0 GAP`이며, 이후 제품 SHA가 바뀌어 실제 여정 증거가 깨지면 즉시 GAP으로 되돌린다.
 
 ## 3. Commands
 
@@ -30,7 +30,7 @@ G7 5-role blind review
 
 ```bash
 pnpm exec playwright test tests/e2e/ondo-b-registry.spec.ts --project=desktop-chromium --workers=1
-pnpm exec playwright test tests/e2e/ondo-b-flow-coverage.spec.ts tests/e2e/ondo-b-product-browser.spec.ts --project=mobile-chromium --project=desktop-chromium --workers=1
+pnpm exec playwright test tests/e2e/ondo-b-flow-coverage.spec.ts tests/e2e/ondo-b-map-truth.spec.ts tests/e2e/ondo-b-product-browser.spec.ts --project=mobile-chromium --project=desktop-chromium --workers=1
 pnpm exec playwright test tests/e2e/ondo-b-content.spec.ts --project=mobile-chromium --workers=1
 pnpm exec playwright test tests/e2e/ondo-b-a11y-interaction.spec.ts --project=mobile-chromium --workers=1
 pnpm exec playwright test tests/visual/ondo-b-flow-pixels-mobile.spec.ts --project=mobile-chromium --workers=1
@@ -51,7 +51,7 @@ pnpm exec playwright test tests/visual/ondo-b-flow-pixels-desktop.spec.ts --proj
 - `pageerror`와 unhandled rejection은 항상 failure다.
 - product document/script/fetch/xhr failure는 failure다.
 - `tiles.openfreemap.org` failure는 `externalMap`, Google Fonts CDN failure는 `externalAsset` 목록에 별도 기록한다.
-- 18-flow canonical suite는 OpenFreeMap tile을 의도적으로 abort해 외부 SLA를 제거한다. live tile 및 fallback/retry 동작은 `ondo-b-product-browser.spec.ts`가 별도로 소유한다.
+- 18-flow canonical suite는 OpenFreeMap tile을 의도적으로 abort해 외부 SLA를 제거한다. deterministic fallback/retry는 `ondo-b-map-truth.spec.ts`, live tile 경계는 `ondo-b-product-browser.spec.ts`가 소유한다.
 - 외부 resource failure가 있어도 `data-map-state=error`, venue list, count, enabled item, `Retry map`이 보여야 한다.
 - external failure가 있었다는 이유만으로 product runtime error를 allowlist하지 않는다.
 

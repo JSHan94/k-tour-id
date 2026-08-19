@@ -4,10 +4,10 @@
 
 | Field | Value |
 |---|---|
-| Fixed product SHA | `70b5b7b130de0fa3102bbcc6239f334c1226e8fb` |
+| Fixed product SHA | `7e36de257304dc057675566e7f3ef0c271528ffb` |
 | Route | `/ondo-b` |
 | QA contract | real UI; no synthetic adapter |
-| Known product gaps | `FL-001 ERROR/RETRY`, `FL-002 RETURN`, `FL-011 ERROR/RETRY` |
+| Known product gaps | `NONE` — targeted browser closure 6/6; full review pending |
 | Clean streak | `0` |
 
 ## Round ledger

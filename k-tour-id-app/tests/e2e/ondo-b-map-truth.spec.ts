@@ -21,16 +21,19 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='seoul']").click()
     const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 12_000 })
-    await expect(page.getByText("The map could not load. The same sourced place list remains available.")).toBeVisible()
-    await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(31)
+    await test.step("B-E2E-FL-001-ERROR", async () => {
+      await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 12_000 })
+      await expect(page.getByText("The map could not load. The same sourced place list remains available.")).toBeVisible()
+      await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(31)
+      await page.waitForTimeout(900)
+      await expect(root).toHaveAttribute("data-map-state", "error")
+    })
 
-    await page.waitForTimeout(900)
-    await expect(root).toHaveAttribute("data-map-state", "error")
-
-    blockTiles = false
-    await page.getByRole("button", { name: "Retry map" }).click()
-    await expect(root).toHaveAttribute("data-map-attempt", "2")
+    await test.step("B-E2E-FL-001-RETRY", async () => {
+      blockTiles = false
+      await page.getByRole("button", { name: "Retry map" }).click()
+      await expect(root).toHaveAttribute("data-map-attempt", "2")
+    })
   })
 
   test("city cards and marker key separate official records from simulated ONDO inputs", async ({ page }) => {

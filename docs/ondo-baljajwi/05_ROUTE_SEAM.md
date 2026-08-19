@@ -1,6 +1,6 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE AT PRODUCT SHA 70b5b7b`
+상태: `ACTIVE AT PRODUCT SHA 7e36de2`
 
 ## 원칙
 
@@ -14,6 +14,8 @@ QA는 `/ondo-b`의 **actual product UI**만 조작한다. 제품에 테스트 �
 | B map | `[data-testid="ondo-b-map-entry"]`, `data-map-state` |
 | City | `[data-city="seoul"]`, `[data-city="busan"]` |
 | Canonical place | `?venueId=<public venue id>`, `canonical-place-peek/overlay` |
+| Venue-scoped After19 return | `canonical-after19-access/unlock`; consumed gate restores exact `venueId` and expanded detail |
+| Local save recovery | `?scenario=save-failed`; `canonical-save-error/retry/dismiss` preserves the same venue |
 | Shared navigation | accessible `Main navigation` / `주요 메뉴` |
 | Shared non-map | `tables-entry`, `ondo-my-entry`, `ondo-identity-entry` |
 | JIT gate | `ondo-gate-overlay`, real accessible button names |
