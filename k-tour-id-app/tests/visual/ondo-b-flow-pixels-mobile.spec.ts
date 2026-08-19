@@ -1,33 +1,34 @@
 import { expect, test } from "@playwright/test"
 import {
-  B_PIXEL_CASES,
-  expectBRuntimeClean,
-  installBRuntimeGuard,
-  prepareBPage,
-  setupBSurface,
-} from "../helpers/ondo-b-qa"
+  B_VISUAL_CASES,
+  attachBCaseMetadata,
+  bSnapshotName,
+  closeBVisualCase,
+  expectBVisualGuards,
+  prepareBVisualPage,
+  setupBVisualCase,
+} from "../helpers/ondo-b-visual-evidence"
 
-const cases = B_PIXEL_CASES.filter((item) => item.project === "mobile-chromium")
+test.describe("ONDO B complete mobile visual evidence · 390×844", () => {
+  for (const item of B_VISUAL_CASES) {
+    test(`${item.id} · ${item.description}`, async ({ page }, testInfo) => {
+      test.setTimeout(90_000)
+      test.skip(testInfo.project.name !== "mobile-chromium", "mobile evidence belongs to mobile-chromium")
+      await page.setViewportSize({ width: 390, height: 844 })
+      await prepareBVisualPage(page, { mapFailure: item.state === "CITY-FALLBACK" })
+      const scope = await setupBVisualCase(page, item)
+      await expect(scope).toBeVisible()
+      await attachBCaseMetadata(testInfo, item, "390x844")
 
-test.describe("ONDO B reachable mobile pixel surfaces", () => {
-  test.beforeEach(async ({ page }) => {
-    installBRuntimeGuard(page)
-    await prepareBPage(page)
-  })
-  test.afterEach(async ({ page }) => expectBRuntimeClean(page))
-
-  for (const item of cases) {
-    test(item.id, async ({ page }, testInfo) => {
-      test.skip(testInfo.project.name !== item.project, `belongs to ${item.project}`)
-      await page.setViewportSize({ width: item.width, height: item.height })
-      const surface = await setupBSurface(page, item.surface, item.locale)
-      await expect(surface).toBeVisible()
-      await expect(page.locator(item.selector)).toHaveScreenshot(`${item.id}.png`, {
+      // External vector tiles are replaced before MapLibre renders. The ONDO
+      // marker, score, cluster, label, sheet, and navigation layers stay visible.
+      await expect(page).toHaveScreenshot(bSnapshotName(item, "390x844"), {
         animations: "disabled",
         caret: "hide",
-        mask: [page.locator("[data-testid='maplibre-map'] canvas")],
-        maskColor: "#EAE6DD",
+        fullPage: false,
       })
+      await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
+      await closeBVisualCase(page)
     })
   }
 })
