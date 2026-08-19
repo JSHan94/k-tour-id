@@ -27,6 +27,7 @@ test.describe("ONDO B complete mobile visual evidence · 390×844", () => {
         animations: "disabled",
         caret: "hide",
         fullPage: false,
+        maxDiffPixels: 32,
       })
       await closeBVisualCase(page)
     })

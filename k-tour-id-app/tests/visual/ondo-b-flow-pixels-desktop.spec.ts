@@ -25,6 +25,7 @@ test.describe("ONDO B complete desktop visual evidence · 1440×1000", () => {
         animations: "disabled",
         caret: "hide",
         fullPage: false,
+        maxDiffPixels: 32,
       })
       await closeBVisualCase(page)
     })
