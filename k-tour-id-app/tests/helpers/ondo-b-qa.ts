@@ -65,7 +65,7 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ENTRY: A("real /ondo-b nation surface"), DECISION: A("Seoul/List/place selection"), CANCEL: A("close place and preserve city"),
     ERROR: A("dedicated map-truth route abort latches data-map-state=error and keeps the sourced list usable"), RETRY: A("Retry map starts a fresh attempt and increments data-map-attempt to 2"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
   }),
-  flow("FL-002", "Short-term KYC to After19", {
+  flow("FL-002", "Age proof to exact After19 venue", {
     ENTRY: A("locked After19 card inside the exact canonical venue"), DECISION: A("age-only JIT explanation preserves venueId"), CANCEL: A("gate cancel returns to the same locked venue detail"),
     ERROR: A("simulated age failure retains the venue-scoped return token"), RETRY: A("same venue age task retry"), TERMINAL: A("verified After19 venue card and banner"),
     RETURN: A("consumed OPEN_AFTER19 action restores the exact venue detail with After19 on"),
