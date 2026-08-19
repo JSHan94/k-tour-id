@@ -153,7 +153,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(page.getByTestId("checkout-receipt")).toBeVisible()
       await page.getByTestId("visit-proof-check").click()
       await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "10")
-      await page.getByRole("button", { name: "Close" }).last().click()
+      await page.getByRole("button", { name: "Back to My Korea" }).click()
       await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
     })
   })
