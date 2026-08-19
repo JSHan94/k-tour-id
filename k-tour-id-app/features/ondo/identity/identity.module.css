@@ -33,7 +33,7 @@
 .route, .routeSelected { display: grid; grid-template-columns: 38px 1fr 20px; align-items: center; gap: 10px; width: 100%; min-height: 70px; padding: 12px 2px; border: 0; border-bottom: 1px solid #e5e3de; background: transparent; color: #716e68; }
 .routeSelected { background: #f1f0ec; color: #242422; }
 .route strong, .routeSelected strong, .providerCard strong { display: block; color: #292927; font-size: 12px; }
-.route small, .routeSelected small, .providerCard small { display: block; margin-top: 3px; color: #797670; font-size: 12px; line-height: 1.45; }
+.route small, .routeSelected small, .providerCard small { display: block; margin-top: 3px; color: #65625d; font-size: 12px; line-height: 1.45; }
 .providerCard { display: grid; grid-template-columns: 36px 1fr; align-items: center; gap: 10px; margin: 20px 0; padding: 13px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; color: #4f4d48; text-align: left; }
 .spin { animation: spin 900ms linear infinite; }
 
@@ -76,7 +76,7 @@
 .labsEntry { display: grid; grid-template-columns: 42px 1fr 20px; align-items: center; gap: 11px; width: 100%; min-height: 70px; margin-top: 26px; padding: 12px 0; border: 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; background: transparent; color: #292927; text-align: left; }
 .labsEntry > span { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; color: #55524d; }
 .labsEntry strong { display: block; font-size: 12px; }
-.labsEntry small { display: block; margin-top: 3px; color: #817e78; font-size: 12px; line-height: 1.45; }
+.labsEntry small { display: block; margin-top: 3px; color: #65625d; font-size: 12px; line-height: 1.45; }
 
 @keyframes gateIn { from { transform: translateY(18px); } to { transform: translateY(0); } }
 @keyframes spin { to { transform: rotate(360deg); } }

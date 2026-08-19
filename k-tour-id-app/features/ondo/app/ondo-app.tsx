@@ -49,7 +49,7 @@ function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A
       data-locale={state.locale}
     >
       <section className={styles.canvas} aria-label="ONDO travel food app">
-        <div className={styles.content} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>{active}</div>
+        <div className={styles.content} data-active-tab={state.tab} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>{active}</div>
         <nav className={styles.nav} aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {NAV.map(({ id, icon: Icon }) => (
             <button

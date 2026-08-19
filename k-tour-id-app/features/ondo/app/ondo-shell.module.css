@@ -35,6 +35,13 @@
   padding-bottom: calc(82px + env(safe-area-inset-bottom));
 }
 
+.content[data-active-tab="my"],
+.content[data-active-tab="tables"],
+.content[data-active-tab="id"] {
+  height: calc(100% - 86px - env(safe-area-inset-bottom));
+  padding-bottom: 0;
+}
+
 .nav {
   position: absolute;
   z-index: 60;

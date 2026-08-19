@@ -61,7 +61,7 @@
 .resultBar { position: absolute; z-index: 5; right: 14px; bottom: calc(95px + env(safe-area-inset-bottom)); left: 14px; display: flex; min-height: 48px; align-items: center; justify-content: space-between; padding: 0 8px 0 16px; border: 1px solid #dededb; border-radius: 14px; background: rgb(255 255 255 / 96%); color: #69645d; font-size: 12px; }
 .resultBar b { color: #24221f; font-size: 14px; }
 .resultBar button { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; border: 0; background: transparent; color: #24221f; font-size: 12px; font-weight: 750; }
-.listPanel { position: absolute; z-index: 4; inset: 218px 0 0; overflow-y: auto; padding: 0 14px 170px; background: #fbfbfa; }
+.listPanel { position: absolute; z-index: 4; top: 218px; right: 0; bottom: calc(151px + env(safe-area-inset-bottom)); left: 0; overflow-y: auto; padding: 0 14px 16px; background: #fbfbfa; }
 .venueList { display: grid; margin: 0; padding: 0; list-style: none; }
 .venueList li { border-bottom: 1px solid #e3e0da; }
 .venueList button { display: grid; width: 100%; min-height: 98px; grid-template-columns: 48px 1fr auto; align-items: center; gap: 12px; padding: 12px 2px; border: 0; background: transparent; color: inherit; text-align: left; }

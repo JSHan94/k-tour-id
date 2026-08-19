@@ -69,7 +69,7 @@ export function MyEntry() {
       <section className={styles.section} aria-labelledby="stamp-heading">
         <div className={styles.sectionTitle}><div><Stamp size={18} /><h2 id="stamp-heading">{locale === "ko" ? "방문 스탬프" : "Visit stamps"}</h2></div><span>{state.stamps}/10</span></div>
         <div className={styles.stampCard}>
-          <div className={styles.stampGrid} aria-label={locale === "ko" ? `방문 스탬프 10개 중 ${state.stamps}개` : `${state.stamps} of 10 visit stamps`}>
+          <div className={styles.stampGrid} role="img" aria-label={locale === "ko" ? `방문 스탬프 10개 중 ${state.stamps}개` : `${state.stamps} of 10 visit stamps`}>
             {Array.from({ length: 10 }, (_, index) => <span key={index} className={index < state.stamps ? styles.stampFilled : styles.stampEmpty}>{index < state.stamps ? <Check size={16} /> : index + 1}</span>)}
           </div>
           <p>{state.stamps === 10 ? locale === "ko" ? "열 번째 방문을 남겼어요." : "You recorded your tenth visit." : locale === "ko" ? "결제가 아니라 별도로 확인된 방문이 하나씩 쌓여요." : "Each separate confirmed visit—not payment—adds one stamp."}</p>

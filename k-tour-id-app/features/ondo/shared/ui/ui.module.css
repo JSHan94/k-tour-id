@@ -29,7 +29,7 @@
 
 .peek { max-height: 36dvh; }
 .medium { max-height: 66dvh; }
-.full { max-height: 92dvh; }
+.full { max-height: 100%; }
 
 .grabber {
   width: 42px;

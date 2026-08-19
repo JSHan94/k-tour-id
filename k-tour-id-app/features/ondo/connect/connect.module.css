@@ -63,6 +63,7 @@
 .received time, .sent small { color: inherit; opacity: .72; font-size: 12px; }
 .sent img { display: block; width: min(240px, 100%); aspect-ratio: 4 / 3; border-radius: 9px; object-fit: cover; }
 .failedMessage { outline: 1px solid #b95148; background: #fff; color: #8b302b; }
+.failedMessage small { color: #7d2c27; opacity: 1; }
 .failedMessage button { min-height: 44px; margin-top: 5px; padding: 0 12px; border: 1px solid #b95148; border-radius: 10px; background: transparent; color: #8b302b; font-size: 12px; }
 .chatTools { display: grid; gap: 10px; padding: 12px 14px calc(18px + env(safe-area-inset-bottom)); border-top: 1px solid #dedbd5; background: #fbfbfa; }
 .composer { display: grid; grid-template-columns: 1fr 44px; gap: 8px; }
