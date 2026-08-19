@@ -146,14 +146,16 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await expectNoSeriousAxe(page, chat)
   })
 
-  test("locked After19 copy leads with benefit and retains privacy/source truth", async ({ page }) => {
+  test("locked After19 copy separates ONDO policy from official place truth", async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await openCanonicalVenue(page)
     const access = page.getByTestId("canonical-after19-access")
-    await expect(access).toContainText("See this place’s night preview after one current 19+ check.")
+    await expect(access).toContainText("ONDO locks this simulated night preview behind its own 19+ policy.")
+    await expect(access).toContainText("This is not an official age restriction")
+    await expect(access).toContainText("does not confirm opening hours, alcohol service, admission, or an age restriction")
     await expect(access).toContainText("The official place record stays visible")
     await expect(access).toContainText("identity details never appear on the map")
-    await expect(access.getByTestId("canonical-after19-unlock")).toHaveText(/Confirm 19\+ and return here/)
+    await expect(access.getByTestId("canonical-after19-unlock")).toHaveText(/Confirm 19\+ for this preview/)
     await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
   })
 

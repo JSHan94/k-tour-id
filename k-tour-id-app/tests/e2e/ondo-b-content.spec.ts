@@ -29,9 +29,21 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       await expectNoHorizontalOverflow(page)
       const copy = (await surface.innerText()).trim()
       expect(copy.length, "surface must contain user-facing copy").toBeGreaterThan(20)
+      if (item.surface === "onboarding") {
+        if (item.locale === "ko") expect(copy).toContain("ONDO는 서울과 부산의 식음료 정보부터 시작해 한국으로 넓혀갑니다.")
+        else expect(copy).toContain("ONDO starts with food and drink coverage in Seoul and Busan, then grows across Korea.")
+        expect(copy).not.toMatch(/dense food|early coverage|서울의 촘촘|부산의 초기/i)
+      }
       if (item.surface === "place") {
         if (item.locale === "ko") expect(copy).toContain("공식 영문명 미제공 · 공식 한글명 표시")
         else expect(copy).toContain("Transliterated for navigation")
+        if (item.locale === "ko") {
+          expect(copy).toContain("ONDO 자체 19+ 정책으로 이 시뮬레이션 야간 프리뷰를 잠가요.")
+          expect(copy).toContain("공식 연령 제한이 아니며")
+        } else {
+          expect(copy).toContain("ONDO locks this simulated night preview behind its own 19+ policy.")
+          expect(copy).toContain("This is not an official age restriction")
+        }
       }
       if (["place", "account-gate", "age-gate", "tables", "table-chat", "local-signal", "checkout", "profile", "labs", "after19"].includes(item.surface)) {
         expect(copy, "sensitive/simulated surfaces must state a truth or privacy boundary").toMatch(PRODUCT_BOUNDARY)

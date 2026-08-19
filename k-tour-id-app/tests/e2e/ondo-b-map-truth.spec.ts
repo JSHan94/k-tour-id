@@ -2,11 +2,11 @@ import { expect, test, type Page } from "@playwright/test"
 
 const ALL_INTERESTS = ["Local classics", "Cafés and dessert", "Late-night food", "Lively", "A little calmer", "Dietary preferences"]
 
-async function seed(page: Page, discoveryPreferences: string[] = []) {
-  await page.addInitScript(({ discoveryPreferences }) => {
+async function seed(page: Page, discoveryPreferences: string[] = [], session: Record<string, unknown> = {}) {
+  await page.addInitScript(({ discoveryPreferences, session }) => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences }))
-    sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-GUEST" }))
-  }, { discoveryPreferences })
+    sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE", account: "ACC-GUEST", ...session }))
+  }, { discoveryPreferences, session })
 }
 
 test.describe("ONDO B map truth and failure boundary", () => {
@@ -106,5 +106,26 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await panel.getByRole("button", { name: "Reset interests" }).click()
     await expect(summary).toContainText("Tune interests")
     await expect(page.getByText(/^200 sourced food places$/)).toBeVisible()
+  })
+
+  test("After19 map shows actual eligible night-preview counts and simulated policy truth", async ({ page }) => {
+    await seed(page, [], {
+      account: "ACC-ACTIVE",
+      person: "PER-VERIFIED",
+      age: "AGE-VERIFIED",
+      ageExpiresAt: "2099-08-20T20:30:00+09:00",
+      after19: "A19-ON",
+    })
+
+    for (const [city, count] of [["seoul", 7], ["busan", 10]] as const) {
+      await page.goto(`/ondo-b?city=${city}&view=list`, { waitUntil: "domcontentloaded" })
+      const root = page.getByTestId("ondo-b-map-entry")
+      await expect(root).toHaveAttribute("data-signal-source-count", String(count))
+      await expect(root).toContainText(`${count} ONDO simulated 19+ night-preview places`)
+      await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(count)
+    }
+
+    await page.getByTestId("ondo-b-map-entry").getByRole("button", { name: "KO", exact: true }).click()
+    await expect(page.getByTestId("ondo-b-map-entry")).toContainText("10 개 ONDO 시뮬레이션 19+ 야간 프리뷰 장소")
   })
 })

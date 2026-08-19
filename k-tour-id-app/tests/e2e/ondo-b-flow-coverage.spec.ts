@@ -63,6 +63,8 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-002", "ENTRY/CANCEL"), async () => {
       await openCanonicalVenue(page)
       await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "locked")
+      await expect(page.getByTestId("canonical-after19-access")).toContainText("ONDO locks this simulated night preview behind its own 19+ policy.")
+      await expect(page.getByTestId("canonical-after19-access")).toContainText("This is not an official age restriction")
       await expect(page.getByTestId("canonical-place-overlay")).toContainText("MOIS LOCALDATA")
       await page.getByTestId("canonical-after19-unlock").click()
       await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Confirm 19+ to continue")
@@ -81,6 +83,8 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(page.getByTestId("ondo-gate-overlay")).toBeHidden()
       await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
       await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "unlocked")
+      await expect(page.getByTestId("canonical-after19-access")).toContainText("ONDO’s simulated 19+ preview policy is on.")
+      await expect(page.getByTestId("canonical-after19-access")).toContainText("not an official age restriction")
       await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
       await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
       await expect(page).not.toHaveURL(/after19Return=/)
