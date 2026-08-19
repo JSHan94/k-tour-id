@@ -1,10 +1,10 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `EXECUTABLE · PRODUCT GAPS CLOSED · FULL RUN PENDING`
+상태: `EXECUTED · PRODUCT GAPS CLOSED · TWO CLEAN ROUNDS REQUIRED`
 
 ## 1. Fixed-SHA rule
 
-1. B product를 `7e36de257304dc057675566e7f3ef0c271528ffb`로 고정한다.
+1. B product를 `0cc65f2793ca7a17f59397b1e9e0391f281f9649`, harness를 `8b0060ff6f371402eb2c9d8766461b50f57e4742`로 고정한다.
 2. 제품 fix commit 뒤의 QA evidence commit은 제품 source/package/config를 수정하지 않는다.
 3. `PLAYWRIGHT_BASE_URL`은 같은 product SHA를 serving하는 URL만 허용한다.
 4. 제품 SHA가 바뀌면 결과·pixel baseline·clean streak를 모두 무효화한다.
@@ -17,7 +17,7 @@ G1 typecheck/build (product owner evidence)
 G2 real browser: 18 composite journeys + 4 data/map boundaries
 G3 content: 14 reachable surfaces × KO/EN
 G4 a11y: 14 reachable surfaces, focus/name/44px/overflow
-G5 pixel: 9 mobile + 4 desktop layout-distinct surfaces
+G5 pixel: 44 states × mobile/desktop = 88 contracts
 G6 runtime: product pageerror/console 0; external map failure separately recorded
 G7 5-role blind review
 ```

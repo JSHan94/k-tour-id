@@ -165,7 +165,7 @@ Commit message 형식:
 
 ~~~text
 feat(ondo-map): [REQ-007,REQ-019][FL-001] add recent map heat states
-feat(ondo-id): [REQ-003,REQ-012][FL-002] add passport and age return flow
+feat(ondo-id): [REQ-005,REQ-012][FL-002] add age-only exact venue return flow
 feat(ondo-connect): [REQ-008,REQ-010][FL-003] add image message retry
 test(ondo): [REQ-011][E2E-PAY-02] cover declined OOKRW checkout
 fix(ondo): [S1][MAP-FALLBACK][FX-MAP-TILE-FAIL] keep list fallback visible

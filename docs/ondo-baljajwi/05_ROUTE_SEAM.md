@@ -1,6 +1,6 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE AT PRODUCT SHA 7e36de2`
+상태: `ACTIVE · PRODUCT 0cc65f2 · HARNESS 8b0060f`
 
 ## 원칙
 

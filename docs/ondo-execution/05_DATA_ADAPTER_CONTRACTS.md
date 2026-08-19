@@ -185,7 +185,7 @@ export interface ReturnTo {
 |---|---|---|---|---|
 | `SCN-001-GUEST-DISCOVER` | `FL-001` | guest, day, Seoul | 검색→장소 상세→외부 길찾기 | tile 실패 시 동기화된 목록 유지 |
 | `SCN-002-ACCOUNT-RETURN` | `FL-010` → `FL-011` | guest가 저장 선택 | account 생성 후 같은 장소 저장 | 취소·실패하면 상세, 성공 callback 중복에도 저장 1회 |
-| `SCN-003-TOURIST-AFTER19` | `FL-002` | account, passport 미확인 | provider fixture→19+→KST 19시 자동 전환 | 취소·실패·만료 후 원 CTA 복귀 |
+| `SCN-003-TOURIST-AFTER19` | `FL-002` | age proof 미확인 | 독립 age fixture→같은 venue 상세→After19; 자동 전환은 별도 4 guard | 취소·실패·만료 후 같은 장소의 일반 정보 유지 |
 | `SCN-004-TABLE-CHAT` | `FL-003` | account, Table 상세 | 참가→텍스트/이미지→피드백 | 미참가 chat 차단; 이미지 retry |
 | `SCN-005-CHECKOUT-LABS` | `FL-004` | payment KYC 미확인 | KYC simulation→mock checkout receipt, stamp 불변 | 잔액 부족·취소·중복 결제 차단 |
 | `SCN-006-STAMP-MILESTONE` | `FL-004` | stamp 9; checkout 결과는 guard가 아님 | 별도 unique visit proof 후 10, 기념 badge 선택 노출 | 결제만으로 stamp 증가 금지; NFT는 Labs opt-in simulation만 |

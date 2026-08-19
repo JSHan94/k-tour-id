@@ -663,7 +663,7 @@ visible CTA가 눌러도 상태가 바뀌지 않으면 Candidate blocker다.
 | `PX-008` | `VIS-HEAT-03` | `SCN-003-TOURIST-AFTER19` | 390×844 | EN | auto banner+night map+off |
 | `PX-009` | `VIS-HEAT-04` | `FX-MAP-BUSAN-SEED` | 390×844 | EN | Busan seed/Growing truth |
 | `PX-010` | `VIS-ONB-01` | `SCN-011-ONBOARD-SHORT`, `SCN-012-ONBOARD-KOREAN`, `SCN-013-ONBOARD-RESIDENT` | 390×844 | KO | 3 persona cards+skip |
-| `PX-011` | `VIS-FLOW-01` | `SCN-003-TOURIST-AFTER19` | 390×844 | EN | Passport/age simulation truth |
+| `PX-011` | `VIS-FLOW-01` | `SCN-003-TOURIST-AFTER19` | 390×844 | EN | age-only simulation truth + exact venue return |
 | `PX-012` | `VIS-FLOW-02` | `SCN-004-TABLE-CHAT` | 390×844 | EN | member chat image failed/retry |
 | `PX-013` | `VIS-FLOW-03` | `SCN-014-LOCAL-SIGNAL` | 390×844 | KO | Local Signal photo+failure/return |
 | `PX-014` | `VIS-FLOW-04` | `SCN-005-CHECKOUT-LABS` | 390×844 | KO | KRW price/OOKRW read-only settlement hypothesis+no stamp |

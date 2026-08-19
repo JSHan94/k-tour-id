@@ -1,5 +1,7 @@
 # ONDO Autonomous Run Status
 
+> **Historical A/v2 run record.** 현재 ONDO B 후보의 실행·검수 정본은 [ONDO B Index](../ondo-baljajwi/00_INDEX.md)와 [Final Requirements Audit](../ondo-baljajwi/06_FINAL_REQUIREMENTS_AUDIT.md)이다.
+
 최종 갱신: `2026-08-19`
 현재 Gate: `CANDIDATE APPROVED · DEPLOYED`
 Clock: `STARTED · 2026-08-19 04:15 KST`

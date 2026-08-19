@@ -121,7 +121,7 @@ Labs fixture는 `LABS · SIMULATED`와 대상 네트워크를 분리해 표시�
 |---|---|---|---|---|---|---|
 | `REQ-001` | 한국인 OmniOne CX | Foundation | `Simulated` | 성공·취소·실패·만료 fixture; 실제 CX 호출 없음 | `FL-005`, `PER-*` | `FX-PER-CX-SUCCESS` |
 | `REQ-002` | 장기체류 외국인 외국인등록증 | Foundation | `Simulated` | 지원·미지원·대체 verification 분기 | `FL-006`, `PER-UNSUPPORTED` | `FX-PER-RESIDENCE-UNSUPPORTED` |
-| `REQ-003` | 단기 여행객 Passport KYC + 첫 현장 미션 | Hero | `Simulated` | KYC와 행동 평판을 분리; `FL-012`는 unique evidence에 따른 Visit·Contribution만 변경하고 Meetup은 `FL-003` 이후 | `FL-002`, `FL-012`, `PER-*`, `REP-*` | `FX-PER-PASSPORT-SUCCESS`, `FX-UPL-LOCAL-SIGNAL-SUCCESS` |
+| `REQ-003` | 단기 여행객 Passport KYC + 첫 현장 미션 | Hero | `Simulated` | KYC와 행동 평판을 분리; `FL-012`는 unique evidence에 따른 Visit·Contribution만 변경하고 Meetup은 `FL-003` 이후. 독립 Age-only인 `FL-002`에는 Passport를 강제하지 않음 | `FL-006`, `FL-012`, `PER-*`, `REP-*` | `FX-PER-PASSPORT-SUCCESS`, `FX-UPL-LOCAL-SIGNAL-SUCCESS` |
 | `REQ-004` | OpenDID·EAS·chain receipt adapter 경계 | Foundation | `Contract-only` | OpenDID와 EAS를 별도 adapter로 두고 canonical Evidence Envelope로 정규화; 실제 EAS adapter 구현은 Deferred | `FL-016`, `FL-018`, `EVD-*` | `FX-EVD-VALID` |
 | `REQ-005` | 로그인/KYC 분리·Sui zkLogin | Foundation | `Simulated` | Account와 verification gate 분리; zkLogin은 Labs signer 선택지 | `FL-010`, `FL-018`, `ACC-*`, `WAL-*` | `FX-ACC-SUCCESS`, `FX-WAL-LABS-READY` |
 | `REQ-006` | USDC/USDT·OOKRW·bridge; AMM Deferred | Labs | `Simulated` | 자산별 잔고와 bridge source/destination state; 실제 자산 이동 없음. AMM은 9시간 비구현 | `FL-018`, `BRG-*`, `BRP-*` | `FX-BRG-DESTINATION-CONFIRMED` |

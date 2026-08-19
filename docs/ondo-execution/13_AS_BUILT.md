@@ -1,5 +1,7 @@
 # ONDO Frontend Demo Candidate v2 · As-built
 
+> **Historical A/v2 as-built.** 이 문서의 `9678b2b`, Leaflet, 초기 서울/부산 fixture와 `/ondo` 배포는 보존된 A 후보 기록이다. 현재 ONDO B의 정본은 [Final As-built](../ondo-baljajwi/07_AS_BUILT.md), [Final Requirements Audit](../ondo-baljajwi/06_FINAL_REQUIREMENTS_AUDIT.md), [Evidence Manifest](../ondo-baljajwi/04_EVIDENCE_MANIFEST.md)다.
+
 상태: `CANDIDATE APPROVED · DEPLOYED`
 
 작성자: Root Integrator

@@ -1,8 +1,10 @@
 # ONDO B · Requirement → Flow → Actual Evidence Matrix
 
-상태: `HONEST REGISTRY · EXECUTION PENDING`
+상태: `HONEST REGISTRY · FINAL AUTOMATED EXECUTION PASS`
 
-고정 제품 SHA: `7e36de257304dc057675566e7f3ef0c271528ffb`
+고정 제품 SHA: `0cc65f2793ca7a17f59397b1e9e0391f281f9649`
+
+검수 Harness SHA: `8b0060ff6f371402eb2c9d8766461b50f57e4742`
 
 ## 1. 판정 규칙
 
@@ -17,7 +19,7 @@
 |---|---|---|
 | `B-REQ-001` | `REQ-001` | `FL-005`, `FL-008`: Korean local은 map 우선, CX는 local action의 JIT gate |
 | `B-REQ-002` | `REQ-002` | `FL-006`, `FL-009`: Residence 지원 전 disclosure와 passport alternate |
-| `B-REQ-003` | `REQ-003` | `FL-002`, `FL-007`, `FL-012`: short-term, age proof, first mission 분리 |
+| `B-REQ-003` | `REQ-003` | `FL-007`, `FL-012`: short-term persona, provider-neutral Person check, first mission 분리. `FL-002`는 독립 Age proof flow |
 | `B-REQ-004` | `REQ-004` | `FL-016`, `FL-018`: OpenDID/EAS canonical envelope와 Labs truth |
 | `B-REQ-005` | `REQ-005` | `FL-002`, `FL-005`~`FL-011`, `FL-013`, `FL-017`, `FL-018`: gate 분리 |
 | `B-REQ-006` | `REQ-006` | `FL-004`, `FL-018`: read-only asset projection와 ordered bridge |
@@ -58,7 +60,7 @@
 | `FL-017` | `B-E2E-FL-017-ENTRY` ACTUAL | `B-E2E-FL-017-DECISION` ACTUAL | `B-E2E-FL-017-CANCEL` ACTUAL | `B-E2E-FL-017-ERROR` ACTUAL | `B-E2E-FL-017-RETRY` ACTUAL | `B-E2E-FL-017-TERMINAL` ACTUAL | `B-E2E-FL-017-RETURN` ACTUAL |
 | `FL-018` | `B-E2E-FL-018-ENTRY` ACTUAL | `B-E2E-FL-018-DECISION` ACTUAL | `B-E2E-FL-018-CANCEL` ACTUAL | `B-E2E-FL-018-ERROR` ACTUAL | `B-E2E-FL-018-RETRY` ACTUAL | `B-E2E-FL-018-TERMINAL` ACTUAL | `B-E2E-FL-018-RETURN` ACTUAL |
 
-현재 판정: `120 ACTUAL · 0 GAP · 6 N/A`. GAP closure 여정은 제품 SHA `7e36de2`에서 mobile/desktop 각 3개씩 통과했다. 전체 Gate와 두 clean round는 별도 실행해야 한다.
+현재 판정: `121 ACTUAL · 0 GAP · 5 N/A`. 최종 제품 SHA에서 18개 composite journey를 mobile/desktop 각각 실행해 `36/36 PASS`했다. `FL-002`는 age failure→retry→success 뒤 같은 확장 장소 상세와 After19 ON으로 복귀한다.
 
 ## 4. Browser suites
 
@@ -72,9 +74,11 @@
 
 ## 5. Pixel evidence
 
-실제 layout-distinct selector만 baseline 대상으로 한다.
+실제 layout/state가 다른 44개 case를 `390×844`와 `1440×1000`에서 각각 실행한다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
 
-`B-PX-ONBOARDING-390-EN`, `B-PX-NATION-390-KO`, `B-PX-CITY-LIST-430-EN`, `B-PX-PLACE-390-EN`, `B-PX-ACCOUNT-GATE-390-KO`, `B-PX-TABLES-430-EN`, `B-PX-LOCAL-SIGNAL-390-EN`, `B-PX-CHECKOUT-430-KO`, `B-PX-AFTER19-390-EN`, `B-PX-NATION-DESKTOP-EN`, `B-PX-PLACE-DESKTOP-EN`, `B-PX-IDENTITY-DESKTOP-KO`, `B-PX-LABS-DESKTOP-EN`.
+QA seam exact IDs: `B-PX-ONBOARDING-390-EN`, `B-PX-NATION-390-KO`, `B-PX-CITY-LIST-430-EN`, `B-PX-PLACE-390-EN`, `B-PX-ACCOUNT-GATE-390-KO`, `B-PX-TABLES-430-EN`, `B-PX-LOCAL-SIGNAL-390-EN`, `B-PX-CHECKOUT-430-KO`, `B-PX-AFTER19-390-EN`, `B-PX-NATION-DESKTOP-EN`, `B-PX-PLACE-DESKTOP-EN`, `B-PX-IDENTITY-DESKTOP-KO`, `B-PX-LABS-DESKTOP-EN`.
+
+최종 결과는 `88/88 PASS`; 반대 viewport spec의 `88`건은 project ownership을 보존하기 위한 intentional skip이다. 외부 vector tile만 결정론적 blank source로 대체하고 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다.
 
 ## 6. Content evidence
 

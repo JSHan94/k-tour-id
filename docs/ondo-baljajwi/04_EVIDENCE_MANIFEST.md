@@ -1,57 +1,74 @@
-# ONDO B Evidence Manifest
+# ONDO B · Final Evidence Index
 
-상태: `GAP CLOSURE 6/6 PASS · FULL RESULTS PENDING`
+상태: `AUTOMATED GATES PASS · REVIEW ROUNDS IN PROGRESS`
 
-Fixed B product SHA: `7e36de257304dc057675566e7f3ef0c271528ffb`
+| Field | Value |
+|---|---|
+| Product SHA | `0cc65f2793ca7a17f59397b1e9e0391f281f9649` |
+| Harness SHA | `8b0060ff6f371402eb2c9d8766461b50f57e4742` |
+| Baseline digest | `f37ac108b1a7814f747e9e5c89b804ad15b258df29d1958b59da7656ea8725fc` |
+| Route | `/ondo-b` |
+| Base URL | `http://127.0.0.1:3130` production build |
+| Browser projects | `mobile-chromium 390×844`, `desktop-chromium 1440×1000` |
 
-RUN ID: `GAP_CLOSURE_20260819`
+## Final automated result
 
-## Evidence rule
-
-결과는 `docs/ondo-baljajwi/evidence/<RUN_ID>/`에 product SHA, command, exit, project, viewport, locale, scenario, artifact checksum과 함께 저장한다. PII, secret, 사진 blob, 정확한 현재 위치는 남기지 않는다. 외부 OpenFreeMap 장애와 product runtime failure는 서로 다른 배열로 기록한다.
-
-## Command manifest
-
-| ID | Expected tests | Command | Status |
-|---|---:|---|---|
-| `B-CMD-REGISTRY-001` | 2 desktop | `playwright test tests/e2e/ondo-b-registry.spec.ts --project=desktop-chromium --workers=1` | `2/2 PASS` |
-| `B-CMD-GAP-FLOW-001` | 2 × 2 projects | `playwright test tests/e2e/ondo-b-flow-coverage.spec.ts --grep 'FL-002\|FL-011' --project=mobile-chromium --project=desktop-chromium --workers=1` | `4/4 PASS` |
-| `B-CMD-GAP-MAP-001` | 1 × 2 projects | `playwright test tests/e2e/ondo-b-map-truth.spec.ts --grep 'source failure is latched' --project=mobile-chromium --project=desktop-chromium --workers=1` | `2/2 PASS` |
-| `B-CMD-FLOW-001` | 18 × 2 projects | `playwright test tests/e2e/ondo-b-flow-coverage.spec.ts --project=mobile-chromium --project=desktop-chromium --workers=1` | `36/36 unique PASS; FL-018 desktop rerun after removing a redundant locator race` |
-| `B-CMD-PRODUCT-001` | 4 × 2 projects | `playwright test tests/e2e/ondo-b-product-browser.spec.ts --project=mobile-chromium --project=desktop-chromium --workers=1` | `NOT RUN` |
-| `B-CMD-COPY-001` | 28 mobile | `playwright test tests/e2e/ondo-b-content.spec.ts --project=mobile-chromium --workers=1` | `28/28 PASS` |
-| `B-CMD-A11Y-001` | 14 mobile | `playwright test tests/e2e/ondo-b-a11y-interaction.spec.ts --project=mobile-chromium --workers=1` | `NOT RUN` |
-| `B-CMD-PIXEL-M-001` | 9 mobile | `playwright test tests/visual/ondo-b-flow-pixels-mobile.spec.ts --project=mobile-chromium --workers=1` | `NOT RUN` |
-| `B-CMD-PIXEL-D-001` | 4 desktop | `playwright test tests/visual/ondo-b-flow-pixels-desktop.spec.ts --project=desktop-chromium --workers=1` | `NOT RUN` |
-
-## Honest checkpoint summary
-
-| Disposition | Count | Release meaning |
+| Evidence family | Result | What it proves |
 |---|---:|---|
-| `ACTUAL` | 120 | real `/ondo-b` proof code exists; gap closure subset executed |
-| `GAP` | 0 | no known product-flow checkpoint gap |
-| `N/A` | 6 | reasoned fallback/re-evaluation contract; no fake UI |
+| TypeScript | `PASS` | compile contract |
+| Next production build | `PASS` | `/ondo-b`, venue API and all existing routes build |
+| Contracts | `26/26 PASS` | identity/returnTo/truth/asset/visit/bridge + venue 200/200/provenance/After19 night-only set |
+| Canonical Flows | `36/36 PASS` | FL-001~018 × mobile/desktop |
+| Pixel | `88/88 PASS` | 44 states × mobile/desktop; `88` opposite-project intentional skips |
+| Accessibility | `28/28 PASS` | 14 actual surfaces × mobile/desktop |
+| Content/map/product/regression/registry | `102/102 PASS` | KO/EN 14 surfaces, map truth, 400 data, R3 geometry, exact registry |
+| Product gaps | `0` | `121 ACTUAL · 0 GAP · 5 reasoned N/A` |
 
-Closed in targeted browser evidence: `B-E2E-FL-001-ERROR`, `B-E2E-FL-001-RETRY`, `B-E2E-FL-002-RETURN`, `B-E2E-FL-011-ERROR`, `B-E2E-FL-011-RETRY`.
+## Command ledger
 
-## Result table
+| ID | Command scope | Result |
+|---|---|---|
+| `B-FINAL-BUILD` | `next build --webpack`, then `pnpm typecheck` | `PASS` |
+| `B-FINAL-CONTRACT` | `pnpm test:contracts` | `26/26 PASS` |
+| `B-FINAL-FLOW` | `ondo-b-flow-coverage.spec.ts --workers=1` | `36/36 PASS` |
+| `B-FINAL-PIXEL` | mobile+desktop complete pixel specs, `--workers=1` | `88/88 PASS · 88 intentional skip` |
+| `B-FINAL-A11Y` | `ondo-b-a11y-interaction.spec.ts --workers=1` | `28/28 PASS` |
+| `B-FINAL-SUPPORT` | content, map truth, product, R3 regression, registry specs | `102/102 PASS` |
 
-| Family | Expected | Passed | Failed | Unexpected skipped | Evidence/checksum |
-|---|---:|---:|---:|---:|---|
-| Registry | 2 | 2 | 0 | 0 | `terminal output · GAP_CLOSURE_20260819` |
-| Flow browser | 36 | 36 | 0 | 0 | `35 initial + FL-018 desktop rerun on same product SHA after test-only race fix` |
-| Product/data/map | 8 | 2 | 0 | 0 | `dedicated fallback/retry subset; remaining 6 pending` |
-| Content | 28 | 28 | 0 | 0 | `KO/EN 14 surfaces` |
-| A11y | 14 | 0 | 0 | 0 | `PENDING` |
-| Pixel mobile | 9 | 0 | 0 | 0 | `PENDING` |
-| Pixel desktop | 4 | 0 | 0 | 0 | `PENDING` |
+모든 browser run은 console/pageerror guard를 제품 오류와 외부 지도 오류로 구분한다. map failure case에서는 OpenFreeMap을 의도적으로 중단하고 같은 200개 목록, Retry, usable card가 유지되는지 확인한다.
 
-## External blocker record
+## Pixel evidence contract
 
-| Evidence ID | Resource | Product fallback | Product errors | Verdict |
-|---|---|---|---|---|
-| `B-MAP-FALLBACK` | `tiles.openfreemap.org` intentionally aborted | error latch + usable list + Retry starts attempt 2 | 0 | `PASS mobile + desktop` |
+- Baseline 수: mobile `44`, desktop `44`.
+- Capture는 font·animation·caret·scroll을 고정한다.
+- 허용치는 platform antialias noise용 `maxDiffPixels=32`; 제품 layout/copy 변화는 이 범위를 크게 초과한다.
+- third-party vector tile만 deterministic blank source로 교체한다.
+- ONDO marker, neutral cluster, label, sheet, navigation, truth copy, focus/geometry는 mask하지 않는다.
+- 각 case는 horizontal overflow, clipping, nav collision, viewport exit CTA, 44px control, 12px metadata, accessible name, serious/critical Axe issue를 검사한다.
 
-## Release status
+## Data evidence
 
-`BLOCKED`: five product gaps are closed, but the full automated matrix and two same-SHA clean review rounds are not attached. A targeted pass or screenshot alone is not release evidence.
+| Item | Exact result |
+|---|---:|
+| Canonical official venues | `400` |
+| Seoul / Busan | `200 / 200` |
+| Unique stable IDs | `400` |
+| Simulated ONDO signal places | `80` (`40 / 40`) |
+| After19 simulated subset | `17` (`서울 7 / 부산 10`), signal category=`night` only |
+| Official source promoted to heat/open-now | `0` |
+| Unknown fact fabricated as confirmed | `0` |
+
+## Truth boundary
+
+- 공식 장소 400과 simulated signal 80은 별도 provenance다.
+- confidence는 pseudo-precise percentage가 아니라 `Limited/Moderate/Strong · Simulated` band다.
+- Residence credential 경로의 문서화와 데모 provider 미구성을 구분한다.
+- visit/stamp는 deterministic simulated record이며 GPS·QR·merchant proof가 아니다.
+- OpenDID/EAS, merchant trait는 `CONTRACT_ONLY`; live EAS, AMM, real bridge/payment/NFT는 `DEFERRED`다.
+
+## Durable round manifests
+
+- R3: [`evidence/RUN-20260819-R3-FINAL/manifest.md`](./evidence/RUN-20260819-R3-FINAL/manifest.md)
+- R4: [`evidence/RUN-20260819-R4-FINAL/manifest.md`](./evidence/RUN-20260819-R4-FINAL/manifest.md)
+
+두 파일은 각 5인 독립 review가 끝난 뒤 reviewer verdict와 evidence digest를 고정한다. 제품 또는 harness가 바뀌면 두 round를 모두 무효화하고 clean streak를 0으로 되돌린다.

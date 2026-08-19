@@ -58,7 +58,7 @@ REQ-001부터 REQ-019는 승인된 19개 요구를 그대로 가리킨다. 숫�
 | ID | Flow | 주 사용자 |
 |---|---|---|
 | FL-001 | Guest ONDO → 서울 실제 지도 → 장소 → 저장·길찾기 | 단기 외국인 |
-| FL-002 | Account → Passport KYC simulation → After 19 → 원래 장소 복귀 | 단기 외국인 |
+| FL-002 | 독립 Age proof → After 19 → 같은 확장 장소 복귀 | 19+ 야간 프리뷰 사용자 |
 | FL-003 | 장소 Table → 참여 → 이미지 대화 → 체크인 → 상호 피드백 | 외국인·로컬 |
 | FL-004 | 장소 Checkout(KRW 가격·OOKRW read-only settlement hypothesis) → 별도 현장 방문 증거 → Stamp 9→10 → Labs badge | 검증 사용자 |
 | FL-005 | 한국인 Account → CX Mobile ID simulation → Local contribution | 한국인 로컬 |
@@ -167,7 +167,7 @@ Release를 막는 Playwright Core suite는 다음 8개 composite test로 제한�
 |---|---|---|
 | E2E-CORE-01 | FL-001 Guest discover | 전국→서울→장소, 지도·목록·길찾기; Guest 저장은 불가 |
 | E2E-CORE-02 | FL-001 Map failure | tile-error→동일 목록, location denied |
-| E2E-CORE-03 | FL-002 After 19 success | Account returnTo, Passport fixture, 19+ 자동 전환·off |
+| E2E-CORE-03 | FL-002 After 19 success | age-only returnTo, 같은 venueId·확장 상세, 19+ 전환·off |
 | E2E-CORE-04 | FL-002 After 19 failure | rejected·expired·cancel 후 일반 지도 유지 |
 | E2E-CORE-05 | FL-003 Table | Account non-member direct chat deny→참여→이미지 pending/fail/retry→체크인·피드백 |
 | E2E-CORE-06 | FL-004 Checkout | KRW 가격+OOKRW read-only settlement hypothesis→mock receipt; 결제 전후 stamp 불변 |

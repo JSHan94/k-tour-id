@@ -87,7 +87,7 @@ type ReturnTo = {
 | Flow ID | 이름 | 연결 REQ | 진입 CTA | 전제 | Success | Cancel | Failure | `returnTo` | 9시간 목표 |
 |---|---|---|---|---|---|---|---|---|---|
 | `FL-001` | Guest Discover | `REQ-007`, `REQ-013`, `REQ-017`~`REQ-019` | 앱 열기, 지역·heat·장소 선택 | 없음 | 서울 장소 상세 또는 외부 길찾기 도착 | sheet 닫고 직전 지도 보존 | 지도 fallback 목록·재시도 | `RT-DISCOVER` | `Implemented` |
-| `FL-002` | Short-term KYC → After19 | `REQ-003`, `REQ-005`, `REQ-012` | `19+ 장소 보기`, 잠긴 주류 장소 | 필요 시 Account | Passport provider와 19+ fixture 성공 후 원 장소 After19 상세 | 기본 ONDO로 돌아감 | 이유·재시도·대체 일반 장소 | `RT-AFTER19-VENUE` | `Simulated` |
+| `FL-002` | Age proof → exact After19 venue | `REQ-005`, `REQ-012` | `19+ 장소 보기`, 잠긴 야간 프리뷰 | 일반 장소 상세 사용 가능 | 독립 19+ fixture 성공 후 같은 확장 장소 After19 상세 | 같은 잠긴 장소 상세로 돌아감 | age 이유·재시도·일반 장소 계속 이용 | `RT-AFTER19-VENUE` | `Simulated` |
 | `FL-003` | Table → Image Chat → Feedback | `REQ-008`~`REQ-010`, `REQ-015` | `Table 참여` | Account; 조건부 Person/19+ | 참가→대화→체크인→피드백→평판 변화 | 직전 장소/Table 복귀 | 단계별 retry·안전한 나가기 | `RT-TABLE-JOIN` | `Simulated` |
 | `FL-004` | Checkout/Labs → Stamp | `REQ-006`, `REQ-011`, `REQ-016` | `결제 시뮬레이션 계속` | Account, Payment KYC | KRW 표시 가격·OOKRW read-only settlement hypothesis→별도 unique visit evidence→9에서 10 stamp→Labs badge opt-in | checkout 또는 Labs 닫고 장소/My Korea 복귀 | 자산·stamp 불변, 재시도 | `RT-CHECKOUT`, badge는 `RT-MINT-BADGE` | `Simulated` |
 | `FL-005` | Korean CX | `REQ-001`, `REQ-005` | 홈 도착 뒤 Local Signal·Table의 Person gate 또는 ID 화면의 명시적 확인 | Account, 한국인 경로 선택 | CX fixture로 `PER-VERIFIED`, 보존된 원 CTA 복귀 | Account 상태로 계속 탐색 | 실패·만료·재시도 | gated action의 기존 `RT-LOCAL-SIGNAL` 또는 `RT-TABLE-JOIN`; ID 자체 확인만 `RT-PERSON-ACTION` | `Simulated` |
@@ -149,22 +149,20 @@ type ReturnTo = {
 - 외부 길찾기는 새 context에서 열며 돌아오면 같은 장소 sheet가 유지된다.
 - 이 flow는 발견·상세·길찾기까지만 책임진다. `저장`은 `FL-010` Account gate와 `FL-011` Save/My Korea 계약으로 분리한다.
 
-### FL-002 · Short-term KYC → After19
+### FL-002 · Age proof → exact After19 venue
 
 ```text
-잠긴 주류 장소/After 19 CTA
+잠긴 야간 프리뷰/After 19 CTA
 → 19+가 필요한 이유·공유하지 않는 정보 안내
-→ Passport verification provider fixture
-→ 필요한 경우 Account 연결
 → AGE proof 결과
 → AGE-VERIFIED
-→ 원래 선택한 venueId의 After 19 sheet
+→ 원래 선택한 venueId의 확장 장소 상세와 After 19 ON
 ```
 
-- Person proof와 19+ proof는 하나의 성공 문구로 뭉개지 않는다.
-- provider 명칭은 계약 전 중립적으로 쓰고 `Sumsub connected`를 주장하지 않는다.
+- Person/Passport proof를 이 flow의 선행 조건으로 강제하지 않는다.
+- Age proof는 Account, Person, Payment KYC와 독립이다.
 - 성공 시 전체 여권·생년월일이 아니라 `19+ confirmed`, issuer type, expiry의 최소 결과만 앱이 소비한다.
-- 취소·실패·미지원·만료 시 일반 식음료 탐색은 계속 가능하다.
+- 취소·실패·만료 시 일반 식음료 탐색과 같은 장소의 공식 정보는 계속 가능하다.
 - `returnTo` venue가 사라졌다면 같은 지역의 일반 장소 목록으로 안전하게 돌아간다.
 
 ### FL-003 · Table → Image Chat → Feedback
