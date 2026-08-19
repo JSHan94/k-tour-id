@@ -7,6 +7,7 @@ import {
   expectBVisualGuards,
   prepareBVisualPage,
   setupBVisualCase,
+  stabilizeBVisualSnapshot,
 } from "../helpers/ondo-b-visual-evidence"
 
 test.describe("ONDO B complete mobile visual evidence · 390×844", () => {
@@ -20,6 +21,7 @@ test.describe("ONDO B complete mobile visual evidence · 390×844", () => {
       await expect(scope).toBeVisible()
       await attachBCaseMetadata(testInfo, item, "390x844")
       await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
+      await stabilizeBVisualSnapshot(page, item)
 
       // External vector tiles are replaced before MapLibre renders. The ONDO
       // marker, score, cluster, label, sheet, and navigation layers stay visible.

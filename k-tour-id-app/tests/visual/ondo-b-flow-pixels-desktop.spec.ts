@@ -7,6 +7,7 @@ import {
   expectBVisualGuards,
   prepareBVisualPage,
   setupBVisualCase,
+  stabilizeBVisualSnapshot,
 } from "../helpers/ondo-b-visual-evidence"
 
 test.describe("ONDO B complete desktop visual evidence · 1440×1000", () => {
@@ -20,6 +21,7 @@ test.describe("ONDO B complete desktop visual evidence · 1440×1000", () => {
       await expect(scope).toBeVisible()
       await attachBCaseMetadata(testInfo, item, "1440x1000")
       await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
+      await stabilizeBVisualSnapshot(page, item)
 
       await expect(page).toHaveScreenshot(bSnapshotName(item, "1440x1000"), {
         animations: "disabled",
