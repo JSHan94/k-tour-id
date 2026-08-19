@@ -177,35 +177,43 @@ export const B_CONTENT_CASES = [
   locale,
 })))
 
-type RuntimeEvidence = { product: string[]; externalMap: string[] }
+type RuntimeEvidence = { product: string[]; externalMap: string[]; externalAsset: string[] }
 const runtimeEvidence = new WeakMap<Page, RuntimeEvidence>()
 const EXTERNAL_MAP_HOSTS = new Set(["tiles.openfreemap.org"])
+const EXTERNAL_ASSET_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"])
 
 function isExternalMapUrl(raw: string | undefined) {
   if (!raw) return false
   try { return EXTERNAL_MAP_HOSTS.has(new URL(raw).hostname) } catch { return raw.includes("tiles.openfreemap.org") }
 }
 
+function isExternalAssetUrl(raw: string | undefined) {
+  if (!raw) return false
+  try { return EXTERNAL_ASSET_HOSTS.has(new URL(raw).hostname) } catch { return [...EXTERNAL_ASSET_HOSTS].some((host) => raw.includes(host)) }
+}
+
 export function installBRuntimeGuard(page: Page) {
-  const evidence: RuntimeEvidence = { product: [], externalMap: [] }
+  const evidence: RuntimeEvidence = { product: [], externalMap: [], externalAsset: [] }
   runtimeEvidence.set(page, evidence)
   page.on("console", (message) => {
     if (message.type() !== "error") return
     const location = message.location().url
     const item = `console: ${message.text()}${location ? ` @ ${location}` : ""}`
     if (isExternalMapUrl(location) || message.text().includes("tiles.openfreemap.org")) evidence.externalMap.push(item)
+    else if (isExternalAssetUrl(location) || [...EXTERNAL_ASSET_HOSTS].some((host) => message.text().includes(host))) evidence.externalAsset.push(item)
     else evidence.product.push(item)
   })
   page.on("pageerror", (error) => evidence.product.push(`pageerror: ${error.message}`))
   page.on("requestfailed", (request) => {
     const reason = request.failure()?.errorText ?? "request failed"
     if (isExternalMapUrl(request.url())) evidence.externalMap.push(`requestfailed: ${request.url()} · ${reason}`)
+    else if (isExternalAssetUrl(request.url())) evidence.externalAsset.push(`requestfailed: ${request.url()} · ${reason}`)
     else if (["document", "script", "fetch", "xhr"].includes(request.resourceType())) evidence.product.push(`requestfailed: ${request.url()} · ${reason}`)
   })
 }
 
 export function getBRuntimeEvidence(page: Page): RuntimeEvidence {
-  return runtimeEvidence.get(page) ?? { product: [], externalMap: [] }
+  return runtimeEvidence.get(page) ?? { product: [], externalMap: [], externalAsset: [] }
 }
 
 export async function expectBRuntimeClean(page: Page) {
@@ -307,9 +315,10 @@ export async function openTables(page: Page, tableId = TABLE_ID) {
 
 export async function openLabs(page: Page) {
   await page.getByRole("button", { name: "My Korea", exact: true }).click()
-  const launcher = page.getByTestId("open-labs-milestone").or(page.getByTestId("open-labs"))
-  await launcher.first().click()
-  await expect(page.getByTestId("labs-overlay")).toBeVisible()
+  const milestone = page.getByTestId("open-labs-milestone")
+  if (await milestone.isVisible().catch(() => false)) await milestone.click()
+  else await page.getByTestId("open-labs").click()
+  await expect(page.getByRole("dialog", { name: "Labs" })).toBeVisible()
 }
 
 export async function finishAccountGate(page: Page) {
@@ -331,6 +340,7 @@ export async function finishAgeGate(page: Page) {
 export async function finishPaymentGate(page: Page) {
   await page.getByRole("button", { name: "Start Payment KYC simulation" }).click()
   await page.getByRole("button", { name: "Complete Payment KYC · Simulated" }).click()
+  await expect.poll(async () => (await sessionState(page)).paymentKyc).toBe("PKY-VERIFIED")
 }
 
 export async function sessionState(page: Page) {
@@ -385,7 +395,7 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
 
   await seedB(page, { locale, session })
   if (surface === "nation" || surface === "after19") {
-    await gotoB(page)
+    await gotoB(page, surface === "after19" ? "?city=seoul" : "")
     if (surface === "after19") await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
     return surface === "after19" ? page.getByTestId("ondo-after19-layer") : page.getByTestId("ondo-b-map-entry")
   }
@@ -406,7 +416,7 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
     return page.getByTestId("ondo-gate-overlay")
   }
   if (surface === "age-gate") {
-    await gotoB(page)
+    await gotoB(page, "?city=seoul")
     const chip = locale === "ko" ? "After 19" : "After 19"
     await page.getByRole("button", { name: chip, exact: true }).click()
     await page.getByRole("button", { name: /Confirm 19\+|19\+ 확인/ }).click()
@@ -439,5 +449,7 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
   }
   await gotoB(page)
   await openLabs(page)
+  const acknowledge = page.getByTestId("labs-acknowledge")
+  if (await acknowledge.isVisible().catch(() => false)) await acknowledge.click()
   return page.getByTestId("labs-overlay")
 }

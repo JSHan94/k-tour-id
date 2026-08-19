@@ -50,7 +50,8 @@ pnpm exec playwright test tests/visual/ondo-b-flow-pixels-desktop.spec.ts --proj
 
 - `pageerror`와 unhandled rejection은 항상 failure다.
 - product document/script/fetch/xhr failure는 failure다.
-- `tiles.openfreemap.org` failure는 `externalMap` 목록에 별도 기록한다.
+- `tiles.openfreemap.org` failure는 `externalMap`, Google Fonts CDN failure는 `externalAsset` 목록에 별도 기록한다.
+- 18-flow canonical suite는 OpenFreeMap tile을 의도적으로 abort해 외부 SLA를 제거한다. live tile 및 fallback/retry 동작은 `ondo-b-product-browser.spec.ts`가 별도로 소유한다.
 - 외부 resource failure가 있어도 `data-map-state=error`, venue list, count, enabled item, `Retry map`이 보여야 한다.
 - external failure가 있었다는 이유만으로 product runtime error를 allowlist하지 않는다.
 
