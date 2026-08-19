@@ -157,6 +157,38 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
   })
 
+  test("nation actions stay concise and four-axis history keeps a readable two-column hierarchy", async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+    await gotoB(page)
+
+    const nation = page.getByTestId("ondo-b-nation")
+    for (const city of ["seoul", "busan"]) {
+      const action = nation.locator(`[data-city='${city}']`)
+      await expect(action.locator("small")).toHaveText("Open food map")
+      const clips = await action.locator("small").evaluate((element) => element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1)
+      expect(clips).toBe(false)
+    }
+    await expectNoSeriousAxe(page, nation)
+
+    await page.getByRole("button", { name: "ID", exact: true }).click()
+    const trust = page.getByTestId("ondo-trust-panel")
+    const [titleBox, countBox] = await Promise.all([box(trust.locator("header > div")), box(trust.locator("header > span"))])
+    expect(titleBox.width).toBeGreaterThan(120)
+    expect(titleBox.x + titleBox.width).toBeLessThanOrEqual(countBox.x - 8)
+
+    for (const axis of await trust.locator("article").all()) {
+      const [iconBox, bodyBox] = await Promise.all([box(axis.locator("span").first()), box(axis.locator("div").first())])
+      expect(iconBox.x + iconBox.width).toBeLessThanOrEqual(bodyBox.x - 8)
+      const label = axis.locator("strong")
+      const value = axis.locator("small")
+      await expect(label).toBeVisible()
+      await expect(value).toBeVisible()
+      expect((await label.textContent())?.trim().length).toBeGreaterThan(0)
+      expect((await value.textContent())?.trim().length).toBeGreaterThan(0)
+    }
+    await expectNoSeriousAxe(page, trust)
+  })
+
   test("Labs keeps a 44px exit available at the deepest scroll and restores the opener", async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", stamps: 10 } })
     await gotoB(page)

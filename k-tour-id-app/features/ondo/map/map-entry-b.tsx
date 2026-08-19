@@ -235,7 +235,7 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
               <i style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{region.ondoScore ?? "—"}</i>
               <span>
                 <strong>{CITY[cityId].label[locale]} <em>{HEAT_LABELS[locale][region.heatLevel]}</em></strong>
-                <small>{locale === "ko" ? `${region.officialVenueCount}곳 · 신호 장소 ${region.signalVenueCount}` : `${region.officialVenueCount} places · ${region.signalVenueCount} signal places`}</small>
+                <small>{locale === "ko" ? "식음료 지도 열기" : "Open food map"}</small>
               </span>
             </button>
           )
