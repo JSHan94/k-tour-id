@@ -301,7 +301,14 @@ export async function openCanonicalVenue(page: Page, { expanded = true, query = 
   await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
   if (expanded) {
     await page.getByTestId("canonical-place-details").click()
-    await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    const detail = page.getByTestId("canonical-place-overlay")
+    await expect(detail).toBeVisible()
+    // Do not navigate away while the on-demand official-detail request is
+    // still in flight. An intentional surface transition would otherwise
+    // abort the request and make the global runtime guard report a false
+    // product failure in long, serial suites.
+    await expect(detail.locator("[data-detail-state]"))
+      .toHaveAttribute("data-detail-state", "ready")
   }
 }
 
@@ -365,7 +372,11 @@ export async function expectMinimumControlTargets(scope: Locator) {
     const element = node as HTMLElement
     if (element.getAttribute("aria-disabled") === "true" || (element instanceof HTMLButtonElement && element.disabled)) return []
     const box = element.getBoundingClientRect()
-    return box.width < 44 || box.height < 44
+    // Chromium can expose a nominal CSS 44px target as 43.98px at fractional
+    // device scaling. Judge the rendered CSS-pixel target after rounding, the
+    // same value recorded in failure evidence, rather than failing on subpixel
+    // rasterization noise.
+    return Math.round(box.width) < 44 || Math.round(box.height) < 44
       ? [{ action: element.getAttribute("aria-label") ?? element.textContent?.trim() ?? element.tagName, width: Math.round(box.width), height: Math.round(box.height) }]
       : []
   }))
