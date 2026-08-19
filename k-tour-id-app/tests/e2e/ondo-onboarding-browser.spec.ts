@@ -21,7 +21,12 @@ for (const persona of PERSONAS) {
     await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
     await page.getByRole("button", { name: "Get started" }).click()
     await page.getByTestId(`persona-${persona}`).click()
-    await page.getByRole("button", { name: "Open the ONDO map" }).click()
+    const continueToPreferences = page.getByRole("button", { name: "Choose meal preferences", exact: true })
+    await expect(continueToPreferences).toBeVisible()
+    await expect(page.getByRole("button", { name: "Open the ONDO map", exact: true })).toHaveCount(0)
+    await continueToPreferences.click()
+    await expect(page.getByTestId("onboarding-step-preferences")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Open the ONDO map", exact: true })).toBeVisible()
     await page.getByRole("button", { name: "Local classics" }).click()
     await page.getByTestId("onboarding-finish").click()
 
@@ -47,6 +52,21 @@ test("browser guest skip lands on ONDO with every verification boundary untouche
     const state = await persistedSession(page)
     return [state.account, state.person, state.age, state.paymentKyc]
   }).toEqual(["ACC-GUEST", "PER-UNVERIFIED", "AGE-UNVERIFIED", "PKY-NOT-STARTED"])
+})
+
+test("browser Korean persona CTA names the preferences step before the map", async ({ page }) => {
+  await resetOnboarding(page)
+  await page.goto("/ondo")
+  await page.getByRole("button", { name: "KO", exact: true }).click()
+  await page.getByRole("button", { name: "시작하기", exact: true }).click()
+  await page.getByTestId("persona-long_term_resident").click()
+
+  const continueToPreferences = page.getByRole("button", { name: "한 끼 취향 고르기", exact: true })
+  await expect(continueToPreferences).toBeVisible()
+  await expect(page.getByRole("button", { name: "ONDO 지도 열기", exact: true })).toHaveCount(0)
+  await continueToPreferences.click()
+  await expect(page.getByTestId("onboarding-step-preferences")).toBeVisible()
+  await expect(page.getByRole("button", { name: "ONDO 지도 열기", exact: true })).toBeVisible()
 })
 
 test("onboarding traps focus inside the modal surface", async ({ page }) => {
