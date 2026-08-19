@@ -70,8 +70,8 @@
 .notice_success { background: #e6f2eb; color: #256448; }
 
 @keyframes rise {
-  from { transform: translateY(22px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(22px); }
+  to { transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
