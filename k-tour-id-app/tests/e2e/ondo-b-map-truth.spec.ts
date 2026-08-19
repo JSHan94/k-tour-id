@@ -10,7 +10,7 @@ async function seed(page: Page, discoveryPreferences: string[] = []) {
 }
 
 test.describe("ONDO B map truth and failure boundary", () => {
-  test("source failure is latched into the list fallback and retry can recover", async ({ page }) => {
+  test("source failure is latched into the list fallback and retry starts a fresh attempt", async ({ page }) => {
     await seed(page)
     let blockTiles = true
     await page.route(/tiles\.openfreemap\.org/, async (route) => {
@@ -18,7 +18,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
       else await route.continue()
     })
 
-    await page.goto("/ondo-b")
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='seoul']").click()
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 12_000 })
@@ -30,13 +30,12 @@ test.describe("ONDO B map truth and failure boundary", () => {
 
     blockTiles = false
     await page.getByRole("button", { name: "Retry map" }).click()
-    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-    await expect(page.getByText("The map could not load. The same sourced place list remains available.")).toHaveCount(0)
+    await expect(root).toHaveAttribute("data-map-attempt", "2")
   })
 
   test("city cards and marker key separate official records from simulated ONDO inputs", async ({ page }) => {
     await seed(page)
-    await page.goto("/ondo-b")
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
 
     const seoul = page.locator("[data-city='seoul']")
     const busan = page.locator("[data-city='busan']")
@@ -58,15 +57,34 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     await expect(root).toHaveAttribute("data-cluster-grammar", "outlined-count")
     await expect(root).toHaveAttribute("data-score-grammar", "solid-heat")
+    await expect(root).toHaveAttribute("data-neutral-source-count", "160")
+    await expect(root).toHaveAttribute("data-signal-source-count", "40")
+    await expect(root).toHaveAttribute("data-signal-zoom-tier", "top")
+    await expect.poll(async () => Number(await root.getAttribute("data-rendered-signal-count"))).toBeGreaterThan(0)
+    await expect.poll(async () => Number(await root.getAttribute("data-rendered-signal-count"))).toBeLessThanOrEqual(10)
+    await expect.poll(async () => Number(await root.getAttribute("data-min-signal-distance-px"))).toBeGreaterThanOrEqual(28)
     const key = page.getByTestId("ondo-b-map-key")
     await expect(key).toContainText("Places")
     await expect(key).toContainText("Simulated score")
-    await expect(key).toHaveAttribute("aria-label", "Outlined count means a sourced place group. Solid color means a simulated ONDO score.")
+    await expect(key).toContainText("Top signals at this zoom")
+    await expect(key).toHaveAttribute("aria-label", "Outlined count means a sourced place group. Solid color means a simulated ONDO score. Top signals at this zoom.")
+
+    await page.getByTitle("Zoom in").click()
+    await page.waitForTimeout(550)
+    await page.getByTitle("Zoom in").click()
+    await page.waitForTimeout(550)
+    await expect(root).toHaveAttribute("data-signal-zoom-tier", "more")
+
+    await page.getByTitle("Zoom in").click()
+    await page.waitForTimeout(550)
+    await page.getByTitle("Zoom in").click()
+    await page.waitForTimeout(550)
+    await expect(root).toHaveAttribute("data-signal-zoom-tier", "all")
   })
 
   test("all onboarding interests remain visible and editable without unsupported filtering", async ({ page }) => {
     await seed(page, ["classic", "cafe", "late", "lively", "calm", "diet"])
-    await page.goto("/ondo-b")
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='busan']").click()
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
 

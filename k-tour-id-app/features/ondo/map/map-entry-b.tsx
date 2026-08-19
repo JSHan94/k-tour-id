@@ -64,6 +64,9 @@ const COPY = {
     clusterKey: "Places",
     scoreKey: "Simulated score",
     mapKeyLabel: "Outlined count means a sourced place group. Solid color means a simulated ONDO score.",
+    topSignals: "Top signals at this zoom",
+    moreSignals: "More signals as you zoom in",
+    allSignals: "All preview signals at this zoom",
     preferences: "Starting interests",
     editPreferences: "Edit interests",
     noPreferences: "Tune interests",
@@ -106,6 +109,9 @@ const COPY = {
     clusterKey: "공식 장소",
     scoreKey: "시뮬레이션 점수",
     mapKeyLabel: "테두리 숫자는 공식 장소 묶음, 단색 원은 ONDO 시뮬레이션 점수를 뜻합니다.",
+    topSignals: "이 줌의 상위 신호",
+    moreSignals: "확대하면 신호가 더 보여요",
+    allSignals: "이 줌의 모든 프리뷰 신호",
     preferences: "시작 관심사",
     editPreferences: "관심사 수정",
     noPreferences: "관심사 설정",
@@ -262,6 +268,22 @@ function toSignalFeatureCollection(venues: readonly BMapVenue[]) {
   return toFeatureCollection(venues.filter((venue) => venue.signalTruth === "SIMULATED"))
 }
 
+function toNeutralFeatureCollection(venues: readonly BMapVenue[]) {
+  return toFeatureCollection(venues.filter((venue) => venue.signalTruth === "UNKNOWN"))
+}
+
+type SignalZoomTier = "top" | "more" | "all"
+
+function signalDensityForZoom(zoom: number): { tier: SignalZoomTier; minimumScore: number } {
+  if (zoom < 11.75) return { tier: "top", minimumScore: 84 }
+  if (zoom < 13.5) return { tier: "more", minimumScore: 72 }
+  return { tier: "all", minimumScore: 0 }
+}
+
+function signalLayerFilter(minimumScore: number) {
+  return [">=", ["get", "score"], minimumScore] as never
+}
+
 function toContributionFeatureCollection(venues: readonly BMapVenue[], contributedVenueIds: ReadonlySet<string>) {
   return toFeatureCollection(venues.filter((venue) => contributedVenueIds.has(venue.id)))
 }
@@ -309,6 +331,9 @@ export function MapEntryB() {
   const [visibleCount, setVisibleCount] = useState(30)
   const [retryToken, setRetryToken] = useState(0)
   const [preferencesOpen, setPreferencesOpen] = useState(false)
+  const [signalZoomTier, setSignalZoomTier] = useState<SignalZoomTier>("top")
+  const [renderedSignalCount, setRenderedSignalCount] = useState(0)
+  const [minimumSignalDistance, setMinimumSignalDistance] = useState<number | null>(null)
   const after19On = state.after19 === "A19-ON"
   const preferenceLabels = state.discoveryPreferences.map((preference) => PREFERENCE_COPY[preference][locale])
   const preferenceSummary = preferenceLabels.length
@@ -385,7 +410,7 @@ export function MapEntryB() {
       instance.on("load", () => {
         if (disposed || failed) return
         try {
-          instance.addSource("ondo-venues", { type: "geojson", data: toFeatureCollection(venues), cluster: true, clusterRadius: 48, clusterMaxZoom: 13 })
+          instance.addSource("ondo-venues", { type: "geojson", data: toNeutralFeatureCollection(venues), cluster: true, clusterRadius: 48, clusterMaxZoom: 13 })
           instance.addSource("ondo-signals", { type: "geojson", data: toSignalFeatureCollection(venues) })
           instance.addSource("ondo-contributions", { type: "geojson", data: toContributionFeatureCollection(venues, contributedVenueIds) })
           instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-venues", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,255,255,0.9)", "circle-radius": ["step", ["get", "point_count"], 15, 15, 18, 50, 22], "circle-stroke-color": "#6d6861", "circle-stroke-width": 1.5, "circle-opacity": 0.96 } })
@@ -420,6 +445,32 @@ export function MapEntryB() {
         instance.on("mouseleave", "ondo-clusters", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-points", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-signal-points", () => { instance.getCanvas().style.cursor = "" })
+        const updateRenderedSignalCount = () => {
+          const renderedById = new globalThis.Map(instance.queryRenderedFeatures({ layers: ["ondo-signal-points"] }).flatMap((feature) => {
+            const id = feature.properties?.id
+            return typeof id === "string" && feature.geometry.type === "Point" ? [[id, feature.geometry.coordinates as [number, number]] as const] : []
+          }))
+          const points = [...renderedById.values()].map((coordinates) => instance.project(coordinates))
+          let minimumDistance = Number.POSITIVE_INFINITY
+          for (let index = 0; index < points.length; index += 1) {
+            for (let comparison = index + 1; comparison < points.length; comparison += 1) {
+              minimumDistance = Math.min(minimumDistance, points[index].dist(points[comparison]))
+            }
+          }
+          setRenderedSignalCount(renderedById.size)
+          setMinimumSignalDistance(Number.isFinite(minimumDistance) ? Math.round(minimumDistance) : null)
+        }
+        const applySignalDensity = () => {
+          const density = signalDensityForZoom(instance.getZoom())
+          const filter = signalLayerFilter(density.minimumScore)
+          instance.setFilter("ondo-signal-points", filter)
+          instance.setFilter("ondo-score", filter)
+          setSignalZoomTier(density.tier)
+          window.requestAnimationFrame(updateRenderedSignalCount)
+        }
+        applySignalDensity()
+        instance.on("zoomend", applySignalDensity)
+        instance.on("idle", updateRenderedSignalCount)
         if (loadDeadline != null) window.clearTimeout(loadDeadline)
         if (!failed) setMapState("ready")
       })
@@ -434,7 +485,7 @@ export function MapEntryB() {
 
   useEffect(() => {
     const source = mapRef.current?.getSource("ondo-venues") as GeoJSONSource | undefined
-    if (source) void source.setData(toFeatureCollection(venues))
+    if (source) void source.setData(toNeutralFeatureCollection(venues))
     const signalSource = mapRef.current?.getSource("ondo-signals") as GeoJSONSource | undefined
     if (signalSource) void signalSource.setData(toSignalFeatureCollection(venues))
     const contributionSource = mapRef.current?.getSource("ondo-contributions") as GeoJSONSource | undefined
@@ -480,7 +531,7 @@ export function MapEntryB() {
 
   return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
-      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState} data-cluster-grammar="outlined-count" data-score-grammar="solid-heat">
+      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState} data-map-attempt={retryToken + 1} data-cluster-grammar="outlined-count" data-score-grammar="solid-heat" data-signal-zoom-tier={signalZoomTier} data-rendered-signal-count={renderedSignalCount} data-min-signal-distance-px={minimumSignalDistance ?? "none"} data-neutral-source-count={venues.filter((venue) => venue.signalTruth === "UNKNOWN").length} data-signal-source-count={venues.filter((venue) => venue.signalTruth === "SIMULATED").length}>
         <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
         <div ref={mapNode} className={styles.map} data-testid="maplibre-map" aria-label={locale === "ko" ? "ONDO 식음료 지도" : "ONDO food map"} aria-describedby="ondo-b-map-instruction" />
         <header className={styles.cityHeader}>
@@ -515,7 +566,7 @@ export function MapEntryB() {
 
         {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
 
-        {view === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={copy.mapKeyLabel}><span><i className={styles.clusterSwatch}>12×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>82</i>{copy.scoreKey}</span></div> : null}
+        {view === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKeyLabel} ${signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}.`}><div><span><i className={styles.clusterSwatch}>12×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>82</i>{copy.scoreKey}</span></div><small>{signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}</small></div> : null}
         {view === "map" ? <button type="button" className={styles.locate} aria-label={locale === "ko" ? "내 위치" : "My location"} onClick={() => navigator.geolocation?.getCurrentPosition(({ coords }) => mapRef.current?.easeTo({ center: [coords.longitude, coords.latitude], zoom: 14 }), () => actions.notify(copy.locationUnavailable))}><LocateFixed size={19} /></button> : null}
         {view === "map" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}
       </section>

@@ -80,9 +80,11 @@
 .venueList .loadMore { border: 0; }
 .venueList .loadMore button { display: flex; min-height: 52px; grid-template-columns: 1fr; justify-content: center; color: #3f3b36; font-size: 12px; font-weight: 750; text-align: center; }
 .locate { position: absolute; z-index: 5; right: 16px; bottom: calc(154px + env(safe-area-inset-bottom)); display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #dededb; border-radius: 50%; background: #fff; color: #24221f; }
-.mapKey { position: absolute; z-index: 5; bottom: calc(154px + env(safe-area-inset-bottom)); left: 14px; display: flex; min-height: 36px; align-items: center; gap: 5px; padding: 6px 9px; border: 1px solid #e0ddd8; border-radius: 11px; background: rgb(255 255 255 / 92%); color: #625d56; font-size: 12px; line-height: 16px; }
-.mapKey > span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.mapKey > b { color: #a5a098; font-weight: 400; }
+.mapKey { position: absolute; z-index: 5; bottom: calc(154px + env(safe-area-inset-bottom)); left: 14px; display: grid; min-height: 44px; gap: 2px; padding: 6px 9px; border: 1px solid #e0ddd8; border-radius: 11px; background: rgb(255 255 255 / 94%); color: #625d56; font-size: 12px; line-height: 16px; }
+.mapKey > div { display: flex; align-items: center; gap: 5px; }
+.mapKey > div > span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.mapKey > div > b { color: #a5a098; font-weight: 400; }
+.mapKey > small { color: #6c665f; font-size: 12px; line-height: 16px; }
 .mapKey i { display: grid; width: 28px; height: 22px; flex: 0 0 auto; place-items: center; border-radius: 11px; font-size: 10px; font-style: normal; font-weight: 800; }
 .clusterSwatch { border: 1px solid #6d6861; background: rgb(255 255 255 / 96%); color: #4c4842; }
 .scoreSwatch { background: #c94832; color: #fff; }
