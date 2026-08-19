@@ -171,10 +171,10 @@ export function LabsEntry() {
   const phaseCopy = phase === "none" ? null : BRIDGE_COPY[phase][locale]
 
   return (
-    <Sheet label="Labs" onClose={close} size="full">
+    <Sheet label="Labs" onClose={close} showClose={false} size="full">
       <main className={styles.body} data-wallet-state={wallet} data-bridge-state={bridge} data-bridge-phase={phase} data-mint-state={mint} data-testid="labs-overlay">
         <header className={styles.header}>
-          <button type="button" onClick={close} aria-label={locale === "ko" ? "My Korea로 돌아가기" : "Back to My Korea"}><ArrowLeft size={20} /></button>
+          <button type="button" data-sheet-initial-focus onClick={close} aria-label={locale === "ko" ? "My Korea로 돌아가기" : "Back to My Korea"}><ArrowLeft size={20} /></button>
           <div><p className={styles.eyebrow}>LABS · SIMULATED</p><h2>Labs</h2></div>
           <span className={styles.truthBadge}>SIMULATED</span>
         </header>

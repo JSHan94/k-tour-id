@@ -370,6 +370,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await page.getByTestId("table-check-in").click()
       await page.getByTestId("table-finish-meal").click()
       await expect(page.getByTestId("table-feedback")).toBeVisible()
+      await expect(page.getByRole("status").filter({ hasText: /체크인했어요|Checked in/ })).toHaveCount(0, { timeout: 3_000 })
     } else if (state === "REPORT") {
       await page.getByTestId("table-report").click()
       await expect(page.getByRole("alertdialog")).toBeVisible()
@@ -438,13 +439,33 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
 
 export async function collectBGeometryIssues(page: Page) {
   return page.getByTestId("ondo-b-root").evaluate((root) => {
+    type RectLike = Pick<DOMRect, "bottom" | "height" | "left" | "right" | "top" | "width" | "x" | "y">
     const viewport = { width: window.innerWidth, height: window.innerHeight }
     const rootRect = root.getBoundingClientRect()
-    const visibleRect = (rect: DOMRect) => rect.bottom > 0 && rect.right > 0 && rect.top < viewport.height && rect.left < viewport.width
-    const fullyInViewport = (rect: DOMRect) => rect.top >= 0 && rect.left >= 0 && rect.bottom <= viewport.height && rect.right <= viewport.width
-    const intersects = (first: DOMRect, second: DOMRect) => Math.min(first.right, second.right) - Math.max(first.left, second.left) > 2
+    const visibleRect = (rect: RectLike) => rect.bottom > 0 && rect.right > 0 && rect.top < viewport.height && rect.left < viewport.width
+    const clipToOverflowAncestors = (element: HTMLElement, initial: DOMRect) => {
+      let left = Math.max(0, initial.left)
+      let right = Math.min(viewport.width, initial.right)
+      let top = Math.max(0, initial.top)
+      let bottom = Math.min(viewport.height, initial.bottom)
+      let ancestor = element.parentElement
+      while (ancestor && root.contains(ancestor)) {
+        const style = getComputedStyle(ancestor)
+        const clipsX = [style.overflow, style.overflowX].some((value) => ["auto", "clip", "hidden", "scroll"].includes(value))
+        const clipsY = [style.overflow, style.overflowY].some((value) => ["auto", "clip", "hidden", "scroll"].includes(value))
+        if (clipsX || clipsY) {
+          const boundary = ancestor.getBoundingClientRect()
+          if (clipsX) { left = Math.max(left, boundary.left); right = Math.min(right, boundary.right) }
+          if (clipsY) { top = Math.max(top, boundary.top); bottom = Math.min(bottom, boundary.bottom) }
+        }
+        ancestor = ancestor.parentElement
+      }
+      return { x: left, y: top, left, right, top, bottom, width: Math.max(0, right - left), height: Math.max(0, bottom - top) }
+    }
+    const fullyInViewport = (rect: RectLike) => rect.top >= 0 && rect.left >= 0 && rect.bottom <= viewport.height && rect.right <= viewport.width
+    const intersects = (first: RectLike, second: RectLike) => Math.min(first.right, second.right) - Math.max(first.left, second.left) > 2
       && Math.min(first.bottom, second.bottom) - Math.max(first.top, second.top) > 2
-    const hitTestable = (element: HTMLElement, rect: DOMRect) => {
+    const hitTestable = (element: HTMLElement, rect: RectLike) => {
       const x = rect.left + rect.width / 2
       const y = rect.top + rect.height / 2
       if (x < 0 || x >= viewport.width || y < 0 || y >= viewport.height) return false
@@ -465,7 +486,10 @@ export async function collectBGeometryIssues(page: Page) {
       return (element.getAttribute("aria-label") ?? labelledBy ?? "").replace(/\s+/g, " ").trim()
     }
     const allControls = Array.from(root.querySelectorAll<HTMLElement>("button:not([disabled]),a[href],input:not([type='hidden']):not([disabled]),select:not([disabled]),textarea:not([disabled]),[role='button']"))
-      .map((element) => ({ element, rect: element.getBoundingClientRect() }))
+      .map((element) => {
+        const rawRect = element.getBoundingClientRect()
+        return { element, rawRect, rect: clipToOverflowAncestors(element, rawRect) }
+      })
       .filter(({ element, rect }) => {
         const style = getComputedStyle(element)
         return rect.width > 0 && rect.height > 0 && visibleRect(rect) && style.display !== "none" && style.visibility !== "hidden" && Number.parseFloat(style.opacity) > 0 && element.getAttribute("aria-hidden") !== "true" && element.tabIndex >= 0
@@ -476,7 +500,11 @@ export async function collectBGeometryIssues(page: Page) {
         ? [{ control: label(element), rect: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) } }]
         : []
     ))
-    const undersizedControls = controls.flatMap(({ element, rect }) => {
+    const undersizedControls = controls.flatMap(({ element, rawRect, rect }) => {
+      // A row partially entering or leaving its own scroll viewport is not a
+      // reduced target; its full box becomes available by continuing to scroll.
+      // Exit controls are checked separately against their un-clipped box.
+      if (rect.width < rawRect.width - 1 || rect.height < rawRect.height - 1) return []
       const wrappingLabel = element.matches("input,select,textarea") ? element.closest("label") : null
       const labelRect = wrappingLabel?.getBoundingClientRect()
       const effectiveWidth = labelRect && labelRect.width >= rect.width ? labelRect.width : rect.width
@@ -509,7 +537,7 @@ export async function collectBGeometryIssues(page: Page) {
     const exitCtaIssues = visibleDialogs.flatMap(({ element }) => {
       const candidates = controls.filter(({ element: control }) => element.contains(control) && exitPattern.test(accessibleName(control)))
       if (!candidates.length) return [{ dialog: label(element), issue: "no visible, hit-testable exit CTA" }]
-      return candidates.flatMap(({ element: control, rect }) => fullyInViewport(rect) ? [] : [{ dialog: label(element), issue: `${label(control)} is outside the viewport` }])
+      return candidates.flatMap(({ element: control, rawRect }) => fullyInViewport(rawRect) ? [] : [{ dialog: label(element), issue: `${label(control)} is outside the viewport` }])
     })
     const ariaIssues = [
       ...visibleDialogs.flatMap(({ element }) => explicitDialogName(element) ? [] : [{ element: label(element), issue: "dialog has no aria-label or valid aria-labelledby" }]),

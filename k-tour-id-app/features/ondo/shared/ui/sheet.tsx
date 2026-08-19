@@ -19,11 +19,13 @@ export function Sheet({
   children,
   label,
   onClose,
+  showClose = true,
   size = "medium",
 }: {
   children: ReactNode
   label: string
   onClose(): void
+  showClose?: boolean
   size?: "peek" | "medium" | "full"
 }) {
   const { state } = useOndo()
@@ -57,12 +59,13 @@ export function Sheet({
       window.clearTimeout(focusRecoveryTimer)
       document.body.style.overflow = previousOverflow
       window.setTimeout(() => {
+        if (document.querySelector("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']")) return
         const previous = returnFocusRef.current
         if (previous?.isConnected) previous.focus({ preventScroll: true })
         else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
       }, 80)
     }
-  }, [])
+  }, [showClose])
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
@@ -103,7 +106,7 @@ export function Sheet({
         onKeyDown={handleKeyDown}
       >
         <div className={styles.grabber} aria-hidden="true" />
-        <button type="button" data-sheet-initial-focus className={styles.close} onClick={onClose} aria-label={closeLabel}><X size={19} /></button>
+        {showClose ? <button type="button" data-sheet-initial-focus className={styles.close} onClick={onClose} aria-label={closeLabel}><X size={19} /></button> : null}
         {children}
       </section>
     </div>

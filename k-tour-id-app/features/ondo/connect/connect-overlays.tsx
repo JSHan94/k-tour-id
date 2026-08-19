@@ -350,7 +350,7 @@ function TableChat({ tableId }: { tableId: string }) {
               <fieldset><legend>{locale === "ko" ? "정보가 도움이 됐나요?" : "Was the information helpful?"}</legend><div><button type="button" aria-pressed={helpful === true} onClick={() => setHelpful(true)} data-testid="feedback-helpful-yes">{locale === "ko" ? "예" : "Yes"}</button><button type="button" aria-pressed={helpful === false} onClick={() => setHelpful(false)}>{locale === "ko" ? "아니요" : "No"}</button></div></fieldset>
               <fieldset><legend>{locale === "ko" ? "약속과 기본 예절을 지켰나요?" : "Did they keep the plan and act respectfully?"}</legend><div><button type="button" aria-pressed={respectful === true} onClick={() => setRespectful(true)} data-testid="feedback-respectful-yes">{locale === "ko" ? "예" : "Yes"}</button><button type="button" aria-pressed={respectful === false} onClick={() => setRespectful(false)}>{locale === "ko" ? "아니요" : "No"}</button></div></fieldset>
               <label htmlFor={`feedback-note-${activeTable.id}`}>{locale === "ko" ? "비공개 메모 · 선택" : "Private note · Optional"}</label>
-              <textarea id={`feedback-note-${activeTable.id}`} value={privateNote} onChange={(event) => setPrivateNote(event.target.value)} />
+              <textarea id={`feedback-note-${activeTable.id}`} aria-label={locale === "ko" ? "비공개 메모 · 선택" : "Private note · Optional"} value={privateNote} onChange={(event) => setPrivateNote(event.target.value)} />
               <button type="button" className={styles.primary} onClick={submitFeedback} disabled={helpful == null || respectful == null} data-testid="feedback-submit">{locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button>
             </section>
           ) : null}
@@ -359,7 +359,7 @@ function TableChat({ tableId }: { tableId: string }) {
           {photo ? <button type="button" className={styles.secondary} onClick={sendImage} disabled={photo.state === "UPL-SENDING"}><ImagePlus size={17} /> {photo.state === "UPL-FAILED" ? locale === "ko" ? "사진 다시 보내기" : "Retry photo" : locale === "ko" ? "사진 보내기" : "Send photo"}</button> : null}
           <div className={styles.composer}>
             <label className={styles.srOnly} htmlFor={`message-${table.id}`}>{locale === "ko" ? "Table에 메시지 보내기" : "Message the Table"}</label>
-            <input id={`message-${table.id}`} value={text} onChange={(event) => setText(event.target.value)} placeholder={locale === "ko" ? "Table에 메시지 보내기" : "Message the Table"} onKeyDown={(event) => { if (event.key === "Enter") sendText() }} />
+            <input id={`message-${table.id}`} aria-label={locale === "ko" ? "Table에 메시지 보내기" : "Message the Table"} value={text} onChange={(event) => setText(event.target.value)} placeholder={locale === "ko" ? "Table에 메시지 보내기" : "Message the Table"} onKeyDown={(event) => { if (event.key === "Enter") sendText() }} />
             <button type="button" onClick={sendText} disabled={!text.trim()} aria-label={locale === "ko" ? "보내기" : "Send"}><Send size={18} /></button>
           </div>
           <div className={styles.chatActions}>
@@ -437,7 +437,7 @@ function LocalSignal({ venueId }: { venueId: string }) {
         <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "이 데모 세션에는 시뮬레이션 기여만 남아요. Visit과 Contribution 이력 외의 신원·19+·결제 KYC·Meetup·스탬프는 바뀌지 않으며 공개 ONDO 점수도 즉시 바뀌지 않아요." : "This demo session records a simulated contribution only. Identity, 19+, Payment KYC, Meetup, and stamps stay unchanged, and the public ONDO score does not change immediately."}</span></InlineNotice>
         <label className={styles.fieldLabel} htmlFor={`signal-note-${venueId}`}>{locale === "ko" ? "도움이 될 정보 · 메모 또는 사진 필수" : "Helpful note · Add a note or photo"}</label>
         <p className={styles.requirement} id={`signal-requirement-${venueId}`}>{locale === "ko" ? "메모나 현장 사진 중 하나를 추가해야 제출할 수 있어요." : "Add either a note or an on-site photo before submitting."}</p>
-        <textarea id={`signal-note-${venueId}`} aria-describedby={`signal-requirement-${venueId}`} value={note} onChange={(event) => setNote(event.target.value)} placeholder={locale === "ko" ? "메뉴, 주문 방법, 이용 팁을 남겨주세요." : "Share a menu, ordering, or access tip."} />
+        <textarea id={`signal-note-${venueId}`} aria-label={locale === "ko" ? "도움이 될 정보 · 메모 또는 사진 필수" : "Helpful note · Add a note or photo"} aria-describedby={`signal-requirement-${venueId}`} value={note} onChange={(event) => setNote(event.target.value)} placeholder={locale === "ko" ? "메뉴, 주문 방법, 이용 팁을 남겨주세요." : "Share a menu, ordering, or access tip."} />
         <LocalPhotoPicker locale={locale} purpose="local_signal" value={photo} onChange={setPhoto} disabled={status === "submitting"} />
         {status === "failed" ? <InlineNotice tone="danger"><AlertTriangle size={18} /><span>{locale === "ko" ? "신호를 남기지 못했어요. 초안은 유지됐어요." : "The signal could not be submitted. Your draft was kept."}</span></InlineNotice> : null}
         {status === "submitted" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "데모 세션에 시뮬레이션 기여를 남겼어요. Visit과 Contribution 이력만 업데이트됐고 공개 ONDO 점수는 즉시 바뀌지 않아요." : "Simulated contribution recorded in this demo session. Only Visit and Contribution histories were updated; the public ONDO score did not change immediately."}</span></InlineNotice> : null}

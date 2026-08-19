@@ -6,7 +6,7 @@
 .boundary h2, .header h2 { margin: 0; font-size: 26px; letter-spacing: -.045em; }
 .boundary > p:not(.eyebrow) { max-width: 34rem; margin: 0 auto; color: #706d67; font-size: 14px; line-height: 1.62; }
 .boundary > div, .traitRow > div { padding: 12px 0; border-radius: 0; background: transparent; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; color: #68655f; }
-.header { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 10px; padding-bottom: 22px; border-bottom: 1px solid #d9d7d1; }
+.header { position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 10px; padding-bottom: 22px; border-bottom: 1px solid #d9d7d1; background: #fbfbfa; }
 .header > button { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; background: transparent; color: #292927; }
 .header > div { display: grid; gap: 2px; }
 .truthBadge { align-self: start; padding: 6px 0; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .04em; }

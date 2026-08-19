@@ -540,7 +540,7 @@ export function MapEntryB() {
           <strong>{CITY[city].label[locale]}</strong>
           <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
         </div>
-        <label className={styles.search}><Search size={18} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} />{query ? <button type="button" onClick={() => setQuery("")} aria-label="Clear"><X size={16} /></button> : null}</label>
+        <div className={styles.search} role="search"><Search size={18} /><input aria-label={copy.search} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} />{query ? <button type="button" onClick={() => setQuery("")} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
         <div className={styles.rail} aria-label={locale === "ko" ? "장소 신호 필터" : "Place signal filters"}>
           {(["all", "signal", "pending"] as const).map((item) => <button key={item} type="button" aria-pressed={heat === item} onClick={() => setHeat(item)}>{copy[item]}</button>)}
         </div>
