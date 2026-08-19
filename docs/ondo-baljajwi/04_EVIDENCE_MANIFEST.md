@@ -1,6 +1,6 @@
 # ONDO B · Final Evidence Index
 
-상태: `AUTOMATED GATES PASS · R3/R4 FIVE-ROLE CLEAN · CLEAN STREAK 2/2`
+상태: `AUTOMATED GATES PASS · R3/R4 FIVE-ROLE CLEAN · CLEAN STREAK 2/2 · PRIVATE B DEPLOYED`
 
 | Field | Value |
 |---|---|
@@ -10,6 +10,22 @@
 | Route | `/ondo-b` |
 | Base URL | `http://127.0.0.1:3130` production build |
 | Browser projects | `mobile-chromium 390×844`, `desktop-chromium 1440×1000` |
+
+## Private B deployment evidence
+
+| Field | Value |
+|---|---|
+| Live URL | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
+| B Sites project | `appgprj_6a85de65d6148191aa042ae9c2787dd2` |
+| Saved version | `1` · `appgprj_6a85de65d6148191aa042ae9c2787dd2~appgver_2d34e3521bb481919ede7af96be442b2` |
+| Deployment | `appgdep_6a85df710f2c819186a2d0b6b708fb5b` · `succeeded` |
+| Deployment-only source SHA | `90d353da02b1774740b80b691c7bcd57aab84aef` |
+| Archive digest | `sha256:db5ebbc64bc7dfbe32eb2e589a4e1f1743c38bb20be44ecc3ff7a3885eca5a45` |
+| Access | `custom · owner allowlist 1 · groups 0 · external visitors 0` |
+| Runtime smoke | `/ondo-b 200` (`38,487 B`), known venue API `200` (`2,346 B`), unknown venue API `404` |
+| A protection | 기존 A project `appgprj_6a69e0a4fff48191892ff4022ebf08b2`와 `/ondo` alias를 수정하지 않음 |
+
+배포 source는 frozen harness 위에서 `.openai/hosting.json`의 B 전용 project ID만 바꾼 deployment-only commit이다. 제품·harness·baseline 파일은 바뀌지 않았다.
 
 ## Final automated result
 

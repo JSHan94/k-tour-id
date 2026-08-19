@@ -1,12 +1,13 @@
 # ONDO B · Final As-built
 
-상태: `IMPLEMENTED · AUTOMATED GATES PASS · TWO INDEPENDENT CLEAN ROUNDS · PRIVATE B DEPLOYMENT PENDING`
+상태: `IMPLEMENTED · AUTOMATED GATES PASS · TWO INDEPENDENT CLEAN ROUNDS · PRIVATE B DEPLOYED`
 
 | 항목 | 최종 값 |
 |---|---|
 | Product SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
 | Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
 | Route | `/ondo-b` |
+| Private preview | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
 | 제품 형태 | responsive Next.js web app |
 | Product scope | 외국인 우선 서울·부산 F&B discovery + JIT identity/commerce/community demo |
 | Requirement trace | `19/19` |
@@ -92,3 +93,5 @@ Pixel set digest: `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb4
 ## 6. 릴리스 판정
 
 제품 또는 harness가 바뀌면 clean streak를 0으로 되돌린다. 같은 tuple에서 다섯 독립 역할의 actionable `S0/S1/S2=0` round가 두 번 연속 끝나고 durable evidence가 연결된 뒤에만 B preview를 승격한다.
+
+이 조건은 동일 tuple의 R3/R4에서 충족됐다. B는 별도 Sites project `appgprj_6a85de65d6148191aa042ae9c2787dd2`의 private owner-only preview로 배포됐고, `/ondo-b`와 known/unknown venue API smoke가 각각 `200 / 200 / 404`로 통과했다. 기존 A project와 `/ondo` 배포는 변경하지 않았다. 이 승격은 frontend demo candidate의 승격이며, 5절의 외부 provider·법률·운영 연동 승인을 의미하지 않는다.

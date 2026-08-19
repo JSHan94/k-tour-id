@@ -1,6 +1,6 @@
 # ONDO B · 발자취형 최종 제품/QA 팩
 
-상태: `PRODUCT + HARNESS FROZEN · AUTOMATED GATES PASS · R3/R4 CLEAN · CLEAN STREAK 2/2 · PRIVATE B DEPLOYMENT PENDING`
+상태: `PRODUCT + HARNESS FROZEN · AUTOMATED GATES PASS · R3/R4 CLEAN · CLEAN STREAK 2/2 · PRIVATE B DEPLOYED`
 
 | SoT | 값 |
 |---|---|
@@ -8,6 +8,7 @@
 | 검수 Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
 | Baseline set digest | `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1` |
 | Route | `/ondo-b` |
+| Private B preview | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
 | Requirements | `19/19 traced` |
 | Flows | `18/18 · 121 ACTUAL · 0 GAP · 5 reasoned N/A` |
 | Pixel | `44 mobile + 44 desktop = 88/88 PASS` |
@@ -39,7 +40,7 @@
 | Data | 공식 장소 `400`, simulated signal `80`, night-category After19 subset `17` (`서울 7 / 부산 10`) |
 | R3 independent review | [Review Manifest](./03_REVIEW_MANIFEST.md) 참조 |
 | R4 independent review | [Review Manifest](./03_REVIEW_MANIFEST.md) 참조 |
-| B deployment | `PENDING TWO FRESH CLEAN ROUNDS` |
+| B deployment | `PASS · private owner-only preview · /ondo-b 200` |
 
 ## 고정 불변식
 
