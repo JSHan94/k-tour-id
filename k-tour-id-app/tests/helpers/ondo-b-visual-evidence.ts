@@ -407,7 +407,11 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await gotoB(page)
     await page.getByRole("navigation").locator("button").nth(3).click()
     const target = page.getByTestId(state === "PROFILE" ? "ondo-profile-panel" : "ondo-trust-panel")
-    await target.scrollIntoViewIfNeeded()
+    if (state === "TRUST-FOUR-AXES") {
+      await target.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }))
+    } else {
+      await target.scrollIntoViewIfNeeded()
+    }
   } else {
     const query = state === "LABS-TRAIT-FAIL" ? "?scenario=trait-retry-fail" : state === "LABS-BRIDGE-FAIL" ? "?scenario=bridge-failed" : ""
     await openPreparedLabs(page, locale, query)
