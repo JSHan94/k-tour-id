@@ -177,9 +177,37 @@ async function settle(page: Page) {
 async function stabilizeMobileEvidenceScroll(
   page: Page,
   target: Locator,
-  position: { kind: "bottom" } | { kind: "scrollTop", value: number },
+  position: { kind: "bottom" } | { kind: "scrollTop", value: number, desktopValue?: number },
 ) {
   if ((page.viewportSize()?.width ?? 0) > 430) {
+    if (position.kind === "scrollTop") {
+      const expectedScrollTop = position.desktopValue ?? position.value
+      await target.evaluate((element, scrollTop) => {
+        let scroller = element.parentElement
+        while (scroller) {
+          const overflowY = getComputedStyle(scroller).overflowY
+          if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) break
+          scroller = scroller.parentElement
+        }
+        if (!scroller) throw new Error("Visual evidence scroll container was not found")
+        // Earlier controls may auto-scroll the dialog while being clicked.
+        // Reset that incidental scroll to the baseline's explicit desktop
+        // position instead of inheriting whichever offset a long run leaves.
+        scroller.scrollTop = scrollTop
+        scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
+      }, expectedScrollTop)
+      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+      await expect.poll(() => target.evaluate((element) => {
+        let scroller = element.parentElement
+        while (scroller) {
+          const overflowY = getComputedStyle(scroller).overflowY
+          if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) return scroller.scrollTop
+          scroller = scroller.parentElement
+        }
+        return -1
+      })).toBe(expectedScrollTop)
+      return
+    }
     await target.scrollIntoViewIfNeeded()
     return
   }
@@ -483,7 +511,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       const labs = page.getByTestId("labs-overlay")
       await expect(labs).toHaveAttribute("data-bridge-state", state === "LABS-BRIDGE-FAIL" ? "BRG-FAILED" : "BRG-SIMULATED-SUCCESS")
       await expect(labs).toHaveAttribute("data-bridge-phase", state === "LABS-BRIDGE-FAIL" ? "source_confirmed" : "destination_confirmed")
-      await stabilizeMobileEvidenceScroll(page, page.getByTestId(state === "LABS-BRIDGE-FAIL" ? "labs-bridge-quote" : "labs-bridge-receipt"), { kind: "scrollTop", value: 657 })
+      await stabilizeMobileEvidenceScroll(page, page.getByTestId(state === "LABS-BRIDGE-FAIL" ? "labs-bridge-quote" : "labs-bridge-receipt"), { kind: "scrollTop", value: 657, desktopValue: 593 })
     }
   }
 
