@@ -1,4 +1,5 @@
 .root { pointer-events: none; position: absolute; z-index: 72; inset: 0; }
+.root[data-prompt-open="true"] { z-index: 105; }
 .root button, .root input, .root label { pointer-events: auto; }
 .root :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .chip, .chipOn { position: absolute; top: calc(166px + env(safe-area-inset-top)); right: 64px; display: flex; min-height: 44px; align-items: center; gap: 6px; border: 1px solid #dedbd5; border-radius: 12px; padding: 0 13px; background: rgb(255 255 255 / 94%); color: #40343b; font-size: 12px; font-weight: 760; }

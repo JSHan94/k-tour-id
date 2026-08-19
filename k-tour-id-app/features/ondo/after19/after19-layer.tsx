@@ -126,7 +126,11 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
   }
   const beginAgeGate = () => {
     setShowGate(false)
-    actions.beginAction({ cta: "OPEN_AFTER19", gates: ["age"] })
+    actions.beginAction({
+      cta: "OPEN_AFTER19",
+      gates: ["age"],
+      venueId: state.surface.kind === "venue" ? state.surface.venueId : undefined,
+    })
   }
   const turnOff = () => {
     actions.setAfter19("A19-MANUAL-OFF")
@@ -162,7 +166,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
   if (state.tab !== "ondo" && !state.gate) return null
 
   return (
-    <div className={styles.root} data-testid="ondo-after19-layer" aria-live="polite">
+    <div className={styles.root} data-testid="ondo-after19-layer" data-prompt-open={showGate ? "true" : "false"} aria-live="polite">
       <button type="button" className={state.after19 === "A19-ON" ? styles.chipOn : styles.chip} onClick={state.after19 === "A19-ON" ? turnOff : manualOpen}>
         {state.after19 === "A19-ON" ? <Sunrise size={16} /> : <Moon size={16} />}{state.after19 === "A19-ON" ? t.chipOn : t.chipOff}
       </button>
