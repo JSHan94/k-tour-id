@@ -1,6 +1,6 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE · PRODUCT 0cc65f2 · HARNESS 8b0060f`
+상태: `ACTIVE · PRODUCT 5ac6308 · HARNESS 6e7254a`
 
 ## 원칙
 

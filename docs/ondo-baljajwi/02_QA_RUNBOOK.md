@@ -4,7 +4,7 @@
 
 ## 1. Fixed-SHA rule
 
-1. B product를 `0cc65f2793ca7a17f59397b1e9e0391f281f9649`, harness를 `8b0060ff6f371402eb2c9d8766461b50f57e4742`로 고정한다.
+1. B product를 `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3`, harness를 `6e7254af02adcf49a35424203e2201093485872a`로 고정한다.
 2. 제품 fix commit 뒤의 QA evidence commit은 제품 source/package/config를 수정하지 않는다.
 3. `PLAYWRIGHT_BASE_URL`은 같은 product SHA를 serving하는 URL만 허용한다.
 4. 제품 SHA가 바뀌면 결과·pixel baseline·clean streak를 모두 무효화한다.

@@ -1,11 +1,11 @@
 # ONDO B · 원요구 최종 반영 감사
 
-상태: `PRODUCT/HARNESS FROZEN · R3 REVIEW IN PROGRESS`
+상태: `PRODUCT/HARNESS FROZEN · R3/R4 CLEAN · FINAL REQUIREMENTS AUDIT PASS`
 
 | 항목 | 값 |
 |---|---|
-| 제품 SHA | `0cc65f2793ca7a17f59397b1e9e0391f281f9649` |
-| 검수 Harness SHA | `8b0060ff6f371402eb2c9d8766461b50f57e4742` |
+| 제품 SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
+| 검수 Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
 | Route | `/ondo-b` |
 | 범위 | 외국인 우선 F&B 웹앱 프론트엔드 데모 |
 | 실제 장소 | 서울 200 + 부산 200 = 400 |

@@ -54,12 +54,12 @@ a product change.
 - `FL-002`: `AFTER19-VENUE-LOCKED` proves ordinary place facts stay available; `AFTER19-VENUE-RETURN` completes the age-only gate and asserts the exact `venueId`, unlocked card, After19 banner, and consumed return marker.
 - `FL-011`: `SAVE-FAILURE` captures the venue-preserving error and both recovery actions; `SAVE-RECOVERED` exercises fail → dismiss → fail → Retry save and captures the persisted Saved state.
 
-These four actual cases replace generic predecessor captures so the registry remains exactly **44 registered states × 2 viewports = 88 pixel contracts** on product SHA `0cc65f2793ca7a17f59397b1e9e0391f281f9649` and harness SHA `8b0060ff6f371402eb2c9d8766461b50f57e4742`.
+These four actual cases replace generic predecessor captures so the registry remains exactly **44 registered states × 2 viewports = 88 pixel contracts** on product SHA `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` and harness SHA `6e7254af02adcf49a35424203e2201093485872a`.
 
 ## Final-SHA verification
 
-The complete matrix was run against product SHA `0cc65f2793ca7a17f59397b1e9e0391f281f9649` and harness SHA
-`8b0060ff6f371402eb2c9d8766461b50f57e4742` at both target viewports. Result: **88/88 passed**, with 88 intentional
+The complete matrix was run against product SHA `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` and harness SHA
+`6e7254af02adcf49a35424203e2201093485872a` at both target viewports. Result: **88/88 passed**, with 88 intentional
 opposite-project skips. Save failure/recovery and the After19 exact-venue return
 pass pixel, geometry, contrast, ARIA, console, runtime and context-preservation
 guards. Labs bridge failure/success captures use explicit per-viewport canonical

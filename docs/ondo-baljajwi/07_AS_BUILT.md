@@ -1,11 +1,11 @@
 # ONDO B · Final As-built
 
-상태: `IMPLEMENTED · AUTOMATED GATES PASS · INDEPENDENT CLEAN ROUNDS IN PROGRESS`
+상태: `IMPLEMENTED · AUTOMATED GATES PASS · TWO INDEPENDENT CLEAN ROUNDS · PRIVATE B DEPLOYMENT PENDING`
 
 | 항목 | 최종 값 |
 |---|---|
-| Product SHA | `0cc65f2793ca7a17f59397b1e9e0391f281f9649` |
-| Harness SHA | `8b0060ff6f371402eb2c9d8766461b50f57e4742` |
+| Product SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
+| Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
 | Route | `/ondo-b` |
 | 제품 형태 | responsive Next.js web app |
 | Product scope | 외국인 우선 서울·부산 F&B discovery + JIT identity/commerce/community demo |
@@ -70,10 +70,10 @@
 | Canonical Flow | `36/36 PASS` (`18 × mobile/desktop`) |
 | Pixel | `88/88 PASS`; 반대-project `88` intentional skip |
 | Accessibility | `28/28 PASS` (`14 × mobile/desktop`) |
-| KO/EN content + map/product/regression/registry | `102/102 PASS` |
+| KO/EN content + map/product/regression/registry/onboarding geometry | `108/108 PASS` |
 | Product runtime errors in accepted runs | `0` |
 
-Pixel set digest: `f37ac108b1a7814f747e9e5c89b804ad15b258df29d1958b59da7656ea8725fc`.
+Pixel set digest: `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1`.
 
 자동 결과의 명령·범위·round 증거는 [`04_EVIDENCE_MANIFEST.md`](./04_EVIDENCE_MANIFEST.md)와 `evidence/RUN-20260819-*-FINAL/manifest.md`에 보존한다.
 
