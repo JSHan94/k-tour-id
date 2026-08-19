@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { AlertTriangle, Check, CreditCard, MapPin, ReceiptText, ShieldCheck } from "lucide-react"
 import { acceptUniqueMilestoneVisit } from "../rewards/reward-model"
+import { venueLabelById } from "@/lib/ondo/venues/display"
 import { useOndo } from "../shared/state/ondo-provider"
 import { InlineNotice, Sheet } from "../shared/ui/sheet"
 import { beginCheckout, finishCheckout, isReadOnlySettlement, processCheckout, type CheckoutSnapshot } from "./commerce-model"
@@ -28,6 +29,7 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
   })
   const [visitState, setVisitState] = useState<"idle" | "checking" | "accepted" | "duplicate">("idle")
   const ready = state.account === "ACC-ACTIVE" && state.paymentKyc === "PKY-VERIFIED"
+  const venueName = venueLabelById(venueId, locale) ?? (locale === "ko" ? "선택한 장소" : "Selected place")
 
   function start() {
     if (!ready) {
@@ -67,9 +69,9 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
         <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "실제 결제나 자산 이동이 발생하지 않습니다. 결제용 KYC는 사람 확인·19+와 별도입니다." : "No real payment or asset movement occurs. Payment KYC is separate from person and 19+ checks."}</span></InlineNotice>
 
         <div className={styles.priceCard}>
-          <div><MapPin size={18} /><span>{locale === "ko" ? "장소 표시 가격" : "Venue display price"}</span></div>
+          <div><MapPin size={18} /><span>{venueName}</span></div>
           <strong>₩{checkout.displayPriceKRW.toLocaleString()}</strong>
-          <small>KRW</small>
+          <small>{locale === "ko" ? "예시 주문 합계 · 시뮬레이션" : "Illustrative order total · Simulated"}</small>
         </div>
 
         <div className={styles.settlement} data-read-only={isReadOnlySettlement(checkout)}>

@@ -5,7 +5,7 @@
   min-height: 100%;
   overflow: auto;
   padding: calc(18px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));
-  background: #fbfaf7;
+  background: #fbfbfa;
   color: #171716;
 }
 .layer :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }

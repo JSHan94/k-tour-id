@@ -1,5 +1,5 @@
 .peek {
-  --surface: #fffefa;
+  --surface: #fff;
   --ink: #22211f;
   --muted: #716c65;
   --line: rgb(34 33 31 / 13%);
@@ -37,11 +37,11 @@
 
 .fullLayer { position: absolute; z-index: 90; inset: 0; display: flex; align-items: flex-end; justify-content: center; font-family: "Noto Sans KR", Inter, system-ui, sans-serif; }
 .backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgb(22 21 19 / 32%); backdrop-filter: blur(2px); }
-.detail { position: relative; width: 100%; max-height: 91dvh; overflow-y: auto; border: 1px solid rgb(34 33 31 / 12%); border-radius: 22px 22px 0 0; background: #fffefa; color: #22211f; box-shadow: 0 -8px 30px rgb(34 33 31 / 12%); }
+.detail { position: relative; width: 100%; max-height: 91dvh; overflow-y: auto; border: 1px solid rgb(34 33 31 / 12%); border-radius: 20px 20px 0 0; background: #fff; color: #22211f; box-shadow: 0 -8px 30px rgb(34 33 31 / 10%); }
 .hero { position: relative; height: min(160px, 19dvh); min-height: 128px; overflow: hidden; border-radius: 21px 21px 0 0; background: #efeeeb; }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgb(20 20 18 / 16%), transparent 48%); }
 .hero img { width: 100%; height: 100%; object-fit: cover; }
-.detailClose, .save { position: absolute; z-index: 2; top: 14px; border: 1px solid rgb(34 33 31 / 13%); background: rgb(255 254 250 / 96%); color: #22211f; box-shadow: none; }
+.detailClose, .save { position: absolute; z-index: 2; top: 14px; border: 1px solid rgb(34 33 31 / 13%); background: rgb(255 255 255 / 96%); color: #22211f; box-shadow: none; }
 .detailClose { left: 14px; }
 .save { right: 14px; }
 .save.saved { background: #fff0ec; color: #b43e31; }
@@ -57,7 +57,7 @@
 .placeActions { margin: 2px 0 16px; padding: 14px 0; border-top: 1px solid rgb(34 33 31 / 12%); border-bottom: 1px solid rgb(34 33 31 / 12%); }
 .placeActions h3 { margin: 0 0 9px; color: #6f6a63; font-size: 12px; font-weight: 750; letter-spacing: -.01em; }
 .placeActions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.placeActions button { display: grid; min-width: 0; min-height: 54px; grid-template-columns: 20px minmax(0, 1fr) 16px; align-items: center; gap: 6px; padding: 7px 9px 7px 11px; border: 1px solid rgb(34 33 31 / 13%); border-radius: 13px; background: #fffefa; color: #22211f; font-size: 12px; font-weight: 750; line-height: 1.25; text-align: left; }
+.placeActions button { display: grid; min-width: 0; min-height: 54px; grid-template-columns: 20px minmax(0, 1fr) 16px; align-items: center; gap: 6px; padding: 7px 9px 7px 11px; border: 1px solid rgb(34 33 31 / 13%); border-radius: 13px; background: #fff; color: #22211f; font-size: 12px; font-weight: 750; line-height: 1.25; text-align: left; }
 .placeActions button:last-child { border-color: #22211f; background: #22211f; color: #fff; }
 .placeActions button span { min-width: 0; }
 .placeActions button svg:last-child { justify-self: end; }
@@ -98,9 +98,9 @@
 .beforeNote svg { flex: 0 0 auto; }
 .sourceMeta { font-size: 12px !important; font-variant-numeric: tabular-nums; }
 .saveGateHint { margin: 13px 0 0; padding: 10px 12px; border-radius: 13px; background: #fff0d6; color: #724713; font-size: 12px; line-height: 1.45; }
-.detailActions { position: sticky; bottom: 0; display: grid; grid-template-columns: .8fr 1.2fr; gap: 8px; margin-top: 18px; padding-top: 10px; background: linear-gradient(180deg, transparent, #fffefa 18%); }
+.detailActions { position: sticky; bottom: 0; display: grid; grid-template-columns: .8fr 1.2fr; gap: 8px; margin-top: 18px; padding-top: 10px; background: linear-gradient(180deg, transparent, #fff 18%); }
 .detailActions a, .detailActions button { display: flex; min-height: 50px; align-items: center; justify-content: center; gap: 6px; border-radius: 15px; font-size: 13px; font-weight: 750; text-decoration: none; }
-.detailActions a { border: 1px solid rgb(34 33 31 / 14%); background: #fffefa; color: #22211f; }
+.detailActions a { border: 1px solid rgb(34 33 31 / 14%); background: #fff; color: #22211f; }
 .detailActions button { border: 0; background: #22211f; color: #fff; }
 .detailActions button svg:last-child { margin-left: auto; }
 

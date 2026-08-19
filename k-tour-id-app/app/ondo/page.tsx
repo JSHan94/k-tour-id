@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { OndoProduct } from "@/features/ondo/app/ondo-product"
+import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
 export const metadata: Metadata = {
   title: "ONDO — Where locals eat now",
@@ -19,5 +20,5 @@ export const metadata: Metadata = {
 }
 
 export default function OndoPage() {
-  return <OndoProduct />
+  return process.env.NEXT_PUBLIC_ONDO_QA_VARIANT === "B" ? <OndoProductB /> : <OndoProduct />
 }

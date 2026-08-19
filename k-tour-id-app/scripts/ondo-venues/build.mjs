@@ -125,6 +125,7 @@ export async function build({ seoulFile, busanFile, outputDirectory, fetchedAt }
   await Promise.all([
     writeFile(path.join(outputDirectory, "canonical-venues.json"), `${JSON.stringify(dataset, null, 2)}\n`),
     writeFile(path.join(outputDirectory, "canonical-venues.geojson"), `${JSON.stringify(geoJson(venues), null, 2)}\n`),
+    writeFile(path.join(outputDirectory, "canonical-venues-map.json"), `${JSON.stringify(geoJson(venues), null, 2)}\n`),
     writeFile(path.join(outputDirectory, "provenance-manifest.json"), `${JSON.stringify(provenance, null, 2)}\n`),
   ])
   return { dataset, provenance }

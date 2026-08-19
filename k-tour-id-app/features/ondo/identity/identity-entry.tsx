@@ -35,6 +35,8 @@ const COPY = {
     routeTruth: "Preview only · No request is sent to an external provider.",
     labs: "Labs",
     labsBody: "Experimental signer, asset, bridge, and badge hypotheses",
+    after19Setting: "After 19 auto-open",
+    after19SettingBody: "Open the night preview automatically only after a current 19+ check and 19:00 Korea time.",
   },
   ko: {
     eyebrow: "ONDO ID",
@@ -63,6 +65,8 @@ const COPY = {
     routeTruth: "미리보기 · 외부 인증기관으로 요청을 보내지 않습니다.",
     labs: "Labs",
     labsBody: "서명·자산·체인 연결·기념 배지 기술 가설 실험 영역",
+    after19Setting: "After 19 자동 열기",
+    after19SettingBody: "현재 유효한 19+ 확인과 한국 시간 19:00 이후 조건이 모두 맞을 때만 밤 프리뷰를 자동으로 열어요.",
   },
 } satisfies Record<Locale, Record<string, string>>
 
@@ -104,6 +108,15 @@ export function IdentityEntry() {
         <p className={styles.routePreview}>{t.routePreview}</p>
         <p>{t.routeTruth}</p>
       </section>
+
+      <label className={styles.preferenceRow} data-testid="after19-auto-setting">
+        <span><strong>{t.after19Setting}</strong><small>{t.after19SettingBody}</small></span>
+        <input type="checkbox" checked={state.autoNight} onChange={(event) => {
+          actions.setAutoNight(event.target.checked)
+          if (!event.target.checked && state.after19 === "A19-ON") actions.setAfter19("A19-OFF")
+        }} />
+        <i aria-hidden="true"><b /></i>
+      </label>
 
       <ProfilePanel />
       <TrustPanel />

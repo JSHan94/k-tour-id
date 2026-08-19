@@ -1,4 +1,4 @@
-.body { display: grid; gap: 22px; padding: 30px 18px calc(30px + env(safe-area-inset-bottom)); background: #fbfaf7; color: #20201e; }
+.body { display: grid; gap: 22px; padding: 30px 18px calc(30px + env(safe-area-inset-bottom)); background: #fbfbfa; color: #20201e; }
 .body :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .eyebrow { margin: 0; color: #77746e; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
 .body h2 { margin: 0; font-size: 25px; letter-spacing: -.04em; }

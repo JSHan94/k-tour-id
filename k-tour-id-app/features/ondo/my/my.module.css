@@ -1,4 +1,4 @@
-.screen { min-height: 100%; padding: max(34px, env(safe-area-inset-top)) 18px 112px; background: #fbfaf7; color: #20201e; }
+.screen { min-height: 100%; padding: max(34px, env(safe-area-inset-top)) 18px 112px; background: #fbfbfa; color: #20201e; }
 .screen :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .header p { margin: 0 0 10px; color: #77746e; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
 .header h1 { margin: 0; font-size: 29px; line-height: 1.18; letter-spacing: -.045em; }

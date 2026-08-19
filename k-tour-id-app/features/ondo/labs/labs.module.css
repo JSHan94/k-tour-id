@@ -1,4 +1,4 @@
-.boundary, .body { display: grid; gap: 22px; padding: 30px 18px calc(32px + env(safe-area-inset-bottom)); background: #fbfaf7; color: #20201e; }
+.boundary, .body { display: grid; gap: 22px; padding: 30px 18px calc(32px + env(safe-area-inset-bottom)); background: #fbfbfa; color: #20201e; }
 .boundary :focus-visible, .body :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .boundary { min-height: min(84dvh, 720px); align-content: center; text-align: center; }
 .labMark { display: grid; width: 56px; height: 56px; margin: 0 auto; place-items: center; border: 1px solid #d5d2cc; border-radius: 50%; color: #4f4d48; }

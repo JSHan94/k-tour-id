@@ -1,6 +1,8 @@
 "use client"
 
 import { CalendarClock, ChevronRight, Languages, MapPin, Users } from "lucide-react"
+import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
+import { venueDisplayName } from "@/lib/ondo/venues/display"
 import { useOndo } from "../shared/state/ondo-provider"
 import { TABLES, tableStatusCopy } from "./table-model"
 import styles from "./connect.module.css"
@@ -16,6 +18,7 @@ export function TablesEntry() {
   const { state, actions } = useOndo()
   const locale = state.locale
   const joined = TABLES.filter((table) => ["confirmed", "checked_in", "completed"].includes(state.tableMembershipById[table.id] ?? "none"))
+  const selectedVenue = state.surface.kind === "venue" ? canonicalMapVenueById(state.surface.venueId) : undefined
 
   return (
     <div className={styles.screen} data-testid="tables-entry">
@@ -24,6 +27,8 @@ export function TablesEntry() {
         <h1>Pulse Tables</h1>
         <span>{locale === "ko" ? "식사하고 싶은 사람들이 장소와 시간을 기준으로 만나는 자리예요." : "Meet people who want to eat at the same place and time."}</span>
       </header>
+
+      {selectedVenue ? <aside className={styles.contextNotice} data-testid="tables-canonical-context"><MapPin size={17} /><div><strong>{venueDisplayName(selectedVenue.name.ko, locale)}</strong><span>{locale === "ko" ? "이 공식 장소에 연결된 실제 Table은 아직 없어요. 아래는 전체 Table 흐름 프리뷰입니다." : "No live Table is attached to this sourced place yet. The list below previews the global Table flow."}</span></div></aside> : null}
 
       {joined.length ? (
         <section className={styles.section} aria-labelledby="joined-tables-title">

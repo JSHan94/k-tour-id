@@ -1,4 +1,9 @@
-.screen { min-height: 100%; padding: max(34px, env(safe-area-inset-top)) 18px 112px; background: #fbfaf7; color: #20201e; }
+.screen { min-height: 100%; padding: max(34px, env(safe-area-inset-top)) 18px 112px; background: #fbfbfa; color: #20201e; }
+.contextNotice { display: grid; grid-template-columns: 24px 1fr; gap: 12px; margin: 24px 0; padding: 15px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
+.contextNotice > svg { margin-top: 2px; color: #56534e; }
+.contextNotice div { display: grid; gap: 5px; }
+.contextNotice strong { font-size: 14px; }
+.contextNotice span { color: #706d67; font-size: 12px; line-height: 1.55; }
 .screen :focus-visible, .sheetBody :focus-visible, .chat :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .screenHeader { display: grid; gap: 8px; margin-bottom: 38px; }
 .eyebrow { margin: 0; color: #77746e; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
@@ -41,7 +46,7 @@
 .secondary { border: 1px solid #d6d3cd; background: transparent; color: #292927; }
 .fieldLabel { margin-bottom: -9px; color: #55524d; font-size: 12px; font-weight: 720; }
 .sheetBody textarea { min-height: 104px; resize: vertical; padding: 13px 0; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; background: transparent; color: #20201e; font: inherit; font-size: 14px; }
-.chat { position: relative; min-height: min(88dvh, 760px); display: flex; flex-direction: column; color: #20201e; background: #fbfaf7; }
+.chat { position: relative; min-height: min(88dvh, 760px); display: flex; flex-direction: column; color: #20201e; background: #fbfbfa; }
 .chatHeader { position: sticky; top: 0; z-index: 2; min-height: 64px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 7px; padding: 8px 12px; border-bottom: 1px solid #dedbd5; background: rgb(251 250 247 / 96%); }
 .chatHeader button { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #292927; }
 .chatHeader > div { display: grid; gap: 2px; min-width: 0; }
@@ -58,7 +63,7 @@
 .sent img { display: block; width: min(240px, 100%); aspect-ratio: 4 / 3; border-radius: 9px; object-fit: cover; }
 .failedMessage { outline: 1px solid #b95148; background: #fff; color: #8b302b; }
 .failedMessage button { min-height: 44px; margin-top: 5px; padding: 0 12px; border: 1px solid #b95148; border-radius: 10px; background: transparent; color: #8b302b; font-size: 12px; }
-.chatTools { display: grid; gap: 10px; padding: 12px 14px calc(18px + env(safe-area-inset-bottom)); border-top: 1px solid #dedbd5; background: #fbfaf7; }
+.chatTools { display: grid; gap: 10px; padding: 12px 14px calc(18px + env(safe-area-inset-bottom)); border-top: 1px solid #dedbd5; background: #fbfbfa; }
 .composer { display: grid; grid-template-columns: 1fr 44px; gap: 8px; }
 .composer input { min-width: 0; min-height: 44px; padding: 0 13px; border: 1px solid #d4d1cb; border-radius: 12px; background: #fff; font: inherit; font-size: 14px; }
 .composer button { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #20201e; color: #fff; }

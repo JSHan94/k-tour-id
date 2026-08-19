@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { AlertTriangle, ArrowLeft, Check, Clock3, ImagePlus, Languages, MapPin, MessageCircle, MoreHorizontal, Send, ShieldCheck, Users } from "lucide-react"
 import { activityIdempotencyKey, firstMissionEvents, type ActivityEvent } from "../contracts/activity"
+import { venueLabelById } from "@/lib/ondo/venues/display"
 import type { MessageStatus } from "../contracts/domain"
 import { LocalPhotoPicker, withUploadState } from "../media/local-photo-picker"
 import type { LocalPhoto } from "../media/media-model"
@@ -390,7 +391,7 @@ function LocalSignal({ venueId }: { venueId: string }) {
   const [note, setNote] = useState("")
   const [status, setStatus] = useState<"draft" | "submitting" | "submitted" | "failed" | "duplicate">("draft")
   const before = useRef<null | { person: typeof state.person; age: typeof state.age; paymentKyc: typeof state.paymentKyc; stamps: number; meetup: typeof state.reputation.meetup }>(null)
-  const venue = VENUE_NAMES[venueId]?.[locale] ?? venueId
+  const venue = VENUE_NAMES[venueId]?.[locale] ?? venueLabelById(venueId, locale) ?? (locale === "ko" ? "선택한 장소" : "Selected place")
   const gatesReady = state.account === "ACC-ACTIVE" && state.person === "PER-VERIFIED"
 
   function submit() {

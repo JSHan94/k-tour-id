@@ -1,7 +1,7 @@
 "use client"
 
 import { Bookmark, Check, ChevronRight, FlaskConical, MapPin, MessageCircle, ShieldCheck, Sparkles, Stamp } from "lucide-react"
-import { canonicalVenueById } from "@/lib/ondo/venues"
+import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { useOndo } from "../shared/state/ondo-provider"
 import styles from "./my.module.css"
 
@@ -25,7 +25,7 @@ export function MyEntry() {
   function savedVenueName(venueId: string) {
     const legacyName = VENUE_NAMES[venueId]?.[locale]
     if (legacyName) return legacyName
-    return canonicalVenueById(venueId)?.name.ko.value ?? (locale === "ko" ? "저장한 장소" : "Saved place")
+    return canonicalMapVenueById(venueId)?.name.ko ?? (locale === "ko" ? "저장한 장소" : "Saved place")
   }
 
   return (

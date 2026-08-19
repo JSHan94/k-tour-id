@@ -9,7 +9,7 @@ import { MapEntryB } from "../map/map-entry-b"
 import { MyEntry } from "../my/my-entry"
 import { OnboardingLayer } from "../onboarding/onboarding-layer"
 import { PlaceOverlay } from "../place/place-overlay"
-import { CanonicalPlaceOverlay } from "../place/canonical-place-overlay"
+import { CanonicalPlaceMount } from "../place/canonical-place-mount"
 import { OndoApp } from "./ondo-app"
 
 export function OndoProductB() {
@@ -19,7 +19,7 @@ export function OndoProductB() {
       my: <MyEntry />,
       tables: <TablesEntry />,
       id: <IdentityEntry />,
-      overlays: <><CanonicalPlaceOverlay /><PlaceOverlay /><ConnectOverlays /><After19Layer /><OnboardingLayer /><GateOverlay /></>,
+      overlays: <><CanonicalPlaceMount /><PlaceOverlay /><ConnectOverlays /><After19Layer /><OnboardingLayer /><GateOverlay /></>,
     }} />
   )
 }
