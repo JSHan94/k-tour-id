@@ -407,11 +407,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await gotoB(page)
     await page.getByRole("navigation").locator("button").nth(3).click()
     const target = page.getByTestId(state === "PROFILE" ? "ondo-profile-panel" : "ondo-trust-panel")
-    if (state === "TRUST-FOUR-AXES") {
-      await target.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }))
-    } else {
-      await target.scrollIntoViewIfNeeded()
-    }
+    if (state !== "TRUST-FOUR-AXES") await target.scrollIntoViewIfNeeded()
   } else {
     const query = state === "LABS-TRAIT-FAIL" ? "?scenario=trait-retry-fail" : state === "LABS-BRIDGE-FAIL" ? "?scenario=bridge-failed" : ""
     await openPreparedLabs(page, locale, query)
@@ -438,6 +434,26 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   }
 
   await settle(page)
+  if (state === "TRUST-FOUR-AXES") {
+    const target = page.getByTestId("ondo-trust-panel")
+    await target.evaluate((element) => {
+      let scroller = element.parentElement
+      while (scroller) {
+        const overflowY = getComputedStyle(scroller).overflowY
+        if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) break
+        scroller = scroller.parentElement
+      }
+      if (!scroller) throw new Error("Trust evidence scroll container was not found")
+      const targetTop = window.innerWidth <= 430 ? 212 : 275
+      const targetRect = element.getBoundingClientRect()
+      scroller.scrollTop += targetRect.top - targetTop
+      scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
+    })
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    await expect(target).toBeVisible()
+    const targetTop = await page.evaluate(() => window.innerWidth <= 430 ? 212 : 275)
+    await expect.poll(() => target.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(targetTop)
+  }
   return page.getByTestId("ondo-b-root")
 }
 
