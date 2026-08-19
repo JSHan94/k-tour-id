@@ -29,6 +29,10 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       await expectNoHorizontalOverflow(page)
       const copy = (await surface.innerText()).trim()
       expect(copy.length, "surface must contain user-facing copy").toBeGreaterThan(20)
+      if (item.surface === "place") {
+        if (item.locale === "ko") expect(copy).toContain("공식 영문명 미제공 · 공식 한글명 표시")
+        else expect(copy).toContain("Transliterated for navigation")
+      }
       if (["place", "account-gate", "age-gate", "table-chat", "local-signal", "checkout", "profile", "labs", "after19"].includes(item.surface)) {
         expect(copy, "sensitive/simulated surfaces must state a truth or privacy boundary").toMatch(PRODUCT_BOUNDARY)
       }
