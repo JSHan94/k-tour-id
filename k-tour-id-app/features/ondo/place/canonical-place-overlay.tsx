@@ -133,18 +133,32 @@ export function CanonicalPlaceOverlay() {
   const confidenceBand = signal && signal.confidence >= 0.8 ? copy.confidenceStrong : signal && signal.confidence >= 0.65 ? copy.confidenceModerate : copy.confidenceLimited
 
   useEffect(() => {
-    setExpanded(false)
     setDetail(null)
     setDetailState("idle")
     saveAttemptRef.current = 0
     if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current)
     saveTimerRef.current = null
-    if (!venueId) return
+    if (!venueId) {
+      setExpanded(false)
+      return
+    }
     const url = new URL(window.location.href)
-    if (url.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) return
-    url.searchParams.delete(AFTER19_VENUE_RETURN_PARAM)
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`)
+    if (url.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) {
+      setExpanded(false)
+      return
+    }
+
+    // Keep the one-shot URL intent through React's development-mode effect
+    // replay. Removing it synchronously let the replay collapse the exact
+    // venue detail that the 19+ gate was meant to restore.
     setExpanded(true)
+    const returnCleanupTimer = window.setTimeout(() => {
+      const currentUrl = new URL(window.location.href)
+      if (currentUrl.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) return
+      currentUrl.searchParams.delete(AFTER19_VENUE_RETURN_PARAM)
+      window.history.replaceState({}, "", `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`)
+    }, 0)
+    return () => window.clearTimeout(returnCleanupTimer)
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])

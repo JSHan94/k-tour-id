@@ -72,7 +72,7 @@ export function MyEntry() {
           <div className={styles.stampGrid} role="img" aria-label={locale === "ko" ? `방문 스탬프 10개 중 ${state.stamps}개` : `${state.stamps} of 10 visit stamps`}>
             {Array.from({ length: 10 }, (_, index) => <span key={index} className={index < state.stamps ? styles.stampFilled : styles.stampEmpty}>{index < state.stamps ? <Check size={16} /> : index + 1}</span>)}
           </div>
-          <p>{state.stamps === 10 ? locale === "ko" ? "열 번째 방문을 남겼어요." : "You recorded your tenth visit." : locale === "ko" ? "결제가 아니라 별도로 확인된 방문이 하나씩 쌓여요." : "Each separate confirmed visit—not payment—adds one stamp."}</p>
+          <p>{state.stamps === 10 ? locale === "ko" ? "열 번째 시뮬레이션 방문 기록을 남겼어요." : "Your tenth simulated visit record is complete." : locale === "ko" ? "결제가 아니라 서로 다른 시뮬레이션 방문 기록이 데모 스탬프로 쌓여요." : "Distinct simulated visit records—not payment—add demo stamps."}</p>
           {state.stamps === 10 ? <button type="button" className={styles.labsLink} onClick={() => actions.setSurface({ kind: "labs" })} data-testid="open-labs-milestone"><FlaskConical size={17} /><span>{locale === "ko" ? "원하면 Labs에서 기념 배지 시뮬레이션을 볼 수 있어요." : "If you choose, view a souvenir badge simulation in Labs."}</span><ChevronRight size={17} /></button> : null}
         </div>
       </section>
