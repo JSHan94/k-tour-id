@@ -62,6 +62,9 @@
 @media (min-width: 700px) {
   .layer { padding-right: max(32px, calc((100% - 430px) / 2)); padding-left: max(32px, calc((100% - 430px) / 2)); }
 }
+@media (min-width: 801px) {
+  .value, .panel { min-height: calc(100% - 44px); }
+}
 @media (max-height: 760px) {
   .panel { padding-top: 24px; }
   .personas { margin-top: 18px; }
