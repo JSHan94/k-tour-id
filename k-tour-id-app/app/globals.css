@@ -873,3 +873,4 @@
     transition-duration: 0.01ms !important;
   }
 }
+@import "maplibre-gl/dist/maplibre-gl.css";
