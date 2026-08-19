@@ -42,7 +42,7 @@
 .topline .back { justify-self: start; }
 .topline .language { justify-self: end; }
 .search { display: flex; min-height: 50px; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #e0dfdb; border-radius: 14px; background: rgb(255 255 255 / 94%); box-shadow: 0 3px 16px rgb(45 42 37 / 4%); }
-.search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 14px; }
+.search input { min-width: 0; min-height: 44px; flex: 1; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 14px; }
 .search button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
 .rail { display: flex; width: max-content; max-width: 100%; align-items: center; gap: 2px; overflow-x: auto; border: 1px solid #e1dfda; border-radius: 13px; padding: 2px; background: rgb(255 255 255 / 91%); scrollbar-width: none; }
 .rail button { min-height: 44px; flex: 0 0 auto; padding: 0 11px; border: 0; border-radius: 10px; background: transparent; color: #68635c; font-size: 12px; font-weight: 680; }

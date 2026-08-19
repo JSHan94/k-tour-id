@@ -535,7 +535,7 @@ export async function collectBGeometryIssues(page: Page) {
       .map((element) => ({ element, rect: element.getBoundingClientRect() }))
       .filter(({ element, rect }) => rect.width > 0 && rect.height > 0 && visibleRect(rect) && controls.some(({ element: control }) => element.contains(control)))
     const exitCtaIssues = visibleDialogs.flatMap(({ element }) => {
-      const candidates = controls.filter(({ element: control }) => element.contains(control) && exitPattern.test(accessibleName(control)))
+      const candidates = controls.filter(({ element: control }) => element.contains(control) && (control.hasAttribute("data-dialog-exit") || exitPattern.test(accessibleName(control))))
       if (!candidates.length) return [{ dialog: label(element), issue: "no visible, hit-testable exit CTA" }]
       return candidates.flatMap(({ element: control, rawRect }) => fullyInViewport(rawRect) ? [] : [{ dialog: label(element), issue: `${label(control)} is outside the viewport` }])
     })

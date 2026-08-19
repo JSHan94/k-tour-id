@@ -152,7 +152,7 @@ export function OnboardingLayer() {
             <button type="button" data-onboarding-initial-focus className={styles.primary} onClick={() => { actions.beginOnboarding(); setStep("intent") }}>
               {t.start}<ArrowRight size={18} />
             </button>
-            <button type="button" className={styles.secondary} onClick={skip}>{t.guest}</button>
+            <button type="button" className={styles.secondary} data-dialog-exit onClick={skip}>{t.guest}</button>
           </div>
         </div>
       ) : null}
@@ -178,7 +178,7 @@ export function OnboardingLayer() {
             <button type="button" className={styles.primary} disabled={!state.persona} onClick={() => setStep("preferences")}>
               {t.open}<ArrowRight size={18} />
             </button>
-            <button type="button" className={styles.secondary} onClick={skip}>{t.skip}</button>
+            <button type="button" className={styles.secondary} data-dialog-exit onClick={skip}>{t.skip}</button>
           </div>
         </div>
       ) : null}
@@ -197,7 +197,7 @@ export function OnboardingLayer() {
             <button type="button" data-onboarding-initial-focus className={styles.primary} onClick={finish} data-testid="onboarding-finish">
               {failed ? t.continueFallback : t.open}<ArrowRight size={18} />
             </button>
-            <button type="button" className={styles.secondary} onClick={skip}>{preferences.length ? t.defaults : t.skip}</button>
+            <button type="button" className={styles.secondary} data-dialog-exit onClick={skip}>{preferences.length ? t.defaults : t.skip}</button>
           </div>
         </div>
       ) : null}

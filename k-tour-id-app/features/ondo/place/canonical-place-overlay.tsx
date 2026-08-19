@@ -226,7 +226,7 @@ export function CanonicalPlaceOverlay() {
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
   if (!expanded) return (
-    <aside className={styles.peek} role="dialog" aria-modal="false" aria-label={name} data-testid="canonical-place-peek">
+    <div className={styles.peek} role="dialog" aria-modal="false" aria-label={name} data-testid="canonical-place-peek">
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <div className={styles.meta}><span>{district} · {CATEGORY[venue.primaryCategory][locale]}</span><i>{copy.active}</i></div>
@@ -240,7 +240,7 @@ export function CanonicalPlaceOverlay() {
         <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions"><Navigation size={17} />{copy.directions}</a>
         <button ref={openRef} type="button" onClick={() => setExpanded(true)} data-testid="canonical-place-details">{copy.details}<ChevronRight size={17} /></button>
       </div>
-    </aside>
+    </div>
   )
 
   return (
