@@ -27,16 +27,17 @@ export type BVisualStateId =
   | "CITY-FALLBACK"
   | "PLACE-PEEK"
   | "PLACE-DETAIL"
-  | "GATE-ACCOUNT"
+  | "AFTER19-VENUE-LOCKED"
+  | "AFTER19-VENUE-RETURN"
+  | "SAVE-FAILURE"
+  | "SAVE-RECOVERED"
   | "GATE-ACCOUNT-FAIL"
   | "GATE-PERSON-PASSPORT"
   | "GATE-PERSON-CX"
   | "GATE-PERSON-RESIDENCE-UNSUPPORTED"
-  | "GATE-AGE"
   | "GATE-AGE-FAIL"
   | "GATE-PAYMENT"
   | "GATE-PAYMENT-FAIL"
-  | "AFTER19"
   | "TABLES-LIST"
   | "TABLE-DETAIL"
   | "TABLE-JOIN-FAIL"
@@ -85,17 +86,17 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-CITY-FALLBACK-KO", state: "CITY-FALLBACK", flows: ["FL-001"], locale: "ko", description: "tile failure list and retry" },
   { id: "B-PX-PLACE-PEEK-EN", state: "PLACE-PEEK", flows: ["FL-001"], locale: "en", description: "canonical selected place peek" },
   { id: "B-PX-PLACE-DETAIL-EN", state: "PLACE-DETAIL", flows: ["FL-001", "FL-010", "FL-011", "FL-012", "FL-016"], locale: "en", description: "canonical place facts and actions" },
-  { id: "B-PX-PLACE-DETAIL-KO", state: "PLACE-DETAIL", flows: ["FL-001", "FL-010", "FL-011", "FL-012", "FL-016"], locale: "ko", description: "canonical detail Korean wrapping" },
-  { id: "B-PX-GATE-ACCOUNT-EN", state: "GATE-ACCOUNT", flows: ["FL-010", "FL-011"], locale: "en", description: "account JIT gate" },
+  { id: "B-PX-SAVE-RECOVERED-KO", state: "SAVE-RECOVERED", flows: ["FL-011"], locale: "ko", description: "save fail, dismiss, retry, and persisted saved state" },
+  { id: "B-PX-SAVE-FAILURE-EN", state: "SAVE-FAILURE", flows: ["FL-011"], locale: "en", description: "local save failure preserves exact venue and recovery actions" },
   { id: "B-PX-GATE-ACCOUNT-FAIL-KO", state: "GATE-ACCOUNT-FAIL", flows: ["FL-010"], locale: "ko", description: "account retry and unchanged return" },
   { id: "B-PX-GATE-PERSON-PASSPORT-EN", state: "GATE-PERSON-PASSPORT", flows: ["FL-002", "FL-006", "FL-012"], locale: "en", description: "provider-neutral visitor person check" },
   { id: "B-PX-GATE-PERSON-CX-KO", state: "GATE-PERSON-CX", flows: ["FL-005"], locale: "ko", description: "Korean OmniOne CX simulation route" },
   { id: "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN", state: "GATE-PERSON-RESIDENCE-UNSUPPORTED", flows: ["FL-006"], locale: "en", description: "Residence Card unsupported and alternate" },
-  { id: "B-PX-GATE-AGE-EN", state: "GATE-AGE", flows: ["FL-002", "FL-013"], locale: "en", description: "age-only gate" },
+  { id: "B-PX-AFTER19-VENUE-LOCKED-EN", state: "AFTER19-VENUE-LOCKED", flows: ["FL-002"], locale: "en", description: "locked After19-only venue without blocking ordinary place facts" },
   { id: "B-PX-GATE-AGE-FAIL-KO", state: "GATE-AGE-FAIL", flows: ["FL-002", "FL-013"], locale: "ko", description: "age proof retry" },
   { id: "B-PX-GATE-PAYMENT-EN", state: "GATE-PAYMENT", flows: ["FL-017"], locale: "en", description: "Payment KYC isolated gate" },
   { id: "B-PX-GATE-PAYMENT-FAIL-KO", state: "GATE-PAYMENT-FAIL", flows: ["FL-017"], locale: "ko", description: "Payment KYC failure and retry" },
-  { id: "B-PX-AFTER19-EN", state: "AFTER19", flows: ["FL-002", "FL-013", "FL-014"], locale: "en", description: "verified night layer and immediate off" },
+  { id: "B-PX-AFTER19-VENUE-RETURN-EN", state: "AFTER19-VENUE-RETURN", flows: ["FL-002", "FL-013", "FL-014"], locale: "en", description: "age proof returns to the exact venue with After19 enabled" },
   { id: "B-PX-TABLES-LIST-EN", state: "TABLES-LIST", flows: ["FL-003"], locale: "en", description: "Tables index" },
   { id: "B-PX-TABLE-DETAIL-KO", state: "TABLE-DETAIL", flows: ["FL-003"], locale: "ko", description: "Table detail and trust boundary" },
   { id: "B-PX-TABLE-JOIN-FAIL-EN", state: "TABLE-JOIN-FAIL", flows: ["FL-003"], locale: "en", description: "retryable Table join failure" },
@@ -118,26 +119,6 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-LABS-TRAIT-FAIL-KO", state: "LABS-TRAIT-FAIL", flows: ["FL-016"], locale: "ko", description: "merchant trait negative contract" },
   { id: "B-PX-LABS-BRIDGE-FAIL-EN", state: "LABS-BRIDGE-FAIL", flows: ["FL-018"], locale: "en", description: "ordered bridge failure with assets unchanged" },
   { id: "B-PX-LABS-BRIDGE-SUCCESS-EN", state: "LABS-BRIDGE-SUCCESS", flows: ["FL-018"], locale: "en", description: "read-only bridge receipt" },
-] as const
-
-/**
- * Follow-up captures to generate after this evidence harness is cherry-picked
- * onto final integration e154b2d. They are implemented product states there,
- * not product gaps; source c1433a9 predates their selectors.
- */
-export const B_INTEGRATION_FOLLOWUP_BASELINES = [
-  {
-    id: "B-PX-FOLLOWUP-FL002-LOCKED-VENUE-RETURN",
-    flow: "FL-002" as const,
-    selector: "canonical-after19-access / canonical-after19-unlock",
-    reason: "Implemented in final integration e154b2d; capture locked venue, gate, and exact return after the harness is cherry-picked.",
-  },
-  {
-    id: "B-PX-FOLLOWUP-FL011-SAVE-FAILURE-RETRY",
-    flow: "FL-011" as const,
-    selector: "canonical-save-error / canonical-save-retry",
-    reason: "Implemented in final integration e154b2d; capture save failure and retry after the harness is cherry-picked.",
-  },
 ] as const
 
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
@@ -312,7 +293,44 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else if (state === "PLACE-PEEK" || state === "PLACE-DETAIL") {
     await seedB(page, { locale })
     await openCanonicalVenue(page, { expanded: state === "PLACE-DETAIL" })
-  } else if (state === "GATE-ACCOUNT" || state === "GATE-ACCOUNT-FAIL") {
+  } else if (state === "AFTER19-VENUE-LOCKED" || state === "AFTER19-VENUE-RETURN") {
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
+    await openCanonicalVenue(page)
+    const access = page.getByTestId("canonical-after19-access")
+    await expect(access).toHaveAttribute("data-after19-venue-status", "locked")
+    await expect(page.getByTestId("canonical-place-overlay")).toContainText(locale === "ko" ? "공식 장소 출처" : "Official place source")
+    if (state === "AFTER19-VENUE-RETURN") {
+      await page.getByTestId("canonical-after19-unlock").click()
+      await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
+      await finishAgeGate(page)
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      await expect(access).toHaveAttribute("data-after19-venue-status", "unlocked")
+      await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
+      await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
+      await expect(page).not.toHaveURL(/after19Return=/)
+    }
+    await access.scrollIntoViewIfNeeded()
+  } else if (state === "SAVE-FAILURE" || state === "SAVE-RECOVERED") {
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE" } })
+    await openCanonicalVenue(page, { query: "scenario=save-failed" })
+    await page.getByTestId("canonical-venue-save").click()
+    await expect(page.getByTestId("canonical-save-error")).toBeVisible()
+    if (state === "SAVE-RECOVERED") {
+      await page.getByTestId("canonical-save-dismiss").click()
+      await expect(page.getByTestId("canonical-save-error")).toHaveCount(0)
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await page.getByTestId("canonical-place-details").click()
+      await page.getByTestId("canonical-venue-save").click()
+      await expect(page.getByTestId("canonical-save-error")).toBeVisible()
+      await page.getByTestId("canonical-save-retry").click()
+      await expect(page.getByTestId("canonical-venue-save")).toHaveText(locale === "ko" ? "저장됨" : "Saved")
+      await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+      await page.getByTestId("canonical-venue-save").scrollIntoViewIfNeeded()
+    } else {
+      await page.getByTestId("canonical-save-error").scrollIntoViewIfNeeded()
+    }
+  } else if (state === "GATE-ACCOUNT-FAIL") {
     await seedB(page, { locale, session: { account: "ACC-GUEST", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
     await openCanonicalVenue(page)
     await page.getByTestId("canonical-venue-save").click()
@@ -325,16 +343,12 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await triggerPersonGate(page, locale, "long_term_resident")
     await page.getByRole("button", { name: locale === "ko" ? "미연결 상태 보기" : "Show unavailable route" }).click()
     await expect(page.getByTestId("gate-unsupported")).toBeVisible()
-  } else if (state === "GATE-AGE" || state === "GATE-AGE-FAIL") {
+  } else if (state === "GATE-AGE-FAIL") {
     await triggerAgeGate(page, locale)
-    if (state === "GATE-AGE-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
+    await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
   } else if (state === "GATE-PAYMENT" || state === "GATE-PAYMENT-FAIL") {
     await triggerPaymentGate(page, locale)
     if (state === "GATE-PAYMENT-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
-  } else if (state === "AFTER19") {
-    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T20:30:00+09:00", after19: "A19-OFF" } })
-    await openCity(page)
-    await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
   } else if (state === "TABLES-LIST") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await openTablesIndex(page, locale)
@@ -427,6 +441,9 @@ export async function collectBGeometryIssues(page: Page) {
     const viewport = { width: window.innerWidth, height: window.innerHeight }
     const rootRect = root.getBoundingClientRect()
     const visibleRect = (rect: DOMRect) => rect.bottom > 0 && rect.right > 0 && rect.top < viewport.height && rect.left < viewport.width
+    const fullyInViewport = (rect: DOMRect) => rect.top >= 0 && rect.left >= 0 && rect.bottom <= viewport.height && rect.right <= viewport.width
+    const intersects = (first: DOMRect, second: DOMRect) => Math.min(first.right, second.right) - Math.max(first.left, second.left) > 2
+      && Math.min(first.bottom, second.bottom) - Math.max(first.top, second.top) > 2
     const hitTestable = (element: HTMLElement, rect: DOMRect) => {
       const x = rect.left + rect.width / 2
       const y = rect.top + rect.height / 2
@@ -438,9 +455,22 @@ export async function collectBGeometryIssues(page: Page) {
       const copy = element.getAttribute("aria-label") ?? element.textContent?.trim().replace(/\s+/g, " ").slice(0, 90)
       return `${element.tagName.toLowerCase()}${element.dataset.testid ? `[${element.dataset.testid}]` : ""}${copy ? ` · ${copy}` : ""}`
     }
-    const controls = Array.from(root.querySelectorAll<HTMLElement>("button:not([disabled]),a[href],input:not([type='hidden']):not([disabled]),select:not([disabled]),textarea:not([disabled]),[role='button']"))
+    const accessibleName = (element: HTMLElement) => {
+      const labelledBy = element.getAttribute("aria-labelledby")?.split(/\s+/).map((id) => document.getElementById(id)?.textContent?.trim() ?? "").join(" ").trim()
+      const wrappingLabel = element.closest("label")?.textContent?.trim()
+      return (element.getAttribute("aria-label") ?? labelledBy ?? wrappingLabel ?? element.textContent?.trim() ?? element.getAttribute("title") ?? "").replace(/\s+/g, " ").trim()
+    }
+    const explicitDialogName = (element: HTMLElement) => {
+      const labelledBy = element.getAttribute("aria-labelledby")?.split(/\s+/).map((id) => document.getElementById(id)?.textContent?.trim() ?? "").join(" ").trim()
+      return (element.getAttribute("aria-label") ?? labelledBy ?? "").replace(/\s+/g, " ").trim()
+    }
+    const allControls = Array.from(root.querySelectorAll<HTMLElement>("button:not([disabled]),a[href],input:not([type='hidden']):not([disabled]),select:not([disabled]),textarea:not([disabled]),[role='button']"))
       .map((element) => ({ element, rect: element.getBoundingClientRect() }))
-      .filter(({ element, rect }) => rect.width > 0 && rect.height > 0 && visibleRect(rect) && hitTestable(element, rect) && element.getAttribute("aria-hidden") !== "true" && element.tabIndex >= 0)
+      .filter(({ element, rect }) => {
+        const style = getComputedStyle(element)
+        return rect.width > 0 && rect.height > 0 && visibleRect(rect) && style.display !== "none" && style.visibility !== "hidden" && Number.parseFloat(style.opacity) > 0 && element.getAttribute("aria-hidden") !== "true" && element.tabIndex >= 0
+      })
+    const controls = allControls.filter(({ element, rect }) => hitTestable(element, rect))
     const clippedControls = controls.flatMap(({ element, rect }) => (
       rect.left < rootRect.left - 1 || rect.right > rootRect.right + 1 || rect.top < rootRect.top - 1 || rect.bottom > rootRect.bottom + 1
         ? [{ control: label(element), rect: { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) } }]
@@ -461,11 +491,30 @@ export async function collectBGeometryIssues(page: Page) {
         const a = controls[first]
         const b = controls[second]
         if (a.element.contains(b.element) || b.element.contains(a.element)) continue
-        const overlapWidth = Math.min(a.rect.right, b.rect.right) - Math.max(a.rect.left, b.rect.left)
-        const overlapHeight = Math.min(a.rect.bottom, b.rect.bottom) - Math.max(a.rect.top, b.rect.top)
-        if (overlapWidth > 2 && overlapHeight > 2) overlaps.push({ first: label(a.element), second: label(b.element) })
+        if (intersects(a.rect, b.rect)) overlaps.push({ first: label(a.element), second: label(b.element) })
       }
     }
+    const bottomNav = Array.from(root.querySelectorAll<HTMLElement>("nav")).find((element) => ["Main navigation", "주요 메뉴"].includes(element.getAttribute("aria-label") ?? ""))
+    // Only compare controls that are actually on top at their center point. A
+    // full-screen modal legitimately leaves the nav mounted underneath its
+    // backdrop; counting those covered nodes would be a geometry false positive.
+    const bottomNavControls = bottomNav ? controls.filter(({ element }) => bottomNav.contains(element)) : []
+    const bottomNavOverlaps = bottomNavControls.flatMap((navControl) => controls
+      .filter(({ element }) => !bottomNav?.contains(element))
+      .flatMap((other) => intersects(navControl.rect, other.rect) ? [{ navigation: label(navControl.element), content: label(other.element) }] : []))
+    const exitPattern = /close|back|return|cancel|stay|not now|dismiss|닫|뒤로|돌아|취소|머물|나중/i
+    const visibleDialogs = Array.from(root.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']"))
+      .map((element) => ({ element, rect: element.getBoundingClientRect() }))
+      .filter(({ element, rect }) => rect.width > 0 && rect.height > 0 && visibleRect(rect) && controls.some(({ element: control }) => element.contains(control)))
+    const exitCtaIssues = visibleDialogs.flatMap(({ element }) => {
+      const candidates = controls.filter(({ element: control }) => element.contains(control) && exitPattern.test(accessibleName(control)))
+      if (!candidates.length) return [{ dialog: label(element), issue: "no visible, hit-testable exit CTA" }]
+      return candidates.flatMap(({ element: control, rect }) => fullyInViewport(rect) ? [] : [{ dialog: label(element), issue: `${label(control)} is outside the viewport` }])
+    })
+    const ariaIssues = [
+      ...visibleDialogs.flatMap(({ element }) => explicitDialogName(element) ? [] : [{ element: label(element), issue: "dialog has no aria-label or valid aria-labelledby" }]),
+      ...controls.flatMap(({ element }) => accessibleName(element) ? [] : [{ element: label(element), issue: "interactive control has no accessible name" }]),
+    ]
     const metadata = Array.from(root.querySelectorAll<HTMLElement>("small,time,code,dt,dd,figcaption"))
       .map((element) => ({ element, rect: element.getBoundingClientRect(), fontSize: Number.parseFloat(getComputedStyle(element).fontSize) }))
       .filter(({ element, rect }) => element.textContent?.trim() && rect.width > 0 && rect.height > 0 && visibleRect(rect))
@@ -473,6 +522,9 @@ export async function collectBGeometryIssues(page: Page) {
     return {
       rootOverflowX: Math.max(0, root.scrollWidth - root.clientWidth),
       clippedControls,
+      ariaIssues,
+      bottomNavOverlaps,
+      exitCtaIssues,
       metadata,
       overlaps,
       undersizedControls,
@@ -485,6 +537,9 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
   await testInfo.attach("geometry.json", { body: JSON.stringify(geometry, null, 2), contentType: "application/json" })
   expect.soft(geometry.rootOverflowX, "horizontal clipping/overflow").toBeLessThanOrEqual(1)
   expect.soft(geometry.clippedControls, "hit-testable controls clipped by the app canvas").toEqual([])
+  expect.soft(geometry.bottomNavOverlaps, "bottom navigation controls overlap another visible control").toEqual([])
+  expect.soft(geometry.exitCtaIssues, "every active dialog keeps an exit CTA inside the viewport").toEqual([])
+  expect.soft(geometry.ariaIssues, "visible dialogs and controls have programmatic names").toEqual([])
   expect.soft(geometry.undersizedControls, "hit-testable controls below 44×44 CSS px").toEqual([])
   expect.soft(geometry.metadata, "visible metadata below 12 CSS px").toEqual([])
   expect.soft(geometry.overlaps, "independent hit-testable controls overlap").toEqual([])
@@ -493,8 +548,12 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
     if (!node.id) node.id = `ondo-b-evidence-${Math.random().toString(36).slice(2)}`
     return `#${CSS.escape(node.id)}`
   })).analyze()
+  const contrast = axe.violations.filter((violation) => violation.id === "color-contrast")
+  const aria = axe.violations.filter((violation) => violation.id.startsWith("aria-") || ["button-name", "dialog-name", "label", "link-name"].includes(violation.id))
   const actionable = axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")
   await testInfo.attach("axe.json", { body: JSON.stringify(axe, null, 2), contentType: "application/json" })
+  expect.soft(contrast, "axe color-contrast violations").toEqual([])
+  expect.soft(aria, "axe ARIA/name/label violations").toEqual([])
   expect.soft(actionable, "serious/critical axe violations").toEqual([])
 }
 

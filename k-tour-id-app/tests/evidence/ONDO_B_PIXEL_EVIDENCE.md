@@ -24,6 +24,10 @@ Headers, lists, sheets, notices and navigation are never masked.
 - hit-testable controls smaller than `44×44 CSS px`: `0`
 - visible metadata smaller than `12 CSS px`: `0`
 - independent hit-testable control overlap: `0`
+- bottom navigation versus visible content-control overlap: `0`
+- every active dialog has a hit-testable exit CTA fully inside the viewport
+- every visible dialog/control has a programmatic ARIA name
+- axe `color-contrast` and ARIA/name/label violations: `0`
 - horizontally clipped/overflowing app content: `0`
 
 Each Playwright result attaches `evidence-case.json`, `geometry.json`, and
@@ -45,12 +49,20 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:3118 pnpm exec playwright test \
 Baseline changes are reviewed image-by-image. Do not use a blanket update after
 a product change.
 
-## Final-integration follow-up captures
+## Final-integration cases
 
-- `FL-002`: final integration `e154b2d` implements the locked venue path via `canonical-after19-access` / `canonical-after19-unlock`.
-- `FL-011`: final integration `e154b2d` implements save failure and retry via `canonical-save-error` / `canonical-save-retry`.
+- `FL-002`: `AFTER19-VENUE-LOCKED` proves ordinary place facts stay available; `AFTER19-VENUE-RETURN` completes the age-only gate and asserts the exact `venueId`, unlocked card, After19 banner, and consumed return marker.
+- `FL-011`: `SAVE-FAILURE` captures the venue-preserving error and both recovery actions; `SAVE-RECOVERED` exercises fail → dismiss → fail → Retry save and captures the persisted Saved state.
 
-They are **not product gaps**. This isolated evidence source is intentionally
-fixed at `c1433a9`, which predates those selectors. After cherry-picking this
-harness onto final integration, add both reachable states to `B_VISUAL_CASES`
-and generate their mobile and desktop baselines through targeted runs.
+These four actual cases replace generic predecessor captures so the registry remains exactly **44 layout-distinct states × 2 viewports = 88 pixel contracts** on product SHA `e154b2d`.
+
+## Final-SHA focused verification
+
+The four replaced cases were run against a local production build of exact
+product SHA `e154b2d` at both target viewports. Result: **7 passed, 1 failed**
+(plus 8 intentional cross-project skips). The failing contract is
+`B-PX-SAVE-FAILURE-EN` at `1440×1000`: the sticky `Close place` control overlaps
+the visible `Confirm 19+ and return here` control after the save error is
+revealed. This is retained as an actionable product finding; the harness does
+not suppress or whitelist it. Mobile save failure and both After19 exact-venue
+states passed their pixel, geometry, contrast, ARIA, console and runtime guards.

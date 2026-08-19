@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test"
 import { B_FLOW_IDS } from "../helpers/ondo-b-qa"
-import { B_INTEGRATION_FOLLOWUP_BASELINES, B_VISUAL_CASES } from "../helpers/ondo-b-visual-evidence"
+import { B_VISUAL_CASES } from "../helpers/ondo-b-visual-evidence"
 
 const REQUIRED_STATES = [
   "ONBOARDING-VALUE", "ONBOARDING-PERSONAS", "ONBOARDING-PREFERENCES",
   "NATION", "CITY-LIVE", "CITY-LIST", "CITY-FALLBACK", "PLACE-PEEK", "PLACE-DETAIL",
-  "GATE-ACCOUNT", "GATE-PERSON-PASSPORT", "GATE-PERSON-CX", "GATE-PERSON-RESIDENCE-UNSUPPORTED", "GATE-AGE", "GATE-PAYMENT", "AFTER19",
+  "AFTER19-VENUE-LOCKED", "AFTER19-VENUE-RETURN", "SAVE-FAILURE", "SAVE-RECOVERED",
+  "GATE-PERSON-PASSPORT", "GATE-PERSON-CX", "GATE-PERSON-RESIDENCE-UNSUPPORTED", "GATE-PAYMENT",
   "TABLES-LIST", "TABLE-DETAIL", "CHAT", "CHAT-IMAGE-FAIL", "FEEDBACK", "REPORT",
   "LOCAL-SIGNAL-EMPTY", "LOCAL-SIGNAL-FAIL", "LOCAL-SIGNAL-SUCCESS",
   "CHECKOUT-IDLE", "CHECKOUT-CANCEL", "CHECKOUT-FAIL", "CHECKOUT-RECEIPT", "CHECKOUT-STAMP",
@@ -16,13 +17,14 @@ test("B-EVIDENCE-REGISTRY covers FL-001..018 and every required layout family", 
   const coveredFlows = new Set(B_VISUAL_CASES.flatMap((item) => item.flows))
   const coveredStates = new Set(B_VISUAL_CASES.map((item) => item.state))
   expect([...B_FLOW_IDS].filter((flow) => !coveredFlows.has(flow))).toEqual([])
+  expect(B_VISUAL_CASES).toHaveLength(44)
   expect(REQUIRED_STATES.filter((state) => !coveredStates.has(state))).toEqual([])
   expect(new Set(B_VISUAL_CASES.map((item) => item.id)).size).toBe(B_VISUAL_CASES.length)
   expect(B_VISUAL_CASES.every((item) => item.locale === "en" || item.locale === "ko")).toBe(true)
 })
 
-test("B-EVIDENCE-FOLLOWUP records the two implemented final-integration captures", () => {
-  expect(B_INTEGRATION_FOLLOWUP_BASELINES).toHaveLength(2)
-  expect(B_INTEGRATION_FOLLOWUP_BASELINES.map((item) => item.flow)).toEqual(["FL-002", "FL-011"])
-  expect(B_INTEGRATION_FOLLOWUP_BASELINES.every((item) => item.selector.length > 20 && item.reason.includes("e154b2d"))).toBe(true)
+test("B-EVIDENCE-FINAL-INTEGRATION makes FL-002 and FL-011 reachable pixel cases", () => {
+  const required = ["AFTER19-VENUE-LOCKED", "AFTER19-VENUE-RETURN", "SAVE-FAILURE", "SAVE-RECOVERED"]
+  expect(required.filter((state) => !B_VISUAL_CASES.some((item) => item.state === state))).toEqual([])
+  expect(B_VISUAL_CASES.filter((item) => required.includes(item.state)).every((item) => item.flows.includes(item.state.startsWith("AFTER19") ? "FL-002" : "FL-011"))).toBe(true)
 })

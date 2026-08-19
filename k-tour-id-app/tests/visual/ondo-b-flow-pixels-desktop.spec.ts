@@ -19,13 +19,13 @@ test.describe("ONDO B complete desktop visual evidence · 1440×1000", () => {
       const scope = await setupBVisualCase(page, item)
       await expect(scope).toBeVisible()
       await attachBCaseMetadata(testInfo, item, "1440x1000")
+      await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
 
       await expect(page).toHaveScreenshot(bSnapshotName(item, "1440x1000"), {
         animations: "disabled",
         caret: "hide",
         fullPage: false,
       })
-      await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
       await closeBVisualCase(page)
     })
   }
