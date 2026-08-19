@@ -89,7 +89,7 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-SAVE-RECOVERED-KO", state: "SAVE-RECOVERED", flows: ["FL-011"], locale: "ko", description: "save fail, dismiss, retry, and persisted saved state" },
   { id: "B-PX-SAVE-FAILURE-EN", state: "SAVE-FAILURE", flows: ["FL-011"], locale: "en", description: "local save failure preserves exact venue and recovery actions" },
   { id: "B-PX-GATE-ACCOUNT-FAIL-KO", state: "GATE-ACCOUNT-FAIL", flows: ["FL-010"], locale: "ko", description: "account retry and unchanged return" },
-  { id: "B-PX-GATE-PERSON-PASSPORT-EN", state: "GATE-PERSON-PASSPORT", flows: ["FL-002", "FL-006", "FL-012"], locale: "en", description: "provider-neutral visitor person check" },
+  { id: "B-PX-GATE-PERSON-PASSPORT-EN", state: "GATE-PERSON-PASSPORT", flows: ["FL-006", "FL-012"], locale: "en", description: "provider-neutral visitor person check" },
   { id: "B-PX-GATE-PERSON-CX-KO", state: "GATE-PERSON-CX", flows: ["FL-005"], locale: "ko", description: "Korean OmniOne CX simulation route" },
   { id: "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN", state: "GATE-PERSON-RESIDENCE-UNSUPPORTED", flows: ["FL-006"], locale: "en", description: "Residence Card unsupported and alternate" },
   { id: "B-PX-AFTER19-VENUE-LOCKED-EN", state: "AFTER19-VENUE-LOCKED", flows: ["FL-002"], locale: "en", description: "locked After19-only venue without blocking ordinary place facts" },
