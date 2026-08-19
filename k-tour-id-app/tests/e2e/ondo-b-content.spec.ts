@@ -1,20 +1,17 @@
-import { test } from "@playwright/test"
+import { expect, test } from "@playwright/test"
 import {
-  B_CHECKPOINTS,
   B_CONTENT_CASES,
-  B_ROUTE_SEAM_READY,
-  bCaseUrl,
-  expectBRoot,
   expectBRuntimeClean,
   expectNoHorizontalOverflow,
   expectNoRawTruthLeaks,
   installBRuntimeGuard,
   prepareBPage,
+  setupBSurface,
 } from "../helpers/ondo-b-qa"
 
-test.describe("ONDO B KO/EN content and truth boundaries", () => {
-  test.skip(!B_ROUTE_SEAM_READY, "PENDING_ROOT_ROUTE_SEAM: B copy is not rendered until /ondo-b exists")
+const PRODUCT_BOUNDARY = /Simulat|시뮬레이션|official|공식|source|출처|preview|미리보기|local|로컬|signal|신호|private|비공개|not confirmed|확인되지/
 
+test.describe("ONDO B reachable KO/EN content surfaces", () => {
   test.beforeEach(async ({ page }) => {
     installBRuntimeGuard(page)
     await prepareBPage(page)
@@ -26,11 +23,14 @@ test.describe("ONDO B KO/EN content and truth boundaries", () => {
 
   for (const item of B_CONTENT_CASES) {
     test(item.id, async ({ page }) => {
-      for (const checkpoint of B_CHECKPOINTS) {
-        await page.goto(bCaseUrl(item.flow, checkpoint, item.locale))
-        await expectBRoot(page, item.flow, checkpoint, item.locale)
-        await expectNoRawTruthLeaks(page)
-        await expectNoHorizontalOverflow(page)
+      const surface = await setupBSurface(page, item.surface, item.locale)
+      await expect(surface).toBeVisible()
+      await expectNoRawTruthLeaks(page, surface)
+      await expectNoHorizontalOverflow(page)
+      const copy = (await surface.innerText()).trim()
+      expect(copy.length, "surface must contain user-facing copy").toBeGreaterThan(20)
+      if (["place", "account-gate", "age-gate", "table-chat", "local-signal", "checkout", "profile", "labs", "after19"].includes(item.surface)) {
+        expect(copy, "sensitive/simulated surfaces must state a truth or privacy boundary").toMatch(PRODUCT_BOUNDARY)
       }
     })
   }

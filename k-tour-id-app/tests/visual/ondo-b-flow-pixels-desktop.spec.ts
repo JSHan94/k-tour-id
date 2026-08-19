@@ -1,36 +1,32 @@
 import { expect, test } from "@playwright/test"
 import {
   B_PIXEL_CASES,
-  B_ROUTE_SEAM_READY,
-  bCaseUrl,
-  expectBRoot,
   expectBRuntimeClean,
   installBRuntimeGuard,
   prepareBPage,
+  setupBSurface,
 } from "../helpers/ondo-b-qa"
 
-const desktopCases = B_PIXEL_CASES.filter((item) => item.project === "desktop-chromium")
+const cases = B_PIXEL_CASES.filter((item) => item.project === "desktop-chromium")
 
-test.describe("ONDO B desktop pixel checkpoints", () => {
-  test.skip(!B_ROUTE_SEAM_READY, "PENDING_ROOT_ROUTE_SEAM: B pixels require /ondo-b")
-
+test.describe("ONDO B reachable desktop pixel surfaces", () => {
   test.beforeEach(async ({ page }) => {
     installBRuntimeGuard(page)
     await prepareBPage(page)
   })
+  test.afterEach(async ({ page }) => expectBRuntimeClean(page))
 
-  test.afterEach(async ({ page }) => {
-    await expectBRuntimeClean(page)
-  })
-
-  for (const item of desktopCases) {
-    test(item.id, async ({ page }) => {
+  for (const item of cases) {
+    test(item.id, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name !== item.project, `belongs to ${item.project}`)
       await page.setViewportSize({ width: item.width, height: item.height })
-      await page.goto(bCaseUrl(item.flow, item.checkpoint, item.locale))
-      const root = await expectBRoot(page, item.flow, item.checkpoint, item.locale)
-      await expect(root).toHaveScreenshot(`${item.id}.png`, {
+      const surface = await setupBSurface(page, item.surface, item.locale)
+      await expect(surface).toBeVisible()
+      await expect(page.locator(item.selector)).toHaveScreenshot(`${item.id}.png`, {
         animations: "disabled",
-        mask: [page.locator(".leaflet-tile-pane"), page.locator("[data-qa-mask='dynamic']")],
+        caret: "hide",
+        mask: [page.locator("[data-testid='maplibre-map'] canvas")],
+        maskColor: "#EAE6DD",
       })
     })
   }

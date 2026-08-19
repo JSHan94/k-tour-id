@@ -1,21 +1,30 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
 import {
-  actionSelector,
-  B_BROWSER_CASES,
-  B_ROUTE_SEAM_READY,
-  bCaseUrl,
-  expectBRoot,
+  B_FLOW_CONTRACTS,
+  CANONICAL_VENUE_ID,
   expectBRuntimeClean,
-  expectNoHorizontalOverflow,
   expectNoRawTruthLeaks,
-  expectedNextCheckpoint,
+  finishAccountGate,
+  finishAgeGate,
+  finishPaymentGate,
+  finishPersonGate,
+  gotoB,
   installBRuntimeGuard,
+  openCanonicalVenue,
+  openLabs,
+  openTables,
   prepareBPage,
+  seedB,
+  seedFreshOnboarding,
+  sessionState,
+  TABLE_ID,
 } from "../helpers/ondo-b-qa"
 
-test.describe("ONDO B functional non-inferiority checkpoints", () => {
-  test.skip(!B_ROUTE_SEAM_READY, "PENDING_ROOT_ROUTE_SEAM: /ondo-b and deterministic qaCase adapter are not mounted yet")
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
+const title = (flow: string) => B_FLOW_CONTRACTS.find((item) => item.flow === flow)!.testTitle
+const evidence = (flow: string, checkpoint: string) => `${flow}-${checkpoint}`
 
+test.describe("ONDO B canonical flow journeys", () => {
   test.beforeEach(async ({ page }) => {
     installBRuntimeGuard(page)
     await prepareBPage(page)
@@ -25,24 +34,415 @@ test.describe("ONDO B functional non-inferiority checkpoints", () => {
     await expectBRuntimeClean(page)
   })
 
-  for (const item of B_BROWSER_CASES) {
-    test(item.id, async ({ page }) => {
-      await page.goto(bCaseUrl(item.flow, item.checkpoint, item.locale))
-      await expectBRoot(page, item.flow, item.checkpoint, item.locale)
-      await expectNoHorizontalOverflow(page)
-      await expectNoRawTruthLeaks(page)
+  test(title("FL-001"), async ({ page }) => {
+    await seedB(page)
+    await test.step(evidence("FL-001", "ENTRY/DECISION"), async () => {
+      await gotoB(page)
+      await page.locator("[data-city='seoul']").click()
+      await page.getByRole("button", { name: "List" }).click()
+      await expect(page.getByText(/^200 sourced food places$/)).toBeVisible()
+      await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
+    })
+    await test.step(evidence("FL-001", "TERMINAL"), async () => {
+      await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
+      await page.getByTestId("canonical-place-details").click()
+      await expect(page.getByTestId("canonical-place-overlay")).toContainText("MOIS LOCALDATA")
+      await expectNoRawTruthLeaks(page, page.getByTestId("canonical-place-overlay"))
+    })
+    await test.step(evidence("FL-001", "CANCEL/RETURN"), async () => {
+      await page.getByTestId("canonical-place-overlay").getByRole("button", { name: "Back to place summary" }).last().click()
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await page.getByTestId("canonical-place-peek").getByRole("button", { name: "Close place" }).click()
+      await expect(page.getByText(/^200 sourced food places$/)).toBeVisible()
+    })
+  })
 
-      const next = expectedNextCheckpoint(item.checkpoint)
-      const selector = actionSelector(item.checkpoint)
-      if (next && selector) {
-        const action = page.getByTestId("ondo-b-root").locator(selector)
-        await expect(action).toBeVisible()
-        await expect(action).toBeEnabled()
-        await action.click()
-        await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-b-checkpoint", next.toLowerCase())
-      } else {
-        await expect(page.getByTestId("ondo-b-root").locator("[data-b-return-anchor]")).toBeVisible()
-      }
+  test(title("FL-002"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+    await gotoB(page)
+    await test.step(evidence("FL-002", "ENTRY/CANCEL"), async () => {
+      await page.getByRole("button", { name: "After 19", exact: true }).click()
+      await expect(page.getByRole("dialog", { name: /Confirm 19\+/ })).toBeVisible()
+      await page.keyboard.press("Escape")
+      await expect(page.getByRole("dialog", { name: /Confirm 19\+/ })).toHaveCount(0)
+    })
+    await test.step(evidence("FL-002", "DECISION/ERROR/RETRY"), async () => {
+      await page.getByRole("button", { name: "After 19", exact: true }).click()
+      await page.getByRole("button", { name: "Confirm 19+", exact: true }).click()
+      await page.getByRole("button", { name: "Simulate failure" }).click()
+      await expect(page.getByTestId("gate-failure")).toBeVisible()
+      await page.getByRole("button", { name: "Try again", exact: true }).click()
+      await finishAgeGate(page)
+    })
+    await test.step(evidence("FL-002", "TERMINAL"), async () => {
+      await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ age: "AGE-VERIFIED", paymentKyc: "PKY-NOT-STARTED", after19: "A19-ON" })
+    })
+  })
+
+  test(title("FL-003"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T20:30:00+09:00" } })
+    await test.step(evidence("FL-003", "ENTRY/DECISION/ERROR"), async () => {
+      await gotoB(page, "?scenario=table-network")
+      await openTables(page)
+      await page.getByTestId("table-join").click()
+      await expect(page.getByTestId("table-requesting")).toBeVisible()
+      await expect(page.getByText("A connection problem interrupted the request.")).toBeVisible()
+      await expect(page.getByRole("button", { name: "Open chat" })).toHaveCount(0)
+    })
+    await test.step(evidence("FL-003", "RETRY"), async () => {
+      await page.evaluate(() => window.history.replaceState({}, "", "/ondo-b"))
+      await page.getByTestId("table-join-retry").click()
+      await expect(page.getByRole("button", { name: "Open chat" })).toBeVisible()
+    })
+    await test.step(evidence("FL-003", "TERMINAL"), async () => {
+      await page.getByRole("button", { name: "Open chat" }).click()
+      await page.locator("input[type='file']").setInputFiles({ name: "meal.png", mimeType: "image/png", buffer: PNG })
+      await page.getByRole("button", { name: "Send photo" }).click()
+      await expect(page.locator("[data-message-status='MSG-SENT']")).toBeVisible()
+      await page.getByTestId("table-check-in").click()
+      await page.getByTestId("table-finish-meal").click()
+      await page.getByTestId("feedback-helpful-yes").click()
+      await page.getByTestId("feedback-respectful-yes").click()
+      await page.getByTestId("feedback-submit").click()
+      await expect(page.getByTestId("table-chat")).toContainText("Feedback recorded. No overall score was created.")
+    })
+    await test.step(evidence("FL-003", "CANCEL/RETURN"), async () => {
+      await page.getByTestId("table-leave").click()
+      await page.getByRole("alertdialog").getByRole("button", { name: "Cancel" }).click()
+      await expect(page.getByTestId("table-chat")).toBeVisible()
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await page.getByRole("button", { name: "Tables", exact: true }).click()
+      await page.getByRole("region", { name: "Joined" }).locator(`[data-table-id='${TABLE_ID}']`).click()
+      await expect(page.getByTestId("table-chat")).toContainText("Feedback recorded")
+    })
+  })
+
+  test(title("FL-004"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED", stamps: 9 } })
+    await test.step(evidence("FL-004", "ENTRY/DECISION/CANCEL"), async () => {
+      await openCanonicalVenue(page)
+      await page.getByTestId("canonical-venue-checkout").click()
+      await page.getByTestId("checkout-start").click()
+      await page.getByTestId("checkout-cancel").click()
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-CANCELLED")
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "9")
+    })
+    await test.step(evidence("FL-004", "ERROR/RETRY"), async () => {
+      await openCanonicalVenue(page, { query: "scenario=payment-declined" })
+      await page.getByTestId("canonical-venue-checkout").click()
+      await page.getByTestId("checkout-start").click()
+      await page.getByTestId("checkout-confirm").click()
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-FAILED")
+      await page.getByRole("button", { name: "Try again" }).click()
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-CONFIRMING")
+    })
+    await test.step(evidence("FL-004", "TERMINAL/RETURN"), async () => {
+      await openCanonicalVenue(page)
+      await page.getByTestId("canonical-venue-checkout").click()
+      await page.getByTestId("checkout-start").click()
+      await page.getByTestId("checkout-confirm").click()
+      await expect(page.getByTestId("checkout-receipt")).toBeVisible()
+      await page.getByTestId("visit-proof-check").click()
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "10")
+      await page.getByRole("button", { name: "Close" }).last().click()
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    })
+  })
+
+  test(title("FL-005"), async ({ page }) => {
+    await seedB(page, { session: { persona: "korean_local", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-venue-signal").click()
+    await test.step(evidence("FL-005", "ENTRY/CANCEL"), async () => {
+      await page.getByTestId("local-signal-submit").click()
+      await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Check with Mobile ID")
+      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+    })
+    await test.step(evidence("FL-005", "DECISION/ERROR/RETRY"), async () => {
+      await page.getByTestId("local-signal-submit").click()
+      await page.getByRole("button", { name: "Start check" }).click()
+      await page.getByRole("button", { name: "Simulate failure" }).click()
+      await expect(page.getByTestId("gate-failure")).toBeVisible()
+      await page.getByRole("button", { name: "Try again" }).click()
+      await finishPersonGate(page)
+    })
+    await test.step(evidence("FL-005", "TERMINAL/RETURN"), async () => {
+      await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" })
+    })
+  })
+
+  test(title("FL-006"), async ({ page }) => {
+    await seedB(page, { session: { persona: "long_term_resident", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-venue-signal").click()
+    await page.getByTestId("local-signal-submit").click()
+    await test.step(evidence("FL-006", "ENTRY/DECISION/CANCEL"), async () => {
+      const gate = page.getByTestId("ondo-gate-overlay")
+      await expect(gate).toContainText("Mobile Residence Card")
+      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+      await page.getByTestId("local-signal-submit").click()
+    })
+    await test.step(evidence("FL-006", "ERROR/RETRY"), async () => {
+      await page.getByRole("button", { name: "Show unavailable route" }).click()
+      await expect(page.getByTestId("gate-unsupported")).toContainText("not connected yet")
+      await page.getByRole("button", { name: "Use passport provider instead" }).click()
+      await finishPersonGate(page)
+    })
+    await test.step(evidence("FL-006", "TERMINAL/RETURN"), async () => {
+      await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" })
+    })
+  })
+
+  for (const [flowId, persona] of [["FL-007", "short_term"], ["FL-008", "korean_local"], ["FL-009", "long_term_resident"]] as const) {
+    test(title(flowId), async ({ page }) => {
+      await seedFreshOnboarding(page)
+      await test.step(evidence(flowId, "ENTRY/CANCEL"), async () => {
+        await gotoB(page)
+        await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
+        await page.getByRole("button", { name: "Explore as a guest" }).click()
+        await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+      })
+      await page.evaluate(() => { localStorage.removeItem("ondo.preferences.v3"); sessionStorage.removeItem("ondo.session.v3") })
+      await test.step(evidence(flowId, "DECISION/ERROR"), async () => {
+        await page.goto(`/ondo-b?onboarding=failure`, { waitUntil: "domcontentloaded" })
+        await page.getByRole("button", { name: "Get started" }).click()
+        await page.getByTestId(`persona-${persona}`).click()
+        await page.getByRole("button", { name: "Open the ONDO map" }).click()
+        await page.getByRole("button", { name: "Local classics" }).click()
+        await page.getByTestId("onboarding-finish").click()
+        await expect(page.getByRole("alert")).toBeVisible()
+        await page.getByTestId("onboarding-finish").click()
+      })
+      await test.step(evidence(flowId, "TERMINAL/RETURN"), async () => {
+        await expect(page.getByTestId("ondo-onboarding")).toBeHidden()
+        await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+        await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
+        expect(await sessionState(page)).toMatchObject({ onboarding: "ONB-COMPLETE", persona, account: "ACC-GUEST", person: "PER-UNVERIFIED" })
+      })
     })
   }
+
+  test(title("FL-010"), async ({ page }) => {
+    await seedB(page)
+    await openCanonicalVenue(page)
+    await test.step(evidence("FL-010", "ENTRY/CANCEL"), async () => {
+      await page.getByTestId("canonical-venue-save").click()
+      await expect(page.getByTestId("ondo-gate-overlay")).toContainText("save this place")
+      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    })
+    await test.step(evidence("FL-010", "DECISION/ERROR/RETRY"), async () => {
+      await page.getByTestId("canonical-venue-save").click()
+      await page.getByRole("button", { name: "Simulate failure" }).click()
+      await expect(page.getByTestId("gate-failure")).toBeVisible()
+      await page.getByRole("button", { name: "Try again" }).click()
+      await finishAccountGate(page)
+    })
+    await test.step(evidence("FL-010", "TERMINAL/RETURN"), async () => {
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await page.getByTestId("canonical-place-details").click()
+      await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+      expect(await sessionState(page)).toMatchObject({ account: "ACC-ACTIVE", person: "PER-UNVERIFIED" })
+    })
+  })
+
+  test(title("FL-011"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE" } })
+    await test.step(evidence("FL-011", "ENTRY/DECISION/TERMINAL"), async () => {
+      await openCanonicalVenue(page)
+      await page.getByTestId("canonical-venue-save").click()
+      await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await page.getByRole("button", { name: "My Korea", exact: true }).click()
+      await expect(page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`)).toBeVisible()
+    })
+    await test.step(evidence("FL-011", "RETURN"), async () => {
+      await page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`).click()
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    })
+  })
+
+  test(title("FL-012"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+    await test.step(evidence("FL-012", "ENTRY/DECISION/CANCEL"), async () => {
+      await openCanonicalVenue(page)
+      await page.getByTestId("canonical-venue-signal").click()
+      await page.getByLabel("Helpful note · Optional").fill("Draft stays local.")
+      await page.locator("input[type='file']").setInputFiles({ name: "visit.png", mimeType: "image/png", buffer: PNG })
+      await page.getByRole("button", { name: "Cancel draft" }).click()
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    })
+    await test.step(evidence("FL-012", "ERROR/RETRY"), async () => {
+      await openCanonicalVenue(page, { query: "scenario=local-signal-fail" })
+      await page.getByTestId("canonical-venue-signal").click()
+      await page.getByLabel("Helpful note · Optional").fill("Draft survives.")
+      await page.getByTestId("local-signal-submit").click()
+      await expect(page.getByTestId("local-signal-overlay")).toHaveAttribute("data-signal-status", "failed")
+      await expect(page.getByTestId("local-signal-submit")).toHaveText("Try again")
+    })
+    await test.step(evidence("FL-012", "TERMINAL/RETURN"), async () => {
+      await openCanonicalVenue(page)
+      await page.getByTestId("canonical-venue-signal").click()
+      await page.getByTestId("local-signal-submit").click()
+      await expect(page.getByTestId("local-signal-overlay")).toHaveAttribute("data-signal-status", "submitted")
+      expect(await sessionState(page)).toMatchObject({ person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED", stamps: 9, reputation: { visit: "recent", contribution: "helpful", meetup: "new" } })
+      await page.getByRole("button", { name: "Return to venue" }).click()
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    })
+  })
+
+  test(title("FL-013"), async ({ page }) => {
+    await seedB(page)
+    await gotoB(page)
+    await test.step(evidence("FL-013", "ENTRY/CANCEL"), async () => {
+      await page.getByRole("button", { name: "After 19", exact: true }).click()
+      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+    })
+    await test.step(evidence("FL-013", "DECISION/ERROR/RETRY"), async () => {
+      await page.getByRole("button", { name: "After 19", exact: true }).click()
+      await page.getByRole("button", { name: "Confirm 19+", exact: true }).click()
+      await page.getByRole("button", { name: "Simulate failure" }).click()
+      await page.getByRole("button", { name: "Try again" }).click()
+      await finishAgeGate(page)
+    })
+    await test.step(evidence("FL-013", "TERMINAL/RETURN"), async () => {
+      await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ account: "ACC-GUEST", age: "AGE-VERIFIED", paymentKyc: "PKY-NOT-STARTED" })
+    })
+  })
+
+  test(title("FL-014"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T20:30:00+09:00" } })
+    await test.step(evidence("FL-014", "ENTRY/DECISION/TERMINAL"), async () => {
+      await gotoB(page)
+      await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ after19: "A19-ON" })
+    })
+    await test.step(evidence("FL-014", "CANCEL/RETURN"), async () => {
+      await page.getByRole("button", { name: "Return to the main map" }).click()
+      expect(await sessionState(page)).toMatchObject({ after19: "A19-MANUAL-OFF" })
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await expect(page.getByTestId("after19-auto-banner")).toHaveCount(0)
+      await expect(page.getByRole("button", { name: "After 19", exact: true })).toBeVisible()
+    })
+  })
+
+  test(title("FL-015"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE" } })
+    await gotoB(page, "?profile=failure")
+    await page.getByRole("button", { name: "ID", exact: true }).click()
+    const profile = page.getByTestId("ondo-profile-panel")
+    await test.step(evidence("FL-015", "ENTRY/DECISION/CANCEL"), async () => {
+      await profile.getByRole("button", { name: "Edit public fields" }).click()
+      await profile.getByRole("button", { name: "Show publicly" }).first().click()
+      await profile.getByRole("button", { name: "Cancel editing" }).click()
+      await expect(profile).toContainText("Private by default")
+    })
+    await test.step(evidence("FL-015", "ERROR/RETRY"), async () => {
+      await profile.getByRole("button", { name: "Edit public fields" }).click()
+      await profile.getByRole("button", { name: "Show publicly" }).first().click()
+      await profile.getByRole("button", { name: "Save selected fields" }).click()
+      await expect(profile.getByRole("alert")).toBeVisible()
+      await profile.getByRole("button", { name: "Try save again" }).click()
+    })
+    await test.step(evidence("FL-015", "TERMINAL/RETURN"), async () => {
+      await expect(profile).toContainText("Only selected fields are public")
+      await expect(page.getByTestId("ondo-trust-panel")).toBeVisible()
+      await expect(profile).toContainText("Person-check nationality is never copied here")
+    })
+  })
+
+  test(title("FL-016"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED", stamps: 10 } })
+    await test.step(evidence("FL-016", "ENTRY/DECISION/ERROR"), async () => {
+      await openCanonicalVenue(page)
+      const detail = page.getByTestId("canonical-place-overlay")
+      await expect(detail).toContainText("Not confirmed by this source")
+      await expect(detail).not.toContainText(/safe|guaranteed/i)
+    })
+    await test.step(evidence("FL-016", "CANCEL/RETURN"), async () => {
+      await page.getByTestId("canonical-place-overlay").getByRole("button", { name: "Back to place summary" }).last().click()
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    })
+    await test.step(evidence("FL-016", "RETRY/TERMINAL"), async () => {
+      await openLabs(page)
+      await page.getByTestId("labs-acknowledge").click()
+      await page.getByTestId("trait-retry-offer-foreign-card").click()
+      await expect(page.locator("[data-trait-state='eligible']").first()).toBeVisible()
+      await expect(page.getByTestId("labs-overlay")).toContainText(/limited|eligib/i)
+    })
+  })
+
+  test(title("FL-017"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-venue-checkout").click()
+    await test.step(evidence("FL-017", "ENTRY/DECISION/CANCEL"), async () => {
+      await page.getByTestId("checkout-start").click()
+      await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Payment KYC is separate")
+      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("checkout-overlay")).toBeVisible()
+    })
+    await test.step(evidence("FL-017", "ERROR/RETRY"), async () => {
+      await page.getByTestId("checkout-start").click()
+      await page.getByRole("button", { name: "Simulate failure" }).click()
+      await expect(page.getByTestId("gate-failure")).toBeVisible()
+      await page.getByRole("button", { name: "Try again" }).click()
+      await finishPaymentGate(page)
+    })
+    await test.step(evidence("FL-017", "TERMINAL/RETURN"), async () => {
+      await expect(page.getByTestId("checkout-overlay")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ paymentKyc: "PKY-VERIFIED", age: "AGE-UNVERIFIED", person: "PER-VERIFIED" })
+      await page.getByTestId("checkout-start").click()
+      await page.getByTestId("checkout-confirm").click()
+      await expect(page.getByTestId("checkout-receipt")).toBeVisible()
+    })
+  })
+
+  test(title("FL-018"), async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED", stamps: 10 } })
+    await gotoB(page)
+    await test.step(evidence("FL-018", "ENTRY/DECISION"), async () => {
+      await openLabs(page)
+      await page.getByTestId("labs-acknowledge").click()
+      await page.getByTestId("labs-connect-wallet").click()
+      await page.getByTestId("labs-bridge-quote").click()
+      await expect(page.getByTestId("labs-overlay")).toHaveAttribute("data-bridge-state", "BRG-QUOTED")
+    })
+    await test.step(evidence("FL-018", "CANCEL"), async () => {
+      await page.getByTestId("labs-bridge-cancel").click()
+      await expect(page.getByTestId("labs-overlay")).toHaveAttribute("data-bridge-state", "BRG-CANCELLED")
+      await expect(page.getByTestId("labs-bridge-receipt")).toHaveCount(0)
+    })
+    await test.step(evidence("FL-018", "ERROR/RETRY"), async () => {
+      await gotoB(page, "?scenario=bridge-failed")
+      await openLabs(page)
+      if (await page.getByTestId("labs-acknowledge").count()) await page.getByTestId("labs-acknowledge").click()
+      if (await page.getByTestId("labs-connect-wallet").count()) await page.getByTestId("labs-connect-wallet").click()
+      await page.getByTestId("labs-bridge-quote").click()
+      await page.getByTestId("labs-bridge-confirm").click()
+      await page.getByTestId("labs-bridge-submit").click()
+      await page.getByTestId("labs-bridge-advance").click()
+      await page.getByTestId("labs-bridge-advance").click()
+      await expect(page.getByTestId("labs-overlay")).toHaveAttribute("data-bridge-state", "BRG-FAILED")
+      await expect(page.getByTestId("labs-bridge-quote")).toBeVisible()
+    })
+    await test.step(evidence("FL-018", "TERMINAL/RETURN"), async () => {
+      await gotoB(page)
+      await openLabs(page)
+      await page.getByTestId("labs-bridge-quote").click()
+      await page.getByTestId("labs-bridge-confirm").click()
+      await page.getByTestId("labs-bridge-submit").click()
+      for (let index = 0; index < 3; index += 1) await page.getByTestId("labs-bridge-advance").click()
+      await expect(page.getByTestId("labs-bridge-receipt")).toContainText("Actual balances and transactions were not changed.")
+      await page.getByRole("button", { name: "Close" }).last().click()
+      await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
+    })
+  })
 })

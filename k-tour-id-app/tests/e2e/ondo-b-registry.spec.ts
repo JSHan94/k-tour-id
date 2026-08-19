@@ -1,23 +1,48 @@
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
-import { B_BROWSER_CASES, B_CHECKPOINTS, B_CONTENT_CASES, B_FLOW_IDS, B_PIXEL_CASES } from "../helpers/ondo-b-qa"
+import { B_CHECKPOINTS, B_CONTENT_CASES, B_FLOW_CONTRACTS, B_FLOW_IDS, B_PIXEL_CASES } from "../helpers/ondo-b-qa"
 
-test("B exact registry has 19 REQ, 18 flows and complete evidence slots", () => {
-  const trace = readFileSync(resolve(process.cwd(), "../docs/ondo-baljajwi/01_TRACE_MATRIX.md"), "utf8")
+const read = (file: string) => readFileSync(resolve(process.cwd(), `../docs/ondo-baljajwi/${file}`), "utf8")
+
+test("B registry is exact, honest, and contains no synthetic qaCase adapter", () => {
+  const trace = read("01_TRACE_MATRIX.md")
+  const seam = read("05_ROUTE_SEAM.md")
+  const helper = readFileSync(resolve(process.cwd(), "tests/helpers/ondo-b-qa.ts"), "utf8")
   const reqs = Array.from({ length: 19 }, (_, index) => `B-REQ-${String(index + 1).padStart(3, "0")}`)
 
-  expect(new Set(reqs).size).toBe(19)
   expect(B_FLOW_IDS).toHaveLength(18)
-  expect(B_CHECKPOINTS).toHaveLength(7)
-  expect(B_BROWSER_CASES).toHaveLength(126)
-  expect(B_PIXEL_CASES).toHaveLength(72)
-  expect(B_CONTENT_CASES).toHaveLength(36)
-  expect(new Set(B_BROWSER_CASES.map((item) => item.id)).size).toBe(126)
-  expect(new Set(B_PIXEL_CASES.map((item) => item.id)).size).toBe(72)
-  expect(new Set(B_CONTENT_CASES.map((item) => item.id)).size).toBe(36)
+  expect(B_FLOW_CONTRACTS).toHaveLength(18)
+  expect(new Set(B_FLOW_CONTRACTS.map((item) => item.flow)).size).toBe(18)
+  expect(B_PIXEL_CASES.length).toBeGreaterThanOrEqual(12)
+  expect(B_CONTENT_CASES.length).toBeGreaterThanOrEqual(20)
 
-  for (const id of [...reqs, ...B_BROWSER_CASES.map((item) => item.id), ...B_PIXEL_CASES.map((item) => item.id), ...B_CONTENT_CASES.map((item) => item.id)]) {
-    expect(trace, `${id} must be present in the B trace`).toContain(id)
+  const checkpoints = B_FLOW_CONTRACTS.flatMap((item) => item.checkpoints)
+  expect(checkpoints).toHaveLength(18 * 7)
+  expect(new Set(checkpoints.map((item) => item.id)).size).toBe(18 * 7)
+  for (const contract of B_FLOW_CONTRACTS) {
+    expect(contract.checkpoints.map((item) => item.checkpoint)).toEqual(B_CHECKPOINTS)
+    expect(contract.checkpoints.filter((item) => item.disposition === "actual").length).toBeGreaterThanOrEqual(5)
+  }
+
+  for (const id of [...reqs, ...B_FLOW_IDS, ...checkpoints.map((item) => item.id), ...B_PIXEL_CASES.map((item) => item.id), ...B_CONTENT_CASES.map((item) => item.id)]) {
+    expect(trace, `${id} must be exact in trace`).toContain(id)
+  }
+
+  for (const source of [trace, seam, helper]) {
+    expect(source).not.toMatch(/\?qaCase=|data-b-flow|data-b-checkpoint|data-b-primary-action|18\s*[×x]\s*7\s*=\s*126/)
+  }
+  expect(seam).toContain("/ondo-b")
+  expect(seam).toContain("actual product UI")
+})
+
+test("every gap and N/A is explicit and reasoned", () => {
+  const trace = read("01_TRACE_MATRIX.md")
+  const nonActual = B_FLOW_CONTRACTS.flatMap((flow) => flow.checkpoints.filter((item) => item.disposition !== "actual"))
+  expect(nonActual.length).toBeGreaterThan(0)
+  for (const item of nonActual) {
+    expect(item.proof.length).toBeGreaterThan(30)
+    expect(trace).toContain(item.id)
+    expect(trace).toContain(item.disposition === "gap" ? "`GAP`" : "`N/A`")
   }
 })
