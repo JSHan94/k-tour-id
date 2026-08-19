@@ -54,7 +54,7 @@
 .chatHeader strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .chatHeader span { color: #6e6b65; font-size: 12px; }
 .messageList { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 18px 14px; overflow: auto; background: #f5f4f1; }
-.systemMessage { align-self: center; max-width: 88%; padding: 8px 0; color: #6f6c66; font-size: 12px; text-align: center; }
+.systemMessage { align-self: center; max-width: 88%; padding: 8px 0; color: #625f5a; font-size: 12px; text-align: center; }
 .received, .sent { max-width: 78%; padding: 10px 12px; border-radius: 13px; font-size: 13px; line-height: 1.48; }
 .received { align-self: flex-start; border: 1px solid #e0ded9; border-bottom-left-radius: 4px; background: #fff; }
 .sent { align-self: flex-end; border-bottom-right-radius: 4px; background: #282725; color: #fff; }
