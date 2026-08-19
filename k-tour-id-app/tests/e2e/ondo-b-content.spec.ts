@@ -33,8 +33,23 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
         if (item.locale === "ko") expect(copy).toContain("공식 영문명 미제공 · 공식 한글명 표시")
         else expect(copy).toContain("Transliterated for navigation")
       }
-      if (["place", "account-gate", "age-gate", "table-chat", "local-signal", "checkout", "profile", "labs", "after19"].includes(item.surface)) {
+      if (["place", "account-gate", "age-gate", "tables", "table-chat", "local-signal", "checkout", "profile", "labs", "after19"].includes(item.surface)) {
         expect(copy, "sensitive/simulated surfaces must state a truth or privacy boundary").toMatch(PRODUCT_BOUNDARY)
+      }
+      if (item.surface === "tables") {
+        if (item.locale === "ko") {
+          expect(copy).toContain("시뮬레이션 미리보기")
+          expect(copy).toContain("실제 호스트나 예약은 없습니다")
+        } else {
+          expect(copy).toContain("Simulated fixture")
+          expect(copy).toContain("No live host or reservation")
+        }
+
+        await surface.locator("[data-table-id]").first().click()
+        const detail = page.locator("[data-table-membership]")
+        await expect(detail).toBeVisible()
+        await expect(detail).toContainText(item.locale === "ko" ? "실제 호스트나 예약은 없습니다" : "No live host or reservation")
+        await expect(detail.getByTestId("table-join")).toHaveText(item.locale === "ko" ? "참여 미리보기" : "Join preview")
       }
     })
   }

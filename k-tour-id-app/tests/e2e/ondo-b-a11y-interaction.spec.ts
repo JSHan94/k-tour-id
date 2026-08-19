@@ -37,6 +37,20 @@ test.describe("ONDO B actual-surface accessibility and interaction", () => {
       })).analyze()
       const actionable = result.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")
       expect(actionable).toEqual([])
+
+      if (surfaceId === "tables") {
+        await expect(surface.getByTestId("tables-truth-notice")).toContainText("No live host or reservation")
+        await surface.locator("[data-table-id]").first().click()
+        const detail = page.locator("[data-table-membership]")
+        await expect(detail).toContainText("Simulated fixture")
+        await expectMinimumControlTargets(detail)
+        const detailResult = await new AxeBuilder({ page }).include(await detail.evaluate((node) => {
+          if (!node.id) node.id = `b-a11y-table-detail-${Math.random().toString(36).slice(2)}`
+          return `#${CSS.escape(node.id)}`
+        })).analyze()
+        const detailActionable = detailResult.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")
+        expect(detailActionable).toEqual([])
+      }
     })
   }
 })

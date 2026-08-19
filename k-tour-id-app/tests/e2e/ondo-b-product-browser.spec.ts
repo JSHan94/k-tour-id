@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 import {
   CANONICAL_VENUE_ID,
+  TABLE_ID,
   expectBRuntimeClean,
   getBRuntimeEvidence,
   gotoB,
@@ -56,6 +57,30 @@ test.describe("ONDO B sourced discovery and external-map boundary", () => {
     await expect(detail.getByText("Not confirmed by this source")).toHaveCount(4)
     await expect(detail).toContainText(/ONDO signal pending|Preview signal · Simulated/)
     await expect(detail).not.toContainText(/Open now|Foreign-issued cards accepted|English menu available/)
+  })
+
+  test("B-TRUTH-TABLES labels direct and canonical fixtures before joining", async ({ page }) => {
+    await gotoB(page)
+    await page.getByRole("button", { name: "Tables", exact: true }).click()
+    const tables = page.getByTestId("tables-entry")
+    const truth = tables.getByTestId("tables-truth-notice")
+    await expect(truth).toContainText("Simulated fixture")
+    await expect(truth).toContainText("No live host or reservation")
+
+    await tables.locator(`[data-table-id='${TABLE_ID}']`).click()
+    const detail = page.locator("[data-table-membership]")
+    await expect(detail).toContainText("Simulated fixture")
+    await expect(detail).toContainText("No live host or reservation")
+    await expect(detail.getByTestId("table-join")).toHaveText("Join preview")
+    await expect(detail).not.toContainText("Join this Table")
+    await page.getByRole("dialog", { name: "First gukbap together" }).getByRole("button", { name: "Close" }).click()
+
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-venue-tables").click()
+    const canonicalTruth = page.getByTestId("tables-canonical-context")
+    await expect(canonicalTruth).toContainText("has no live Table attached")
+    await expect(canonicalTruth).toContainText("no live host or reservation")
+    await expect(page.getByTestId("tables-truth-notice").getByText("Simulated fixture", { exact: true })).toHaveCount(1)
   })
 
   test("B-MAP-FALLBACK classifies OpenFreeMap failure and keeps the manual list usable", async ({ page }) => {
