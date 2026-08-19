@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "ondo-venues-provenance-1.0.0",
+  "generatedAt": "2026-08-19T02:34:13.000Z",
+  "source": {
+    "id": "MOIS_LOCALDATA_GENERAL_RESTAURANTS",
+    "agency": "Ministry of the Interior and Safety (MOIS)",
+    "datasetNameKo": "행정안전부_식품_일반음식점",
+    "infoUrl": "https://file.localdata.go.kr/file/general_restaurants/info",
+    "dataPortalUrl": "https://www.data.go.kr/data/15045016/fileData.do",
+    "apiPortalUrl": "https://www.data.go.kr/data/15154916/openapi.do",
+    "downloadPath": "/file/download/general_restaurants/info",
+    "validationPath": "/file/validate/download-count",
+    "sourceCrs": "EPSG:5174",
+    "encoding": "euc-kr",
+    "license": {
+      "code": "PUBLIC_DATA_UNRESTRICTED",
+      "labelKo": "이용허락범위 제한 없음",
+      "cost": "FREE"
+    },
+    "cadence": "DAILY_WITH_REPORTED_TWO_DAY_LAG",
+    "publicDownloadRequiresApiKey": false,
+    "sourceFiles": [
+      {
+        "cityId": "seoul",
+        "orgCode": "6110000_ALL",
+        "fileName": "ondo-seoul-general.download",
+        "byteSize": 161467072,
+        "sha256": "9e99b2cfa77b8479824773b53a9aade7aafd009a624a20757e267dba32b53af9",
+        "sourceRowCount": 537461,
+        "eligibleCandidateCount": 49064
+      },
+      {
+        "cityId": "busan",
+        "orgCode": "6260000_ALL",
+        "fileName": "ondo-busan-general.download",
+        "byteSize": 39545973,
+        "sha256": "ee907cdce95fea40fb01dd4ce7df60ab4ed08d2e1f8ca167cc5dca2c625409cb",
+        "sourceRowCount": 131241,
+        "eligibleCandidateCount": 23451
+      }
+    ],
+    "sourceFieldEvidence": {
+      "nameKo": "사업장명",
+      "primaryCategory": "업태구분명 (normalized; raw retained as sourceCategory)",
+      "address": [
+        "도로명주소",
+        "지번주소"
+      ],
+      "coordinates": [
+        "좌표정보(X)",
+        "좌표정보(Y)"
+      ],
+      "activeLicense": [
+        "영업상태명=영업/정상",
+        "상세영업상태명=영업"
+      ],
+      "sourceModifiedAt": "최종수정시점"
+    }
+  },
+  "selection": {
+    "objective": "A reproducible, geographically balanced directory seed; not a popularity or quality ranking.",
+    "cityQuota": {
+      "seoul": 200,
+      "busan": 200
+    },
+    "districtsPerCity": 10,
+    "recordsPerDistrict": 20,
+    "categoryQuotaPerDistrict": {
+      "korean": 5,
+      "casual": 3,
+      "japanese": 2,
+      "chinese": 2,
+      "global": 3,
+      "night": 3,
+      "specialty": 2
+    },
+    "order": "SHA-256(city|district|category|managementId); first N after exact name+address deduplication",
+    "exclusions": [
+      "non-active license",
+      "missing name/address/coordinate",
+      "outside city bounds",
+      "unmapped category",
+      "exact normalized name+address duplicate"
+    ]
+  },
+  "unknownByPolicy": [
+    "nameEn",
+    "openingHours",
+    "openNow",
+    "foreignCardAccepted",
+    "menu",
+    "priceRange",
+    "reservationPolicy",
+    "englishSupport",
+    "image"
+  ],
+  "heatPolicy": "All published records carry heat.score=null and heat.truth=UNKNOWN. A future measured or SIMULATED heat overlay must be joined separately and must not mutate source facts.",
+  "imagePolicy": "No images are downloaded or published. Image rights are UNKNOWN until a separately licensed source is recorded.",
+  "coordinateTransformation": {
+    "from": "EPSG:5174 Korean 1985 / Modified Central Belt",
+    "to": "EPSG:4326 WGS 84",
+    "operation": "Inverse Transverse Mercator + EPSG Korean 1985 to WGS 84 (1) Molodensky-Badekas coordinate-frame transformation",
+    "epsgReference": "https://epsg.org/crs_5174/Korean-1985-Modified-Central-Belt.html",
+    "validationVectors": [
+      {
+        "source": [
+          198774.650399989,
+          453349.61464659
+        ],
+        "expectedWgs84": [
+          126.9869151469787,
+          37.58244674288366
+        ],
+        "toleranceDegrees": 1e-7
+      },
+      {
+        "source": [
+          385182.895154091,
+          179636.640850239
+        ],
+        "expectedWgs84": [
+          129.03165042328862,
+          35.09881516385051
+        ],
+        "toleranceDegrees": 1e-7
+      }
+    ]
+  },
+  "optionalEnrichment": {
+    "ktoTourApi": {
+      "status": "BLOCKED_MISSING_KEY",
+      "requiredEnv": [
+        "KTO_TOUR_API_SERVICE_KEY",
+        "KTO_TOUR_API_MOBILE_APP"
+      ],
+      "effect": "Only KTO matching/enrichment is blocked; the 400 official LOCALDATA records are complete without it.",
+      "portal": "https://www.data.go.kr/data/15101578/openapi.do"
+    },
+    "moisOpenApi": {
+      "status": "OPTIONAL_KEY_NOT_CONFIGURED",
+      "requiredEnv": [
+        "DATA_GO_KR_SERVICE_KEY"
+      ],
+      "effect": "Incremental API refresh is blocked; public city CSV refresh remains available.",
+      "portal": "https://www.data.go.kr/data/15154916/openapi.do"
+    }
+  }
+}
