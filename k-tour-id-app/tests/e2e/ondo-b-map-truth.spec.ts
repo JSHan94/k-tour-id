@@ -46,7 +46,8 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(seoul).toHaveAttribute("data-signal-venue-count", "40")
     await expect(seoul).toHaveAttribute("data-sample-count", "589")
     await expect(seoul).toHaveAttribute("data-signal-truth", "SIMULATED")
-    await expect(seoul).toContainText("200 places · 40 signal places")
+    await expect(seoul).toHaveAttribute("data-official-count", "200")
+    await expect(seoul).toHaveAttribute("data-signal-venue-count", "40")
     await expect(seoul).toHaveAttribute("aria-label", /589 input signals · Moderate illustrative confidence band · Simulated ONDO 71/)
     await expect(busan).toHaveAttribute("data-sample-count", "601")
     const truthLegend = page.getByTestId("ondo-b-city-truth-legend")
@@ -56,7 +57,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(truthLegend).toContainText("Aug 19 snapshot · Simulated")
 
     await page.getByTestId("ondo-b-map-entry").getByRole("button", { name: "KO", exact: true }).click()
-    await expect(seoul).toContainText("200곳 · 신호 장소 40")
+    await expect(seoul).toHaveAttribute("aria-label", /200 개 공식 장소 기록 · 40 개 프리뷰 신호 장소/)
     await page.getByTestId("ondo-b-map-entry").getByRole("button", { name: "EN", exact: true }).click()
 
     await seoul.click()
