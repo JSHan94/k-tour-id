@@ -41,19 +41,19 @@
 .secondary { border: 0; background: transparent; color: #6f6d67; }
 
 .panel { padding-top: 48px; }
-.heading > span { display: inline-block; margin-bottom: 14px; color: #77746e; font-size: 12px; font-weight: 760; }
+.heading > span { display: inline-block; margin-bottom: 14px; color: #6e6b65; font-size: 12px; font-weight: 760; }
 .heading h1 { max-width: 340px; font-size: 28px; line-height: 1.25; }
-.heading p { margin: 13px 0 0; color: #77746e; font-size: 13px; line-height: 1.62; }
+.heading p { margin: 13px 0 0; color: #6e6b65; font-size: 13px; line-height: 1.62; }
 .personas { display: grid; margin-top: 30px; border-top: 1px solid #dedcd7; }
 .persona, .personaSelected { display: grid; grid-template-columns: 42px 1fr 24px; align-items: center; gap: 14px; width: 100%; min-height: 82px; padding: 14px 2px; border: 0; border-bottom: 1px solid #e5e3de; background: transparent; color: #222220; text-align: left; transition: background-color 140ms ease; }
 .personaSelected { background: #f1f0ec; }
 .personaIcon { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; background: #fff; color: #4e4d49; }
 .personaSelected .personaIcon { border-color: #222220; color: #222220; }
 .persona strong, .personaSelected strong { display: block; font-size: 14px; }
-.persona small, .personaSelected small { display: block; margin-top: 4px; color: #77746e; font-size: 12px; line-height: 1.5; }
+.persona small, .personaSelected small { display: block; margin-top: 4px; color: #6e6b65; font-size: 12px; line-height: 1.5; }
 .persona i, .personaSelected i { display: grid; width: 22px; height: 22px; place-items: center; border: 1px solid #cbc8c2; border-radius: 50%; background: transparent; color: transparent; }
 .personaSelected i { border-color: #222220; background: #222220; color: #fff; }
-.boundary { margin: 16px 2px 0; color: #77746e; font-size: 12px; line-height: 1.6; }
+.boundary { margin: 16px 2px 0; color: #6e6b65; font-size: 12px; line-height: 1.6; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 30px; }
 .chip, .chipSelected { min-height: 44px; padding: 0 15px; border: 1px solid #dedbd5; border-radius: 12px; background: transparent; color: #64625d; font-size: 12px; font-weight: 680; }
 .chipSelected { border-color: #222220; background: #222220; color: #fff; }

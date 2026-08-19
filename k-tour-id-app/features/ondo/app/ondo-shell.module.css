@@ -102,10 +102,6 @@
   text-align: center;
 }
 
-.canvas:has([data-testid="ondo-b-nation"]) [data-testid="ondo-after19-layer"] {
-  display: none;
-}
-
 .stage[data-variant="B"] [data-testid="ondo-after19-layer"] > label {
   display: none;
 }

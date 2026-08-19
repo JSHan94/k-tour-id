@@ -218,6 +218,7 @@ export function MapEntryB() {
   const copy = COPY[locale]
   const mapNode = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const urlHydrated = useRef(false)
   const [city, setCity] = useState<CityId | null>(null)
   const [view, setView] = useState<ViewMode>("map")
   const [query, setQuery] = useState("")
@@ -231,6 +232,22 @@ export function MapEntryB() {
     return match ? [match[1]] : []
   })), [state.acceptedActivityEventKeys])
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
+
+  useEffect(() => {
+    if (urlHydrated.current) return
+    urlHydrated.current = true
+    const params = new URLSearchParams(window.location.search)
+    const urlCity = params.get("city")
+    const urlVenueId = params.get("venueId")
+    const urlView = params.get("view")
+    if (urlCity === "seoul" || urlCity === "busan") setCity(urlCity)
+    if (urlView === "list") setView("list")
+    if (urlVenueId) {
+      const canonical = CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === urlVenueId)
+      if (canonical) setCity(canonical.cityId)
+      actions.setSurface({ kind: "venue", venueId: urlVenueId })
+    }
+  }, [actions])
 
   const venues = useMemo(() => B_MAP_VENUES.filter((venue) => {
     if (!city || venue.cityId !== city) return false
@@ -341,20 +358,23 @@ export function MapEntryB() {
   }
 
   if (!city) return (
-    <section className={styles.root} data-testid="ondo-b-map-entry">
-      <header className={styles.header}>
-        <div className={styles.brand}><i /> <span><strong>ONDO</strong><small>{copy.tagline}</small></span></div>
-        <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
-      </header>
-      <NationPulse locale={locale} onSelect={chooseCity} />
-    </section>
+    <div className={styles.compatRoot} data-testid="ondo-map-entry">
+      <section className={styles.root} data-testid="ondo-b-map-entry">
+        <header className={styles.header}>
+          <div className={styles.brand}><i /> <span><strong>ONDO</strong><small>{copy.tagline}</small></span></div>
+          <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
+        </header>
+        <NationPulse locale={locale} onSelect={chooseCity} />
+      </section>
+    </div>
   )
 
   return (
-    <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState}>
-      <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
-      <div ref={mapNode} className={styles.map} data-testid="maplibre-map" aria-label={locale === "ko" ? "ONDO 식음료 지도" : "ONDO food map"} aria-describedby="ondo-b-map-instruction" />
-      <header className={styles.cityHeader}>
+    <div className={styles.compatRoot} data-testid="ondo-map-entry">
+      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState}>
+        <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
+        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" aria-label={locale === "ko" ? "ONDO 식음료 지도" : "ONDO food map"} aria-describedby="ondo-b-map-instruction" />
+        <header className={styles.cityHeader}>
         <div className={styles.topline}>
           <button type="button" className={styles.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
           <strong>{CITY[city].label[locale]}</strong>
@@ -364,17 +384,18 @@ export function MapEntryB() {
         <div className={styles.rail} aria-label={locale === "ko" ? "장소 신호 필터" : "Place signal filters"}>
           {(["all", "signal", "pending"] as const).map((item) => <button key={item} type="button" aria-pressed={heat === item} onClick={() => setHeat(item)}>{copy[item]}</button>)}
         </div>
-      </header>
+        </header>
 
-      <div className={styles.resultBar}>
-        <span><b>{venues.length}</b> {after19On ? copy.after19Mode : copy.places}</span>
-        <button type="button" onClick={() => setView(view === "map" ? "list" : "map")}>{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
-      </div>
+        <div className={styles.resultBar}>
+          <span><b>{venues.length}</b> {after19On ? copy.after19Mode : copy.places}</span>
+          <button type="button" onClick={() => setView(view === "map" ? "list" : "map")}>{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
+        </div>
 
-      {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
+        {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
 
-      {view === "map" ? <button type="button" className={styles.locate} aria-label={locale === "ko" ? "내 위치" : "My location"} onClick={() => navigator.geolocation?.getCurrentPosition(({ coords }) => mapRef.current?.easeTo({ center: [coords.longitude, coords.latitude], zoom: 14 }), () => actions.notify(copy.locationUnavailable))}><LocateFixed size={19} /></button> : null}
-      {view === "map" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}
-    </section>
+        {view === "map" ? <button type="button" className={styles.locate} aria-label={locale === "ko" ? "내 위치" : "My location"} onClick={() => navigator.geolocation?.getCurrentPosition(({ coords }) => mapRef.current?.easeTo({ center: [coords.longitude, coords.latitude], zoom: 14 }), () => actions.notify(copy.locationUnavailable))}><LocateFixed size={19} /></button> : null}
+        {view === "map" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}
+      </section>
+    </div>
   )
 }

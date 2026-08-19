@@ -6,21 +6,21 @@
 .contextNotice span { color: #706d67; font-size: 12px; line-height: 1.55; }
 .screen :focus-visible, .sheetBody :focus-visible, .chat :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .screenHeader { display: grid; gap: 8px; margin-bottom: 38px; }
-.eyebrow { margin: 0; color: #77746e; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
+.eyebrow { margin: 0; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
 .screenHeader h1 { margin: 0; font-size: 29px; line-height: 1.18; letter-spacing: -.045em; }
 .lead { max-width: 34rem; margin: 0; color: #716e68; font-size: 14px; line-height: 1.62; }
 .section { margin-top: 32px; }
 .sectionTitle { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .sectionTitle h2 { margin: 0; font-size: 17px; }
-.sectionTitle span { color: #77746e; font-size: 12px; }
+.sectionTitle span { color: #6e6b65; font-size: 12px; }
 .tableList { display: grid; border-top: 1px solid #d9d7d1; }
 .tableCard { width: 100%; min-height: 112px; padding: 17px 2px; border: 0; border-bottom: 1px solid #e2e0db; background: transparent; color: #242422; text-align: left; }
 .tableCardTop { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 12px; }
 .tableCardTop strong { font-size: 16px; line-height: 1.35; }
 .availability, .availabilityMuted { min-height: 24px; padding: 4px 0; color: #2f654b; font-size: 12px; font-weight: 720; }
-.availabilityMuted { color: #827f79; }
+.availabilityMuted { color: #6e6b65; }
 .venueName { display: block; margin-top: 7px; color: #68655f; font-size: 13px; }
-.tableMeta { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 13px; color: #77746e; font-size: 12px; }
+.tableMeta { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 13px; color: #6e6b65; font-size: 12px; }
 .ageBadge { color: #5d2947; font-weight: 720; }
 .cardArrow { display: inline-flex; align-items: center; gap: 4px; margin-top: 14px; color: #33312f; font-size: 12px; font-weight: 720; }
 .sheetBody { display: grid; gap: 22px; padding: 6px 18px calc(28px + env(safe-area-inset-bottom)); color: #20201e; }
@@ -33,12 +33,12 @@
 .detailGrid > div { min-height: 78px; padding: 14px 4px; border-bottom: 1px solid #e2e0db; }
 .detailGrid > div:nth-child(odd) { padding-right: 12px; border-right: 1px solid #e2e0db; }
 .detailGrid > div:nth-child(even) { padding-left: 12px; }
-.detailGrid dt { display: flex; align-items: center; gap: 5px; color: #77746e; font-size: 12px; }
+.detailGrid dt { display: flex; align-items: center; gap: 5px; color: #6e6b65; font-size: 12px; }
 .detailGrid dd { margin: 8px 0 0; font-size: 13px; font-weight: 700; line-height: 1.4; }
 .hostCard { display: grid; grid-template-columns: 42px 1fr auto; align-items: center; gap: 11px; padding: 14px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
 .avatar { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #d5d2cc; border-radius: 50%; background: #fff; font-weight: 760; }
 .hostCard > div { display: grid; gap: 3px; }
-.hostCard div span, .hostCard small { color: #77746e; font-size: 12px; }
+.hostCard div span, .hostCard small { color: #6e6b65; font-size: 12px; }
 .hostCard ~ div, .feedbackPanel > div { padding: 12px 0; border-radius: 0; background: transparent; }
 .primary, .secondary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 13px; font-size: 14px; font-weight: 720; cursor: pointer; }
 .primary { border: 0; background: #20201e; color: #fff; }
@@ -51,7 +51,7 @@
 .chatHeader button { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #292927; }
 .chatHeader > div { display: grid; gap: 2px; min-width: 0; }
 .chatHeader strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-.chatHeader span { color: #77746e; font-size: 12px; }
+.chatHeader span { color: #6e6b65; font-size: 12px; }
 .messageList { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 18px 14px; overflow: auto; background: #f5f4f1; }
 .systemMessage { align-self: center; max-width: 88%; padding: 8px 0; color: #6f6c66; font-size: 12px; text-align: center; }
 .received, .sent { max-width: 78%; padding: 10px 12px; border-radius: 13px; font-size: 13px; line-height: 1.48; }

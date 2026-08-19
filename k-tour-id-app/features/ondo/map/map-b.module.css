@@ -1,4 +1,6 @@
-.root { position: relative; min-height: 100%; height: 100%; overflow: hidden; background: #fbfbfa; color: #22211f; }
+.compatRoot, .root { position: relative; min-height: 100%; height: 100%; }
+.compatRoot { overflow: hidden; }
+.root { overflow: hidden; background: #fbfbfa; color: #22211f; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
 .header { position: absolute; z-index: 10; top: max(18px, env(safe-area-inset-top)); right: 20px; left: 20px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 10px; }
