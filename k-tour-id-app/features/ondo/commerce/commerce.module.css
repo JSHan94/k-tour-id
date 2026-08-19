@@ -1,18 +1,18 @@
 .body { display: grid; gap: 22px; padding: 30px 18px calc(30px + env(safe-area-inset-bottom)); background: #fbfbfa; color: #20201e; }
 .body :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
-.eyebrow { margin: 0; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
+.eyebrow { margin: 0; color: #625f59; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
 .body h2 { margin: 0; font-size: 25px; letter-spacing: -.04em; }
 .body > h2 + div, .visitProof > div { padding: 12px 0; border-radius: 0; background: transparent; border-top: 1px solid #e2e0db; border-bottom: 1px solid #e2e0db; color: #68655f; }
 .priceCard { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 6px; padding: 20px 0; border-top: 1px solid #d9d7d1; border-bottom: 1px solid #d9d7d1; color: #20201e; }
-.priceCard > div { display: flex; align-items: center; gap: 7px; grid-column: 1 / -1; color: #6e6b65; font-size: 12px; }
+.priceCard > div { display: flex; align-items: center; gap: 7px; grid-column: 1 / -1; color: #625f59; font-size: 12px; }
 .priceCard strong { font-size: 30px; letter-spacing: -.04em; }
-.priceCard small { color: #6e6b65; font-size: 12px; }
+.priceCard small { color: #625f59; font-size: 12px; }
 .settlement { padding: 14px 0; border-top: 1px dashed #cbc8c2; border-bottom: 1px dashed #cbc8c2; }
 .settlement > div { display: flex; align-items: center; gap: 7px; }
 .settlement > span { display: block; margin-top: 8px; color: #55524d; font-size: 12px; font-weight: 720; }
-.settlement p { margin: 6px 0 0; color: #6e6b65; font-size: 12px; line-height: 1.55; }
+.settlement p { margin: 6px 0 0; color: #625f59; font-size: 12px; line-height: 1.55; }
 .kycRow { display: flex; min-height: 60px; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid #e2e0db; border-bottom: 1px solid #e2e0db; }
-.kycRow > div { display: flex; align-items: center; gap: 7px; color: #706d67; font-size: 12px; }
+.kycRow > div { display: flex; align-items: center; gap: 7px; color: #625f59; font-size: 12px; }
 .kycRow strong { font-size: 12px; text-align: right; }
 .primary, .secondary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 13px; font-size: 14px; font-weight: 720; }
 .primary { border: 0; background: #20201e; color: #fff; }
@@ -24,5 +24,5 @@
 .receipt code { grid-column: 2; color: #557364; font-size: 12px; }
 .visitProof { display: grid; gap: 10px; padding: 16px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
 .visitProof p { display: grid; gap: 4px; margin: 0; }
-.visitProof span { color: #716e68; font-size: 12px; line-height: 1.55; }
-.textButton { min-height: 44px; border: 0; background: transparent; color: #6f6c66; font-size: 13px; font-weight: 700; }
+.visitProof span { color: #625f59; font-size: 12px; line-height: 1.55; }
+.textButton { min-height: 44px; border: 0; background: transparent; color: #625f59; font-size: 13px; font-weight: 700; }
