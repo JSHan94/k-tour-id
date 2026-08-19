@@ -491,6 +491,13 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else {
     const query = state === "LABS-TRAIT-FAIL" ? "?scenario=trait-retry-fail" : state === "LABS-BRIDGE-FAIL" ? "?scenario=bridge-failed" : ""
     await openPreparedLabs(page, locale, query)
+    if (state === "LABS") {
+      // Opening the milestone can race the sheet mount against Playwright's
+      // click auto-scroll. The translucent desktop scrim makes that otherwise
+      // irrelevant My Korea offset part of the pixel contract, so normalize
+      // the underlying scroller after the dialog is present.
+      await stabilizeMobileEvidenceScroll(page, page.getByTestId("open-labs-milestone"), { kind: "scrollTop", value: 828, desktopValue: 726 })
+    }
     if (state !== "LABS") {
       const acknowledge = page.getByTestId("labs-acknowledge")
       if (await acknowledge.isVisible().catch(() => false)) await acknowledge.click()
