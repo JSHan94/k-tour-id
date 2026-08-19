@@ -154,6 +154,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await seedB(page, { session: { persona: "korean_local", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
     await openCanonicalVenue(page)
     await page.getByTestId("canonical-venue-signal").click()
+    await page.getByTestId("local-signal-overlay").locator("textarea").fill("A useful local food note.")
     await test.step(evidence("FL-005", "ENTRY/CANCEL"), async () => {
       await page.getByTestId("local-signal-submit").click()
       await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Check with Mobile ID")
@@ -178,6 +179,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await seedB(page, { session: { persona: "long_term_resident", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
     await openCanonicalVenue(page)
     await page.getByTestId("canonical-venue-signal").click()
+    await page.getByTestId("local-signal-overlay").locator("textarea").fill("A useful resident food note.")
     await page.getByTestId("local-signal-submit").click()
     await test.step(evidence("FL-006", "ENTRY/DECISION/CANCEL"), async () => {
       const gate = page.getByTestId("ondo-gate-overlay")
@@ -272,7 +274,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-012", "ENTRY/DECISION/CANCEL"), async () => {
       await openCanonicalVenue(page)
       await page.getByTestId("canonical-venue-signal").click()
-      await page.getByLabel("Helpful note · Optional").fill("Draft stays local.")
+      await page.getByTestId("local-signal-overlay").locator("textarea").fill("Draft stays local.")
       await page.locator("input[type='file']").setInputFiles({ name: "visit.png", mimeType: "image/png", buffer: PNG })
       await page.getByRole("button", { name: "Cancel draft" }).click()
       await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
@@ -280,7 +282,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-012", "ERROR/RETRY"), async () => {
       await openCanonicalVenue(page, { query: "scenario=local-signal-fail" })
       await page.getByTestId("canonical-venue-signal").click()
-      await page.getByLabel("Helpful note · Optional").fill("Draft survives.")
+      await page.getByTestId("local-signal-overlay").locator("textarea").fill("Draft survives.")
       await page.getByTestId("local-signal-submit").click()
       await expect(page.getByTestId("local-signal-overlay")).toHaveAttribute("data-signal-status", "failed")
       await expect(page.getByTestId("local-signal-submit")).toHaveText("Try again")
@@ -288,6 +290,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-012", "TERMINAL/RETURN"), async () => {
       await openCanonicalVenue(page)
       await page.getByTestId("canonical-venue-signal").click()
+      await page.getByTestId("local-signal-overlay").locator("textarea").fill("A fresh local food note.")
       await page.getByTestId("local-signal-submit").click()
       await expect(page.getByTestId("local-signal-overlay")).toHaveAttribute("data-signal-status", "submitted")
       expect(await sessionState(page)).toMatchObject({ person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED", stamps: 9, reputation: { visit: "recent", contribution: "helpful", meetup: "new" } })

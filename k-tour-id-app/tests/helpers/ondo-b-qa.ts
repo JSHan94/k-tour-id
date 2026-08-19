@@ -320,6 +320,7 @@ export async function finishAccountGate(page: Page) {
 export async function finishPersonGate(page: Page) {
   await page.getByRole("button", { name: "Start check" }).click()
   await page.getByRole("button", { name: "Complete simulated check" }).click()
+  await expect.poll(() => sessionState(page)).toMatchObject({ person: "PER-VERIFIED" })
 }
 
 export async function finishAgeGate(page: Page) {
