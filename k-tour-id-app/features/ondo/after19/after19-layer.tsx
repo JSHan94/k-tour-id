@@ -27,6 +27,7 @@ const COPY = {
     autoSetting: "Open automatically when eligible",
     close: "Close",
     reset: "Allow automatic opening again",
+    previewBoundary: "This demo uses a simulated 19+ check; identity details are not shown on the map.",
   },
   ko: {
     on: "After 19가 켜졌어요",
@@ -46,12 +47,13 @@ const COPY = {
     autoSetting: "조건이 맞으면 자동으로 열기",
     close: "닫기",
     reset: "자동 열기 다시 허용",
+    previewBoundary: "이 데모는 19+ 확인 시뮬레이션을 사용하며 신원 상세는 지도에 표시하지 않아요.",
   },
 } satisfies Record<Locale, Record<string, string>>
 
 const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
-export function After19Layer({ now }: { now?: Date } = {}) {
+export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A" | "B" } = {}) {
   const { state, actions } = useOndo()
   const [clock, setClock] = useState(() => now ?? new Date())
   const [showGate, setShowGate] = useState(false)
@@ -168,7 +170,7 @@ export function After19Layer({ now }: { now?: Date } = {}) {
       {state.after19 === "A19-ON" ? (
         <section className={styles.banner} data-testid="after19-auto-banner">
           <span><Moon size={19} /></span>
-          <div><strong>{t.on}</strong><p>{autoOpened.current ? t.autoReason : t.manualReason}</p><small>{t.nonAlcohol}</small></div>
+          <div><strong>{t.on}</strong><p>{autoOpened.current ? t.autoReason : t.manualReason}</p><small>{t.nonAlcohol}{variant === "B" ? ` ${t.previewBoundary}` : ""}</small></div>
           <button type="button" onClick={turnOff}>{t.off}</button>
         </section>
       ) : null}

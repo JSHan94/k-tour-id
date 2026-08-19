@@ -2,11 +2,12 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, CreditCard, MapPin, MessageCircle, Navigation, Users, X } from "lucide-react"
+import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, CreditCard, LockKeyhole, MapPin, MessageCircle, Moon, Navigation, Users, X } from "lucide-react"
 import { canonicalVenueById } from "@/lib/ondo/venues"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
 import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
+import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
 import { useOndo } from "../shared/state/ondo-provider"
 import styles from "./canonical-place.module.css"
 
@@ -39,6 +40,16 @@ const COPY = {
     confidence: "confidence",
     freshness: "Freshness",
     contributionIncluded: "Your session signal is recorded separately; the preview score is not recalculated.",
+    after19Eyebrow: "AFTER 19 · PREVIEW",
+    after19Title: "Night preview for this place",
+    after19Locked: "The official place record remains visible. Only the After 19 preview asks for a current 19+ check, without showing identity details on the map.",
+    after19Unlocked: "After 19 is on for this place. Opening hours, alcohol service, and admission are still not confirmed by the official source.",
+    after19Unlock: "Confirm 19+ and return here",
+    after19Ready: "After 19 preview on",
+    saving: "Saving…",
+    saveFailed: "This place was not saved. Your venue context is unchanged.",
+    retrySave: "Retry save",
+    dismissSave: "Not now",
   },
   ko: {
     active: "공식 장소 기록",
@@ -68,6 +79,16 @@ const COPY = {
     confidence: "신뢰도",
     freshness: "최신성",
     contributionIncluded: "내 세션 신호는 별도로 기록되며 프리뷰 점수는 다시 계산하지 않아요.",
+    after19Eyebrow: "AFTER 19 · 프리뷰",
+    after19Title: "이 장소의 야간 프리뷰",
+    after19Locked: "공식 장소 정보는 그대로 볼 수 있어요. After 19 프리뷰만 현재 유효한 19+ 확인을 요청하며 신원 상세는 지도에 표시하지 않아요.",
+    after19Unlocked: "이 장소에서 After 19가 켜졌어요. 영업시간·주류 제공·입장 가능 여부는 공식 출처로 확인되지 않았어요.",
+    after19Unlock: "19+ 확인 후 이 장소로 돌아오기",
+    after19Ready: "After 19 프리뷰 켜짐",
+    saving: "저장 중…",
+    saveFailed: "장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지돼요.",
+    retrySave: "저장 다시 시도",
+    dismissSave: "나중에",
   },
 } as const
 
@@ -89,13 +110,27 @@ export function CanonicalPlaceOverlay() {
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
+  const saveAttemptRef = useRef(0)
+  const saveTimerRef = useRef<number | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
   const venue = venueId ? canonicalVenueById(venueId) : undefined
   const signal = venueId ? B_DEMO_SIGNAL_BY_VENUE_ID.get(venueId) : undefined
   const locale = state.locale
   const copy = COPY[locale]
 
-  useEffect(() => { setExpanded(false) }, [venueId])
+  useEffect(() => {
+    setExpanded(false)
+    saveAttemptRef.current = 0
+    if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = null
+    if (!venueId) return
+    const url = new URL(window.location.href)
+    if (url.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) return
+    url.searchParams.delete(AFTER19_VENUE_RETURN_PARAM)
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`)
+    setExpanded(true)
+  }, [venueId])
+  useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
 
   if (!venue || state.tab !== "ondo") return null
@@ -104,8 +139,13 @@ export function CanonicalPlaceOverlay() {
   const district = venueDistrictLabel(venue.cityId, venue.districtId, locale)
   const address = venue.address.road.value ?? venue.address.lot.value ?? copy.unknown
   const saved = state.savedVenueIds.includes(venue.id)
+  const saveStatus = state.saveStatusByVenue[venue.id] ?? "SAV-IDLE"
+  const saving = saveStatus === "SAV-SAVING"
   const palette = HEAT_COLORS[signal?.level ?? "limited"]
   const contributed = state.acceptedActivityEventKeys.some((key) => key.includes(`local-signal:${venue.id}:`))
+  const ageCurrent = state.age === "AGE-VERIFIED" && state.ageExpiresAt != null && new Date(state.ageExpiresAt).getTime() > Date.now()
+  const after19Unlocked = state.after19 === "A19-ON" && ageCurrent
+  const currentVenueId = venue.id
 
   function close() { actions.setSurface({ kind: "map" }) }
   function closeDetails() {
@@ -127,8 +167,31 @@ export function CanonicalPlaceOverlay() {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
   function save() {
-    if (saved) return
-    actions.beginAction({ cta: "SAVE_VENUE", gates: ["account"], venueId: venue!.id })
+    if (saved || saving) return
+    if (state.account !== "ACC-ACTIVE") {
+      actions.beginAction({ cta: "SAVE_VENUE", gates: ["account"], venueId: currentVenueId })
+      return
+    }
+    saveAttemptRef.current += 1
+    const attempt = saveAttemptRef.current
+    actions.setSaveStatus(currentVenueId, "SAV-SAVING")
+    saveTimerRef.current = window.setTimeout(() => {
+      saveTimerRef.current = null
+      const scenario = new URLSearchParams(window.location.search).get("scenario")
+      if (scenario === "save-failed" && attempt === 1) {
+        actions.setSaveStatus(currentVenueId, "SAV-FAILED")
+        return
+      }
+      actions.beginAction({ cta: "SAVE_VENUE", gates: ["account"], venueId: currentVenueId })
+    }, 360)
+  }
+  function openAfter19Venue() {
+    if (after19Unlocked) return
+    if (ageCurrent) {
+      actions.setAfter19("A19-ON")
+      return
+    }
+    actions.beginAction({ cta: "OPEN_AFTER19", gates: ["age"], venueId: currentVenueId })
   }
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.location.latitude},${venue.location.longitude}`)}`
 
@@ -170,6 +233,14 @@ export function CanonicalPlaceOverlay() {
             <div><small>{signal ? copy.simulated : "ONDO"}</small><h3>{signal ? HEAT_LABELS[locale][signal.level] : copy.signalPending}</h3><p>{signal ? signal.reason[locale] : contributed ? copy.contributed : copy.signalPendingBody}</p>{signal ? <dl className={styles.signalEvidence}><div><dt>{copy.signalCount}</dt><dd>{signal.signalCount}</dd></div><div><dt>{copy.confidence}</dt><dd>{Math.round(signal.confidence * 100)}%</dd></div><div><dt>{copy.freshness}</dt><dd>{signal.freshness[locale]}</dd></div></dl> : null}{signal && contributed ? <p className={styles.contributionNote}>{copy.contributionIncluded}</p> : null}</div>
           </section>
 
+          {signal?.after19 ? (
+            <section className={styles.after19Access} data-testid="canonical-after19-access" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"}>
+              <span className={styles.after19Icon}>{after19Unlocked ? <Moon size={21} /> : <LockKeyhole size={21} />}</span>
+              <div><small>{copy.after19Eyebrow}</small><h3>{copy.after19Title}</h3><p>{after19Unlocked ? copy.after19Unlocked : copy.after19Locked}</p></div>
+              {after19Unlocked ? <strong>{copy.after19Ready}</strong> : <button type="button" onClick={openAfter19Venue} data-testid="canonical-after19-unlock">{copy.after19Unlock}<ChevronRight size={17} /></button>}
+            </section>
+          ) : null}
+
           <section className={styles.before}>
             <h3>{copy.before}</h3>
             {[[copy.hours, copy.unknown], [copy.card, copy.unknown], [copy.menu, copy.unknown], [copy.phone, copy.unknown]].map(([label, value]) => <div key={label}><CircleHelp size={17} /><span><strong>{label}</strong><small>{value}</small></span></div>)}
@@ -182,11 +253,18 @@ export function CanonicalPlaceOverlay() {
           </section>
 
           <nav className={styles.secondaryActions} aria-label={locale === "ko" ? "장소 추가 작업" : "More place actions"}>
-            <button type="button" onClick={save} disabled={saved} data-testid="canonical-venue-save"><Bookmark size={18} />{saved ? copy.saved : copy.save}<ChevronRight size={16} /></button>
+            <button type="button" onClick={save} disabled={saved || saving} data-testid="canonical-venue-save"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}<ChevronRight size={16} /></button>
             <button type="button" onClick={() => actions.setSurface({ kind: "local_signal", venueId: venue.id })} data-testid="canonical-venue-signal"><MessageCircle size={18} />{copy.signal}<ChevronRight size={16} /></button>
             <button type="button" onClick={() => actions.setTab("tables")} data-testid="canonical-venue-tables"><Users size={18} />{copy.tables}<ChevronRight size={16} /></button>
             <button type="button" onClick={() => actions.setSurface({ kind: "checkout", venueId: venue.id })} data-testid="canonical-venue-checkout"><CreditCard size={18} />{copy.checkout}<ChevronRight size={16} /></button>
           </nav>
+
+          {saveStatus === "SAV-FAILED" ? (
+            <section className={styles.saveError} role="alert" data-testid="canonical-save-error">
+              <p>{copy.saveFailed}</p>
+              <div><button type="button" onClick={save} data-testid="canonical-save-retry">{copy.retrySave}</button><button type="button" onClick={() => actions.setSaveStatus(venue.id, "SAV-IDLE")} data-testid="canonical-save-dismiss">{copy.dismissSave}</button></div>
+            </section>
+          ) : null}
 
           <a className={styles.primary} href={directions} target="_blank" rel="noreferrer"><Navigation size={18} />{copy.directions}</a>
         </div>

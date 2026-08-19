@@ -1,6 +1,7 @@
 "use client"
 
 import { After19Layer } from "../after19/after19-layer"
+import { After19VenueReturn } from "../after19/after19-venue-return"
 import { ConnectOverlays } from "../connect/connect-overlays"
 import { TablesEntry } from "../connect/tables-entry"
 import { GateOverlay } from "../identity/gate-overlay"
@@ -19,7 +20,7 @@ export function OndoProductB() {
       my: <MyEntry />,
       tables: <TablesEntry />,
       id: <IdentityEntry />,
-      overlays: <><CanonicalPlaceMount /><PlaceOverlay /><ConnectOverlays /><After19Layer /><OnboardingLayer /><GateOverlay /></>,
+      overlays: <><After19VenueReturn /><CanonicalPlaceMount /><PlaceOverlay /><ConnectOverlays /><After19Layer variant="B" /><OnboardingLayer /><GateOverlay /></>,
     }} />
   )
 }

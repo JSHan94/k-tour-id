@@ -36,6 +36,14 @@
 .signalEvidence dt { overflow: hidden; color: #6f6962; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .signalEvidence dd { margin: 3px 0 0; color: #2b2926; font-size: 12px; font-weight: 760; line-height: 1.35; }
 .contributionNote { margin-top: 10px !important; padding-left: 9px; border-left: 2px solid #c94832; }
+.after19Access { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: start; gap: 12px; padding: 20px 0; border-bottom: 1px solid #dedbd5; }
+.after19Icon { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #ead4cd; border-radius: 50%; background: #fff4f0; color: #ad3f31; }
+.after19Access small { color: #8b463c; font-size: 12px; font-weight: 780; letter-spacing: .04em; }
+.after19Access h3 { margin: 4px 0 5px; font-size: 16px; }
+.after19Access p { margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.55; }
+.after19Access > button, .after19Access > strong { grid-column: 2; }
+.after19Access > button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid #d8b5ad; border-radius: 12px; background: #fff; color: #7d3028; font-size: 12px; font-weight: 760; text-align: left; }
+.after19Access > strong { color: #7d3028; font-size: 12px; }
 .before, .source { padding: 22px 0; border-bottom: 1px solid #dedbd5; }
 .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
 .before > div { display: grid; min-height: 55px; grid-template-columns: 28px 1fr; align-items: center; border-top: 1px solid #ece9e4; }
@@ -49,6 +57,11 @@
 .source dd { margin: 3px 0 0; font-size: 12px; font-weight: 700; }
 .secondaryActions { display: grid; padding: 10px 0; }
 .secondaryActions button { display: grid; min-height: 54px; grid-template-columns: 24px 1fr 18px; align-items: center; gap: 8px; padding: 0; border: 0; border-bottom: 1px solid #e7e4df; background: transparent; color: #2b2926; font-size: 13px; font-weight: 680; text-align: left; }
+.saveError { margin: 12px 0 0; padding: 14px; border: 1px solid #e4c4bc; border-radius: 13px; background: #fff7f4; }
+.saveError p { margin: 0 0 10px; color: #6b332c; font-size: 12px; line-height: 1.5; }
+.saveError div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.saveError button { min-height: 44px; border: 1px solid #d8b5ad; border-radius: 10px; background: #fff; color: #6b332c; font-size: 12px; font-weight: 750; }
+.saveError button:first-child { border-color: #913d31; background: #913d31; color: #fff; }
 .primary { position: sticky; bottom: 0; display: flex; min-height: 52px; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; border-radius: 13px; background: #22211f; color: white; font-size: 14px; font-weight: 760; text-decoration: none; }
 
 @media (max-width: 370px) {
