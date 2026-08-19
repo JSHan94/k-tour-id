@@ -430,8 +430,10 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-018", "ERROR/RETRY"), async () => {
       await gotoB(page, "?scenario=bridge-failed")
       await openLabs(page)
-      if (await page.getByTestId("labs-acknowledge").count()) await page.getByTestId("labs-acknowledge").click()
-      if (await page.getByTestId("labs-connect-wallet").count()) await page.getByTestId("labs-connect-wallet").click()
+      const acknowledge = page.getByTestId("labs-acknowledge")
+      if (await acknowledge.isVisible().catch(() => false)) await acknowledge.click()
+      const connectWallet = page.getByTestId("labs-connect-wallet")
+      if (await connectWallet.isVisible().catch(() => false)) await connectWallet.click()
       await page.getByTestId("labs-bridge-quote").click()
       await page.getByTestId("labs-bridge-confirm").click()
       await page.getByTestId("labs-bridge-submit").click()
