@@ -61,7 +61,7 @@ test.describe("ONDO B canonical flow journeys", () => {
   test(title("FL-002"), async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await test.step(evidence("FL-002", "ENTRY/CANCEL"), async () => {
-      await openCanonicalVenue(page)
+      await openCanonicalVenue(page, { query: "qa=1" })
       await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "locked")
       await expect(page.getByTestId("canonical-after19-access")).toContainText("ONDO locks this simulated night preview behind its own 19+ policy.")
       await expect(page.getByTestId("canonical-after19-access")).toContainText("This is not an official age restriction")
@@ -164,7 +164,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-005"), async ({ page }) => {
     await seedB(page, { session: { persona: "korean_local", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
-    await openCanonicalVenue(page)
+    await openCanonicalVenue(page, { query: "qa=1" })
     await page.getByTestId("canonical-venue-signal").click()
     await page.getByTestId("local-signal-overlay").locator("textarea").fill("A local ordering tip.")
     await test.step(evidence("FL-005", "ENTRY/CANCEL"), async () => {
@@ -190,7 +190,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-006"), async ({ page }) => {
     await seedB(page, { session: { persona: "long_term_resident", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
-    await openCanonicalVenue(page)
+    await openCanonicalVenue(page, { query: "qa=1" })
     await page.getByTestId("canonical-venue-signal").click()
     await page.getByTestId("local-signal-overlay").locator("textarea").fill("A resident ordering tip.")
     await page.getByTestId("local-signal-submit").click()
@@ -247,7 +247,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-010"), async ({ page }) => {
     await seedB(page)
-    await openCanonicalVenue(page)
+    await openCanonicalVenue(page, { query: "qa=1" })
     await test.step(evidence("FL-010", "ENTRY/CANCEL"), async () => {
       await page.getByTestId("canonical-venue-save").click()
       await expect(page.getByTestId("ondo-gate-overlay")).toContainText("save this place")
@@ -337,7 +337,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-013"), async ({ page }) => {
     await seedB(page)
-    await gotoB(page, "?city=seoul")
+    await gotoB(page, "?city=seoul&qa=1")
     await test.step(evidence("FL-013", "ENTRY/CANCEL"), async () => {
       await page.getByRole("button", { name: "After 19", exact: true }).click()
       await page.getByRole("button", { name: "Stay on the main map" }).click()
@@ -400,7 +400,7 @@ test.describe("ONDO B canonical flow journeys", () => {
   test(title("FL-016"), async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED", stamps: 10 } })
     await test.step(evidence("FL-016", "ENTRY/DECISION/ERROR"), async () => {
-      await openCanonicalVenue(page)
+      await openCanonicalVenue(page, { query: "qa=1" })
       const detail = page.getByTestId("canonical-place-overlay")
       await expect(detail).toContainText("Not confirmed by this source")
       await expect(detail).not.toContainText(/safe|guaranteed/i)
@@ -413,7 +413,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-016", "RETRY/TERMINAL"), async () => {
       await openLabs(page)
       await page.getByTestId("labs-acknowledge").click()
-      await page.getByTestId("trait-retry-offer-foreign-card").click()
+      await page.getByTestId("trait-retry-seongsu-card").click()
       await expect(page.locator("[data-trait-state='eligible']").first()).toContainText("This specific access condition is met")
       await expect(page.getByTestId("labs-overlay")).toContainText("do not guarantee venue admission")
     })
@@ -421,7 +421,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-017"), async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-    await openCanonicalVenue(page)
+    await openCanonicalVenue(page, { query: "qa=1" })
     await page.getByTestId("canonical-venue-checkout").click()
     await test.step(evidence("FL-017", "ENTRY/DECISION/CANCEL"), async () => {
       await page.getByTestId("checkout-start").click()
@@ -448,7 +448,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-018"), async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED", stamps: 10 } })
-    await gotoB(page)
+    await gotoB(page, "?qa=1")
     await test.step(evidence("FL-018", "ENTRY/DECISION"), async () => {
       await openLabs(page)
       await page.getByTestId("labs-acknowledge").click()
@@ -462,7 +462,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(page.getByTestId("labs-bridge-receipt")).toHaveCount(0)
     })
     await test.step(evidence("FL-018", "ERROR/RETRY"), async () => {
-      await gotoB(page, "?scenario=bridge-failed")
+      await gotoB(page, "?qa=1&scenario=bridge-failed")
       await openLabs(page)
       const connectWallet = page.getByTestId("labs-connect-wallet")
       if (await connectWallet.isVisible().catch(() => false)) await connectWallet.click()
@@ -475,14 +475,14 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(page.getByTestId("labs-bridge-quote")).toBeVisible()
     })
     await test.step(evidence("FL-018", "TERMINAL/RETURN"), async () => {
-      await gotoB(page)
+      await gotoB(page, "?qa=1")
       await openLabs(page)
       await page.getByTestId("labs-bridge-quote").click()
       await page.getByTestId("labs-bridge-confirm").click()
       await page.getByTestId("labs-bridge-submit").click()
       for (let index = 0; index < 3; index += 1) await page.getByTestId("labs-bridge-advance").click()
       await expect(page.getByTestId("labs-bridge-receipt")).toContainText("Actual balances and transactions were not changed.")
-      await page.getByRole("button", { name: "Back to My Korea" }).click()
+      await page.getByRole("button", { name: "Return to My Korea" }).click()
       await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
     })
   })
