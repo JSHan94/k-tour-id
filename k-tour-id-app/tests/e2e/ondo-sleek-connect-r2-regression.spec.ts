@@ -4,6 +4,12 @@ import { expect, test, type Page } from "@playwright/test"
 const TABLE_ID = "table-seongsu-dinner"
 const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 
+async function settleFocusFrames(page: Page) {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  }))
+}
+
 async function seed(page: Page, locale: "en" | "ko", options: { membership?: "confirmed"; person?: "PER-VERIFIED" | "PER-UNVERIFIED" } = {}) {
   await page.addInitScript(() => {
     window.addEventListener("DOMContentLoaded", () => {
@@ -181,12 +187,16 @@ test("SLEEK-R2 D2-002 report and leave decisions are the sole modal and pointer-
       expect(hit.reachedBackgroundControl).toBe(false)
       expect(hit.insideDecisionLayer).toBe(true)
       if (hit.insideDecision) continue
-      await page.mouse.click(point.x, point.y)
-      rawBackgroundClicks += 1
-      await expect(dialog).toBeVisible()
-      await expect(page.getByTestId("table-chat")).toBeVisible()
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        await page.mouse.click(point.x, point.y)
+        rawBackgroundClicks += 1
+        await settleFocusFrames(page)
+        await expect(dialog).toBeVisible()
+        await expect(page.getByTestId("table-chat")).toBeVisible()
+        expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true)
+      }
     }
-    expect(rawBackgroundClicks).toBeGreaterThanOrEqual(2)
+    expect(rawBackgroundClicks).toBeGreaterThanOrEqual(6)
     expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true)
     const axe = await new AxeBuilder({ page }).include("[data-testid='chat-confirm-layer']").analyze()
     expect(axe.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([])
