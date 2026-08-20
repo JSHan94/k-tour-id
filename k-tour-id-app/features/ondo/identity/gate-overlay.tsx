@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, BadgeCheck, Check, ChevronRight, CircleUserRoun
 import type { GateKind, Locale, Persona } from "../contracts/domain"
 import { isReturnToUsable } from "../contracts/return-to"
 import { useOndo } from "../shared/state/ondo-provider"
+import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { useQaControls } from "../shared/ui/use-qa-controls"
 import styles from "./identity.module.css"
 
@@ -162,31 +163,7 @@ export function GateOverlay() {
     }
   }, [gate?.tokenId])
 
-  useEffect(() => {
-    if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return
-    const coveredDialogs = Array.from(document.querySelectorAll<HTMLElement>("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']"))
-      .filter((element) => !layerRef.current?.contains(element))
-      .map((element) => ({
-        element,
-        inert: element.getAttribute("inert"),
-        ariaHidden: element.getAttribute("aria-hidden"),
-      }))
-
-    coveredDialogs.forEach(({ element }) => {
-      element.setAttribute("inert", "")
-      element.setAttribute("aria-hidden", "true")
-    })
-
-    return () => {
-      coveredDialogs.forEach(({ element, inert, ariaHidden }) => {
-        if (!element.isConnected) return
-        if (inert == null) element.removeAttribute("inert")
-        else element.setAttribute("inert", inert)
-        if (ariaHidden == null) element.removeAttribute("aria-hidden")
-        else element.setAttribute("aria-hidden", ariaHidden)
-      })
-    }
-  }, [gate?.tokenId])
+  useModalIsolation(Boolean(gate && !gate.consumedAt && isReturnToUsable(gate)), layerRef)
 
   useEffect(() => {
     if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return

@@ -166,7 +166,7 @@ export function CanonicalPlaceOverlay() {
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
-  useModalIsolation(expanded, layerRef)
+  useModalIsolation(expanded && state.tab === "ondo" && Boolean(venueId), layerRef)
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
     const controller = new AbortController()
