@@ -44,6 +44,7 @@ export type BVisualStateId =
   | "GATE-PAYMENT"
   | "GATE-PAYMENT-FAIL"
   | "TABLES-LIST"
+  | "TABLES-VENUE-EMPTY"
   | "TABLE-DETAIL"
   | "TABLE-JOIN-FAIL"
   | "CHAT"
@@ -115,6 +116,7 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-GATE-PAYMENT-FAIL-KO", state: "GATE-PAYMENT-FAIL", flows: ["FL-017"], locale: "ko", description: "Payment KYC failure and retry" },
   { id: "B-PX-AFTER19-VENUE-RETURN-EN", state: "AFTER19-VENUE-RETURN", flows: ["FL-002", "FL-013", "FL-014"], locale: "en", description: "age proof returns to the exact venue with After19 enabled" },
   { id: "B-PX-TABLES-LIST-EN", state: "TABLES-LIST", flows: ["FL-003"], locale: "en", description: "Tables index" },
+  { id: "B-PX-TABLES-VENUE-EMPTY-EN", state: "TABLES-VENUE-EMPTY", flows: ["FL-003"], locale: "en", description: "venue-scoped zero-Table state with exact-place and global recovery" },
   { id: "B-PX-TABLE-DETAIL-KO", state: "TABLE-DETAIL", flows: ["FL-003"], locale: "ko", description: "Table detail and trust boundary" },
   { id: "B-PX-TABLE-JOIN-FAIL-EN", state: "TABLE-JOIN-FAIL", flows: ["FL-003"], locale: "en", description: "retryable Table join failure" },
   { id: "B-PX-CHAT-EN", state: "CHAT", flows: ["FL-003"], locale: "en", description: "confirmed member chat" },
@@ -168,12 +170,12 @@ const B_PIXEL_BY_CHECKPOINT: Partial<Record<CheckpointKey, readonly BVisualCase[
   "FL-002:RETRY": pixel("B-PX-GATE-AGE-FAIL-KO"),
   "FL-002:TERMINAL": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
   "FL-002:RETURN": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
-  "FL-003:ENTRY": pixel("B-PX-TABLES-LIST-EN"),
+  "FL-003:ENTRY": pixel("B-PX-TABLES-LIST-EN", "B-PX-TABLES-VENUE-EMPTY-EN"),
   "FL-003:DECISION": pixel("B-PX-TABLE-DETAIL-KO"),
   "FL-003:ERROR": pixel("B-PX-TABLE-JOIN-FAIL-EN", "B-PX-CHAT-IMAGE-FAIL-EN"),
   "FL-003:RETRY": pixel("B-PX-TABLE-JOIN-FAIL-EN", "B-PX-CHAT-IMAGE-FAIL-EN"),
   "FL-003:TERMINAL": pixel("B-PX-CHAT-EN", "B-PX-FEEDBACK-KO", "B-PX-REPORT-EN"),
-  "FL-003:RETURN": pixel("B-PX-TABLES-LIST-EN"),
+  "FL-003:RETURN": pixel("B-PX-TABLES-LIST-EN", "B-PX-TABLES-VENUE-EMPTY-EN"),
   "FL-004:ENTRY": pixel("B-PX-CHECKOUT-IDLE-EN"),
   "FL-004:DECISION": pixel("B-PX-CHECKOUT-IDLE-EN"),
   "FL-004:CANCEL": pixel("B-PX-CHECKOUT-CANCEL-KO"),
@@ -623,6 +625,14 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else if (state === "GATE-PAYMENT" || state === "GATE-PAYMENT-FAIL") {
     await triggerPaymentGate(page, locale, state === "GATE-PAYMENT-FAIL")
     if (state === "GATE-PAYMENT-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
+  } else if (state === "TABLES-VENUE-EMPTY") {
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-venue-tables").click()
+    await expect(page.getByTestId("venue-table-scope")).toBeVisible()
+    await expect(page.getByTestId("venue-tables-empty")).toBeVisible()
+    await expect(page.getByTestId("tables-back-to-venue")).toBeVisible()
+    await expect(page.getByTestId("tables-browse-all")).toBeVisible()
   } else if (state === "TABLES-LIST") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await openTablesIndex(page, locale)
