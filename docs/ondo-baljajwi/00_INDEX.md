@@ -26,6 +26,8 @@
 7. [Final As-built](./07_AS_BUILT.md) — 최종 구현·데이터·연동 등급·검수 수치
 8. [Visual System](./VISUAL_SYSTEM.md), [Surface Matrix](./VISUAL_SURFACE_MATRIX.md)
 9. [Data Pipeline](./DATA_PIPELINE.md), [Truth](./DATA_PROVENANCE_AND_TRUTH.md), [External blockers](./DATA_ENV_AND_BLOCKERS.md)
+10. [Five-Designer Sleekness Review](./08_UX_UI_FIVE_DESIGNER_REVIEW.md) — 다섯 독립 UX/UI reviewer와 zero-actionable loop
+11. [UX/UI Component & State Matrix](./09_UX_UI_COMPONENT_STATE_MATRIX.md) — 전제품 component/state/breakpoint coverage
 
 ## 현재 Gate
 
