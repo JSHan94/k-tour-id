@@ -52,6 +52,10 @@
 .secondary { border: 1px solid #d6d3cd; background: transparent; color: #292927; }
 .fieldLabel { margin-bottom: -9px; color: #55524d; font-size: 12px; font-weight: 720; }
 .requirement { margin: -14px 0 -16px; color: #706d67; font-size: 12px; line-height: 1.5; }
+.actionNotice { display: grid; grid-template-columns: 22px 1fr; align-items: start; gap: 10px; padding: 13px 0; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; font-size: 13px; line-height: 1.55; }
+.actionNotice > svg { margin-top: 1px; }
+.actionNoticeNeutral { color: #315f49; }
+.actionNoticeDanger { color: #7c302a; }
 .sheetBody textarea { min-height: 104px; resize: vertical; padding: 13px 0; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; background: transparent; color: #20201e; font: inherit; font-size: 14px; }
 .sheetBody textarea::placeholder, .feedbackPanel textarea::placeholder, .composer input::placeholder { color: #66615a; opacity: 1; }
 .chat { position: relative; min-height: min(88dvh, 760px); display: flex; flex-direction: column; color: #20201e; background: #fbfbfa; }

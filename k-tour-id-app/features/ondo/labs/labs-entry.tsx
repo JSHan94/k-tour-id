@@ -83,6 +83,7 @@ export function LabsEntry() {
   const advanceButtonRef = useRef<HTMLButtonElement>(null)
   const progressRef = useRef<HTMLDivElement>(null)
   const bridgeReceiptRef = useRef<HTMLDivElement>(null)
+  const walletRetryRef = useRef<HTMLButtonElement>(null)
   const sessionWasRestored = useRef(false)
   const estimatedTotal = useMemo(() => estimatedUsdTotal(LABS_ASSETS), [])
 
@@ -115,6 +116,22 @@ export function LabsEntry() {
     const timer = window.setTimeout(advanceBridge, 650)
     return () => window.clearTimeout(timer)
   }, [bridge, phase, qaControls, sessionLoaded])
+
+  useEffect(() => {
+    if (wallet !== "WAL-FAILED") return
+    let secondFrame = 0
+    let timeout = 0
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        timeout = window.setTimeout(() => walletRetryRef.current?.focus({ preventScroll: true }), 0)
+      })
+    })
+    return () => {
+      window.cancelAnimationFrame(firstFrame)
+      window.cancelAnimationFrame(secondFrame)
+      window.clearTimeout(timeout)
+    }
+  }, [wallet])
 
   function close() {
     const opener = originOpener.current
@@ -227,6 +244,7 @@ export function LabsEntry() {
 
   const canDisconnect = wallet !== "WAL-CONNECTING" && bridge !== "BRG-PENDING"
   const phaseCopy = phase === "none" ? null : BRIDGE_COPY[phase][locale]
+  const walletOutcomeId = "labs-wallet-outcome"
 
   return (
     <Sheet label="Labs" onClose={close} showClose={false} size="full">
@@ -243,9 +261,9 @@ export function LabsEntry() {
           <div className={styles.sectionHeading}><span><WalletCards size={18} /></span><div><h3 id="labs-signer-title">{locale === "ko" ? "Sui zkLogin · 서명 방식 식별자" : "Sui zkLogin signer"}</h3><p>{locale === "ko" ? "대상 네트워크 식별자: Sui Testnet · 시뮬레이션" : "Target network: Sui Testnet · Simulated"}</p></div></div>
           <p className={styles.bodyCopy}>{locale === "ko" ? "Sui 주소와 트랜잭션 서명 경로를 보여줍니다. ONDO 계정, 본인 확인(KYC) 또는 멀티체인 지갑을 만들지는 않습니다." : "Shows a Sui address and transaction-signing route. It does not create an ONDO account, KYC, or multichain wallet."}</p>
           {wallet === "WAL-READY" ? <div><small className={styles.identifierLabel}>{locale === "ko" ? "미리보기 주소 식별자" : "Preview address identifier"}</small><code className={styles.address}>{qaControls ? "0x8a71…ondo_fixture" : "0x8a71…ondo_preview"}</code></div> : null}
-          {wallet === "WAL-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{qaControls ? locale === "ko" ? "테스트용 연결을 완료하지 못했어요. 실제 계정에는 영향이 없습니다." : "The connection fixture did not complete. No real account was affected." : locale === "ko" ? "미리보기 연결을 완료하지 못했어요. 실제 계정에는 영향이 없습니다." : "The preview connection did not complete. No real account was affected."}</span></InlineNotice> : null}
-          {wallet === "WAL-DISCONNECTED" || wallet === "WAL-FAILED" ? <button type="button" className={styles.secondary} onClick={connectWallet} data-testid="labs-connect-wallet">{wallet === "WAL-FAILED" ? locale === "ko" ? "다시 시도" : "Try again" : qaControls ? locale === "ko" ? "서명 기능 연결 시뮬레이션" : "Simulate signer connection" : locale === "ko" ? "미리보기 서명 기능 연결" : "Connect preview signer"}</button> : null}
-          {wallet === "WAL-CONNECTING" ? <button type="button" className={styles.secondary} disabled>{locale === "ko" ? "연결 중" : "Connecting"}</button> : null}
+          {wallet === "WAL-FAILED" ? <div id={walletOutcomeId} className={styles.walletOutcome} role="alert" aria-atomic="true" data-testid="labs-wallet-outcome"><AlertTriangle size={17} /><span>{qaControls ? locale === "ko" ? "테스트용 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다." : "The test connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected." : locale === "ko" ? "미리보기 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다." : "The preview connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected."}</span></div> : null}
+          {wallet === "WAL-DISCONNECTED" || wallet === "WAL-FAILED" ? <button ref={walletRetryRef} type="button" className={styles.secondary} onClick={connectWallet} aria-describedby={wallet === "WAL-FAILED" ? walletOutcomeId : undefined} data-testid="labs-connect-wallet">{wallet === "WAL-FAILED" ? locale === "ko" ? "다시 시도" : "Try again" : qaControls ? locale === "ko" ? "서명 기능 연결 시뮬레이션" : "Simulate signer connection" : locale === "ko" ? "미리보기 서명 기능 연결" : "Connect preview signer"}</button> : null}
+          {wallet === "WAL-CONNECTING" ? <button type="button" className={styles.secondary} aria-busy="true" disabled>{locale === "ko" ? "연결 중" : "Connecting"}</button> : null}
           {wallet === "WAL-READY" ? <button type="button" className={styles.textButton} disabled={!canDisconnect} onClick={() => setWallet("WAL-DISCONNECTED")}>{locale === "ko" ? "연결 해제" : "Disconnect"}</button> : null}
         </section>
 

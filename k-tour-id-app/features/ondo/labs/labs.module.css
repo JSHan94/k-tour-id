@@ -19,6 +19,8 @@
 .bodyCopy, .finePrint { margin: 0; color: #716e68; line-height: 1.58; }
 .bodyCopy { font-size: 13px; }
 .finePrint { font-size: 12px; }
+.walletOutcome { display: grid; grid-template-columns: 22px 1fr; align-items: start; gap: 10px; padding: 13px 0; border-top: 1px solid currentColor; border-bottom: 1px solid currentColor; color: #7c302a; font-size: 13px; line-height: 1.55; }
+.walletOutcome > svg { margin-top: 1px; }
 .primary, .secondary { width: 100%; min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 7px; border-radius: 13px; font-size: 14px; font-weight: 720; }
 .primary { border: 0; background: #20201e; color: #fff; }
 .secondary { border: 1px solid #d5d2cc; background: transparent; color: #292927; }

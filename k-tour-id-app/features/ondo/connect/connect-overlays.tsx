@@ -20,6 +20,7 @@ type ChatItem = { id: string; kind: "text" | "image"; text?: string; previewUrl?
 type StoredChatItem = Omit<ChatItem, "previewUrl">
 type FeedbackReceipt = { helpful: boolean; respectful: boolean; privateNote: string | null; submittedAt: string }
 type TableOutcome = { feedbackSubmitted: boolean; feedbackReceipt: FeedbackReceipt | null; reportReceipt: string | null; reportReason: string | null; participantBlocked: boolean }
+type TableActionStatus = "idle" | "requesting" | "confirmed" | "network" | "policy" | "full"
 
 const CHAT_SESSION_KEY = "ondo.chat.v2"
 const TABLE_OUTCOME_SESSION_KEY = "ondo.table-outcomes.v2"
@@ -99,6 +100,7 @@ export function ConnectOverlays() {
 function TableDetail({ tableId }: { tableId: string }) {
   const { state, actions } = useOndo()
   const table = TABLES.find((candidate) => candidate.id === tableId)
+  const membership = toCanonicalMembership(state.tableMembershipById[tableId])
   const [failure, setFailure] = useState<TableFailureState>(
     table?.availability === "TAV-FULL"
       ? "TFR-FULL"
@@ -106,7 +108,9 @@ function TableDetail({ tableId }: { tableId: string }) {
         ? "TFR-CANCELLED"
         : "TFR-NONE",
   )
-  const membership = toCanonicalMembership(state.tableMembershipById[tableId])
+  const [actionStatus, setActionStatus] = useState<TableActionStatus>(membership === "TMB-REQUESTING" ? "requesting" : "idle")
+  const retryButtonRef = useRef<HTMLButtonElement>(null)
+  const alternativeButtonRef = useRef<HTMLButtonElement>(null)
   const runtime = table ? { ...initialTableRuntime(table, state.tableMembershipById[tableId]), failure } : null
   const tableOutcome = readTableOutcome(tableId)
   const locale = state.locale
@@ -114,20 +118,43 @@ function TableDetail({ tableId }: { tableId: string }) {
   useEffect(() => {
     if (!table || membership !== "TMB-REQUESTING") return
     setFailure("TFR-NONE")
+    setActionStatus("requesting")
     const timer = window.setTimeout(() => {
       const scenario = new URLSearchParams(window.location.search).get("scenario")
       if (scenario === "table-network" || scenario === "table-policy" || scenario === "table-full") {
         const reason = scenario === "table-network" ? "network" : scenario === "table-policy" ? "policy" : "full"
         const outcome = joinFailureRuntime(table, reason)
         setFailure(outcome.failure)
+        setActionStatus(reason)
         actions.setMembership(table.id, "failed")
         return
       }
+      setActionStatus("confirmed")
       actions.setMembership(table.id, "confirmed")
-      actions.notify(locale === "ko" ? "참여 미리보기가 확정됐어요." : "Your preview participation is confirmed.")
     }, 900)
     return () => window.clearTimeout(timer)
-  }, [actions, locale, membership, table])
+  }, [actions, membership, table])
+
+  useEffect(() => {
+    const target = actionStatus === "network" || actionStatus === "policy"
+      ? retryButtonRef.current
+      : actionStatus === "full"
+        ? alternativeButtonRef.current
+        : null
+    if (!target) return
+    let timeout = 0
+    let secondFrame = 0
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        timeout = window.setTimeout(() => target.focus({ preventScroll: true }), 0)
+      })
+    })
+    return () => {
+      window.cancelAnimationFrame(firstFrame)
+      window.cancelAnimationFrame(secondFrame)
+      window.clearTimeout(timeout)
+    }
+  }, [actionStatus])
 
   if (!table || !runtime) {
     return <Sheet label="Table unavailable" onClose={() => actions.setSurface({ kind: "map" })}><div className={styles.sheetBody}><h2>{locale === "ko" ? "Table을 찾지 못했어요." : "This Table is unavailable."}</h2><button type="button" className={styles.primary} onClick={() => { actions.setTab("tables"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "다른 Table 보기" : "View other Tables"}</button></div></Sheet>
@@ -141,6 +168,7 @@ function TableDetail({ tableId }: { tableId: string }) {
   function join() {
     if (unavailable) return
     setFailure("TFR-NONE")
+    setActionStatus("idle")
     const gates: Array<"account" | "person" | "age"> = ["account"]
     if (activeTable.requiresPerson) gates.push("person")
     if (activeTable.alcohol) gates.push("age")
@@ -150,11 +178,14 @@ function TableDetail({ tableId }: { tableId: string }) {
       actions.beginAction({ cta: "JOIN_TABLE", gates, venueId: activeTable.venueId, tableId: activeTable.id })
       return
     }
+    setActionStatus("requesting")
     actions.setMembership(activeTable.id, "requesting")
   }
 
   const retryableFailureCopy = failure === "TFR-NETWORK"
-    ? locale === "ko" ? "연결 문제로 참여를 완료하지 못했어요." : "A connection problem interrupted the request."
+    ? locale === "ko"
+      ? "이 로컬 미리보기를 업데이트하지 못했어요. 실제 호스트에게 연락하거나 실제 예약을 만들지 않았어요. 다시 시도해도 이 Table의 시간과 자리는 그대로예요."
+      : "This local preview could not be updated. No live host or reservation was contacted. Retry keeps this Table, time, and seats unchanged."
     : failure === "TFR-POLICY"
       ? locale === "ko" ? "이 Table의 참여 조건을 충족하지 못했어요." : "The Table policy was not met."
       : null
@@ -162,6 +193,16 @@ function TableDetail({ tableId }: { tableId: string }) {
     ? locale === "ko" ? "요청하는 동안 마지막 자리가 찼어요." : "The last seat filled while your request was processing."
     : tableStatusCopy(table, locale)
   const truth = tableFixtureTruth(locale)
+  const actionMessageId = `table-action-message-${tableId}`
+  const actionMessage = actionStatus === "requesting"
+    ? locale === "ko" ? "참여 미리보기를 확인하고 있어요." : "Checking your preview participation."
+    : actionStatus === "confirmed"
+      ? locale === "ko" ? "참여 미리보기가 확정됐어요. 이제 대화를 열 수 있어요." : "Your preview participation is confirmed. You can now open the chat."
+      : actionStatus === "network" || actionStatus === "policy"
+        ? retryableFailureCopy
+        : actionStatus === "full"
+          ? `${unavailableCopy} ${locale === "ko" ? "근처 다른 Table을 확인해 주세요." : "Choose another nearby Table."}`
+          : null
 
   return (
     <Sheet label={table.title[locale]} onClose={() => actions.setSurface({ kind: "map" })} size="full" initialFocusSelector={confirmed ? "[data-testid='table-open-chat']" : undefined}>
@@ -183,8 +224,6 @@ function TableDetail({ tableId }: { tableId: string }) {
           <div><dt>{locale === "ko" ? "예상 비용" : "Expected cost"}</dt><dd>~₩{table.estimatedPriceKRW.toLocaleString()}</dd></div>
         </dl>
 
-        {retryableFailureCopy ? <><InlineNotice tone="danger"><AlertTriangle size={18} /><span>{retryableFailureCopy}</span></InlineNotice><button type="button" className={styles.primary} onClick={join} data-testid="table-join-retry">{locale === "ko" ? "참여 미리보기 다시 시도" : "Retry join preview"}</button></> : null}
-
         <div className={styles.hostCard}>
           <span className={styles.avatar} aria-hidden="true">{table.hostName.slice(0, 1)}</span>
           <div><strong>{table.hostName}</strong><span>{table.hostRole[locale]}</span></div>
@@ -200,18 +239,33 @@ function TableDetail({ tableId }: { tableId: string }) {
 
         {tableOutcome.reportReceipt ? <InlineNotice tone="success"><Check size={18} /><span data-testid="table-report-receipt">{locale === "ko" ? "로컬 시뮬레이션 미리보기 신고 기록" : "Local simulated preview report recorded"} · {tableOutcome.reportReason === "harassment" ? locale === "ko" ? "불쾌한 언행" : "Harassment" : tableOutcome.reportReason === "no_show" ? locale === "ko" ? "약속 불참" : "No-show" : locale === "ko" ? "기타" : "Other"} · <code>{tableOutcome.reportReceipt}</code></span></InlineNotice> : null}
 
-        {unavailable ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{unavailableCopy} {locale === "ko" ? "근처 다른 Table을 확인해 주세요." : "Choose another nearby Table."}</span></InlineNotice> : null}
+        {unavailable && actionStatus !== "full" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{unavailableCopy} {locale === "ko" ? "근처 다른 Table을 확인해 주세요." : "Choose another nearby Table."}</span></InlineNotice> : null}
+
+        {actionMessage ? (
+          <div
+            id={actionMessageId}
+            className={`${styles.actionNotice} ${actionStatus === "network" || actionStatus === "policy" || actionStatus === "full" ? styles.actionNoticeDanger : styles.actionNoticeNeutral}`}
+            role={actionStatus === "network" || actionStatus === "policy" || actionStatus === "full" ? "alert" : "status"}
+            aria-atomic="true"
+            data-testid={actionStatus === "requesting" ? "table-requesting" : "table-action-message"}
+          >
+            {actionStatus === "requesting" ? <Clock3 size={18} /> : actionStatus === "confirmed" ? <Check size={18} /> : <AlertTriangle size={18} />}
+            <span>{actionMessage}</span>
+          </div>
+        ) : null}
 
         {confirmed ? (
-          <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "chat", tableId })} data-testid="table-open-chat"><MessageCircle size={18} /> {locale === "ko" ? "대화 열기" : "Open chat"}</button>
+          <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "chat", tableId })} data-testid="table-open-chat" aria-describedby={actionStatus === "confirmed" ? actionMessageId : undefined}><MessageCircle size={18} /> {locale === "ko" ? "대화 열기" : "Open chat"}</button>
         ) : membership === "TMB-REQUESTING" ? (
-          <button type="button" className={styles.primary} disabled data-testid="table-requesting">{locale === "ko" ? "미리보기 확인 중" : "Checking the preview"}</button>
-        ) : retryableFailureCopy ? null : (
+          null
+        ) : retryableFailureCopy ? (
+          <button ref={retryButtonRef} type="button" className={styles.primary} onClick={join} data-testid="table-join-retry" aria-describedby={actionMessageId}>{locale === "ko" ? "참여 미리보기 다시 시도" : "Retry join preview"}</button>
+        ) : (
           <button type="button" className={styles.primary} onClick={join} disabled={unavailable} data-testid="table-join">
             {locale === "ko" ? "참여 미리보기" : "Join preview"}
           </button>
         )}
-        {unavailable ? <button type="button" className={styles.secondary} onClick={() => { actions.setTab("tables"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "근처 다른 Table 보기" : "View another Table nearby"}</button> : null}
+        {unavailable ? <button ref={alternativeButtonRef} type="button" className={styles.secondary} onClick={() => { actions.setTab("tables"); actions.setSurface({ kind: "map" }) }} aria-describedby={actionStatus === "full" ? actionMessageId : undefined} data-testid="table-view-alternative">{locale === "ko" ? "근처 다른 Table 보기" : "View another Table nearby"}</button> : null}
       </article>
     </Sheet>
   )
@@ -541,6 +595,14 @@ function LocalSignal({ venueId }: { venueId: string }) {
       && before.current.meetup === state.reputation.meetup
   )
   const terminal = status === "submitted" || status === "duplicate"
+  const outcomeMessageId = `local-signal-outcome-${venueId}`
+  const outcomeMessage = status === "failed"
+    ? locale === "ko" ? "신호를 남기지 못했어요. 초안은 유지됐어요." : "The signal could not be submitted. Your draft was kept."
+    : status === "submitted"
+      ? locale === "ko" ? "현장 팁을 이 기기의 데모에 저장했어요. 실제 서비스에는 전송되지 않았어요." : "Your local tip was saved to this device demo. Nothing was sent to a live service."
+      : status === "duplicate"
+        ? locale === "ko" ? "이미 반영된 데모 방문이에요. 방문·기여 이력과 공개 ONDO 점수는 다시 바뀌지 않았어요." : "This demo visit was already recorded. Visit and contribution histories and the public ONDO score did not change again."
+        : null
 
   useEffect(() => {
     if (status !== "failed" && !terminal) return
@@ -569,10 +631,8 @@ function LocalSignal({ venueId }: { venueId: string }) {
           <textarea id={`signal-note-${venueId}`} aria-label={locale === "ko" ? "도움이 될 정보 · 메모 또는 사진 필수" : "Helpful note · Add a note or photo"} aria-describedby={`signal-requirement-${venueId}`} value={note} onChange={(event) => setNote(event.target.value)} placeholder={locale === "ko" ? "메뉴, 주문 방법, 이용 팁을 남겨주세요." : "Share a menu, ordering, or access tip."} />
           <LocalPhotoPicker locale={locale} purpose="local_signal" value={photo} onChange={setPhoto} disabled={status === "submitting"} />
         </> : null}
-        {status === "failed" ? <InlineNotice tone="danger"><AlertTriangle size={18} /><span>{locale === "ko" ? "신호를 남기지 못했어요. 초안은 유지됐어요." : "The signal could not be submitted. Your draft was kept."}</span></InlineNotice> : null}
-        {status === "submitted" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "현장 팁을 이 기기의 데모에 저장했어요. 실제 서비스에는 전송되지 않았어요." : "Your local tip was saved to this device demo. Nothing was sent to a live service."}</span></InlineNotice> : null}
-        {status === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{locale === "ko" ? "이미 반영된 데모 방문이에요. 방문·기여 이력과 공개 ONDO 점수는 다시 바뀌지 않았어요." : "This demo visit was already recorded. Visit and contribution histories and the public ONDO score did not change again."}</span></InlineNotice> : null}
-        {terminal ? <button ref={returnRef} type="button" className={styles.primary} onClick={returnToVenue} data-testid="local-signal-return">{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button> : <button ref={submitRef} type="button" className={styles.primary} onClick={submit} disabled={status === "submitting" || !hasEvidence} data-testid="local-signal-submit">{status === "submitting" ? locale === "ko" ? "현장 팁을 남기는 중" : "Submitting tip" : status === "failed" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "현장 팁 남기기" : "Submit local tip"}</button>}
+        {outcomeMessage ? <div id={outcomeMessageId} className={`${styles.actionNotice} ${status === "failed" ? styles.actionNoticeDanger : styles.actionNoticeNeutral}`} role={status === "failed" ? "alert" : "status"} aria-atomic="true" data-testid="local-signal-outcome">{status === "submitted" ? <Check size={18} /> : <AlertTriangle size={18} />}<span>{outcomeMessage}</span></div> : null}
+        {terminal ? <button ref={returnRef} type="button" className={styles.primary} onClick={returnToVenue} data-testid="local-signal-return" aria-describedby={outcomeMessageId}>{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button> : <button ref={submitRef} type="button" className={styles.primary} onClick={submit} disabled={status === "submitting" || !hasEvidence} aria-busy={status === "submitting" ? "true" : undefined} aria-describedby={status === "failed" ? outcomeMessageId : undefined} data-testid="local-signal-submit">{status === "submitting" ? locale === "ko" ? "현장 팁을 남기는 중" : "Submitting tip" : status === "failed" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "현장 팁 남기기" : "Submit local tip"}</button>}
         {status === "draft" || status === "failed" ? <button type="button" className={styles.secondary} onClick={returnToVenue}>{locale === "ko" ? "작성 취소" : "Cancel draft"}</button> : null}
       </div>
     </Sheet>
