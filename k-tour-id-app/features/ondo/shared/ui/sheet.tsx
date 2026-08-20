@@ -49,7 +49,10 @@ export function Sheet({
     const preferred = (initialFocusSelector ? dialog?.querySelector<HTMLElement>(initialFocusSelector) : null)
       ?? dialog?.querySelector<HTMLElement>("[data-sheet-initial-focus]")
     const first = preferred ?? dialog?.querySelector<HTMLElement>(FOCUSABLE) ?? dialog
-    const focusInitial = () => first?.focus({ preventScroll: true })
+    const focusInitial = () => {
+      if (dialog?.contains(document.activeElement)) return
+      first?.focus({ preventScroll: true })
+    }
     window.requestAnimationFrame(() => window.requestAnimationFrame(focusInitial))
     const focusRecoveryTimer = window.setTimeout(() => {
       if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) focusInitial()

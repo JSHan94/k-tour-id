@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, type RefObject } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { AlertTriangle, Check, CreditCard, MapPin, ReceiptText, ShieldCheck } from "lucide-react"
 import { acceptUniqueMilestoneVisit } from "../rewards/reward-model"
 import { venueLabelById } from "@/lib/ondo/venues/display"
@@ -37,9 +37,35 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
   const ready = state.account === "ACC-ACTIVE" && state.paymentKyc === "PKY-VERIFIED"
   const venueName = venueLabelById(venueId, locale) ?? (locale === "ko" ? "선택한 장소" : "Selected place")
 
-  function focusAfterTransition(target: RefObject<HTMLElement | null>) {
-    window.requestAnimationFrame(() => target.current?.focus())
-  }
+  useLayoutEffect(() => {
+    const target = checkout.payment === "PAY-CONFIRMING"
+      ? confirmRef
+      : checkout.payment === "PAY-PROCESSING"
+        ? processingRef
+        : checkout.payment === "PAY-FAILED" || checkout.payment === "PAY-CANCELLED"
+          ? retryRef
+          : checkout.payment === "PAY-SIMULATED-SUCCESS"
+            ? receiptRef
+            : null
+    if (!target) return
+
+    const ownFocus = () => {
+      const node = target.current
+      if (!node) return
+      node.focus()
+      node.scrollIntoView({ block: "nearest", inline: "nearest" })
+    }
+    ownFocus()
+  }, [checkout.payment])
+
+  useEffect(() => {
+    if (checkout.payment !== "PAY-PROCESSING") return
+    const completionTimer = window.setTimeout(() => {
+      const scenario = new URLSearchParams(window.location.search).get("scenario")
+      setCheckout((current) => finishCheckout(current, scenario === "payment-declined" ? "failure" : "success"))
+    }, 520)
+    return () => window.clearTimeout(completionTimer)
+  }, [checkout.payment])
 
   function start() {
     if (!ready) {
@@ -47,28 +73,18 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
       return
     }
     setCheckout((current) => beginCheckout(current))
-    focusAfterTransition(confirmRef)
   }
 
   function confirm() {
     setCheckout((current) => processCheckout(current))
-    focusAfterTransition(processingRef)
-    window.setTimeout(() => {
-      const scenario = new URLSearchParams(window.location.search).get("scenario")
-      const outcome = scenario === "payment-declined" ? "failure" : "success"
-      setCheckout((current) => finishCheckout(current, outcome))
-      focusAfterTransition(outcome === "failure" ? retryRef : receiptRef)
-    }, 520)
   }
 
   function cancel() {
     setCheckout((current) => finishCheckout(current.payment === "PAY-IDLE" ? beginCheckout(current) : current, "cancel"))
-    focusAfterTransition(retryRef)
   }
 
   function reopen() {
     setCheckout((current) => beginCheckout(current))
-    focusAfterTransition(confirmRef)
   }
 
   function verifyVisit() {
