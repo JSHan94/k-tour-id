@@ -3,13 +3,13 @@
 .close { position: absolute; top: 9px; right: 10px; display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
 .meta { display: flex; margin-right: 44px; align-items: center; gap: 8px; color: #716c65; font-size: 12px; }
 .meta i { padding-left: 8px; border-left: 1px solid #d7d3cd; font-style: normal; }
-.peek h2 { margin: 8px 44px 1px 0; overflow: hidden; font-family: var(--font-noto-serif-kr), serif; font-size: 20px; font-weight: 600; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
+.peek h2 { margin: 8px 44px 1px 0; overflow: hidden; font: inherit; font-size: 20px; font-weight: 700; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
 .peek > p { margin: 0 44px 9px 0; overflow: hidden; color: #7b756e; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .signal { display: grid; grid-template-columns: 46px 1fr; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #e0ddd7; border-bottom: 1px solid #e0ddd7; }
 .signal > b, .signalDetail > b { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid; border-radius: 50%; font-size: 13px; }
 .signal span { display: grid; gap: 2px; min-width: 0; }
 .signal strong { font-size: 13px; }
-.signal small { overflow: hidden; color: #777169; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.signal small { color: #77746e; font-size: 12px; line-height: 1.4; white-space: normal; }
 .peekActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .peekActions a, .peekActions button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border-radius: 13px; font-size: 13px; font-weight: 750; text-decoration: none; }
 .peekActions a { border: 0; background: #22211f; color: white; }
@@ -22,10 +22,15 @@
 .detail > header span { justify-self: center; color: #716c65; font-size: 12px; font-weight: 700; }
 .body { min-height: 0; overflow-y: auto; padding: 24px 18px calc(30px + env(safe-area-inset-bottom)); overscroll-behavior: contain; }
 .eyebrow { margin: 0; color: #656059; font-size: 12px; font-weight: 750; letter-spacing: .06em; }
-.body > h2 { margin: 8px 0 1px; font-family: var(--font-noto-serif-kr), serif; font-size: 28px; font-weight: 600; letter-spacing: -.05em; }
+.body > h2 { margin: 8px 0 1px; font: inherit; font-size: 28px; font-weight: 700; letter-spacing: -.05em; }
 .secondaryName { margin: 0; color: #716b64; font-size: 12px; }
-.address { display: flex; align-items: flex-start; gap: 7px; margin: 13px 0 22px; color: #625e58; font-size: 12px; line-height: 1.5; }
+.address { display: flex; align-items: flex-start; gap: 7px; margin: 13px 0 16px; color: #625e58; font-size: 12px; line-height: 1.5; }
 .address svg { flex: 0 0 auto; margin-top: 1px; }
+.decisionActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+.decisionActions a, .decisionActions button { display: flex; min-height: 50px; align-items: center; justify-content: center; gap: 7px; border-radius: 12px; font-size: 13px; font-weight: 760; text-decoration: none; }
+.decisionActions a { border: 1px solid #20201e; background: #20201e; color: #fff; }
+.decisionActions button { border: 1px solid #dedbd5; background: transparent; color: #20201e; }
+.decisionActions button:disabled { color: #77746e; }
 .signalDetail { display: grid; grid-template-columns: 58px 1fr; gap: 14px; align-items: start; padding: 20px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
 .signalDetail > b { width: 56px; height: 56px; font-size: 16px; }
 .signalDetail small { color: #756f68; font-size: 12px; font-weight: 750; letter-spacing: .04em; }
@@ -35,15 +40,15 @@
 .signalEvidence div { min-width: 0; padding-top: 8px; border-top: 1px solid #e4e1dc; }
 .signalEvidence dt { overflow: hidden; color: #6f6962; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
 .signalEvidence dd { margin: 3px 0 0; color: #2b2926; font-size: 12px; font-weight: 760; line-height: 1.35; }
-.contributionNote { margin-top: 10px !important; padding-left: 9px; border-left: 2px solid #c94832; }
+.contributionNote { margin-top: 10px !important; padding-left: 9px; border-left: 2px solid #77746e; }
 .after19Access { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: start; gap: 12px; padding: 20px 0; border-bottom: 1px solid #dedbd5; }
-.after19Icon { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #ead4cd; border-radius: 50%; background: #fff4f0; color: #ad3f31; }
-.after19Access small { color: #8b463c; font-size: 12px; font-weight: 780; letter-spacing: .04em; }
+.after19Icon { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #c9c0c5; border-radius: 50%; background: #f4f1f2; color: #30232a; }
+.after19Access small { color: #30232a; font-size: 12px; font-weight: 780; letter-spacing: .04em; }
 .after19Access h3 { margin: 4px 0 5px; font-size: 16px; }
 .after19Access p { margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.55; }
 .after19Access > button, .after19Access > strong { grid-column: 2; }
-.after19Access > button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid #d8b5ad; border-radius: 12px; background: #fff; color: #7d3028; font-size: 12px; font-weight: 760; text-align: left; }
-.after19Access > strong { color: #7d3028; font-size: 12px; }
+.after19Access > button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid #30232a; border-radius: 12px; background: #30232a; color: #fff; font-size: 12px; font-weight: 760; text-align: left; }
+.after19Access > strong { color: #30232a; font-size: 12px; }
 .before, .source { padding: 22px 0; border-bottom: 1px solid #dedbd5; }
 .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
 .before > div { display: grid; min-height: 55px; grid-template-columns: 28px 1fr; align-items: center; border-top: 1px solid #ece9e4; }
@@ -55,17 +60,18 @@
 .source dl div { padding-top: 8px; border-top: 1px solid #e7e4df; }
 .source dt { color: #6f6962; font-size: 12px; }
 .source dd { margin: 3px 0 0; font-size: 12px; font-weight: 700; }
-.secondaryActions { display: grid; padding: 10px 0; }
+.secondaryActions { display: grid; padding: 10px 0; border-bottom: 1px solid #dedbd5; }
 .secondaryActions button { display: grid; min-height: 54px; grid-template-columns: 24px 1fr 18px; align-items: center; gap: 8px; padding: 0; border: 0; border-bottom: 1px solid #e7e4df; background: transparent; color: #2b2926; font-size: 13px; font-weight: 680; text-align: left; }
-.saveError { margin: 12px 0 0; padding: 14px; border: 1px solid #e4c4bc; border-radius: 13px; background: #fff7f4; }
-.saveError p { margin: 0 0 10px; color: #6b332c; font-size: 12px; line-height: 1.5; }
+.saveError { margin: -6px 0 18px; padding: 12px 0 14px; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; background: transparent; }
+.saveError p { margin: 0 0 10px; color: #514d47; font-size: 12px; line-height: 1.5; }
 .saveError div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.saveError button { min-height: 44px; border: 1px solid #d8b5ad; border-radius: 10px; background: #fff; color: #6b332c; font-size: 12px; font-weight: 750; }
-.saveError button:first-child { border-color: #913d31; background: #913d31; color: #fff; }
-.primary { display: flex; min-height: 52px; align-items: center; justify-content: center; gap: 8px; margin-top: 18px; border-radius: 13px; background: #22211f; color: white; font-size: 14px; font-weight: 760; text-decoration: none; }
+.saveError button { min-height: 44px; border: 1px solid #dedbd5; border-radius: 10px; background: transparent; color: #20201e; font-size: 12px; font-weight: 750; }
+.saveError button:first-child { border-color: #20201e; background: #20201e; color: #fff; }
 
 @media (max-width: 370px) {
   .peek { right: 8px; left: 8px; }
+  .signalEvidence { grid-template-columns: 1fr; gap: 0; }
+  .signalEvidence dt { overflow: visible; text-overflow: clip; white-space: normal; }
   .before > div span { display: grid; gap: 2px; }
   .before small { text-align: left; }
 }
