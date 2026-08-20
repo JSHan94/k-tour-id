@@ -10,6 +10,25 @@ async function settleFocusFrames(page: Page) {
   }))
 }
 
+async function settleSheetLayout(page: Page, viewport: { width: number; height: number }) {
+  const sheet = page.getByTestId("ondo-sheet")
+  await sheet.evaluate(async (element) => {
+    await Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => undefined)))
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  })
+  await expect.poll(() => sheet.evaluate((element) => ({
+    transform: getComputedStyle(element).transform,
+    runningAnimations: element.getAnimations().filter((animation) => animation.playState === "running").length,
+    viewportWidth: document.documentElement.clientWidth,
+    viewportHeight: document.documentElement.clientHeight,
+  }))).toEqual({
+    transform: "none",
+    runningAnimations: 0,
+    viewportWidth: viewport.width,
+    viewportHeight: viewport.height,
+  })
+}
+
 async function seed(page: Page, locale: "en" | "ko", options: { membership?: "confirmed"; person?: "PER-VERIFIED" | "PER-UNVERIFIED" } = {}) {
   await page.addInitScript(() => {
     window.addEventListener("DOMContentLoaded", () => {
@@ -19,6 +38,12 @@ async function seed(page: Page, locale: "en" | "ko", options: { membership?: "co
     }, { once: true })
   })
   await page.goto("/ondo-b")
+  // Let the provider finish its initial empty-state persistence before the
+  // deterministic seed replaces it; otherwise its hydration effect can win.
+  await page.waitForFunction(() => (
+    localStorage.getItem("ondo.preferences.v3") !== null
+    && sessionStorage.getItem("ondo.session.v3") !== null
+  ))
   await page.evaluate(({ locale, membership, person, tableId }) => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale, guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
     sessionStorage.setItem("ondo.session.v3", JSON.stringify({
@@ -218,6 +243,7 @@ test("SLEEK-R2 Connect decision geometry holds at 360/430/768/801", async ({ pag
     { width: 801, height: 1000 },
   ]) {
     await page.setViewportSize(viewport)
+    await settleSheetLayout(page, viewport)
     await page.getByTestId("table-report").click()
     const layerBox = await page.getByTestId("chat-confirm-layer").boundingBox()
     const dialogBox = await page.getByTestId("chat-confirm-dialog").boundingBox()
