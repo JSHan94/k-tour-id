@@ -109,6 +109,7 @@
      real controls and must never sit underneath it. Keep the basemap full
      width while reserving a quiet interaction gutter for list/fallback mode. */
   .listPanel { left: 88px; }
+  .preferencePanel { left: 88px; }
 }
 
 @media (max-width: 360px) {
