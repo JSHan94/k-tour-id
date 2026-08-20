@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, BadgeCheck, Check, ChevronRight, CircleUserRoun
 import type { GateKind, Locale, Persona } from "../contracts/domain"
 import { isReturnToUsable } from "../contracts/return-to"
 import { useOndo } from "../shared/state/ondo-provider"
+import { useQaControls } from "../shared/ui/use-qa-controls"
 import styles from "./identity.module.css"
 
 type PersonRoute = "cx" | "residence" | "passport"
@@ -124,8 +125,10 @@ export function GateOverlay() {
   const [started, setStarted] = useState(false)
   const [busy, setBusy] = useState(false)
   const completionLock = useRef(false)
+  const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
+  const qaControls = useQaControls()
   const t = COPY[state.locale]
   const gate = state.gate
 
@@ -156,6 +159,32 @@ export function GateOverlay() {
     return () => {
       document.body.style.overflow = previousOverflow
       window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+    }
+  }, [gate?.tokenId])
+
+  useEffect(() => {
+    if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return
+    const coveredDialogs = Array.from(document.querySelectorAll<HTMLElement>("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']"))
+      .filter((element) => !layerRef.current?.contains(element))
+      .map((element) => ({
+        element,
+        inert: element.getAttribute("inert"),
+        ariaHidden: element.getAttribute("aria-hidden"),
+      }))
+
+    coveredDialogs.forEach(({ element }) => {
+      element.setAttribute("inert", "")
+      element.setAttribute("aria-hidden", "true")
+    })
+
+    return () => {
+      coveredDialogs.forEach(({ element, inert, ariaHidden }) => {
+        if (!element.isConnected) return
+        if (inert == null) element.removeAttribute("inert")
+        else element.setAttribute("inert", inert)
+        if (ariaHidden == null) element.removeAttribute("aria-hidden")
+        else element.setAttribute("aria-hidden", ariaHidden)
+      })
     }
   }, [gate?.tokenId])
 
@@ -246,7 +275,7 @@ export function GateOverlay() {
           : t.accountTitle
 
   return (
-    <div className={styles.gateLayer} data-testid="ondo-gate-overlay">
+    <div ref={layerRef} className={styles.gateLayer} data-testid="ondo-gate-overlay">
       <button type="button" tabIndex={-1} className={styles.backdrop} onClick={actions.cancelGate} aria-hidden="true" />
       <section ref={dialogRef} className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="gate-title" tabIndex={-1} onKeyDown={handleDialogKeyDown}>
         <div className={styles.grabber} aria-hidden="true" />
@@ -292,7 +321,7 @@ export function GateOverlay() {
             <h2 id="gate-title">{accountTitle}</h2>
             <p>{t.accountBody}</p>
             {!started ? <button type="button" className={styles.primary} onClick={() => setStarted(true)}>{t.accountStart}</button> : <button type="button" className={styles.primary} disabled={busy} onClick={complete}>{busy ? <><LoaderCircle className={styles.spin} size={17} />{t.working}</> : t.accountSuccess}</button>}
-            <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button>
+            {qaControls ? <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button> : null}
             <button type="button" className={styles.secondary} onClick={actions.cancelGate}>{t.return}</button>
           </div>
         ) : active === "person" ? (
@@ -310,13 +339,13 @@ export function GateOverlay() {
                   })}
                 </div>
                 <button type="button" className={styles.primary} onClick={() => setStarted(true)}>{t.startCheck}</button>
-                {route === "residence" ? <button type="button" className={styles.tertiary} onClick={() => fail(true)}>{t.unavailable}</button> : null}
+                {route === "residence" && qaControls ? <button type="button" className={styles.tertiary} onClick={() => fail(true)}>{t.unavailable}</button> : null}
               </>
             ) : (
               <>
                 <div className={styles.providerCard}><ShieldCheck size={20} /><span><strong>{routeCopy.title}</strong><small>{routeCopy.note}</small></span></div>
                 <button type="button" className={styles.primary} disabled={busy} onClick={complete}>{busy ? <><LoaderCircle className={styles.spin} size={17} />{t.working}</> : t.completeCheck}</button>
-                <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button>
+                {qaControls ? <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button> : null}
               </>
             )}
             <button type="button" className={styles.secondary} onClick={actions.cancelGate}>{t.return}</button>
@@ -327,7 +356,7 @@ export function GateOverlay() {
             <h2 id="gate-title">{t.ageTitle}</h2>
             <p>{t.ageBody}</p>
             {!started ? <button type="button" className={styles.primaryNight} onClick={() => setStarted(true)}>{t.ageStart}</button> : <button type="button" className={styles.primaryNight} disabled={busy} onClick={complete}>{busy ? <><LoaderCircle className={styles.spin} size={17} />{t.working}</> : t.ageSuccess}</button>}
-            <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button>
+            {qaControls ? <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button> : null}
             <button type="button" className={styles.secondary} onClick={actions.cancelGate}>{t.return}</button>
           </div>
         ) : (
@@ -336,7 +365,7 @@ export function GateOverlay() {
             <h2 id="gate-title">{t.paymentTitle}</h2>
             <p>{t.paymentBody}</p>
             {!started ? <button type="button" className={styles.primary} onClick={() => setStarted(true)}>{t.paymentStart}</button> : <button type="button" className={styles.primary} disabled={busy} onClick={complete}>{busy ? <><LoaderCircle className={styles.spin} size={17} />{t.working}</> : t.paymentSuccess}</button>}
-            <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button>
+            {qaControls ? <button type="button" className={styles.tertiary} onClick={() => fail()}>{t.fail}</button> : null}
             <button type="button" className={styles.secondary} onClick={actions.cancelGate}>{t.return}</button>
           </div>
         )}

@@ -6,6 +6,7 @@ import { acceptUniqueMilestoneVisit } from "../rewards/reward-model"
 import { venueLabelById } from "@/lib/ondo/venues/display"
 import { useOndo } from "../shared/state/ondo-provider"
 import { InlineNotice, Sheet } from "../shared/ui/sheet"
+import { useQaControls } from "../shared/ui/use-qa-controls"
 import { beginCheckout, finishCheckout, isReadOnlySettlement, processCheckout, type CheckoutSnapshot } from "./commerce-model"
 import styles from "./commerce.module.css"
 
@@ -19,6 +20,7 @@ const VENUE_PRICE: Record<string, number> = {
 export function CheckoutOverlay({ venueId }: { venueId: string }) {
   const { state, actions } = useOndo()
   const locale = state.locale
+  const qaControls = useQaControls()
   const [checkout, setCheckout] = useState<CheckoutSnapshot>({
     venueId,
     displayPriceKRW: VENUE_PRICE[venueId] ?? 18_000,
@@ -101,11 +103,11 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
 
         {checkout.payment === "PAY-SIMULATED-SUCCESS" ? (
           <div className={styles.visitProof}>
-            <p><strong>{locale === "ko" ? `방문 스탬프 ${state.stamps}/10` : `Visit stamps ${state.stamps}/10`}</strong><span>{locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 이 데모는 GPS·QR·가맹점 영수증이 아닌 고정 세션 fixture로 방문 중복 방지만 시뮬레이션합니다." : "Payment alone adds no stamp. This demo simulates visit deduplication with a deterministic session fixture—not GPS, QR, or merchant evidence."}</span></p>
-            {state.stamps < 10 ? <button type="button" className={styles.secondary} onClick={verifyVisit} disabled={visitState === "checking"} data-testid="visit-proof-check">{visitState === "checking" ? locale === "ko" ? "방문 fixture 확인 중" : "Checking visit fixture" : locale === "ko" ? "시뮬레이션 방문 fixture 확인" : "Check simulated visit fixture"}</button> : null}
-            {visitState === "accepted" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "중복되지 않은 시뮬레이션 방문 fixture로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique simulated visit fixture recorded your tenth stamp. It is not real on-site evidence."}</span></InlineNotice> : null}
+            <p><strong>{locale === "ko" ? `방문 스탬프 ${state.stamps}/10` : `Visit stamps ${state.stamps}/10`}</strong><span>{qaControls ? locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 이 데모는 GPS·QR·가맹점 영수증이 아닌 고정 세션 fixture로 방문 중복 방지만 시뮬레이션합니다." : "Payment alone adds no stamp. This demo simulates visit deduplication with a deterministic session fixture—not GPS, QR, or merchant evidence." : locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 별도의 재현 가능한 미리보기 방문 기록을 확인하며, GPS·QR·가맹점 증거가 아닙니다." : "Payment alone adds no stamp. This preview checks a separate, reproducible visit record; it is not GPS, QR, or merchant evidence."}</span></p>
+            {state.stamps < 10 ? <button type="button" className={styles.secondary} onClick={verifyVisit} disabled={visitState === "checking"} data-testid="visit-proof-check">{qaControls ? visitState === "checking" ? locale === "ko" ? "방문 fixture 확인 중" : "Checking visit fixture" : locale === "ko" ? "시뮬레이션 방문 fixture 확인" : "Check simulated visit fixture" : visitState === "checking" ? locale === "ko" ? "미리보기 방문 확인 중" : "Checking preview visit" : locale === "ko" ? "별도 미리보기 방문 확인" : "Check separate preview visit"}</button> : null}
+            {visitState === "accepted" ? <InlineNotice tone="success"><Check size={18} /><span>{qaControls ? locale === "ko" ? "중복되지 않은 시뮬레이션 방문 fixture로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique simulated visit fixture recorded your tenth stamp. It is not real on-site evidence." : locale === "ko" ? "중복되지 않은 미리보기 방문 기록으로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique preview visit recorded your tenth stamp. It is not real on-site evidence."}</span></InlineNotice> : null}
             {state.stamps === 10 && visitState !== "accepted" ? <InlineNotice tone="neutral"><Check size={18} /><span>{locale === "ko" ? "열 번째 방문은 이전에 별도 확인되어 있습니다." : "The tenth visit was confirmed separately before this checkout."}</span></InlineNotice> : null}
-            {visitState === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{locale === "ko" ? "이미 사용한 시뮬레이션 fixture라 스탬프가 다시 늘지 않았어요." : "This simulated visit fixture was already used, so the stamp did not increase again."}</span></InlineNotice> : null}
+            {visitState === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{qaControls ? locale === "ko" ? "이미 사용한 시뮬레이션 fixture라 스탬프가 다시 늘지 않았어요." : "This simulated visit fixture was already used, so the stamp did not increase again." : locale === "ko" ? "이미 사용한 미리보기 방문 기록이라 스탬프가 다시 늘지 않았어요." : "This preview visit was already used, so the stamp did not increase again."}</span></InlineNotice> : null}
           </div>
         ) : null}
 

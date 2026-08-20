@@ -8,7 +8,7 @@
 .truth { color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .04em; text-transform: uppercase; }
 .truth i { display: none; }
 .gateProgress { display: flex; align-items: center; gap: 12px; overflow-x: auto; padding: 9px 0 22px; border-bottom: 1px solid #e5e3de; scrollbar-width: none; }
-.gateStep, .gateStepCurrent, .gateStepDone { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; color: #a19e98; }
+.gateStep, .gateStepCurrent, .gateStepDone { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; color: #625f59; }
 .gateStep span, .gateStepCurrent span, .gateStepDone span { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; background: transparent; font-size: 12px; font-weight: 760; }
 .gateStep small, .gateStepCurrent small, .gateStepDone small { font-size: 12px; font-weight: 680; }
 .gateStepCurrent { color: #242422; }
@@ -56,14 +56,14 @@
 .accountIcon, .accountIconReady { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid #d9d7d1; border-radius: 50%; background: #fff; color: #716e68; }
 .accountIconReady { border-color: #5d876f; color: #35664f; }
 .accountCard strong { display: block; font-size: 14px; }
-.accountCard small { display: block; margin-top: 4px; color: #817e78; font-size: 12px; font-weight: 650; line-height: 1.4; }
+.accountCard small { display: block; margin-top: 4px; color: #625f59; font-size: 12px; font-weight: 650; line-height: 1.4; }
 .statusReady, .statusNeutral { display: grid; width: 30px; height: 30px; place-items: center; border-radius: 50%; color: #35664f; }
-.statusNeutral { color: #817e78; }
+.statusNeutral { color: #625f59; }
 .checks { margin-top: 24px; border-top: 1px solid #dedbd5; }
 .checks article { display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 11px; min-height: 68px; padding: 11px 0; border-bottom: 1px solid #e5e3de; }
 .checks article > span { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; background: transparent; color: #55524d; }
 .checks strong { display: block; font-size: 12px; }
-.checks small { display: block; margin-top: 4px; color: #85817b; font-size: 12px; font-weight: 650; line-height: 1.4; }
+.checks small { display: block; margin-top: 4px; color: #625f59; font-size: 12px; font-weight: 650; line-height: 1.4; }
 .boundary { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0 28px; color: #706d67; font-size: 12px; line-height: 1.6; }
 .boundary svg { flex: 0 0 auto; margin-top: 1px; }
 .jitCard { display: grid; grid-template-columns: 44px 1fr; gap: 13px; padding: 18px 0; border-top: 1px solid #d9d7d1; border-bottom: 1px solid #d9d7d1; color: #252523; }

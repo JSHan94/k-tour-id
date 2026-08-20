@@ -121,7 +121,7 @@ export function IdentityEntry() {
       <ProfilePanel />
       <TrustPanel />
 
-      <button type="button" className={styles.labsEntry} onClick={() => actions.setSurface({ kind: "labs" })}>
+      <button type="button" className={styles.labsEntry} onClick={() => actions.setSurface({ kind: "labs" })} data-testid="open-labs-id">
         <span><FlaskConical size={19} /></span><div><strong>{t.labs}</strong><small>{t.labsBody}</small></div><ChevronRight size={18} />
       </button>
     </div>

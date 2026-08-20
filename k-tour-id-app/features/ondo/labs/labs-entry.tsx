@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowLeft, ArrowRight, Check, ChevronRight, CircleDollar
 import { estimatedUsdTotal, type BridgePhase } from "../contracts/commerce"
 import { InlineNotice, Sheet } from "../shared/ui/sheet"
 import { useOndo } from "../shared/state/ondo-provider"
+import { useQaControls } from "../shared/ui/use-qa-controls"
 import { EVIDENCE_FIXTURES, LABS_ASSETS, TRAIT_FIXTURES, bridgeStateForPhase, nextBridgePhase, type BridgeState, type WalletState } from "./labs-model"
 import styles from "./labs.module.css"
 
@@ -23,6 +24,26 @@ type LabsSession = {
 }
 
 const LABS_SESSION_KEY = "ondo.labs.v2"
+
+const TRAIT_DISPLAY = {
+  "offer-foreign-card": {
+    key: "seongsu-card",
+    place: { ko: "성수 돼지국밥", en: "Seongsu Dwaeji Gukbap" },
+    condition: { ko: "해외 발급 카드 안내", en: "Foreign-issued card information" },
+    policy: { ko: "카드 이용 정책", en: "Card acceptance policy" },
+  },
+  "offer-over19": {
+    key: "euljiro-over19",
+    place: { ko: "을지로 노가리", en: "Euljiro Nogari" },
+    condition: { ko: "19세 이상 이용 조건", en: "19+ access condition" },
+    policy: { ko: "야간 이용 정책", en: "Night access policy" },
+  },
+} satisfies Record<string, {
+  key: string
+  place: { ko: string; en: string }
+  condition: { ko: string; en: string }
+  policy: { ko: string; en: string }
+}>
 
 function readLabsSession(): Partial<LabsSession> {
   if (typeof window === "undefined") return {}
@@ -43,6 +64,9 @@ const BRIDGE_COPY: Record<Exclude<BridgePhase, "none">, { ko: string; en: string
 export function LabsEntry() {
   const { state, actions } = useOndo()
   const locale = state.locale
+  const qaControls = useQaControls()
+  const originTab = useRef(state.tab).current
+  const originOpener = useRef<HTMLElement | null>(typeof document !== "undefined" && document.activeElement instanceof HTMLElement ? document.activeElement : null)
   const [acknowledged, setAcknowledged] = useState(false)
   const [wallet, setWallet] = useState<WalletState>("WAL-DISCONNECTED")
   const [bridge, setBridge] = useState<BridgeState>("BRG-IDLE")
@@ -76,10 +100,27 @@ export function LabsEntry() {
     window.sessionStorage.setItem(LABS_SESSION_KEY, JSON.stringify(snapshot))
   }, [acknowledged, bridge, consent, mint, phase, quoteExpiresAt, sessionLoaded, traitStates, wallet])
 
+  useEffect(() => {
+    if (!sessionLoaded || qaControls || bridge !== "BRG-PENDING") return
+    const timer = window.setTimeout(advanceBridge, 650)
+    return () => window.clearTimeout(timer)
+  }, [bridge, phase, qaControls, sessionLoaded])
+
   function close() {
+    const opener = originOpener.current
     actions.setSurface({ kind: "map" })
-    actions.setTab("my")
+    actions.setTab(originTab)
+    window.setTimeout(() => {
+      if (opener?.isConnected) opener.focus({ preventScroll: true })
+      else document.querySelector<HTMLElement>(originTab === "id" ? "[data-testid='open-labs-id']" : "[data-testid='open-labs-milestone'], [data-testid='open-labs']")?.focus({ preventScroll: true })
+    }, 120)
   }
+
+  const returnLabel = originTab === "id"
+    ? locale === "ko" ? "ID로 돌아가기" : "Return to ID"
+    : originTab === "my"
+      ? locale === "ko" ? "My Korea로 돌아가기" : "Return to My Korea"
+      : locale === "ko" ? "이전 탭으로 돌아가기" : "Return to previous tab"
 
   function connectWallet() {
     setWallet("WAL-CONNECTING")
@@ -159,9 +200,9 @@ export function LabsEntry() {
           <p className={styles.eyebrow}>LABS · SIMULATED</p>
           <h2>Labs</h2>
           <p>{locale === "ko" ? "기술 가설을 보여주는 실험 영역입니다. 실제 자산 이동이나 운영 서비스가 아닙니다." : "This is an experimental area for technical hypotheses. It does not move real assets or represent a production service."}</p>
-          <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{locale === "ko" ? "여기의 지갑, 잔고, bridge, badge 결과는 모두 결정적 fixture입니다." : "Wallet, balance, bridge, and badge results here are deterministic fixtures."}</span></InlineNotice>
+          <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{qaControls ? locale === "ko" ? "여기의 지갑, 잔고, bridge, badge 결과는 모두 결정적 fixture입니다." : "Wallet, balance, bridge, and badge results here are deterministic fixtures." : locale === "ko" ? "지갑, 잔고, bridge, badge는 모두 재현 가능한 미리보기 결과입니다." : "Wallet, balance, bridge, and badge results are reproducible previews."}</span></InlineNotice>
           <button type="button" className={styles.primary} onClick={() => setAcknowledged(true)} data-testid="labs-acknowledge">{locale === "ko" ? "이해하고 보기" : "I understand"}</button>
-          <button type="button" className={styles.textButton} onClick={close}>{locale === "ko" ? "My Korea로 돌아가기" : "Return to My Korea"}</button>
+          <button type="button" className={styles.textButton} onClick={close}>{returnLabel}</button>
         </div>
       </Sheet>
     )
@@ -174,7 +215,7 @@ export function LabsEntry() {
     <Sheet label="Labs" onClose={close} showClose={false} size="full">
       <main className={styles.body} data-wallet-state={wallet} data-bridge-state={bridge} data-bridge-phase={phase} data-mint-state={mint} data-testid="labs-overlay">
         <header className={styles.header}>
-          <button type="button" data-sheet-initial-focus onClick={close} aria-label={locale === "ko" ? "My Korea로 돌아가기" : "Back to My Korea"}><ArrowLeft size={20} /></button>
+          <button type="button" data-sheet-initial-focus onClick={close} aria-label={returnLabel}><ArrowLeft size={20} /></button>
           <div><p className={styles.eyebrow}>LABS · SIMULATED</p><h2>Labs</h2></div>
           <span className={styles.truthBadge}>SIMULATED</span>
         </header>
@@ -184,9 +225,9 @@ export function LabsEntry() {
         <section className={styles.card} aria-labelledby="labs-signer-title">
           <div className={styles.sectionHeading}><span><WalletCards size={18} /></span><div><h3 id="labs-signer-title">Sui zkLogin signer</h3><p>Target network: Sui Testnet · Simulated</p></div></div>
           <p className={styles.bodyCopy}>{locale === "ko" ? "Sui 주소와 트랜잭션 서명 경로를 보여줍니다. ONDO 계정, KYC 또는 멀티체인 지갑을 만들지는 않습니다." : "Shows a Sui address and transaction-signing route. It does not create an ONDO account, KYC, or multichain wallet."}</p>
-          {wallet === "WAL-READY" ? <code className={styles.address}>0x8a71…ondo_fixture</code> : null}
-          {wallet === "WAL-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{locale === "ko" ? "연결 fixture를 완료하지 못했어요. 실제 계정에는 영향이 없습니다." : "The connection fixture did not complete. No real account was affected."}</span></InlineNotice> : null}
-          {wallet === "WAL-DISCONNECTED" || wallet === "WAL-FAILED" ? <button type="button" className={styles.secondary} onClick={connectWallet} data-testid="labs-connect-wallet">{wallet === "WAL-FAILED" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "Signer 연결 시뮬레이션" : "Simulate signer connection"}</button> : null}
+          {wallet === "WAL-READY" ? <code className={styles.address}>{qaControls ? "0x8a71…ondo_fixture" : "0x8a71…ondo_preview"}</code> : null}
+          {wallet === "WAL-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{qaControls ? locale === "ko" ? "연결 fixture를 완료하지 못했어요. 실제 계정에는 영향이 없습니다." : "The connection fixture did not complete. No real account was affected." : locale === "ko" ? "미리보기 연결을 완료하지 못했어요. 실제 계정에는 영향이 없습니다." : "The preview connection did not complete. No real account was affected."}</span></InlineNotice> : null}
+          {wallet === "WAL-DISCONNECTED" || wallet === "WAL-FAILED" ? <button type="button" className={styles.secondary} onClick={connectWallet} data-testid="labs-connect-wallet">{wallet === "WAL-FAILED" ? locale === "ko" ? "다시 시도" : "Try again" : qaControls ? locale === "ko" ? "Signer 연결 시뮬레이션" : "Simulate signer connection" : locale === "ko" ? "미리보기 Signer 연결" : "Connect preview signer"}</button> : null}
           {wallet === "WAL-CONNECTING" ? <button type="button" className={styles.secondary} disabled>{locale === "ko" ? "연결 중" : "Connecting"}</button> : null}
           {wallet === "WAL-READY" ? <button type="button" className={styles.textButton} disabled={!canDisconnect} onClick={() => setWallet("WAL-DISCONNECTED")}>{locale === "ko" ? "연결 해제" : "Disconnect"}</button> : null}
         </section>
@@ -207,35 +248,53 @@ export function LabsEntry() {
           {bridge === "BRG-IDLE" || bridge === "BRG-FAILED" || bridge === "BRG-CANCELLED" || bridge === "BRG-EXPIRED" ? <button type="button" className={styles.primary} onClick={quoteBridge} disabled={wallet !== "WAL-READY"} data-testid="labs-bridge-quote">{wallet === "WAL-READY" ? bridge === "BRG-EXPIRED" ? locale === "ko" ? "새 Quote 받기" : "Get a new quote" : locale === "ko" ? "Quote 보기" : "View quote" : locale === "ko" ? "Signer 연결 후 Quote" : "Connect signer for quote"}</button> : null}
           {bridge === "BRG-QUOTED" ? <><div className={styles.quote} data-testid="labs-quote"><span>{locale === "ko" ? "예상 경로 수수료" : "Estimated route fee"}</span><strong>$0.04</strong><small>{quoteExpiresAt != null && quoteExpiresAt <= Date.now() ? locale === "ko" ? "Quote 만료됨 · 시뮬레이션" : "Quote expired · Simulated" : locale === "ko" ? "최대 2분 동안 유효 · 시뮬레이션" : "Valid for up to 2 min · Simulated"}</small></div><button type="button" className={styles.primary} onClick={confirmBridge} data-testid="labs-bridge-confirm">{locale === "ko" ? "Quote 확인" : "Confirm quote"}</button><button type="button" className={styles.secondary} onClick={cancelBridge} data-testid="labs-bridge-cancel">{locale === "ko" ? "취소" : "Cancel"}</button></> : null}
           {bridge === "BRG-CONFIRMING" ? <><button type="button" className={styles.primary} onClick={submitBridge} data-testid="labs-bridge-submit">{locale === "ko" ? "Bridge 시뮬레이션 시작" : "Start bridge simulation"}</button><button type="button" className={styles.secondary} onClick={cancelBridge} data-testid="labs-bridge-cancel">{locale === "ko" ? "취소" : "Cancel"}</button></> : null}
-          {bridge === "BRG-PENDING" ? <button type="button" className={styles.primary} onClick={advanceBridge} data-testid="labs-bridge-advance">{locale === "ko" ? "다음 fixture 단계" : "Advance fixture phase"}<ChevronRight size={17} /></button> : null}
+          {bridge === "BRG-PENDING" && qaControls ? <button type="button" className={styles.primary} onClick={advanceBridge} data-testid="labs-bridge-advance">{locale === "ko" ? "다음 fixture 단계" : "Advance fixture phase"}<ChevronRight size={17} /></button> : null}
           {bridge === "BRG-SIMULATED-SUCCESS" ? <><InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "도착 단계까지 확인된 시뮬레이션입니다. 실제 자산은 바뀌지 않았습니다." : "The simulation reached destination confirmation. No real assets changed."}</span></InlineNotice><div className={styles.bridgeReceipt} data-testid="labs-bridge-receipt"><strong>{locale === "ko" ? "예상 전후 · 읽기 전용" : "Projected before and after · Read only"}</strong><span>USDT on Sui Testnet <b>13.50 → 0.00</b></span><span>OOKRW on OmniOne hypothesis <b>18,000 → 31,460</b></span><small>{locale === "ko" ? "실제 잔고나 transaction은 변경되지 않았습니다." : "Actual balances and transactions were not changed."}</small></div></> : null}
           {bridge === "BRG-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{locale === "ko" ? "시뮬레이션 실패 · 현재 단계와 모든 잔고는 그대로예요." : "Simulation failed. The current phase and every balance remain unchanged."}</span></InlineNotice> : null}
           {bridge === "BRG-CANCELLED" ? <InlineNotice tone="neutral"><span>{locale === "ko" ? "시뮬레이션을 취소했어요. 잔고는 바뀌지 않았습니다." : "Simulation cancelled. Balances did not change."}</span></InlineNotice> : null}
           {bridge === "BRG-EXPIRED" ? <InlineNotice tone="warm"><AlertTriangle size={17} /><span>{locale === "ko" ? "Quote가 만료되어 제출하지 않았어요. 새 Quote가 필요합니다." : "The quote expired, so nothing was submitted. Get a new quote to continue."}</span></InlineNotice> : null}
-          <button type="button" className={styles.inlineLink} onClick={() => setMismatch((current) => !current)}>{locale === "ko" ? "Quote 불일치 예시 보기" : "View quote mismatch example"}</button>
-          {mismatch ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{locale === "ko" ? "자산·체인·금액이 quote와 달라 진행하지 않았어요." : "The asset, chain, or amount did not match the quote, so nothing was submitted."}</span></InlineNotice> : null}
+          {qaControls ? <button type="button" className={styles.inlineLink} onClick={() => setMismatch((current) => !current)}>{locale === "ko" ? "Quote 불일치 예시 보기" : "View quote mismatch example"}</button> : null}
+          {qaControls && mismatch ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{locale === "ko" ? "자산·체인·금액이 quote와 달라 진행하지 않았어요." : "The asset, chain, or amount did not match the quote, so nothing was submitted."}</span></InlineNotice> : null}
         </section>
 
-        <section className={styles.card} aria-labelledby="labs-evidence-title">
-          <div className={styles.sectionHeading}><span><ShieldCheck size={18} /></span><div><h3 id="labs-evidence-title">{locale === "ko" ? "증거 adapter 경계" : "Evidence adapter boundaries"}</h3><p>CONTRACT ONLY</p></div></div>
-          <p className={styles.bodyCopy}>{locale === "ko" ? "OpenDID와 EAS는 서로 다른 adapter가 canonical envelope로 정규화합니다. EAS 실제 구현은 Deferred입니다." : "OpenDID and EAS remain separate adapters normalized into a canonical envelope. A live EAS implementation is deferred."}</p>
-          <div className={styles.evidenceList}>{EVIDENCE_FIXTURES.map((evidence) => <article key={evidence.id}><span>{evidence.sourceStandard}</span><strong>{evidence.claimType.replace("_", " ")}</strong><small>{evidence.adapterId} · {evidence.provenance.truth}</small></article>)}</div>
-        </section>
+        <details className={`${styles.card} ${styles.disclosure}`} open={qaControls || undefined}>
+          <summary className={styles.disclosureSummary}><div className={styles.sectionHeading}><span><ShieldCheck size={18} /></span><div><h3>{locale === "ko" ? "증거 adapter 경계" : "Evidence adapter boundaries"}</h3><p>CONTRACT ONLY · {locale === "ko" ? "기술 세부정보" : "Technical details"}</p></div></div><ChevronRight size={18} /></summary>
+          <div className={styles.disclosureBody}>
+            <p className={styles.bodyCopy}>{locale === "ko" ? "OpenDID와 EAS는 서로 다른 adapter가 canonical envelope로 정규화합니다. EAS 실제 구현은 Deferred입니다." : "OpenDID and EAS remain separate adapters normalized into a canonical envelope. A live EAS implementation is deferred."}</p>
+            <div className={styles.evidenceList}>{EVIDENCE_FIXTURES.map((evidence) => <article key={evidence.id}><span>{evidence.sourceStandard}</span><strong>{evidence.claimType.replace("_", " ")}</strong><small>{evidence.sourceStandard} adapter · {evidence.provenance.truth}</small></article>)}</div>
+          </div>
+        </details>
 
         <section className={styles.card} aria-labelledby="labs-traits-title">
           <div className={styles.sectionHeading}><span><ShieldCheck size={18} /></span><div><h3 id="labs-traits-title">{locale === "ko" ? "상점 이용 조건" : "Merchant access conditions"}</h3><p>CONTRACT ONLY</p></div></div>
           {TRAIT_FIXTURES.map((trait) => {
             const key = `${trait.merchantId}:${trait.offerId}`
             const retryState = traitStates[key] ?? "idle"
-            return <div className={styles.traitRow} key={key} data-trait-state={retryState}><InlineNotice tone={retryState === "eligible" ? "success" : trait.result === "error" || retryState === "failed" ? "danger" : "warm"}>{retryState === "eligible" ? <Check size={17} /> : <AlertTriangle size={17} />}<span>{retryState === "eligible" ? locale === "ko" ? "이 특정 이용 조건은 충족됩니다 · Contract only" : "This specific access condition is met · Contract only" : retryState === "failed" ? locale === "ko" ? "재확인 fixture도 실패했어요. 최신 장소 안내를 확인해 주세요." : "The retry fixture also failed. Review the venue’s latest information." : trait.result === "stale" ? locale === "ko" ? "이 조건의 확인 시점이 지났어요." : "This condition check is out of date." : locale === "ko" ? "이용 조건을 확인하지 못했어요. 최신 장소 안내를 확인해 주세요." : "This access condition could not be checked. Please review the venue’s latest information."}</span></InlineNotice><button type="button" className={styles.secondary} disabled={retryState === "checking"} onClick={() => retryTrait(key)} data-testid={`trait-retry-${trait.offerId}`}>{retryState === "checking" ? locale === "ko" ? "다시 확인 중" : "Checking again" : locale === "ko" ? "조건 다시 확인" : "Retry condition check"}</button></div>
+            const display = TRAIT_DISPLAY[trait.offerId as keyof typeof TRAIT_DISPLAY]
+            const status = retryState === "checking"
+              ? locale === "ko" ? "다시 확인 중" : "Checking again"
+              : retryState === "eligible"
+                ? locale === "ko" ? "조건 충족" : "Condition met"
+                : retryState === "failed"
+                  ? locale === "ko" ? "여전히 확인 불가" : "Still unavailable"
+                  : trait.result === "stale"
+                    ? locale === "ko" ? "확인 기한 지남" : "Out of date"
+                    : locale === "ko" ? "확인 불가" : "Unavailable"
+            const checkedAt = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "Asia/Seoul" }).format(new Date(trait.checkedAt))
+            return <article className={styles.traitRow} key={key} data-trait-state={retryState} data-testid={`trait-${display.key}`} aria-labelledby={`trait-${display.key}-place`}>
+              <header className={styles.traitHeading}><strong id={`trait-${display.key}-place`}>{display.place[locale]}</strong><span>{display.condition[locale]}</span></header>
+              <dl className={styles.traitFacts}><div><dt>{locale === "ko" ? "상태" : "Status"}</dt><dd>{status}</dd></div><div><dt>{locale === "ko" ? "확인 시각" : "Checked at"}</dt><dd>{checkedAt}</dd></div><div><dt>{locale === "ko" ? "조건 범위" : "Condition scope"}</dt><dd>{display.policy[locale]} · Contract only</dd></div></dl>
+              <InlineNotice tone={retryState === "eligible" ? "success" : trait.result === "error" || retryState === "failed" ? "danger" : "warm"}>{retryState === "eligible" ? <Check size={17} /> : <AlertTriangle size={17} />}<span>{retryState === "eligible" ? locale === "ko" ? "이 특정 이용 조건은 충족됩니다. 장소 전체의 이용 가능 여부는 별도로 확인해 주세요." : "This specific access condition is met. Confirm overall venue availability separately." : retryState === "failed" ? locale === "ko" ? "다시 확인하지 못했어요. 최신 장소 안내를 확인해 주세요." : "The condition still could not be checked. Review the venue’s latest information." : trait.result === "stale" ? locale === "ko" ? "이 조건의 확인 시점이 지났어요." : "This condition check is out of date." : locale === "ko" ? "이용 조건을 확인하지 못했어요. 최신 장소 안내를 확인해 주세요." : "This access condition could not be checked. Please review the venue’s latest information."}</span></InlineNotice>
+              <button type="button" className={styles.secondary} disabled={retryState === "checking"} onClick={() => retryTrait(key)} data-testid={`trait-retry-${display.key}`} aria-label={locale === "ko" ? `${display.place.ko}의 ${display.condition.ko} 다시 확인` : `Retry ${display.condition.en} for ${display.place.en}`}>{retryState === "checking" ? locale === "ko" ? "다시 확인 중" : "Checking again" : locale === "ko" ? "이 조건 다시 확인" : "Retry this condition"}</button>
+            </article>
           })}
           <p className={styles.finePrint}>{locale === "ko" ? "Trait 결과는 특정 정책 fact만 나타내며 장소 전체의 입장·안전·결제를 보증하지 않습니다." : "Trait results describe a specific policy fact and do not guarantee venue admission, safety, or payment."}</p>
         </section>
 
-        <section className={styles.card} aria-labelledby="labs-amm-title">
-          <div className={styles.sectionHeading}><span><FlaskConical size={18} /></span><div><h3 id="labs-amm-title">AMM</h3><p>DEFERRED</p></div></div>
-          <p className={styles.bodyCopy}>{locale === "ko" ? "AMM 교환은 이번 후보 범위에 포함되지 않습니다." : "AMM swaps are not included in this candidate."}</p>
-        </section>
+        <details className={`${styles.card} ${styles.disclosure}`} open={qaControls || undefined}>
+          <summary className={styles.disclosureSummary}><div className={styles.sectionHeading}><span><FlaskConical size={18} /></span><div><h3>AMM</h3><p>DEFERRED · {locale === "ko" ? "사용 불가" : "Not available"}</p></div></div><ChevronRight size={18} /></summary>
+          <div className={styles.disclosureBody}><p className={styles.bodyCopy}>{locale === "ko" ? "AMM 교환은 이번 후보 범위에 포함되지 않습니다." : "AMM swaps are not included in this candidate."}</p></div>
+        </details>
 
         <section className={styles.card} aria-labelledby="labs-badge-title">
           <div className={styles.sectionHeading}><span><FlaskConical size={18} /></span><div><h3 id="labs-badge-title">{locale === "ko" ? "기념 badge 시뮬레이션" : "Souvenir badge simulation"}</h3><p>{state.stamps}/10</p></div></div>
