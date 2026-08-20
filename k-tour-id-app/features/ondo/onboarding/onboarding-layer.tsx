@@ -37,6 +37,8 @@ const TEXT = {
     intentBody: "This only prepares recommendations and verification routes. You can change it later.",
     preferenceTitle: "What kind of meal are you looking for?",
     preferenceBody: "This only sets your starting filters. You can change it without an account.",
+    mealGroup: "Meal type",
+    moodGroup: "Mood and needs",
     continueToPreferences: "Choose meal preferences",
     open: "Open the ONDO map",
     defaults: "Continue with defaults",
@@ -57,6 +59,8 @@ const TEXT = {
     intentBody: "추천과 인증 경로를 준비하는 데만 사용하며, 나중에 바꿀 수 있어요.",
     preferenceTitle: "어떤 한 끼를 찾고 있나요?",
     preferenceBody: "처음 보이는 필터에만 반영하며 계정 없이도 바꿀 수 있어요.",
+    mealGroup: "먹고 싶은 것",
+    moodGroup: "분위기와 필요",
     continueToPreferences: "한 끼 취향 고르기",
     open: "ONDO 지도 열기",
     defaults: "기본 설정으로 계속",
@@ -145,7 +149,7 @@ export function OnboardingLayer() {
 
       {step === "value" ? (
         <div className={styles.value} data-testid="onboarding-step-value">
-          <div className={styles.seal}><Utensils size={27} /><span>溫度</span></div>
+          <div className={styles.seal}><Utensils size={27} /><span>ONDO</span></div>
           <p className={styles.eyebrow}>{t.eyebrow}</p>
           <h1>{t.title}</h1>
           <p className={styles.lead}>{t.body}</p>
@@ -188,11 +192,19 @@ export function OnboardingLayer() {
       {step === "preferences" ? (
         <div className={styles.panel} data-testid="onboarding-step-preferences">
           <div className={styles.heading}><span>03</span><h1>{t.preferenceTitle}</h1><p>{t.preferenceBody}</p></div>
-          <div className={styles.chips}>
-            {DISCOVERY_PREFERENCE_OPTIONS.map((preference) => {
-              const selected = preferences.includes(preference.id)
-              return <button key={preference.id} type="button" aria-pressed={selected} className={selected ? styles.chipSelected : styles.chip} onClick={() => setPreferences((current) => selected ? current.filter((id) => id !== preference.id) : [...current, preference.id])}>{preference.label[state.locale]}</button>
-            })}
+          <div className={styles.preferenceGroups}>
+            {[
+              { title: t.mealGroup, items: DISCOVERY_PREFERENCE_OPTIONS.slice(0, 3) },
+              { title: t.moodGroup, items: DISCOVERY_PREFERENCE_OPTIONS.slice(3) },
+            ].map((group) => <section key={group.title} className={styles.preferenceGroup}>
+              <h2>{group.title}</h2>
+              <div className={styles.chips}>
+                {group.items.map((preference) => {
+                  const selected = preferences.includes(preference.id)
+                  return <button key={preference.id} type="button" aria-pressed={selected} className={selected ? styles.chipSelected : styles.chip} onClick={() => setPreferences((current) => selected ? current.filter((id) => id !== preference.id) : [...current, preference.id])}>{preference.label[state.locale]}</button>
+                })}
+              </div>
+            </section>)}
           </div>
           {failed ? <div className={styles.error} role="alert">{t.fallback}</div> : null}
           <div className={styles.actions}>
