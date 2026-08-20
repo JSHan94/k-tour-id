@@ -97,7 +97,7 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     }
   })
 
-  test("Local Signal success keeps both return actions inside 390×844", async ({ page }) => {
+  test("Local Signal success keeps its single terminal return inside 390×844", async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await openCanonicalVenue(page)
     await page.getByTestId("canonical-venue-signal").click()
@@ -106,7 +106,7 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await page.getByTestId("local-signal-submit").click()
     await expect(signal).toHaveAttribute("data-signal-status", "submitted")
     await expectFullyVisible(signal.getByRole("button", { name: "Return to venue" }))
-    await expectFullyVisible(signal.getByRole("button", { name: "Cancel draft" }))
+    await expect(signal.getByRole("button", { name: "Cancel draft" })).toHaveCount(0)
   })
 
   test("declined checkout keeps retry and venue return inside 390×844", async ({ page }) => {

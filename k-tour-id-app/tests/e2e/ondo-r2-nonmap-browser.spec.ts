@@ -69,8 +69,10 @@ test("Local Signal requires a note or photo and states the simulated public-scor
   await submit.click()
   await expect(signal).toHaveAttribute("data-signal-status", "submitted")
   await expect(signal).toHaveAttribute("data-signal-invariants", "preserved")
-  await expect(signal).toContainText("Only Visit and Contribution histories were updated")
+  await expect(signal).toContainText("updates only visit and contribution histories")
+  await expect(signal).toContainText("saved to this device demo")
   await expect(signal).toContainText("public ONDO score did not change immediately")
+  await expect(signal.getByRole("button", { name: "Cancel draft" })).toHaveCount(0)
 })
 
 test("My Korea edits persona and preferences and labels an English canonical save bilingually", async ({ page }) => {
