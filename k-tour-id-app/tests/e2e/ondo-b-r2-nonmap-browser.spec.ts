@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test, type Locator, type Page } from "@playwright/test"
+import { prepareBPage } from "../helpers/ondo-b-qa"
 
 const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 
@@ -28,15 +29,36 @@ async function seed(page: Page, options: { ready?: boolean; saved?: string[]; pr
   })
 }
 
+async function expectHydratedShell(page: Page) {
+  const nav = page.getByTestId("ondo-main-nav")
+  await expect(nav).not.toHaveAttribute("aria-hidden", "true")
+  await expect(nav).toHaveJSProperty("inert", false)
+}
+
+async function expectCenterHit(control: Locator) {
+  await expect.poll(() => control.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+    return hit === element || (hit != null && element.contains(hit))
+  })).toBe(true)
+}
+
+test.beforeEach(async ({ page }) => {
+  await prepareBPage(page)
+})
+
 test("After 19 stays out of the B nation hero and appears after city selection", async ({ page }) => {
   await seed(page)
   await page.goto("/ondo-b")
+  await expectHydratedShell(page)
 
   const after19 = page.getByRole("button", { name: "After 19", exact: true })
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   await expect(after19).toBeHidden()
 
-  await page.locator("[data-city='seoul']").click()
+  const seoul = page.locator("[data-city='seoul']")
+  await expectCenterHit(seoul)
+  await seoul.click()
   await expect(after19).toBeVisible()
 })
 
@@ -49,6 +71,8 @@ test("Local Signal requires a note or photo and states the simulated public-scor
 
   const signal = page.getByTestId("local-signal-overlay")
   const submit = page.getByTestId("local-signal-submit")
+  await expect(page.getByRole("dialog", { name: "Share a local tip", exact: true })).toBeVisible()
+  await expect(submit).toHaveText("Submit local tip")
   await expect(signal).toHaveAttribute("data-signal-evidence", "required")
   await expect(submit).toBeDisabled()
   await expect(signal).toContainText("simulated contribution only")
@@ -78,7 +102,10 @@ test("Local Signal requires a note or photo and states the simulated public-scor
 test("My Korea edits persona and preferences and labels an English canonical save bilingually", async ({ page }) => {
   await seed(page, { saved: [CANONICAL_VENUE_ID], preferences: ["classic"] })
   await page.goto("/ondo-b")
-  await page.getByRole("button", { name: "My Korea", exact: true }).click()
+  await expectHydratedShell(page)
+  const myKorea = page.getByRole("button", { name: "My Korea", exact: true })
+  await expectCenterHit(myKorea)
+  await myKorea.click()
 
   const saved = page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`)
   await expect(saved).toContainText("Roba")
@@ -86,11 +113,25 @@ test("My Korea edits persona and preferences and labels an English canonical sav
 
   await page.getByTestId("discovery-persona").selectOption("long_term_resident")
   await page.getByTestId("discovery-preference-cafe").click()
-  await expect(page.getByTestId("discovery-preference-truth")).toContainText("used as discovery context")
-  await expect(page.getByTestId("discovery-preference-truth")).toContainText("not used as hidden filters")
+  const dietary = page.getByRole("group", { name: "Dietary requirements", exact: true })
+  await expect(dietary).toBeVisible()
+  await page.getByTestId("discovery-preference-vegan").click()
+  await expect(page.getByTestId("discovery-preference-vegan")).toHaveAttribute("aria-pressed", "true")
+  await expect(page.getByTestId("discovery-preference-truth")).toContainText("Saved only as discovery context on this device")
+  await expect(page.getByTestId("discovery-preference-truth")).toContainText("neither hide venues nor label them as supported")
   await expect.poll(() => page.evaluate(() => {
     const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
     const local = JSON.parse(localStorage.getItem("ondo.preferences.v3") ?? "{}")
     return [session.persona, local.discoveryPreferences]
-  })).toEqual(["long_term_resident", ["classic", "cafe"]])
+  })).toEqual(["long_term_resident", ["classic", "cafe", "vegan"]])
+
+  await page.getByTestId("nav-id").click()
+  let identity = page.getByTestId("ondo-identity-entry")
+  await expect(identity.getByRole("heading", { name: "Account and identity checks", exact: true })).toBeVisible()
+  await page.getByRole("button", { name: "KO", exact: true }).click()
+  await expect(page.getByTestId("nav-id")).toHaveText("신원")
+  identity = page.getByTestId("ondo-identity-entry")
+  await expect(identity.getByRole("heading", { name: "계정과 신원 확인", exact: true })).toBeVisible()
+  await expect(identity).toContainText("본인 확인 전")
+  await expect(identity).toContainText("계정·본인·19+·결제용 KYC는 서로 분리")
 })

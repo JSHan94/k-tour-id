@@ -6,7 +6,6 @@ import {
   openCanonicalVenue,
   openLabs,
   prepareBPage,
-  seedB,
   TABLE_ID,
 } from "../helpers/ondo-b-qa"
 
@@ -17,6 +16,42 @@ const READY_SESSION = {
   ageExpiresAt: "2026-08-20T20:30:00+09:00",
   paymentKyc: "PKY-VERIFIED",
   stamps: 10,
+}
+
+async function seedD3(page: Page, locale: "en" | "ko", { labs = false } = {}) {
+  await page.addInitScript(({ nextLocale, nextSession, withLabs }) => {
+    localStorage.setItem("ondo.preferences.v3", JSON.stringify({
+      locale: nextLocale,
+      guideSeen: true,
+      autoNight: false,
+      savedVenueIds: [],
+      discoveryPreferences: [],
+    }))
+    sessionStorage.setItem("ondo.session.v3", JSON.stringify({
+      onboarding: "ONB-COMPLETE",
+      persona: "short_term",
+      after19: "A19-OFF",
+      tableMembershipById: {},
+      ...nextSession,
+    }))
+    sessionStorage.removeItem("ondo.chat.v2")
+    sessionStorage.removeItem("ondo.table-outcomes.v2")
+    sessionStorage.removeItem("ondo.accepted-visits.v2")
+    if (withLabs) {
+      sessionStorage.setItem("ondo.labs.v2", JSON.stringify({
+        acknowledged: true,
+        wallet: "WAL-DISCONNECTED",
+        bridge: "BRG-IDLE",
+        phase: "none",
+        mint: "NFT-ELIGIBLE",
+        consent: false,
+        quoteExpiresAt: null,
+        traitStates: {},
+      }))
+    } else {
+      sessionStorage.removeItem("ondo.labs.v2")
+    }
+  }, { nextLocale: locale, nextSession: READY_SESSION, withLabs: labs })
 }
 
 async function expectNoSeriousAxe(page: Page, selector: string) {
@@ -33,10 +68,28 @@ async function expectControlDescription(control: Locator, message: Locator) {
   await expect(control).toHaveAttribute("aria-describedby", id!)
 }
 
+async function expectHydratedShell(page: Page) {
+  const nav = page.getByTestId("ondo-main-nav")
+  await expect(nav).not.toHaveAttribute("aria-hidden", "true")
+  await expect(nav).toHaveJSProperty("inert", false)
+}
+
+async function expectCenterHit(control: Locator) {
+  await expect.poll(() => control.evaluate((element) => {
+    const box = element.getBoundingClientRect()
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+    return hit === element || (hit != null && element.contains(hit))
+  })).toBe(true)
+}
+
 async function openTable(page: Page, locale: "en" | "ko", scenario: string) {
-  await seedB(page, { locale, session: READY_SESSION })
-  await gotoB(page, `?scenario=${scenario}`)
-  await page.getByRole("button", { name: locale === "ko" ? "모임" : "Tables", exact: true }).click()
+  await seedD3(page, locale)
+  await gotoB(page, `?qa=1&scenario=${scenario}`)
+  await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", locale)
+  await expectHydratedShell(page)
+  const tablesNav = page.getByRole("button", { name: locale === "ko" ? "모임" : "Tables", exact: true })
+  await expectCenterHit(tablesNav)
+  await tablesNav.click()
   const tables = page.getByRole("region", { name: locale === "ko" ? "장소별 Table" : "Tables by place" })
   await expect(tables).toBeVisible()
   await tables.locator(`[data-table-id='${TABLE_ID}']`).click()
@@ -44,20 +97,11 @@ async function openTable(page: Page, locale: "en" | "ko", scenario: string) {
 }
 
 async function seedLabs(page: Page, locale: "en" | "ko") {
-  await seedB(page, { locale, session: READY_SESSION, clearFeatures: false })
-  await page.addInitScript(() => {
-    sessionStorage.setItem("ondo.labs.v2", JSON.stringify({
-      acknowledged: true,
-      wallet: "WAL-DISCONNECTED",
-      bridge: "BRG-IDLE",
-      phase: "none",
-      mint: "NFT-ELIGIBLE",
-      consent: false,
-      quoteExpiresAt: null,
-      traitStates: {},
-    }))
-  })
-  await gotoB(page, "?scenario=labs-wallet-fail")
+  await seedD3(page, locale, { labs: true })
+  await gotoB(page, "?qa=1&scenario=labs-wallet-fail")
+  await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", locale)
+  await expectHydratedShell(page)
+  await expectCenterHit(page.getByTestId("nav-my"))
   await openLabs(page)
   await expect(page.getByTestId("labs-overlay")).toBeVisible()
 }
@@ -83,8 +127,8 @@ for (const locale of ["en", "ko"] as const) {
         signalNote: "키오스크에서 먼저 주문해요.",
         signalRetry: "다시 시도",
         signalReturn: "장소로 돌아가기",
-        walletFailure: "미리보기 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.",
-        walletConnect: "미리보기 서명 기능 연결",
+        walletFailure: "테스트용 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.",
+        walletConnect: "서명 기능 연결 시뮬레이션",
         walletRetry: "다시 시도",
       }
     : {
@@ -102,8 +146,8 @@ for (const locale of ["en", "ko"] as const) {
         signalNote: "Order at the kiosk first.",
         signalRetry: "Try again",
         signalReturn: "Return to venue",
-        walletFailure: "The preview connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.",
-        walletConnect: "Connect preview signer",
+        walletFailure: "The test connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.",
+        walletConnect: "Simulate signer connection",
         walletRetry: "Try again",
       }
 
@@ -137,7 +181,7 @@ for (const locale of ["en", "ko"] as const) {
       await expectNoSeriousAxe(page, "[data-testid='ondo-sheet']")
 
       if (scenario !== "table-full") {
-        await page.evaluate(() => history.replaceState({}, "", location.pathname))
+        await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?qa=1`))
         await recovery.click()
         await expect(page.getByTestId("table-requesting")).toHaveAttribute("role", "status")
         await expect(page.getByTestId("ondo-sheet").locator("[role='alert']")).toHaveCount(0)
@@ -156,8 +200,9 @@ for (const locale of ["en", "ko"] as const) {
 
   test(`R3 D3-001 ${locale} Local Signal announces fail, success, and duplicate exactly once`, async ({ page }) => {
     test.setTimeout(60_000)
-    await seedB(page, { locale, session: READY_SESSION })
-    await openCanonicalVenue(page, { query: "scenario=local-signal-fail" })
+    await seedD3(page, locale)
+    await openCanonicalVenue(page, { query: "qa=1&scenario=local-signal-fail" })
+    await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", locale)
     await page.getByTestId("canonical-venue-signal").click()
     let signal = page.getByTestId("local-signal-overlay")
     await signal.locator("textarea").fill(copy.signalNote)
@@ -168,11 +213,11 @@ for (const locale of ["en", "ko"] as const) {
     await expect(outcome).toHaveText(copy.signalFailure)
     await expect(signal.getByText(copy.signalFailure, { exact: true })).toHaveCount(1)
     await expect(signal.locator("[role='alert'], [role='status']")).toHaveCount(1)
-    const retry = page.getByRole("button", { name: copy.signalRetry, exact: true })
+    const retry = signal.getByRole("button", { name: copy.signalRetry, exact: true })
     await expect(retry).toBeFocused()
     await expectControlDescription(retry, outcome)
 
-    await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?venueId=${new URLSearchParams(location.search).get("venueId")}`))
+    await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?venueId=${new URLSearchParams(location.search).get("venueId")}&qa=1`))
     await retry.click()
     await expect(signal.locator("[role='alert']")).toHaveCount(0)
     outcome = page.getByTestId("local-signal-outcome")
@@ -180,7 +225,7 @@ for (const locale of ["en", "ko"] as const) {
     await expect(outcome).toHaveText(copy.signalSuccess)
     await expect(signal.getByText(copy.signalSuccess, { exact: true })).toHaveCount(1)
     await expect(signal.locator("[role='alert'], [role='status']")).toHaveCount(1)
-    let returnControl = page.getByRole("button", { name: copy.signalReturn, exact: true })
+    let returnControl = signal.getByRole("button", { name: copy.signalReturn, exact: true })
     await expect(returnControl).toBeFocused()
     await expectControlDescription(returnControl, outcome)
     await expectNoSeriousAxe(page, "[data-testid='local-signal-overlay']")
@@ -196,7 +241,7 @@ for (const locale of ["en", "ko"] as const) {
     await expect(outcome).toHaveText(copy.signalDuplicate)
     await expect(signal.getByText(copy.signalDuplicate, { exact: true })).toHaveCount(1)
     await expect(signal.locator("[role='alert'], [role='status']")).toHaveCount(1)
-    returnControl = page.getByRole("button", { name: copy.signalReturn, exact: true })
+    returnControl = signal.getByRole("button", { name: copy.signalReturn, exact: true })
     await expect(returnControl).toBeFocused()
     await expectControlDescription(returnControl, outcome)
   })
@@ -205,7 +250,7 @@ for (const locale of ["en", "ko"] as const) {
     test.setTimeout(45_000)
     await seedLabs(page, locale)
     const labs = page.getByTestId("labs-overlay")
-    await page.getByRole("button", { name: copy.walletConnect, exact: true }).click()
+    await labs.getByRole("button", { name: copy.walletConnect, exact: true }).click()
     await expect(labs).toHaveAttribute("data-wallet-state", "WAL-FAILED")
 
     const outcome = page.getByTestId("labs-wallet-outcome")
@@ -213,16 +258,16 @@ for (const locale of ["en", "ko"] as const) {
     await expect(outcome).toHaveText(copy.walletFailure)
     await expect(labs.getByText(copy.walletFailure, { exact: true })).toHaveCount(1)
     await expect(labs.locator("[role='alert']")).toHaveCount(1)
-    const retry = page.getByRole("button", { name: copy.walletRetry, exact: true })
+    const retry = labs.getByRole("button", { name: copy.walletRetry, exact: true })
     await expect(retry).toBeFocused()
     await expectControlDescription(retry, outcome)
     await expectNoSeriousAxe(page, "[data-testid='labs-overlay']")
 
-    await page.evaluate(() => history.replaceState({}, "", location.pathname))
+    await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?qa=1`))
     await retry.click()
     await expect(page.getByTestId("labs-wallet-outcome")).toHaveCount(0)
     await expect(labs.locator("[role='alert']")).toHaveCount(0)
     await expect(labs).toHaveAttribute("data-wallet-state", "WAL-READY")
-    await expect(page.getByText("0x8a71…ondo_preview", { exact: true })).toBeVisible()
+    await expect(page.getByText("0x8a71…ondo_fixture", { exact: true })).toBeVisible()
   })
 }
