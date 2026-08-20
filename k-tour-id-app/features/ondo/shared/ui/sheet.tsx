@@ -109,7 +109,7 @@ export function Sheet({
       >
         <div className={styles.grabber} aria-hidden="true" />
         {showClose ? <button type="button" data-sheet-initial-focus className={styles.close} onClick={onClose} aria-label={closeLabel}><X size={19} /></button> : null}
-        {children}
+        <div className={styles.viewport}>{children}</div>
       </section>
     </div>
   )

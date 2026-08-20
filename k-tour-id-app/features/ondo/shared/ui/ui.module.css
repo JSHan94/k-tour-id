@@ -17,8 +17,11 @@
 
 .sheet {
   position: relative;
+  display: flex;
   width: 100%;
-  overflow: auto;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
   border: 1px solid rgb(32 32 30 / 12%);
   border-bottom: 0;
   border-radius: 20px 20px 0 0;
@@ -27,11 +30,19 @@
   animation: rise 200ms cubic-bezier(.2,.8,.2,1);
 }
 
+.viewport {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .peek { max-height: 36dvh; }
 .medium { max-height: 66dvh; }
 .full { max-height: 100%; }
 
 .grabber {
+  flex: 0 0 auto;
   width: 42px;
   height: 4px;
   margin: 10px auto 4px;
