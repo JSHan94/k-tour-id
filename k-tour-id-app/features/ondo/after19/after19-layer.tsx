@@ -6,6 +6,7 @@ import { Clock3, Moon, ShieldCheck, Sunrise, X } from "lucide-react"
 import { canAutoEnterAfter19 } from "../contracts/after19"
 import type { Locale } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
+import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./after19.module.css"
 
 const COPY = {
@@ -60,6 +61,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
   const [showSessionNotice, setShowSessionNotice] = useState(false)
   const promptedToken = useRef<string | null>(null)
   const autoOpened = useRef(false)
+  const gateLayerRef = useRef<HTMLDivElement>(null)
   const gateRef = useRef<HTMLElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const t = COPY[state.locale]
@@ -113,6 +115,8 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
       window.requestAnimationFrame(() => returnFocusRef.current?.focus())
     }
   }, [showGate])
+
+  useModalIsolation(showGate, gateLayerRef)
 
   if (!state.hydrated) return null
 
@@ -184,7 +188,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
       ) : null}
 
       {showGate ? (
-        <div className={styles.gateLayer}>
+        <div ref={gateLayerRef} className={styles.gateLayer} data-testid="after19-prompt-layer">
           <button type="button" tabIndex={-1} className={styles.backdrop} onClick={() => setShowGate(false)} aria-hidden="true" />
           <section ref={gateRef} className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="after19-title" tabIndex={-1} onKeyDown={handleGateKeyDown}>
             <span className={styles.moon}><Moon size={28} /></span>

@@ -10,6 +10,7 @@ import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
 import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
 import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
 import { useOndo } from "../shared/state/ondo-provider"
+import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
 
 const COPY = {
@@ -123,6 +124,7 @@ export function CanonicalPlaceOverlay() {
   const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const closeRef = useRef<HTMLButtonElement | null>(null)
+  const layerRef = useRef<HTMLDivElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
   const saveAttemptRef = useRef(0)
@@ -164,6 +166,7 @@ export function CanonicalPlaceOverlay() {
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
+  useModalIsolation(expanded, layerRef)
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
     const controller = new AbortController()
@@ -267,7 +270,7 @@ export function CanonicalPlaceOverlay() {
   )
 
   return (
-    <div className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id}>
+    <div ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id}>
       <button type="button" className={styles.backdrop} onClick={closeDetails} aria-label={copy.back} tabIndex={-1} />
       <article ref={detailRef} className={styles.detail} onKeyDown={handleDetailKeyDown}>
         <header>
