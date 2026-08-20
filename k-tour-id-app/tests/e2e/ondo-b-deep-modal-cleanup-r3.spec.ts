@@ -28,8 +28,8 @@ const COPY = {
   ko: {
     accountStart: "계정 만들기 · 시뮬레이션",
     accountFinish: "계정 시뮬레이션 완료",
-    personStart: "확인 시작",
-    personFinish: "확인 시뮬레이션 완료",
+    personStart: "본인 확인 시작",
+    personFinish: "본인 확인 시뮬레이션 완료",
     ageStart: "19+ 확인 시뮬레이션 시작",
     ageFinish: "19+ 확인 · 시뮬레이션",
     paymentStart: "결제용 KYC 시뮬레이션 시작",

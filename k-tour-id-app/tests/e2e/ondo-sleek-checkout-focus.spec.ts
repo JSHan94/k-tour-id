@@ -121,6 +121,54 @@ async function releaseCheckoutCompletion(page: Page) {
   })
 }
 
+async function holdSheetReturnFocus(page: Page) {
+  await page.evaluate(() => {
+    type HeldSheetFocusWindow = Window & typeof globalThis & {
+      __sheetNativeSetTimeout?: typeof setTimeout
+      __sheetNativeClearTimeout?: typeof clearTimeout
+      __sheetReturnFocus?: { id: number; handler: TimerHandler; args: unknown[]; cancelled: boolean }
+    }
+    const timerWindow = window as HeldSheetFocusWindow
+    timerWindow.__sheetNativeSetTimeout = window.setTimeout.bind(window)
+    timerWindow.__sheetNativeClearTimeout = window.clearTimeout.bind(window)
+    window.setTimeout = ((handler: TimerHandler, timeout = 0, ...args: unknown[]) => {
+      if (timeout === 80 && !timerWindow.__sheetReturnFocus) {
+        const id = 3_000_000
+        timerWindow.__sheetReturnFocus = { id, handler, args, cancelled: false }
+        return id
+      }
+      return timerWindow.__sheetNativeSetTimeout?.(handler, timeout, ...args) ?? 0
+    }) as typeof window.setTimeout
+    window.clearTimeout = ((id: number | undefined) => {
+      const pending = timerWindow.__sheetReturnFocus
+      if (pending && id === pending.id) {
+        pending.cancelled = true
+        return
+      }
+      timerWindow.__sheetNativeClearTimeout?.(id)
+    }) as typeof window.clearTimeout
+  })
+}
+
+async function releaseSheetReturnFocus(page: Page) {
+  await page.evaluate(() => {
+    type HeldSheetFocusWindow = Window & typeof globalThis & {
+      __sheetNativeSetTimeout?: typeof setTimeout
+      __sheetNativeClearTimeout?: typeof clearTimeout
+      __sheetReturnFocus?: { id: number; handler: TimerHandler; args: unknown[]; cancelled: boolean }
+    }
+    const timerWindow = window as HeldSheetFocusWindow
+    const pending = timerWindow.__sheetReturnFocus
+    if (timerWindow.__sheetNativeSetTimeout) window.setTimeout = timerWindow.__sheetNativeSetTimeout
+    if (timerWindow.__sheetNativeClearTimeout) window.clearTimeout = timerWindow.__sheetNativeClearTimeout
+    delete timerWindow.__sheetNativeSetTimeout
+    delete timerWindow.__sheetNativeClearTimeout
+    delete timerWindow.__sheetReturnFocus
+    if (!pending || pending.cancelled || typeof pending.handler !== "function") return
+    pending.handler(...pending.args)
+  })
+}
+
 async function expectFocusOwner(page: Page, overlay: Locator, state: string, target: Locator, settle = true) {
   await expect(overlay).toHaveAttribute("data-payment-state", state)
   if (settle) await settleFocusOwner(page)
@@ -160,6 +208,46 @@ test.beforeEach(async ({ page }, testInfo) => {
 })
 
 for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
+  test(`Sheet return focus yields to a newer surface focus owner (${locale})`, async ({ page }) => {
+    await prepareBPage(page)
+    await seedB(page, { locale, session: READY_SESSION })
+    await openCheckout(page)
+    const checkout = page.getByTestId("checkout-overlay")
+    const returnToVenue = checkout.getByRole("button", { name: locale === "ko" ? "장소로 돌아가기" : "Return to venue" })
+
+    await holdSheetReturnFocus(page)
+    await returnToVenue.click()
+    await expect(checkout).toHaveCount(0)
+    await page.getByTestId("nav-tables").focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByTestId("tables-entry")).toBeVisible()
+    const newerOwner = page.getByTestId("nav-my")
+    await newerOwner.focus()
+    await expect(newerOwner).toBeFocused()
+
+    await releaseSheetReturnFocus(page)
+    await page.waitForTimeout(140)
+    await expect(newerOwner).toBeFocused()
+  })
+
+  test(`Sheet return focus still restores the venue fallback when focus is unclaimed (${locale})`, async ({ page }) => {
+    await prepareBPage(page)
+    await seedB(page, { locale, session: READY_SESSION })
+    await openCheckout(page)
+    const checkout = page.getByTestId("checkout-overlay")
+
+    await holdSheetReturnFocus(page)
+    await checkout.getByRole("button", { name: locale === "ko" ? "장소로 돌아가기" : "Return to venue" }).click()
+    await expect(checkout).toHaveCount(0)
+    const fallback = page.getByTestId("canonical-place-details")
+    await expect(fallback).toBeVisible()
+
+    // The venue transition may reach the same fallback before the held Sheet
+    // callback. Releasing it must preserve or establish that valid owner.
+    await releaseSheetReturnFocus(page)
+    await expect(fallback).toBeFocused()
+  })
+
   test(`Checkout has one settled focus owner through cancel, failure, retry and receipt (${locale})`, async ({ page }) => {
     await prepareBPage(page)
     await seedB(page, { locale, session: READY_SESSION })
