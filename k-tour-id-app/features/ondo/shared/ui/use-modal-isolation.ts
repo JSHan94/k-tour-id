@@ -28,18 +28,22 @@ export function useModalIsolation(open: boolean, modalRef: RefObject<HTMLElement
     const covered = new Map<HTMLElement, AttributeSnapshot>()
     let branch: HTMLElement = modal
 
+    const remember = (element: HTMLElement) => {
+      if (covered.has(element)) return
+      covered.set(element, {
+        element,
+        inert: element.getAttribute("inert"),
+        ariaHidden: element.getAttribute("aria-hidden"),
+      })
+    }
+
     while (branch !== boundary) {
       const parent = branch.parentElement
       if (!parent) break
       Array.from(parent.children).forEach((candidate) => {
         if (!(candidate instanceof HTMLElement) || candidate === branch || candidate.contains(modal)) return
-        if (!covered.has(candidate)) {
-          covered.set(candidate, {
-            element: candidate,
-            inert: candidate.getAttribute("inert"),
-            ariaHidden: candidate.getAttribute("aria-hidden"),
-          })
-        }
+        remember(candidate)
+        candidate.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']").forEach(remember)
       })
       branch = parent
     }
