@@ -1,6 +1,6 @@
 "use client"
 
-import type { KeyboardEvent } from "react"
+import type { KeyboardEvent, MouseEvent } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { AlertCircle, ArrowLeft, BadgeCheck, Check, ChevronRight, CircleUserRound, Clock3, CreditCard, FileKey2, LoaderCircle, ShieldCheck, X } from "lucide-react"
 import type { GateKind, Locale, Persona } from "../contracts/domain"
@@ -203,11 +203,29 @@ export function GateOverlay() {
     setStarted(false)
     actions.setGateState("pending")
   }
-  const chooseAlternate = () => {
+  const chooseAlternate = (event: MouseEvent<HTMLButtonElement>) => {
+    // A rapid second pointer click can land on this newly rendered button at
+    // the same coordinates as the Residence start action. Require a distinct
+    // activation so the unavailable result cannot be skipped accidentally.
+    if (event.detail > 1) return
     setRoute("passport")
     setStarted(false)
     completionLock.current = false
     actions.setGateState("pending")
+  }
+  const startPersonCheck = (event: MouseEvent<HTMLButtonElement>) => {
+    if (event.detail > 1) return
+    if (route === "residence") {
+      fail(true)
+      return
+    }
+    setStarted(true)
+  }
+
+  function guardRapidGateActivation(event: MouseEvent<HTMLDivElement>) {
+    if (event.detail <= 1) return
+    event.preventDefault()
+    event.stopPropagation()
   }
 
   function handleDialogKeyDown(event: KeyboardEvent<HTMLElement>) {
@@ -252,7 +270,7 @@ export function GateOverlay() {
           : t.accountTitle
 
   return (
-    <div ref={layerRef} className={styles.gateLayer} data-testid="ondo-gate-overlay">
+    <div ref={layerRef} className={styles.gateLayer} data-testid="ondo-gate-overlay" onClickCapture={guardRapidGateActivation}>
       <button type="button" tabIndex={-1} className={styles.backdrop} onClick={actions.cancelGate} aria-hidden="true" />
       <section ref={dialogRef} className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="gate-title" tabIndex={-1} onKeyDown={handleDialogKeyDown}>
         <div className={styles.grabber} aria-hidden="true" />
@@ -312,10 +330,10 @@ export function GateOverlay() {
                   {(state.persona === "long_term_resident" ? ["residence", "passport"] : state.persona === "korean_local" ? ["cx"] : ["passport"]).map((item) => {
                     const itemRoute = item as PersonRoute
                     const content = itemRoute === "cx" ? { title: t.cx, note: t.cxNote } : itemRoute === "residence" ? { title: t.residence, note: t.residenceNote } : { title: t.passport, note: t.passportNote }
-                    return <button key={item} type="button" className={route === itemRoute ? styles.routeSelected : styles.route} aria-pressed={route === itemRoute} onClick={() => setRoute(itemRoute)}><ShieldCheck size={20} /><span><strong>{content.title}</strong><small>{content.note}</small></span>{route === itemRoute ? <Check size={16} /> : null}</button>
+                    return <button key={item} type="button" className={route === itemRoute ? styles.routeSelected : styles.route} aria-pressed={route === itemRoute} onClick={() => setRoute(itemRoute)} data-testid={`person-route-${itemRoute}`}><ShieldCheck size={20} /><span><strong>{content.title}</strong><small>{content.note}</small></span>{route === itemRoute ? <Check size={16} /> : null}</button>
                   })}
                 </div>
-                <button type="button" className={styles.primary} onClick={() => setStarted(true)}>{t.startCheck}</button>
+                <button type="button" className={styles.primary} onClick={startPersonCheck}>{t.startCheck}</button>
                 {route === "residence" && qaControls ? <button type="button" className={styles.tertiary} onClick={() => fail(true)}>{t.unavailable}</button> : null}
               </>
             ) : (
