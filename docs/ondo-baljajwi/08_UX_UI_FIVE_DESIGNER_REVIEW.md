@@ -1,6 +1,6 @@
 # ONDO B · Five-Designer Sleekness Review
 
-상태: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED · CLEAN STREAK 0/2`
+상태: `FROZEN TUPLE · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 이 문서는 기존 기능·진실·접근성 계약을 보존하면서 `/ondo-b`의 모든 Flow, surface, component, state를 더 sleek하고 일관된 제품 언어로 개선하는 실행 정본이다. 목표는 의견을 억지로 없애는 것이 아니라 **동일 제품 SHA에서 unresolved actionable UX/UI issue를 0으로 수렴**시키는 것이다.
 
@@ -8,16 +8,17 @@
 
 | Field | Value |
 |---|---|
-| Current product SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
-| Current harness SHA | `PENDING` |
-| Current baseline digest | `PENDING` |
+| Current product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
+| Current harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
+| Current baseline digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`; 264 committed PNGs |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
 | Current visual target | `44 cases · 42 state IDs · 6 viewports = 264 committed screenshots` |
 | Checkpoint registry | `126 exact rows · pixel | functional_only` |
-| Current round | `SLEEK R2 NOT STARTED`; R1 was `5/5 NOT CLEAN` and is immutable history |
+| Automated gate | typecheck/build PASS · contracts `26/26` · E2E `213 pass / 5 intentional viewport skips / 0 fail` · pixel `264/264` |
+| Current round | `SLEEK R2 READY TO START`; reviewer verdict 없음; R1 was `5/5 NOT CLEAN` and is immutable history |
 
-제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. R2는 세 값이 모두 고정되고 automated gate가 통과한 뒤 시작한다.
+제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. 현재 세 값은 고정됐고 frozen-tuple automated gate도 통과했으므로 R2를 시작할 준비가 됐다. 아직 reviewer verdict나 CLEAN 결과는 없다.
 
 ## 2. Sleekness의 조작적 정의
 
@@ -133,4 +134,4 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
 
-`evidence/SLEEK-R1/`은 수정하지 않는 역사 원본이다. `evidence/SLEEK-R2/`의 현재 `REVIEWED-BY-ROOT-PENDING` 264-file staging receipt는 freeze나 round 시작이 아니다. product+harness+baseline tuple과 no-update run을 고정하기 전에는 reviewer verdict, CLEAN 또는 PASS를 써 두지 않는다.
+`evidence/SLEEK-R1/`은 수정하지 않는 역사 원본이다. 현재 tuple은 product `46ad40f…`, harness `6eceef4…`, baseline digest `0f56b0cf…`로 동결됐고 unchanged-baseline `264/264 PASS`를 포함한 전체 automated gate를 통과했다. R2는 `READY TO START`이며 reviewer verdict, CLEAN 또는 release PASS를 미리 기록하지 않는다.

@@ -1,19 +1,19 @@
 # ONDO B · 발자취형 제품/QA Source of Truth
 
-상태: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED · CLEAN STREAK 0/2 · LEGACY PRIVATE B ONLY`
+상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | SoT | 현재 값 |
 |---|---|
-| 제품 SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
-| 검수 Harness SHA | `PENDING` — 변경 중이며 아직 commit으로 고정되지 않음 |
-| Baseline set digest | `PENDING` — 승인·commit 뒤 산출 |
+| 제품 SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
+| 검수 Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
+| Baseline set digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e` — 264 committed PNGs |
 | Route | `/ondo-b` |
 | 배포 | 새 sleek B 미배포. 기존 private B는 이전 tuple의 역사 preview일 뿐 현재 후보가 아님 |
 | Requirements | `19/19 traced` |
 | Flows | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
 | Visual registry | `44 cases · 42 distinct state IDs` |
 | Pixel target | `44 × 6 exact viewports = 264 committed baselines` |
-| Review gate | `SLEEK R2 NOT STARTED · 0/2 clean rounds` |
+| Review gate | `SLEEK R2 READY TO START · 0/2 clean rounds` |
 
 이 디렉터리가 현재 발자취형 B 후보의 살아 있는 제품·검수·증거 source of truth다. [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md)은 A/v2의 역사 기록이다. `evidence/RUN-*`과 이전 clean tuple은 당시 결과를 보존하지만 현재 제품의 합격 증거로 재사용하지 않는다.
 
@@ -35,12 +35,12 @@
 
 | Gate | 현재 판정 |
 |---|---|
-| Product source | `FROZEN` at `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
-| Harness source | `UNFROZEN` — commit SHA 대기 |
+| Product source | `FROZEN` at `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
+| Harness source | `FROZEN` at `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
 | Checkpoint registry | `126 mapped` to `pixel | functional_only`; grouped journey step 이름을 126개 exact `test.step`으로 과장하지 않음 |
-| Pixel baseline | `264 target` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; freeze/digest 대기 |
-| Current automated acceptance | `NOT YET RECORDED` against a frozen product+harness+baseline tuple |
-| SLEEK R2 | `NOT STARTED` |
+| Pixel baseline | frozen `264/264 no-update PASS` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; digest `0f56b0cf…` |
+| Current automated acceptance | `PASS` — typecheck/build PASS · contracts `26/26` · nonpixel E2E `213 pass / 5 intentional viewport skips / 0 fail` · pixel `264/264` |
+| SLEEK R2 | `READY TO START` — reviewer verdict 없음 |
 | Clean streak | `0/2` |
 | New sleek deployment | `NOT DEPLOYED` |
 | Data inventory | 공식 장소 `400`, simulated signal `80`, night-category After19 subset `17` (`서울 7 / 부산 10`) |

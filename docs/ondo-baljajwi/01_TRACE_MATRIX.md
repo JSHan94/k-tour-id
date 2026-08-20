@@ -1,10 +1,10 @@
 # ONDO B · Requirement → Flow → Actual Evidence Matrix
 
-상태: `HONEST REGISTRY · PRODUCT FROZEN · CURRENT HARNESS ACCEPTANCE PENDING`
+상태: `HONEST REGISTRY · PRODUCT/HARNESS/BASELINE FROZEN · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START`
 
-고정 제품 SHA: `fb6529e560a6c2b96ae22d1120645e560b8039ef`
+고정 제품 SHA: `46ad40f9fdbad89d3cf3e701f713803004d3e3af`
 
-검수 Harness SHA: `PENDING` — 현재 변경을 commit한 뒤 고정
+검수 Harness SHA: `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6`
 
 ## 1. 판정 규칙
 
@@ -60,7 +60,7 @@
 | `FL-017` | `B-E2E-FL-017-ENTRY` ACTUAL | `B-E2E-FL-017-DECISION` ACTUAL | `B-E2E-FL-017-CANCEL` ACTUAL | `B-E2E-FL-017-ERROR` ACTUAL | `B-E2E-FL-017-RETRY` ACTUAL | `B-E2E-FL-017-TERMINAL` ACTUAL | `B-E2E-FL-017-RETURN` ACTUAL |
 | `FL-018` | `B-E2E-FL-018-ENTRY` ACTUAL | `B-E2E-FL-018-DECISION` ACTUAL | `B-E2E-FL-018-CANCEL` ACTUAL | `B-E2E-FL-018-ERROR` ACTUAL | `B-E2E-FL-018-RETRY` ACTUAL | `B-E2E-FL-018-TERMINAL` ACTUAL | `B-E2E-FL-018-RETURN` ACTUAL |
 
-현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 이 수치는 제품 계약과 machine registry의 disposition이며, 현재 tuple의 실행 PASS를 뜻하지 않는다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. Harness·baseline commit과 전체 재실행이 끝날 때까지 현재 acceptance는 `PENDING`이다.
+현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. 동결 tuple의 nonpixel E2E는 `213 pass / 5 intentional viewport skips / 0 fail`이며, checkpoint mapping은 `121 actual + 5 N/A + 0 GAP`으로 통과했다.
 
 ## 4. Browser suites
 
@@ -80,11 +80,11 @@
 
 목표 baseline은 `44 × 6 = 264` PNG다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
 
-`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. 현재 264장 baseline의 commit/digest와 no-update full run은 아직 동결 전이므로 PASS로 기록하지 않는다.
+`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. 동결된 264장 baseline은 digest `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`이며 unchanged-baseline `264/264 PASS`를 통과했다.
 
 ## 6. Content evidence
 
-다음 KO/EN surface evidence ID가 registry에 있다. 현재 tuple의 실행 합격은 harness freeze 뒤 별도로 기록한다.
+다음 KO/EN surface evidence ID가 registry에 있으며 동결 tuple의 content/browser gate에서 통과했다.
 
 `B-COPY-ONBOARDING-KO`, `B-COPY-ONBOARDING-EN`, `B-COPY-NATION-KO`, `B-COPY-NATION-EN`, `B-COPY-CITY-LIST-KO`, `B-COPY-CITY-LIST-EN`, `B-COPY-PLACE-KO`, `B-COPY-PLACE-EN`, `B-COPY-ACCOUNT-GATE-KO`, `B-COPY-ACCOUNT-GATE-EN`, `B-COPY-AGE-GATE-KO`, `B-COPY-AGE-GATE-EN`, `B-COPY-TABLES-KO`, `B-COPY-TABLES-EN`, `B-COPY-TABLE-CHAT-KO`, `B-COPY-TABLE-CHAT-EN`, `B-COPY-LOCAL-SIGNAL-KO`, `B-COPY-LOCAL-SIGNAL-EN`, `B-COPY-CHECKOUT-KO`, `B-COPY-CHECKOUT-EN`, `B-COPY-IDENTITY-KO`, `B-COPY-IDENTITY-EN`, `B-COPY-PROFILE-KO`, `B-COPY-PROFILE-EN`, `B-COPY-LABS-KO`, `B-COPY-LABS-EN`, `B-COPY-AFTER19-KO`, `B-COPY-AFTER19-EN`.
 

@@ -1,12 +1,13 @@
 # SLEEK-R2 pixel baseline approval manifest
 
-Status: **FROZEN-PENDING-HARNESS**
+Status: **FROZEN · REVIEW READY · CLEAN STREAK 0/2**
 
-This receipt freezes the exact ONDO B pixel set that passed the unchanged-baseline `264/264` visual run. It records the Product SHA and image inventory while the Harness SHA is still pending. It is not a clean-round verdict, and the SLEEK-R2 clean streak remains `0/2`.
+This receipt freezes the exact ONDO B product, harness, and pixel set that passed the automated release gate. It is not a clean-round verdict, and the SLEEK-R2 clean streak remains `0/2` until five blind reviewers complete two consecutive clean rounds on this identical tuple.
 
 ## Frozen inputs
 
 - Product SHA: `46ad40f9fdbad89d3cf3e701f713803004d3e3af`
+- Harness SHA: `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6`
 - PNG inventory: `264` files = `44` cases × `6` viewports
 - Viewports: `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 - Responsive expansion: `176` files across the four added viewport families
@@ -30,7 +31,17 @@ Required invariants:
 - exactly `44` rows per viewport;
 - every `case_id + viewport` pair is unique;
 - dimensions equal the declared viewport;
-- every file status is `FROZEN-PENDING-HARNESS` until the Harness SHA is frozen.
+- every file status is `FROZEN` for the exact Product/Harness/baseline tuple above.
+
+## Automated gate receipt
+
+- TypeScript: PASS
+- Webpack production build: PASS (`28` routes, including `/ondo-b`)
+- Contracts: `26/26` PASS
+- B non-pixel E2E: `213` PASS, `5` intentional viewport-ownership skips, `0` failures
+- B pixel evidence: `264/264` PASS with no snapshot update
+- Checkpoint mapping: `121 ACTUAL`, `5` reasoned `N/A`, `0 GAP`
+- Runtime/product errors observed by the gate: `0`
 
 ## Approval reason taxonomy
 
@@ -47,4 +58,4 @@ Rows may carry multiple reason IDs when a screenshot proves more than one scoped
 
 ## Finalization boundary
 
-The unchanged-baseline `264/264` visual run is complete and this PNG inventory is frozen. The root agent must still freeze the Harness SHA, complete the remaining non-pixel gates, and execute the required blind review rounds on one identical tuple. No clean round has started; until those steps close, this status must not be promoted.
+The automated gates are complete and this tuple is frozen for review. No clean round has started. Five blind reviewers must now complete two consecutive clean rounds on this identical tuple before the candidate can be deployed or described as release-clean.

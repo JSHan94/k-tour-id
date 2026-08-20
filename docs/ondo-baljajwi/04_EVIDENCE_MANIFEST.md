@@ -1,21 +1,21 @@
 # ONDO B · Evidence Index
 
-상태: `CURRENT TUPLE PREFREEZE · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED`
+상태: `CURRENT TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 ## Current tuple
 
 | Field | Value |
 |---|---|
-| Product SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
-| Harness SHA | `PENDING` |
-| Baseline digest | `PENDING` — staging candidate digest `81adf5c4d807888d63ce7fcec1bc795c8997a21d043f82e42465d5c071ee2d62`, not frozen |
+| Product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
+| Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
+| Baseline digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`; 264 committed PNGs |
 | Route | `/ondo-b` |
 | Flow registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
 | Visual registry | `44 cases · 42 state IDs` |
 | Exact viewports | `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` |
 | Baseline target | `264 committed PNGs` |
-| Current accepted automated run | `NONE` — frozen current tuple의 full receipt 대기 |
-| Current review | `SLEEK R2 NOT STARTED · clean streak 0/2` |
+| Current automated run | typecheck/build PASS · contracts `26/26` · nonpixel E2E `213 pass / 5 intentional viewport skips / 0 fail` · pixel `264/264 PASS` |
+| Current review | `SLEEK R2 READY TO START · reviewer verdict 없음 · clean streak 0/2` |
 | Current deployment | `NOT DEPLOYED` |
 
 ## Historical private B — not current evidence
@@ -41,17 +41,17 @@
 6. runtime guard 설치와 first-party request/HTTP failure 검사가 모든 accepted browser/pixel run에 적용된다.
 7. baseline은 issue-scoped approval 뒤 commit되며 no-update run으로 재검증된다.
 
-## Current command ledger — pending execution receipt
+## Current command ledger — frozen-tuple execution receipt
 
 | Evidence ID | Command family | Required result | Current state |
 |---|---|---|---|
-| `B-SLK-R2-BUILD` | `pnpm typecheck`, `pnpm exec next build --webpack` | both PASS | receipt pending |
-| `B-SLK-R2-CONTRACT` | `pnpm test:contracts` | all PASS | receipt pending |
-| `B-SLK-R2-E2E` | `PLAYWRIGHT_BASE_URL=… pnpm test:e2e:b` | all B suites PASS, unexpected skip 0 | receipt pending |
-| `B-SLK-R2-PIXEL` | `PLAYWRIGHT_BASE_URL=… pnpm test:visual:b` | 264/264 no-update PASS | baseline freeze pending |
-| `B-SLK-R2-REGISTRY` | registry and baseline census specs | exact counts + 264 tracked PNGs | commit pending |
-| `B-SLK-R2-RUNTIME` | per-test runtime attachments | product error/failure/HTTP 4xx·5xx 0 | receipt pending |
-| `B-SLK-R2-REVIEW` | five blind roles | 5/5 complete, actionable 0 | not started |
+| `B-SLK-R2-BUILD` | `pnpm typecheck`, `pnpm exec next build --webpack` | both PASS | `PASS` |
+| `B-SLK-R2-CONTRACT` | `pnpm test:contracts` | all PASS | `26/26 PASS` |
+| `B-SLK-R2-E2E` | `PLAYWRIGHT_BASE_URL=… pnpm test:e2e:b` | all B suites PASS; only declared viewport skips | `213 pass / 5 intentional viewport skips / 0 fail` |
+| `B-SLK-R2-PIXEL` | `PLAYWRIGHT_BASE_URL=… pnpm test:visual:b` | 264/264 no-update PASS | `264/264 PASS`; digest `0f56b0cf…` |
+| `B-SLK-R2-REGISTRY` | registry and baseline census specs | exact counts + 264 tracked PNGs | `PASS` — `121 actual / 5 N/A / 0 GAP` |
+| `B-SLK-R2-RUNTIME` | per-test runtime attachments | product error/failure/HTTP 4xx·5xx 0 | `PASS` |
+| `B-SLK-R2-REVIEW` | five blind roles | 5/5 complete, actionable 0 | ready to start; no verdict |
 | `B-SLK-R2-CONFIRM` | same tuple five blind roles | second 5/5 clean | not started |
 
 ## Pixel evidence contract
@@ -96,6 +96,6 @@ Exact census:
 - [`evidence/RUN-20260819-R3-FINAL/manifest.md`](./evidence/RUN-20260819-R3-FINAL/manifest.md)
 - [`evidence/RUN-20260819-R4-FINAL/manifest.md`](./evidence/RUN-20260819-R4-FINAL/manifest.md)
 - `evidence/SLEEK-R1/`
-- `evidence/SLEEK-R2/manifest.md` and `baseline-files.tsv` — current 264-file staging receipt, `REVIEWED-BY-ROOT-PENDING`
+- `evidence/SLEEK-R2/manifest.md` and `baseline-files.tsv` — current 264-file baseline receipt; reviewer verdict와 clean contribution은 아직 없음
 
-`RUN-*`과 `SLEEK-R1`은 immutable history다. 현재 product/harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. `SLEEK-R2` staging receipt는 baseline 후보 파일을 식별할 뿐이며, harness commit·no-update full run·blind review 전에는 round 시작 또는 PASS로 승격하지 않는다.
+`RUN-*`과 `SLEEK-R1`은 immutable history다. 현재 product/harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. 현재 tuple은 full automated gate를 통과해 SLEEK R2를 시작할 준비가 됐지만 blind review verdict는 아직 없으며, clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.

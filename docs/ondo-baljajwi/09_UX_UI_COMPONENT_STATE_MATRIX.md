@@ -1,11 +1,14 @@
 # ONDO B · UX/UI Component & State Matrix
 
-상태: `EXECUTABLE REGISTRY EXPANDED · 264-BASELINE FREEZE PENDING`
+상태: `EXECUTABLE REGISTRY FROZEN · 264/264 PIXEL PASS · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START`
 
 ## 1. Current exact inventory
 
 | Item | Count |
 |---|---:|
+| Product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
+| Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
+| Baseline digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e` |
 | B route | `1` — `/ondo-b` |
 | Tab roots | `4` — ONDO, My Korea, Tables, ID |
 | Reducer surface kinds | `7` — map, venue, table, chat, local_signal, checkout, labs |
@@ -84,4 +87,4 @@ Setup fixture와 truth/geometry/a11y assertions는 case registry를 소비하는
 8. serious/critical Axe, contrast/name/label violation, product runtime failure `0`이어야 한다.
 9. baseline update는 issue-scoped approval 후 수행하고 최종에는 no-update full 264 run을 통과해야 한다.
 
-현재 registry와 target 파일 구조는 마련됐지만 harness commit SHA와 baseline digest가 아직 없으므로 `FROZEN` 또는 `264/264 PASS`로 판정하지 않는다.
+현재 264 PNG baseline set은 harness `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6`, digest `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`로 동결됐고 unchanged-baseline `264/264 PASS`를 통과했다. Typecheck/build PASS, contracts `26/26`, nonpixel E2E `213 pass / 5 intentional viewport skips / 0 fail`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`도 통과했다. SLEEK R2는 시작 준비 상태지만 reviewer verdict나 release acceptance는 아직 없다.

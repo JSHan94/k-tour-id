@@ -1,11 +1,11 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED`
+상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · G0~G6 PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2`
 
 ## 1. Fixed-tuple rule
 
-1. B product는 `fb6529e560a6c2b96ae22d1120645e560b8039ef`로 고정한다.
-2. Harness SHA와 264-baseline digest는 변경을 별도 commit하고 image census를 통과한 뒤 기록한다.
+1. B product는 `46ad40f9fdbad89d3cf3e701f713803004d3e3af`로 고정한다.
+2. Harness는 `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6`, 264-baseline digest는 `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`로 고정한다.
 3. 제품 fix commit 뒤의 QA evidence commit은 제품 source를 수정하지 않는다.
 4. `PLAYWRIGHT_BASE_URL`은 고정 product SHA를 serving하는 URL만 허용한다.
 5. product, harness, 승인 baseline 중 하나라도 바뀌면 진행 중 verdict와 clean streak를 `0/2`로 되돌린다.
@@ -70,6 +70,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm test:visual:b
 - 모든 126 checkpoint는 `pixel` 또는 사유 있는 `functional_only` disposition을 가진다.
 - baseline 변경은 issue 단위로 승인하며 blanket `--update-snapshots`를 release evidence로 인정하지 않는다.
 - 264 PNG가 모두 git tracked이고 정확한 viewport dimension을 가질 때만 baseline을 freeze한다.
+- 동결 baseline digest는 `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`이고 unchanged-baseline run은 `264/264 PASS`다.
 
 ## 7. Five-role blind review
 
@@ -96,4 +97,4 @@ Clean round는 같은 product+harness+baseline tuple에서 다음을 모두 만�
 - reviewer coverage receipt `5/5 COMPLETE`
 - reviewer 원문, issue closure, 명령 log, checksum과 frozen tuple 기록
 
-동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. 현재는 harness/baseline이 동결되지 않았고 SLEEK R2가 시작되지 않았으므로 clean streak는 `0/2`다.
+동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. 현재 동결 tuple은 typecheck/build PASS, contracts `26/26`, nonpixel E2E `213 pass / 5 intentional viewport skips / 0 fail`, pixel `264/264 PASS`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`까지 통과해 `SLEEK R2 READY TO START`다. Reviewer verdict는 아직 없으므로 clean streak는 `0/2`다.

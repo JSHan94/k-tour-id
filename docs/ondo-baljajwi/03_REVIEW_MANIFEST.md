@@ -1,12 +1,12 @@
 # ONDO B · Five-role Review Manifest
 
-상태: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED · CLEAN STREAK 0/2`
+상태: `FROZEN TUPLE · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | Field | Current value |
 |---|---|
-| Product SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
-| Harness SHA | `PENDING` |
-| Baseline digest | `PENDING` |
+| Product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
+| Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
+| Baseline digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e` · 264 committed PNGs |
 | Route | `/ondo-b` |
 | Visual scope | `44 cases · 42 state IDs · 6 viewports · 264 baselines` |
 | Flow scope | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
@@ -19,10 +19,10 @@
 | Round | Product/Harness/Baseline | Five reviewers | Actionable state | Clean contribution |
 |---|---|---|---|---|
 | `SLEEK-R1` | 이전 sleek baseline tuple | `5/5 NOT CLEAN` | 22개 finding이 fix/retest loop로 들어감 | `NO` |
-| `SLEEK-R2` | product만 현재 SHA로 frozen; harness/digest pending | `NOT STARTED` | freeze와 full gate 대기 | `NO · 0/2` |
+| `SLEEK-R2` | `46ad40f… / 6eceef4… / 0f56b0c…`; full automated QA PASS | `READY TO START` | reviewer verdict 없음 | `NO · 0/2` |
 | clean confirmation | R2와 동일 tuple에서만 실행 | `NOT STARTED` | R2 clean 뒤에만 가능 | `NO · 0/2` |
 
-`SLEEK-R1` reviewer 원문과 issue ledger는 `evidence/SLEEK-R1/`의 immutable 역사 증거다. 코드 수정이 들어갔으므로 R1 verdict를 현재 제품 closure나 clean으로 재해석하지 않는다. `evidence/SLEEK-R2/`에는 264-file candidate inventory를 식별하는 `REVIEWED-BY-ROOT-PENDING` staging receipt가 있지만, product+harness+baseline tuple freeze나 R2 시작/clean verdict가 아니다.
+`SLEEK-R1` reviewer 원문과 issue ledger는 `evidence/SLEEK-R1/`의 immutable 역사 증거다. 코드 수정이 들어갔으므로 R1 verdict를 현재 제품 closure나 clean으로 재해석하지 않는다. 현재 tuple은 product `46ad40f…`, harness `6eceef4…`, baseline `0f56b0c…`로 동결됐고 automated gate를 통과했다. 이는 R2 검토를 시작할 준비가 됐다는 뜻이며 R2 시작·완료·CLEAN verdict를 미리 뜻하지 않는다.
 
 ## Older accepted tuple — history only
 
@@ -48,10 +48,9 @@
 
 ## Next admissible evidence
 
-1. Harness commit SHA와 264-baseline digest를 고정한다.
-2. `qa:b`와 264/264 no-update run의 fresh receipt를 만든다.
-3. 같은 tuple을 다섯 reviewer에게 blind 배포한다.
-4. actionable issue가 있으면 product/harness fix 후 tuple을 다시 고정하고 R2를 처음부터 재시작한다.
-5. R2가 5/5 clean이면 같은 tuple에서 두 번째 독립 5/5 clean round를 실행한다.
+1. 동결 tuple의 automated receipt(typecheck/build PASS, contracts `26/26`, E2E `213 pass / 5 intentional viewport skips / 0 fail`, pixel `264/264`)를 유지한다.
+2. 같은 tuple을 다섯 reviewer에게 blind 배포한다.
+3. actionable issue가 있으면 product/harness fix 후 tuple을 다시 고정하고 R2를 처음부터 재시작한다.
+4. R2가 5/5 clean이면 같은 tuple에서 두 번째 독립 5/5 clean round를 실행한다.
 
 두 round가 모두 clean이 되기 전에는 새 sleek preview를 final 또는 release candidate로 표시하지 않는다.
