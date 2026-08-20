@@ -21,7 +21,7 @@ const READY_SESSION = {
   stamps: 9,
 }
 
-const BANNED_KO_ENGINEERING_NOUNS = /\b(?:Receipt|fixture|Quote|transaction|adapter|canonical envelope|Deferred|badge|metadata)\b/i
+const BANNED_KO_ENGINEERING_NOUNS = /\b(?:Receipt|fixture|Quote|transaction|adapter|canonical envelope|Deferred|badge|metadata|CONTRACT ONLY)\b/i
 
 async function seedReady(page: Page, locale: BLocale, clearFeatures = true) {
   await prepareBPage(page)
