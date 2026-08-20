@@ -9,7 +9,7 @@ import {
   setupBSurface,
 } from "../helpers/ondo-b-qa"
 
-const PRODUCT_BOUNDARY = /Simulat|시뮬레이션|official|공식|source|출처|preview|미리보기|local|로컬|signal|신호|private|비공개|not confirmed|확인되지/i
+const PRODUCT_BOUNDARY = /Simulat|시뮬레이션|demo|데모|official|공식|source|출처|preview|미리보기|local|로컬|signal|신호|private|비공개|not confirmed|확인되지/i
 
 test.describe("ONDO B reachable KO/EN content surfaces", () => {
   test.beforeEach(async ({ page }) => {

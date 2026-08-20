@@ -320,7 +320,7 @@ export async function openTables(page: Page, tableId = TABLE_ID) {
 }
 
 export async function openLabs(page: Page) {
-  await page.getByRole("button", { name: "My Korea", exact: true }).click()
+  await page.getByTestId("nav-my").click()
   const milestone = page.getByTestId("open-labs-milestone")
   if (await milestone.isVisible().catch(() => false)) await milestone.click()
   else await page.getByTestId("open-labs").click()
