@@ -69,6 +69,17 @@ export type BVisualCase = {
   description: string
 }
 
+export const B_SLEEK_VIEWPORTS = [
+  { id: "360x800", width: 360, height: 800, role: "compact-mobile" },
+  { id: "390x844", width: 390, height: 844, role: "canonical-mobile" },
+  { id: "430x932", width: 430, height: 932, role: "large-mobile" },
+  { id: "768x1024", width: 768, height: 1024, role: "tablet" },
+  { id: "801x1000", width: 801, height: 1000, role: "desktop-breakpoint" },
+  { id: "1440x1000", width: 1440, height: 1000, role: "canonical-desktop" },
+] as const
+
+export type BSleekViewportId = (typeof B_SLEEK_VIEWPORTS)[number]["id"]
+
 /**
  * Reachable, layout-distinct B surfaces. Every case runs at both 390×844 and
  * 1440×1000. KO/EN are both present on surfaces where copy expansion can
@@ -700,11 +711,11 @@ export async function closeBVisualCase(page: Page) {
   await expectBRuntimeClean(page)
 }
 
-export function bSnapshotName(item: BVisualCase, viewport: "390x844" | "1440x1000") {
+export function bSnapshotName(item: BVisualCase, viewport: BSleekViewportId) {
   return `${item.id}__${item.flows.join("+")}__${item.locale}__${viewport}.png`
 }
 
-export function attachBCaseMetadata(testInfo: TestInfo, item: BVisualCase, viewport: "390x844" | "1440x1000") {
+export function attachBCaseMetadata(testInfo: TestInfo, item: BVisualCase, viewport: BSleekViewportId) {
   return testInfo.attach("evidence-case.json", {
     body: JSON.stringify({ ...item, viewport, sourceRoute: "/ondo-b", tilePolicy: "external vector tiles replaced; ONDO overlays unmasked" }, null, 2),
     contentType: "application/json",

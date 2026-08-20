@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 import { B_FLOW_IDS } from "../helpers/ondo-b-qa"
-import { B_VISUAL_CASES } from "../helpers/ondo-b-visual-evidence"
+import { B_SLEEK_VIEWPORTS, B_VISUAL_CASES } from "../helpers/ondo-b-visual-evidence"
 
 const REQUIRED_STATES = [
   "ONBOARDING-VALUE", "ONBOARDING-PERSONAS", "ONBOARDING-PREFERENCES",
@@ -27,4 +27,6 @@ test("B-EVIDENCE-FINAL-INTEGRATION makes FL-002 and FL-011 reachable pixel cases
   const required = ["AFTER19-VENUE-LOCKED", "AFTER19-VENUE-RETURN", "SAVE-FAILURE", "SAVE-RECOVERED"]
   expect(required.filter((state) => !B_VISUAL_CASES.some((item) => item.state === state))).toEqual([])
   expect(B_VISUAL_CASES.filter((item) => required.includes(item.state)).every((item) => item.flows.includes(item.state.startsWith("AFTER19") ? "FL-002" : "FL-011"))).toBe(true)
+  expect(B_SLEEK_VIEWPORTS.map(({ id }) => id)).toEqual(["360x800", "390x844", "430x932", "768x1024", "801x1000", "1440x1000"])
+  expect(B_VISUAL_CASES.length * B_SLEEK_VIEWPORTS.length).toBe(264)
 })
