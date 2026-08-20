@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { AlertTriangle, ArrowLeft, Check, Clock3, ImagePlus, Languages, MapPin, MessageCircle, Send, ShieldCheck, Users } from "lucide-react"
 import { activityIdempotencyKey, firstMissionEvents, type ActivityEvent } from "../contracts/activity"
 import { venueLabelById } from "@/lib/ondo/venues/display"
@@ -301,6 +301,15 @@ function TableChat({ tableId }: { tableId: string }) {
     }
   }, [confirm])
 
+  function retainConfirmFocus(event: ReactPointerEvent<HTMLDivElement>) {
+    const panel = confirmPanelRef.current
+    if (!panel || panel.contains(event.target as Node)) return
+    event.preventDefault()
+    if (panel.contains(document.activeElement)) return
+    const initial = panel.querySelector<HTMLElement>("[data-confirm-initial-focus]") ?? panel
+    initial.focus({ preventScroll: true })
+  }
+
   function updateMessages(update: (current: ChatItem[]) => ChatItem[]) {
     setMessages((current) => {
       const next = update(current)
@@ -471,7 +480,7 @@ function TableChat({ tableId }: { tableId: string }) {
         </div>
 
         {confirm ? (
-          <div ref={confirmLayerRef} className={styles.confirmLayer} data-testid="chat-confirm-layer">
+          <div ref={confirmLayerRef} className={styles.confirmLayer} data-testid="chat-confirm-layer" onPointerDown={retainConfirmFocus}>
             <div className={styles.confirmBackdrop} aria-hidden="true" />
             <div ref={confirmPanelRef} className={styles.confirmPanel} role="alertdialog" aria-modal="true" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description" tabIndex={-1} data-testid="chat-confirm-dialog">
             <h3 id="confirm-action-title">{confirm === "leave" ? locale === "ko" ? "Table을 나갈까요?" : "Leave this Table?" : locale === "ko" ? "로컬 미리보기에 신고를 저장할까요?" : "Save a report in this local preview?"}</h3>
