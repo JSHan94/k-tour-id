@@ -126,12 +126,16 @@ test("SLK-009 ?qa=1 exposes the deterministic Gate seam", async ({ page }) => {
 test("SLK-012 active Gate owns the modal tree, traps focus, and restores Checkout", async ({ page }) => {
   await seedB(page, { local: { autoNight: false }, session: { ...READY_SESSION, paymentKyc: "PKY-NOT-STARTED" } })
   await openCheckout(page)
-  const checkoutDialog = page.locator("[role='dialog'][aria-label='Checkout simulation']")
+  const checkoutDialog = page.getByTestId("ondo-sheet")
+  await expect(checkoutDialog).toHaveAttribute("role", "dialog")
+  await expect(checkoutDialog).toHaveAttribute("aria-modal", "true")
   await page.getByTestId("checkout-start").click()
 
   await expect(checkoutDialog).toHaveAttribute("inert", "")
   await expect(checkoutDialog).toHaveAttribute("aria-hidden", "true")
-  await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true'])")).toHaveCount(1)
+  await expect(checkoutDialog).not.toHaveAttribute("role")
+  await expect(checkoutDialog).not.toHaveAttribute("aria-modal")
+  await expect(page.locator("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']")).toHaveCount(1)
   const gate = page.getByTestId("ondo-gate-overlay")
   await expect(gate).not.toContainText(/Simulate failure|Show unavailable route/i)
   const close = gate.getByRole("button", { name: "Return to previous screen" })
@@ -146,6 +150,8 @@ test("SLK-012 active Gate owns the modal tree, traps focus, and restores Checkou
   await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
   await expect(checkoutDialog).not.toHaveAttribute("inert", "")
   await expect(checkoutDialog).not.toHaveAttribute("aria-hidden", "true")
+  await expect(checkoutDialog).toHaveAttribute("role", "dialog")
+  await expect(checkoutDialog).toHaveAttribute("aria-modal", "true")
   await expect(page.getByTestId("checkout-start")).toBeFocused()
 })
 
