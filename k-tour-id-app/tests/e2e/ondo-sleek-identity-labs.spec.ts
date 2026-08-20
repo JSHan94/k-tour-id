@@ -117,14 +117,14 @@ test("SLK-009 ?qa=1 exposes the deterministic Labs seam", async ({ page }) => {
 })
 
 test("SLK-009 ?qa=1 exposes the deterministic Gate seam", async ({ page }) => {
-  await seedB(page, { session: { ...READY_SESSION, paymentKyc: "PKY-NOT-STARTED" } })
+  await seedB(page, { local: { autoNight: false }, session: { ...READY_SESSION, paymentKyc: "PKY-NOT-STARTED" } })
   await openCheckout(page, "qa=1")
   await page.getByTestId("checkout-start").click()
   await expect(page.getByRole("button", { name: "Simulate failure" })).toBeVisible()
 })
 
 test("SLK-012 active Gate owns the modal tree, traps focus, and restores Checkout", async ({ page }) => {
-  await seedB(page, { session: { ...READY_SESSION, paymentKyc: "PKY-NOT-STARTED" } })
+  await seedB(page, { local: { autoNight: false }, session: { ...READY_SESSION, paymentKyc: "PKY-NOT-STARTED" } })
   await openCheckout(page)
   const checkoutDialog = page.locator("[role='dialog'][aria-label='Checkout simulation']")
   await page.getByTestId("checkout-start").click()
