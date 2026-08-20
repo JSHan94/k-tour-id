@@ -32,7 +32,7 @@ const TEXT = {
     body: "ONDO starts with food and drink coverage in Seoul and Busan, then grows across Korea.",
     start: "Get started",
     guest: "Explore as a guest",
-    signal: "ONDO is a recent local food signal, not the weather.",
+    signal: "Example ONDO score · Simulated preview, not weather or a live crowd count.",
     intentTitle: "How will you use ONDO?",
     intentBody: "This only prepares recommendations and verification routes. You can change it later.",
     preferenceTitle: "What kind of meal are you looking for?",
@@ -52,7 +52,7 @@ const TEXT = {
     body: "ONDO는 서울과 부산의 식음료 정보부터 시작해 한국으로 넓혀갑니다.",
     start: "시작하기",
     guest: "먼저 둘러보기",
-    signal: "숫자는 기온이 아니라 최근 로컬 식음료 신호예요.",
+    signal: "ONDO 점수 예시 · 실제 기온이나 실시간 인파가 아닌 시뮬레이션 미리보기예요.",
     intentTitle: "ONDO를 어떻게 사용하시나요?",
     intentBody: "추천과 인증 경로를 준비하는 데만 사용하며, 나중에 바꿀 수 있어요.",
     preferenceTitle: "어떤 한 끼를 찾고 있나요?",
@@ -149,7 +149,7 @@ export function OnboardingLayer() {
           <p className={styles.eyebrow}>{t.eyebrow}</p>
           <h1>{t.title}</h1>
           <p className={styles.lead}>{t.body}</p>
-          <div className={styles.signal}><span>72</span><p>{t.signal}</p></div>
+          <div className={styles.signal} data-testid="onboarding-signal-truth"><span>72</span><p>{t.signal}</p></div>
           <div className={styles.actions}>
             <button type="button" data-onboarding-initial-focus className={styles.primary} onClick={() => { actions.beginOnboarding(); setStep("intent") }}>
               {t.start}<ArrowRight size={18} />

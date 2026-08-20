@@ -81,4 +81,25 @@ test.describe("ONDO B sleek shared shell", () => {
     await expect(axes.nth(2).locator("i[class]")).toHaveCount(2)
     await expect(axes.nth(3).locator("i[class]")).toHaveCount(2)
   })
+
+  test("onboarding labels its example score as simulated at the decision point", async ({ page }) => {
+    await gotoB(page)
+    const truth = page.getByTestId("onboarding-signal-truth")
+    await expect(truth).toContainText("Simulated preview")
+    await expect(truth).toContainText("not weather")
+  })
+
+  test("desktop onboarding uses the editorial canvas instead of a phone-width column", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium")
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await gotoB(page)
+    const onboarding = page.getByTestId("ondo-onboarding")
+    const title = onboarding.getByRole("heading", { level: 1 })
+    const truth = page.getByTestId("onboarding-signal-truth")
+    const [titleBox, truthBox] = await Promise.all([title.boundingBox(), truth.boundingBox()])
+    expect(titleBox).not.toBeNull()
+    expect(truthBox).not.toBeNull()
+    expect(titleBox!.x + titleBox!.width).toBeLessThan(truthBox!.x)
+    expect(truthBox!.width).toBeGreaterThanOrEqual(300)
+  })
 })
