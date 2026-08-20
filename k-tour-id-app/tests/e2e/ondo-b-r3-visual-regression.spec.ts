@@ -25,6 +25,11 @@ async function expectAbove(upper: Locator, lower: Locator, gap = 0) {
   expect(upperBox.y + upperBox.height).toBeLessThanOrEqual(lowerBox.y - gap + 1)
 }
 
+async function expectRightOf(right: Locator, left: Locator, gap = 0) {
+  const [rightBox, leftBox] = await Promise.all([box(right), box(left)])
+  expect(rightBox.x).toBeGreaterThanOrEqual(leftBox.x + leftBox.width + gap - 1)
+}
+
 async function expectFullyVisible(locator: Locator) {
   await expect(locator).toBeVisible()
   const rect = await box(locator)
@@ -66,7 +71,8 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     const resultBar = page.getByRole("button", { name: "Map", exact: true }).locator("..")
     const nav = page.getByRole("navigation", { name: "Main navigation" })
     await expectAbove(listPanel, resultBar, 7)
-    await expectAbove(resultBar, nav, 7)
+    if ((page.viewportSize()?.width ?? 0) >= 801) await expectRightOf(resultBar, nav, 7)
+    else await expectAbove(resultBar, nav, 7)
   })
 
   test("map fallback keeps its list bounded and removes unavailable map controls", async ({ page }) => {
@@ -89,11 +95,13 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     for (const [tab, id] of [["My Korea", "my"], ["Tables", "tables"], ["ID", "id"]] as const) {
       await page.getByRole("button", { name: tab, exact: true }).click()
       const content = page.locator(`[data-active-tab='${id}']`)
-      await expectAbove(content, nav, 7)
+      if ((page.viewportSize()?.width ?? 0) >= 801) await expectRightOf(content, nav, 7)
+      else await expectAbove(content, nav, 7)
       await content.evaluate((element) => { element.scrollTop = element.scrollHeight })
       const lastControl = content.locator("button:visible, a[href]:visible").last()
       await expectFullyVisible(lastControl)
-      await expectAbove(lastControl, nav, 7)
+      if ((page.viewportSize()?.width ?? 0) >= 801) await expectRightOf(lastControl, nav, 7)
+      else await expectAbove(lastControl, nav, 7)
     }
   })
 
@@ -202,7 +210,7 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
 
     const dialog = page.getByRole("dialog", { name: "Labs" })
     await dialog.evaluate((element) => { element.scrollTop = element.scrollHeight })
-    const back = page.getByRole("button", { name: "Back to My Korea" })
+    const back = page.getByRole("button", { name: "Return to My Korea" })
     await expectFullyVisible(back)
     const backBox = await box(back)
     expect(backBox.width).toBeGreaterThanOrEqual(44)
@@ -214,7 +222,7 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await opener.click()
     await expect(page.getByTestId("labs-acknowledge")).toHaveCount(0)
     await expect(page.getByTestId("labs-overlay")).toHaveAttribute("data-wallet-state", "WAL-READY")
-    await expect(page.getByRole("button", { name: "Back to My Korea" })).toBeFocused()
+    await expect(page.getByRole("button", { name: "Return to My Korea" })).toBeFocused()
     await page.keyboard.press("Escape")
     await expect(page.getByRole("dialog", { name: "Labs" })).toHaveCount(0)
     await expect(opener).toBeFocused()
