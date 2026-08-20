@@ -60,7 +60,7 @@ test.describe("ONDO B sleek shared shell", () => {
     const nav = page.getByTestId("ondo-main-nav")
     await expect(nav.getByText("나의 한국", { exact: true })).toBeVisible()
     await expect(nav.getByText("모임", { exact: true })).toBeVisible()
-    await expect(nav.getByText("확인", { exact: true })).toBeVisible()
+    await expect(nav.getByText("신원", { exact: true })).toBeVisible()
     await expect(nav.locator("[aria-current='page']")).toHaveCount(1)
   })
 

@@ -386,13 +386,13 @@ test.describe("ONDO B canonical flow journeys", () => {
     const profile = page.getByTestId("ondo-profile-panel")
     await test.step(evidence("FL-015", "ENTRY/DECISION/CANCEL"), async () => {
       await profile.getByRole("button", { name: "Edit public fields" }).click()
-      await profile.getByRole("button", { name: "Show publicly" }).first().click()
+      await profile.getByRole("button", { name: "From: private. Show From publicly", exact: true }).click()
       await profile.getByRole("button", { name: "Cancel editing" }).click()
       await expect(profile).toContainText("Private by default")
     })
     await test.step(evidence("FL-015", "ERROR/RETRY"), async () => {
       await profile.getByRole("button", { name: "Edit public fields" }).click()
-      await profile.getByRole("button", { name: "Show publicly" }).first().click()
+      await profile.getByRole("button", { name: "From: private. Show From publicly", exact: true }).click()
       await profile.getByRole("button", { name: "Save selected fields" }).click()
       await expect(profile.getByRole("alert")).toBeVisible()
       await profile.getByRole("button", { name: "Try save again" }).click()
@@ -400,7 +400,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-015", "TERMINAL/RETURN"), async () => {
       await expect(profile).toContainText("Only selected fields are public")
       await expect(page.getByTestId("ondo-trust-panel")).toBeVisible()
-      await expect(profile).toContainText("Person-check nationality is never copied here")
+      await expect(profile).toContainText("Identity-check nationality is never copied here")
     })
   })
 

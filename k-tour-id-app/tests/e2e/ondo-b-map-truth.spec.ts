@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 
-const ALL_INTERESTS = ["Local classics", "Cafés and dessert", "Late-night food", "Lively", "A little calmer", "Dietary preferences"]
+const ALL_INTERESTS = ["Local classics", "Cafés and dessert", "Late-night food", "Lively", "A little calmer", "Vegetarian", "Vegan", "Halal", "Allergy-aware"]
 
 async function seed(page: Page, discoveryPreferences: string[] = [], session: Record<string, unknown> = {}) {
   await page.addInitScript(({ discoveryPreferences, session }) => {
@@ -98,12 +98,12 @@ test.describe("ONDO B map truth and failure boundary", () => {
   })
 
   test("all onboarding interests remain visible and editable without unsupported filtering", async ({ page }) => {
-    await seed(page, ["classic", "cafe", "late", "lively", "calm", "diet"])
+    await seed(page, ["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"])
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='busan']").click()
 
     const summary = page.getByTestId("ondo-b-preference-summary")
-    await expect(summary).toContainText("6 starting interests")
+    await expect(summary).toContainText("9 starting interests")
     await summary.click()
     const panel = page.getByTestId("ondo-b-preference-panel")
     await expect(panel).toContainText("results are not silently filtered")

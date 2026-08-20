@@ -115,8 +115,8 @@ for (const locale of ["en", "ko"] as const) {
     const identity = page.getByTestId("ondo-identity-entry")
     const profile = page.getByTestId("ondo-profile-panel")
     const labels = locale === "ko"
-      ? { edit: "공개 필드 편집", name: "표시 이름", cancel: "편집 취소", save: "선택한 필드 저장", retry: "저장 다시 시도", show: "공개하기" }
-      : { edit: "Edit public fields", name: "Display name", cancel: "Cancel editing", save: "Save selected fields", retry: "Try save again", show: "Show publicly" }
+      ? { edit: "공개 필드 편집", name: "표시 이름", cancel: "편집 취소", save: "선택한 필드 저장", retry: "저장 다시 시도", show: "출신: 비공개. 출신 공개하기" }
+      : { edit: "Edit public fields", name: "Display name", cancel: "Cancel editing", save: "Save selected fields", retry: "Try save again", show: "From: private. Show From publicly" }
 
     await profile.getByRole("button", { name: labels.edit }).click()
     await expect(profile.getByLabel(labels.name)).toBeFocused()
@@ -127,7 +127,7 @@ for (const locale of ["en", "ko"] as const) {
     await expectFocusWithinViewport(page, identity)
 
     await profile.getByRole("button", { name: labels.edit }).click()
-    await profile.getByRole("button", { name: labels.show }).first().click()
+    await profile.getByRole("button", { name: labels.show, exact: true }).click()
     await profile.getByRole("button", { name: labels.save }).click()
     await expect(profile.getByRole("alert")).toBeVisible()
     await expect(profile.getByRole("button", { name: labels.retry })).toBeFocused()
