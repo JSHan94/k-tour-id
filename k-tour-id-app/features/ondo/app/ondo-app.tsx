@@ -26,9 +26,32 @@ const NAV: Array<{ id: OndoTab; icon: typeof Map }> = [
 function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A" | "B" }) {
   const { state, actions } = useOndo()
   const previousSurface = useRef(state.surface)
+  const previousDocumentLanguage = useRef<string | null>(null)
+  const appliedDocumentLanguage = useRef(state.locale)
   const copy = COPY[state.locale]
   const active = state.tab === "ondo" ? slots.map : state.tab === "my" ? slots.my : state.tab === "tables" ? slots.tables : slots.id
   const onboardingActive = state.onboarding !== "ONB-COMPLETE"
+
+  useEffect(() => {
+    previousDocumentLanguage.current = document.documentElement.lang
+    const languageObserver = new MutationObserver(() => {
+      if (document.documentElement.lang === appliedDocumentLanguage.current) return
+      previousDocumentLanguage.current = document.documentElement.lang
+      document.documentElement.lang = appliedDocumentLanguage.current
+    })
+    languageObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] })
+    return () => {
+      languageObserver.disconnect()
+      if (document.documentElement.lang === appliedDocumentLanguage.current && previousDocumentLanguage.current) {
+        document.documentElement.lang = previousDocumentLanguage.current
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    document.documentElement.lang = state.locale
+    appliedDocumentLanguage.current = state.locale
+  }, [state.locale])
 
   useEffect(() => {
     const before = previousSurface.current
@@ -48,7 +71,7 @@ function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A
       data-variant={variant}
       data-locale={state.locale}
     >
-      <section className={styles.canvas} aria-label="ONDO travel food app" data-testid="ondo-canvas">
+      <section className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 여행 식음료 앱" : "ONDO travel food app"} data-testid="ondo-canvas">
         <div className={styles.content} data-active-tab={state.tab} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>{active}</div>
         <nav className={styles.nav} data-testid="ondo-main-nav" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {NAV.map(({ id, icon: Icon }) => (

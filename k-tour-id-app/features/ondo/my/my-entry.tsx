@@ -1,7 +1,7 @@
 "use client"
 
 import { Bookmark, Check, ChevronRight, FlaskConical, MapPin, MessageCircle, ShieldCheck, Sparkles, Stamp } from "lucide-react"
-import { venueDisplayName } from "@/lib/ondo/venues/display"
+import { venueNamePresentation } from "@/lib/ondo/venues/display"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { DISCOVERY_PREFERENCE_OPTIONS, PERSONA_OPTIONS } from "../onboarding/discovery-options"
 import { useOndo } from "../shared/state/ondo-provider"
@@ -26,12 +26,11 @@ export function MyEntry() {
 
   function savedVenueLabel(venueId: string) {
     const legacy = VENUE_NAMES[venueId]
-    if (legacy) return { primary: legacy[locale], secondary: locale === "en" ? legacy.ko : null }
+    if (legacy) return { primary: legacy[locale], sourceLabel: null, transliteration: locale === "en" ? legacy.ko : null, transliterationLabel: null }
     const koreanName = canonicalMapVenueById(venueId)?.name.ko
-    if (!koreanName) return { primary: locale === "ko" ? "저장한 장소" : "Saved place", secondary: null }
-    return locale === "ko"
-      ? { primary: koreanName, secondary: null }
-      : { primary: venueDisplayName(koreanName, "en"), secondary: `${koreanName} · Transliterated for navigation` }
+    if (!koreanName) return { primary: locale === "ko" ? "저장한 장소" : "Saved place", sourceLabel: null, transliteration: null, transliterationLabel: null }
+    const presentation = venueNamePresentation(koreanName, locale)
+    return { primary: presentation.officialName, sourceLabel: presentation.officialNameLabel, transliteration: presentation.transliteration, transliterationLabel: presentation.transliterationLabel }
   }
 
   function togglePreference(id: (typeof DISCOVERY_PREFERENCE_OPTIONS)[number]["id"]) {
@@ -48,7 +47,7 @@ export function MyEntry() {
         <div className={styles.sectionTitle}><div><Bookmark size={18} /><h2 id="saved-heading">{locale === "ko" ? "저장한 장소" : "Saved places"}</h2></div><span>{state.savedVenueIds.length}</span></div>
         {state.savedVenueIds.length ? <div className={styles.savedList}>{state.savedVenueIds.map((venueId) => {
           const label = savedVenueLabel(venueId)
-          return <button key={venueId} type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "venue", venueId }) }} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span><strong>{label.primary}</strong>{label.secondary ? <small>{label.secondary}</small> : null}</span><ChevronRight size={17} /></button>
+          return <button key={venueId} type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "venue", venueId }) }} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span><strong>{label.primary}</strong>{label.sourceLabel ? <small className={styles.sourceNameTruth}>{label.sourceLabel}</small> : null}{label.transliteration ? <small className={styles.savedTransliteration}><b>{label.transliteration}</b>{label.transliterationLabel ? <> · {label.transliterationLabel}</> : null}</small> : null}</span><ChevronRight size={17} /></button>
         })}</div> : <div className={styles.empty}><Bookmark size={21} /><p>{locale === "ko" ? "ONDO 지도에서 다시 보고 싶은 식음료 장소를 저장해 보세요." : "Save a food or drink place from the ONDO map to find it here."}</p><button type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "ONDO 지도 보기" : "Open ONDO map"}</button></div>}
       </section>
 

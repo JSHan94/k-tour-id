@@ -6,7 +6,7 @@ import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, CreditCard, LockKeyhole,
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
-import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
+import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { HEAT_COLORS } from "@/lib/ondo/map/heat"
 import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
 import { useOndo } from "../shared/state/ondo-provider"
@@ -138,7 +138,9 @@ export function CanonicalPlaceOverlay() {
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
+  const peekRef = useRef<HTMLDivElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
   const saveAttemptRef = useRef(0)
   const saveTimerRef = useRef<number | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
@@ -178,6 +180,15 @@ export function CanonicalPlaceOverlay() {
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
+  useEffect(() => {
+    if (!venueId || expanded) return
+    const active = document.activeElement
+    if (!returnFocusRef.current && active instanceof HTMLElement && active !== document.body && active.matches(`[data-venue-opener='${CSS.escape(venueId)}']`)) {
+      returnFocusRef.current = active
+    }
+    const frame = window.requestAnimationFrame(() => openRef.current?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [expanded, venueId])
   useModalIsolation(expanded && state.tab === "ondo" && Boolean(venueId), layerRef)
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
@@ -202,7 +213,7 @@ export function CanonicalPlaceOverlay() {
 
   if (!venue || state.tab !== "ondo") return null
   const koreanName = venue.name.ko
-  const name = venueDisplayName(koreanName, locale)
+  const name = venueNamePresentation(koreanName, locale)
   const district = venueDistrictLabel(venue.cityId, venue.districtId, locale)
   const addressEvidence = detail?.address.road.value ? detail.address.road : detail?.address.lot.value ? detail.address.lot : null
   const address = addressEvidence?.value ?? (detailState === "error" ? copy.detailUnavailable : detailState === "ready" ? copy.unknown : copy.detailLoading)
@@ -215,7 +226,16 @@ export function CanonicalPlaceOverlay() {
   const after19Unlocked = state.after19 === "A19-ON" && ageCurrent
   const currentVenueId = venue.id
 
-  function close() { actions.setSurface({ kind: "map" }) }
+  function restorePeekOpener() {
+    const opener = returnFocusRef.current
+    const fallback = document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")
+    const target = opener?.isConnected ? opener : fallback
+    target?.focus({ preventScroll: true })
+  }
+  function close() {
+    actions.setSurface({ kind: "map" })
+    window.requestAnimationFrame(restorePeekOpener)
+  }
   function closeDetails() {
     setExpanded(false)
     window.requestAnimationFrame(() => openRef.current?.focus())
@@ -228,6 +248,20 @@ export function CanonicalPlaceOverlay() {
     }
     if (event.key !== "Tab") return
     const focusable = Array.from(detailRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((element) => element.offsetParent !== null)
+    const first = focusable[0]
+    const last = focusable.at(-1)
+    if (!first || !last) return
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+  }
+  function handlePeekKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      close()
+      return
+    }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(peekRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((element) => element.offsetParent !== null)
     const first = focusable[0]
     const last = focusable.at(-1)
     if (!first || !last) return
@@ -265,12 +299,12 @@ export function CanonicalPlaceOverlay() {
   const signalCount = signal ? locale === "ko" ? `${signal.signalCount}개 프리뷰 입력` : `${signal.signalCount} preview inputs` : ""
 
   if (!expanded) return (
-    <div className={styles.peek} role="dialog" aria-modal="false" aria-label={name} data-testid="canonical-place-peek" data-venue-id={venue.id}>
+    <div ref={peekRef} className={styles.peek} role="dialog" aria-modal="false" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <div className={styles.meta}><span>{district} · {CATEGORY[venue.primaryCategory][locale]}</span><i>{copy.active}</i></div>
-      <h2>{name}</h2>
-      <p>{locale === "en" ? koreanName : copy.noEnglish}</p>
+      <h2>{name.officialName}</h2>
+      <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
       <div className={styles.signal} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
         <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
         <span><strong>{signal ? copy.previewSnapshot : copy.signalPending}</strong><small data-testid="canonical-place-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100 · ${signalCount}` : contributed ? copy.contributed : copy.signalPendingBody}</small></span>
@@ -297,8 +331,8 @@ export function CanonicalPlaceOverlay() {
         </header>
         <div className={styles.body}>
           <p className={styles.eyebrow}>{district} · {CATEGORY[venue.primaryCategory][locale]}</p>
-          <h2 id="canonical-place-title">{name}</h2>
-          <p className={styles.secondaryName}>{locale === "en" ? `${koreanName} · Transliterated for navigation` : copy.noEnglish}</p>
+          <h2 id="canonical-place-title">{name.officialName}</h2>
+          <div className={styles.detailNameProvenance} data-testid="canonical-detail-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
           <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">

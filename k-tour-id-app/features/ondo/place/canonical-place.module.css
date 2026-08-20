@@ -3,8 +3,12 @@
 .close { position: absolute; top: 9px; right: 10px; display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
 .meta { display: flex; margin-right: 44px; align-items: center; gap: 8px; color: #716c65; font-size: 12px; }
 .meta i { padding-left: 8px; border-left: 1px solid #d7d3cd; font-style: normal; }
-.peek h2 { margin: 8px 44px 1px 0; overflow: hidden; font: inherit; font-size: 20px; font-weight: 700; letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
-.peek > p { margin: 0 44px 9px 0; overflow: hidden; color: #7b756e; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.peek h2 { margin: 8px 44px 1px 0; font: inherit; font-size: 20px; font-weight: 700; line-height: 1.28; letter-spacing: -.035em; overflow-wrap: anywhere; }
+.nameProvenance, .detailNameProvenance { display: grid; min-width: 0; gap: 2px; color: #716b64; font-size: 12px; line-height: 1.4; }
+.nameProvenance { margin: 2px 44px 9px 0; }
+.nameProvenance span, .detailNameProvenance span { color: #777169; font-weight: 680; }
+.nameProvenance strong, .detailNameProvenance strong { color: #34312d; font-size: 12px; overflow-wrap: anywhere; }
+.nameProvenance small, .detailNameProvenance small { color: #716b64; font-size: 12px; overflow-wrap: anywhere; }
 .signal { display: grid; grid-template-columns: 46px 1fr; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #e0ddd7; border-bottom: 1px solid #e0ddd7; }
 .signal > b, .signalDetail > b { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid; border-radius: 50%; font-size: 13px; }
 .signal span { display: grid; gap: 2px; min-width: 0; }
@@ -29,7 +33,7 @@
 .body { min-height: 0; overflow-y: auto; padding: 24px 18px calc(30px + env(safe-area-inset-bottom)); overscroll-behavior: contain; }
 .eyebrow { margin: 0; color: #656059; font-size: 12px; font-weight: 750; letter-spacing: .06em; }
 .body > h2 { margin: 8px 0 1px; font: inherit; font-size: 28px; font-weight: 700; letter-spacing: -.05em; }
-.secondaryName { margin: 0; color: #716b64; font-size: 12px; }
+.detailNameProvenance { margin-top: 3px; }
 .address { display: flex; align-items: flex-start; gap: 7px; margin: 13px 0 16px; color: #625e58; font-size: 12px; line-height: 1.5; }
 .address svg { flex: 0 0 auto; margin-top: 1px; }
 .decisionActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }

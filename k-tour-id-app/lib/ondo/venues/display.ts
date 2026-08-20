@@ -27,6 +27,18 @@ export function venueDisplayName(name: string, locale: "en" | "ko") {
   return locale === "ko" ? name : romanizeKorean(name)
 }
 
+export function venueNamePresentation(name: string, locale: "en" | "ko") {
+  const transliteration = romanizeKorean(name)
+  return {
+    officialName: name,
+    officialNameLabel: locale === "ko" ? "공식 출처 한글명" : "Official Korean source name",
+    transliteration,
+    transliterationLabel: locale === "ko"
+      ? "길찾기용 생성 로마자 표기 · 공식 영문명 아님"
+      : "Transliterated for navigation · Generated, not an official English name",
+  }
+}
+
 export function venueDistrictLabel(cityId: "seoul" | "busan", districtId: string, locale: "en" | "ko") {
   return locale === "ko" ? districtId : DISTRICTS[`${cityId}:${districtId}`] ?? romanizeKorean(districtId)
 }

@@ -9,7 +9,7 @@ import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues"
 import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
-import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
+import { venueDisplayName, venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { mapFoodIntentAliases } from "@/lib/ondo/venues/map-discovery-aliases"
 import type { DiscoveryPreference, HeatLevel } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
@@ -382,20 +382,28 @@ function VenueList({ venues, locale, visibleCount, contributedVenueIds, onClear,
   const copy = COPY[locale]
   return (
     <ul className={styles.venueList} data-testid="ondo-b-venue-list">
-      {venues.slice(0, visibleCount).map((venue) => (
+      {venues.slice(0, visibleCount).map((venue) => {
+        const presentation = venueNamePresentation(venue.name.ko, locale)
+        const signalTruthLabel = contributedVenueIds.has(venue.id)
+          ? copy.contributed
+          : venue.signalTruth === "SIMULATED"
+            ? `${copy.scoreKey} ${venue.ondoScore}/100 · ${inputSignalCount(B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)?.signalCount ?? 0, locale)} · ${copy.simulated}`
+            : copy.neutral
+        return (
         <li key={venue.id}>
-          <button type="button" onClick={() => onSelect(venue)}>
+          <button type="button" onClick={() => onSelect(venue)} data-venue-opener={venue.id} aria-label={`${presentation.officialName} · ${presentation.officialNameLabel} · ${presentation.transliteration} · ${presentation.transliterationLabel} · ${venueDistrictLabel(venue.cityId, venue.districtId, locale)} · ${CATEGORY[venue.primaryCategory][locale]} · ${signalTruthLabel}`}>
             <span className={styles.score} data-level={venue.heatLevel}>{venue.ondoScore ?? "—"}</span>
             <span>
               <small>{venueDistrictLabel(venue.cityId, venue.districtId, locale)} · {CATEGORY[venue.primaryCategory][locale]}</small>
-              <strong>{venueDisplayName(venue.name.ko, locale)}</strong>
-              <em>{locale === "en" ? venue.name.ko : CATEGORY[venue.primaryCategory].en}</em>
-              <small className={styles.signalTruth}>{contributedVenueIds.has(venue.id) ? copy.contributed : venue.signalTruth === "SIMULATED" ? `${copy.scoreKey} ${venue.ondoScore}/100 · ${inputSignalCount(B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)?.signalCount ?? 0, locale)} · ${copy.simulated}` : copy.neutral}</small>
+              <strong data-testid="official-source-name">{presentation.officialName}</strong>
+              <em className={styles.officialNameTruth}>{presentation.officialNameLabel}</em>
+              <small className={styles.transliterationTruth}><span>{presentation.transliteration}</span> · {presentation.transliterationLabel}</small>
+              <small className={styles.signalTruth}>{signalTruthLabel}</small>
             </span>
             <ChevronRight size={17} />
           </button>
         </li>
-      ))}
+      )})}
       {visibleCount < venues.length ? <li className={styles.loadMore}><button type="button" onClick={onMore}>{copy.more}</button></li> : null}
       {!venues.length ? <li className={styles.empty} data-testid="ondo-b-empty-results" role="status"><strong>{copy.noResultsTitle}</strong><span>{copy.noResultsBody}</span><button type="button" onClick={onClear}>{copy.clearResults}</button></li> : null}
     </ul>
@@ -476,7 +484,7 @@ export function MapEntryB() {
   }, [selectedVenueId])
 
   useEffect(() => {
-    if (!city || !mapNode.current || mapRef.current) return
+    if (!city || view !== "map" || !mapNode.current || mapRef.current) return
     let disposed = false
     let failed = false
     let loadDeadline: number | undefined
@@ -499,6 +507,14 @@ export function MapEntryB() {
         maxZoom: 18,
         attributionControl: false,
         cooperativeGestures: true,
+        locale: locale === "ko" ? {
+          "Map.Title": "지도",
+          "NavigationControl.ZoomIn": "지도 확대",
+          "NavigationControl.ZoomOut": "지도 축소",
+          "CooperativeGesturesHandler.WindowsHelpText": "Ctrl 키를 누른 채 스크롤하여 지도를 확대하거나 축소하세요",
+          "CooperativeGesturesHandler.MacHelpText": "⌘ 키를 누른 채 스크롤하여 지도를 확대하거나 축소하세요",
+          "CooperativeGesturesHandler.MobileHelpText": "두 손가락으로 지도를 움직이세요",
+        } : undefined,
       })
       mapRef.current = instance
       instance.on("error", failMap)
@@ -580,7 +596,7 @@ export function MapEntryB() {
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [actions, city, locale, retryToken])
+  }, [actions, city, locale, retryToken, view])
 
   useEffect(() => {
     const source = mapRef.current?.getSource("ondo-venues") as GeoJSONSource | undefined
@@ -690,7 +706,7 @@ export function MapEntryB() {
 
         <div className={styles.resultBar}>
           <span><b>{resultCount(venues.length, locale, after19On)}</b><small>{copy.citySnapshotBoundary}</small></span>
-          <button type="button" onClick={() => setView(view === "map" ? "list" : "map")}>{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
+          <button type="button" onClick={() => setView(view === "map" ? "list" : "map")} data-testid="ondo-b-view-toggle">{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
         </div>
 
         {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onClear={() => { setQuery(""); setHeat("all") }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}

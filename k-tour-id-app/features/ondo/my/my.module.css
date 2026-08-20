@@ -14,11 +14,13 @@
 .empty p { margin: 0; font-size: 13px; line-height: 1.55; }
 .empty button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 11px; background: #20201e; color: #fff; font-size: 12px; font-weight: 700; }
 .savedList { display: grid; border-top: 1px solid #dedbd5; }
-.savedList button { min-height: 66px; display: grid; grid-template-columns: 22px 1fr 22px; align-items: center; gap: 10px; padding: 8px 2px; border: 0; border-bottom: 1px solid #e5e3de; background: transparent; color: #20201e; font: inherit; font-size: 13px; text-align: left; }
+.savedList button { min-height: 88px; display: grid; grid-template-columns: 22px 1fr 22px; align-items: center; gap: 10px; padding: 10px 2px; border: 0; border-bottom: 1px solid #e5e3de; background: transparent; color: #20201e; font: inherit; font-size: 13px; text-align: left; }
 .savedList button > span { display: grid; min-width: 0; gap: 3px; }
-.savedList button strong, .savedList button small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.savedList button strong, .savedList button small { min-width: 0; overflow-wrap: anywhere; }
 .savedList button strong { font-size: 14px; }
-.savedList button small { color: #706d67; font-size: 12px; }
+.savedList button small { color: #706d67; font-size: 12px; line-height: 1.4; }
+.savedList .sourceNameTruth { font-weight: 680; }
+.savedList .savedTransliteration b { color: #34312d; font: inherit; font-weight: 720; }
 .personaControl { display: grid; gap: 8px; padding: 14px 0; border-top: 1px solid #dedbd5; }
 .personaControl > span, .preferenceFieldset legend { color: #55524d; font-size: 12px; font-weight: 720; }
 .personaControl select { width: 100%; min-height: 46px; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; padding: 0 2px; background: transparent; color: #20201e; font: inherit; font-size: 14px; }
