@@ -10,6 +10,7 @@ import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues"
 import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
+import { mapFoodIntentAliases } from "@/lib/ondo/venues/map-discovery-aliases"
 import type { DiscoveryPreference, HeatLevel } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
 import type { Locale } from "../contracts/domain"
@@ -449,7 +450,7 @@ export function MapEntryB() {
   const venues = useMemo(() => B_MAP_VENUES.filter((venue) => {
     if (!city || venue.cityId !== city) return false
     if (after19On && !B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)?.after19) return false
-    const haystack = `${venue.name.ko} ${venue.name.en} ${venueDisplayName(venue.name.ko, "en")} ${CATEGORY[venue.primaryCategory].ko} ${CATEGORY[venue.primaryCategory].en} ${venue.districtId} ${venueDistrictLabel(venue.cityId, venue.districtId, "en")}`.toLowerCase()
+    const haystack = `${venue.name.ko} ${venue.name.en} ${venueDisplayName(venue.name.ko, "en")} ${CATEGORY[venue.primaryCategory].ko} ${CATEGORY[venue.primaryCategory].en} ${venue.districtId} ${venueDistrictLabel(venue.cityId, venue.districtId, "en")} ${mapFoodIntentAliases(venue.name.ko).join(" ")}`.toLowerCase()
     if (query && !haystack.includes(query.toLowerCase())) return false
     if (heat === "signal" && venue.signalTruth !== "SIMULATED") return false
     if (heat === "pending" && venue.signalTruth !== "UNKNOWN") return false
