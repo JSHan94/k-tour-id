@@ -1,101 +1,101 @@
-# ONDO B · Final Evidence Index
+# ONDO B · Evidence Index
 
-상태: `AUTOMATED GATES PASS · R3/R4 FIVE-ROLE CLEAN · CLEAN STREAK 2/2 · PRIVATE B DEPLOYED`
+상태: `CURRENT TUPLE PREFREEZE · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED`
+
+## Current tuple
 
 | Field | Value |
 |---|---|
-| Product SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
-| Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
-| Baseline digest | `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1` |
+| Product SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
+| Harness SHA | `PENDING` |
+| Baseline digest | `PENDING` — staging candidate digest `81adf5c4d807888d63ce7fcec1bc795c8997a21d043f82e42465d5c071ee2d62`, not frozen |
 | Route | `/ondo-b` |
-| Base URL | `http://127.0.0.1:3130` production build |
-| Browser projects | `mobile-chromium 390×844`, `desktop-chromium 1440×1000` |
+| Flow registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
+| Visual registry | `44 cases · 42 state IDs` |
+| Exact viewports | `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` |
+| Baseline target | `264 committed PNGs` |
+| Current accepted automated run | `NONE` — frozen current tuple의 full receipt 대기 |
+| Current review | `SLEEK R2 NOT STARTED · clean streak 0/2` |
+| Current deployment | `NOT DEPLOYED` |
 
-## Private B deployment evidence
+## Historical private B — not current evidence
 
-| Field | Value |
+| Field | Historical value |
 |---|---|
-| Live URL | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
-| B Sites project | `appgprj_6a85de65d6148191aa042ae9c2787dd2` |
-| Saved version | `1` · `appgprj_6a85de65d6148191aa042ae9c2787dd2~appgver_2d34e3521bb481919ede7af96be442b2` |
-| Deployment | `appgdep_6a85df710f2c819186a2d0b6b708fb5b` · `succeeded` |
-| Deployment-only source SHA | `90d353da02b1774740b80b691c7bcd57aab84aef` |
-| Archive digest | `sha256:db5ebbc64bc7dfbe32eb2e589a4e1f1743c38bb20be44ecc3ff7a3885eca5a45` |
-| Access | `custom · owner allowlist 1 · groups 0 · external visitors 0` |
-| Runtime smoke | `/ondo-b 200` (`38,487 B`), known venue API `200` (`2,346 B`), unknown venue API `404` |
-| A protection | 기존 A project `appgprj_6a69e0a4fff48191892ff4022ebf08b2`와 `/ondo` alias를 수정하지 않음 |
+| Product / Harness | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` / `6e7254af02adcf49a35424203e2201093485872a` |
+| Baseline digest | `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1` |
+| Private URL | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
+| Status | 이전 tuple의 accepted history. 현재 sleek 제품, 264 baseline 또는 R2를 증명하지 않음 |
 
-배포 source는 frozen harness 위에서 `.openai/hosting.json`의 B 전용 project ID만 바꾼 deployment-only commit이다. 제품·harness·baseline 파일은 바뀌지 않았다.
+이전 URL과 `RUN-20260819-*-FINAL`은 보존 대상 역사 자료다. 제품 변경 뒤 current release evidence나 최종 링크로 사용하지 않는다.
 
-## Final automated result
+## Evidence admission rules
 
-| Evidence family | Result | What it proves |
-|---|---:|---|
-| TypeScript | `PASS` | compile contract |
-| Next production build | `PASS` | `/ondo-b`, venue API and all existing routes build |
-| Contracts | `26/26 PASS` | identity/returnTo/truth/asset/visit/bridge + venue 200/200/provenance/After19 night-only set |
-| Canonical Flows | `36/36 PASS` | FL-001~018 × mobile/desktop |
-| Pixel | `88/88 PASS` | 44 states × mobile/desktop; `88` opposite-project intentional skips |
-| Accessibility | `28/28 PASS` | 14 actual surfaces × mobile/desktop |
-| Content/map/product/regression/registry | `108/108 PASS` | KO/EN 14 surfaces, map truth, 400 data, R3 geometry, exact registry, selected-venue After19 overlay, onboarding hit-test geometry |
-| Product gaps | `0` | `121 ACTUAL · 0 GAP · 5 reasoned N/A` |
+현재 tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로 기록할 수 있다.
 
-## Command ledger
+1. product SHA, harness SHA, baseline digest가 고정돼 있다.
+2. 명령이 같은 product SHA의 production server를 사용한다.
+3. registry가 `18 / 126 / 121 / 5 / 0`, visual이 `44 / 42 / 6 / 264` exact census를 통과한다.
+4. 모든 126 checkpoint가 `pixel | functional_only` machine disposition을 가진다.
+5. grouped flow journey를 126개 exact named `test.step`으로 과장하지 않는다.
+6. runtime guard 설치와 first-party request/HTTP failure 검사가 모든 accepted browser/pixel run에 적용된다.
+7. baseline은 issue-scoped approval 뒤 commit되며 no-update run으로 재검증된다.
 
-| ID | Command scope | Result |
-|---|---|---|
-| `B-FINAL-BUILD` | `next build --webpack`, then `pnpm typecheck` | `PASS` |
-| `B-FINAL-CONTRACT` | `pnpm test:contracts` | `26/26 PASS` |
-| `B-FINAL-FLOW` | `ondo-b-flow-coverage.spec.ts --workers=1` | `36/36 PASS` |
-| `B-FINAL-PIXEL` | mobile+desktop complete pixel specs, `--workers=1` | `88/88 PASS · 88 intentional skip` |
-| `B-FINAL-A11Y` | `ondo-b-a11y-interaction.spec.ts --workers=1` | `28/28 PASS` |
-| `B-FINAL-SUPPORT` | content, map truth, product, R3 regression, selected-venue After19, onboarding geometry, registry specs | `108/108 PASS` |
+## Current command ledger — pending execution receipt
 
-모든 browser run은 console/pageerror guard를 제품 오류와 외부 지도 오류로 구분한다. map failure case에서는 OpenFreeMap을 의도적으로 중단하고 같은 200개 목록, Retry, usable card가 유지되는지 확인한다.
+| Evidence ID | Command family | Required result | Current state |
+|---|---|---|---|
+| `B-SLK-R2-BUILD` | `pnpm typecheck`, `pnpm exec next build --webpack` | both PASS | receipt pending |
+| `B-SLK-R2-CONTRACT` | `pnpm test:contracts` | all PASS | receipt pending |
+| `B-SLK-R2-E2E` | `PLAYWRIGHT_BASE_URL=… pnpm test:e2e:b` | all B suites PASS, unexpected skip 0 | receipt pending |
+| `B-SLK-R2-PIXEL` | `PLAYWRIGHT_BASE_URL=… pnpm test:visual:b` | 264/264 no-update PASS | baseline freeze pending |
+| `B-SLK-R2-REGISTRY` | registry and baseline census specs | exact counts + 264 tracked PNGs | commit pending |
+| `B-SLK-R2-RUNTIME` | per-test runtime attachments | product error/failure/HTTP 4xx·5xx 0 | receipt pending |
+| `B-SLK-R2-REVIEW` | five blind roles | 5/5 complete, actionable 0 | not started |
+| `B-SLK-R2-CONFIRM` | same tuple five blind roles | second 5/5 clean | not started |
 
 ## Pixel evidence contract
 
-- Baseline 수: mobile `44`, desktop `44`.
-- Capture는 font·animation·caret·scroll을 고정한다.
-- 허용치는 platform antialias noise용 `maxDiffPixels=32`; 제품 layout/copy 변화는 이 범위를 크게 초과한다.
-- third-party vector tile만 deterministic blank source로 교체한다.
-- ONDO marker, neutral cluster, label, sheet, navigation, truth copy, focus/geometry는 mask하지 않는다.
-- 각 case는 horizontal overflow, clipping, nav collision, viewport exit CTA, 44px control, 12px metadata, accessible name, serious/critical Axe issue를 검사한다.
+Committed target directories:
 
-Baseline digest는 `k-tour-id-app`을 working directory로 고정하고 다음 명령의 stdout 첫 필드를 사용한다. 파일 상대경로까지 digest input에 포함되므로 다른 directory에서 실행한 값과 혼동하지 않는다.
-
-```sh
-find tests/visual/ondo-b-flow-pixels-mobile.spec.ts-snapshots \
-  tests/visual/ondo-b-flow-pixels-desktop.spec.ts-snapshots \
-  -type f -name '*.png' -print0 \
-  | sort -z \
-  | xargs -0 shasum -a 256 \
-  | shasum -a 256
+```text
+k-tour-id-app/tests/visual/ondo-b-flow-pixels-mobile.spec.ts-snapshots/
+k-tour-id-app/tests/visual/ondo-b-flow-pixels-desktop.spec.ts-snapshots/
+k-tour-id-app/tests/visual/ondo-b-flow-pixels-responsive.spec.ts-snapshots/
 ```
 
-## Data evidence
+Exact census:
 
-| Item | Exact result |
-|---|---:|
-| Canonical official venues | `400` |
-| Seoul / Busan | `200 / 200` |
-| Unique stable IDs | `400` |
-| Simulated ONDO signal places | `80` (`40 / 40`) |
-| After19 simulated subset | `17` (`서울 7 / 부산 10`), signal category=`night` only |
-| Official source promoted to heat/open-now | `0` |
-| Unknown fact fabricated as confirmed | `0` |
+- mobile canonical: `44` at `390×844`
+- desktop canonical: `44` at `1440×1000`
+- responsive: `176` = `44` each at `360×800`, `430×932`, `768×1024`, `801×1000`
+- total: `264`
 
-## Truth boundary
+각 결과는 case metadata, geometry, Axe, runtime evidence를 붙인다. viewport dimension, case/state uniqueness, git-tracked count를 registry test가 검사한다. 외부 vector basemap만 deterministic empty source로 대체하며 ONDO overlay와 UI는 숨기지 않는다.
 
-- 공식 장소 400과 simulated signal 80은 별도 provenance다.
-- confidence는 pseudo-precise percentage가 아니라 `Limited/Moderate/Strong · Simulated` band다.
-- Residence credential 경로의 문서화와 데모 provider 미구성을 구분한다.
-- visit/stamp는 deterministic simulated record이며 GPS·QR·merchant proof가 아니다.
-- OpenDID/EAS, merchant trait는 `CONTRACT_ONLY`; live EAS, AMM, real bridge/payment/NFT는 `DEFERRED`다.
+## Checkpoint evidence contract
 
-## Durable round manifests
+`B_CHECKPOINT_VISUAL_EVIDENCE`는 18 flow × 7 checkpoint = 126 exact row를 가진다.
 
-- R3: [`evidence/RUN-20260819-R3-FINAL/manifest.md`](./evidence/RUN-20260819-R3-FINAL/manifest.md)
-- R4: [`evidence/RUN-20260819-R4-FINAL/manifest.md`](./evidence/RUN-20260819-R4-FINAL/manifest.md)
+- `pixel`: layout-distinct state를 증명하는 하나 이상의 `B-PX-*` case ID를 가리킨다.
+- `functional_only`: 별도 screenshot을 만들지 않는 이유와 canonical browser proof를 기록한다.
 
-두 파일은 각 5인 독립 review가 끝난 뒤 reviewer verdict와 evidence digest를 고정한다. 제품 또는 harness가 바뀌면 두 round를 모두 무효화하고 clean streak를 0으로 되돌린다.
+이 매핑은 visual completeness를 checkpoint 수만큼 중복 screenshot으로 부풀리지 않으면서도 orphan checkpoint와 orphan visual case를 금지한다.
+
+## Data and truth evidence
+
+- 공식 LOCALDATA active-licence F&B 장소 `400` (`서울 200 / 부산 200`)
+- stable venue ID, source/licence/snapshot provenance
+- simulated ONDO signal `80`, official place record와 분리
+- simulated After19 night-category subset `17` (`서울 7 / 부산 10`)
+- unknown field는 인기·영업 중·외국인 친화·안전으로 승격하지 않음
+- CX/Residence/Passport/Age/Payment, chat/photo/payment/bridge/trait/badge는 화면에 표시한 simulation/contract/deferred 경계를 유지
+
+## Durable history
+
+- [`evidence/RUN-20260819-R3-FINAL/manifest.md`](./evidence/RUN-20260819-R3-FINAL/manifest.md)
+- [`evidence/RUN-20260819-R4-FINAL/manifest.md`](./evidence/RUN-20260819-R4-FINAL/manifest.md)
+- `evidence/SLEEK-R1/`
+- `evidence/SLEEK-R2/manifest.md` and `baseline-files.tsv` — current 264-file staging receipt, `REVIEWED-BY-ROOT-PENDING`
+
+`RUN-*`과 `SLEEK-R1`은 immutable history다. 현재 product/harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. `SLEEK-R2` staging receipt는 baseline 후보 파일을 식별할 뿐이며, harness commit·no-update full run·blind review 전에는 round 시작 또는 PASS로 승격하지 않는다.

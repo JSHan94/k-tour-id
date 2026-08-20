@@ -1,6 +1,6 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE · PRODUCT 5ac6308 · HARNESS 6e7254a`
+상태: `ACTIVE · PRODUCT fb6529e560a6c2b96ae22d1120645e560b8039ef FROZEN · HARNESS PENDING`
 
 ## 원칙
 
@@ -32,11 +32,18 @@ QA는 `/ondo-b`의 **actual product UI**만 조작한다. 제품에 테스트 �
 
 ## External map runtime 분류
 
-- `pageerror`, unhandled rejection, product console error는 항상 product failure다.
-- `tiles.openfreemap.org` request/console failure는 `externalMap`, Google Fonts CDN 실패는 `externalAsset` evidence로 분리한다.
+- runtime guard가 설치되지 않았으면 clean evidence를 만들지 않는다.
+- `pageerror`, unhandled rejection, product console error, first-party request failure와 HTTP `4xx/5xx`는 항상 product failure다.
+- `tiles.openfreemap.org` request/console failure는 `externalMap`, 외부 font/CDN 실패는 `externalAsset` evidence로 분리한다.
 - canonical flow suite의 tile abort는 기능 실패를 흉내 내기 위한 것이 아니라 외부 basemap SLA를 격리하기 위한 test seam이다. 실제 live/failure 경계는 dedicated product-browser suite에서 검증한다.
 - 외부 장애를 무시하는 것으로 끝내지 않는다. B map이 `data-map-state=error`, usable venue list, `Retry map`을 실제로 보여야 한다.
-- 정상 map pixel은 외부 tile 변동 때문에 전면 baseline으로 승인하지 않는다. layout screenshot에서는 MapLibre canvas만 명시 mask하고 marker/legend/list/sheet/nav는 mask하지 않는다.
+- pixel run은 외부 vector basemap을 deterministic empty source로 대체한다. MapLibre canvas를 임의 색 mask하지 않으며 ONDO marker/cluster/label, legend/list/sheet/nav/truth copy를 모두 실제 raster에 남긴다.
+
+## Modal isolation seam
+
+- 동시에 노출된 modal dialog는 하나만 허용한다. Sheet 위의 확인 alert는 nested `aria-modal`로 중복 노출하지 않는다.
+- modal이 열리면 일반 canvas/nav sibling은 `inert`와 `aria-hidden`으로 격리하고 닫힐 때 이전 값을 정확히 복구한다.
+- 키보드 focus, Escape exit, trigger focus return을 실제 overlay에서 검증한다.
 
 ## Shared non-map mount proof
 

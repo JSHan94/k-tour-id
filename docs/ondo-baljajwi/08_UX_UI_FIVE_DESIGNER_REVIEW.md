@@ -1,6 +1,6 @@
 # ONDO B · Five-Designer Sleekness Review
 
-상태: `EXECUTING · ROUND S1 NOT YET EVALUATED`
+상태: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED · CLEAN STREAK 0/2`
 
 이 문서는 기존 기능·진실·접근성 계약을 보존하면서 `/ondo-b`의 모든 Flow, surface, component, state를 더 sleek하고 일관된 제품 언어로 개선하는 실행 정본이다. 목표는 의견을 억지로 없애는 것이 아니라 **동일 제품 SHA에서 unresolved actionable UX/UI issue를 0으로 수렴**시키는 것이다.
 
@@ -8,14 +8,16 @@
 
 | Field | Value |
 |---|---|
-| Baseline product SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
-| Baseline harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
-| Baseline digest | `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1` |
+| Current product SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
+| Current harness SHA | `PENDING` |
+| Current baseline digest | `PENDING` |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
-| Existing evidence | `44 cases × 2 viewports = 88 screenshots` |
+| Current visual target | `44 cases · 42 state IDs · 6 viewports = 264 committed screenshots` |
+| Checkpoint registry | `126 exact rows · pixel | functional_only` |
+| Current round | `SLEEK R2 NOT STARTED`; R1 was `5/5 NOT CLEAN` and is immutable history |
 
-제품 또는 harness가 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처는 비교 baseline으로만 보존한다.
+제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. R2는 세 값이 모두 고정되고 automated gate가 통과한 뒤 시작한다.
 
 ## 2. Sleekness의 조작적 정의
 
@@ -55,8 +57,9 @@ Sleek는 단순히 카드와 색을 줄이는 취향이 아니다. 다음 조건
 - 현재 `44/44 visual case` 확인
 - 현재 `42/42 distinct state ID` 확인
 - `KO/EN` copy-heavy surface 확인
-- `390×844`, `1440×1000` 전수 확인
-- breakpoint risk smoke: `360×740`, `430×932`, `768×1024`, `801×1000`
+- `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` 전수 확인
+- `44 cases × 6 viewports = 264` image census 확인
+- 126 checkpoint의 `pixel | functional_only` disposition 확인
 - loading, empty, pending, success, error, cancel, locked, unsupported 상태 확인 또는 사유 있는 N/A
 - shell/nav/toast/sheet/focus/scroll 같은 shared component 확인
 
@@ -92,7 +95,7 @@ proposed fix · owner · status · fix SHA · retest evidence
 3. token/shared component 문제를 먼저, flow-local 문제를 다음으로 묶는다.
 4. product fix와 regression harness를 분리해 커밋한다.
 5. 영향 surface의 실제 browser, geometry, Axe, KO/EN, pixel을 먼저 통과시킨다.
-6. G0~G6와 `FL-001`~`FL-018`, full pixel matrix를 다시 실행한다.
+6. G0~G6와 `FL-001`~`FL-018`, 264-image full pixel matrix를 no-update로 다시 실행한다.
 7. 새 tuple에서 다섯 reviewer가 다시 blind review한다.
 8. 같은 tuple에서 두 번 연속 `5/5 CLEAN`이 될 때 종료한다.
 
@@ -110,7 +113,7 @@ Clean round는 다음을 모두 충족한다.
 - 이전 issue의 fix SHA, acceptance test, reviewer closure 연결
 - 다섯 독립 원문과 evidence checksum 보존
 
-동일 tuple의 clean round가 `2/2`일 때만 새 sleek B preview를 배포한다.
+동일 tuple의 clean round가 `2/2`일 때만 새 sleek B preview를 배포한다. 현재는 `0/2`이며 기존 private B는 현재 tuple의 배포가 아니다.
 
 ## 9. Evidence layout
 
@@ -129,3 +132,5 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 ```
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
+
+`evidence/SLEEK-R1/`은 수정하지 않는 역사 원본이다. `evidence/SLEEK-R2/`의 현재 `REVIEWED-BY-ROOT-PENDING` 264-file staging receipt는 freeze나 round 시작이 아니다. product+harness+baseline tuple과 no-update run을 고정하기 전에는 reviewer verdict, CLEAN 또는 PASS를 써 두지 않는다.

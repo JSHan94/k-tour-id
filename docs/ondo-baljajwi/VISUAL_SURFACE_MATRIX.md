@@ -1,6 +1,6 @@
 # ONDO B · 발자취형 Surface Matrix
 
-상태: `FINAL PRODUCT APPLIED · 88 PIXEL STATES PASS`
+상태: `CURRENT PRODUCT APPLIED · SIX-VIEWPORT BASELINE FREEZE PENDING`
 
 발자취의 고유 화면을 복제하지 않고 거의 흰 canvas, 큰 여백, hairline 구획, 절제된 점·기록 메타포, 한 개의 우세한 행동을 ONDO의 F&B heat/identity 흐름에 맞게 번역했다. Map, Place, App shell, Onboarding, Gate, Tables, Chat, Checkout, My, ID, Labs가 모두 같은 B 제품에 통합돼 있다.
 
@@ -37,11 +37,14 @@
 | Unsupported | 대체 경로를 숨기지 않고 같은 정보 위계에 노출한다. |
 | Unknown | 미확인 fact를 green/eligible/open으로 승격하지 않는다. |
 
-## 최종 검수
+## 현재 visual 검수 계약
 
-- `44` layout/state case × `390×844`, `1440×1000` = `88/88 PASS`.
+- `44` visual case / `42` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. 목표는 `264` committed baselines이며 현재 freeze/digest와 no-update full run은 대기 중이다.
+- 126 flow checkpoint 각각은 machine registry에서 `pixel` 또는 사유 있는 `functional_only`로 연결한다.
 - visible metadata 12px 이상, control 44×44 이상, horizontal overflow·nav/CTA overlap 0.
 - serious/critical Axe issue 0; keyboard focus, Escape, focus return을 실제 surface에서 검사.
-- 외부 vector tile만 결정론적으로 대체하고 ONDO marker·cluster·label·sheet·truth copy는 mask하지 않는다.
+- 외부 vector tile만 deterministic empty source로 대체하고 ONDO marker·cluster·label·sheet·truth copy는 mask하지 않는다.
 - heat score는 solid color circle, neutral cluster count는 outline geometry로 구분한다.
 - near-white/hairline/negative-space 문법을 전체 surface에 적용하고 heat 이외 색은 status 의미에만 쓴다.
+
+제품 SHA는 `fb6529e560a6c2b96ae22d1120645e560b8039ef`로 frozen이다. Harness SHA와 baseline digest가 고정되고 264/264 no-update run 및 다섯 reviewer 두 clean round가 끝나기 전에는 이 matrix를 최종 PASS로 표시하지 않는다.

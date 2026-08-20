@@ -1,67 +1,92 @@
 # ONDO B pixel evidence harness
 
+Status: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · CURRENT FULL RUN PENDING`
+
 Source route: `/ondo-b`
 
-Primary source of cases: `tests/helpers/ondo-b-visual-evidence.ts`
+Primary registry: `tests/helpers/ondo-b-visual-evidence.ts`
 
-## What is frozen
+Current product SHA: `fb6529e560a6c2b96ae22d1120645e560b8039ef`
+
+Current harness SHA and baseline digest: `PENDING`
+
+## Exact registry
+
+- `18` flows and `126` checkpoints
+- `121 ACTUAL`, `5` reasoned `N/A`, `0 GAP`
+- `44` visual cases and `42` distinct state IDs
+- `6` exact viewports: `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
+- baseline target: `44 × 6 = 264` committed PNGs
+
+`B_CHECKPOINT_VISUAL_EVIDENCE` gives every checkpoint one exact disposition:
+
+- `pixel`: references one or more canonical `B-PX-*` cases.
+- `functional_only`: records why no layout-distinct screenshot is claimed and links the canonical browser proof.
+
+The flow suite uses composite journeys and grouped steps. This harness does not claim that all 126 checkpoint IDs are separate, exactly named `test.step` blocks.
+
+## Frozen capture inputs
 
 - browser time: `2026-08-19 20:30 KST`
-- viewport: `390×844` mobile and `1440×1000` desktop
-- locale and local/session fixtures per case
-- local application fonts: screenshots wait for `document.fonts.ready`
-- motion, transitions, caret and smooth scrolling
-- external vector basemap: OpenFreeMap TileJSON is replaced by an empty deterministic vector source
+- viewport: the six exact sizes above
+- locale and local/session fixtures: declared per case
+- local application fonts: wait for `document.fonts.ready`
+- motion, transitions, caret and smooth scrolling: disabled
+- external vector basemap: OpenFreeMap TileJSON is replaced with a deterministic empty vector source
 
-The empty basemap is not a blanket canvas mask. MapLibre still renders ONDO's own
-cluster circles, point markers, heat scores, contribution rings and score labels.
-Headers, lists, sheets, notices and navigation are never masked.
+The basemap replacement is not a blanket canvas mask. MapLibre still renders ONDO cluster circles, point markers, heat scores, contribution rings and labels. Headers, lists, sheets, notices, navigation and truth copy are never masked.
 
 ## Assertions attached to every screenshot
 
-- unexpected product console errors, page errors and first-party request failures: `0`
-- serious or critical axe violations: `0`
+- runtime guard is installed
+- unexpected product console errors and page errors: `0`
+- first-party request failure and HTTP `4xx/5xx`: `0`
+- serious or critical Axe violations: `0`
+- Axe contrast/name/label/ARIA violations: `0`
 - hit-testable controls smaller than `44×44 CSS px`: `0`
 - visible metadata smaller than `12 CSS px`: `0`
 - independent hit-testable control overlap: `0`
 - bottom navigation versus visible content-control overlap: `0`
-- every active dialog has a hit-testable exit CTA fully inside the viewport
-- every visible dialog/control has a programmatic ARIA name
-- axe `color-contrast` and ARIA/name/label violations: `0`
 - horizontally clipped/overflowing app content: `0`
+- more than one exposed modal dialog: `0`
+- active modal background without paired `inert` and `aria-hidden`: `0`
+- every active dialog has at least one hit-testable exit fully inside the viewport
+- every visible dialog/control has a programmatic accessible name
 
-Each Playwright result attaches `evidence-case.json`, `geometry.json`, and
-`axe.json`. Raw runs remain under ignored `artifacts/qa/`; committed screenshot
-baselines are the reviewed pixel contract.
+Each Playwright result attaches `evidence-case.json`, `geometry.json`, `axe.json`, and runtime evidence. Raw runs remain under ignored `artifacts/qa/`; committed screenshot baselines are the reviewed pixel contract.
 
 ## Commands
 
 ```sh
-PLAYWRIGHT_BASE_URL=http://127.0.0.1:3118 pnpm exec playwright test \
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm test:visual:b
+```
+
+Equivalent explicit ownership:
+
+```sh
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm exec playwright test \
   tests/visual/ondo-b-flow-pixels-mobile.spec.ts \
   --project=mobile-chromium --workers=1
 
-PLAYWRIGHT_BASE_URL=http://127.0.0.1:3118 pnpm exec playwright test \
+PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm exec playwright test \
   tests/visual/ondo-b-flow-pixels-desktop.spec.ts \
+  tests/visual/ondo-b-flow-pixels-responsive.spec.ts \
   --project=desktop-chromium --workers=1
 ```
 
-Baseline changes are reviewed image-by-image. Do not use a blanket update after
-a product change.
+Baseline changes are reviewed image-by-image and linked to an issue/approval receipt. A blanket snapshot update is not accepted as release evidence. The final gate is a full no-update `264/264` run.
 
-## Final-integration cases
+## Baseline census
 
-- `FL-002`: `AFTER19-VENUE-LOCKED` proves ordinary place facts stay available; `AFTER19-VENUE-RETURN` completes the age-only gate and asserts the exact `venueId`, unlocked card, After19 banner, and consumed return marker.
-- `FL-011`: `SAVE-FAILURE` captures the venue-preserving error and both recovery actions; `SAVE-RECOVERED` exercises fail → dismiss → fail → Retry save and captures the persisted Saved state.
+The registry test requires:
 
-These four actual cases replace generic predecessor captures so the registry remains exactly **44 registered states × 2 viewports = 88 pixel contracts** on product SHA `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` and harness SHA `6e7254af02adcf49a35424203e2201093485872a`.
+- mobile snapshots: exactly `44` at `390×844`
+- desktop snapshots: exactly `44` at `1440×1000`
+- responsive snapshots: exactly `176`, with `44` each at `360×800`, `430×932`, `768×1024`, `801×1000`
+- total git-tracked PNGs: exactly `264`
+- every image dimension matches its viewport
+- every case/state/flow ID is registered and non-orphaned
 
-## Final-SHA verification
+## Current acceptance
 
-The complete matrix was run against product SHA `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` and harness SHA
-`6e7254af02adcf49a35424203e2201093485872a` at both target viewports. Result: **88/88 passed**, with 88 intentional
-opposite-project skips. Save failure/recovery and the After19 exact-venue return
-pass pixel, geometry, contrast, ARIA, console, runtime and context-preservation
-guards. Labs bridge failure/success captures use explicit per-viewport canonical
-scroll positions so a long serial run cannot inherit browser auto-scroll. There
-are no unresolved actionable visual findings.
+The current product source is frozen, but the harness commit and 264-image digest are not yet frozen. Therefore no `264/264 PASS`, clean review round, or final deployment is claimed here. The older `5ac6308… / 6e7254a… / 5ffbe67…` 88-image tuple is historical evidence only and does not validate this product SHA.

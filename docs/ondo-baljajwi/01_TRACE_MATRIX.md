@@ -1,10 +1,10 @@
 # ONDO B · Requirement → Flow → Actual Evidence Matrix
 
-상태: `HONEST REGISTRY · FINAL AUTOMATED EXECUTION PASS`
+상태: `HONEST REGISTRY · PRODUCT FROZEN · CURRENT HARNESS ACCEPTANCE PENDING`
 
-고정 제품 SHA: `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3`
+고정 제품 SHA: `fb6529e560a6c2b96ae22d1120645e560b8039ef`
 
-검수 Harness SHA: `6e7254af02adcf49a35424203e2201093485872a`
+검수 Harness SHA: `PENDING` — 현재 변경을 commit한 뒤 고정
 
 ## 1. 판정 규칙
 
@@ -60,13 +60,13 @@
 | `FL-017` | `B-E2E-FL-017-ENTRY` ACTUAL | `B-E2E-FL-017-DECISION` ACTUAL | `B-E2E-FL-017-CANCEL` ACTUAL | `B-E2E-FL-017-ERROR` ACTUAL | `B-E2E-FL-017-RETRY` ACTUAL | `B-E2E-FL-017-TERMINAL` ACTUAL | `B-E2E-FL-017-RETURN` ACTUAL |
 | `FL-018` | `B-E2E-FL-018-ENTRY` ACTUAL | `B-E2E-FL-018-DECISION` ACTUAL | `B-E2E-FL-018-CANCEL` ACTUAL | `B-E2E-FL-018-ERROR` ACTUAL | `B-E2E-FL-018-RETRY` ACTUAL | `B-E2E-FL-018-TERMINAL` ACTUAL | `B-E2E-FL-018-RETURN` ACTUAL |
 
-현재 판정: `121 ACTUAL · 0 GAP · 5 N/A`. 최종 제품 SHA에서 18개 composite journey를 mobile/desktop 각각 실행해 `36/36 PASS`했다. `FL-002`는 age failure→retry→success 뒤 같은 확장 장소 상세와 After19 ON으로 복귀한다.
+현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 이 수치는 제품 계약과 machine registry의 disposition이며, 현재 tuple의 실행 PASS를 뜻하지 않는다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. Harness·baseline commit과 전체 재실행이 끝날 때까지 현재 acceptance는 `PENDING`이다.
 
 ## 4. Browser suites
 
 | Suite | Real evidence | Count per project |
 |---|---|---:|
-| `ondo-b-flow-coverage.spec.ts` | 18 composite journeys; actual checkpoint는 named `test.step` | 18 |
+| `ondo-b-flow-coverage.spec.ts` | 18 composite journeys; grouped steps와 assertions가 121 ACTUAL checkpoint proof를 함께 제공 | 18 |
 | `ondo-b-product-browser.spec.ts` | Seoul/Busan 200, official truth, external map fallback/retry | 4 |
 | `ondo-b-content.spec.ts` | 14 actual surfaces × KO/EN | 28 |
 | `ondo-b-a11y-interaction.spec.ts` | 14 actual surfaces | 14 |
@@ -74,15 +74,17 @@
 
 ## 5. Pixel evidence
 
-실제 layout/state가 다른 44개 case를 `390×844`와 `1440×1000`에서 각각 실행한다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
+실제 layout/state가 다른 `44 visual cases / 42 distinct state IDs`를 아래 여섯 viewport에서 각각 실행한다.
 
-QA seam exact IDs: `B-PX-ONBOARDING-390-EN`, `B-PX-NATION-390-KO`, `B-PX-CITY-LIST-430-EN`, `B-PX-PLACE-390-EN`, `B-PX-ACCOUNT-GATE-390-KO`, `B-PX-TABLES-430-EN`, `B-PX-LOCAL-SIGNAL-390-EN`, `B-PX-CHECKOUT-430-KO`, `B-PX-AFTER19-390-EN`, `B-PX-NATION-DESKTOP-EN`, `B-PX-PLACE-DESKTOP-EN`, `B-PX-IDENTITY-DESKTOP-KO`, `B-PX-LABS-DESKTOP-EN`.
+`360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 
-최종 결과는 `88/88 PASS`; 반대 viewport spec의 `88`건은 project ownership을 보존하기 위한 intentional skip이다. 외부 vector tile만 결정론적 blank source로 대체하고 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다.
+목표 baseline은 `44 × 6 = 264` PNG다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
+
+`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. 현재 264장 baseline의 commit/digest와 no-update full run은 아직 동결 전이므로 PASS로 기록하지 않는다.
 
 ## 6. Content evidence
 
-각 surface에 `KO`, `EN`이 있다:
+다음 KO/EN surface evidence ID가 registry에 있다. 현재 tuple의 실행 합격은 harness freeze 뒤 별도로 기록한다.
 
 `B-COPY-ONBOARDING-KO`, `B-COPY-ONBOARDING-EN`, `B-COPY-NATION-KO`, `B-COPY-NATION-EN`, `B-COPY-CITY-LIST-KO`, `B-COPY-CITY-LIST-EN`, `B-COPY-PLACE-KO`, `B-COPY-PLACE-EN`, `B-COPY-ACCOUNT-GATE-KO`, `B-COPY-ACCOUNT-GATE-EN`, `B-COPY-AGE-GATE-KO`, `B-COPY-AGE-GATE-EN`, `B-COPY-TABLES-KO`, `B-COPY-TABLES-EN`, `B-COPY-TABLE-CHAT-KO`, `B-COPY-TABLE-CHAT-EN`, `B-COPY-LOCAL-SIGNAL-KO`, `B-COPY-LOCAL-SIGNAL-EN`, `B-COPY-CHECKOUT-KO`, `B-COPY-CHECKOUT-EN`, `B-COPY-IDENTITY-KO`, `B-COPY-IDENTITY-EN`, `B-COPY-PROFILE-KO`, `B-COPY-PROFILE-EN`, `B-COPY-LABS-KO`, `B-COPY-LABS-EN`, `B-COPY-AFTER19-KO`, `B-COPY-AFTER19-EN`.
 

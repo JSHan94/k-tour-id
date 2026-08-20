@@ -1,23 +1,23 @@
-# ONDO B · Final As-built
+# ONDO B · Current As-built
 
-상태: `IMPLEMENTED · AUTOMATED GATES PASS · TWO INDEPENDENT CLEAN ROUNDS · PRIVATE B DEPLOYED`
+상태: `PRODUCT IMPLEMENTED/FROZEN · HARNESS/BASELINE UNFROZEN · CURRENT ACCEPTANCE PENDING`
 
 | 항목 | 최종 값 |
 |---|---|
-| Product SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
-| Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
+| Product SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
+| Harness SHA | `PENDING` |
 | Route | `/ondo-b` |
-| Private preview | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
+| Current preview | `NOT DEPLOYED`; 기존 private B URL은 이전 tuple의 역사 preview |
 | 제품 형태 | responsive Next.js web app |
 | Product scope | 외국인 우선 서울·부산 F&B discovery + JIT identity/commerce/community demo |
 | Requirement trace | `19/19` |
-| Flow trace | `18/18 · 121 ACTUAL · 0 GAP · 5 reasoned N/A` |
-| Pixel evidence | `44 states × 2 viewports = 88/88 PASS` |
+| Flow trace | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
+| Pixel target | `44 cases · 42 states · 6 viewports = 264 committed baselines` |
 | Data | 공식 장소 `400` (`서울 200 / 부산 200`) |
 | ONDO preview | `SIMULATED` signal `80` (`40 / 40`) |
 | After19 preview | `SIMULATED` night-category signal `17` (`서울 7 / 부산 10`) |
 
-이 문서가 B 제품의 실제 구현 상태 정본이다. [`docs/ondo-execution/13_AS_BUILT.md`](../ondo-execution/13_AS_BUILT.md)는 `/ondo` A/v2 후보의 역사 기록이며 이 문서의 수치와 상태를 덮어쓰지 않는다.
+이 문서가 B 제품 source의 실제 구현 상태 정본이다. 구현 상태와 현재 tuple의 QA/review acceptance는 별개다. [`docs/ondo-execution/13_AS_BUILT.md`](../ondo-execution/13_AS_BUILT.md)는 `/ondo` A/v2 후보의 역사 기록이며 이 문서의 수치와 상태를 덮어쓰지 않는다.
 
 ## 1. 실제 구현된 제품 구조
 
@@ -61,22 +61,19 @@
 - 국적 기반 자동 matching 대신 명시적으로 공개한 profile 정보만 사용.
 - Can I Go 별도 제품 대신 evidence-backed place facts와 UNKNOWN 상태.
 
-## 4. 최종 자동 검수
+## 4. 현재 자동 검수 상태
 
-| Gate | 결과 |
-|---|---:|
-| TypeScript | `PASS` |
-| Next production build | `PASS` |
-| Contracts | `26/26 PASS` |
-| Canonical Flow | `36/36 PASS` (`18 × mobile/desktop`) |
-| Pixel | `88/88 PASS`; 반대-project `88` intentional skip |
-| Accessibility | `28/28 PASS` (`14 × mobile/desktop`) |
-| KO/EN content + map/product/regression/registry/onboarding geometry | `108/108 PASS` |
-| Product runtime errors in accepted runs | `0` |
+| Gate | 현재 상태 |
+|---|---|
+| Product source | `FROZEN` at `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
+| Harness SHA | `PENDING` |
+| Baseline | `264 target`; commit census/digest pending |
+| Checkpoint registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`; `pixel | functional_only` mapping present |
+| Full current automated receipt | `PENDING` — frozen tuple의 no-update run 미기록 |
+| SLEEK R2 | `NOT STARTED` |
+| Clean streak | `0/2` |
 
-Pixel set digest: `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1`.
-
-자동 결과의 명령·범위·round 증거는 [`04_EVIDENCE_MANIFEST.md`](./04_EVIDENCE_MANIFEST.md)와 `evidence/RUN-20260819-*-FINAL/manifest.md`에 보존한다.
+이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS와 R3/R4는 [`04_EVIDENCE_MANIFEST.md`](./04_EVIDENCE_MANIFEST.md)와 `evidence/RUN-20260819-*-FINAL/`에 역사적으로 보존한다. 제품 변경 뒤 현재 결과로 합산하지 않는다.
 
 ## 5. 아직 운영 제품이 아닌 부분
 
@@ -94,4 +91,4 @@ Pixel set digest: `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb4
 
 제품 또는 harness가 바뀌면 clean streak를 0으로 되돌린다. 같은 tuple에서 다섯 독립 역할의 actionable `S0/S1/S2=0` round가 두 번 연속 끝나고 durable evidence가 연결된 뒤에만 B preview를 승격한다.
 
-이 조건은 동일 tuple의 R3/R4에서 충족됐다. B는 별도 Sites project `appgprj_6a85de65d6148191aa042ae9c2787dd2`의 private owner-only preview로 배포됐고, `/ondo-b`와 known/unknown venue API smoke가 각각 `200 / 200 / 404`로 통과했다. 기존 A project와 `/ondo` 배포는 변경하지 않았다. 이 승격은 frontend demo candidate의 승격이며, 5절의 외부 provider·법률·운영 연동 승인을 의미하지 않는다.
+이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 현재 제품 SHA와 다르다. 현재 sleek B는 harness/baseline freeze, full automated gate, 같은 tuple의 두 차례 5/5 clean round, 별도 deployment smoke를 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo`는 변경하지 않는다.

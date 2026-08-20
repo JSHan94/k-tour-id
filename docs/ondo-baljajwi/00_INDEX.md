@@ -1,48 +1,51 @@
-# ONDO B · 발자취형 최종 제품/QA 팩
+# ONDO B · 발자취형 제품/QA Source of Truth
 
-상태: `PRODUCT + HARNESS FROZEN · AUTOMATED GATES PASS · R3/R4 CLEAN · CLEAN STREAK 2/2 · PRIVATE B DEPLOYED`
+상태: `PRODUCT FROZEN · HARNESS/BASELINE UNFROZEN · SLEEK R2 NOT STARTED · CLEAN STREAK 0/2 · LEGACY PRIVATE B ONLY`
 
-| SoT | 값 |
+| SoT | 현재 값 |
 |---|---|
-| 제품 SHA | `5ac630858389a1ca902a3fcfd01f77ae5bce9bb3` |
-| 검수 Harness SHA | `6e7254af02adcf49a35424203e2201093485872a` |
-| Baseline set digest | `5ffbe67fe65e5d46ecb2b7c217394fd2c29847f272dbf56afdac716c66bb49c1` |
+| 제품 SHA | `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
+| 검수 Harness SHA | `PENDING` — 변경 중이며 아직 commit으로 고정되지 않음 |
+| Baseline set digest | `PENDING` — 승인·commit 뒤 산출 |
 | Route | `/ondo-b` |
-| Private B preview | `https://ondo-b-private-20260820.phenixnet-jl.chatgpt.site/ondo-b` |
+| 배포 | 새 sleek B 미배포. 기존 private B는 이전 tuple의 역사 preview일 뿐 현재 후보가 아님 |
 | Requirements | `19/19 traced` |
-| Flows | `18/18 · 121 ACTUAL · 0 GAP · 5 reasoned N/A` |
-| Pixel | `44 mobile + 44 desktop = 88/88 PASS` |
+| Flows | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
+| Visual registry | `44 cases · 42 distinct state IDs` |
+| Pixel target | `44 × 6 exact viewports = 264 committed baselines` |
+| Review gate | `SLEEK R2 NOT STARTED · 0/2 clean rounds` |
 
-이 디렉터리가 발자취형 B 후보의 제품·검수·증거 source of truth다. [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md)은 A/v2의 역사 기록이며 현재 B 판정을 덮어쓰지 않는다.
+이 디렉터리가 현재 발자취형 B 후보의 살아 있는 제품·검수·증거 source of truth다. [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md)은 A/v2의 역사 기록이다. `evidence/RUN-*`과 이전 clean tuple은 당시 결과를 보존하지만 현재 제품의 합격 증거로 재사용하지 않는다.
 
 ## 읽는 순서
 
-1. [원요구 최종 감사](./06_FINAL_REQUIREMENTS_AUDIT.md) — 다섯 실행 질문과 19개 아이디어의 구현 깊이
-2. [Trace Matrix](./01_TRACE_MATRIX.md) — 19 REQ, 18 Flow, 121 actual checkpoints
-3. [QA Runbook](./02_QA_RUNBOOK.md) — 같은 tuple의 실행·재검수 규칙
-4. [Review Manifest](./03_REVIEW_MANIFEST.md) — 5개 독립 역할과 두 clean round
-5. [Evidence Manifest](./04_EVIDENCE_MANIFEST.md) — 자동 검수 수치·명령·digest
-6. [Route Seam](./05_ROUTE_SEAM.md) — 실제 `/ondo-b` route·state seam
-7. [Final As-built](./07_AS_BUILT.md) — 최종 구현·데이터·연동 등급·검수 수치
-8. [Visual System](./VISUAL_SYSTEM.md), [Surface Matrix](./VISUAL_SURFACE_MATRIX.md)
-9. [Data Pipeline](./DATA_PIPELINE.md), [Truth](./DATA_PROVENANCE_AND_TRUTH.md), [External blockers](./DATA_ENV_AND_BLOCKERS.md)
-10. [Five-Designer Sleekness Review](./08_UX_UI_FIVE_DESIGNER_REVIEW.md) — 다섯 독립 UX/UI reviewer와 zero-actionable loop
-11. [UX/UI Component & State Matrix](./09_UX_UI_COMPONENT_STATE_MATRIX.md) — 전제품 component/state/breakpoint coverage
+1. [원요구 감사](./06_FINAL_REQUIREMENTS_AUDIT.md) — 다섯 실행 질문과 19개 아이디어의 구현 깊이
+2. [Trace Matrix](./01_TRACE_MATRIX.md) — 19 REQ, 18 Flow, 126 checkpoint disposition
+3. [QA Runbook](./02_QA_RUNBOOK.md) — 현재 tuple을 동결하고 다시 실행하는 규칙
+4. [Five-Designer Review](./08_UX_UI_FIVE_DESIGNER_REVIEW.md) — 다섯 독립 UX/UI reviewer와 zero-actionable loop
+5. [Component & State Matrix](./09_UX_UI_COMPONENT_STATE_MATRIX.md) — 44 case, 42 state, 6 viewport registry
+6. [Review Manifest](./03_REVIEW_MANIFEST.md) — 역사 round와 현재 clean streak
+7. [Evidence Manifest](./04_EVIDENCE_MANIFEST.md) — 현재/역사 증거를 구분한 인덱스
+8. [Route Seam](./05_ROUTE_SEAM.md) — 실제 `/ondo-b` route·state seam
+9. [As-built](./07_AS_BUILT.md) — 현재 제품 구현과 아직 미검증인 부분
+10. [Visual System](./VISUAL_SYSTEM.md), [Surface Matrix](./VISUAL_SURFACE_MATRIX.md)
+11. [Data Pipeline](./DATA_PIPELINE.md), [Truth](./DATA_PROVENANCE_AND_TRUTH.md), [External blockers](./DATA_ENV_AND_BLOCKERS.md)
 
 ## 현재 Gate
 
-| Gate | 결과 |
+| Gate | 현재 판정 |
 |---|---|
-| Product build + typecheck | `PASS` |
-| Contracts | `26/26 PASS` |
-| 18 Flow mobile+desktop | `36/36 PASS` |
-| Pixel mobile+desktop | `88/88 PASS`, project-mismatch `88 intentional skip` |
-| A11y mobile+desktop | `28/28 PASS` |
-| KO/EN content + map/product/regression/registry/onboarding geometry | `108/108 PASS` |
-| Data | 공식 장소 `400`, simulated signal `80`, night-category After19 subset `17` (`서울 7 / 부산 10`) |
-| R3 independent review | [Review Manifest](./03_REVIEW_MANIFEST.md) 참조 |
-| R4 independent review | [Review Manifest](./03_REVIEW_MANIFEST.md) 참조 |
-| B deployment | `PASS · private owner-only preview · /ondo-b 200` |
+| Product source | `FROZEN` at `fb6529e560a6c2b96ae22d1120645e560b8039ef` |
+| Harness source | `UNFROZEN` — commit SHA 대기 |
+| Checkpoint registry | `126 mapped` to `pixel | functional_only`; grouped journey step 이름을 126개 exact `test.step`으로 과장하지 않음 |
+| Pixel baseline | `264 target` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; freeze/digest 대기 |
+| Current automated acceptance | `NOT YET RECORDED` against a frozen product+harness+baseline tuple |
+| SLEEK R2 | `NOT STARTED` |
+| Clean streak | `0/2` |
+| New sleek deployment | `NOT DEPLOYED` |
+| Data inventory | 공식 장소 `400`, simulated signal `80`, night-category After19 subset `17` (`서울 7 / 부산 10`) |
+
+이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS, R3/R4 clean, private deployment는 역사적으로 유효하지만 제품 변경 뒤 현재 release gate에는 포함하지 않는다.
 
 ## 고정 불변식
 
@@ -53,4 +56,5 @@
 - 지도 실패 시 같은 200개 목록과 Retry를 제공한다.
 - 결제 성공만으로 Stamp가 증가하지 않는다.
 - 외부 receipt가 없으면 `SIMULATED`, `CONTRACT ONLY`, `NOT CONFIGURED`, `DEFERRED`를 제거하지 않는다.
-- 같은 제품·harness tuple에서 5인 독립 clean round 두 번 전에는 최종 승격하지 않는다.
+- 제품 또는 harness/baseline이 바뀌면 review verdict와 clean streak를 폐기한다.
+- 같은 frozen tuple에서 5인 독립 clean round 두 번 전에는 새 sleek B를 승격·배포하지 않는다.

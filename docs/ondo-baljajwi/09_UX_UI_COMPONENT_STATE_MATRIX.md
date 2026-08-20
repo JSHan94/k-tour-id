@@ -1,76 +1,87 @@
 # ONDO B · UX/UI Component & State Matrix
 
-상태: `BASELINE INVENTORIED · EXPANSION REQUIRED`
+상태: `EXECUTABLE REGISTRY EXPANDED · 264-BASELINE FREEZE PENDING`
 
 ## 1. Current exact inventory
 
 | Item | Count |
 |---|---:|
-| B route | `1` |
+| B route | `1` — `/ondo-b` |
 | Tab roots | `4` — ONDO, My Korea, Tables, ID |
 | Reducer surface kinds | `7` — map, venue, table, chat, local_signal, checkout, labs |
 | B content surface families | `14` |
-| B product TSX files | `21` |
-| Feature directories | `17` |
 | Flow | `18` |
-| Current visual cases | `44` |
+| Flow checkpoints | `126` — `121 ACTUAL / 5 N/A / 0 GAP` |
+| Visual cases | `44` |
 | Distinct visual state IDs | `42` |
-| Current snapshots | `88` — mobile 44 + desktop 44 |
-| Current locale mix | `EN 28 / KO 16` |
+| Exact viewports | `6` |
+| Baseline target | `264 committed PNGs` |
+| Locale mix per 44-case registry | `EN 28 / KO 16` |
 
-## 2. Family coverage baseline
+Exact viewports: `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`.
 
-| Family | Source | Current case | Sleek review expansion |
+## 2. Family coverage
+
+| Family | Source | Registered visual cases | Required complementary proof |
 |---|---|---:|---|
-| Shell/nav | `features/ondo/app/*` | `0` independent | nav states, toast, focus, scroll, safe area |
-| Onboarding | `onboarding/*` | `3` | three personas, fallback, KO/EN parity, short height |
-| Nation/City | `map/map-entry-b.tsx` | `6` | Busan, search empty, preference panel, zoom tiers, 360/430 |
-| Place/Save | `place/canonical-place-*` | `6` | loading/error/UNKNOWN/KO detail and action density |
-| JIT gates | `identity/gate-overlay.tsx` | `7` | idle/pending/success/cancel/return and locale parity |
-| Tables/chat | `connect/*` | `7` | full/requesting/join success/chat locked/send fail/image success/leave |
-| Local Signal/photo | `connect/*`, `media/*` | `3` | preview/uploading/remove/duplicate |
-| Checkout/stamp | `commerce/*` | `5` | confirming/processing and locale parity |
-| My Korea | `my/*` | `1` | empty/pre-milestone/saved/KO |
-| ID/Profile/Trust | `identity/*`, `profile/*`, `trust/*` | `2`, ID root `0` | ID root, partial consent, save fail/retry, low-axis states |
-| Global After19 | `after19/*` | venue cases only | prompt, auto banner, manual-off, setting off, expiry |
-| Labs | `labs/*` | `4` | wallet/quote/confirm/cancel/expired/mismatch/badge states |
+| Shell/nav | `features/ondo/app/*` | 모든 case에 포함 | nav state, inert modal background, focus return, scroll, safe area |
+| Onboarding | `onboarding/*` | `3` | three personas, skip/fallback, KO/EN content suite |
+| Nation/City | `map/*` | `6` | Seoul/Busan 200 each, map/list/fallback/retry, heat/cluster distinction |
+| Place/Save | `place/*` | `4` + shared detail cases | UNKNOWN facts, exact venue preservation, save failure/retry |
+| JIT gates | `identity/*` | `7` | Account/Person/Age/Payment isolation, cancel/error/retry/return |
+| Tables/chat | `connect/*` | `7` | member lock, join failure, image retry, feedback/report |
+| Local Signal/photo | `connect/*`, `media/*` | `3` | empty/failure/success, draft preservation |
+| Checkout/stamp | `commerce/*` | `5` | cancel/failure invariants, receipt≠visit, stamp milestone |
+| My Korea | `my/*` | `1` | same saved venue and milestone persistence |
+| Profile/Trust | `profile/*`, `trust/*` | `2` | consent and four independent reputation axes |
+| Global/venue After19 | `after19/*`, `place/*` | `2` | four guards, manual-off priority, exact venue return |
+| Labs | `labs/*` | `4` | truth boundary, trait failure, bridge failure/success invariants |
 
-## 3. Canonical registry row
+Case 수는 중복 surface를 억지로 늘리지 않는다. layout-distinct UI가 없는 checkpoint는 browser assertion과 `functional_only` reason으로 증명한다.
 
-한 개의 machine-readable source registry에서 browser, pixel spec, 문서 표를 생성한다.
+## 3. Executable registry shapes
+
+정본은 `tests/helpers/ondo-b-visual-evidence.ts`다. 문서용 이상형 schema를 별도로 발명하지 않고 현재 코드의 실제 형태를 기록한다.
 
 ```ts
-type SleekVisualCase = {
-  caseId: `B-SLK-${string}`
-  familyId: string
-  surfaceKind: string
-  componentPath: string
-  selector: string
-  flowIds: readonly string[]
-  checkpointIds: readonly string[]
-  stateId: string
-  stateClass: "idle" | "empty" | "pending" | "success" | "error" | "cancel" | "locked" | "unsupported"
+type BVisualCase = {
+  id: `B-PX-${string}`
+  state: BVisualStateId
+  flows: readonly BFlowId[]
   locale: "ko" | "en"
-  viewportId: "360x740" | "390x844" | "430x932" | "768x1024" | "801x1000" | "1440x1000"
-  setupFixture: string
-  truthAssertions: readonly string[]
-  geometryProfile: string
-  pixelRequired: boolean
-  a11yRequired: boolean
-  closeReturnInvariant?: string
-  riskTags: readonly string[]
-  disposition: "covered" | "gap" | "n/a"
-  reason?: string
+  description: string
+}
+
+type BCheckpointVisualEvidence = {
+  checkpointId: `B-E2E-${BFlowId}-${BCheckpoint}`
+  disposition: "pixel" | "functional_only"
+  caseIds: readonly BVisualCase["id"][]
+  reason: string
 }
 ```
 
-## 4. Registry gates
+Setup fixture와 truth/geometry/a11y assertions는 case registry를 소비하는 canonical setup 함수와 capture guard가 실행한다. 현재 schema에 없는 `selector`, `stateClass`, `setupFixture` 필드가 있다고 주장하지 않는다.
 
-1. visible family마다 mobile/desktop baseline이 있어야 한다.
-2. text-heavy family는 KO/EN을 모두 가진다.
-3. 명시적 상태는 visual case 또는 사유 있는 N/A를 가진다.
-4. 각 Flow checkpoint는 interaction/visual evidence 또는 nonvisual 사유와 연결된다.
-5. `360×740`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` breakpoint registry를 관리한다.
-6. orphan ID, duplicate ID, unregistered visible component, stale snapshot count는 CI failure다.
+## 4. Checkpoint mapping
 
-기존 `B_PIXEL_CASES`와 `B_VISUAL_CASES` 이중 registry는 새 canonical registry로 통합한다. 전환 전까지 현재 88장은 baseline comparison 자료이며 whole-product completeness 증명으로 단독 사용하지 않는다.
+`B_CHECKPOINT_VISUAL_EVIDENCE`는 `18 × 7 = 126` row를 정확히 생성한다.
+
+- `pixel`: 하나 이상의 44 canonical case를 연결한다.
+- `functional_only`: 별도 layout screenshot이 필요 없는 이유와 `B_FLOW_CONTRACTS` browser proof를 연결한다.
+- 126 checkpoint ID는 unique여야 한다.
+- 44 visual case는 적어도 한 checkpoint에서 참조되어야 하며 orphan을 허용하지 않는다.
+- 한 composite flow test가 여러 checkpoint를 증명할 수 있다. 126개의 exact named `test.step`이 있다고 주장하지 않는다.
+
+## 5. Baseline census and gates
+
+1. 44 case ID와 42 exact state ID set이 코드와 일치해야 한다.
+2. 각 case를 여섯 exact viewport에서 한 번씩 캡처해 `264` PNG를 만든다.
+3. mobile directory `44`, desktop directory `44`, responsive directory `176`이어야 한다.
+4. 각 PNG 실제 dimension이 filename/viewport registry와 일치해야 한다.
+5. 264 PNG 모두 git tracked여야 한다.
+6. visible metadata `≥12px`, hit target `≥44×44`, horizontal overflow/independent control overlap/nav overlap `0`이어야 한다.
+7. active modal은 하나만 노출되고 background는 inert+aria-hidden이며 visible exit가 있어야 한다.
+8. serious/critical Axe, contrast/name/label violation, product runtime failure `0`이어야 한다.
+9. baseline update는 issue-scoped approval 후 수행하고 최종에는 no-update full 264 run을 통과해야 한다.
+
+현재 registry와 target 파일 구조는 마련됐지만 harness commit SHA와 baseline digest가 아직 없으므로 `FROZEN` 또는 `264/264 PASS`로 판정하지 않는다.
