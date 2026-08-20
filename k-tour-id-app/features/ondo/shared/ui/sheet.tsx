@@ -21,12 +21,18 @@ export function Sheet({
   onClose,
   showClose = true,
   size = "medium",
+  suspended = false,
+  initialFocusSelector,
 }: {
   children: ReactNode
   label: string
   onClose(): void
   showClose?: boolean
   size?: "peek" | "medium" | "full"
+  /** A nested, fully isolated decision owns modality while this is true. */
+  suspended?: boolean
+  /** Prefer a task-local action over the generic Close control on entry. */
+  initialFocusSelector?: string
 }) {
   const { state } = useOndo()
   const dialogRef = useRef<HTMLElement>(null)
@@ -37,7 +43,8 @@ export function Sheet({
     const activeElement = document.activeElement
     returnFocusRef.current = activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : null
     const dialog = dialogRef.current
-    const preferred = dialog?.querySelector<HTMLElement>("[data-sheet-initial-focus]")
+    const preferred = (initialFocusSelector ? dialog?.querySelector<HTMLElement>(initialFocusSelector) : null)
+      ?? dialog?.querySelector<HTMLElement>("[data-sheet-initial-focus]")
     const first = preferred ?? dialog?.querySelector<HTMLElement>(FOCUSABLE) ?? dialog
     const focusInitial = () => first?.focus({ preventScroll: true })
     window.requestAnimationFrame(() => window.requestAnimationFrame(focusInitial))
@@ -65,7 +72,7 @@ export function Sheet({
         else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='canonical-place-details'], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
       }, 80)
     }
-  }, [showClose])
+  }, [initialFocusSelector, showClose])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -124,8 +131,8 @@ export function Sheet({
         className={`${styles.sheet} ${styles[size]}`}
         data-testid="ondo-sheet"
         data-sheet-size={size}
-        role="dialog"
-        aria-modal="true"
+        role={suspended ? undefined : "dialog"}
+        aria-modal={suspended ? undefined : "true"}
         aria-label={label}
         tabIndex={-1}
         onKeyDown={handleKeyDown}

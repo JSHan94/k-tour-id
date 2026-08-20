@@ -89,7 +89,9 @@
 .feedbackPanel fieldset button { min-height: 44px; border: 1px solid #d8d5cf; border-radius: 11px; background: transparent; color: #292927; font-weight: 700; }
 .feedbackPanel fieldset button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
 .feedbackPanel textarea { min-height: 72px; resize: vertical; padding: 10px 0; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; background: transparent; font: inherit; font-size: 14px; }
-.confirmPanel { position: absolute; z-index: 5; right: 12px; bottom: calc(14px + env(safe-area-inset-bottom)); left: 12px; padding: 20px; border: 1px solid #d9d7d1; border-radius: 14px; background: #fff; }
+.confirmLayer { position: fixed; z-index: 40; inset: 0; display: grid; align-items: end; justify-items: center; }
+.confirmBackdrop { position: absolute; inset: 0; background: rgb(24 24 22 / 44%); }
+.confirmPanel { position: relative; width: min(100%, 640px); padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); border: 0; border-top: 1px solid #d9d7d1; border-radius: 18px 18px 0 0; background: #fff; box-shadow: 0 -18px 50px rgb(24 24 22 / 15%); }
 .confirmPanel h3 { margin: 0; font-size: 18px; }
 .confirmPanel p { color: #706d67; font-size: 13px; line-height: 1.55; }
 .confirmPanel > label { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: #5f5c57; font-size: 12px; font-weight: 700; }
@@ -102,4 +104,5 @@
 .confirmPanel button:disabled { opacity: .4; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 @media (min-width: 700px) { .screen { max-width: 700px; margin: 0 auto; } }
+@media (min-width: 801px) { .confirmLayer { align-items: center; padding: 28px; } .confirmPanel { border: 1px solid #d9d7d1; border-radius: 18px; box-shadow: 0 24px 70px rgb(24 24 22 / 22%); } }
 @media (max-width: 360px) { .detailGrid > div:nth-child(odd) { padding-right: 8px; } .detailGrid > div:nth-child(even) { padding-left: 8px; } .hostCard { grid-template-columns: 42px 1fr; } .hostCard small { grid-column: 2; } }

@@ -18,16 +18,16 @@ const VENUE_NAMES: Record<string, { en: string; ko: string }> = {
 
 export function tableFixtureTruth(locale: Locale, venue?: string) {
   if (locale === "ko") return {
-    title: "시뮬레이션 미리보기",
+    title: "시뮬레이션 미리보기 · 2026년 8월 19일 오후 6시 KST 기준",
     body: venue
-      ? `${venue}에는 실제 Table이 연결되어 있지 않습니다. 아래 항목에도 실제 호스트나 예약은 없으며, 참여해도 이 기기의 로컬 미리보기만 바뀝니다.`
-      : "실제 호스트나 예약은 없습니다. 참여해도 이 기기의 로컬 미리보기만 바뀝니다.",
+      ? `${venue}에는 실제 Table이 연결되어 있지 않습니다. 아래 일정·자리 상태는 현재 정보가 아닌 고정 예시입니다. 실제 호스트나 예약은 없습니다. 참여해도 이 기기의 로컬 미리보기만 바뀝니다.`
+      : "일정과 자리 상태는 현재 정보가 아닌 고정 예시입니다. 실제 호스트나 예약은 없습니다. 참여해도 이 기기의 로컬 미리보기만 바뀝니다.",
   }
   return {
-    title: "Simulated fixture",
+    title: "Simulated preview · Fixed at Aug 19, 2026, 6:00 PM KST",
     body: venue
-      ? `${venue} has no live Table attached. The entries below have no live host or reservation; joining changes only this local preview.`
-      : "No live host or reservation. Joining changes only this local preview.",
+      ? `${venue} has no live Table attached. Dates and seat status below are fixed examples, not current availability. There is no live host or reservation; joining changes only this local preview.`
+      : "Dates and seat status are fixed examples, not current availability. No live host or reservation exists; joining changes only this local preview.",
   }
 }
 
@@ -81,7 +81,7 @@ export function TablesEntry() {
             )}
           </section>
           <div className={styles.contextActions}>
-            <button type="button" className={styles.primary} onClick={returnToVenue} data-testid="tables-back-to-venue"><ArrowLeft size={17} />{locale === "ko" ? `${selectedVenueName}(으)로 돌아가기` : `Back to ${selectedVenueName}`}</button>
+            <button type="button" className={styles.primary} onClick={returnToVenue} data-testid="tables-back-to-venue"><ArrowLeft size={17} />{locale === "ko" ? "장소로 돌아가기" : `Back to ${selectedVenueName}`}</button>
             <button type="button" className={styles.secondary} onClick={() => setScope("global")} data-testid="tables-browse-all">{locale === "ko" ? "전체 Table 둘러보기" : "Browse all Tables"}</button>
           </div>
         </>
@@ -110,7 +110,7 @@ function TableCard({ tableId, joined = false }: { tableId: string; joined?: bool
   const table = TABLES.find((candidate) => candidate.id === tableId)!
   const locale = state.locale
   const venue = VENUE_NAMES[table.venueId]?.[locale] ?? table.venueId
-  const date = new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }).format(new Date(table.startsAt))
+  const date = `${new Intl.DateTimeFormat(locale === "ko" ? "ko-KR" : "en-US", { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "Asia/Seoul" }).format(new Date(table.startsAt))} · KST`
 
   return (
     <button

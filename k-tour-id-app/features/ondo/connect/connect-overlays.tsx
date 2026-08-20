@@ -8,6 +8,7 @@ import type { MessageStatus } from "../contracts/domain"
 import { LocalPhotoPicker, withUploadState } from "../media/local-photo-picker"
 import type { LocalPhoto } from "../media/media-model"
 import { InlineNotice, Sheet } from "../shared/ui/sheet"
+import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { useOndo } from "../shared/state/ondo-provider"
 import { CheckoutOverlay } from "../commerce/checkout-overlay"
 import { LabsEntry } from "../labs/labs-entry"
@@ -22,6 +23,17 @@ type TableOutcome = { feedbackSubmitted: boolean; feedbackReceipt: FeedbackRecei
 
 const CHAT_SESSION_KEY = "ondo.chat.v2"
 const TABLE_OUTCOME_SESSION_KEY = "ondo.table-outcomes.v2"
+
+function focusAfterSurfaceTransition(selectors: string[]) {
+  window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+    for (const selector of selectors) {
+      const candidate = document.querySelector<HTMLElement>(selector)
+      if (!candidate || candidate.getClientRects().length === 0) continue
+      candidate.focus({ preventScroll: true })
+      return
+    }
+  }))
+}
 
 function readTableOutcome(tableId: string): TableOutcome {
   const fallback = { feedbackSubmitted: false, feedbackReceipt: null, reportReceipt: null, reportReason: null, participantBlocked: false }
@@ -152,7 +164,7 @@ function TableDetail({ tableId }: { tableId: string }) {
   const truth = tableFixtureTruth(locale)
 
   return (
-    <Sheet label={table.title[locale]} onClose={() => actions.setSurface({ kind: "map" })} size="full">
+    <Sheet label={table.title[locale]} onClose={() => actions.setSurface({ kind: "map" })} size="full" initialFocusSelector={confirmed ? "[data-testid='table-open-chat']" : undefined}>
       <article className={styles.sheetBody} data-table-membership={membership} data-chat-access={runtime.chatAccess} data-table-failure={runtime.failure}>
         <p className={styles.eyebrow}>{locale === "ko" ? "같이 먹는 한 끼" : "A meal shared locally"}</p>
         <h2>{table.title[locale]}</h2>
@@ -191,7 +203,7 @@ function TableDetail({ tableId }: { tableId: string }) {
         {unavailable ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{unavailableCopy} {locale === "ko" ? "근처 다른 Table을 확인해 주세요." : "Choose another nearby Table."}</span></InlineNotice> : null}
 
         {confirmed ? (
-          <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "chat", tableId })}><MessageCircle size={18} /> {locale === "ko" ? "대화 열기" : "Open chat"}</button>
+          <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "chat", tableId })} data-testid="table-open-chat"><MessageCircle size={18} /> {locale === "ko" ? "대화 열기" : "Open chat"}</button>
         ) : membership === "TMB-REQUESTING" ? (
           <button type="button" className={styles.primary} disabled data-testid="table-requesting">{locale === "ko" ? "미리보기 확인 중" : "Checking the preview"}</button>
         ) : retryableFailureCopy ? null : (
@@ -224,7 +236,10 @@ function TableChat({ tableId }: { tableId: string }) {
   const [blockParticipant, setBlockParticipant] = useState(() => outcome.participantBlocked)
   const ownedObjectUrls = useRef(new Set<string>())
   const confirmPanelRef = useRef<HTMLDivElement>(null)
+  const confirmLayerRef = useRef<HTMLDivElement>(null)
   const confirmInvokerRef = useRef<HTMLElement | null>(null)
+
+  useModalIsolation(confirm !== null, confirmLayerRef)
 
   useEffect(() => () => {
     ownedObjectUrls.current.forEach((url) => URL.revokeObjectURL(url))
@@ -269,12 +284,20 @@ function TableChat({ tableId }: { tableId: string }) {
         first.focus()
       }
     }
+    const containNestedFocus = (event: FocusEvent) => {
+      const currentPanel = confirmPanelRef.current
+      if (!currentPanel || currentPanel.contains(event.target as Node)) return
+      event.stopImmediatePropagation()
+      window.requestAnimationFrame(() => initial?.focus({ preventScroll: true }))
+    }
     // Window capture runs before the parent Sheet's document listener, so Escape
     // belongs to this nested alert dialog while it is open.
     window.addEventListener("keydown", ownNestedDialog, true)
+    document.addEventListener("focusin", containNestedFocus, true)
     return () => {
       window.cancelAnimationFrame(frame)
       window.removeEventListener("keydown", ownNestedDialog, true)
+      document.removeEventListener("focusin", containNestedFocus, true)
     }
   }, [confirm])
 
@@ -370,6 +393,7 @@ function TableChat({ tableId }: { tableId: string }) {
     updateOutcome({ reportReceipt: receipt, reportReason, participantBlocked: blockParticipant })
     setConfirm(null)
     actions.setSurface({ kind: "table", tableId })
+    focusAfterSurfaceTransition(["[data-testid='table-open-chat']", "[data-testid='table-join']", "[data-testid='ondo-sheet']"])
     actions.notify(blockParticipant
       ? locale === "ko" ? "로컬 시뮬레이션 미리보기에 신고와 참가자 차단을 저장했어요." : "Report and participant block saved only in this local simulated preview."
       : locale === "ko" ? "로컬 시뮬레이션 미리보기에 신고를 저장했어요." : "Report saved only in this local simulated preview.")
@@ -388,12 +412,18 @@ function TableChat({ tableId }: { tableId: string }) {
     })
   }
 
+  function returnToTable() {
+    setConfirm(null)
+    actions.setSurface({ kind: "table", tableId })
+    focusAfterSurfaceTransition(["[data-testid='table-open-chat']", "[data-testid='table-join']", "[data-testid='ondo-sheet']"])
+  }
+
   return (
-    <Sheet label={table.title[locale]} onClose={() => actions.setSurface({ kind: "table", tableId })} size="full">
+    <Sheet label={table.title[locale]} onClose={returnToTable} size="full" suspended={confirm !== null}>
       <div className={styles.chat} data-chat-access="CHA-OPEN" data-membership={membership} data-testid="table-chat">
         <header className={styles.chatHeader}>
-          <button type="button" onClick={() => actions.setSurface({ kind: "table", tableId })} aria-label={locale === "ko" ? "Table로 돌아가기" : "Back to Table"}><ArrowLeft size={20} /></button>
-          <div><strong>{table.title[locale]}</strong><span>{locale === "ko" ? "이 기기의 미리보기 · 확정 참가자만" : "This preview stays on this device · Confirmed members only"}</span></div>
+          <button type="button" onClick={returnToTable} aria-label={locale === "ko" ? "Table로 돌아가기" : "Back to Table"}><ArrowLeft size={20} /></button>
+          <div><strong>{table.title[locale]}</strong><span>{locale === "ko" ? "로컬 미리보기 참여자만 · 참가자 신원은 확인되지 않음" : "Local-preview members only · Participant identities are not verified"}</span></div>
           <span className={styles.headerSpacer} aria-hidden="true" />
         </header>
 
@@ -441,11 +471,14 @@ function TableChat({ tableId }: { tableId: string }) {
         </div>
 
         {confirm ? (
-          <div ref={confirmPanelRef} className={styles.confirmPanel} role="alertdialog" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description" tabIndex={-1} data-testid="chat-confirm-dialog">
+          <div ref={confirmLayerRef} className={styles.confirmLayer} data-testid="chat-confirm-layer">
+            <div className={styles.confirmBackdrop} aria-hidden="true" />
+            <div ref={confirmPanelRef} className={styles.confirmPanel} role="alertdialog" aria-modal="true" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description" tabIndex={-1} data-testid="chat-confirm-dialog">
             <h3 id="confirm-action-title">{confirm === "leave" ? locale === "ko" ? "Table을 나갈까요?" : "Leave this Table?" : locale === "ko" ? "로컬 미리보기에 신고를 저장할까요?" : "Save a report in this local preview?"}</h3>
             <p id="confirm-action-description">{confirm === "leave" ? locale === "ko" ? "나가면 대화를 더 이상 볼 수 없어요." : "You will no longer be able to view this chat." : locale === "ko" ? "신고와 차단은 이 기기의 시뮬레이션 미리보기에만 저장되며 실제 운영팀에는 전송되지 않아요." : "The report and block stay only in this device’s simulated preview and are not sent to a live moderation team."}</p>
             {confirm === "report" ? <><label htmlFor={`report-reason-${activeTable.id}`}>{locale === "ko" ? "로컬 미리보기 신고 사유" : "Local preview report reason"}</label><select id={`report-reason-${activeTable.id}`} value={reportReason} onChange={(event) => setReportReason(event.target.value)} data-testid="report-reason" data-confirm-initial-focus><option value="">{locale === "ko" ? "선택해 주세요" : "Choose a reason"}</option><option value="no_show">{locale === "ko" ? "약속에 나타나지 않음" : "No-show"}</option><option value="harassment">{locale === "ko" ? "불쾌한 언행" : "Harassment"}</option><option value="other">{locale === "ko" ? "기타" : "Other"}</option></select><label className={styles.blockOption}><input type="checkbox" checked={blockParticipant} onChange={(event) => setBlockParticipant(event.target.checked)} data-testid="report-block" />{locale === "ko" ? "이 로컬 미리보기에서만 참가자 차단" : "Block participant only in this local preview"}</label></> : null}
             <div><button type="button" onClick={closeConfirm} data-testid="confirm-cancel" {...(confirm === "leave" ? { "data-confirm-initial-focus": true } : {})}>{locale === "ko" ? "취소" : "Cancel"}</button><button type="button" disabled={confirm === "report" && !reportReason} data-testid="confirm-submit" onClick={() => { if (confirm === "leave") { actions.setMembership(table.id, "left"); setConfirm(null); actions.setSurface({ kind: "table", tableId }) } else submitReport() }}>{confirm === "report" ? locale === "ko" ? "신고 저장" : "Record report" : locale === "ko" ? "확인" : "Confirm"}</button></div>
+            </div>
           </div>
         ) : null}
       </div>
@@ -459,6 +492,8 @@ function LocalSignal({ venueId }: { venueId: string }) {
   const [photo, setPhoto] = useState<LocalPhoto | null>(null)
   const [note, setNote] = useState("")
   const [status, setStatus] = useState<"draft" | "submitting" | "submitted" | "failed" | "duplicate">("draft")
+  const submitRef = useRef<HTMLButtonElement>(null)
+  const returnRef = useRef<HTMLButtonElement>(null)
   const before = useRef<null | { person: typeof state.person; age: typeof state.age; paymentKyc: typeof state.paymentKyc; stamps: number; meetup: typeof state.reputation.meetup }>(null)
   const venue = VENUE_NAMES[venueId]?.[locale] ?? venueLabelById(venueId, locale) ?? (locale === "ko" ? "선택한 장소" : "Selected place")
   const gatesReady = state.account === "ACC-ACTIVE" && state.person === "PER-VERIFIED"
@@ -498,8 +533,22 @@ function LocalSignal({ venueId }: { venueId: string }) {
   )
   const terminal = status === "submitted" || status === "duplicate"
 
+  useEffect(() => {
+    if (status !== "failed" && !terminal) return
+    const frame = window.requestAnimationFrame(() => {
+      const target = terminal ? returnRef.current : submitRef.current
+      target?.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [status, terminal])
+
+  function returnToVenue() {
+    actions.setSurface({ kind: "venue", venueId })
+    focusAfterSurfaceTransition(["[data-testid='canonical-place-details']", "[data-testid='canonical-place-peek'] button", "[aria-current='page']"])
+  }
+
   return (
-    <Sheet label={locale === "ko" ? "현장 팁 남기기" : "Share a local tip"} onClose={() => actions.setSurface({ kind: "venue", venueId })} size="full">
+    <Sheet label={locale === "ko" ? "현장 팁 남기기" : "Share a local tip"} onClose={returnToVenue} size="full">
       <div className={styles.sheetBody} data-signal-status={status} data-signal-evidence={hasEvidence ? "ready" : "required"} data-signal-invariants={invariantsHold ? "preserved" : "changed"} data-testid="local-signal-overlay">
         <p className={styles.eyebrow}>{locale === "ko" ? "다음 여행자에게 도움 주기" : "Help the next traveler"}</p>
         <h2>{locale === "ko" ? "지금 알게 된 현장 팁을 남겨주세요" : "Share what you found here"}</h2>
@@ -514,8 +563,8 @@ function LocalSignal({ venueId }: { venueId: string }) {
         {status === "failed" ? <InlineNotice tone="danger"><AlertTriangle size={18} /><span>{locale === "ko" ? "신호를 남기지 못했어요. 초안은 유지됐어요." : "The signal could not be submitted. Your draft was kept."}</span></InlineNotice> : null}
         {status === "submitted" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "현장 팁을 이 기기의 데모에 저장했어요. 실제 서비스에는 전송되지 않았어요." : "Your local tip was saved to this device demo. Nothing was sent to a live service."}</span></InlineNotice> : null}
         {status === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{locale === "ko" ? "이미 반영된 데모 방문이에요. 방문·기여 이력과 공개 ONDO 점수는 다시 바뀌지 않았어요." : "This demo visit was already recorded. Visit and contribution histories and the public ONDO score did not change again."}</span></InlineNotice> : null}
-        {terminal ? <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "venue", venueId })} data-testid="local-signal-return">{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button> : <button type="button" className={styles.primary} onClick={submit} disabled={status === "submitting" || !hasEvidence} data-testid="local-signal-submit">{status === "submitting" ? locale === "ko" ? "현장 팁을 남기는 중" : "Submitting tip" : status === "failed" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "현장 팁 남기기" : "Submit local tip"}</button>}
-        {status === "draft" || status === "failed" ? <button type="button" className={styles.secondary} onClick={() => actions.setSurface({ kind: "venue", venueId })}>{locale === "ko" ? "작성 취소" : "Cancel draft"}</button> : null}
+        {terminal ? <button ref={returnRef} type="button" className={styles.primary} onClick={returnToVenue} data-testid="local-signal-return">{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button> : <button ref={submitRef} type="button" className={styles.primary} onClick={submit} disabled={status === "submitting" || !hasEvidence} data-testid="local-signal-submit">{status === "submitting" ? locale === "ko" ? "현장 팁을 남기는 중" : "Submitting tip" : status === "failed" ? locale === "ko" ? "다시 시도" : "Try again" : locale === "ko" ? "현장 팁 남기기" : "Submit local tip"}</button>}
+        {status === "draft" || status === "failed" ? <button type="button" className={styles.secondary} onClick={returnToVenue}>{locale === "ko" ? "작성 취소" : "Cancel draft"}</button> : null}
       </div>
     </Sheet>
   )
