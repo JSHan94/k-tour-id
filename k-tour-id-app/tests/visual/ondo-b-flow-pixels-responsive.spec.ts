@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
   B_SLEEK_VIEWPORTS,
   B_VISUAL_CASES,
+  attachAndAssertBVisualRuntime,
   attachBCaseMetadata,
   bSnapshotName,
   closeBVisualCase,
@@ -10,6 +11,10 @@ import {
   setupBVisualCase,
   stabilizeBVisualSnapshot,
 } from "../helpers/ondo-b-visual-evidence"
+
+test.afterEach(async ({ page }, testInfo) => {
+  await attachAndAssertBVisualRuntime(page, testInfo)
+})
 
 const RESPONSIVE_VIEWPORTS = B_SLEEK_VIEWPORTS.filter(({ id }) => !["390x844", "1440x1000"].includes(id))
 

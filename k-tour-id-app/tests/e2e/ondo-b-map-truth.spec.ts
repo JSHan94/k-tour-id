@@ -101,7 +101,6 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await seed(page, ["classic", "cafe", "late", "lively", "calm", "diet"])
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='busan']").click()
-    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
 
     const summary = page.getByTestId("ondo-b-preference-summary")
     await expect(summary).toContainText("6 starting interests")

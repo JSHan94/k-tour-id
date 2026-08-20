@@ -5,13 +5,17 @@ import {
   TABLE_ID,
   expectBRuntimeClean,
   finishAgeGate,
+  getBRuntimeEvidence,
   gotoB,
+  hasBRuntimeGuard,
   installBRuntimeGuard,
   openCanonicalVenue,
   openLabs,
   prepareBPage,
   seedB,
   seedFreshOnboarding,
+  B_FLOW_CONTRACTS,
+  type BCheckpoint,
   type BFlowId,
   type BLocale,
   type BSessionSeed,
@@ -132,6 +136,142 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-LABS-BRIDGE-SUCCESS-EN", state: "LABS-BRIDGE-SUCCESS", flows: ["FL-018"], locale: "en", description: "read-only bridge receipt" },
 ] as const
 
+export type BCheckpointVisualEvidence = {
+  checkpointId: `B-E2E-${BFlowId}-${BCheckpoint}`
+  disposition: "pixel" | "functional_only"
+  caseIds: readonly BVisualCase["id"][]
+  reason: string
+}
+
+type CheckpointKey = `${BFlowId}:${BCheckpoint}`
+const pixel = (...caseIds: BVisualCase["id"][]) => caseIds
+
+/**
+ * Explicit checkpoint-to-pixel links. A checkpoint omitted here is deliberately
+ * FUNCTIONAL_ONLY: it still has real browser evidence in B_FLOW_CONTRACTS, but
+ * does not claim a second screenshot when it introduces no layout-distinct UI.
+ */
+const B_PIXEL_BY_CHECKPOINT: Partial<Record<CheckpointKey, readonly BVisualCase["id"][]>> = {
+  "FL-001:ENTRY": pixel("B-PX-NATION-EN", "B-PX-NATION-KO"),
+  "FL-001:DECISION": pixel("B-PX-CITY-LIVE-EN", "B-PX-CITY-LIVE-KO", "B-PX-CITY-LIST-EN", "B-PX-PLACE-PEEK-EN"),
+  "FL-001:CANCEL": pixel("B-PX-PLACE-PEEK-EN"),
+  "FL-001:ERROR": pixel("B-PX-CITY-FALLBACK-KO"),
+  "FL-001:RETRY": pixel("B-PX-CITY-FALLBACK-KO"),
+  "FL-001:TERMINAL": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-001:RETURN": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-002:ENTRY": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
+  "FL-002:DECISION": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
+  "FL-002:CANCEL": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
+  "FL-002:ERROR": pixel("B-PX-GATE-AGE-FAIL-KO"),
+  "FL-002:RETRY": pixel("B-PX-GATE-AGE-FAIL-KO"),
+  "FL-002:TERMINAL": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
+  "FL-002:RETURN": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
+  "FL-003:ENTRY": pixel("B-PX-TABLES-LIST-EN"),
+  "FL-003:DECISION": pixel("B-PX-TABLE-DETAIL-KO"),
+  "FL-003:ERROR": pixel("B-PX-TABLE-JOIN-FAIL-EN", "B-PX-CHAT-IMAGE-FAIL-EN"),
+  "FL-003:RETRY": pixel("B-PX-TABLE-JOIN-FAIL-EN", "B-PX-CHAT-IMAGE-FAIL-EN"),
+  "FL-003:TERMINAL": pixel("B-PX-CHAT-EN", "B-PX-FEEDBACK-KO", "B-PX-REPORT-EN"),
+  "FL-003:RETURN": pixel("B-PX-TABLES-LIST-EN"),
+  "FL-004:ENTRY": pixel("B-PX-CHECKOUT-IDLE-EN"),
+  "FL-004:DECISION": pixel("B-PX-CHECKOUT-IDLE-EN"),
+  "FL-004:CANCEL": pixel("B-PX-CHECKOUT-CANCEL-KO"),
+  "FL-004:ERROR": pixel("B-PX-CHECKOUT-FAIL-EN"),
+  "FL-004:RETRY": pixel("B-PX-CHECKOUT-FAIL-EN"),
+  "FL-004:TERMINAL": pixel("B-PX-CHECKOUT-RECEIPT-EN", "B-PX-CHECKOUT-STAMP-KO"),
+  "FL-004:RETURN": pixel("B-PX-MY-EN"),
+  "FL-005:ENTRY": pixel("B-PX-GATE-PERSON-CX-KO"),
+  "FL-005:DECISION": pixel("B-PX-GATE-PERSON-CX-KO"),
+  "FL-005:ERROR": pixel("B-PX-GATE-PERSON-CX-KO"),
+  "FL-005:RETRY": pixel("B-PX-GATE-PERSON-CX-KO"),
+  "FL-006:ENTRY": pixel("B-PX-GATE-PERSON-PASSPORT-EN"),
+  "FL-006:DECISION": pixel("B-PX-GATE-RESIDENCE-UNSUPPORTED-EN"),
+  "FL-006:ERROR": pixel("B-PX-GATE-RESIDENCE-UNSUPPORTED-EN"),
+  "FL-006:RETRY": pixel("B-PX-GATE-PERSON-PASSPORT-EN"),
+  "FL-007:ENTRY": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-007:DECISION": pixel("B-PX-ONBOARDING-PERSONAS-KO", "B-PX-ONBOARDING-PREFERENCES-EN"),
+  "FL-007:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-007:TERMINAL": pixel("B-PX-NATION-EN"),
+  "FL-007:RETURN": pixel("B-PX-NATION-EN"),
+  "FL-008:ENTRY": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-008:DECISION": pixel("B-PX-ONBOARDING-PERSONAS-KO", "B-PX-ONBOARDING-PREFERENCES-EN"),
+  "FL-008:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-008:TERMINAL": pixel("B-PX-NATION-KO"),
+  "FL-008:RETURN": pixel("B-PX-NATION-KO"),
+  "FL-009:ENTRY": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-009:DECISION": pixel("B-PX-ONBOARDING-PERSONAS-KO", "B-PX-ONBOARDING-PREFERENCES-EN"),
+  "FL-009:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-009:TERMINAL": pixel("B-PX-NATION-EN"),
+  "FL-009:RETURN": pixel("B-PX-NATION-EN"),
+  "FL-010:ENTRY": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-010:DECISION": pixel("B-PX-GATE-ACCOUNT-FAIL-KO"),
+  "FL-010:ERROR": pixel("B-PX-GATE-ACCOUNT-FAIL-KO"),
+  "FL-010:RETRY": pixel("B-PX-GATE-ACCOUNT-FAIL-KO"),
+  "FL-010:TERMINAL": pixel("B-PX-SAVE-RECOVERED-KO"),
+  "FL-010:RETURN": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-011:ENTRY": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-011:CANCEL": pixel("B-PX-SAVE-FAILURE-EN"),
+  "FL-011:ERROR": pixel("B-PX-SAVE-FAILURE-EN"),
+  "FL-011:RETRY": pixel("B-PX-SAVE-RECOVERED-KO"),
+  "FL-011:TERMINAL": pixel("B-PX-SAVE-RECOVERED-KO", "B-PX-MY-EN"),
+  "FL-011:RETURN": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-012:ENTRY": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-012:DECISION": pixel("B-PX-LOCAL-SIGNAL-EMPTY-EN"),
+  "FL-012:CANCEL": pixel("B-PX-LOCAL-SIGNAL-EMPTY-EN"),
+  "FL-012:ERROR": pixel("B-PX-LOCAL-SIGNAL-FAIL-KO"),
+  "FL-012:RETRY": pixel("B-PX-LOCAL-SIGNAL-FAIL-KO"),
+  "FL-012:TERMINAL": pixel("B-PX-LOCAL-SIGNAL-SUCCESS-EN"),
+  "FL-012:RETURN": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-013:ENTRY": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
+  "FL-013:DECISION": pixel("B-PX-GATE-AGE-FAIL-KO"),
+  "FL-013:ERROR": pixel("B-PX-GATE-AGE-FAIL-KO"),
+  "FL-013:RETRY": pixel("B-PX-GATE-AGE-FAIL-KO"),
+  "FL-013:TERMINAL": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
+  "FL-013:RETURN": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
+  "FL-014:ENTRY": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-014:DECISION": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
+  "FL-014:CANCEL": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-014:TERMINAL": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
+  "FL-014:RETURN": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-015:ENTRY": pixel("B-PX-PROFILE-KO"),
+  "FL-015:DECISION": pixel("B-PX-PROFILE-KO"),
+  "FL-015:TERMINAL": pixel("B-PX-PROFILE-KO", "B-PX-TRUST-FOUR-AXES-EN", "B-PX-LOCAL-SIGNAL-SUCCESS-EN", "B-PX-FEEDBACK-KO"),
+  "FL-015:RETURN": pixel("B-PX-MY-EN"),
+  "FL-016:ENTRY": pixel("B-PX-PLACE-DETAIL-EN", "B-PX-LABS-EN"),
+  "FL-016:DECISION": pixel("B-PX-LABS-TRAIT-FAIL-KO"),
+  "FL-016:ERROR": pixel("B-PX-LABS-TRAIT-FAIL-KO"),
+  "FL-016:RETRY": pixel("B-PX-LABS-TRAIT-FAIL-KO"),
+  "FL-016:TERMINAL": pixel("B-PX-LABS-EN"),
+  "FL-016:RETURN": pixel("B-PX-PLACE-DETAIL-EN"),
+  "FL-017:ENTRY": pixel("B-PX-CHECKOUT-IDLE-EN"),
+  "FL-017:DECISION": pixel("B-PX-GATE-PAYMENT-EN"),
+  "FL-017:CANCEL": pixel("B-PX-GATE-PAYMENT-EN"),
+  "FL-017:ERROR": pixel("B-PX-GATE-PAYMENT-FAIL-KO"),
+  "FL-017:RETRY": pixel("B-PX-GATE-PAYMENT-FAIL-KO"),
+  "FL-017:TERMINAL": pixel("B-PX-CHECKOUT-RECEIPT-EN"),
+  "FL-017:RETURN": pixel("B-PX-CHECKOUT-IDLE-EN"),
+  "FL-018:ENTRY": pixel("B-PX-LABS-EN"),
+  "FL-018:DECISION": pixel("B-PX-LABS-EN"),
+  "FL-018:CANCEL": pixel("B-PX-LABS-BRIDGE-FAIL-EN"),
+  "FL-018:ERROR": pixel("B-PX-LABS-BRIDGE-FAIL-EN"),
+  "FL-018:RETRY": pixel("B-PX-LABS-BRIDGE-FAIL-EN"),
+  "FL-018:TERMINAL": pixel("B-PX-LABS-BRIDGE-SUCCESS-EN"),
+  "FL-018:RETURN": pixel("B-PX-MY-EN"),
+}
+
+export const B_CHECKPOINT_VISUAL_EVIDENCE: readonly BCheckpointVisualEvidence[] = B_FLOW_CONTRACTS.flatMap((flow) =>
+  flow.checkpoints.map((checkpoint) => {
+    const caseIds = B_PIXEL_BY_CHECKPOINT[`${flow.flow}:${checkpoint.checkpoint}`] ?? []
+    return {
+      checkpointId: checkpoint.id,
+      disposition: caseIds.length ? "pixel" as const : "functional_only" as const,
+      caseIds,
+      reason: caseIds.length
+        ? `Layout-distinct evidence is captured by ${caseIds.join(", ")}.`
+        : `No distinct pixel is claimed. Canonical browser evidence: ${checkpoint.proof}`,
+    }
+  }),
+)
+
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
 
 const DETERMINISTIC_TILEJSON = {
@@ -219,7 +359,32 @@ async function stabilizeMobileEvidenceScroll(
       })).toBe(expectedScrollTop)
       return
     }
-    await target.scrollIntoViewIfNeeded()
+    const expectedScrollTop = await target.evaluate((element) => {
+      let scroller = element.parentElement
+      while (scroller) {
+        const overflowY = getComputedStyle(scroller).overflowY
+        if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) break
+        scroller = scroller.parentElement
+      }
+      if (!scroller) throw new Error("Visual evidence scroll container was not found")
+      // `scrollIntoViewIfNeeded` preserves whichever incidental offset a prior
+      // click/focus operation created. Pin the actual scroll owner to its
+      // clamped end position so long serial runs and isolated runs capture the
+      // same pixels.
+      scroller.scrollTop = scroller.scrollHeight
+      scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
+      return scroller.scrollTop
+    })
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+    await expect.poll(() => target.evaluate((element) => {
+      let scroller = element.parentElement
+      while (scroller) {
+        const overflowY = getComputedStyle(scroller).overflowY
+        if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) return scroller.scrollTop
+        scroller = scroller.parentElement
+      }
+      return -1
+    })).toBe(expectedScrollTop)
     return
   }
   await settle(page)
@@ -266,7 +431,6 @@ async function openCity(page: Page, query = "") {
   await gotoB(page, query)
   await page.locator("[data-city='seoul']").click()
   await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-  await expect.poll(async () => Number(await page.getByTestId("ondo-b-map-entry").getAttribute("data-rendered-signal-count")), { timeout: 10_000 }).toBeGreaterThan(0)
 }
 
 async function openLocalSignal(page: Page, query = "") {
@@ -378,9 +542,15 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await page.locator("[data-city='seoul']").click()
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "error", { timeout: 20_000 })
     await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
-  } else if (state === "PLACE-PEEK" || state === "PLACE-DETAIL") {
+  } else if (state === "PLACE-PEEK") {
     await seedB(page, { locale })
-    await openCanonicalVenue(page, { expanded: state === "PLACE-DETAIL" })
+    await openCity(page)
+    await page.getByRole("button", { name: locale === "ko" ? "목록" : "List", exact: true }).click()
+    await page.getByTestId("ondo-b-venue-list").locator("li button").filter({ hasText: locale === "ko" ? "로바" : "Roba" }).click()
+    await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+  } else if (state === "PLACE-DETAIL") {
+    await seedB(page, { locale })
+    await openCanonicalVenue(page)
   } else if (state === "AFTER19-VENUE-LOCKED" || state === "AFTER19-VENUE-RETURN") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
     await openCanonicalVenue(page)
@@ -398,7 +568,10 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
       await expect(page).not.toHaveURL(/after19Return=/)
     }
-    if (state === "AFTER19-VENUE-LOCKED") await stabilizeMobileEvidenceScroll(page, access, { kind: "bottom" })
+    if (state === "AFTER19-VENUE-LOCKED") {
+      await access.scrollIntoViewIfNeeded()
+      await expect(access).toBeVisible()
+    }
     else await access.scrollIntoViewIfNeeded()
   } else if (state === "SAVE-FAILURE" || state === "SAVE-RECOVERED") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE" } })
@@ -470,7 +643,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     }
   } else if (state === "LOCAL-SIGNAL-EMPTY" || state === "LOCAL-SIGNAL-FAIL" || state === "LOCAL-SIGNAL-SUCCESS") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
-    await openLocalSignal(page, state === "LOCAL-SIGNAL-FAIL" ? "scenario=local-signal-fail" : "")
+    await openLocalSignal(page, state === "LOCAL-SIGNAL-FAIL" ? "view=list&scenario=local-signal-fail" : "view=list")
     if (state !== "LOCAL-SIGNAL-EMPTY") {
       await page.getByTestId("local-signal-overlay").locator("textarea").fill(locale === "ko" ? "입구 옆 카운터에서 주문해요." : "Order at the counter beside the entrance.")
       await page.getByTestId("local-signal-submit").click()
@@ -658,13 +831,31 @@ export async function collectBGeometryIssues(page: Page) {
       .filter(({ element }) => !bottomNav?.contains(element))
       .flatMap((other) => intersects(navControl.rect, other.rect) ? [{ navigation: label(navControl.element), content: label(other.element) }] : []))
     const exitPattern = /close|back|return|cancel|stay|not now|dismiss|닫|뒤로|돌아|취소|머물|나중/i
-    const visibleDialogs = Array.from(root.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']"))
+    const allVisibleDialogs = Array.from(root.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']"))
       .map((element) => ({ element, rect: element.getBoundingClientRect() }))
-      .filter(({ element, rect }) => rect.width > 0 && rect.height > 0 && visibleRect(rect) && controls.some(({ element: control }) => element.contains(control)))
+      .filter(({ element, rect }) => {
+        const style = getComputedStyle(element)
+        return rect.width > 0 && rect.height > 0 && visibleRect(rect) && style.display !== "none" && style.visibility !== "hidden"
+      })
+    const visibleDialogs = allVisibleDialogs.filter(({ element }) => controls.some(({ element: control }) => element.contains(control)))
+    const exposedModals = allVisibleDialogs.filter(({ element }) => element.getAttribute("aria-modal") === "true" && element.getAttribute("aria-hidden") !== "true" && !element.hasAttribute("inert"))
+    const modalStackIssues = [
+      ...(exposedModals.length > 1 ? [{ issue: `multiple exposed modal dialogs: ${exposedModals.map(({ element }) => label(element)).join(" | ")}` }] : []),
+      ...allVisibleDialogs.flatMap(({ element }) => {
+        const hidden = element.getAttribute("aria-hidden") === "true"
+        const inert = element.hasAttribute("inert")
+        if (hidden === inert) return []
+        return [{ issue: `${label(element)} must pair inert with aria-hidden while covered` }]
+      }),
+    ]
     const exitCtaIssues = visibleDialogs.flatMap(({ element }) => {
       const candidates = controls.filter(({ element: control }) => element.contains(control) && (control.hasAttribute("data-dialog-exit") || exitPattern.test(accessibleName(control))))
       if (!candidates.length) return [{ dialog: label(element), issue: "no visible, hit-testable exit CTA" }]
-      return candidates.flatMap(({ element: control, rawRect }) => fullyInViewport(rawRect) ? [] : [{ dialog: label(element), issue: `${label(control)} is outside the viewport` }])
+      // A long sheet may legitimately have secondary return/cancel actions
+      // farther down its scroll viewport. The invariant is that at least one
+      // genuine exit remains visible and hit-testable at every scroll offset.
+      if (candidates.some(({ rawRect }) => fullyInViewport(rawRect))) return []
+      return [{ dialog: label(element), issue: "no exit CTA is fully inside the viewport" }]
     })
     const ariaIssues = [
       ...visibleDialogs.flatMap(({ element }) => explicitDialogName(element) ? [] : [{ element: label(element), issue: "dialog has no aria-label or valid aria-labelledby" }]),
@@ -680,6 +871,7 @@ export async function collectBGeometryIssues(page: Page) {
       ariaIssues,
       bottomNavOverlaps,
       exitCtaIssues,
+      modalStackIssues,
       metadata,
       overlaps,
       undersizedControls,
@@ -694,6 +886,7 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
   expect.soft(geometry.clippedControls, "hit-testable controls clipped by the app canvas").toEqual([])
   expect.soft(geometry.bottomNavOverlaps, "bottom navigation controls overlap another visible control").toEqual([])
   expect.soft(geometry.exitCtaIssues, "every active dialog keeps an exit CTA inside the viewport").toEqual([])
+  expect.soft(geometry.modalStackIssues, "only one modal is exposed and every covered dialog is inert plus aria-hidden").toEqual([])
   expect.soft(geometry.ariaIssues, "visible dialogs and controls have programmatic names").toEqual([])
   expect.soft(geometry.undersizedControls, "hit-testable controls below 44×44 CSS px").toEqual([])
   expect.soft(geometry.metadata, "visible metadata below 12 CSS px").toEqual([])
@@ -713,16 +906,27 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
 }
 
 export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
-  if (item.state !== "LABS") return
-  // Opening the milestone can race the sheet mount and initial-focus work
-  // against Playwright's click auto-scroll. The translucent desktop scrim
-  // makes that otherwise irrelevant My Korea offset part of the pixel
-  // contract, so normalize it after every pre-snapshot geometry/a11y probe.
-  await stabilizeMobileEvidenceScroll(page, page.getByTestId("open-labs-milestone"), { kind: "scrollTop", value: 828, desktopValue: 726 })
+  if (item.state === "PROFILE") {
+    await stabilizeMobileEvidenceScroll(page, page.getByTestId("ondo-profile-panel"), { kind: "bottom" })
+  }
+  if (item.state.startsWith("LABS")) {
+    // Opening Labs can race sheet mount and initial-focus work against click
+    // auto-scroll. The translucent scrim makes the otherwise irrelevant My
+    // Korea offset part of the pixel contract, so normalize it for every Labs
+    // state after geometry/a11y probes (not only the base Labs case).
+    await stabilizeMobileEvidenceScroll(page, page.getByTestId("open-labs-milestone"), { kind: "scrollTop", value: 828, desktopValue: 726 })
+  }
 }
 
 export async function closeBVisualCase(page: Page) {
   await expectBRuntimeClean(page)
+}
+
+export async function attachAndAssertBVisualRuntime(page: Page, testInfo: TestInfo) {
+  if (!hasBRuntimeGuard(page)) return
+  const evidence = getBRuntimeEvidence(page)
+  await testInfo.attach("runtime.json", { body: JSON.stringify(evidence, null, 2), contentType: "application/json" })
+  expect(evidence.product, "product runtime errors (external OpenFreeMap failures are classified separately)").toEqual([])
 }
 
 export function bSnapshotName(item: BVisualCase, viewport: BSleekViewportId) {

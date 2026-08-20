@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 import {
   B_VISUAL_CASES,
+  attachAndAssertBVisualRuntime,
   attachBCaseMetadata,
   bSnapshotName,
   closeBVisualCase,
@@ -9,6 +10,10 @@ import {
   setupBVisualCase,
   stabilizeBVisualSnapshot,
 } from "../helpers/ondo-b-visual-evidence"
+
+test.afterEach(async ({ page }, testInfo) => {
+  await attachAndAssertBVisualRuntime(page, testInfo)
+})
 
 test.describe("ONDO B complete mobile visual evidence · 390×844", () => {
   for (const item of B_VISUAL_CASES) {

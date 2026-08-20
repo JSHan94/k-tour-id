@@ -1,23 +1,24 @@
 # SLEEK-R2 pixel baseline approval manifest
 
-Status: **REVIEWED-BY-ROOT-PENDING**
+Status: **FROZEN-PENDING-HARNESS**
 
-This receipt identifies the exact ONDO B pixel set prepared for the root agent's final full run and visual review. It is a per-file, issue-scoped approval record, not a final clean-round verdict.
+This receipt freezes the exact ONDO B pixel set that passed the unchanged-baseline `264/264` visual run. It records the Product SHA and image inventory while the Harness SHA is still pending. It is not a clean-round verdict, and the SLEEK-R2 clean streak remains `0/2`.
 
 ## Frozen inputs
 
-- Product SHA: `fb6529e560a6c2b96ae22d1120645e560b8039ef`
+- Product SHA: `46ad40f9fdbad89d3cf3e701f713803004d3e3af`
 - PNG inventory: `264` files = `44` cases × `6` viewports
 - Viewports: `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 - Responsive expansion: `176` files across the four added viewport families
 - Canonical mobile: `44` files
 - Canonical desktop: `44` files
-- Aggregate digest: `ba535f1d04a8571a0efd3cfc9c96e24824c47efcbc8b88848a70833f231bc996`
+- Aggregate digest: `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`
+- Digest working directory: `k-tour-id-app/`
 - Digest algorithm: sorted `sha256 path` lines from:
 
-      find k-tour-id-app/tests/visual -path '*ondo-b-flow-pixels*spec.ts-snapshots/*.png' -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256
+      find tests/visual -path '*ondo-b-flow-pixels*spec.ts-snapshots/*.png' -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256
 
-The digest covers only paths matching `*ondo-b-flow-pixels*spec.ts-snapshots/*.png`. Any PNG byte or path change invalidates this receipt.
+The digest covers only paths matching `*ondo-b-flow-pixels*spec.ts-snapshots/*.png`, using paths relative to `k-tour-id-app/`. The TSV uses repository-relative paths. Any PNG byte or path change invalidates this receipt.
 
 ## Machine-checkable inventory
 
@@ -29,7 +30,7 @@ Required invariants:
 - exactly `44` rows per viewport;
 - every `case_id + viewport` pair is unique;
 - dimensions equal the declared viewport;
-- every file status remains `REVIEWED-BY-ROOT-PENDING` until the root full run and visual review close.
+- every file status is `FROZEN-PENDING-HARNESS` until the Harness SHA is frozen.
 
 ## Approval reason taxonomy
 
@@ -46,4 +47,4 @@ Rows may carry multiple reason IDs when a screenshot proves more than one scoped
 
 ## Finalization boundary
 
-This manifest does not start or complete SLEEK-R2. The root agent must still run the unchanged-baseline 264-shot suite, perform the final visual inspection, freeze the harness SHA, and execute the required blind review rounds on one identical tuple. Until then, the status above must not be promoted.
+The unchanged-baseline `264/264` visual run is complete and this PNG inventory is frozen. The root agent must still freeze the Harness SHA, complete the remaining non-pixel gates, and execute the required blind review rounds on one identical tuple. No clean round has started; until those steps close, this status must not be promoted.

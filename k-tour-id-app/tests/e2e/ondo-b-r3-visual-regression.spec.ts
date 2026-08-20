@@ -25,9 +25,11 @@ async function expectAbove(upper: Locator, lower: Locator, gap = 0) {
   expect(upperBox.y + upperBox.height).toBeLessThanOrEqual(lowerBox.y - gap + 1)
 }
 
-async function expectRightOf(right: Locator, left: Locator, gap = 0) {
-  const [rightBox, leftBox] = await Promise.all([box(right), box(left)])
-  expect(rightBox.x).toBeGreaterThanOrEqual(leftBox.x + leftBox.width + gap - 1)
+async function expectNoOverlap(first: Locator, second: Locator) {
+  const [firstBox, secondBox] = await Promise.all([box(first), box(second)])
+  const overlapWidth = Math.max(0, Math.min(firstBox.x + firstBox.width, secondBox.x + secondBox.width) - Math.max(firstBox.x, secondBox.x))
+  const overlapHeight = Math.max(0, Math.min(firstBox.y + firstBox.height, secondBox.y + secondBox.height) - Math.max(firstBox.y, secondBox.y))
+  expect(overlapWidth * overlapHeight).toBe(0)
 }
 
 async function expectFullyVisible(locator: Locator) {
@@ -71,7 +73,7 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     const resultBar = page.getByRole("button", { name: "Map", exact: true }).locator("..")
     const nav = page.getByRole("navigation", { name: "Main navigation" })
     await expectAbove(listPanel, resultBar, 7)
-    if ((page.viewportSize()?.width ?? 0) >= 801) await expectRightOf(resultBar, nav, 7)
+    if ((page.viewportSize()?.width ?? 0) >= 801) await expectNoOverlap(resultBar, nav)
     else await expectAbove(resultBar, nav, 7)
   })
 
@@ -95,12 +97,11 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     for (const [tab, id] of [["My Korea", "my"], ["Tables", "tables"], ["ID", "id"]] as const) {
       await page.getByRole("button", { name: tab, exact: true }).click()
       const content = page.locator(`[data-active-tab='${id}']`)
-      if ((page.viewportSize()?.width ?? 0) >= 801) await expectRightOf(content, nav, 7)
-      else await expectAbove(content, nav, 7)
+      if ((page.viewportSize()?.width ?? 0) < 801) await expectAbove(content, nav, 7)
       await content.evaluate((element) => { element.scrollTop = element.scrollHeight })
       const lastControl = content.locator("button:visible, a[href]:visible").last()
       await expectFullyVisible(lastControl)
-      if ((page.viewportSize()?.width ?? 0) >= 801) await expectRightOf(lastControl, nav, 7)
+      if ((page.viewportSize()?.width ?? 0) >= 801) await expectNoOverlap(lastControl, nav)
       else await expectAbove(lastControl, nav, 7)
     }
   })

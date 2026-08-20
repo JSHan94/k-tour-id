@@ -1,7 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test"
 
 export const B_ROUTE = "/ondo-b"
-export const B_ROUTE_SEAM_READY = true
 export const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 export const TABLE_ID = "table-seongsu-dinner"
 
@@ -140,33 +139,6 @@ export type BSurfaceId =
   | "onboarding" | "nation" | "city-list" | "place" | "account-gate" | "age-gate"
   | "tables" | "table-chat" | "local-signal" | "checkout" | "identity" | "profile" | "labs" | "after19"
 
-export type BPixelCase = {
-  id: `B-PX-${string}`
-  surface: BSurfaceId
-  locale: BLocale
-  width: 390 | 430 | 1440
-  height: 844 | 932 | 1000
-  project: "mobile-chromium" | "desktop-chromium"
-  selector: string
-}
-
-/** Layout-distinct, reachable surfaces only. No 18×4 multiplication. */
-export const B_PIXEL_CASES: readonly BPixelCase[] = [
-  { id: "B-PX-ONBOARDING-390-EN", surface: "onboarding", locale: "en", width: 390, height: 844, project: "mobile-chromium", selector: "[data-testid='ondo-onboarding']" },
-  { id: "B-PX-NATION-390-KO", surface: "nation", locale: "ko", width: 390, height: 844, project: "mobile-chromium", selector: "[data-testid='ondo-b-map-entry']" },
-  { id: "B-PX-CITY-LIST-430-EN", surface: "city-list", locale: "en", width: 430, height: 932, project: "mobile-chromium", selector: "[data-testid='ondo-b-map-entry']" },
-  { id: "B-PX-PLACE-390-EN", surface: "place", locale: "en", width: 390, height: 844, project: "mobile-chromium", selector: "[data-testid='canonical-place-overlay']" },
-  { id: "B-PX-ACCOUNT-GATE-390-KO", surface: "account-gate", locale: "ko", width: 390, height: 844, project: "mobile-chromium", selector: "[data-testid='ondo-gate-overlay']" },
-  { id: "B-PX-TABLES-430-EN", surface: "tables", locale: "en", width: 430, height: 932, project: "mobile-chromium", selector: "[data-testid='tables-entry']" },
-  { id: "B-PX-LOCAL-SIGNAL-390-EN", surface: "local-signal", locale: "en", width: 390, height: 844, project: "mobile-chromium", selector: "[data-testid='local-signal-overlay']" },
-  { id: "B-PX-CHECKOUT-430-KO", surface: "checkout", locale: "ko", width: 430, height: 932, project: "mobile-chromium", selector: "[data-testid='checkout-overlay']" },
-  { id: "B-PX-AFTER19-390-EN", surface: "after19", locale: "en", width: 390, height: 844, project: "mobile-chromium", selector: "[data-testid='ondo-after19-layer']" },
-  { id: "B-PX-NATION-DESKTOP-EN", surface: "nation", locale: "en", width: 1440, height: 1000, project: "desktop-chromium", selector: "[data-testid='ondo-b-root']" },
-  { id: "B-PX-PLACE-DESKTOP-EN", surface: "place", locale: "en", width: 1440, height: 1000, project: "desktop-chromium", selector: "[data-testid='canonical-place-overlay']" },
-  { id: "B-PX-IDENTITY-DESKTOP-KO", surface: "identity", locale: "ko", width: 1440, height: 1000, project: "desktop-chromium", selector: "[data-testid='ondo-identity-entry']" },
-  { id: "B-PX-LABS-DESKTOP-EN", surface: "labs", locale: "en", width: 1440, height: 1000, project: "desktop-chromium", selector: "[data-testid='labs-overlay']" },
-]
-
 export const B_CONTENT_CASES = [
   "onboarding", "nation", "city-list", "place", "account-gate", "age-gate", "tables",
   "table-chat", "local-signal", "checkout", "identity", "profile", "labs", "after19",
@@ -207,12 +179,25 @@ export function installBRuntimeGuard(page: Page) {
     const reason = request.failure()?.errorText ?? "request failed"
     if (isExternalMapUrl(request.url())) evidence.externalMap.push(`requestfailed: ${request.url()} · ${reason}`)
     else if (isExternalAssetUrl(request.url())) evidence.externalAsset.push(`requestfailed: ${request.url()} · ${reason}`)
-    else if (["document", "script", "fetch", "xhr"].includes(request.resourceType())) evidence.product.push(`requestfailed: ${request.url()} · ${reason}`)
+    else evidence.product.push(`requestfailed: ${request.url()} · ${reason}`)
+  })
+  page.on("response", (response) => {
+    if (response.status() < 400) return
+    const item = `response: ${response.status()} ${response.url()}`
+    if (isExternalMapUrl(response.url())) evidence.externalMap.push(item)
+    else if (isExternalAssetUrl(response.url())) evidence.externalAsset.push(item)
+    else evidence.product.push(item)
   })
 }
 
 export function getBRuntimeEvidence(page: Page): RuntimeEvidence {
-  return runtimeEvidence.get(page) ?? { product: [], externalMap: [], externalAsset: [] }
+  const evidence = runtimeEvidence.get(page)
+  if (!evidence) throw new Error("B runtime guard was not installed for this page")
+  return evidence
+}
+
+export function hasBRuntimeGuard(page: Page) {
+  return runtimeEvidence.has(page)
 }
 
 export async function expectBRuntimeClean(page: Page) {

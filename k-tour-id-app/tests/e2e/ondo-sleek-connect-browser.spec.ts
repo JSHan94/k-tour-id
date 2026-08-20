@@ -81,11 +81,15 @@ test("SLK-005 canonical Place opens a venue-first Table scope with explicit glob
 test("SLK-006/007 nested preview report owns focus, Tab, Escape, focus return, receipt and reload truth", async ({ page }) => {
   await seed(page, { membership: "confirmed" })
   await openJoinedChat(page)
+  await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("inert", "")
+  await expect(page.locator("[data-active-tab='tables']")).toHaveAttribute("aria-hidden", "true")
 
   const invoker = page.getByTestId("table-report")
   await invoker.click()
   const dialog = page.getByTestId("chat-confirm-dialog")
   await expect(dialog).toBeVisible()
+  await expect(dialog).not.toHaveAttribute("aria-modal", "true")
+  await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
   await expect(page.getByTestId("report-reason")).toBeFocused()
   await expect(dialog).toContainText("only in this device’s simulated preview")
   await page.keyboard.press("Shift+Tab")

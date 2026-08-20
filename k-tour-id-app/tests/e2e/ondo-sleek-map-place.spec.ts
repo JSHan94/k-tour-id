@@ -139,7 +139,8 @@ test.describe("SLEEK-R1 map and place closure", () => {
     expect(decisionBox!.y + decisionBox!.height).toBeLessThanOrEqual(signalBox!.y + 1)
 
     const evidence = detail.locator("dl").first()
-    expect((await evidence.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").filter(Boolean).length))).toBe(1)
+    expect((await evidence.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").filter(Boolean).length))).toBe(2)
+    await expect(evidence.locator(":scope > div").last()).toHaveCSS("grid-column", "1 / -1")
     for (const label of await evidence.locator("dt").all()) {
       expect(await label.evaluate((node) => getComputedStyle(node).whiteSpace)).toBe("normal")
       expect(await label.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true)

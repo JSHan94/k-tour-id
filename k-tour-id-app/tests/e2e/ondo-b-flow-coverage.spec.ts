@@ -76,6 +76,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.getByTestId("canonical-after19-unlock").click()
       await page.getByRole("button", { name: "Simulate failure" }).click()
       await expect(page.getByTestId("gate-failure")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ gate: { cta: "OPEN_AFTER19", venueId: CANONICAL_VENUE_ID, activeGate: "age" } })
       await page.getByRole("button", { name: "Try again", exact: true }).click()
       await finishAgeGate(page)
     })
@@ -139,6 +140,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.getByTestId("checkout-cancel").click()
       await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-CANCELLED")
       await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "9")
+      await expect(page.getByTestId("checkout-receipt")).toHaveCount(0)
     })
     await test.step(evidence("FL-004", "ERROR/RETRY"), async () => {
       await openCanonicalVenue(page, { query: "scenario=payment-declined" })
@@ -146,6 +148,8 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.getByTestId("checkout-start").click()
       await page.getByTestId("checkout-confirm").click()
       await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-FAILED")
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "9")
+      await expect(page.getByTestId("checkout-receipt")).toHaveCount(0)
       await page.getByRole("button", { name: "Try again" }).click()
       await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-CONFIRMING")
     })
@@ -172,6 +176,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Check with Mobile ID")
       await page.getByTestId("ondo-gate-overlay").getByRole("button", { name: "Return to previous screen" }).click()
       await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+      await expect(page.getByTestId("local-signal-overlay").locator("textarea")).toHaveValue("A local ordering tip.")
     })
     await test.step(evidence("FL-005", "DECISION/ERROR/RETRY"), async () => {
       await page.getByTestId("local-signal-submit").click()
@@ -199,6 +204,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(gate).toContainText("Mobile Residence Card")
       await gate.getByRole("button", { name: "Return to previous screen" }).click()
       await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+      await expect(page.getByTestId("local-signal-overlay").locator("textarea")).toHaveValue("A resident ordering tip.")
       await page.getByTestId("local-signal-submit").click()
     })
     await test.step(evidence("FL-006", "ERROR/RETRY"), async () => {
@@ -266,6 +272,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
       await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
       expect(await sessionState(page)).toMatchObject({ account: "ACC-ACTIVE", person: "PER-UNVERIFIED" })
+      expect(await page.evaluate(() => JSON.parse(localStorage.getItem("ondo.preferences.v3") ?? "{}").savedVenueIds)).toEqual([CANONICAL_VENUE_ID])
     })
   })
 
@@ -413,6 +420,8 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-016", "RETRY/TERMINAL"), async () => {
       await openLabs(page)
       await page.getByTestId("labs-acknowledge").click()
+      await expect(page.getByTestId("trait-seongsu-card")).toHaveAttribute("data-trait-state", "idle")
+      await expect(page.getByTestId("trait-seongsu-card")).toContainText("Out of date")
       await page.getByTestId("trait-retry-seongsu-card").click()
       await expect(page.locator("[data-trait-state='eligible']").first()).toContainText("This specific access condition is met")
       await expect(page.getByTestId("labs-overlay")).toContainText("do not guarantee venue admission")
@@ -426,13 +435,16 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-017", "ENTRY/DECISION/CANCEL"), async () => {
       await page.getByTestId("checkout-start").click()
       await expect(page.getByTestId("ondo-gate-overlay")).toContainText("Payment KYC is separate")
+      expect(await sessionState(page)).toMatchObject({ gate: { cta: "START_CHECKOUT", venueId: CANONICAL_VENUE_ID, activeGate: "payment_kyc" } })
       await page.getByTestId("ondo-gate-overlay").getByRole("button", { name: "Return to previous screen" }).click()
       await expect(page.getByTestId("checkout-overlay")).toBeVisible()
+      await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
     })
     await test.step(evidence("FL-017", "ERROR/RETRY"), async () => {
       await page.getByTestId("checkout-start").click()
       await page.getByRole("button", { name: "Simulate failure" }).click()
       await expect(page.getByTestId("gate-failure")).toBeVisible()
+      expect(await sessionState(page)).toMatchObject({ gate: { cta: "START_CHECKOUT", venueId: CANONICAL_VENUE_ID, activeGate: "payment_kyc" } })
       await page.getByRole("button", { name: "Try again" }).click()
       await finishPaymentGate(page)
       await expect(page.getByTestId("ondo-gate-overlay")).toBeHidden()
