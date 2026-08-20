@@ -70,4 +70,4 @@
 .consent { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 10px; min-height: 44px; padding: 11px 0; border-top: 1px solid #e5e3de; border-bottom: 1px solid #e5e3de; font-size: 12px; line-height: 1.5; }
 .consent input { width: 18px; height: 18px; margin: 0; accent-color: #20201e; }
 @media (min-width: 700px) { .boundary, .body { max-width: 700px; margin: 0 auto; } }
-@media (max-width: 360px) { .header { grid-template-columns: 44px 1fr; } .truthBadge { grid-column: 2; justify-self: start; } .evidenceList { grid-template-columns: 1fr; } .evidenceList article:nth-child(odd), .evidenceList article:nth-child(even) { padding-right: 4px; padding-left: 4px; border-right: 0; } }
+@media (max-width: 360px) { .header { grid-template-columns: 44px 1fr; } .truthBadge { display: none; } .evidenceList { grid-template-columns: 1fr; } .evidenceList article:nth-child(odd), .evidenceList article:nth-child(even) { padding-right: 4px; padding-left: 4px; border-right: 0; } }
