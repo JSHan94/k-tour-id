@@ -100,7 +100,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await openTables(page)
       await page.getByTestId("table-join").click()
       await expect(page.getByTestId("table-requesting")).toBeVisible()
-      await expect(page.getByText("A connection problem interrupted the request.")).toBeVisible()
+      await expect(page.getByText("This local preview could not be updated. No live host or reservation was contacted. Retry keeps this Table, time, and seats unchanged.")).toBeVisible()
       await expect(page.getByRole("button", { name: "Open chat" })).toHaveCount(0)
     })
     await test.step(evidence("FL-003", "RETRY"), async () => {
