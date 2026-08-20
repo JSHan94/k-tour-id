@@ -171,6 +171,8 @@ function TableDetail({ tableId }: { tableId: string }) {
           <div><dt>{locale === "ko" ? "예상 비용" : "Expected cost"}</dt><dd>~₩{table.estimatedPriceKRW.toLocaleString()}</dd></div>
         </dl>
 
+        {retryableFailureCopy ? <><InlineNotice tone="danger"><AlertTriangle size={18} /><span>{retryableFailureCopy}</span></InlineNotice><button type="button" className={styles.primary} onClick={join} data-testid="table-join-retry">{locale === "ko" ? "참여 미리보기 다시 시도" : "Retry join preview"}</button></> : null}
+
         <div className={styles.hostCard}>
           <span className={styles.avatar} aria-hidden="true">{table.hostName.slice(0, 1)}</span>
           <div><strong>{table.hostName}</strong><span>{table.hostRole[locale]}</span></div>
@@ -187,15 +189,12 @@ function TableDetail({ tableId }: { tableId: string }) {
         {tableOutcome.reportReceipt ? <InlineNotice tone="success"><Check size={18} /><span data-testid="table-report-receipt">{locale === "ko" ? "로컬 시뮬레이션 미리보기 신고 기록" : "Local simulated preview report recorded"} · {tableOutcome.reportReason === "harassment" ? locale === "ko" ? "불쾌한 언행" : "Harassment" : tableOutcome.reportReason === "no_show" ? locale === "ko" ? "약속 불참" : "No-show" : locale === "ko" ? "기타" : "Other"} · <code>{tableOutcome.reportReceipt}</code></span></InlineNotice> : null}
 
         {unavailable ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{unavailableCopy} {locale === "ko" ? "근처 다른 Table을 확인해 주세요." : "Choose another nearby Table."}</span></InlineNotice> : null}
-        {retryableFailureCopy ? <InlineNotice tone="danger"><AlertTriangle size={18} /><span>{retryableFailureCopy}</span></InlineNotice> : null}
 
         {confirmed ? (
           <button type="button" className={styles.primary} onClick={() => actions.setSurface({ kind: "chat", tableId })}><MessageCircle size={18} /> {locale === "ko" ? "대화 열기" : "Open chat"}</button>
         ) : membership === "TMB-REQUESTING" ? (
           <button type="button" className={styles.primary} disabled data-testid="table-requesting">{locale === "ko" ? "미리보기 확인 중" : "Checking the preview"}</button>
-        ) : retryableFailureCopy ? (
-          <button type="button" className={styles.primary} onClick={join} data-testid="table-join-retry">{locale === "ko" ? "참여 미리보기 다시 시도" : "Retry join preview"}</button>
-        ) : (
+        ) : retryableFailureCopy ? null : (
           <button type="button" className={styles.primary} onClick={join} disabled={unavailable} data-testid="table-join">
             {locale === "ko" ? "참여 미리보기" : "Join preview"}
           </button>
@@ -442,7 +441,7 @@ function TableChat({ tableId }: { tableId: string }) {
         </div>
 
         {confirm ? (
-          <div ref={confirmPanelRef} className={styles.confirmPanel} role="alertdialog" aria-modal="true" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description" tabIndex={-1} data-testid="chat-confirm-dialog">
+          <div ref={confirmPanelRef} className={styles.confirmPanel} role="alertdialog" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description" tabIndex={-1} data-testid="chat-confirm-dialog">
             <h3 id="confirm-action-title">{confirm === "leave" ? locale === "ko" ? "Table을 나갈까요?" : "Leave this Table?" : locale === "ko" ? "로컬 미리보기에 신고를 저장할까요?" : "Save a report in this local preview?"}</h3>
             <p id="confirm-action-description">{confirm === "leave" ? locale === "ko" ? "나가면 대화를 더 이상 볼 수 없어요." : "You will no longer be able to view this chat." : locale === "ko" ? "신고와 차단은 이 기기의 시뮬레이션 미리보기에만 저장되며 실제 운영팀에는 전송되지 않아요." : "The report and block stay only in this device’s simulated preview and are not sent to a live moderation team."}</p>
             {confirm === "report" ? <><label htmlFor={`report-reason-${activeTable.id}`}>{locale === "ko" ? "로컬 미리보기 신고 사유" : "Local preview report reason"}</label><select id={`report-reason-${activeTable.id}`} value={reportReason} onChange={(event) => setReportReason(event.target.value)} data-testid="report-reason" data-confirm-initial-focus><option value="">{locale === "ko" ? "선택해 주세요" : "Choose a reason"}</option><option value="no_show">{locale === "ko" ? "약속에 나타나지 않음" : "No-show"}</option><option value="harassment">{locale === "ko" ? "불쾌한 언행" : "Harassment"}</option><option value="other">{locale === "ko" ? "기타" : "Other"}</option></select><label className={styles.blockOption}><input type="checkbox" checked={blockParticipant} onChange={(event) => setBlockParticipant(event.target.checked)} data-testid="report-block" />{locale === "ko" ? "이 로컬 미리보기에서만 참가자 차단" : "Block participant only in this local preview"}</label></> : null}

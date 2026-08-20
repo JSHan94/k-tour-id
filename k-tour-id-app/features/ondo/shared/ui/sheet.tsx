@@ -67,6 +67,29 @@ export function Sheet({
     }
   }, [showClose])
 
+  useEffect(() => {
+    const dialog = dialogRef.current
+    const layer = dialog?.parentElement
+    const canvas = dialog?.closest<HTMLElement>("[data-testid='ondo-canvas']")
+    if (!dialog || !layer || !canvas) return
+    const covered = Array.from(canvas.children)
+      .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== layer && !element.contains(layer))
+      .map((element) => ({ element, inert: element.getAttribute("inert"), ariaHidden: element.getAttribute("aria-hidden") }))
+    covered.forEach(({ element }) => {
+      element.setAttribute("inert", "")
+      element.setAttribute("aria-hidden", "true")
+    })
+    return () => {
+      covered.forEach(({ element, inert, ariaHidden }) => {
+        if (!element.isConnected) return
+        if (inert == null) element.removeAttribute("inert")
+        else element.setAttribute("inert", inert)
+        if (ariaHidden == null) element.removeAttribute("aria-hidden")
+        else element.setAttribute("aria-hidden", ariaHidden)
+      })
+    }
+  }, [])
+
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
       event.preventDefault()

@@ -301,8 +301,9 @@ export function CanonicalPlaceOverlay() {
           {signal?.after19 ? (
             <section className={styles.after19Access} data-testid="canonical-after19-access" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"}>
               <span className={styles.after19Icon}>{after19Unlocked ? <Moon size={21} /> : <LockKeyhole size={21} />}</span>
-              <div><small>{copy.after19Eyebrow}</small><h3>{copy.after19Title}</h3><p>{after19Unlocked ? copy.after19Unlocked : copy.after19Locked}</p></div>
+              <div><small>{copy.after19Eyebrow}</small><h3>{copy.after19Title}</h3></div>
               {after19Unlocked ? <strong>{copy.after19Ready}</strong> : <button type="button" onClick={openAfter19Venue} data-testid="canonical-after19-unlock">{copy.after19Unlock}<ChevronRight size={17} /></button>}
+              <p>{after19Unlocked ? copy.after19Unlocked : copy.after19Locked}</p>
             </section>
           ) : null}
 

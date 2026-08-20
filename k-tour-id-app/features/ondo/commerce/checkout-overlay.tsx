@@ -65,7 +65,7 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
 
   return (
     <Sheet label={locale === "ko" ? "결제 시뮬레이션" : "Checkout simulation"} onClose={() => actions.setSurface({ kind: "venue", venueId })} size="full">
-      <div className={styles.body} data-payment-state={checkout.payment} data-payment-kyc={state.paymentKyc} data-stamp-count={state.stamps} data-testid="checkout-overlay">
+      <div className={styles.body} data-payment-state={checkout.payment} data-payment-kyc={state.paymentKyc} data-stamp-count={state.stamps} data-venue-id={venueId} data-testid="checkout-overlay">
         <p className={styles.eyebrow}>CHECKOUT · SIMULATED</p>
         <h2>{locale === "ko" ? "결제 시뮬레이션" : "Checkout simulation"}</h2>
         <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "실제 결제나 자산 이동이 발생하지 않습니다. 결제용 KYC는 사람 확인·19+와 별도입니다." : "No real payment or asset movement occurs. Payment KYC is separate from person and 19+ checks."}</span></InlineNotice>
