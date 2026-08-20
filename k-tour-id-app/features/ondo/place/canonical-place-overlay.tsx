@@ -7,7 +7,7 @@ import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/o
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDisplayName, venueDistrictLabel } from "@/lib/ondo/venues/display"
-import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
+import { HEAT_COLORS } from "@/lib/ondo/map/heat"
 import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
 import { useOndo } from "../shared/state/ondo-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
@@ -23,10 +23,13 @@ const COPY = {
     sourceBody: "MOIS LOCALDATA · Active general restaurant licence record",
     before: "Before you go",
     unknown: "Not confirmed by this source",
+    unknownShort: "Unknown",
     hours: "Opening hours",
     card: "Foreign-issued cards",
     menu: "English menu",
     phone: "Korean phone requirement",
+    payment: "Payment",
+    access: "Access",
     details: "Place details",
     directions: "Directions",
     save: "Save",
@@ -40,6 +43,7 @@ const COPY = {
     contributed: "Your visit signal is recorded. More local signals are needed before an ONDO score is calculated.",
     signalCount: "preview signals",
     simulatedScore: "Score",
+    previewSnapshot: "Fixed simulated snapshot",
     confidence: "Signal basis",
     confidenceStrong: "Strong",
     confidenceModerate: "Moderate",
@@ -55,9 +59,11 @@ const COPY = {
     saving: "Saving…",
     saveFailed: "This place was not saved. Your venue context is unchanged.",
     retrySave: "Retry save",
-    dismissSave: "Not now",
+    dismissSave: "Dismiss",
     detailLoading: "Loading official address evidence…",
     detailUnavailable: "Official address evidence is temporarily unavailable",
+    sourceSnapshot: "Source snapshot",
+    sourceRecord: "Source record ID",
   },
   ko: {
     active: "공식 장소 기록",
@@ -68,10 +74,13 @@ const COPY = {
     sourceBody: "행정안전부 LOCALDATA · 영업 상태가 유효한 일반음식점 인허가 기록",
     before: "가기 전 확인",
     unknown: "이 출처로는 확인되지 않음",
+    unknownShort: "미확인",
     hours: "영업시간",
     card: "해외 발급 카드",
     menu: "영문 메뉴",
     phone: "한국 전화번호 필요 여부",
+    payment: "결제",
+    access: "이용 조건",
     details: "장소 상세",
     directions: "길찾기",
     save: "저장",
@@ -83,8 +92,9 @@ const COPY = {
     back: "장소 요약으로",
     noEnglish: "공식 영문명 미제공 · 공식 한글명 표시",
     contributed: "내 방문 신호가 기록됐어요. ONDO 점수를 산출하려면 로컬 신호가 더 필요해요.",
-    signalCount: "개 프리뷰 신호",
+    signalCount: "프리뷰 입력 수",
     simulatedScore: "점수",
+    previewSnapshot: "고정 시뮬레이션 스냅샷",
     confidence: "신호 기반",
     confidenceStrong: "강함",
     confidenceModerate: "보통",
@@ -103,6 +113,8 @@ const COPY = {
     dismissSave: "나중에",
     detailLoading: "공식 주소 근거를 불러오는 중…",
     detailUnavailable: "공식 주소 근거를 잠시 불러올 수 없어요",
+    sourceSnapshot: "출처 스냅샷",
+    sourceRecord: "출처 기록 ID",
   },
 } as const
 
@@ -250,6 +262,7 @@ export function CanonicalPlaceOverlay() {
     actions.beginAction({ cta: "OPEN_AFTER19", gates: ["age"], venueId: currentVenueId })
   }
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
+  const signalCount = signal ? locale === "ko" ? `${signal.signalCount}개 프리뷰 입력` : `${signal.signalCount} preview inputs` : ""
 
   if (!expanded) return (
     <div className={styles.peek} role="dialog" aria-modal="false" aria-label={name} data-testid="canonical-place-peek" data-venue-id={venue.id}>
@@ -260,17 +273,21 @@ export function CanonicalPlaceOverlay() {
       <p>{locale === "en" ? koreanName : copy.noEnglish}</p>
       <div className={styles.signal} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
         <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
-        <span><strong>{signal ? HEAT_LABELS[locale][signal.level] : copy.signalPending}</strong><small data-testid="canonical-place-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100 · ${signal.signalCount} ${copy.signalCount}` : contributed ? copy.contributed : copy.signalPendingBody}</small></span>
+        <span><strong>{signal ? copy.previewSnapshot : copy.signalPending}</strong><small data-testid="canonical-place-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100 · ${signalCount}` : contributed ? copy.contributed : copy.signalPendingBody}</small></span>
       </div>
+      <section className={styles.peekBefore} data-testid="canonical-place-before-summary" aria-label={copy.before}>
+        <strong>{copy.before}</strong>
+        <dl>{[[copy.hours, copy.unknownShort], [copy.payment, copy.unknownShort], [copy.access, copy.unknownShort]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      </section>
       <div className={styles.peekActions}>
-        <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions"><Navigation size={17} />{copy.directions}</a>
-        <button ref={openRef} type="button" onClick={() => setExpanded(true)} data-testid="canonical-place-details">{copy.details}<ChevronRight size={17} /></button>
+        <button ref={openRef} type="button" onClick={() => setExpanded(true)} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
+        <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>
       </div>
     </div>
   )
 
   return (
-    <div ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id}>
+    <div ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus}>
       <button type="button" className={styles.backdrop} onClick={closeDetails} aria-label={copy.back} tabIndex={-1} />
       <article ref={detailRef} className={styles.detail} onKeyDown={handleDetailKeyDown}>
         <header>
@@ -285,27 +302,27 @@ export function CanonicalPlaceOverlay() {
           <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
-            <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions"><Navigation size={18} />{copy.directions}</a>
-            <button type="button" onClick={save} disabled={saved || saving} data-testid="canonical-venue-save"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}</button>
+            <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority={saveStatus === "SAV-FAILED" ? "secondary" : "primary"}><Navigation size={18} />{copy.directions}</a>
+            <button type="button" onClick={save} disabled={saved || saving} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}</button>
           </div>
 
           {saveStatus === "SAV-FAILED" ? (
             <section className={styles.saveError} role="alert" data-testid="canonical-save-error">
               <p>{copy.saveFailed}</p>
-              <div><button type="button" onClick={save} data-testid="canonical-save-retry">{copy.retrySave}</button><button type="button" onClick={() => actions.setSaveStatus(venue.id, "SAV-IDLE")} data-testid="canonical-save-dismiss">{copy.dismissSave}</button></div>
+              <div><button type="button" onClick={save} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button><button type="button" onClick={() => actions.setSaveStatus(venue.id, "SAV-IDLE")} data-testid="canonical-save-dismiss" data-visual-priority="secondary">{copy.dismissSave}</button></div>
             </section>
           ) : null}
 
           <section className={styles.signalDetail} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
             <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
-            <div><small data-testid="canonical-place-detail-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100` : "ONDO"}</small><h3>{signal ? HEAT_LABELS[locale][signal.level] : copy.signalPending}</h3><p>{signal ? signal.reason[locale] : contributed ? copy.contributed : copy.signalPendingBody}</p>{signal ? <dl className={styles.signalEvidence}><div><dt>{copy.signalCount}</dt><dd>{signal.signalCount}</dd></div><div><dt>{copy.confidence}</dt><dd>{confidenceBand}</dd></div><div><dt>{copy.freshness}</dt><dd>{signal.freshness[locale]}</dd></div></dl> : null}{signal && contributed ? <p className={styles.contributionNote}>{copy.contributionIncluded}</p> : null}</div>
+            <div><small data-testid="canonical-place-detail-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100` : "ONDO"}</small><h3>{signal ? copy.previewSnapshot : copy.signalPending}</h3><p>{signal ? signal.reason[locale] : contributed ? copy.contributed : copy.signalPendingBody}</p>{signal ? <dl className={styles.signalEvidence}><div><dt>{copy.signalCount}</dt><dd>{locale === "ko" ? `${signal.signalCount}개` : signal.signalCount}</dd></div><div><dt>{copy.confidence}</dt><dd>{confidenceBand}</dd></div><div><dt>{copy.freshness}</dt><dd>{signal.freshness[locale]}</dd></div></dl> : null}{signal && contributed ? <p className={styles.contributionNote}>{copy.contributionIncluded}</p> : null}</div>
           </section>
 
           {signal?.after19 ? (
             <section className={styles.after19Access} data-testid="canonical-after19-access" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"}>
               <span className={styles.after19Icon}>{after19Unlocked ? <Moon size={21} /> : <LockKeyhole size={21} />}</span>
               <div><small>{copy.after19Eyebrow}</small><h3>{copy.after19Title}</h3></div>
-              {after19Unlocked ? <strong>{copy.after19Ready}</strong> : <button type="button" onClick={openAfter19Venue} data-testid="canonical-after19-unlock">{copy.after19Unlock}<ChevronRight size={17} /></button>}
+              {after19Unlocked ? <strong>{copy.after19Ready}</strong> : <button type="button" onClick={openAfter19Venue} data-testid="canonical-after19-unlock" data-visual-priority="secondary">{copy.after19Unlock}<ChevronRight size={17} /></button>}
               <p>{after19Unlocked ? copy.after19Unlocked : copy.after19Locked}</p>
             </section>
           ) : null}
@@ -324,7 +341,7 @@ export function CanonicalPlaceOverlay() {
           <section className={styles.source} data-detail-source={detail?.address.road.sourceRefId ?? detail?.address.lot.sourceRefId ?? "NOT_LOADED"}>
             <h3>{copy.source}</h3>
             <p>{copy.sourceBody}</p>
-            <dl><div><dt>Snapshot</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div><div><dt>Record</dt><dd>{venue.id.slice(5, 15)}</dd></div></dl>
+            <dl><div><dt>{copy.sourceSnapshot}</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div><div><dt>{copy.sourceRecord}</dt><dd>{venue.id.slice(5, 15)}</dd></div></dl>
           </section>
 
         </div>

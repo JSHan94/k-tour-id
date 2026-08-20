@@ -4,7 +4,7 @@ import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "mapl
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, SlidersHorizontal, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
-import { HEAT_COLORS, HEAT_LABELS } from "@/lib/ondo/map/heat"
+import { HEAT_COLORS } from "@/lib/ondo/map/heat"
 import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues"
 import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
@@ -32,9 +32,9 @@ const CITY = {
 
 const COPY = {
   en: {
-    tagline: "Where locals eat now",
-    title: "Pick a city by its local food pulse.",
-    body: "A quiet map of real places. Color appears only where ONDO has a food signal.",
+    tagline: "Sourced places · Simulated snapshot",
+    title: "Choose Seoul or Busan for a food-place preview.",
+    body: "A fixed demo snapshot of sourced places. ONDO scores and colors are simulated—not live activity or trends.",
     search: "Food place or neighborhood",
     all: "All places",
     signal: "ONDO signal",
@@ -45,7 +45,7 @@ const COPY = {
     places: "sourced food places",
     neutral: "Place only · signal pending",
     simulatedList: "Preview ONDO signal · Simulated",
-    source: "Place coverage preview · ONDO signals are simulated",
+    source: "Fixed demo snapshot · Place records are sourced; ONDO scores are simulated",
     more: "Load 30 more",
     mapA11y: "The map is visual. Open the List for keyboard-accessible place results.",
     mapUnavailable: "The map could not load. The same sourced place list remains available.",
@@ -67,7 +67,7 @@ const COPY = {
     officialPlaces: "official place records",
     previewPlaces: "preview signal places",
     inputSignals: "input signals",
-    confidence: "illustrative confidence band",
+    confidence: "illustrative score basis",
     officialShort: "official",
     previewShort: "preview",
     inputShort: "inputs",
@@ -75,25 +75,27 @@ const COPY = {
     confidenceStrong: "Strong",
     confidenceModerate: "Moderate",
     confidenceLimited: "Limited",
-    snapshot: "Aug 19 snapshot",
-    simulated: "Simulated",
+    snapshot: "Fixed Aug 19 snapshot",
+    simulated: "Not live · Simulated",
+    simulatedSnapshot: "Simulated snapshot",
     clusterKey: "Places",
     scoreKey: "Simulated score",
     mapKeyLabel: "Outlined count means a sourced place group. Solid color means a simulated ONDO score.",
-    topSignals: "Top signals at this zoom",
-    moreSignals: "More signals as you zoom in",
-    allSignals: "All preview signals at this zoom",
+    topSignals: "Highest simulated scores at this zoom",
+    moreSignals: "More simulated scores as you zoom in",
+    allSignals: "All simulated scores at this zoom",
     preferences: "Starting interests",
     editPreferences: "Edit interests",
     noPreferences: "Tune interests",
     preferenceBoundary: "Saved as discovery context. Current official records cannot verify dietary fit, late hours, café type, or atmosphere, so results are not silently filtered.",
     resetPreferences: "Reset interests",
     closePreferences: "Close interests",
+    citySnapshotBoundary: "Fixed simulated snapshot · Not live activity or trends",
   },
   ko: {
-    tagline: "로컬이 지금 먹는 곳",
-    title: "로컬 식음료 열기로 도시를 골라보세요.",
-    body: "실재 장소를 담은 조용한 지도예요. ONDO 신호가 있는 곳에만 색이 나타납니다.",
+    tagline: "공식 장소 · 시뮬레이션 스냅샷",
+    title: "서울과 부산의 식음료 장소를 살펴보세요.",
+    body: "공식 장소 기록 위에 고정된 데모 스냅샷을 표시해요. ONDO 점수와 색은 실시간 현황이나 추세가 아닌 시뮬레이션입니다.",
     search: "가게 이름, 지역, 음식 검색",
     all: "모든 장소",
     signal: "ONDO 신호",
@@ -101,10 +103,10 @@ const COPY = {
     list: "목록",
     map: "지도",
     back: "전국",
-    places: "개 공식 식음료 장소",
+    places: "공식 식음료 장소",
     neutral: "장소 정보만 · 신호 수집 중",
     simulatedList: "ONDO 신호 프리뷰 · 시뮬레이션",
-    source: "장소 커버리지 프리뷰 · ONDO 신호는 시뮬레이션",
+    source: "고정 데모 스냅샷 · 장소는 공식 기록, ONDO 점수는 시뮬레이션",
     more: "30개 더 보기",
     mapA11y: "지도는 시각 정보예요. 키보드로 장소를 찾으려면 목록을 여세요.",
     mapUnavailable: "지도를 불러오지 못했어요. 같은 공식 장소 목록은 계속 볼 수 있어요.",
@@ -121,33 +123,35 @@ const COPY = {
     noResultsTitle: "조건에 맞는 장소가 아직 없어요",
     noResultsBody: "검색어와 신호 필터를 초기화하면 이 도시의 모든 공식 장소를 볼 수 있어요.",
     clearResults: "검색어와 필터 초기화",
-    after19Mode: "개 ONDO 시뮬레이션 19+ 야간 프리뷰 장소",
+    after19Mode: "ONDO 시뮬레이션 19+ 야간 프리뷰 장소",
     contributed: "내 방문 신호 기록됨 · 점수 산출 전",
-    officialPlaces: "개 공식 장소 기록",
-    previewPlaces: "개 프리뷰 신호 장소",
-    inputSignals: "개 입력 신호",
-    confidence: "예시 신뢰 구간",
-    officialShort: "공식",
-    previewShort: "프리뷰",
-    inputShort: "입력",
-    confidenceShort: "프리뷰 구간",
+    officialPlaces: "공식 장소 기록",
+    previewPlaces: "시뮬레이션 프리뷰 장소",
+    inputSignals: "시뮬레이션 입력 신호",
+    confidence: "예시 점수 근거",
+    officialShort: "공식 장소",
+    previewShort: "프리뷰 장소",
+    inputShort: "입력 신호",
+    confidenceShort: "예시 근거",
     confidenceStrong: "강함",
     confidenceModerate: "보통",
     confidenceLimited: "제한적",
-    snapshot: "8월 19일 스냅샷",
-    simulated: "시뮬레이션",
+    snapshot: "8월 19일 고정 스냅샷",
+    simulated: "실시간 아님 · 시뮬레이션",
+    simulatedSnapshot: "시뮬레이션 스냅샷",
     clusterKey: "공식 장소",
     scoreKey: "시뮬레이션 점수",
     mapKeyLabel: "테두리 숫자는 공식 장소 묶음, 단색 원은 ONDO 시뮬레이션 점수를 뜻합니다.",
-    topSignals: "이 줌의 상위 신호",
-    moreSignals: "확대하면 신호가 더 보여요",
-    allSignals: "이 줌의 모든 프리뷰 신호",
+    topSignals: "이 줌의 높은 시뮬레이션 점수",
+    moreSignals: "확대하면 시뮬레이션 점수가 더 보여요",
+    allSignals: "이 줌의 모든 시뮬레이션 점수",
     preferences: "시작 관심사",
     editPreferences: "관심사 수정",
     noPreferences: "관심사 설정",
     preferenceBoundary: "탐색 맥락으로만 저장해요. 현재 공식 장소 기록은 식이 적합성·심야 영업·카페 유형·분위기를 확인하지 못하므로 결과를 몰래 필터링하지 않아요.",
     resetPreferences: "관심사 초기화",
     closePreferences: "관심사 닫기",
+    citySnapshotBoundary: "고정 시뮬레이션 스냅샷 · 실시간 현황이나 추세 아님",
   },
 } as const
 
@@ -239,6 +243,23 @@ function previewConfidenceBand(value: number | null, locale: Locale) {
   return copy.confidenceLimited
 }
 
+function officialVenueCount(count: number, locale: Locale) {
+  return locale === "ko" ? `${count}곳의 공식 장소 기록` : `${count} official place records`
+}
+
+function previewVenueCount(count: number, locale: Locale) {
+  return locale === "ko" ? `${count}곳의 시뮬레이션 프리뷰` : `${count} preview signal places`
+}
+
+function inputSignalCount(count: number, locale: Locale) {
+  return locale === "ko" ? `${count}개의 시뮬레이션 입력` : `${count} simulated inputs`
+}
+
+function resultCount(count: number, locale: Locale, after19: boolean) {
+  if (locale === "ko") return after19 ? `${count}곳의 ONDO 시뮬레이션 19+ 야간 프리뷰 장소` : `${count}곳의 공식 식음료 장소`
+  return `${count} ${after19 ? COPY.en.after19Mode : COPY.en.places}`
+}
+
 function distanceInMeters(from: UserLocation, venue: Pick<BMapVenue, "longitude" | "latitude">) {
   const radians = (degrees: number) => degrees * Math.PI / 180
   const earthRadius = 6_371_000
@@ -261,7 +282,7 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
     <section className={styles.nation} data-testid="ondo-b-nation">
       <div className={styles.nationIntro}>
         <small>KOREA · FOOD SIGNALS</small>
-        <h2>{copy.title}</h2>
+        <h1>{copy.title}</h1>
         <p>{copy.body}</p>
       </div>
       <div className={styles.dotMap}>
@@ -283,13 +304,13 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
               data-signal-truth={region.truth}
               data-computed-at={region.computedAt ?? undefined}
               onClick={() => onSelect(cityId)}
-              aria-label={`${CITY[cityId].label[locale]} · ${region.officialVenueCount} ${copy.officialPlaces} · ${region.signalVenueCount} ${copy.previewPlaces} · ${region.signalCount} ${copy.inputSignals} · ${previewConfidenceBand(region.confidence, locale)} ${copy.confidence} · ${copy.simulated} ONDO ${region.ondoScore ?? "—"}`}
+              aria-label={`${CITY[cityId].label[locale]} · ${officialVenueCount(region.officialVenueCount, locale)} · ${previewVenueCount(region.signalVenueCount, locale)} · ${inputSignalCount(region.signalCount, locale)} · ${previewConfidenceBand(region.confidence, locale)} ${copy.confidence} · ${copy.simulatedSnapshot} · ONDO ${region.ondoScore ?? "—"}`}
             >
               <i style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{region.ondoScore ?? "—"}</i>
               <span>
-                <strong>{CITY[cityId].label[locale]} <em>{HEAT_LABELS[locale][region.heatLevel]}</em></strong>
+                <strong>{CITY[cityId].label[locale]} <em>{locale === "ko" ? "데모" : "DEMO"}</em></strong>
                 <small>{locale === "ko" ? "식음료 지도 열기" : "Open food map"}</small>
-                <em className={styles.cityScoreTruth}>{copy.scoreKey} {region.ondoScore ?? "—"}/100 · {region.signalCount} {copy.inputShort}</em>
+                <em className={styles.cityScoreTruth}>{copy.scoreKey} {region.ondoScore ?? "—"}/100 · {locale === "ko" ? `${region.signalCount}개 입력` : `${region.signalCount} inputs`}</em>
               </span>
             </button>
           )
@@ -298,7 +319,7 @@ function NationPulse({ locale, onSelect }: { locale: Locale; onSelect(city: City
       <aside className={styles.cityTruthLegend} data-testid="ondo-b-city-truth-legend">
         {(["seoul", "busan"] as const).map((cityId) => {
           const region = cityPulse(cityId)
-          return <div key={cityId}><strong>{CITY[cityId].label[locale]}</strong><span>{region.officialVenueCount} {copy.officialShort} · {region.signalVenueCount} {copy.previewShort}</span><small>{region.signalCount} {copy.inputShort} · {previewConfidenceBand(region.confidence, locale)} {copy.confidenceShort}</small><small>{copy.snapshot} · {copy.simulated}</small></div>
+          return <div key={cityId}><strong>{CITY[cityId].label[locale]}</strong><span>{locale === "ko" ? `공식 장소 ${region.officialVenueCount}곳 · 점수 프리뷰 ${region.signalVenueCount}곳` : `${region.officialVenueCount} sourced · ${region.signalVenueCount} scored previews`}</span><small>{locale === "ko" ? `시뮬레이션 입력 ${region.signalCount}개` : `${region.signalCount} simulated inputs`} · {previewConfidenceBand(region.confidence, locale)} {copy.confidenceShort}</small><small>{copy.snapshot} · {copy.simulated}</small></div>
         })}
       </aside>
       <footer><span />{copy.source}</footer>
@@ -365,7 +386,7 @@ function VenueList({ venues, locale, visibleCount, contributedVenueIds, onClear,
               <small>{venueDistrictLabel(venue.cityId, venue.districtId, locale)} · {CATEGORY[venue.primaryCategory][locale]}</small>
               <strong>{venueDisplayName(venue.name.ko, locale)}</strong>
               <em>{locale === "en" ? venue.name.ko : CATEGORY[venue.primaryCategory].en}</em>
-              <small className={styles.signalTruth}>{contributedVenueIds.has(venue.id) ? copy.contributed : venue.signalTruth === "SIMULATED" ? `${copy.scoreKey} ${venue.ondoScore}/100 · ${B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)?.signalCount ?? 0} ${copy.inputShort} · ${copy.simulated}` : copy.neutral}</small>
+              <small className={styles.signalTruth}>{contributedVenueIds.has(venue.id) ? copy.contributed : venue.signalTruth === "SIMULATED" ? `${copy.scoreKey} ${venue.ondoScore}/100 · ${inputSignalCount(B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)?.signalCount ?? 0, locale)} · ${copy.simulated}` : copy.neutral}</small>
             </span>
             <ChevronRight size={17} />
           </button>
@@ -641,7 +662,7 @@ export function MapEntryB() {
         <header className={styles.cityHeader}>
         <div className={styles.topline}>
           <button type="button" className={styles.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
-          <strong>{CITY[city].label[locale]}</strong>
+          <h1>{CITY[city].label[locale]}</h1>
           <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
         </div>
         <div className={styles.search} role="search"><Search size={18} /><input aria-label={copy.search} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} />{query ? <button type="button" onClick={() => setQuery("")} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
@@ -664,7 +685,7 @@ export function MapEntryB() {
         ) : null}
 
         <div className={styles.resultBar}>
-          <span><b>{venues.length}</b> {after19On ? copy.after19Mode : copy.places}</span>
+          <span><b>{resultCount(venues.length, locale, after19On)}</b><small>{copy.citySnapshotBoundary}</small></span>
           <button type="button" onClick={() => setView(view === "map" ? "list" : "map")}>{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
         </div>
 

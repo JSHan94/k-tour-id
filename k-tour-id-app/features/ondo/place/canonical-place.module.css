@@ -10,10 +10,16 @@
 .signal span { display: grid; gap: 2px; min-width: 0; }
 .signal strong { font-size: 13px; }
 .signal small { color: #77746e; font-size: 12px; line-height: 1.4; white-space: normal; }
+.peekBefore { display: grid; gap: 7px; padding-top: 9px; }
+.peekBefore > strong { color: #4f4b45; font-size: 12px; }
+.peekBefore dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.peekBefore dl > div { min-width: 0; padding-top: 6px; border-top: 1px solid #e7e4df; }
+.peekBefore dt { overflow: hidden; color: #716c65; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.peekBefore dd { margin: 2px 0 0; color: #34312d; font-size: 12px; font-weight: 720; }
 .peekActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .peekActions a, .peekActions button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border-radius: 13px; font-size: 13px; font-weight: 750; text-decoration: none; }
-.peekActions a { border: 0; background: #22211f; color: white; }
-.peekActions button { border: 1px solid #dadad6; background: #fff; color: #22211f; }
+.peekActions button { border: 0; background: #22211f; color: white; }
+.peekActions a { border: 1px solid #dadad6; background: #fff; color: #22211f; }
 .layer { position: absolute; z-index: 92; inset: 0; display: flex; align-items: flex-end; }
 .backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgb(22 21 19 / 32%); backdrop-filter: blur(2px); }
 .detail { position: relative; display: flex; width: 100%; max-height: 92dvh; flex-direction: column; overflow: hidden; border: 1px solid rgb(34 33 31 / 12%); border-radius: 20px 20px 0 0; background: #fff; color: #22211f; box-shadow: 0 -8px 30px rgb(34 33 31 / 10%); }
@@ -31,6 +37,7 @@
 .decisionActions a { border: 1px solid #20201e; background: #20201e; color: #fff; }
 .decisionActions button { border: 1px solid #dedbd5; background: transparent; color: #20201e; }
 .decisionActions button:disabled { color: #77746e; }
+.layer[data-save-state="SAV-FAILED"] .decisionActions a { border-color: #dedbd5; background: transparent; color: #20201e; }
 .signalDetail { display: grid; grid-template-columns: 58px 1fr; gap: 14px; align-items: start; padding: 20px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
 .signalDetail > b { width: 56px; height: 56px; font-size: 16px; }
 .signalDetail small { color: #756f68; font-size: 12px; font-weight: 750; letter-spacing: .04em; }
@@ -47,7 +54,7 @@
 .after19Access h3 { margin: 4px 0 5px; font-size: 16px; }
 .after19Access p { grid-column: 2; margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.55; }
 .after19Access > button, .after19Access > strong { grid-column: 2; }
-.after19Access > button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid #30232a; border-radius: 12px; background: #30232a; color: #fff; font-size: 12px; font-weight: 760; text-align: left; }
+.after19Access > button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid #8c7281; border-radius: 12px; background: transparent; color: #30232a; font-size: 12px; font-weight: 760; text-align: left; }
 .after19Access > strong { color: #30232a; font-size: 12px; }
 .before, .source { padding: 22px 0; border-bottom: 1px solid #dedbd5; }
 .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
@@ -70,6 +77,7 @@
 
 @media (max-width: 370px) {
   .peek { right: 8px; left: 8px; }
+  .peekBefore dl { gap: 5px; }
   .signalDetail { grid-template-columns: 46px 1fr; gap: 10px; padding-block: 14px; }
   .signalDetail > b { width: 44px; height: 44px; font-size: 14px; }
   .signalEvidence { grid-template-columns: 1fr 1fr; gap: 8px; }

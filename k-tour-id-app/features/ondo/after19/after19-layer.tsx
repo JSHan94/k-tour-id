@@ -27,7 +27,7 @@ const COPY = {
     simulation: "19+ check simulation",
     autoSetting: "Open automatically when eligible",
     close: "Close",
-    reset: "Allow automatic opening again",
+    reset: "Undo",
     previewBoundary: "This demo uses a simulated 19+ check; identity details are not shown on the map.",
   },
   ko: {
@@ -47,7 +47,7 @@ const COPY = {
     simulation: "19+ 확인 시뮬레이션",
     autoSetting: "조건이 맞으면 자동으로 열기",
     close: "닫기",
-    reset: "자동 열기 다시 허용",
+    reset: "끄기 취소",
     previewBoundary: "이 데모는 19+ 확인 시뮬레이션을 사용하며 신원 상세는 지도에 표시하지 않아요.",
   },
 } satisfies Record<Locale, Record<string, string>>
@@ -63,7 +63,10 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
   const autoOpened = useRef(false)
   const gateLayerRef = useRef<HTMLDivElement>(null)
   const gateRef = useRef<HTMLElement>(null)
+  const chipRef = useRef<HTMLButtonElement>(null)
+  const noticeUndoRef = useRef<HTMLButtonElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
+  const restoreGateOpenerRef = useRef(true)
   const t = COPY[state.locale]
 
   useEffect(() => {
@@ -112,9 +115,19 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     window.requestAnimationFrame(() => gateRef.current?.querySelector<HTMLElement>("[data-after19-initial-focus]")?.focus())
     return () => {
-      window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+      if (restoreGateOpenerRef.current) window.requestAnimationFrame(() => returnFocusRef.current?.focus())
     }
   }, [showGate])
+
+  useEffect(() => {
+    if (!showSessionNotice) return
+    const frame = window.requestAnimationFrame(() => noticeUndoRef.current?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [showSessionNotice])
+
+  useEffect(() => {
+    if (state.tab !== "ondo") setShowSessionNotice(false)
+  }, [state.tab])
 
   useModalIsolation(showGate, gateLayerRef)
 
@@ -126,9 +139,11 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
       actions.setAfter19("A19-ON")
       return
     }
+    restoreGateOpenerRef.current = true
     setShowGate(true)
   }
   const beginAgeGate = () => {
+    restoreGateOpenerRef.current = false
     setShowGate(false)
     actions.beginAction({
       cta: "OPEN_AFTER19",
@@ -140,12 +155,24 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
     actions.setAfter19("A19-MANUAL-OFF")
     setShowSessionNotice(true)
   }
+  const closeGate = () => {
+    restoreGateOpenerRef.current = true
+    setShowGate(false)
+  }
+  const closeSessionNotice = () => {
+    setShowSessionNotice(false)
+    window.requestAnimationFrame(() => chipRef.current?.focus({ preventScroll: true }))
+  }
+  const undoTurnOff = () => {
+    actions.setAfter19("A19-ON")
+    closeSessionNotice()
+  }
 
   function handleGateKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
       event.preventDefault()
       event.stopPropagation()
-      setShowGate(false)
+      closeGate()
       return
     }
     if (event.key !== "Tab") return
@@ -171,7 +198,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
 
   return (
     <div className={styles.root} data-testid="ondo-after19-layer" data-prompt-open={showGate ? "true" : "false"} aria-live="polite">
-      <button type="button" className={state.after19 === "A19-ON" ? styles.chipOn : styles.chip} onClick={state.after19 === "A19-ON" ? turnOff : manualOpen}>
+      <button ref={chipRef} type="button" className={state.after19 === "A19-ON" ? styles.chipOn : styles.chip} onClick={state.after19 === "A19-ON" ? turnOff : manualOpen} data-testid="after19-toggle">
         {state.after19 === "A19-ON" ? <Sunrise size={16} /> : <Moon size={16} />}{state.after19 === "A19-ON" ? t.chipOn : t.chipOff}
       </button>
 
@@ -184,12 +211,12 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
       ) : null}
 
       {showSessionNotice ? (
-        <div className={styles.sessionNotice} role="status"><span>{t.sessionOff}</span><button type="button" className={styles.reset} onClick={() => { actions.setAfter19("A19-OFF"); setShowSessionNotice(false); promptedToken.current = null }}>{t.reset}</button><button type="button" onClick={() => setShowSessionNotice(false)} aria-label={t.close}><X size={15} /></button></div>
+        <section className={styles.sessionNotice} data-testid="after19-session-notice" aria-label={t.sessionOff}><span role="status">{t.sessionOff}</span><button ref={noticeUndoRef} type="button" className={styles.reset} onClick={undoTurnOff}>{t.reset}</button><button type="button" onClick={closeSessionNotice} aria-label={t.close}><X size={15} /></button></section>
       ) : null}
 
       {showGate ? (
         <div ref={gateLayerRef} className={styles.gateLayer} data-testid="after19-prompt-layer">
-          <button type="button" tabIndex={-1} className={styles.backdrop} onClick={() => setShowGate(false)} aria-hidden="true" />
+          <button type="button" tabIndex={-1} className={styles.backdrop} onClick={closeGate} aria-hidden="true" />
           <section ref={gateRef} className={styles.gate} role="dialog" aria-modal="true" aria-labelledby="after19-title" tabIndex={-1} onKeyDown={handleGateKeyDown}>
             <span className={styles.moon}><Moon size={28} /></span>
             <p className={styles.truth}><ShieldCheck size={13} />{t.simulation}</p>
@@ -197,7 +224,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
             <p>{t.gateBody}</p>
             <div className={styles.fact}><Clock3 size={17} /><span>{state.locale === "ko" ? "한국 시간 19:00 이후 자동 전환은 19+ 확인과 자동 열기 설정이 모두 필요합니다." : "Automatic switching after 19:00 Korea time also requires a current 19+ check and auto-open setting."}</span></div>
             <button type="button" data-after19-initial-focus className={styles.primary} onClick={beginAgeGate}>{t.gatePrimary}</button>
-            <button type="button" className={styles.secondary} onClick={() => setShowGate(false)}>{t.gateSecondary}</button>
+            <button type="button" className={styles.secondary} onClick={closeGate}>{t.gateSecondary}</button>
           </section>
         </div>
       ) : null}

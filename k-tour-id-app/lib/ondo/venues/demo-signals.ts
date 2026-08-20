@@ -27,32 +27,32 @@ function levelFor(score: number): HeatLevel {
 
 const CATEGORY_REASON: Record<VenuePrimaryCategory, LocalizedText> = {
   korean: {
-    en: "A simulated local-classic pulse assembled from preview saves and visit signals.",
-    ko: "프리뷰 저장·방문 신호로 구성한 로컬 한식 열기 시뮬레이션이에요.",
+    en: "A fixed simulated local-classic score assembled from preview saves and visit inputs; it is not live activity or a trend.",
+    ko: "프리뷰 저장·방문 입력으로 만든 고정 한식 점수 시뮬레이션이며 실시간 현황이나 추세가 아니에요.",
   },
   casual: {
-    en: "A simulated casual-meal pulse assembled from preview saves and visit signals.",
-    ko: "프리뷰 저장·방문 신호로 구성한 간편식 열기 시뮬레이션이에요.",
+    en: "A fixed simulated casual-meal score assembled from preview saves and visit inputs; it is not live activity or a trend.",
+    ko: "프리뷰 저장·방문 입력으로 만든 고정 간편식 점수 시뮬레이션이며 실시간 현황이나 추세가 아니에요.",
   },
   japanese: {
-    en: "A simulated Japanese-food pulse assembled from preview saves and visit signals.",
-    ko: "프리뷰 저장·방문 신호로 구성한 일식 열기 시뮬레이션이에요.",
+    en: "A fixed simulated Japanese-food score assembled from preview saves and visit inputs; it is not live activity or a trend.",
+    ko: "프리뷰 저장·방문 입력으로 만든 고정 일식 점수 시뮬레이션이며 실시간 현황이나 추세가 아니에요.",
   },
   chinese: {
-    en: "A simulated Chinese-food pulse assembled from preview saves and visit signals.",
-    ko: "프리뷰 저장·방문 신호로 구성한 중식 열기 시뮬레이션이에요.",
+    en: "A fixed simulated Chinese-food score assembled from preview saves and visit inputs; it is not live activity or a trend.",
+    ko: "프리뷰 저장·방문 입력으로 만든 고정 중식 점수 시뮬레이션이며 실시간 현황이나 추세가 아니에요.",
   },
   global: {
-    en: "A simulated global-food pulse assembled from preview saves and visit signals.",
-    ko: "프리뷰 저장·방문 신호로 구성한 세계 음식 열기 시뮬레이션이에요.",
+    en: "A fixed simulated global-food score assembled from preview saves and visit inputs; it is not live activity or a trend.",
+    ko: "프리뷰 저장·방문 입력으로 만든 고정 세계 음식 점수 시뮬레이션이며 실시간 현황이나 추세가 아니에요.",
   },
   night: {
-    en: "A simulated food-and-drink pulse. Opening hours and alcohol service are not verified.",
-    ko: "식음료 열기 시뮬레이션이에요. 영업시간과 주류 제공 여부는 확인되지 않았어요.",
+    en: "A fixed simulated food-and-drink score, not live activity or a trend. Opening hours and alcohol service are not verified.",
+    ko: "실시간 현황이나 추세가 아닌 고정 식음료 점수 시뮬레이션이에요. 영업시간과 주류 제공 여부는 확인되지 않았어요.",
   },
   specialty: {
-    en: "A simulated specialty-food pulse assembled from preview saves and visit signals.",
-    ko: "프리뷰 저장·방문 신호로 구성한 전문 음식점 열기 시뮬레이션이에요.",
+    en: "A fixed simulated specialty-food score assembled from preview saves and visit inputs; it is not live activity or a trend.",
+    ko: "프리뷰 저장·방문 입력으로 만든 고정 전문 음식점 점수 시뮬레이션이며 실시간 현황이나 추세가 아니에요.",
   },
 }
 
