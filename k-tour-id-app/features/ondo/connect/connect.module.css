@@ -4,6 +4,12 @@
 .contextNotice div { display: grid; gap: 5px; }
 .contextNotice strong { font-size: 14px; }
 .contextNotice span { color: #706d67; font-size: 12px; line-height: 1.55; }
+.contextActions { display: grid; gap: 9px; margin-top: 28px; }
+.contextBack { min-height: 44px; display: inline-flex; align-items: center; gap: 7px; margin: 2px 0 4px; padding: 0; border: 0; background: transparent; color: #4f4c47; font: inherit; font-size: 13px; font-weight: 700; }
+.emptyState { display: grid; justify-items: start; gap: 8px; padding: 26px 0; border-top: 1px solid #d9d7d1; border-bottom: 1px solid #e2e0db; }
+.emptyState > svg { color: #5f5c57; }
+.emptyState strong { font-size: 15px; }
+.emptyState span { max-width: 34rem; color: #625f5a; font-size: 13px; line-height: 1.6; }
 .screen :focus-visible, .sheetBody :focus-visible, .chat :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
 .screenHeader { display: grid; gap: 8px; margin-bottom: 38px; }
 .eyebrow { margin: 0; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .1em; text-transform: uppercase; }
@@ -51,6 +57,7 @@
 .chatHeader { position: sticky; top: 0; z-index: 2; min-height: 64px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 7px; padding: 8px 12px; border-bottom: 1px solid #dedbd5; background: rgb(251 250 247 / 96%); }
 .chatHeader button { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #292927; }
 .chatHeader > div { display: grid; gap: 2px; min-width: 0; }
+.headerSpacer { width: 44px; height: 44px; }
 .chatHeader strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
 .chatHeader span { color: #6e6b65; font-size: 12px; }
 .messageList { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 18px 14px; overflow: auto; background: #f5f4f1; }

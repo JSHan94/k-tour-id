@@ -54,7 +54,7 @@ export function LocalPhotoPicker({
 
   const labels = locale === "ko"
     ? {
-        choose: value ? "다른 사진 선택" : "사진 선택",
+        choose: value ? "다른 사진 선택" : purpose === "chat_image" ? "사진 추가" : "사진 선택",
         remove: "사진 삭제",
         preview: purpose === "local_signal" ? "현장 사진 · 로컬 미리보기" : "대화 사진 · 전송 전 미리보기",
         truth: "사진은 이 화면에서만 보이며 서버에 업로드되거나 저장되지 않습니다.",
@@ -62,7 +62,7 @@ export function LocalPhotoPicker({
         size: "10MB 이하 사진을 선택해 주세요.",
       }
     : {
-        choose: value ? "Choose another photo" : "Choose photo",
+        choose: value ? "Choose another photo" : purpose === "chat_image" ? "Add a photo" : "Choose photo",
         remove: "Remove photo",
         preview: purpose === "local_signal" ? "On-site photo · Local preview" : "Chat photo · Preview before sending",
         truth: "The photo is visible only on this screen and is not uploaded to or stored on a server.",

@@ -1,6 +1,7 @@
 "use client"
 
-import { CalendarClock, ChevronRight, Languages, MapPin, ShieldCheck, Users } from "lucide-react"
+import { useEffect, useState } from "react"
+import { ArrowLeft, CalendarClock, ChevronRight, Languages, MapPin, ShieldCheck, Users } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
 import type { Locale } from "../contracts/domain"
@@ -35,18 +36,57 @@ export function TablesEntry() {
   const locale = state.locale
   const joined = TABLES.filter((table) => ["confirmed", "checked_in", "completed"].includes(state.tableMembershipById[table.id] ?? "none"))
   const selectedVenue = state.surface.kind === "venue" ? canonicalMapVenueById(state.surface.venueId) : undefined
-  const truth = tableFixtureTruth(locale, selectedVenue ? venueDisplayName(selectedVenue.name.ko, locale) : undefined)
+  const selectedVenueName = selectedVenue ? venueDisplayName(selectedVenue.name.ko, locale) : undefined
+  const venueTables = selectedVenue ? TABLES.filter((table) => table.venueId === selectedVenue.id) : []
+  const [scope, setScope] = useState<"venue" | "global">(selectedVenue ? "venue" : "global")
+  const contextual = Boolean(selectedVenue && scope === "venue")
+  const truth = tableFixtureTruth(locale, contextual ? selectedVenueName : undefined)
+
+  useEffect(() => {
+    setScope(selectedVenue ? "venue" : "global")
+  }, [selectedVenue?.id])
+
+  function returnToVenue() {
+    if (!selectedVenue) return
+    actions.setTab("ondo")
+    // This explicit surface restore also keeps the handoff safe before the shared
+    // tab-preservation update lands in the integration branch.
+    actions.setSurface({ kind: "venue", venueId: selectedVenue.id })
+  }
 
   return (
     <div className={styles.screen} data-testid="tables-entry">
       <header className={styles.screenHeader}>
-        <p>{locale === "ko" ? "같은 장소, 같은 시간" : "Same place, same time"}</p>
-        <h1>Pulse Tables</h1>
-        <span>{locale === "ko" ? "식사하고 싶은 사람들이 장소와 시간을 기준으로 만나는 자리예요." : "Meet people who want to eat at the same place and time."}</span>
+        <p>{contextual ? locale === "ko" ? "이 장소에서 함께 먹기" : "Eat together at this place" : locale === "ko" ? "같은 장소, 같은 시간" : "Same place, same time"}</p>
+        <h1>{contextual ? selectedVenueName : "Pulse Tables"}</h1>
+        <span>{contextual
+          ? locale === "ko" ? "이 장소에 연결된 Table만 먼저 확인해요." : "Start with Tables attached to this exact place."
+          : locale === "ko" ? "식사하고 싶은 사람들이 장소와 시간을 기준으로 만나는 자리예요." : "Meet people who want to eat at the same place and time."}</span>
       </header>
 
       <aside className={styles.contextNotice} data-testid="tables-truth-notice"><ShieldCheck size={17} /><div><strong>{truth.title}</strong><span data-testid={selectedVenue ? "tables-canonical-context" : undefined}>{truth.body}</span></div></aside>
 
+      {contextual ? (
+        <>
+          <section className={styles.section} aria-labelledby="venue-tables-title" data-testid="venue-table-scope">
+            <div className={styles.sectionTitle}><h2 id="venue-tables-title">{locale === "ko" ? "이 장소의 Table" : "Tables at this place"}</h2><span>{venueTables.length}</span></div>
+            {venueTables.length ? (
+              <div className={styles.tableList}>{venueTables.map((table) => <TableCard key={table.id} tableId={table.id} joined={joined.some((entry) => entry.id === table.id)} />)}</div>
+            ) : (
+              <div className={styles.emptyState} data-testid="venue-tables-empty">
+                <Users size={22} />
+                <strong>{locale === "ko" ? "아직 이 장소에 열린 Table이 없어요." : "No Tables are open at this place yet."}</strong>
+                <span>{locale === "ko" ? "다른 장소의 로컬 미리보기 Table은 전체 목록에서 볼 수 있어요." : "You can still browse local-preview Tables at other places."}</span>
+              </div>
+            )}
+          </section>
+          <div className={styles.contextActions}>
+            <button type="button" className={styles.primary} onClick={returnToVenue} data-testid="tables-back-to-venue"><ArrowLeft size={17} />{locale === "ko" ? `${selectedVenueName}(으)로 돌아가기` : `Back to ${selectedVenueName}`}</button>
+            <button type="button" className={styles.secondary} onClick={() => setScope("global")} data-testid="tables-browse-all">{locale === "ko" ? "전체 Table 둘러보기" : "Browse all Tables"}</button>
+          </div>
+        </>
+      ) : <>
+      {selectedVenue ? <button type="button" className={styles.contextBack} onClick={() => setScope("venue")} data-testid="tables-back-to-place-scope"><ArrowLeft size={16} />{locale === "ko" ? `${selectedVenueName}의 Table` : `Tables at ${selectedVenueName}`}</button> : null}
       {joined.length ? (
         <section className={styles.section} aria-labelledby="joined-tables-title">
           <div className={styles.sectionTitle}><h2 id="joined-tables-title">{locale === "ko" ? "참여 중" : "Joined"}</h2><span>{joined.length}</span></div>
@@ -60,6 +100,7 @@ export function TablesEntry() {
           {TABLES.map((table) => <TableCard key={table.id} tableId={table.id} />)}
         </div>
       </section>
+      </>}
     </div>
   )
 }
