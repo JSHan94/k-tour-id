@@ -12,12 +12,14 @@
 .summary button { min-width: 44px; min-height: 44px; border: 0; background: transparent; color: #33312f; font-size: 12px; font-weight: 720; }
 .form { display: grid; gap: 18px; margin-top: 20px; }
 .field { display: grid; gap: 8px; color: #55524d; font-size: 12px; font-weight: 700; }
+.fieldLabel { display: flex; align-items: center; gap: 6px; }
+.selfDeclared { margin: -3px 0 0; color: #6f6b65; font-size: 12px; font-weight: 560; line-height: 1.45; }
 .field input, .field textarea { width: 100%; min-height: 46px; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; padding: 10px 0; background: transparent; color: #20201e; font: inherit; font-size: 14px; }
 .field textarea { min-height: 84px; resize: vertical; }
 .locked { display: flex; min-height: 46px; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid #e5e3de; color: #6e6b65; font-size: 12px; }
 .consent, .consentOn { display: grid; grid-template-columns: 20px 1fr; align-items: start; gap: 10px; min-height: 44px; padding: 12px 0; border-top: 1px solid #e5e3de; color: #68655f; font-size: 12px; line-height: 1.5; }
 .consentOn { color: #2f5f49; }
-.consent input, .consentOn input { width: 18px; height: 18px; margin: 0; accent-color: #252523; }
+.consent > span:first-child, .consentOn > span:first-child { display: grid; width: 18px; height: 18px; place-items: center; border: 1px solid currentColor; border-radius: 4px; }
 .save, .cancel { min-height: 48px; border-radius: 12px; font-size: 13px; font-weight: 720; }
 .save { border: 0; background: #20201e; color: #fff; }
 .cancel { border: 0; background: transparent; color: #6f6c66; }

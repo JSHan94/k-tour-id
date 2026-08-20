@@ -23,7 +23,7 @@ const COPY = {
     cancel: "Cancel editing",
     failed: "Profile changes were not saved. Your previous public fields are unchanged.",
     retry: "Try save again",
-    truth: "Person-check nationality is never copied here. Every public location or language is self-declared and separately consented.",
+    truth: "Identity-check nationality is never copied here. Every public location or language is self-declared and separately consented.",
   },
   ko: {
     title: "공개 프로필",
@@ -41,7 +41,7 @@ const COPY = {
     cancel: "편집 취소",
     failed: "프로필 변경을 저장하지 못했어요. 기존 공개값은 바뀌지 않았습니다.",
     retry: "저장 다시 시도",
-    truth: "사람 확인의 국적은 여기로 복사하지 않습니다. 공개 위치와 언어는 각각 본인이 입력하고 동의한 값입니다.",
+    truth: "본인 확인에 사용한 국적은 여기로 복사하지 않습니다. 공개 위치와 언어는 각각 본인이 입력하고 동의한 값입니다.",
   },
 } satisfies Record<Locale, Record<string, string>>
 
@@ -133,9 +133,9 @@ export function ProfilePanel() {
       ) : editing ? (
         <div className={styles.form}>
           <label><span>{t.name}</span><input ref={nameInputRef} value={draft.displayName} onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))} /></label>
-          <Field label={t.from} icon={<Globe2 size={15} />} value={draft.from} share={draft.shareFrom} locale={state.locale} onValue={(from) => setDraft((current) => ({ ...current, from }))} onShare={(shareFrom) => setDraft((current) => ({ ...current, shareFrom }))} />
-          <Field label={t.lives} icon={<MapPin size={15} />} value={draft.livesIn} share={draft.shareLivesIn} locale={state.locale} onValue={(livesIn) => setDraft((current) => ({ ...current, livesIn }))} onShare={(shareLivesIn) => setDraft((current) => ({ ...current, shareLivesIn }))} />
-          <Field label={t.languages} icon={<Globe2 size={15} />} value={draft.languages} share={draft.shareLanguages} locale={state.locale} onValue={(languages) => setDraft((current) => ({ ...current, languages }))} onShare={(shareLanguages) => setDraft((current) => ({ ...current, shareLanguages }))} />
+          <Field id="profile-from" label={t.from} description={t.self} icon={<Globe2 size={15} />} value={draft.from} share={draft.shareFrom} locale={state.locale} onValue={(from) => setDraft((current) => ({ ...current, from }))} onShare={(shareFrom) => setDraft((current) => ({ ...current, shareFrom }))} />
+          <Field id="profile-lives-in" label={t.lives} description={t.self} icon={<MapPin size={15} />} value={draft.livesIn} share={draft.shareLivesIn} locale={state.locale} onValue={(livesIn) => setDraft((current) => ({ ...current, livesIn }))} onShare={(shareLivesIn) => setDraft((current) => ({ ...current, shareLivesIn }))} />
+          <Field id="profile-languages" label={t.languages} description={t.self} icon={<Globe2 size={15} />} value={draft.languages} share={draft.shareLanguages} locale={state.locale} onValue={(languages) => setDraft((current) => ({ ...current, languages }))} onShare={(shareLanguages) => setDraft((current) => ({ ...current, shareLanguages }))} />
           {failed ? <div className={styles.error} role="alert">{t.failed}</div> : null}
           <button ref={retryButtonRef} type="button" className={styles.save} onClick={save}>{failed ? <RotateCcw size={16} /> : <Save size={16} />}{failed ? t.retry : t.save}</button>
           <button type="button" className={styles.cancel} onClick={() => { focusEditOnExitRef.current = true; setEditing(false); setFailed(false) }}>{t.cancel}</button>
@@ -151,11 +151,20 @@ export function ProfilePanel() {
   )
 }
 
-function Field({ label, icon, value, share, locale, onValue, onShare }: { label: string; icon: React.ReactNode; value: string; share: boolean; locale: Locale; onValue(value: string): void; onShare(value: boolean): void }) {
+function Field({ id, label, description, icon, value, share, locale, onValue, onShare }: { id: string; label: string; description: string; icon: React.ReactNode; value: string; share: boolean; locale: Locale; onValue(value: string): void; onShare(value: boolean): void }) {
+  const toggleLabel = locale === "ko"
+    ? share ? `${label}: 공개 중. ${label} 비공개로 전환` : `${label}: 비공개. ${label} 공개하기`
+    : share ? `${label}: public. Make ${label} private` : `${label}: private. Show ${label} publicly`
+  const toggleText = locale === "ko"
+    ? share ? "공개 중 · 비공개로 전환" : "비공개 · 공개하기"
+    : share ? "Public · Make private" : "Private · Show publicly"
+
   return (
     <div className={styles.field}>
-      <label><span>{icon}{label}<i>{locale === "ko" ? "본인 입력" : "Self-declared"}</i></span><input value={value} onChange={(event) => onValue(event.target.value)} /></label>
-      <button type="button" aria-pressed={share} className={share ? styles.consentOn : styles.consent} onClick={() => onShare(!share)}><span>{share ? <Check size={12} /> : null}</span>{locale === "ko" ? "공개하기" : "Show publicly"}</button>
+      <label className={styles.fieldLabel} htmlFor={id}>{icon}<span>{label}</span></label>
+      <p id={`${id}-description`} className={styles.selfDeclared}>{description}</p>
+      <input id={id} aria-describedby={`${id}-description`} value={value} onChange={(event) => onValue(event.target.value)} />
+      <button type="button" aria-label={toggleLabel} aria-pressed={share} className={share ? styles.consentOn : styles.consent} onClick={() => onShare(!share)}><span aria-hidden="true">{share ? <Check size={12} /> : null}</span><span>{toggleText}</span></button>
     </div>
   )
 }

@@ -51,7 +51,7 @@
 .identityHeader { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; }
 .identityHeader p { margin: 0 0 8px; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .12em; }
 .identityHeader h1 { margin: 0; font-family: inherit; font-size: 29px; font-weight: 720; letter-spacing: -.04em; }
-.identityHeader button { width: 44px; height: 44px; border: 1px solid #dedbd5; border-radius: 50%; background: transparent; color: #33312f; font-size: 12px; font-weight: 780; }
+.identityHeader button { width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid #dedbd5; border-radius: 50%; background: transparent; color: #33312f; font-size: 12px; font-weight: 780; }
 .accountCard { display: grid; grid-template-columns: 48px 1fr 32px; align-items: center; gap: 13px; padding: 15px 0; border-top: 1px solid #d9d7d1; border-bottom: 1px solid #d9d7d1; }
 .accountIcon, .accountIconReady { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid #d9d7d1; border-radius: 50%; background: #fff; color: #716e68; }
 .accountIconReady { border-color: #5d876f; color: #35664f; }

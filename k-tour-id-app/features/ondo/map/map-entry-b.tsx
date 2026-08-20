@@ -162,7 +162,10 @@ const PREFERENCE_COPY: Record<DiscoveryPreference, { en: string; ko: string }> =
   late: { en: "Late-night food", ko: "늦은 시간의 한 끼" },
   lively: { en: "Lively", ko: "활기찬 분위기" },
   calm: { en: "A little calmer", ko: "조금 여유롭게" },
-  diet: { en: "Dietary preferences", ko: "식이 선택" },
+  vegetarian: { en: "Vegetarian", ko: "채식" },
+  vegan: { en: "Vegan", ko: "비건" },
+  halal: { en: "Halal", ko: "할랄" },
+  allergy_aware: { en: "Allergy-aware", ko: "알레르기 주의" },
 }
 
 const ALL_PREFERENCES = Object.keys(PREFERENCE_COPY) as DiscoveryPreference[]

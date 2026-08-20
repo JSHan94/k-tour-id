@@ -1,6 +1,6 @@
 export type Locale = "en" | "ko"
 export type Persona = "short_term" | "korean_local" | "long_term_resident"
-export type DiscoveryPreference = "classic" | "cafe" | "late" | "lively" | "calm" | "diet"
+export type DiscoveryPreference = "classic" | "cafe" | "late" | "lively" | "calm" | "vegetarian" | "vegan" | "halal" | "allergy_aware"
 export type OndoTab = "ondo" | "my" | "tables" | "id"
 
 export type AccountStatus = "ACC-GUEST" | "ACC-CREATING" | "ACC-ACTIVE" | "ACC-FAILED"

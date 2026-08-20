@@ -18,10 +18,10 @@ export function MyEntry() {
   const { state, actions } = useOndo()
   const locale = state.locale
   const history = [
-    { key: "identity", icon: <ShieldCheck size={17} />, label: locale === "ko" ? "사람 확인" : "Person check", value: state.reputation.identity === "verified" ? locale === "ko" ? "확인됨" : "Verified" : locale === "ko" ? "확인 전" : "Not verified" },
-    { key: "visit", icon: <MapPin size={17} />, label: locale === "ko" ? "확인된 방문" : "Confirmed visits", value: state.reputation.visit === "repeat" ? locale === "ko" ? "반복 방문" : "Repeat" : state.reputation.visit === "recent" ? locale === "ko" ? "최근 방문" : "Recent" : locale === "ko" ? "새 활동" : "New" },
-    { key: "contribution", icon: <Sparkles size={17} />, label: locale === "ko" ? "도움이 된 정보" : "Helpful contributions", value: state.reputation.contribution === "established" ? locale === "ko" ? "꾸준한 기여" : "Established" : state.reputation.contribution === "helpful" ? locale === "ko" ? "도움이 됨" : "Helpful" : locale === "ko" ? "새 활동" : "New" },
-    { key: "meetup", icon: <MessageCircle size={17} />, label: locale === "ko" ? "완료한 Table" : "Completed Tables", value: state.reputation.meetup === "established" ? locale === "ko" ? "꾸준한 참여" : "Established" : state.reputation.meetup === "reliable" ? locale === "ko" ? "완료 이력 있음" : "Reliable" : locale === "ko" ? "새 활동" : "New" },
+    { key: "identity", icon: <ShieldCheck size={17} />, label: locale === "ko" ? "본인 확인" : "Identity check", value: state.reputation.identity === "verified" ? locale === "ko" ? "완료 · 시뮬레이션" : "Completed · Simulated" : locale === "ko" ? "미완료" : "Not completed" },
+    { key: "visit", icon: <MapPin size={17} />, label: locale === "ko" ? "시뮬레이션 방문 기록" : "Simulated visit records", value: state.reputation.visit === "repeat" ? locale === "ko" ? "로컬 기록 여러 건" : "Multiple local records" : state.reputation.visit === "recent" ? locale === "ko" ? "로컬 기록 1건" : "One local record" : locale === "ko" ? "로컬 기록 없음" : "No local records" },
+    { key: "contribution", icon: <Sparkles size={17} />, label: locale === "ko" ? "로컬 미리보기 기여" : "Local-preview contributions", value: state.reputation.contribution === "established" ? locale === "ko" ? "로컬 입력 여러 건" : "Several local entries" : state.reputation.contribution === "helpful" ? locale === "ko" ? "로컬 입력 1건" : "One local entry" : locale === "ko" ? "로컬 입력 없음" : "No local entries" },
+    { key: "meetup", icon: <MessageCircle size={17} />, label: locale === "ko" ? "로컬 미리보기 모임" : "Local-preview Tables", value: state.reputation.meetup === "established" ? locale === "ko" ? "로컬 완료 여러 건" : "Several local completions" : state.reputation.meetup === "reliable" ? locale === "ko" ? "로컬 완료 1건" : "One local completion" : locale === "ko" ? "로컬 완료 없음" : "No local completions" },
   ]
 
   function savedVenueLabel(venueId: string) {
@@ -59,11 +59,15 @@ export function MyEntry() {
           const next = PERSONA_OPTIONS.find((option) => option.id === event.target.value)
           if (next) actions.setPersona(next.id)
         }}><option value="" disabled>{locale === "ko" ? "선택해 주세요" : "Choose one"}</option>{PERSONA_OPTIONS.map((option) => <option key={option.id} value={option.id}>{option.label[locale]}</option>)}</select></label>
-        <fieldset className={styles.preferenceFieldset}><legend>{locale === "ko" ? "먹고 싶은 것과 분위기" : "Food and mood"}</legend><div className={styles.preferenceChips}>{DISCOVERY_PREFERENCE_OPTIONS.map((option) => {
+        <fieldset className={styles.preferenceFieldset}><legend>{locale === "ko" ? "먹고 싶은 것과 분위기" : "Food, mood, and timing"}</legend><div className={styles.preferenceChips}>{DISCOVERY_PREFERENCE_OPTIONS.filter((option) => option.group !== "dietary").map((option) => {
           const selected = state.discoveryPreferences.includes(option.id)
           return <button key={option.id} type="button" aria-pressed={selected} onClick={() => togglePreference(option.id)} data-testid={`discovery-preference-${option.id}`}>{option.label[locale]}</button>
         })}</div></fieldset>
-        <p className={styles.preferenceTruth} data-testid="discovery-preference-truth">{locale === "ko" ? "이 기기에 저장되어 둘러보기 맥락에 사용됩니다. 확인되지 않은 식이·심야 영업·분위기 정보는 숨은 필터로 사용하지 않아요." : "Saved on this device and used as discovery context. Unverified dietary, late-hours, and mood facts are not used as hidden filters."}</p>
+        <fieldset className={styles.preferenceFieldset}><legend>{locale === "ko" ? "식이 요구사항" : "Dietary requirements"}</legend><div className={styles.preferenceChips}>{DISCOVERY_PREFERENCE_OPTIONS.filter((option) => option.group === "dietary").map((option) => {
+          const selected = state.discoveryPreferences.includes(option.id)
+          return <button key={option.id} type="button" aria-pressed={selected} onClick={() => togglePreference(option.id)} data-testid={`discovery-preference-${option.id}`}>{option.label[locale]}</button>
+        })}</div></fieldset>
+        <p className={styles.preferenceTruth} data-testid="discovery-preference-truth">{locale === "ko" ? "이 기기의 둘러보기 맥락으로만 저장됩니다. 공식 장소 기록은 식이 요구사항 지원 여부를 확인하지 않으며, 이 선택으로 장소를 숨기거나 지원 장소라고 표시하지 않아요." : "Saved only as discovery context on this device. Official place records do not confirm dietary support, so these choices neither hide venues nor label them as supported."}</p>
       </section>
 
       <section className={styles.section} aria-labelledby="stamp-heading">
@@ -79,7 +83,7 @@ export function MyEntry() {
 
       <section className={styles.section} aria-labelledby="history-heading">
         <div className={styles.sectionTitle}><div><Sparkles size={18} /><h2 id="history-heading">{locale === "ko" ? "활동 이력" : "Activity history"}</h2></div></div>
-        <p className={styles.sectionCopy}>{locale === "ko" ? "종합 점수 없이 서로 다른 의미의 활동을 분리해서 보여줘요." : "Different kinds of activity stay separate; there is no overall trust or safety score."}</p>
+        <p className={styles.sectionCopy}>{locale === "ko" ? "본인 확인과 브라우저 로컬 미리보기 활동을 분리해 보여줘요. 실제 활동을 입증하거나 종합 안전 점수를 만들지 않습니다." : "Identity checks and browser-local preview activity stay separate. They do not prove real-world activity or create an overall safety score."}</p>
         <div className={styles.historyList}>{history.map((item) => <div key={item.key}><span className={styles.historyIcon}>{item.icon}</span><strong>{item.label}</strong><span>{item.value}</span></div>)}</div>
       </section>
 

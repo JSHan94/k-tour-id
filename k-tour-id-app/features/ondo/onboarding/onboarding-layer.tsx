@@ -38,12 +38,14 @@ const TEXT = {
     preferenceTitle: "What kind of meal are you looking for?",
     preferenceBody: "This only sets your starting filters. You can change it without an account.",
     mealGroup: "Meal type",
-    moodGroup: "Mood and needs",
+    moodGroup: "Mood and timing",
+    dietaryGroup: "Dietary requirements",
+    dietaryBoundary: "These choices describe your needs only. ONDO does not yet confirm that any venue supports them.",
     continueToPreferences: "Choose meal preferences",
     open: "Open the ONDO map",
     defaults: "Continue with defaults",
     skip: "Skip and explore",
-    boundary: "Account creation and person checks happen separately, only when an experience needs them.",
+    boundary: "Account creation and identity checks happen separately, only when an experience needs them.",
     fallback: "We could not save those preferences. You can still explore the map with the defaults.",
     continueFallback: "Open map with defaults",
     back: "Go back",
@@ -60,12 +62,14 @@ const TEXT = {
     preferenceTitle: "어떤 한 끼를 찾고 있나요?",
     preferenceBody: "처음 보이는 필터에만 반영하며 계정 없이도 바꿀 수 있어요.",
     mealGroup: "먹고 싶은 것",
-    moodGroup: "분위기와 필요",
+    moodGroup: "분위기와 시간",
+    dietaryGroup: "식이 요구사항",
+    dietaryBoundary: "필요한 조건을 직접 고르는 항목입니다. ONDO는 아직 어떤 장소가 이를 지원한다고 확인하지 않아요.",
     continueToPreferences: "한 끼 취향 고르기",
     open: "ONDO 지도 열기",
     defaults: "기본 설정으로 계속",
     skip: "건너뛰고 둘러보기",
-    boundary: "계정과 사람 확인은 필요한 경험을 시작할 때 별도로 진행합니다.",
+    boundary: "계정 생성과 본인 확인은 필요한 경험을 시작할 때 별도로 진행합니다.",
     fallback: "선택한 설정을 저장하지 못했어요. 기본 설정으로 지도를 둘러볼 수 있어요.",
     continueFallback: "기본 설정으로 지도 열기",
     back: "뒤로",
@@ -194,8 +198,9 @@ export function OnboardingLayer() {
           <div className={styles.heading}><span>03</span><h1>{t.preferenceTitle}</h1><p>{t.preferenceBody}</p></div>
           <div className={styles.preferenceGroups}>
             {[
-              { title: t.mealGroup, items: DISCOVERY_PREFERENCE_OPTIONS.slice(0, 3) },
-              { title: t.moodGroup, items: DISCOVERY_PREFERENCE_OPTIONS.slice(3) },
+              { id: "meal", title: t.mealGroup, items: DISCOVERY_PREFERENCE_OPTIONS.filter((option) => option.group === "meal") },
+              { id: "mood", title: t.moodGroup, items: DISCOVERY_PREFERENCE_OPTIONS.filter((option) => option.group === "mood") },
+              { id: "dietary", title: t.dietaryGroup, note: t.dietaryBoundary, items: DISCOVERY_PREFERENCE_OPTIONS.filter((option) => option.group === "dietary") },
             ].map((group) => <section key={group.title} className={styles.preferenceGroup}>
               <h2>{group.title}</h2>
               <div className={styles.chips}>
@@ -204,6 +209,7 @@ export function OnboardingLayer() {
                   return <button key={preference.id} type="button" aria-pressed={selected} className={selected ? styles.chipSelected : styles.chip} onClick={() => setPreferences((current) => selected ? current.filter((id) => id !== preference.id) : [...current, preference.id])}>{preference.label[state.locale]}</button>
                 })}
               </div>
+              {group.note ? <p className={styles.preferenceNote}>{group.note}</p> : null}
             </section>)}
           </div>
           {failed ? <div className={styles.error} role="alert">{t.fallback}</div> : null}
