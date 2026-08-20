@@ -63,6 +63,12 @@ async function expectBackgroundIsolated(page: Page) {
   await expect(page.locator("[aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
 }
 
+async function settleFocusFrames(page: Page) {
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+  }))
+}
+
 test.describe("ONDO B R3 visual and traveler regression", () => {
   test.beforeEach(async ({ page }) => {
     installBRuntimeGuard(page)
@@ -197,8 +203,10 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     const stay = prompt.getByRole("button", { name: "Stay on the main map" })
     await expect(confirm).toBeFocused()
     await page.keyboard.press("Shift+Tab")
+    await settleFocusFrames(page)
     await expect(stay).toBeFocused()
     await page.keyboard.press("Tab")
+    await settleFocusFrames(page)
     await expect(confirm).toBeFocused()
     await page.keyboard.press("Escape")
     await expect(prompt).toHaveCount(0)
