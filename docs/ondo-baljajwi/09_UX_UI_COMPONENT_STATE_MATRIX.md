@@ -1,14 +1,14 @@
 # ONDO B · UX/UI Component & State Matrix
 
-상태: `EXECUTABLE REGISTRY FROZEN · 270/270 PIXEL PASS · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START`
+상태: `EXECUTABLE REGISTRY FROZEN · 270/270 PIXEL PASS · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START`
 
 ## 1. Current exact inventory
 
 | Item | Count |
 |---|---:|
-| Product SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Baseline digest | `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` |
+| Product SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
+| Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Baseline digest | `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` |
 | B route | `1` — `/ondo-b` |
 | Tab roots | `4` — ONDO, My Korea, Tables, ID |
 | Reducer surface kinds | `7` — map, venue, table, chat, local_signal, checkout, labs |
@@ -87,4 +87,4 @@ Setup fixture와 truth/geometry/a11y assertions는 case registry를 소비하는
 8. serious/critical Axe, contrast/name/label violation, product runtime failure `0`이어야 한다.
 9. baseline update는 issue-scoped approval 후 수행하고 최종에는 no-update full 270 run을 통과해야 한다.
 
-현재 270 PNG baseline set은 harness `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`, digest `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`로 동결됐고 unchanged-baseline `270/270 PASS`를 통과했다. Typecheck/build PASS, contracts `26/26`, nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`도 통과했다. SLEEK R2는 시작 준비 상태지만 reviewer verdict나 release acceptance는 아직 없고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+현재 270 PNG baseline set은 harness `594dbf98c690d27c65461404b8a291a606f93b76`, digest `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb`로 동결됐고 unchanged-baseline `270/270 PASS`를 통과했다. Typecheck PASS, Webpack build `28/28` PASS, contracts `26/26`, B E2E `253 pass / 11 intentional viewport skips / 0 fail`, runtime/geometry/Axe/modal failures `0`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`도 통과했다. 14개 R2 finding은 수정됐지만 closure pending이며, SLEEK R3는 시작 준비 상태지만 reviewer verdict나 release acceptance는 아직 없고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.

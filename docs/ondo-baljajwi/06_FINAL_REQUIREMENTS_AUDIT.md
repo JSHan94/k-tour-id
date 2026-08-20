@@ -1,20 +1,20 @@
 # ONDO B · 원요구 최종 반영 감사
 
-상태: `PRODUCT IMPLEMENTATION AUDITED · TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2`
+상태: `PRODUCT IMPLEMENTATION AUDITED · TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | 항목 | 값 |
 |---|---|
-| 제품 SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| 검수 Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Pixel baseline | `45 × 6 = 270/270` unchanged-baseline PASS · digest `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` |
-| Automated QA | typecheck/build PASS · contracts `26/26` · nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail` |
+| 제품 SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
+| 검수 Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Pixel baseline | `45 × 6 = 270/270` unchanged-baseline PASS · digest `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` |
+| Automated QA | typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `253 pass / 11 intentional viewport skips / 0 fail` · runtime/geometry/Axe/modal failures `0` |
 | Route | `/ondo-b` |
 | 범위 | 외국인 우선 F&B 웹앱 프론트엔드 데모 |
 | 실제 장소 | 서울 200 + 부산 200 = 400 |
 | ONDO preview signal | 도시별 40, 총 80 · `SIMULATED` |
 | After19 subset | night-category signal만 서울 7 + 부산 10 = 17 · `SIMULATED` |
 
-이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. 현재 product+harness+baseline tuple은 frozen이고 automated QA는 통과했다. SLEEK R2는 시작 준비가 됐지만 reviewer verdict는 아직 없고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다. 이전 [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md) 문서는 A/v2의 역사 기록이다.
+이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. 현재 product+harness+baseline tuple은 frozen이고 automated QA는 통과했다. 14개 R2 finding은 수정됐지만 closure pending이며, SLEEK R3는 시작 준비가 됐지만 reviewer verdict는 아직 없고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다. 이전 [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md) 문서는 A/v2의 역사 기록이다.
 
 ## 1. 다섯 가지 실행 질문에 대한 답
 
@@ -98,4 +98,4 @@
 - 45 visual cases/43 state IDs를 여섯 exact viewport에서 검증해 270/270 committed no-update baseline을 만들고 clipping, nav/CTA overlap, 12px 미만 metadata, 44px 미만 control, serious/critical Axe issue가 없어야 한다.
 - 126 checkpoint 모두 machine registry에서 `pixel | functional_only` disposition을 가져야 하며 grouped journey를 exact named step 126개로 과장하지 않는다.
 - 다섯 독립 역할이 같은 tuple에서 actionable S0/S1/S2를 0으로 판정한 clean round가 두 번 연속이어야 한다.
-- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`, SLEEK R2는 `READY TO START`이고 reviewer verdict는 아직 없다.
+- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`, SLEEK R3는 `READY TO START`이고 14개 R2 fix의 reviewer closure는 아직 pending이다.

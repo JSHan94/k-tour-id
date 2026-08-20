@@ -1,11 +1,11 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · G0~G6 PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2`
+상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · G0~G6 PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 ## 1. Fixed-tuple rule
 
-1. B product는 `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`로 고정한다.
-2. Harness는 `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`, 270-baseline digest는 `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`로 고정한다.
+1. B product는 `997d671e33919fe333e80faa19124987f9d7dd3f`로 고정한다.
+2. Harness는 `594dbf98c690d27c65461404b8a291a606f93b76`, 270-baseline digest는 `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb`로 고정한다.
 3. 제품 fix commit 뒤의 QA evidence commit은 제품 source를 수정하지 않는다.
 4. `PLAYWRIGHT_BASE_URL`은 고정 product SHA를 serving하는 URL만 허용한다.
 5. product, harness, 승인 baseline 중 하나라도 바뀌면 진행 중 verdict와 clean streak를 `0/2`로 되돌린다.
@@ -22,7 +22,7 @@ G3 content/localization: reachable KO/EN surfaces
 G4 a11y/interaction: focus, modal isolation, name, 44px, contrast, overflow
 G5 pixel: 45 cases × 6 exact viewports = 270 committed baselines
 G6 runtime: pageerror/console/requestfailed/first-party HTTP 4xx·5xx = 0
-G7 five-role blind SLEEK R2 review
+G7 five-role blind SLEEK R3 review
 G8 same frozen tuple five-role blind clean confirmation
 ```
 
@@ -70,7 +70,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm test:visual:b
 - 모든 126 checkpoint는 `pixel` 또는 사유 있는 `functional_only` disposition을 가진다.
 - baseline 변경은 issue 단위로 승인하며 blanket `--update-snapshots`를 release evidence로 인정하지 않는다.
 - 270 PNG가 모두 git tracked이고 정확한 viewport dimension을 가질 때만 baseline을 freeze한다.
-- 동결 baseline digest는 `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`이고 unchanged-baseline run은 `270/270 PASS`다.
+- 동결 baseline digest는 `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb`이고 unchanged-baseline run은 `270/270 PASS`다.
 
 ## 7. Five-role blind review
 
@@ -97,4 +97,4 @@ Clean round는 같은 product+harness+baseline tuple에서 다음을 모두 만�
 - reviewer coverage receipt `5/5 COMPLETE`
 - reviewer 원문, issue closure, 명령 log, checksum과 frozen tuple 기록
 
-동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. 현재 동결 tuple은 typecheck/build PASS, contracts `26/26`, nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail`, pixel `270/270 PASS`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`까지 통과해 `SLEEK R2 READY TO START`다. Reviewer verdict는 아직 없으므로 clean streak는 `0/2`이며 배포 상태는 `NOT DEPLOYED`다.
+동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. 현재 동결 tuple은 typecheck PASS, Webpack build `28/28` PASS, contracts `26/26`, B E2E `253 pass / 11 intentional viewport skips / 0 fail`, visual `270/270 PASS`, runtime/geometry/Axe/modal failures `0`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`까지 통과해 `SLEEK R3 READY TO START`다. 14개 R2 finding은 수정됐지만 reviewer closure는 pending이다. 현재 reviewer verdict가 없으므로 clean streak는 `0/2`이며 배포 상태는 `NOT DEPLOYED`다.

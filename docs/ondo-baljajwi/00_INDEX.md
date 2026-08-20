@@ -1,19 +1,19 @@
 # ONDO B · 발자취형 제품/QA Source of Truth
 
-상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | SoT | 현재 값 |
 |---|---|
-| 제품 SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| 검수 Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Baseline set digest | `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` — 270 committed PNGs |
+| 제품 SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
+| 검수 Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Baseline set digest | `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` — 270 committed PNGs |
 | Route | `/ondo-b` |
 | 배포 | 새 sleek B 미배포. 기존 private B는 이전 tuple의 역사 preview일 뿐 현재 후보가 아님 |
 | Requirements | `19/19 traced` |
 | Flows | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
 | Visual registry | `45 cases · 43 distinct state IDs` |
 | Pixel target | `45 × 6 exact viewports = 270 committed baselines` |
-| Review gate | `SLEEK R2 READY TO START · 0/2 clean rounds` |
+| Review gate | `14/14 R2 findings FIXED · CLOSURE PENDING · SLEEK R3 READY TO START · 0/2 clean rounds` |
 
 이 디렉터리가 현재 발자취형 B 후보의 살아 있는 제품·검수·증거 source of truth다. [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md)은 A/v2의 역사 기록이다. `evidence/RUN-*`과 이전 clean tuple은 당시 결과를 보존하지만 현재 제품의 합격 증거로 재사용하지 않는다.
 
@@ -35,12 +35,12 @@
 
 | Gate | 현재 판정 |
 |---|---|
-| Product source | `FROZEN` at `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Harness source | `FROZEN` at `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Product source | `FROZEN` at `997d671e33919fe333e80faa19124987f9d7dd3f` |
+| Harness source | `FROZEN` at `594dbf98c690d27c65461404b8a291a606f93b76` |
 | Checkpoint registry | `126 mapped` to `pixel | functional_only`; grouped journey step 이름을 126개 exact `test.step`으로 과장하지 않음 |
-| Pixel baseline | frozen `270/270 no-update PASS` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; digest `e24d5fe2…` |
-| Current automated acceptance | `PASS` — typecheck/build PASS · contracts `26/26` · nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail` · pixel `270/270` |
-| SLEEK R2 | `READY TO START` — reviewer verdict 없음 |
+| Pixel baseline | frozen `270/270 no-update PASS` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; digest `eca21a93…` |
+| Current automated acceptance | `PASS` — typecheck PASS · Webpack build `28/28` · contracts `26/26` · B E2E `253 pass / 11 intentional viewport skips / 0 fail` · visual `270/270` · runtime/geometry/Axe/modal failures `0` |
+| SLEEK R3 | `READY TO START` — 14/14 R2 findings fixed, closure pending, reviewer verdict 없음 |
 | Clean streak | `0/2` |
 | New sleek deployment | `NOT DEPLOYED` |
 | Data inventory | 공식 장소 `400`, simulated signal `80`, night-category After19 subset `17` (`서울 7 / 부산 10`) |

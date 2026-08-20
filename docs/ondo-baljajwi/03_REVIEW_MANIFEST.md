@@ -1,12 +1,12 @@
 # ONDO B · Five-role Review Manifest
 
-상태: `FROZEN TUPLE · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `FROZEN TUPLE · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | Field | Current value |
 |---|---|
-| Product SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Baseline digest | `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` · 270 committed PNGs |
+| Product SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
+| Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Baseline digest | `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` · 270 committed PNGs |
 | Route | `/ondo-b` |
 | Visual scope | `45 cases · 43 state IDs · 6 viewports · 270 baselines` |
 | Flow scope | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
@@ -19,10 +19,11 @@
 | Round | Product/Harness/Baseline | Five reviewers | Actionable state | Clean contribution |
 |---|---|---|---|---|
 | `SLEEK-R1` | 이전 sleek baseline tuple | `5/5 NOT CLEAN` | 22개 finding이 fix/retest loop로 들어감 | `NO` |
-| `SLEEK-R2` | `b00d5d6… / b00d5d6… / e24d5fe…`; full automated QA PASS | `READY TO START` | reviewer verdict 없음 | `NO · 0/2` |
-| clean confirmation | R2와 동일 tuple에서만 실행 | `NOT STARTED` | R2 clean 뒤에만 가능 | `NO · 0/2` |
+| `SLEEK-R2` | `b00d5d6… / b00d5d6… / e24d5fe…`; historical tuple | `5/5 COMPLETE · NOT CLEAN` | 14개 actionable finding; 현재 tuple에서 fixed, closure pending | `NO` |
+| `SLEEK-R3` | `997d671… / 594dbf9… / eca21a93…`; full automated QA PASS | `READY TO START` | 14/14 R2 findings fixed; fresh reviewer closure pending | `NO · 0/2` |
+| clean confirmation | R3와 동일 tuple에서만 실행 | `NOT STARTED` | R3 clean 뒤에만 가능 | `NO · 0/2` |
 
-`SLEEK-R1` reviewer 원문과 issue ledger는 `evidence/SLEEK-R1/`의 immutable 역사 증거다. 코드 수정이 들어갔으므로 R1 verdict를 현재 제품 closure나 clean으로 재해석하지 않는다. 현재 tuple은 product `b00d5d6…`, harness `b00d5d6…`, baseline `e24d5fe…`로 동결됐고 automated gate를 통과했다. 이는 R2 검토를 시작할 준비가 됐다는 뜻이며 R2 시작·완료·CLEAN verdict를 미리 뜻하지 않는다.
+`SLEEK-R1`과 b00d tuple의 `SLEEK-R2` reviewer 원문·issue ledger는 immutable 역사 증거다. 코드 수정이 들어갔으므로 그 verdict를 현재 제품 closure나 clean으로 재해석하지 않는다. 현재 tuple은 product `997d671…`, harness `594dbf9…`, baseline `eca21a93…`로 동결됐고 automated gate를 통과했다. 이는 R3 검토를 시작할 준비가 됐다는 뜻이며 R3 시작·완료·CLEAN verdict를 미리 뜻하지 않는다.
 
 ## Older accepted tuple — history only
 
@@ -48,9 +49,9 @@
 
 ## Next admissible evidence
 
-1. 동결 tuple의 automated receipt(typecheck/build PASS, contracts `26/26`, E2E `215 pass / 5 intentional viewport skips / 0 fail`, pixel `270/270`)를 유지한다.
+1. 동결 tuple의 automated receipt(typecheck PASS, Webpack build `28/28`, contracts `26/26`, E2E `253 pass / 11 intentional viewport skips / 0 fail`, visual `270/270`, runtime/geometry/Axe/modal failures `0`)를 유지한다.
 2. 같은 tuple을 다섯 reviewer에게 blind 배포한다.
-3. actionable issue가 있으면 product/harness fix 후 tuple을 다시 고정하고 R2를 처음부터 재시작한다.
-4. R2가 5/5 clean이면 같은 tuple에서 두 번째 독립 5/5 clean round를 실행한다.
+3. actionable issue가 있으면 product/harness fix 후 tuple을 다시 고정하고 다음 blind round를 처음부터 재시작한다.
+4. R3가 5/5 clean이면 같은 tuple에서 두 번째 독립 5/5 clean round를 실행한다.
 
 두 round가 모두 clean이 되기 전에는 새 sleek preview를 final 또는 release candidate로 표시하지 않는다.

@@ -1,8 +1,8 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE · PRODUCT b00d5d6c2d9a6fee895dddb52b999733d2ff8026 FROZEN · HARNESS b00d5d6c2d9a6fee895dddb52b999733d2ff8026 FROZEN · AUTOMATED QA PASS`
+상태: `ACTIVE · PRODUCT 997d671e33919fe333e80faa19124987f9d7dd3f FROZEN · HARNESS 594dbf98c690d27c65461404b8a291a606f93b76 FROZEN · AUTOMATED QA PASS`
 
-동결 baseline digest: `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`. 현재 receipt는 typecheck/build PASS, contracts `26/26`, nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail`, pixel `270/270 PASS`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`이다. SLEEK R2는 `READY TO START`, reviewer verdict는 없고 clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다.
+동결 baseline digest: `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb`. 현재 receipt는 typecheck PASS, Webpack build `28/28` PASS, contracts `26/26`, B E2E `253 pass / 11 intentional viewport skips / 0 fail`, visual `270/270 PASS`, runtime/geometry/Axe/modal failures `0`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`이다. 14개 R2 finding은 수정됐지만 closure pending이며, SLEEK R3는 `READY TO START`, reviewer verdict는 없고 clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다.
 
 ## 원칙
 

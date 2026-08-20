@@ -1,6 +1,6 @@
 # ONDO B · Five-Designer Sleekness Review
 
-상태: `FROZEN TUPLE · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `FROZEN TUPLE · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 이 문서는 기존 기능·진실·접근성 계약을 보존하면서 `/ondo-b`의 모든 Flow, surface, component, state를 더 sleek하고 일관된 제품 언어로 개선하는 실행 정본이다. 목표는 의견을 억지로 없애는 것이 아니라 **동일 제품 SHA에서 unresolved actionable UX/UI issue를 0으로 수렴**시키는 것이다.
 
@@ -8,17 +8,17 @@
 
 | Field | Value |
 |---|---|
-| Current product SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Current harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
-| Current baseline digest | `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`; 270 committed PNGs |
+| Current product SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
+| Current harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Current baseline digest | `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb`; 270 committed PNGs |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
 | Current visual target | `45 cases · 43 state IDs · 6 viewports = 270 committed screenshots` |
 | Checkpoint registry | `126 exact rows · pixel | functional_only` |
-| Automated gate | typecheck/build PASS · contracts `26/26` · E2E `215 pass / 5 intentional viewport skips / 0 fail` · pixel `270/270` |
-| Current round | `SLEEK R2 READY TO START`; reviewer verdict 없음; R1 was `5/5 NOT CLEAN` and is immutable history |
+| Automated gate | typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · E2E `253 pass / 11 intentional viewport skips / 0 fail` · visual `270/270` · runtime/geometry/Axe/modal failures `0` |
+| Current round | `SLEEK R3 READY TO START`; 14/14 R2 findings fixed but closure pending; current reviewer verdict 없음 |
 
-제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. 현재 세 값은 고정됐고 frozen-tuple automated gate도 통과했으므로 R2를 시작할 준비가 됐다. 아직 reviewer verdict나 CLEAN 결과는 없다.
+제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. b00d SLEEK-R2는 `5/5 COMPLETE · NOT CLEAN`으로 14개 actionable finding을 남긴 역사 review다. 현재 세 값은 다시 고정됐고 14개 fix 및 frozen-tuple automated gate가 통과했으므로 R3를 시작할 준비가 됐다. Fix closure를 위한 current reviewer verdict나 CLEAN 결과는 아직 없다.
 
 ## 2. Sleekness의 조작적 정의
 
@@ -134,4 +134,4 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
 
-`evidence/SLEEK-R1/`은 수정하지 않는 역사 원본이다. 현재 tuple은 product `b00d5d6…`, harness `b00d5d6…`, baseline digest `e24d5fe…`로 동결됐고 unchanged-baseline `270/270 PASS`를 포함한 전체 automated gate를 통과했다. R2는 `READY TO START`이며 reviewer verdict, CLEAN 또는 release PASS를 미리 기록하지 않는다.
+`evidence/SLEEK-R1/`과 b00d `evidence/SLEEK-R2/reviews|coverage/`는 수정하지 않는 역사 원본이다. 현재 tuple은 product `997d671…`, harness `594dbf9…`, baseline digest `eca21a93…`로 동결됐고 unchanged-baseline `270/270 PASS`를 포함한 전체 automated gate를 통과했다. R3는 `READY TO START`이며 reviewer verdict, CLEAN 또는 release PASS를 미리 기록하지 않는다.

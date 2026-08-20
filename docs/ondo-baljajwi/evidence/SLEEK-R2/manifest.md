@@ -1,19 +1,19 @@
 # SLEEK-R2 pixel baseline approval manifest
 
-Status: **FROZEN · AUTOMATED GATE PASS · SLEEK R2 REVIEW READY · CLEAN STREAK 0/2 · NOT DEPLOYED**
+Status: **FROZEN · AUTOMATED GATE PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED**
 
-This receipt freezes the ONDO B product, harness, and expanded pixel set that passed the final automated gate. The tuple is ready to start SLEEK-R2 blind review, but no reviewer verdict exists, the clean streak is `0/2`, and this candidate is not deployed.
+This receipt freezes the ONDO B product, harness, and expanded pixel set that passed the final automated gate after all 14 SLEEK-R2 findings were fixed. The fixes remain closure-pending until fresh blind review; this exact tuple is ready to start SLEEK-R3, has a clean streak of `0/2`, and is not deployed.
 
 ## Frozen inputs
 
-- Product SHA: `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`
-- Harness SHA: `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`
+- Product SHA: `997d671e33919fe333e80faa19124987f9d7dd3f`
+- Harness SHA: `594dbf98c690d27c65461404b8a291a606f93b76`
 - PNG inventory: `270` files = `45` cases × `6` viewports
 - Viewports: `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 - Responsive expansion: `180` files across the four added viewport families
 - Canonical mobile: `45` files
 - Canonical desktop: `45` files
-- Aggregate digest: `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`
+- Aggregate digest: `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb`
 - Digest working directory: `k-tour-id-app/`
 - Digest algorithm: sorted `sha256 path` lines from:
 
@@ -36,11 +36,12 @@ Required invariants:
 ## Automated gate receipt
 
 - Status: `PASS`
-- Product and Harness: `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`
+- Product: `997d671e33919fe333e80faa19124987f9d7dd3f`
+- Harness: `594dbf98c690d27c65461404b8a291a606f93b76`
 - TypeScript: PASS
-- Webpack production build: PASS
+- Webpack production build: PASS (`28/28` routes)
 - Contracts: `26/26` PASS
-- B non-pixel E2E: `215` PASS, `5` intentional viewport-ownership skips, `0` failures
+- B non-pixel E2E: `253` PASS, `11` intentional viewport-ownership skips, `0` failures
 - B pixel evidence: `270/270` PASS with no snapshot update
 - Runtime, geometry, accessibility, and modal-isolation failures: `0`
 - The Product SHA, Harness SHA, and 270-file baseline digest above are frozen as one review candidate tuple.
@@ -51,7 +52,9 @@ The preceding tuple — Product `46ad40f9fdbad89d3cf3e701f713803004d3e3af`, Harn
 
 The intermediate 270-file tuple — Product `4286d7aeede98e8c552d2688882bcf93f6dbeee2`, Harness `a4eb3b7fe8ffb6e817e493d681f9f5929675f533`, and digest `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` — was frozen with automated revalidation still in progress. The Product and Harness changes above supersede it before any review verdict or clean credit; the unchanged PNG digest does not make its tuple reusable.
 
-The subsequent split tuple — Product `cf98930e6b3d05f28b55fdad890ed431edac7bb1` and Harness `6101ed752f5ba45dffa0e1e4e65c5f0e37ed1b47` with the same 270-file digest — was also superseded before automated revalidation or review completed. Commit `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` now owns both Product and Harness identity because it contains the complete prior harness and the final product hook; no verdict or clean credit carries forward.
+The subsequent split tuple — Product `cf98930e6b3d05f28b55fdad890ed431edac7bb1` and Harness `6101ed752f5ba45dffa0e1e4e65c5f0e37ed1b47` with the same 270-file digest — was also superseded before automated revalidation or review completed.
+
+The SLEEK-R2 review tuple — Product and Harness `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`, digest `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` — completed five-role review as **NOT CLEAN** with 14 consolidated actionable findings. It is immutable historical evidence only. Product, harness, and baseline changes invalidate every R2 verdict for current clean credit, so none carries into the current `0/2` streak.
 
 ## Approval reason taxonomy
 
@@ -69,4 +72,4 @@ Rows may carry multiple reason IDs when a screenshot proves more than one scoped
 
 ## Finalization boundary
 
-The automated gate is complete and this exact tuple is ready to start SLEEK-R2 review. No reviewer verdict exists, no clean round has started, the clean streak remains `0/2`, and the candidate is not deployed. Five blind reviewers must complete two consecutive clean rounds on this identical tuple before it can be deployed or described as release-clean.
+The automated gate is complete and this exact tuple is ready to start SLEEK-R3 review. All 14 SLEEK-R2 findings are fixed but remain closure-pending: no current reviewer verdict exists, no clean round has started, the clean streak remains `0/2`, and the candidate is not deployed. Five blind reviewers must complete two consecutive clean rounds on this identical tuple before it can be deployed or described as release-clean.
