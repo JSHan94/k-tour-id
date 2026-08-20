@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ArrowLeft, CalendarClock, ChevronRight, Languages, MapPin, ShieldCheck, Users } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
@@ -39,12 +39,28 @@ export function TablesEntry() {
   const selectedVenueName = selectedVenue ? venueDisplayName(selectedVenue.name.ko, locale) : undefined
   const venueTables = selectedVenue ? TABLES.filter((table) => table.venueId === selectedVenue.id) : []
   const [scope, setScope] = useState<"venue" | "global">(selectedVenue ? "venue" : "global")
+  const globalHeadingRef = useRef<HTMLHeadingElement>(null)
+  const focusGlobalHeadingRef = useRef(false)
   const contextual = Boolean(selectedVenue && scope === "venue")
   const truth = tableFixtureTruth(locale, contextual ? selectedVenueName : undefined)
 
   useEffect(() => {
     setScope(selectedVenue ? "venue" : "global")
   }, [selectedVenue?.id])
+
+  useLayoutEffect(() => {
+    if (scope !== "global" || !focusGlobalHeadingRef.current) return
+    focusGlobalHeadingRef.current = false
+    const heading = globalHeadingRef.current
+    if (!heading) return
+    heading.focus({ preventScroll: true })
+    heading.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [scope])
+
+  function browseAllTables() {
+    focusGlobalHeadingRef.current = true
+    setScope("global")
+  }
 
   function returnToVenue() {
     if (!selectedVenue) return
@@ -82,7 +98,7 @@ export function TablesEntry() {
           </section>
           <div className={styles.contextActions}>
             <button type="button" className={styles.primary} onClick={returnToVenue} data-testid="tables-back-to-venue"><ArrowLeft size={17} />{locale === "ko" ? "장소로 돌아가기" : `Back to ${selectedVenueName}`}</button>
-            <button type="button" className={styles.secondary} onClick={() => setScope("global")} data-testid="tables-browse-all">{locale === "ko" ? "전체 Table 둘러보기" : "Browse all Tables"}</button>
+            <button type="button" className={styles.secondary} onClick={browseAllTables} data-testid="tables-browse-all">{locale === "ko" ? "전체 Table 둘러보기" : "Browse all Tables"}</button>
           </div>
         </>
       ) : <>
@@ -95,7 +111,7 @@ export function TablesEntry() {
       ) : null}
 
       <section className={styles.section} aria-labelledby="nearby-tables-title">
-        <div className={styles.sectionTitle}><h2 id="nearby-tables-title">{locale === "ko" ? "장소별 Table" : "Tables by place"}</h2><small>{locale === "ko" ? "국적·성별 매칭 없음" : "No nationality or gender matching"}</small></div>
+        <div className={styles.sectionTitle}><h2 ref={globalHeadingRef} id="nearby-tables-title" tabIndex={-1} data-testid="tables-global-heading">{locale === "ko" ? "장소별 Table" : "Tables by place"}</h2><small>{locale === "ko" ? "국적·성별 매칭 없음" : "No nationality or gender matching"}</small></div>
         <div className={styles.tableList}>
           {TABLES.map((table) => <TableCard key={table.id} tableId={table.id} />)}
         </div>

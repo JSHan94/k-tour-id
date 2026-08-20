@@ -157,7 +157,7 @@ function TableDetail({ tableId }: { tableId: string }) {
   }, [actionStatus])
 
   if (!table || !runtime) {
-    return <Sheet label="Table unavailable" onClose={() => actions.setSurface({ kind: "map" })}><div className={styles.sheetBody}><h2>{locale === "ko" ? "Table을 찾지 못했어요." : "This Table is unavailable."}</h2><button type="button" className={styles.primary} onClick={() => { actions.setTab("tables"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "다른 Table 보기" : "View other Tables"}</button></div></Sheet>
+    return <Sheet label={locale === "ko" ? "이용할 수 없는 Table" : "Table unavailable"} onClose={() => actions.setSurface({ kind: "map" })}><div className={styles.sheetBody}><h2>{locale === "ko" ? "Table을 찾지 못했어요." : "This Table is unavailable."}</h2><button type="button" className={styles.primary} onClick={() => { actions.setTab("tables"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "다른 Table 보기" : "View other Tables"}</button></div></Sheet>
   }
   const activeTable = table
 
@@ -190,7 +190,7 @@ function TableDetail({ tableId }: { tableId: string }) {
       ? locale === "ko" ? "이 Table의 참여 조건을 충족하지 못했어요." : "The Table policy was not met."
       : null
   const unavailableCopy = failure === "TFR-FULL"
-    ? locale === "ko" ? "요청하는 동안 마지막 자리가 찼어요." : "The last seat filled while your request was processing."
+    ? locale === "ko" ? "이 고정 로컬 미리보기는 자리가 모두 찬 상태로 설정되어 있어요." : "This fixed local preview is configured as full."
     : tableStatusCopy(table, locale)
   const truth = tableFixtureTruth(locale)
   const actionMessageId = `table-action-message-${tableId}`
@@ -286,18 +286,22 @@ function TableChat({ tableId }: { tableId: string }) {
   const [helpful, setHelpful] = useState<boolean | null>(null)
   const [respectful, setRespectful] = useState<boolean | null>(null)
   const [privateNote, setPrivateNote] = useState("")
+  const [feedbackShielded, setFeedbackShielded] = useState(false)
   const [reportReason, setReportReason] = useState("")
   const [blockParticipant, setBlockParticipant] = useState(() => outcome.participantBlocked)
   const ownedObjectUrls = useRef(new Set<string>())
   const confirmPanelRef = useRef<HTMLDivElement>(null)
   const confirmLayerRef = useRef<HTMLDivElement>(null)
   const confirmInvokerRef = useRef<HTMLElement | null>(null)
+  const feedbackSubmissionRef = useRef(false)
+  const feedbackShieldTimerRef = useRef(0)
 
   useModalIsolation(confirm !== null, confirmLayerRef)
 
   useEffect(() => () => {
     ownedObjectUrls.current.forEach((url) => URL.revokeObjectURL(url))
     ownedObjectUrls.current.clear()
+    window.clearTimeout(feedbackShieldTimerRef.current)
   }, [tableId])
 
   useEffect(() => {
@@ -380,7 +384,7 @@ function TableChat({ tableId }: { tableId: string }) {
 
   if (!table || !allowed) {
     return (
-      <Sheet label="Chat locked" onClose={() => actions.setSurface({ kind: "table", tableId })}>
+      <Sheet label={locale === "ko" ? "잠긴 대화" : "Chat locked"} onClose={() => actions.setSurface({ kind: "table", tableId })}>
         <div className={styles.sheetBody} data-chat-access="CHA-LOCKED">
           <p className={styles.eyebrow}>{locale === "ko" ? "참가자 대화" : "Participant chat"}</p>
           <h2>{locale === "ko" ? "참여가 확정되면 대화를 볼 수 있어요." : "Chat opens after participation is confirmed."}</h2>
@@ -438,11 +442,14 @@ function TableChat({ tableId }: { tableId: string }) {
   }
 
   function submitFeedback() {
-    if (helpful == null || respectful == null) return
+    if (helpful == null || respectful == null || feedbackSubmissionRef.current || outcome.feedbackSubmitted) return
+    feedbackSubmissionRef.current = true
+    setFeedbackShielded(true)
+    window.clearTimeout(feedbackShieldTimerRef.current)
+    feedbackShieldTimerRef.current = window.setTimeout(() => setFeedbackShielded(false), 650)
     const events: ActivityEvent[] = [{ id: `meetup:${activeTable.id}`, kind: "meetup", subjectRef: "account:fixture", evidenceRef: `meetup:${activeTable.id}:2026-08-19`, occurredAt: "2026-08-19T22:00:00+09:00" }]
     if (helpful) events.push({ id: `feedback:${activeTable.id}`, kind: "contribution", subjectRef: "account:fixture", evidenceRef: `feedback:${activeTable.id}:2026-08-19`, occurredAt: "2026-08-19T22:01:00+09:00" })
     actions.recordActivityEvents(events)
-    setFeedbackOpen(false)
     updateOutcome({
       feedbackSubmitted: true,
       feedbackReceipt: { helpful, respectful, privateNote: privateNote.trim() || null, submittedAt: "2026-08-19T22:01:00+09:00" },
@@ -508,11 +515,12 @@ function TableChat({ tableId }: { tableId: string }) {
             <section className={styles.feedbackPanel} data-testid="table-feedback">
               <h3>{locale === "ko" ? "오늘의 Table은 어땠나요?" : "How was today’s Table?"}</h3>
               <p>{locale === "ko" ? "피드백은 분리된 활동 이력에만 반영되며 종합 안전 점수를 만들지 않습니다." : "Feedback updates separate activity histories and never creates an overall safety score."}</p>
-              <fieldset><legend>{locale === "ko" ? "정보가 도움이 됐나요?" : "Was the information helpful?"}</legend><div><button type="button" aria-pressed={helpful === true} onClick={() => setHelpful(true)} data-testid="feedback-helpful-yes">{locale === "ko" ? "예" : "Yes"}</button><button type="button" aria-pressed={helpful === false} onClick={() => setHelpful(false)}>{locale === "ko" ? "아니요" : "No"}</button></div></fieldset>
-              <fieldset><legend>{locale === "ko" ? "약속과 기본 예절을 지켰나요?" : "Did they keep the plan and act respectfully?"}</legend><div><button type="button" aria-pressed={respectful === true} onClick={() => setRespectful(true)} data-testid="feedback-respectful-yes">{locale === "ko" ? "예" : "Yes"}</button><button type="button" aria-pressed={respectful === false} onClick={() => setRespectful(false)}>{locale === "ko" ? "아니요" : "No"}</button></div></fieldset>
+              <fieldset disabled={outcome.feedbackSubmitted}><legend>{locale === "ko" ? "정보가 도움이 됐나요?" : "Was the information helpful?"}</legend><div><button type="button" aria-pressed={helpful === true} onClick={() => setHelpful(true)} data-testid="feedback-helpful-yes">{locale === "ko" ? "예" : "Yes"}</button><button type="button" aria-pressed={helpful === false} onClick={() => setHelpful(false)}>{locale === "ko" ? "아니요" : "No"}</button></div></fieldset>
+              <fieldset disabled={outcome.feedbackSubmitted}><legend>{locale === "ko" ? "약속과 기본 예절을 지켰나요?" : "Did they keep the plan and act respectfully?"}</legend><div><button type="button" aria-pressed={respectful === true} onClick={() => setRespectful(true)} data-testid="feedback-respectful-yes">{locale === "ko" ? "예" : "Yes"}</button><button type="button" aria-pressed={respectful === false} onClick={() => setRespectful(false)}>{locale === "ko" ? "아니요" : "No"}</button></div></fieldset>
               <label htmlFor={`feedback-note-${activeTable.id}`}>{locale === "ko" ? "비공개 메모 · 선택" : "Private note · Optional"}</label>
-              <textarea id={`feedback-note-${activeTable.id}`} aria-label={locale === "ko" ? "비공개 메모 · 선택" : "Private note · Optional"} value={privateNote} onChange={(event) => setPrivateNote(event.target.value)} />
-              <button type="button" className={styles.primary} onClick={submitFeedback} disabled={helpful == null || respectful == null} data-testid="feedback-submit">{locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button>
+              <textarea id={`feedback-note-${activeTable.id}`} aria-label={locale === "ko" ? "비공개 메모 · 선택" : "Private note · Optional"} value={privateNote} onChange={(event) => setPrivateNote(event.target.value)} disabled={outcome.feedbackSubmitted} />
+              <button type="button" className={styles.primary} onClick={submitFeedback} disabled={helpful == null || respectful == null || outcome.feedbackSubmitted} data-testid="feedback-submit">{outcome.feedbackSubmitted ? locale === "ko" ? "피드백 기록됨" : "Feedback recorded" : locale === "ko" ? "피드백 남기기" : "Submit feedback"}</button>
+              {outcome.feedbackSubmitted ? <><InlineNotice tone="success"><Check size={18} /><span data-testid="feedback-result">{locale === "ko" ? "피드백을 한 번 기록했어요. 종합 점수는 만들지 않아요." : "Feedback recorded once. No overall score was created."}{outcome.feedbackReceipt?.privateNote ? locale === "ko" ? " 비공개 메모는 이 기기 세션에만 남아요." : " The private note stays only in this device session." : ""}</span></InlineNotice><button type="button" className={styles.secondary} onClick={() => setFeedbackOpen(false)} data-testid="feedback-back-to-chat">{locale === "ko" ? "대화로 돌아가기" : "Back to chat"}</button></> : null}
             </section>
           ) : <>
           {outcome.feedbackSubmitted ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "피드백을 남겼어요. 종합 점수는 만들지 않아요." : "Feedback recorded. No overall score was created."}{outcome.feedbackReceipt?.privateNote ? locale === "ko" ? " 비공개 메모는 이 기기 세션에만 남아요." : " The private note stays only in this device session." : ""}</span></InlineNotice> : null}
@@ -532,6 +540,8 @@ function TableChat({ tableId }: { tableId: string }) {
           </div>
           </>}
         </div>
+
+        {feedbackShielded ? <div className={styles.feedbackInputShield} data-testid="feedback-input-shield" aria-hidden="true" onPointerDown={(event) => event.preventDefault()} /> : null}
 
         {confirm ? (
           <div ref={confirmLayerRef} className={styles.confirmLayer} data-testid="chat-confirm-layer" onPointerDown={retainConfirmFocus}>

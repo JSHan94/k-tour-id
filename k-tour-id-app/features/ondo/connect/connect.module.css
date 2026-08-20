@@ -93,6 +93,7 @@
 .feedbackPanel fieldset button { min-height: 44px; border: 1px solid #d8d5cf; border-radius: 11px; background: transparent; color: #292927; font-weight: 700; }
 .feedbackPanel fieldset button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
 .feedbackPanel textarea { min-height: 72px; resize: vertical; padding: 10px 0; border: 0; border-bottom: 1px solid #cbc8c2; border-radius: 0; background: transparent; font: inherit; font-size: 14px; }
+.feedbackInputShield { position: fixed; z-index: 35; inset: 0; background: transparent; cursor: progress; }
 .confirmLayer { position: fixed; z-index: 40; inset: 0; display: grid; align-items: end; justify-items: center; }
 .confirmBackdrop { position: absolute; inset: 0; background: rgb(24 24 22 / 44%); }
 .confirmPanel { position: relative; width: min(100%, 640px); padding: 24px 20px calc(20px + env(safe-area-inset-bottom)); border: 0; border-top: 1px solid #d9d7d1; border-radius: 18px 18px 0 0; background: #fff; box-shadow: 0 -18px 50px rgb(24 24 22 / 15%); }
