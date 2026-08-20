@@ -113,7 +113,6 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
   useEffect(() => {
     if (!showGate) return
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-    window.requestAnimationFrame(() => gateRef.current?.querySelector<HTMLElement>("[data-after19-initial-focus]")?.focus())
     return () => {
       if (restoreGateOpenerRef.current) window.requestAnimationFrame(() => returnFocusRef.current?.focus())
     }
