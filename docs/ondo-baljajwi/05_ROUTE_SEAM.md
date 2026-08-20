@@ -1,8 +1,8 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE · PRODUCT 46ad40f9fdbad89d3cf3e701f713803004d3e3af FROZEN · HARNESS 6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6 FROZEN · AUTOMATED QA PASS`
+상태: `ACTIVE · PRODUCT b00d5d6c2d9a6fee895dddb52b999733d2ff8026 FROZEN · HARNESS b00d5d6c2d9a6fee895dddb52b999733d2ff8026 FROZEN · AUTOMATED QA PASS`
 
-동결 baseline digest: `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`. 현재 receipt는 typecheck/build PASS, contracts `26/26`, nonpixel E2E `213 pass / 5 intentional viewport skips / 0 fail`, pixel `264/264 PASS`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`이다. SLEEK R2는 `READY TO START`, clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다.
+동결 baseline digest: `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`. 현재 receipt는 typecheck/build PASS, contracts `26/26`, nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail`, pixel `270/270 PASS`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`이다. SLEEK R2는 `READY TO START`, reviewer verdict는 없고 clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다.
 
 ## 원칙
 

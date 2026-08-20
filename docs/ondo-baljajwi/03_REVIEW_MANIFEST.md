@@ -4,11 +4,11 @@
 
 | Field | Current value |
 |---|---|
-| Product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
-| Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
-| Baseline digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e` · 264 committed PNGs |
+| Product SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Baseline digest | `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` · 270 committed PNGs |
 | Route | `/ondo-b` |
-| Visual scope | `44 cases · 42 state IDs · 6 viewports · 264 baselines` |
+| Visual scope | `45 cases · 43 state IDs · 6 viewports · 270 baselines` |
 | Flow scope | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
 | Review rule | 같은 frozen tuple, blind independent submission, actionable `S0/S1/S2=0` |
 | Clean streak | `0/2` |
@@ -19,10 +19,10 @@
 | Round | Product/Harness/Baseline | Five reviewers | Actionable state | Clean contribution |
 |---|---|---|---|---|
 | `SLEEK-R1` | 이전 sleek baseline tuple | `5/5 NOT CLEAN` | 22개 finding이 fix/retest loop로 들어감 | `NO` |
-| `SLEEK-R2` | `46ad40f… / 6eceef4… / 0f56b0c…`; full automated QA PASS | `READY TO START` | reviewer verdict 없음 | `NO · 0/2` |
+| `SLEEK-R2` | `b00d5d6… / b00d5d6… / e24d5fe…`; full automated QA PASS | `READY TO START` | reviewer verdict 없음 | `NO · 0/2` |
 | clean confirmation | R2와 동일 tuple에서만 실행 | `NOT STARTED` | R2 clean 뒤에만 가능 | `NO · 0/2` |
 
-`SLEEK-R1` reviewer 원문과 issue ledger는 `evidence/SLEEK-R1/`의 immutable 역사 증거다. 코드 수정이 들어갔으므로 R1 verdict를 현재 제품 closure나 clean으로 재해석하지 않는다. 현재 tuple은 product `46ad40f…`, harness `6eceef4…`, baseline `0f56b0c…`로 동결됐고 automated gate를 통과했다. 이는 R2 검토를 시작할 준비가 됐다는 뜻이며 R2 시작·완료·CLEAN verdict를 미리 뜻하지 않는다.
+`SLEEK-R1` reviewer 원문과 issue ledger는 `evidence/SLEEK-R1/`의 immutable 역사 증거다. 코드 수정이 들어갔으므로 R1 verdict를 현재 제품 closure나 clean으로 재해석하지 않는다. 현재 tuple은 product `b00d5d6…`, harness `b00d5d6…`, baseline `e24d5fe…`로 동결됐고 automated gate를 통과했다. 이는 R2 검토를 시작할 준비가 됐다는 뜻이며 R2 시작·완료·CLEAN verdict를 미리 뜻하지 않는다.
 
 ## Older accepted tuple — history only
 
@@ -37,7 +37,7 @@
 
 ## Review and triage rule
 
-- 다섯 역할 모두 `18/18 flows`, `44/44 cases`, `42/42 states`, `6/6 viewports` coverage receipt를 제출해야 한다.
+- 다섯 역할 모두 `18/18 flows`, `45/45 cases`, `43/43 states`, `6/6 viewports` coverage receipt를 제출해야 한다.
 - 각 reviewer는 다른 reviewer 결과를 읽기 전에 같은 frozen evidence pack을 검토한다.
 - 단일 재현 가능한 `S0/S1`과 objective usability/a11y/truth/localization `S2`는 즉시 block한다.
 - 주관적 aesthetic `S2`는 동일 fingerprint에 독립 `2/5` 합의가 있어야 actionable이다.
@@ -48,7 +48,7 @@
 
 ## Next admissible evidence
 
-1. 동결 tuple의 automated receipt(typecheck/build PASS, contracts `26/26`, E2E `213 pass / 5 intentional viewport skips / 0 fail`, pixel `264/264`)를 유지한다.
+1. 동결 tuple의 automated receipt(typecheck/build PASS, contracts `26/26`, E2E `215 pass / 5 intentional viewport skips / 0 fail`, pixel `270/270`)를 유지한다.
 2. 같은 tuple을 다섯 reviewer에게 blind 배포한다.
 3. actionable issue가 있으면 product/harness fix 후 tuple을 다시 고정하고 R2를 처음부터 재시작한다.
 4. R2가 5/5 clean이면 같은 tuple에서 두 번째 독립 5/5 clean round를 실행한다.

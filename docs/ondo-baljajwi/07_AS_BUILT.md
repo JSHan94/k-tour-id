@@ -4,15 +4,15 @@
 
 | 항목 | 최종 값 |
 |---|---|
-| Product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
-| Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
+| Product SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
 | Route | `/ondo-b` |
 | Current preview | `NOT DEPLOYED`; 기존 private B URL은 이전 tuple의 역사 preview |
 | 제품 형태 | responsive Next.js web app |
 | Product scope | 외국인 우선 서울·부산 F&B discovery + JIT identity/commerce/community demo |
 | Requirement trace | `19/19` |
 | Flow trace | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
-| Pixel target | `44 cases · 42 states · 6 viewports = 264 committed baselines` |
+| Pixel target | `45 cases · 43 states · 6 viewports = 270 committed baselines` |
 | Data | 공식 장소 `400` (`서울 200 / 부산 200`) |
 | ONDO preview | `SIMULATED` signal `80` (`40 / 40`) |
 | After19 preview | `SIMULATED` night-category signal `17` (`서울 7 / 부산 10`) |
@@ -65,11 +65,11 @@
 
 | Gate | 현재 상태 |
 |---|---|
-| Product source | `FROZEN` at `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
-| Harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
-| Baseline | frozen `264/264 no-update PASS`; digest `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e` |
+| Product source | `FROZEN` at `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Baseline | frozen `270/270 no-update PASS`; digest `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812` |
 | Checkpoint registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`; `pixel | functional_only` mapping present |
-| Full current automated receipt | `PASS` — typecheck/build PASS · contracts `26/26` · nonpixel E2E `213 pass / 5 intentional viewport skips / 0 fail` · pixel `264/264` |
+| Full current automated receipt | `PASS` — typecheck/build PASS · contracts `26/26` · nonpixel E2E `215 pass / 5 intentional viewport skips / 0 fail` · pixel `270/270` |
 | SLEEK R2 | `READY TO START` — reviewer verdict 없음 |
 | Clean streak | `0/2` |
 

@@ -2,9 +2,9 @@
 
 상태: `HONEST REGISTRY · PRODUCT/HARNESS/BASELINE FROZEN · FULL AUTOMATED QA PASS · SLEEK R2 READY TO START`
 
-고정 제품 SHA: `46ad40f9fdbad89d3cf3e701f713803004d3e3af`
+고정 제품 SHA: `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`
 
-검수 Harness SHA: `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6`
+검수 Harness SHA: `b00d5d6c2d9a6fee895dddb52b999733d2ff8026`
 
 ## 1. 판정 규칙
 
@@ -60,7 +60,7 @@
 | `FL-017` | `B-E2E-FL-017-ENTRY` ACTUAL | `B-E2E-FL-017-DECISION` ACTUAL | `B-E2E-FL-017-CANCEL` ACTUAL | `B-E2E-FL-017-ERROR` ACTUAL | `B-E2E-FL-017-RETRY` ACTUAL | `B-E2E-FL-017-TERMINAL` ACTUAL | `B-E2E-FL-017-RETURN` ACTUAL |
 | `FL-018` | `B-E2E-FL-018-ENTRY` ACTUAL | `B-E2E-FL-018-DECISION` ACTUAL | `B-E2E-FL-018-CANCEL` ACTUAL | `B-E2E-FL-018-ERROR` ACTUAL | `B-E2E-FL-018-RETRY` ACTUAL | `B-E2E-FL-018-TERMINAL` ACTUAL | `B-E2E-FL-018-RETURN` ACTUAL |
 
-현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. 동결 tuple의 nonpixel E2E는 `213 pass / 5 intentional viewport skips / 0 fail`이며, checkpoint mapping은 `121 actual + 5 N/A + 0 GAP`으로 통과했다.
+현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. 동결 tuple의 nonpixel E2E는 `215 pass / 5 intentional viewport skips / 0 fail`이며, checkpoint mapping은 `121 actual + 5 N/A + 0 GAP`으로 통과했다.
 
 ## 4. Browser suites
 
@@ -74,13 +74,15 @@
 
 ## 5. Pixel evidence
 
-실제 layout/state가 다른 `44 visual cases / 42 distinct state IDs`를 아래 여섯 viewport에서 각각 실행한다.
+실제 layout/state가 다른 `45 visual cases / 43 distinct state IDs`를 아래 여섯 viewport에서 각각 실행한다.
 
 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 
-목표 baseline은 `44 × 6 = 264` PNG다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
+현재 SLEEK R2는 `READY TO START`이고 reviewer verdict는 아직 없다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
 
-`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. 동결된 264장 baseline은 digest `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`이며 unchanged-baseline `264/264 PASS`를 통과했다.
+목표 baseline은 `45 × 6 = 270` PNG다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 prompt/locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
+
+`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. 동결된 270장 baseline은 digest `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`이며 unchanged-baseline `270/270 PASS`를 통과했다.
 
 ## 6. Content evidence
 

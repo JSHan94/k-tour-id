@@ -8,14 +8,14 @@
 
 | Field | Value |
 |---|---|
-| Current product SHA | `46ad40f9fdbad89d3cf3e701f713803004d3e3af` |
-| Current harness SHA | `6eceef4fe72be2ce86808821a7b6a8a6dd9a09d6` |
-| Current baseline digest | `0f56b0cfde9049e73e32c40d715fb8cd8c475f66c725d32c8e930a482aa45b3e`; 264 committed PNGs |
+| Current product SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Current harness SHA | `b00d5d6c2d9a6fee895dddb52b999733d2ff8026` |
+| Current baseline digest | `e24d5fe2dd16b984e99fbfaad486de8d3ac47d07fefa37e2e63ee5d32df8d812`; 270 committed PNGs |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
-| Current visual target | `44 cases · 42 state IDs · 6 viewports = 264 committed screenshots` |
+| Current visual target | `45 cases · 43 state IDs · 6 viewports = 270 committed screenshots` |
 | Checkpoint registry | `126 exact rows · pixel | functional_only` |
-| Automated gate | typecheck/build PASS · contracts `26/26` · E2E `213 pass / 5 intentional viewport skips / 0 fail` · pixel `264/264` |
+| Automated gate | typecheck/build PASS · contracts `26/26` · E2E `215 pass / 5 intentional viewport skips / 0 fail` · pixel `270/270` |
 | Current round | `SLEEK R2 READY TO START`; reviewer verdict 없음; R1 was `5/5 NOT CLEAN` and is immutable history |
 
 제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. 현재 세 값은 고정됐고 frozen-tuple automated gate도 통과했으므로 R2를 시작할 준비가 됐다. 아직 reviewer verdict나 CLEAN 결과는 없다.
@@ -55,11 +55,11 @@ Sleek는 단순히 카드와 색을 줄이는 취향이 아니다. 다음 조건
 
 - `18/18 Flow` 확인
 - `14/14 content surface family` 확인
-- 현재 `44/44 visual case` 확인
-- 현재 `42/42 distinct state ID` 확인
+- 현재 `45/45 visual case` 확인
+- 현재 `43/43 distinct state ID` 확인
 - `KO/EN` copy-heavy surface 확인
 - `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` 전수 확인
-- `44 cases × 6 viewports = 264` image census 확인
+- `45 cases × 6 viewports = 270` image census 확인
 - 126 checkpoint의 `pixel | functional_only` disposition 확인
 - loading, empty, pending, success, error, cancel, locked, unsupported 상태 확인 또는 사유 있는 N/A
 - shell/nav/toast/sheet/focus/scroll 같은 shared component 확인
@@ -96,7 +96,7 @@ proposed fix · owner · status · fix SHA · retest evidence
 3. token/shared component 문제를 먼저, flow-local 문제를 다음으로 묶는다.
 4. product fix와 regression harness를 분리해 커밋한다.
 5. 영향 surface의 실제 browser, geometry, Axe, KO/EN, pixel을 먼저 통과시킨다.
-6. G0~G6와 `FL-001`~`FL-018`, 264-image full pixel matrix를 no-update로 다시 실행한다.
+6. G0~G6와 `FL-001`~`FL-018`, 270-image full pixel matrix를 no-update로 다시 실행한다.
 7. 새 tuple에서 다섯 reviewer가 다시 blind review한다.
 8. 같은 tuple에서 두 번 연속 `5/5 CLEAN`이 될 때 종료한다.
 
@@ -134,4 +134,4 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
 
-`evidence/SLEEK-R1/`은 수정하지 않는 역사 원본이다. 현재 tuple은 product `46ad40f…`, harness `6eceef4…`, baseline digest `0f56b0cf…`로 동결됐고 unchanged-baseline `264/264 PASS`를 포함한 전체 automated gate를 통과했다. R2는 `READY TO START`이며 reviewer verdict, CLEAN 또는 release PASS를 미리 기록하지 않는다.
+`evidence/SLEEK-R1/`은 수정하지 않는 역사 원본이다. 현재 tuple은 product `b00d5d6…`, harness `b00d5d6…`, baseline digest `e24d5fe…`로 동결됐고 unchanged-baseline `270/270 PASS`를 포함한 전체 automated gate를 통과했다. R2는 `READY TO START`이며 reviewer verdict, CLEAN 또는 release PASS를 미리 기록하지 않는다.
