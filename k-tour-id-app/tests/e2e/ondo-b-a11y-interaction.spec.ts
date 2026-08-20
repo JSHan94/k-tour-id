@@ -42,7 +42,7 @@ test.describe("ONDO B actual-surface accessibility and interaction", () => {
         await expect(surface.getByTestId("tables-truth-notice")).toContainText("No live host or reservation")
         await surface.locator("[data-table-id]").first().click()
         const detail = page.locator("[data-table-membership]")
-        await expect(detail).toContainText("Simulated fixture")
+        await expect(detail).toContainText("Simulated preview")
         await expectMinimumControlTargets(detail)
         const detailResult = await new AxeBuilder({ page }).include(await detail.evaluate((node) => {
           if (!node.id) node.id = `b-a11y-table-detail-${Math.random().toString(36).slice(2)}`

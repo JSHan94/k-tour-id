@@ -59,17 +59,18 @@ test.describe("ONDO B sourced discovery and external-map boundary", () => {
     await expect(detail).not.toContainText(/Open now|Foreign-issued cards accepted|English menu available/)
   })
 
-  test("B-TRUTH-TABLES labels direct and canonical fixtures before joining", async ({ page }) => {
+  test("B-TRUTH-TABLES labels direct and canonical simulated previews before joining", async ({ page }) => {
     await gotoB(page)
     await page.getByRole("button", { name: "Tables", exact: true }).click()
     const tables = page.getByTestId("tables-entry")
     const truth = tables.getByTestId("tables-truth-notice")
-    await expect(truth).toContainText("Simulated fixture")
+    await expect(truth).toContainText("Simulated preview")
+    await expect(truth).toContainText("not current availability")
     await expect(truth).toContainText("No live host or reservation")
 
     await tables.locator(`[data-table-id='${TABLE_ID}']`).click()
     const detail = page.locator("[data-table-membership]")
-    await expect(detail).toContainText("Simulated fixture")
+    await expect(detail).toContainText("Simulated preview")
     await expect(detail).toContainText("No live host or reservation")
     await expect(detail.getByTestId("table-join")).toHaveText("Join preview")
     await expect(detail).not.toContainText("Join this Table")
@@ -80,7 +81,7 @@ test.describe("ONDO B sourced discovery and external-map boundary", () => {
     const canonicalTruth = page.getByTestId("tables-canonical-context")
     await expect(canonicalTruth).toContainText("has no live Table attached")
     await expect(canonicalTruth).toContainText("no live host or reservation")
-    await expect(page.getByTestId("tables-truth-notice").getByText("Simulated fixture", { exact: true })).toHaveCount(1)
+    await expect(page.getByTestId("tables-truth-notice")).toContainText("Simulated preview")
   })
 
   test("B-MAP-FALLBACK classifies OpenFreeMap failure and keeps the manual list usable", async ({ page }) => {

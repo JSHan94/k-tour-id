@@ -53,7 +53,7 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
           expect(copy).toContain("시뮬레이션 미리보기")
           expect(copy).toContain("실제 호스트나 예약은 없습니다")
         } else {
-          expect(copy).toContain("Simulated fixture")
+          expect(copy).toContain("Simulated preview")
           expect(copy).toContain("No live host or reservation")
         }
 
