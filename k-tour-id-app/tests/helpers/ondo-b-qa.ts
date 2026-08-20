@@ -82,8 +82,8 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ERROR: A("simulated CX failure"), RETRY: A("same gate retry"), TERMINAL: A("PER-VERIFIED only"), RETURN: A("original local-signal sheet"),
   }),
   flow("FL-006", "Residence Card", {
-    ENTRY: A("resident local-signal Person gate"), DECISION: A("Mobile Residence Card route"), CANCEL: A("gate cancel preserves task"),
-    ERROR: A("unavailable route disclosure"), RETRY: A("passport alternate"), TERMINAL: A("PER-VERIFIED only"), RETURN: A("original local-signal sheet"),
+    ENTRY: A("resident local-signal Person gate"), DECISION: A("ordinary Mobile Residence Card action resolves NOT_CONFIGURED"), CANCEL: A("gate cancel preserves the exact signal draft"),
+    ERROR: A("visible unsupported result without QA controls"), RETRY: A("passport alternate is the only completion route"), TERMINAL: A("PER-VERIFIED only after passport completion"), RETURN: A("original venue-scoped local-signal sheet exactly once"),
   }),
   flow("FL-007", "Short-term onboarding", {
     ENTRY: A("first-run guide"), DECISION: A("short-term intent/preferences"), CANCEL: A("Explore as guest"),

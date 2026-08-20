@@ -616,8 +616,8 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else if (state === "GATE-PERSON-CX") {
     await triggerPersonGate(page, locale, "korean_local")
   } else if (state === "GATE-PERSON-RESIDENCE-UNSUPPORTED") {
-    await triggerPersonGate(page, locale, "long_term_resident", true)
-    await page.getByRole("button", { name: locale === "ko" ? "미연결 상태 보기" : "Show unavailable route" }).click()
+    await triggerPersonGate(page, locale, "long_term_resident")
+    await page.getByRole("button", { name: locale === "ko" ? "본인 확인 시작" : "Start check" }).click()
     await expect(page.getByTestId("gate-unsupported")).toBeVisible()
   } else if (state === "GATE-AGE-FAIL") {
     await triggerAgeGate(page, locale, true)

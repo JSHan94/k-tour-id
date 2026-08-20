@@ -195,7 +195,7 @@ test.describe("ONDO B canonical flow journeys", () => {
 
   test(title("FL-006"), async ({ page }) => {
     await seedB(page, { session: { persona: "long_term_resident", account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
-    await openCanonicalVenue(page, { query: "qa=1" })
+    await openCanonicalVenue(page)
     await page.getByTestId("canonical-venue-signal").click()
     await page.getByTestId("local-signal-overlay").locator("textarea").fill("A resident ordering tip.")
     await page.getByTestId("local-signal-submit").click()
@@ -208,7 +208,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.getByTestId("local-signal-submit").click()
     })
     await test.step(evidence("FL-006", "ERROR/RETRY"), async () => {
-      await page.getByRole("button", { name: "Show unavailable route" }).click()
+      await page.getByRole("button", { name: "Start check" }).click()
       await expect(page.getByTestId("gate-unsupported")).toContainText("not connected yet")
       await page.getByRole("button", { name: "Use passport provider instead" }).click()
       await finishPersonGate(page)
