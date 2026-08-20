@@ -152,16 +152,27 @@ test.describe("SLEEK-R1 map and place closure", () => {
   })
 
   test("official detail loading is live, After19 is plum, and recoverable save failure stays neutral", async ({ page }) => {
+    let releaseDetailResponse = () => {}
+    const detailResponseHeld = new Promise<void>((resolve) => { releaseDetailResponse = resolve })
     await page.route(`**/api/ondo/venues/${CANONICAL_VENUE_ID}`, async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 600))
+      await detailResponseHeld
       await route.continue()
     })
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await gotoB(page, `?venueId=${CANONICAL_VENUE_ID}&scenario=save-failed`)
+    const detailRequest = page.waitForRequest(`**/api/ondo/venues/${CANONICAL_VENUE_ID}`)
     await page.getByTestId("canonical-place-details").click()
-    await expect(page.getByRole("status", { name: "" }).filter({ hasText: "Loading official address evidence" })).toBeVisible()
+    await detailRequest
     const detail = page.getByTestId("canonical-place-overlay")
-    await expect(detail.locator("[data-detail-state='ready']")).toBeVisible()
+    try {
+      await expect(detail.getByRole("status")).toContainText("Loading official address evidence")
+    } finally {
+      releaseDetailResponse()
+    }
+    const address = detail.locator("[data-detail-state]")
+    await expect(address).toHaveAttribute("data-detail-state", "ready")
+    await expect(address).toHaveAttribute("data-address-truth", "OFFICIAL_SOURCE")
+    await expect(detail.locator("[data-detail-source='MOIS_LOCALDATA_GENERAL_RESTAURANTS']")).toBeVisible()
     const after19Button = detail.getByTestId("canonical-after19-unlock")
     await expect(after19Button).toBeVisible()
     expect(await after19Button.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgba(0, 0, 0, 0)")
