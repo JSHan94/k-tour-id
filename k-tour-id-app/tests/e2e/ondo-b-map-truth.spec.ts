@@ -55,16 +55,16 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(seoul).toHaveAttribute("data-signal-truth", "SIMULATED")
     await expect(seoul).toHaveAttribute("data-official-count", "200")
     await expect(seoul).toHaveAttribute("data-signal-venue-count", "40")
-    await expect(seoul).toHaveAttribute("aria-label", /589 input signals · Moderate illustrative confidence band · Simulated ONDO 71/)
+    await expect(seoul).toHaveAttribute("aria-label", /589 simulated inputs · Moderate illustrative score basis · Simulated snapshot · ONDO 71/)
     await expect(busan).toHaveAttribute("data-sample-count", "601")
     const truthLegend = page.getByTestId("ondo-b-city-truth-legend")
-    await expect(truthLegend).toContainText("200 official · 40 preview")
-    await expect(truthLegend).toContainText("589 inputs · Moderate preview band")
-    await expect(truthLegend).toContainText("601 inputs · Moderate preview band")
-    await expect(truthLegend).toContainText("Aug 19 snapshot · Simulated")
+    await expect(truthLegend).toContainText("200 sourced · 40 scored previews")
+    await expect(truthLegend).toContainText("589 simulated inputs · Moderate preview band")
+    await expect(truthLegend).toContainText("601 simulated inputs · Moderate preview band")
+    await expect(truthLegend).toContainText("Fixed Aug 19 snapshot · Not live · Simulated")
 
     await page.getByTestId("ondo-b-map-entry").getByRole("button", { name: "KO", exact: true }).click()
-    await expect(seoul).toHaveAttribute("aria-label", /200 개 공식 장소 기록 · 40 개 프리뷰 신호 장소/)
+    await expect(seoul).toHaveAttribute("aria-label", /200곳의 공식 장소 기록 · 40곳의 시뮬레이션 프리뷰/)
     await page.getByTestId("ondo-b-map-entry").getByRole("button", { name: "EN", exact: true }).click()
 
     await seoul.click()
@@ -81,8 +81,8 @@ test.describe("ONDO B map truth and failure boundary", () => {
     const key = page.getByTestId("ondo-b-map-key")
     await expect(key).toContainText("Places")
     await expect(key).toContainText("Simulated score")
-    await expect(key).toContainText("Top signals at this zoom")
-    await expect(key).toHaveAttribute("aria-label", "Outlined count means a sourced place group. Solid color means a simulated ONDO score. Top signals at this zoom.")
+    await expect(key).toContainText("Highest simulated scores at this zoom")
+    await expect(key).toHaveAttribute("aria-label", "Outlined count means a sourced place group. Solid color means a simulated ONDO score. Highest simulated scores at this zoom.")
 
     await page.getByTitle("Zoom in").click()
     await page.waitForTimeout(550)
@@ -132,6 +132,6 @@ test.describe("ONDO B map truth and failure boundary", () => {
     }
 
     await page.getByTestId("ondo-b-map-entry").getByRole("button", { name: "KO", exact: true }).click()
-    await expect(page.getByTestId("ondo-b-map-entry")).toContainText("10 개 ONDO 시뮬레이션 19+ 야간 프리뷰 장소")
+    await expect(page.getByTestId("ondo-b-map-entry")).toContainText("10곳의 ONDO 시뮬레이션 19+ 야간 프리뷰 장소")
   })
 })

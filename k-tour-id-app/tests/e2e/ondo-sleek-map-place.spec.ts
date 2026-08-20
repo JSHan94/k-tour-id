@@ -42,7 +42,7 @@ test.describe("SLEEK-R1 map and place closure", () => {
       await expect(nation.locator("[data-city='busan']")).toContainText(/Simulated score \d+\/100 · 601 inputs/)
       await expectInsideViewport(page, nation.locator("[data-city='seoul']"))
       await expectInsideViewport(page, nation.locator("[data-city='busan']"))
-      const fontFamily = await nation.locator("h2").evaluate((node) => getComputedStyle(node).fontFamily.toLowerCase())
+      const fontFamily = await nation.locator("h1").evaluate((node) => getComputedStyle(node).fontFamily.toLowerCase())
       expect(fontFamily).not.toContain("noto serif")
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
     }
@@ -164,7 +164,7 @@ test.describe("SLEEK-R1 map and place closure", () => {
     await expect(detail.locator("[data-detail-state='ready']")).toBeVisible()
     const after19Button = detail.getByTestId("canonical-after19-unlock")
     await expect(after19Button).toBeVisible()
-    expect(await after19Button.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgb(48, 35, 42)")
+    expect(await after19Button.evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgba(0, 0, 0, 0)")
 
     await detail.getByTestId("canonical-venue-save").click()
     const error = detail.getByTestId("canonical-save-error")
