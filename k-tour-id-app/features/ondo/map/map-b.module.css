@@ -112,6 +112,9 @@
      width while reserving a quiet interaction gutter for list/fallback mode. */
   .listPanel { left: 88px; }
   .preferencePanel { left: 88px; }
+  /* Keep the truth-bearing map key clear of the centered desktop rail even
+     when the canvas is short enough for their vertical ranges to meet. */
+  .mapKey { left: 96px; }
 }
 
 @media (max-width: 360px) {
