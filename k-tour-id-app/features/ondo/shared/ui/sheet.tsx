@@ -4,6 +4,7 @@ import type { KeyboardEvent, ReactNode } from "react"
 import { useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { useOndo } from "../state/ondo-provider"
+import { useModalIsolation } from "./use-modal-isolation"
 import styles from "./ui.module.css"
 
 const FOCUSABLE = [
@@ -35,9 +36,11 @@ export function Sheet({
   initialFocusSelector?: string
 }) {
   const { state } = useOndo()
+  const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const closeLabel = state.locale === "ko" ? "닫기" : "Close"
+  useModalIsolation(true, layerRef)
 
   useEffect(() => {
     const activeElement = document.activeElement
@@ -74,29 +77,6 @@ export function Sheet({
     }
   }, [initialFocusSelector, showClose])
 
-  useEffect(() => {
-    const dialog = dialogRef.current
-    const layer = dialog?.parentElement
-    const canvas = dialog?.closest<HTMLElement>("[data-testid='ondo-canvas']")
-    if (!dialog || !layer || !canvas) return
-    const covered = Array.from(canvas.children)
-      .filter((element): element is HTMLElement => element instanceof HTMLElement && element !== layer && !element.contains(layer))
-      .map((element) => ({ element, inert: element.getAttribute("inert"), ariaHidden: element.getAttribute("aria-hidden") }))
-    covered.forEach(({ element }) => {
-      element.setAttribute("inert", "")
-      element.setAttribute("aria-hidden", "true")
-    })
-    return () => {
-      covered.forEach(({ element, inert, ariaHidden }) => {
-        if (!element.isConnected) return
-        if (inert == null) element.removeAttribute("inert")
-        else element.setAttribute("inert", inert)
-        if (ariaHidden == null) element.removeAttribute("aria-hidden")
-        else element.setAttribute("aria-hidden", ariaHidden)
-      })
-    }
-  }, [])
-
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
       event.preventDefault()
@@ -124,7 +104,7 @@ export function Sheet({
   }
 
   return (
-    <div className={styles.layer}>
+    <div ref={layerRef} className={styles.layer}>
       <button type="button" tabIndex={-1} className={styles.backdrop} onClick={onClose} aria-hidden="true" />
       <section
         ref={dialogRef}
