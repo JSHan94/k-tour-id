@@ -53,6 +53,16 @@ async function expectNoSeriousAxe(page: Page, scope: Locator) {
   expect(blocking, blocking.flatMap((violation) => violation.nodes.map((node) => `${violation.id}: ${node.target.join(" > ")}`)).join("\n")).toEqual([])
 }
 
+async function expectBackgroundIsolated(page: Page) {
+  const content = page.locator("[data-active-tab]")
+  const nav = page.getByTestId("ondo-main-nav")
+  for (const background of [content, nav]) {
+    await expect(background).toHaveAttribute("inert", "")
+    await expect(background).toHaveAttribute("aria-hidden", "true")
+  }
+  await expect(page.locator("[aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
+}
+
 test.describe("ONDO B R3 visual and traveler regression", () => {
   test.beforeEach(async ({ page }) => {
     installBRuntimeGuard(page)
@@ -166,6 +176,35 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await expect(access).toContainText("identity details never appear on the map")
     await expect(access.getByTestId("canonical-after19-unlock")).toHaveText(/Confirm 19\+ for this preview/)
     await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
+  })
+
+  test("Place detail and the manual After19 prompt isolate their background and restore the opener", async ({ page }) => {
+    await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED" } })
+    await openCanonicalVenue(page)
+    await expectBackgroundIsolated(page)
+    await page.keyboard.press("Escape")
+    await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
+    await expect(page.getByTestId("canonical-place-details")).toBeFocused()
+    await expect(page.locator("[data-active-tab]")).not.toHaveAttribute("inert", "")
+    await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("inert", "")
+
+    await page.getByTestId("canonical-place-peek").getByRole("button", { name: "Close place" }).click()
+    await page.getByRole("button", { name: "After 19", exact: true }).click()
+    const prompt = page.getByTestId("after19-prompt-layer")
+    await expect(prompt).toBeVisible()
+    await expectBackgroundIsolated(page)
+    const confirm = prompt.getByRole("button", { name: "Confirm 19+" })
+    const stay = prompt.getByRole("button", { name: "Stay on the main map" })
+    await expect(confirm).toBeFocused()
+    await page.keyboard.press("Shift+Tab")
+    await expect(stay).toBeFocused()
+    await page.keyboard.press("Tab")
+    await expect(confirm).toBeFocused()
+    await page.keyboard.press("Escape")
+    await expect(prompt).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "After 19", exact: true })).toBeFocused()
+    await expect(page.locator("[data-active-tab]")).not.toHaveAttribute("inert", "")
+    await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("inert", "")
   })
 
   test("nation actions stay concise and four-axis history keeps a readable two-column hierarchy", async ({ page }) => {

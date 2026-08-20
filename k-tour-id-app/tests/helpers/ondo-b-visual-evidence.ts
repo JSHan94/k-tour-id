@@ -31,6 +31,7 @@ export type BVisualStateId =
   | "CITY-FALLBACK"
   | "PLACE-PEEK"
   | "PLACE-DETAIL"
+  | "AFTER19-PROMPT"
   | "AFTER19-VENUE-LOCKED"
   | "AFTER19-VENUE-RETURN"
   | "SAVE-FAILURE"
@@ -101,6 +102,7 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-CITY-FALLBACK-KO", state: "CITY-FALLBACK", flows: ["FL-001"], locale: "ko", description: "tile failure list and retry" },
   { id: "B-PX-PLACE-PEEK-EN", state: "PLACE-PEEK", flows: ["FL-001"], locale: "en", description: "canonical selected place peek" },
   { id: "B-PX-PLACE-DETAIL-EN", state: "PLACE-DETAIL", flows: ["FL-001", "FL-010", "FL-011", "FL-012", "FL-016"], locale: "en", description: "canonical place facts and actions" },
+  { id: "B-PX-AFTER19-PROMPT-EN", state: "AFTER19-PROMPT", flows: ["FL-013"], locale: "en", description: "manual After19 decision with an isolated background" },
   { id: "B-PX-SAVE-RECOVERED-KO", state: "SAVE-RECOVERED", flows: ["FL-011"], locale: "ko", description: "save fail, dismiss, retry, and persisted saved state" },
   { id: "B-PX-SAVE-FAILURE-EN", state: "SAVE-FAILURE", flows: ["FL-011"], locale: "en", description: "local save failure preserves exact venue and recovery actions" },
   { id: "B-PX-GATE-ACCOUNT-FAIL-KO", state: "GATE-ACCOUNT-FAIL", flows: ["FL-010"], locale: "ko", description: "account retry and unchanged return" },
@@ -222,7 +224,8 @@ const B_PIXEL_BY_CHECKPOINT: Partial<Record<CheckpointKey, readonly BVisualCase[
   "FL-012:TERMINAL": pixel("B-PX-LOCAL-SIGNAL-SUCCESS-EN"),
   "FL-012:RETURN": pixel("B-PX-PLACE-DETAIL-EN"),
   "FL-013:ENTRY": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
-  "FL-013:DECISION": pixel("B-PX-GATE-AGE-FAIL-KO"),
+  "FL-013:DECISION": pixel("B-PX-AFTER19-PROMPT-EN"),
+  "FL-013:CANCEL": pixel("B-PX-AFTER19-PROMPT-EN"),
   "FL-013:ERROR": pixel("B-PX-GATE-AGE-FAIL-KO"),
   "FL-013:RETRY": pixel("B-PX-GATE-AGE-FAIL-KO"),
   "FL-013:TERMINAL": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
@@ -551,6 +554,11 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else if (state === "PLACE-DETAIL") {
     await seedB(page, { locale })
     await openCanonicalVenue(page)
+  } else if (state === "AFTER19-PROMPT") {
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED" } })
+    await openCity(page)
+    await page.getByRole("button", { name: "After 19", exact: true }).click()
+    await expect(page.getByTestId("after19-prompt-layer")).toBeVisible()
   } else if (state === "AFTER19-VENUE-LOCKED" || state === "AFTER19-VENUE-RETURN") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
     await openCanonicalVenue(page)
@@ -839,6 +847,16 @@ export async function collectBGeometryIssues(page: Page) {
       })
     const visibleDialogs = allVisibleDialogs.filter(({ element }) => controls.some(({ element: control }) => element.contains(control)))
     const exposedModals = allVisibleDialogs.filter(({ element }) => element.getAttribute("aria-modal") === "true" && element.getAttribute("aria-hidden") !== "true" && !element.hasAttribute("inert"))
+    const modalIsolationIssues = exposedModals.flatMap(({ element: modal }) => allControls
+      .filter(({ element }) => !modal.contains(element))
+      .flatMap(({ element }) => {
+        let ancestor: HTMLElement | null = element
+        while (ancestor && root.contains(ancestor)) {
+          if (ancestor.hasAttribute("inert") && ancestor.getAttribute("aria-hidden") === "true") return []
+          ancestor = ancestor.parentElement
+        }
+        return [{ modal: label(modal), control: label(element), issue: "outside control has no inert + aria-hidden ancestor" }]
+      }))
     const modalStackIssues = [
       ...(exposedModals.length > 1 ? [{ issue: `multiple exposed modal dialogs: ${exposedModals.map(({ element }) => label(element)).join(" | ")}` }] : []),
       ...allVisibleDialogs.flatMap(({ element }) => {
@@ -872,6 +890,7 @@ export async function collectBGeometryIssues(page: Page) {
       bottomNavOverlaps,
       exitCtaIssues,
       modalStackIssues,
+      modalIsolationIssues,
       metadata,
       overlaps,
       undersizedControls,
@@ -887,6 +906,7 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
   expect.soft(geometry.bottomNavOverlaps, "bottom navigation controls overlap another visible control").toEqual([])
   expect.soft(geometry.exitCtaIssues, "every active dialog keeps an exit CTA inside the viewport").toEqual([])
   expect.soft(geometry.modalStackIssues, "only one modal is exposed and every covered dialog is inert plus aria-hidden").toEqual([])
+  expect.soft(geometry.modalIsolationIssues, "every control outside the active modal is covered by inert plus aria-hidden").toEqual([])
   expect.soft(geometry.ariaIssues, "visible dialogs and controls have programmatic names").toEqual([])
   expect.soft(geometry.undersizedControls, "hit-testable controls below 44×44 CSS px").toEqual([])
   expect.soft(geometry.metadata, "visible metadata below 12 CSS px").toEqual([])
