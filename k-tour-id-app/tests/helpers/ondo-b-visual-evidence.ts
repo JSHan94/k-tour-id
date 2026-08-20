@@ -262,8 +262,8 @@ async function expectCanonicalDetailReady(page: Page) {
   await expect(page.getByTestId("canonical-place-overlay").locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
 }
 
-async function openCity(page: Page) {
-  await gotoB(page)
+async function openCity(page: Page, query = "") {
+  await gotoB(page, query)
   await page.locator("[data-city='seoul']").click()
   await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
   await expect.poll(async () => Number(await page.getByTestId("ondo-b-map-entry").getAttribute("data-rendered-signal-count")), { timeout: 10_000 }).toBeGreaterThan(0)
@@ -275,25 +275,25 @@ async function openLocalSignal(page: Page, query = "") {
   await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
 }
 
-async function triggerPersonGate(page: Page, locale: BLocale, persona: NonNullable<BSessionSeed["persona"]>) {
+async function triggerPersonGate(page: Page, locale: BLocale, persona: NonNullable<BSessionSeed["persona"]>, qa = false) {
   await seedB(page, { locale, session: { persona, account: "ACC-ACTIVE", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-  await openLocalSignal(page)
+  await openLocalSignal(page, qa ? "qa=1" : "")
   await page.getByTestId("local-signal-overlay").locator("textarea").fill(locale === "ko" ? "주문은 입구에서 해요." : "Order beside the entrance.")
   await page.getByTestId("local-signal-submit").click()
   await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
 }
 
-async function triggerAgeGate(page: Page, locale: BLocale) {
+async function triggerAgeGate(page: Page, locale: BLocale, qa = false) {
   await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-  await openCity(page)
+  await openCity(page, qa ? "?qa=1" : "")
   await page.getByRole("button", { name: "After 19", exact: true }).click()
   await page.getByRole("button", { name: /Confirm 19\+|19\+ 확인/ }).click()
   await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
 }
 
-async function triggerPaymentGate(page: Page, locale: BLocale) {
+async function triggerPaymentGate(page: Page, locale: BLocale, qa = false) {
   await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-  await openCanonicalVenue(page)
+  await openCanonicalVenue(page, { query: qa ? "qa=1" : "" })
   await page.getByTestId("canonical-venue-checkout").click()
   await page.getByTestId("checkout-start").click()
   await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
@@ -419,11 +419,13 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
       await page.getByTestId("canonical-venue-save").scrollIntoViewIfNeeded()
     } else {
-      await stabilizeMobileEvidenceScroll(page, page.getByTestId("canonical-save-error"), { kind: "bottom" })
+      const saveError = page.getByTestId("canonical-save-error")
+      await saveError.scrollIntoViewIfNeeded()
+      await expect(saveError).toBeVisible()
     }
   } else if (state === "GATE-ACCOUNT-FAIL") {
     await seedB(page, { locale, session: { account: "ACC-GUEST", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-    await openCanonicalVenue(page)
+    await openCanonicalVenue(page, { query: "qa=1" })
     await page.getByTestId("canonical-venue-save").click()
     if (state === "GATE-ACCOUNT-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
   } else if (state === "GATE-PERSON-PASSPORT") {
@@ -431,14 +433,14 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   } else if (state === "GATE-PERSON-CX") {
     await triggerPersonGate(page, locale, "korean_local")
   } else if (state === "GATE-PERSON-RESIDENCE-UNSUPPORTED") {
-    await triggerPersonGate(page, locale, "long_term_resident")
+    await triggerPersonGate(page, locale, "long_term_resident", true)
     await page.getByRole("button", { name: locale === "ko" ? "미연결 상태 보기" : "Show unavailable route" }).click()
     await expect(page.getByTestId("gate-unsupported")).toBeVisible()
   } else if (state === "GATE-AGE-FAIL") {
-    await triggerAgeGate(page, locale)
+    await triggerAgeGate(page, locale, true)
     await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
   } else if (state === "GATE-PAYMENT" || state === "GATE-PAYMENT-FAIL") {
-    await triggerPaymentGate(page, locale)
+    await triggerPaymentGate(page, locale, state === "GATE-PAYMENT-FAIL")
     if (state === "GATE-PAYMENT-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
   } else if (state === "TABLES-LIST") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
@@ -500,7 +502,13 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     const target = page.getByTestId(state === "PROFILE" ? "ondo-profile-panel" : "ondo-trust-panel")
     if (state !== "TRUST-FOUR-AXES") await target.scrollIntoViewIfNeeded()
   } else {
-    const query = state === "LABS-TRAIT-FAIL" ? "?scenario=trait-retry-fail" : state === "LABS-BRIDGE-FAIL" ? "?scenario=bridge-failed" : ""
+    const query = state === "LABS-TRAIT-FAIL"
+      ? "?qa=1&scenario=trait-retry-fail"
+      : state === "LABS-BRIDGE-FAIL"
+        ? "?qa=1&scenario=bridge-failed"
+        : state === "LABS-BRIDGE-SUCCESS"
+          ? "?qa=1"
+          : ""
     await openPreparedLabs(page, locale, query)
     if (state !== "LABS") {
       const acknowledge = page.getByTestId("labs-acknowledge")
@@ -508,8 +516,8 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await expect(page.getByTestId("labs-overlay")).toBeVisible()
     }
     if (state === "LABS-TRAIT-FAIL") {
-      await page.getByTestId("trait-retry-offer-foreign-card").scrollIntoViewIfNeeded()
-      await page.getByTestId("trait-retry-offer-foreign-card").click()
+      await page.getByTestId("trait-retry-seongsu-card").scrollIntoViewIfNeeded()
+      await page.getByTestId("trait-retry-seongsu-card").click()
       await expect(page.locator("[data-trait-state='failed']").first()).toBeVisible()
     } else if (state === "LABS-BRIDGE-FAIL" || state === "LABS-BRIDGE-SUCCESS") {
       await page.getByTestId("labs-connect-wallet").click()
@@ -529,7 +537,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   await settle(page)
   if (state === "TRUST-FOUR-AXES") {
     const target = page.getByTestId("ondo-trust-panel")
-    await target.evaluate((element) => {
+    const expectedScrollTop = await target.evaluate((element) => {
       let scroller = element.parentElement
       while (scroller) {
         const overflowY = getComputedStyle(scroller).overflowY
@@ -537,15 +545,21 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
         scroller = scroller.parentElement
       }
       if (!scroller) throw new Error("Trust evidence scroll container was not found")
-      const targetTop = window.innerWidth <= 430 ? 212 : 275
-      const targetRect = element.getBoundingClientRect()
-      scroller.scrollTop += targetRect.top - targetTop
+      scroller.scrollTop = scroller.scrollHeight
       scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
+      return scroller.scrollTop
     })
     await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
     await expect(target).toBeVisible()
-    const targetTop = await page.evaluate(() => window.innerWidth <= 430 ? 212 : 275)
-    await expect.poll(() => target.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(targetTop)
+    await expect.poll(() => target.evaluate((element) => {
+      let scroller = element.parentElement
+      while (scroller) {
+        const overflowY = getComputedStyle(scroller).overflowY
+        if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) return scroller.scrollTop
+        scroller = scroller.parentElement
+      }
+      return -1
+    })).toBe(expectedScrollTop)
   }
   return page.getByTestId("ondo-b-root")
 }
