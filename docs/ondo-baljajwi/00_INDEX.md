@@ -1,19 +1,19 @@
 # ONDO B · 발자취형 제품/QA Source of Truth
 
-상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · FULL AUTOMATED QA PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | SoT | 현재 값 |
 |---|---|
-| 제품 SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
-| 검수 Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
-| Baseline set digest | `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` — 270 committed PNGs |
+| 제품 SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
+| 검수 Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
+| Baseline set digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d` — 276 committed PNGs |
 | Route | `/ondo-b` |
 | 배포 | 새 sleek B 미배포. 기존 private B는 이전 tuple의 역사 preview일 뿐 현재 후보가 아님 |
 | Requirements | `19/19 traced` |
 | Flows | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
-| Visual registry | `45 cases · 43 distinct state IDs` |
-| Pixel target | `45 × 6 exact viewports = 270 committed baselines` |
-| Review gate | `14/14 R2 findings FIXED · CLOSURE PENDING · SLEEK R3 READY TO START · 0/2 clean rounds` |
+| Visual registry | `46 cases · 44 distinct state IDs` |
+| Pixel target | `46 × 6 exact viewports = 276 committed baselines` |
+| Review gate | `SLEEK R3 5/5 COMPLETE · NOT CLEAN · 11/11 findings FIXED · CLOSURE PENDING · R4 READY TO START · 0/2 clean rounds` |
 
 이 디렉터리가 현재 발자취형 B 후보의 살아 있는 제품·검수·증거 source of truth다. [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md)은 A/v2의 역사 기록이다. `evidence/RUN-*`과 이전 clean tuple은 당시 결과를 보존하지만 현재 제품의 합격 증거로 재사용하지 않는다.
 
@@ -23,7 +23,7 @@
 2. [Trace Matrix](./01_TRACE_MATRIX.md) — 19 REQ, 18 Flow, 126 checkpoint disposition
 3. [QA Runbook](./02_QA_RUNBOOK.md) — 현재 tuple을 동결하고 다시 실행하는 규칙
 4. [Five-Designer Review](./08_UX_UI_FIVE_DESIGNER_REVIEW.md) — 다섯 독립 UX/UI reviewer와 zero-actionable loop
-5. [Component & State Matrix](./09_UX_UI_COMPONENT_STATE_MATRIX.md) — 45 case, 43 state, 6 viewport registry
+5. [Component & State Matrix](./09_UX_UI_COMPONENT_STATE_MATRIX.md) — 46 case, 44 state, 6 viewport registry
 6. [Review Manifest](./03_REVIEW_MANIFEST.md) — 역사 round와 현재 clean streak
 7. [Evidence Manifest](./04_EVIDENCE_MANIFEST.md) — 현재/역사 증거를 구분한 인덱스
 8. [Route Seam](./05_ROUTE_SEAM.md) — 실제 `/ondo-b` route·state seam
@@ -35,17 +35,18 @@
 
 | Gate | 현재 판정 |
 |---|---|
-| Product source | `FROZEN` at `997d671e33919fe333e80faa19124987f9d7dd3f` |
-| Harness source | `FROZEN` at `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Product source | `FROZEN` at `05f3002899485c528e31730bfebd57d71c3d788d` |
+| Harness source | `FROZEN` at `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
 | Checkpoint registry | `126 mapped` to `pixel | functional_only`; grouped journey step 이름을 126개 exact `test.step`으로 과장하지 않음 |
-| Pixel baseline | frozen `270/270 no-update PASS` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; digest `eca21a93…` |
-| Current automated acceptance | `PASS` — typecheck PASS · Webpack build `28/28` · contracts `26/26` · B E2E `253 pass / 11 intentional viewport skips / 0 fail` · visual `270/270` · runtime/geometry/Axe/modal failures `0` |
-| SLEEK R3 | `READY TO START` — 14/14 R2 findings fixed, closure pending, reviewer verdict 없음 |
+| Pixel baseline | frozen `276/276 no-update PASS` across `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`; `46/46` each; digest `74100b05…`; high-risk repeat `72/72 PASS` |
+| Current automated acceptance | `PASS` — discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
+| SLEEK R3 | historical `5/5 COMPLETE · NOT CLEAN` — `11 actionable = S1 2 + S2 9`; successor tuple에서 `11/11 FIXED · CLOSURE PENDING` |
+| SLEEK R4 | fresh blind review `READY TO START` |
 | Clean streak | `0/2` |
 | New sleek deployment | `NOT DEPLOYED` |
 | Data inventory | 공식 장소 `400`, simulated signal `80`, night-category After19 subset `17` (`서울 7 / 부산 10`) |
 
-이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS, R3/R4 clean, private deployment는 역사적으로 유효하지만 제품 변경 뒤 현재 release gate에는 포함하지 않는다.
+이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS, R3/R4 clean, private deployment는 역사적으로 유효하지만 제품 변경 뒤 현재 release gate에는 포함하지 않는다. 현재 R3 원문과 11개 fix 연결은 [`evidence/SLEEK-R3/manifest.md`](./evidence/SLEEK-R3/manifest.md)에 보존한다.
 
 ## 고정 불변식
 

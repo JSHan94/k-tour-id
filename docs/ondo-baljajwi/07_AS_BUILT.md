@@ -1,18 +1,18 @@
 # ONDO B · Current As-built
 
-상태: `PRODUCT IMPLEMENTED · TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `PRODUCT IMPLEMENTED · TUPLE FROZEN · FULL AUTOMATED QA PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | 항목 | 최종 값 |
 |---|---|
-| Product SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
-| Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
+| Product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
+| Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
 | Route | `/ondo-b` |
 | Current preview | `NOT DEPLOYED`; 기존 private B URL은 이전 tuple의 역사 preview |
 | 제품 형태 | responsive Next.js web app |
 | Product scope | 외국인 우선 서울·부산 F&B discovery + JIT identity/commerce/community demo |
 | Requirement trace | `19/19` |
 | Flow trace | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
-| Pixel target | `45 cases · 43 states · 6 viewports = 270 committed baselines` |
+| Pixel target | `46 cases · 44 states · 6 viewports = 276 committed baselines` |
 | Data | 공식 장소 `400` (`서울 200 / 부산 200`) |
 | ONDO preview | `SIMULATED` signal `80` (`40 / 40`) |
 | After19 preview | `SIMULATED` night-category signal `17` (`서울 7 / 부산 10`) |
@@ -65,12 +65,13 @@
 
 | Gate | 현재 상태 |
 |---|---|
-| Product source | `FROZEN` at `997d671e33919fe333e80faa19124987f9d7dd3f` |
-| Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
-| Baseline | frozen `270/270 no-update PASS`; digest `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` |
+| Product source | `FROZEN` at `05f3002899485c528e31730bfebd57d71c3d788d` |
+| Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
+| Baseline | frozen `276/276 no-update PASS`; `46/46` each viewport; high-risk repeat `72/72`; digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d` |
 | Checkpoint registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`; `pixel | functional_only` mapping present |
-| Full current automated receipt | `PASS` — typecheck PASS · Webpack build `28/28` · contracts `26/26` · B E2E `253 pass / 11 intentional viewport skips / 0 fail` · visual `270/270` · runtime/geometry/Axe/modal failures `0` |
-| SLEEK R3 | `READY TO START` — 14/14 R2 findings fixed, closure pending, reviewer verdict 없음 |
+| Full current automated receipt | `PASS` — discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
+| SLEEK R3 | historical `5/5 COMPLETE · NOT CLEAN · 11 actionable`; successor `11/11 FIXED · CLOSURE PENDING` |
+| SLEEK R4 | `READY TO START` |
 | Clean streak | `0/2` |
 
 이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS와 R3/R4는 [`04_EVIDENCE_MANIFEST.md`](./04_EVIDENCE_MANIFEST.md)와 `evidence/RUN-20260819-*-FINAL/`에 역사적으로 보존한다. 제품 변경 뒤 현재 결과로 합산하지 않는다.
@@ -91,4 +92,4 @@
 
 제품 또는 harness가 바뀌면 clean streak를 0으로 되돌린다. 같은 tuple에서 다섯 독립 역할의 actionable `S0/S1/S2=0` round가 두 번 연속 끝나고 durable evidence가 연결된 뒤에만 B preview를 승격한다.
 
-이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 현재 제품 SHA와 다르다. 현재 sleek B는 14개 R2 finding을 수정하고 tuple freeze와 full automated gate를 통과해 SLEEK R3를 시작할 준비가 됐지만, fix closure와 같은 tuple의 두 차례 5/5 clean round 및 별도 deployment smoke는 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo`는 변경하지 않는다.
+이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 현재 제품 SHA와 다르다. 현재 sleek B는 역사 SLEEK R3의 11개 finding을 수정했고 successor tuple의 full automated gate를 통과해 fresh R4가 시작 준비 상태다. 같은 tuple의 두 차례 5/5 clean round 및 별도 deployment smoke는 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo`는 변경하지 않는다.

@@ -1,20 +1,20 @@
 # ONDO B · 원요구 최종 반영 감사
 
-상태: `PRODUCT IMPLEMENTATION AUDITED · TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R3 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `PRODUCT IMPLEMENTATION AUDITED · TUPLE FROZEN · FULL AUTOMATED QA PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | 항목 | 값 |
 |---|---|
-| 제품 SHA | `997d671e33919fe333e80faa19124987f9d7dd3f` |
-| 검수 Harness SHA | `594dbf98c690d27c65461404b8a291a606f93b76` |
-| Pixel baseline | `45 × 6 = 270/270` unchanged-baseline PASS · digest `eca21a9358dd13f550bc8d96e1948a8475f267ecaa3239f8c15ccd18858566eb` |
-| Automated QA | typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `253 pass / 11 intentional viewport skips / 0 fail` · runtime/geometry/Axe/modal failures `0` |
+| 제품 SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
+| 검수 Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
+| Pixel baseline | `46 × 6 = 276/276` no-update PASS · `46/46` each viewport · high-risk repeat `72/72` · digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d` |
+| Automated QA | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
 | Route | `/ondo-b` |
 | 범위 | 외국인 우선 F&B 웹앱 프론트엔드 데모 |
 | 실제 장소 | 서울 200 + 부산 200 = 400 |
 | ONDO preview signal | 도시별 40, 총 80 · `SIMULATED` |
 | After19 subset | night-category signal만 서울 7 + 부산 10 = 17 · `SIMULATED` |
 
-이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. 현재 product+harness+baseline tuple은 frozen이고 automated QA는 통과했다. 14개 R2 finding은 수정됐지만 closure pending이며, SLEEK R3는 시작 준비가 됐지만 reviewer verdict는 아직 없고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다. 이전 [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md) 문서는 A/v2의 역사 기록이다.
+이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. 현재 product+harness+baseline tuple은 frozen이고 full automated QA를 통과했다. 역사 SLEEK R3는 `5/5 COMPLETE · NOT CLEAN · 11 actionable`; 현재 successor에서 11개를 모두 수정했지만 reviewer closure는 pending이다. R4는 `READY TO START`이고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다. 이전 [`ondo-execution`](../ondo-execution/00_EXECUTION_INDEX.md) 문서는 A/v2의 역사 기록이다.
 
 ## 1. 다섯 가지 실행 질문에 대한 답
 
@@ -22,7 +22,7 @@
 |---|---|---|
 | 온보딩이 빠졌는가? | `아니오` | 새 3단계 온보딩이 실제로 있다. 가치 설명 → 단기 여행자/한국인/장기체류자 선택 → F&B 관심사 → Guest 지도이며, skip/failure도 인증 없이 지도로 간다. 기존 화면의 묵시적 재사용이 아니다. |
 | 9시간 이상 무입력 병렬 실행이 가능한가? | `프론트엔드 데모에는 예` | 19 REQ, 18 Flow, 상태·fixture·실패·복귀·owner·merge·rollback·QA Gate가 고정돼 있다. 품질 Gate 미통과 시 2시간 단위 확장 루프를 자동 반복한다. 외부 계정·법무·provider provisioning·배포 권한은 자동 결정 범위가 아니다. |
-| 만든 것의 명세가 빠짐없이 남는가? | `예, registry 기준` | 19/19 REQ, FL-001~018, 126 checkpoint(`121 ACTUAL / 5 N/A / 0 GAP`), 45 visual cases/43 states, 6 viewport/270 baseline, KO/EN surface와 외부 연동 등급을 추적한다. Frozen-tuple automated QA는 PASS이며 review·배포는 아직 완료로 기록하지 않는다. |
+| 만든 것의 명세가 빠짐없이 남는가? | `예, registry 기준` | 19/19 REQ, FL-001~018, 126 checkpoint(`121 ACTUAL / 5 N/A / 0 GAP`), 46 visual cases/44 states, 6 viewport/276 baseline, KO/EN surface와 외부 연동 등급을 추적한다. Frozen-tuple automated QA는 PASS이며 review·배포는 아직 완료로 기록하지 않는다. |
 | 한 번에 높은 완성도로 갈 만큼 구체적인가? | `프론트엔드 후보에는 예` | 성공만이 아니라 cancel/error/retry/returnTo, persistence, privacy, truth, a11y, map fallback까지 잠겼다. 실제 운영 서비스 완성은 백엔드·공급자·법무·운영체계가 별도 필요하다. |
 | 많은 병렬 agent/token을 써도 충돌 없이 실행 가능한가? | `예, 실행팩 기준` | 경로 소유, frozen contracts, CCR, shared SHA 동기화, durable evidence, 동일 tuple의 두 clean round 규칙이 있다. 과거 clean round는 현재 제품에 재사용하지 않으며 현재 streak는 0/2다. 토큰 소진 자체를 품질로 보지 않고 Gate 실패·미해결 issue만 루프 조건으로 쓴다. |
 
@@ -95,7 +95,7 @@
 
 - 19/19 REQ와 18/18 Flow가 trace되고 `GAP=0`이어야 한다.
 - typecheck, production build, contract, flow, KO/EN content, map truth, a11y, pixel이 동일 tuple에서 통과해야 한다.
-- 45 visual cases/43 state IDs를 여섯 exact viewport에서 검증해 270/270 committed no-update baseline을 만들고 clipping, nav/CTA overlap, 12px 미만 metadata, 44px 미만 control, serious/critical Axe issue가 없어야 한다.
+- 46 visual cases/44 state IDs를 여섯 exact viewport에서 검증해 276/276 committed no-update baseline을 만들고 clipping, nav/CTA overlap, 12px 미만 metadata, 44px 미만 control, serious/critical Axe issue가 없어야 한다.
 - 126 checkpoint 모두 machine registry에서 `pixel | functional_only` disposition을 가져야 하며 grouped journey를 exact named step 126개로 과장하지 않는다.
 - 다섯 독립 역할이 같은 tuple에서 actionable S0/S1/S2를 0으로 판정한 clean round가 두 번 연속이어야 한다.
-- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`, SLEEK R3는 `READY TO START`이고 14개 R2 fix의 reviewer closure는 아직 pending이다.
+- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`; 역사 SLEEK R3는 NOT CLEAN이고 11개 fix의 reviewer closure를 위한 R4가 `READY TO START`다.
