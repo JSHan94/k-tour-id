@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, BadgeCheck, Check, ChevronRight, CircleUserRoun
 import type { GateKind, Locale, Persona } from "../contracts/domain"
 import { isReturnToUsable } from "../contracts/return-to"
 import { useOndo } from "../shared/state/ondo-provider"
+import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { useQaControls } from "../shared/ui/use-qa-controls"
 import styles from "./identity.module.css"
@@ -114,6 +115,44 @@ const GATE_LABELS: Record<Locale, Record<GateKind, string>> = {
   ko: { account: "계정", person: "본인 확인", age: "19+", payment_kyc: "결제용 KYC" },
 }
 
+const COMPLETION_DESTINATIONS = {
+  SAVE_VENUE: [
+    "[data-testid='canonical-place-overlay'] #canonical-place-title",
+    "[data-testid='canonical-place-peek'] [data-testid='canonical-place-details']",
+    "[data-testid='place-overlay'] #place-title",
+    "[data-testid='place-peek'] [data-testid='place-details']",
+  ],
+  JOIN_TABLE: [
+    "[data-testid='table-open-chat']",
+    "[data-testid='table-action-message']",
+    "[data-testid='ondo-sheet'] h2",
+  ],
+  OPEN_CHAT: [
+    "[data-testid='ondo-sheet'] [data-testid='chat-message-input']",
+    "[data-testid='ondo-sheet'] textarea",
+    "[data-testid='ondo-sheet'] h2",
+  ],
+  SUBMIT_LOCAL_SIGNAL: [
+    "[data-testid='local-signal-overlay'] [data-testid='local-signal-submit']",
+    "[data-testid='local-signal-overlay'] textarea",
+    "[data-testid='local-signal-overlay'] h2",
+  ],
+  START_CHECKOUT: [
+    "[data-testid='checkout-overlay'] [data-testid='checkout-start']",
+    "[data-testid='checkout-overlay'] h2",
+  ],
+  OPEN_AFTER19: [
+    "[data-testid='canonical-place-overlay'] [data-testid='canonical-after19-access']",
+    "[data-testid='after19-auto-banner']",
+    "[data-testid='after19-toggle']",
+  ],
+  MINT_BADGE: [
+    "[data-testid='labs-overlay'] [data-testid='mint-badge']",
+    "[data-testid='labs-overlay'] h2",
+    "[data-testid='open-labs-id']",
+  ],
+} as const
+
 function defaultRoute(persona: Persona | null): PersonRoute {
   if (persona === "korean_local") return "cx"
   if (persona === "long_term_resident") return "residence"
@@ -126,6 +165,7 @@ export function GateOverlay() {
   const [started, setStarted] = useState(false)
   const [busy, setBusy] = useState(false)
   const completionLock = useRef(false)
+  const terminalCompletionRef = useRef<keyof typeof COMPLETION_DESTINATIONS | null>(null)
   const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
@@ -138,6 +178,7 @@ export function GateOverlay() {
     setStarted(false)
     setBusy(false)
     completionLock.current = false
+    terminalCompletionRef.current = null
   }, [gate?.activeGate, gate?.tokenId, state.persona])
 
   useEffect(() => {
@@ -159,7 +200,15 @@ export function GateOverlay() {
     document.body.style.overflow = "hidden"
     return () => {
       document.body.style.overflow = previousOverflow
-      window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+      const completedCta = terminalCompletionRef.current
+      if (completedCta) {
+        focusFirstAvailableDestination(COMPLETION_DESTINATIONS[completedCta])
+        return
+      }
+      window.requestAnimationFrame(() => {
+        const opener = returnFocusRef.current
+        if (opener?.isConnected && !opener.closest("[inert], [aria-hidden='true']")) opener.focus({ preventScroll: true })
+      })
     }
   }, [gate?.tokenId])
 
@@ -194,6 +243,7 @@ export function GateOverlay() {
   const complete = () => {
     if (completionLock.current) return
     completionLock.current = true
+    if (queue.indexOf(active) === queue.length - 1) terminalCompletionRef.current = gate.cta
     setBusy(true)
     window.setTimeout(() => actions.completeGate(active), 360)
   }

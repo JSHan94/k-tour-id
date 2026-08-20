@@ -9,6 +9,8 @@ type AttributeSnapshot = {
   element: HTMLElement
   inert: string | null
   ariaHidden: string | null
+  role: string | null
+  ariaModal: string | null
 }
 
 type IsolationRecord = AttributeSnapshot & {
@@ -34,10 +36,16 @@ function acquireIsolation(element: HTMLElement, owner: symbol) {
     element,
     inert: element.getAttribute("inert"),
     ariaHidden: element.getAttribute("aria-hidden"),
+    role: element.getAttribute("role"),
+    ariaModal: element.getAttribute("aria-modal"),
     owners: new Set([owner]),
   })
   element.setAttribute("inert", "")
   element.setAttribute("aria-hidden", "true")
+  if (element.matches("[role='dialog'],[role='alertdialog']")) {
+    element.removeAttribute("role")
+    element.removeAttribute("aria-modal")
+  }
 }
 
 function releaseIsolation(element: HTMLElement, owner: symbol) {
@@ -51,6 +59,10 @@ function releaseIsolation(element: HTMLElement, owner: symbol) {
   else element.setAttribute("inert", current.inert)
   if (current.ariaHidden == null) element.removeAttribute("aria-hidden")
   else element.setAttribute("aria-hidden", current.ariaHidden)
+  if (current.role == null) element.removeAttribute("role")
+  else element.setAttribute("role", current.role)
+  if (current.ariaModal == null) element.removeAttribute("aria-modal")
+  else element.setAttribute("aria-modal", current.ariaModal)
 }
 
 /**

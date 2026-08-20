@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowRight, Check, ChevronLeft, Compass, MapPin, Sparkles, Utensils } from "lucide-react"
 import type { DiscoveryPreference, Locale, Persona } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
+import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { DISCOVERY_PREFERENCE_OPTIONS } from "./discovery-options"
 import styles from "./onboarding.module.css"
 
@@ -99,6 +100,15 @@ export function OnboardingLayer() {
   const stepIndex = useMemo(() => ({ value: 1, intent: 2, preferences: 3 })[step], [step])
   if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return null
 
+  const completeAndFocusMap = () => {
+    actions.completeOnboarding()
+    focusFirstAvailableDestination([
+      "[data-testid='ondo-b-nation'] [data-city='seoul']",
+      "[data-testid='ondo-b-map-entry'] button",
+      "[data-testid='nav-ondo']",
+    ])
+  }
+
   const finish = () => {
     const shouldFail = new URLSearchParams(window.location.search).get("onboarding") === "failure"
     if (shouldFail && !failed) {
@@ -106,12 +116,12 @@ export function OnboardingLayer() {
       return
     }
     actions.setDiscoveryPreferences(failed ? [] : preferences)
-    actions.completeOnboarding()
+    completeAndFocusMap()
   }
 
   const skip = () => {
     setFailed(false)
-    actions.completeOnboarding()
+    completeAndFocusMap()
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
