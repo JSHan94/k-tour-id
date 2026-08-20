@@ -280,7 +280,11 @@ export function OndoProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<OndoActions>(() => ({
     setLocale: (locale) => setState((current) => ({ ...current, locale })),
-    setTab: (tab) => setState((current) => ({ ...current, tab, surface: tab === "ondo" ? { kind: "map" } : current.surface })),
+    setTab: (tab) => setState((current) => ({
+      ...current,
+      tab,
+      surface: tab === "ondo" && current.surface.kind !== "venue" ? { kind: "map" } : current.surface,
+    })),
     setSurface: (surface) => setState((current) => ({ ...current, surface })),
     setPersona: (persona) => setState((current) => ({ ...current, persona })),
     setDiscoveryPreferences: (discoveryPreferences) => setState((current) => ({ ...current, discoveryPreferences })),

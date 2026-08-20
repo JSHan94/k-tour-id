@@ -1,16 +1,21 @@
 .panel { margin-top: 30px; padding-top: 22px; border-top: 1px solid #d9d7d1; color: #252523; }
 .panel header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 12px; }
 .panel header > div { min-width: 0; }
-.panel header > span { padding-top: 2px; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .06em; }
+.panel header > span { padding-top: 2px; color: #5f5b55; font-size: 12px; font-weight: 720; letter-spacing: .06em; }
 .panel h2 { margin: 0; font-size: 16px; }
-.panel header p { margin: 4px 0 0; color: #6e6b65; font-size: 12px; line-height: 1.5; }
+.panel header p { margin: 4px 0 0; color: #5f5b55; font-size: 12px; line-height: 1.5; }
 .icon { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid #dedbd5; border-radius: 50%; color: #55524d; }
-.boundary { margin: 16px 0 0; padding: 12px 0; border-top: 1px solid #e5e3de; border-bottom: 1px solid #e5e3de; color: #6e6b65; font-size: 12px; line-height: 1.6; }
+.boundary { margin: 16px 0 0; padding: 12px 0; border-top: 1px solid #e5e3de; border-bottom: 1px solid #e5e3de; color: #5f5b55; font-size: 12px; line-height: 1.6; }
 .axes { display: grid; gap: 16px; margin-top: 20px; }
 .axes article { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 12px; }
 .axisBody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(96px, 1fr); align-items: center; gap: 12px; }
 .axisBody > div:first-child { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; }
 .axisBody strong { font-size: 12px; }
-.axisBody small { color: #706d67; font-size: 12px; line-height: 1.35; }
-.bar { height: 3px; overflow: hidden; background: #e1dfda; }
-.fill { display: block; height: 100%; background: #353431; }
+.axisBody small { color: #5f5b55; font-size: 12px; line-height: 1.35; }
+.bar { display: grid; height: 4px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; overflow: visible; background: transparent; }
+.bar i { display: block; height: 4px; background: #d8d5cf; }
+.bar .fill { background: #353431; }
+
+@media (max-width: 420px) {
+  .axisBody { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+}

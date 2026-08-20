@@ -62,7 +62,7 @@ export function Sheet({
         if (document.querySelector("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']")) return
         const previous = returnFocusRef.current
         if (previous?.isConnected) previous.focus({ preventScroll: true })
-        else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
+        else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='canonical-place-details'], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
       }, 80)
     }
   }, [showClose])
@@ -99,6 +99,8 @@ export function Sheet({
       <section
         ref={dialogRef}
         className={`${styles.sheet} ${styles[size]}`}
+        data-testid="ondo-sheet"
+        data-sheet-size={size}
         role="dialog"
         aria-modal="true"
         aria-label={label}

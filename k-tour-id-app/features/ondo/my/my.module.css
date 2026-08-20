@@ -32,7 +32,7 @@
 .stampGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
 .stampGrid > span { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 720; }
 .stampFilled { background: #353431; color: #fff; }
-.stampEmpty { border: 1px dashed #bdbab4; color: #98958f; }
+.stampEmpty { border: 1px dashed #aaa69f; color: #625e58; }
 .stampCard > p { margin: 0; color: #716e68; font-size: 12px; line-height: 1.6; }
 .labsLink { min-height: 58px; display: grid; grid-template-columns: 22px 1fr 20px; align-items: center; gap: 10px; padding: 10px 2px; border: 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; background: transparent; color: #20201e; font-size: 12px; text-align: left; }
 .historyList { display: grid; border-top: 1px solid #dedbd5; }

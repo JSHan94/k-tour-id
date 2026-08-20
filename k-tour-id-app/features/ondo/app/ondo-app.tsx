@@ -29,13 +29,14 @@ function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A
   const copy = COPY[state.locale]
   const active = state.tab === "ondo" ? slots.map : state.tab === "my" ? slots.my : state.tab === "tables" ? slots.tables : slots.id
   const onboardingActive = state.onboarding !== "ONB-COMPLETE"
+  const gateActive = Boolean(state.gate && !state.gate.consumedAt)
 
   useEffect(() => {
     const before = previousSurface.current
     previousSurface.current = state.surface
-    if (before.kind === "map" || state.surface.kind !== "venue") return
+    if (before.kind === "venue" || state.surface.kind !== "venue") return
     const timer = window.setTimeout(() => {
-      document.querySelector<HTMLElement>("[data-testid='place-details']")?.focus({ preventScroll: true })
+      document.querySelector<HTMLElement>("[data-testid='canonical-place-details'], [data-testid='place-details']")?.focus({ preventScroll: true })
     }, 100)
     return () => window.clearTimeout(timer)
   }, [state.surface])
@@ -48,15 +49,16 @@ function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A
       data-variant={variant}
       data-locale={state.locale}
     >
-      <section className={styles.canvas} aria-label="ONDO travel food app">
-        <div className={styles.content} data-active-tab={state.tab} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>{active}</div>
-        <nav className={styles.nav} aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+      <section className={styles.canvas} aria-label="ONDO travel food app" data-testid="ondo-canvas">
+        <div className={styles.content} data-active-tab={state.tab} inert={onboardingActive || gateActive ? true : undefined} aria-hidden={onboardingActive || gateActive ? true : undefined}>{active}</div>
+        <nav className={styles.nav} data-testid="ondo-main-nav" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive || gateActive ? true : undefined} aria-hidden={onboardingActive || gateActive ? true : undefined}>
           {NAV.map(({ id, icon: Icon }) => (
             <button
               key={id}
               type="button"
               className={state.tab === id ? styles.navActive : undefined}
               aria-current={state.tab === id ? "page" : undefined}
+              data-testid={`nav-${id}`}
               onClick={() => actions.setTab(id)}
             >
               <span><Icon size={20} strokeWidth={state.tab === id ? 2.25 : 1.7} /></span>
@@ -66,7 +68,7 @@ function OndoShell({ slots, variant = "A" }: { slots: OndoAppSlots; variant?: "A
           ))}
         </nav>
         {slots.overlays}
-        {state.toast ? <div className={styles.toast} role="status">{state.toast}</div> : null}
+        {state.toast ? <div className={styles.toast} data-testid="ondo-toast" role="status">{state.toast}</div> : null}
       </section>
     </main>
   )
