@@ -73,6 +73,10 @@ export function Sheet({
       document.body.style.overflow = previousOverflow
       window.setTimeout(() => {
         if (document.querySelector("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']")) return
+        const active = document.activeElement
+        // A destination reached during this delay owns focus already. Only
+        // restore when unmounting the Sheet left focus genuinely unclaimed.
+        if (active && active !== document.body && active !== document.documentElement && active.isConnected) return
         const previous = returnFocusRef.current
         if (previous?.isConnected) previous.focus({ preventScroll: true })
         else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='canonical-place-details'], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
