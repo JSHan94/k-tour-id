@@ -18,6 +18,7 @@
 .primary { border: 0; background: #20201e; color: #fff; }
 .primary:disabled { opacity: .4; }
 .secondary { border: 1px solid #d5d2cc; background: transparent; color: #292927; }
+.processing { display: flex; min-height: 50px; align-items: center; justify-content: center; border-radius: 13px; background: #20201e; color: #fff; font-size: 14px; font-weight: 720; }
 .receipt { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 16px 0; border-top: 1px solid #87a895; border-bottom: 1px solid #87a895; color: #2f624a; }
 .receipt div { display: grid; gap: 2px; }
 .receipt span { font-size: 12px; }

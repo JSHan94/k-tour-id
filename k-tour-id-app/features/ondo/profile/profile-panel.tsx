@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Check, Edit3, Globe2, Lock, MapPin, RotateCcw, Save, UserRound } from "lucide-react"
 import type { Locale } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
@@ -59,6 +59,10 @@ export function ProfilePanel() {
   const { state, actions } = useOndo()
   const [editing, setEditing] = useState(false)
   const [failed, setFailed] = useState(false)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const retryButtonRef = useRef<HTMLButtonElement>(null)
+  const focusEditOnExitRef = useRef(false)
   const [draft, setDraft] = useState<Draft>({
     displayName: state.profile.displayName,
     from: state.profile.from ?? "",
@@ -82,6 +86,18 @@ export function ProfilePanel() {
     })
   }, [editing, state.profile])
 
+  useEffect(() => {
+    if (editing) window.requestAnimationFrame(() => nameInputRef.current?.focus())
+    else if (focusEditOnExitRef.current) {
+      focusEditOnExitRef.current = false
+      window.requestAnimationFrame(() => editButtonRef.current?.focus())
+    }
+  }, [editing])
+
+  useEffect(() => {
+    if (failed) window.requestAnimationFrame(() => retryButtonRef.current?.focus())
+  }, [failed])
+
   const save = () => {
     const shouldFail = new URLSearchParams(window.location.search).get("profile") === "failure" && !failed
     if (shouldFail) {
@@ -97,6 +113,7 @@ export function ProfilePanel() {
       shareLivesIn: draft.shareLivesIn,
       shareLanguages: draft.shareLanguages,
     })
+    focusEditOnExitRef.current = true
     setFailed(false)
     setEditing(false)
     actions.notify(state.locale === "ko" ? "선택한 공개 필드를 저장했어요." : "Selected public fields saved.")
@@ -108,23 +125,23 @@ export function ProfilePanel() {
     <section className={styles.panel} data-testid="ondo-profile-panel">
       <header>
         <div><h2>{t.title}</h2><p><Lock size={11} />{isPartial ? t.partial : t.private}</p></div>
-        {state.account === "ACC-ACTIVE" && !editing ? <button type="button" onClick={() => setEditing(true)}><Edit3 size={15} />{t.edit}</button> : null}
+        {state.account === "ACC-ACTIVE" && !editing ? <button ref={editButtonRef} type="button" onClick={() => setEditing(true)}><Edit3 size={15} />{t.edit}</button> : null}
       </header>
 
       {state.account !== "ACC-ACTIVE" ? (
         <div className={styles.locked}><UserRound size={20} /><p>{t.account}</p></div>
       ) : editing ? (
         <div className={styles.form}>
-          <label><span>{t.name}</span><input value={draft.displayName} onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))} /></label>
+          <label><span>{t.name}</span><input ref={nameInputRef} value={draft.displayName} onChange={(event) => setDraft((current) => ({ ...current, displayName: event.target.value }))} /></label>
           <Field label={t.from} icon={<Globe2 size={15} />} value={draft.from} share={draft.shareFrom} locale={state.locale} onValue={(from) => setDraft((current) => ({ ...current, from }))} onShare={(shareFrom) => setDraft((current) => ({ ...current, shareFrom }))} />
           <Field label={t.lives} icon={<MapPin size={15} />} value={draft.livesIn} share={draft.shareLivesIn} locale={state.locale} onValue={(livesIn) => setDraft((current) => ({ ...current, livesIn }))} onShare={(shareLivesIn) => setDraft((current) => ({ ...current, shareLivesIn }))} />
           <Field label={t.languages} icon={<Globe2 size={15} />} value={draft.languages} share={draft.shareLanguages} locale={state.locale} onValue={(languages) => setDraft((current) => ({ ...current, languages }))} onShare={(shareLanguages) => setDraft((current) => ({ ...current, shareLanguages }))} />
           {failed ? <div className={styles.error} role="alert">{t.failed}</div> : null}
-          <button type="button" className={styles.save} onClick={save}>{failed ? <RotateCcw size={16} /> : <Save size={16} />}{failed ? t.retry : t.save}</button>
-          <button type="button" className={styles.cancel} onClick={() => { setEditing(false); setFailed(false) }}>{t.cancel}</button>
+          <button ref={retryButtonRef} type="button" className={styles.save} onClick={save}>{failed ? <RotateCcw size={16} /> : <Save size={16} />}{failed ? t.retry : t.save}</button>
+          <button type="button" className={styles.cancel} onClick={() => { focusEditOnExitRef.current = true; setEditing(false); setFailed(false) }}>{t.cancel}</button>
         </div>
       ) : (
-        <div className={styles.summary}>
+        <div className={styles.summary} role="status" aria-live="polite">
           <span>{state.profile.displayName.slice(0, 1).toUpperCase()}</span>
           <div><strong>{state.profile.displayName}</strong><p>{[state.profile.shareFrom ? state.profile.from : null, state.profile.shareLivesIn ? state.profile.livesIn : null, ...(state.profile.shareLanguages ? state.profile.languages : [])].filter(Boolean).join(" · ") || t.private}</p></div>
         </div>

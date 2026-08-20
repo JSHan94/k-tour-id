@@ -26,6 +26,7 @@
 .textButton, .inlineLink { min-height: 44px; border: 0; background: transparent; color: #706d67; font-size: 12px; font-weight: 700; }
 .inlineLink { min-height: 44px; text-decoration: underline; text-underline-offset: 3px; }
 .address { display: block; overflow: hidden; padding: 13px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; color: #4d4b47; font-size: 12px; text-overflow: ellipsis; }
+.identifierLabel { display: block; margin-bottom: 6px; color: #6e6b65; font-size: 11px; font-weight: 700; }
 .assetList { display: grid; border-top: 1px solid #dedbd5; }
 .assetRow { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid #e5e3de; }
 .assetRow > div { display: grid; gap: 2px; }

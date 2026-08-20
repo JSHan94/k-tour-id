@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState, type RefObject } from "react"
 import { AlertTriangle, Check, CreditCard, MapPin, ReceiptText, ShieldCheck } from "lucide-react"
 import { acceptUniqueMilestoneVisit } from "../rewards/reward-model"
 import { venueLabelById } from "@/lib/ondo/venues/display"
@@ -30,8 +30,16 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
     stampCount: state.stamps,
   })
   const [visitState, setVisitState] = useState<"idle" | "checking" | "accepted" | "duplicate">("idle")
+  const confirmRef = useRef<HTMLButtonElement>(null)
+  const processingRef = useRef<HTMLDivElement>(null)
+  const retryRef = useRef<HTMLButtonElement>(null)
+  const receiptRef = useRef<HTMLElement>(null)
   const ready = state.account === "ACC-ACTIVE" && state.paymentKyc === "PKY-VERIFIED"
   const venueName = venueLabelById(venueId, locale) ?? (locale === "ko" ? "선택한 장소" : "Selected place")
+
+  function focusAfterTransition(target: RefObject<HTMLElement | null>) {
+    window.requestAnimationFrame(() => target.current?.focus())
+  }
 
   function start() {
     if (!ready) {
@@ -39,18 +47,28 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
       return
     }
     setCheckout((current) => beginCheckout(current))
+    focusAfterTransition(confirmRef)
   }
 
   function confirm() {
     setCheckout((current) => processCheckout(current))
+    focusAfterTransition(processingRef)
     window.setTimeout(() => {
       const scenario = new URLSearchParams(window.location.search).get("scenario")
-      setCheckout((current) => finishCheckout(current, scenario === "payment-declined" ? "failure" : "success"))
+      const outcome = scenario === "payment-declined" ? "failure" : "success"
+      setCheckout((current) => finishCheckout(current, outcome))
+      focusAfterTransition(outcome === "failure" ? retryRef : receiptRef)
     }, 520)
   }
 
   function cancel() {
     setCheckout((current) => finishCheckout(current.payment === "PAY-IDLE" ? beginCheckout(current) : current, "cancel"))
+    focusAfterTransition(retryRef)
+  }
+
+  function reopen() {
+    setCheckout((current) => beginCheckout(current))
+    focusAfterTransition(confirmRef)
   }
 
   function verifyVisit() {
@@ -88,13 +106,13 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
         </div>
 
         {checkout.payment === "PAY-IDLE" ? <button type="button" className={styles.primary} onClick={start} data-testid="checkout-start">{ready ? locale === "ko" ? "시뮬레이션 확인" : "Confirm simulation" : locale === "ko" ? "결제용 KYC부터 계속" : "Continue with Payment KYC"}</button> : null}
-        {checkout.payment === "PAY-CONFIRMING" ? <><button type="button" className={styles.primary} onClick={confirm} data-testid="checkout-confirm">{locale === "ko" ? "이 내용으로 시뮬레이션" : "Run this simulation"}</button><button type="button" className={styles.secondary} onClick={cancel} data-testid="checkout-cancel">{locale === "ko" ? "취소" : "Cancel"}</button></> : null}
-        {checkout.payment === "PAY-PROCESSING" ? <button type="button" className={styles.primary} disabled>{locale === "ko" ? "처리 중" : "Processing"}</button> : null}
-        {checkout.payment === "PAY-FAILED" ? <><InlineNotice tone="danger"><AlertTriangle size={18} /><span>{locale === "ko" ? "시뮬레이션을 완료하지 못했어요. Receipt, 잔고와 스탬프는 바뀌지 않았습니다." : "The simulation could not be completed. Receipt, balances, and stamps did not change."}</span></InlineNotice><button type="button" className={styles.primary} onClick={() => setCheckout((current) => beginCheckout(current))}>{locale === "ko" ? "다시 시도" : "Try again"}</button></> : null}
-        {checkout.payment === "PAY-CANCELLED" ? <><InlineNotice tone="neutral"><span>{locale === "ko" ? "시뮬레이션을 취소했어요. 아무 상태도 바뀌지 않았습니다." : "Simulation cancelled. No balances, receipts, or stamps changed."}</span></InlineNotice><button type="button" className={styles.primary} onClick={() => setCheckout((current) => beginCheckout(current))}>{locale === "ko" ? "다시 열기" : "Open again"}</button></> : null}
+        {checkout.payment === "PAY-CONFIRMING" ? <><button ref={confirmRef} type="button" className={styles.primary} onClick={confirm} data-testid="checkout-confirm">{locale === "ko" ? "이 내용으로 시뮬레이션" : "Run this simulation"}</button><button type="button" className={styles.secondary} onClick={cancel} data-testid="checkout-cancel">{locale === "ko" ? "취소" : "Cancel"}</button></> : null}
+        {checkout.payment === "PAY-PROCESSING" ? <div ref={processingRef} className={styles.processing} role="status" aria-live="polite" tabIndex={-1}>{locale === "ko" ? "처리 중" : "Processing"}</div> : null}
+        {checkout.payment === "PAY-FAILED" ? <><div role="alert"><InlineNotice tone="danger"><AlertTriangle size={18} /><span>{locale === "ko" ? "시뮬레이션을 완료하지 못했어요. 결제 완료 기록, 잔고와 스탬프는 바뀌지 않았습니다." : "The simulation could not be completed. The completion record, balances, and stamps did not change."}</span></InlineNotice></div><button ref={retryRef} type="button" className={styles.primary} onClick={reopen} data-testid="checkout-retry">{locale === "ko" ? "다시 시도" : "Try again"}</button></> : null}
+        {checkout.payment === "PAY-CANCELLED" ? <><div role="status" aria-live="polite"><InlineNotice tone="neutral"><span>{locale === "ko" ? "시뮬레이션을 취소했어요. 잔고, 완료 기록과 스탬프는 바뀌지 않았습니다." : "Simulation cancelled. No balances, completion records, or stamps changed."}</span></InlineNotice></div><button ref={retryRef} type="button" className={styles.primary} onClick={reopen} data-testid="checkout-retry">{locale === "ko" ? "다시 열기" : "Open again"}</button></> : null}
 
         {checkout.payment === "PAY-SIMULATED-SUCCESS" ? (
-          <section className={styles.receipt} data-testid="checkout-receipt">
+          <section ref={receiptRef} className={styles.receipt} data-testid="checkout-receipt" role="status" aria-live="polite" tabIndex={-1}>
             <Check size={22} />
             <div><strong>{locale === "ko" ? "시뮬레이션이 완료됐어요." : "Simulation complete."}</strong><span>{locale === "ko" ? "실제 결제는 발생하지 않았습니다." : "No real payment occurred."}</span></div>
             <code>{locale === "ko" ? "미리보기 참조" : "Preview reference"} · SIM-SG01</code>
@@ -103,11 +121,11 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
 
         {checkout.payment === "PAY-SIMULATED-SUCCESS" ? (
           <div className={styles.visitProof}>
-            <p><strong>{locale === "ko" ? `방문 스탬프 ${state.stamps}/10` : `Visit stamps ${state.stamps}/10`}</strong><span>{qaControls ? locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 이 데모는 GPS·QR·가맹점 영수증이 아닌 고정 세션 fixture로 방문 중복 방지만 시뮬레이션합니다." : "Payment alone adds no stamp. This demo simulates visit deduplication with a deterministic session fixture—not GPS, QR, or merchant evidence." : locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 별도의 재현 가능한 미리보기 방문 기록을 확인하며, GPS·QR·가맹점 증거가 아닙니다." : "Payment alone adds no stamp. This preview checks a separate, reproducible visit record; it is not GPS, QR, or merchant evidence."}</span></p>
-            {state.stamps < 10 ? <button type="button" className={styles.secondary} onClick={verifyVisit} disabled={visitState === "checking"} data-testid="visit-proof-check">{qaControls ? visitState === "checking" ? locale === "ko" ? "방문 fixture 확인 중" : "Checking visit fixture" : locale === "ko" ? "시뮬레이션 방문 fixture 확인" : "Check simulated visit fixture" : visitState === "checking" ? locale === "ko" ? "미리보기 방문 확인 중" : "Checking preview visit" : locale === "ko" ? "별도 미리보기 방문 확인" : "Check separate preview visit"}</button> : null}
-            {visitState === "accepted" ? <InlineNotice tone="success"><Check size={18} /><span>{qaControls ? locale === "ko" ? "중복되지 않은 시뮬레이션 방문 fixture로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique simulated visit fixture recorded your tenth stamp. It is not real on-site evidence." : locale === "ko" ? "중복되지 않은 미리보기 방문 기록으로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique preview visit recorded your tenth stamp. It is not real on-site evidence."}</span></InlineNotice> : null}
+            <p><strong>{locale === "ko" ? `방문 스탬프 ${state.stamps}/10` : `Visit stamps ${state.stamps}/10`}</strong><span>{qaControls ? locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 이 데모는 GPS·QR·가맹점 영수증이 아닌 고정된 테스트용 방문 기록으로 중복 방지만 시뮬레이션합니다." : "Payment alone adds no stamp. This demo simulates visit deduplication with a deterministic session fixture—not GPS, QR, or merchant evidence." : locale === "ko" ? "결제만으로 스탬프는 늘지 않습니다. 별도의 재현 가능한 미리보기 방문 기록을 확인하며, GPS·QR·가맹점 증거가 아닙니다." : "Payment alone adds no stamp. This preview checks a separate, reproducible visit record; it is not GPS, QR, or merchant evidence."}</span></p>
+            {state.stamps < 10 ? <button type="button" className={styles.secondary} onClick={verifyVisit} disabled={visitState === "checking"} data-testid="visit-proof-check">{qaControls ? visitState === "checking" ? locale === "ko" ? "테스트용 방문 기록 확인 중" : "Checking visit fixture" : locale === "ko" ? "테스트용 방문 기록 확인" : "Check simulated visit fixture" : visitState === "checking" ? locale === "ko" ? "미리보기 방문 확인 중" : "Checking preview visit" : locale === "ko" ? "별도 미리보기 방문 확인" : "Check separate preview visit"}</button> : null}
+            {visitState === "accepted" ? <InlineNotice tone="success"><Check size={18} /><span>{qaControls ? locale === "ko" ? "중복되지 않은 테스트용 방문 기록으로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique simulated visit fixture recorded your tenth stamp. It is not real on-site evidence." : locale === "ko" ? "중복되지 않은 미리보기 방문 기록으로 열 번째 스탬프를 남겼어요. 실제 현장 방문 증거가 아닙니다." : "A unique preview visit recorded your tenth stamp. It is not real on-site evidence."}</span></InlineNotice> : null}
             {state.stamps === 10 && visitState !== "accepted" ? <InlineNotice tone="neutral"><Check size={18} /><span>{locale === "ko" ? "열 번째 방문은 이전에 별도 확인되어 있습니다." : "The tenth visit was confirmed separately before this checkout."}</span></InlineNotice> : null}
-            {visitState === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{qaControls ? locale === "ko" ? "이미 사용한 시뮬레이션 fixture라 스탬프가 다시 늘지 않았어요." : "This simulated visit fixture was already used, so the stamp did not increase again." : locale === "ko" ? "이미 사용한 미리보기 방문 기록이라 스탬프가 다시 늘지 않았어요." : "This preview visit was already used, so the stamp did not increase again."}</span></InlineNotice> : null}
+            {visitState === "duplicate" ? <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{qaControls ? locale === "ko" ? "이미 사용한 테스트용 방문 기록이라 스탬프가 다시 늘지 않았어요." : "This simulated visit fixture was already used, so the stamp did not increase again." : locale === "ko" ? "이미 사용한 미리보기 방문 기록이라 스탬프가 다시 늘지 않았어요." : "This preview visit was already used, so the stamp did not increase again."}</span></InlineNotice> : null}
           </div>
         ) : null}
 
