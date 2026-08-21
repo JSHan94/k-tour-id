@@ -1,26 +1,26 @@
 # ONDO B · Five-Designer Sleekness Review
 
-상태: `SLEEK R4 5/5 COMPLETE · NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `SLEEK R5 5/5 COMPLETE · NOT CLEAN · OBJECTIVE S2 3 · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 이 문서는 기존 기능·진실·접근성 계약을 보존하면서 `/ondo-b`의 모든 Flow, surface, component, state를 더 sleek하고 일관된 제품 언어로 개선하는 실행 정본이다. 목표는 의견을 억지로 없애는 것이 아니라 **동일 제품 SHA에서 unresolved actionable UX/UI issue를 0으로 수렴**시키는 것이다.
 
-## 1. R4 frozen input and frozen successor
+## 1. R5 reviewed input and frozen retry candidate
 
 | Field | Value |
 |---|---|
-| R4-reviewed product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
-| R4-reviewed harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
-| R4-reviewed baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`; 276 committed PNGs |
-| Frozen successor | Product `9ec3d192d0ebdc9614d980bdb173633aee16fc17` · Harness/HEAD `12354bcf71621c00a08433faf09cbb000683ae61` · digest `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b` |
+| R5 evidence candidate | `39687c33ca5d14b60304b762b373e719bb4bdbbd` |
+| R5-reviewed Product / Harness | `9ec3d192d0ebdc9614d980bdb173633aee16fc17` / `12354bcf71621c00a08433faf09cbb000683ae61` |
+| R5-reviewed baseline | digest `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b`; 46/44/276 |
+| Frozen retry candidate | Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc` · Harness/HEAD `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f` · digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91` |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
-| Current visual target | `46 cases · 44 state IDs · 6 viewports = 276 committed screenshots` |
+| Current visual target | `47 cases · 45 state IDs · 6 viewports = 282 committed screenshots` |
 | Checkpoint registry | `126 exact rows · pixel | functional_only` |
-| R4-reviewed automated gate | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276` · high-risk repeat `72/72` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
-| Historical round | `SLEEK R3 5/5 COMPLETE · NOT CLEAN · 11 actionable = S1 2 + S2 9` |
-| Current lifecycle | `SLEEK R4 5/5 COMPLETE · NOT CLEAN`; frozen successor `12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · REVIEWER CLOSURE PENDING · R5 READY TO START` |
+| R5 reviewed result | `5/5 COMPLETE · NOT CLEAN`; D1/D3/D5 objective S2 3, D2/D4 CLEAN |
+| Retry automated gate | exact-`ee19adb…` visual `282/282`, high-risk `216/216`, landscape `2/2`; nonpixel B `420+84/504`, A `22/22`; failures `0`; full PASS |
+| Current lifecycle | retry `3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · REVIEWER CLOSURE PENDING · R5 RETRY READY TO START` |
 
-제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. R4 다섯 reviewer는 같은 frozen input에서 전수 검토를 완료했고 raw `S2 12 + S3 2`를 제출했다. 중복 통합 결과는 `objective S2 10 + accepted polish S3 2`이며 frozen successor에 `12/12 FIXED AND AUTOMATED`가 포함됐다. 이는 reviewer CLEAN이 아니다. Exact-tuple automated final receipts는 통과했고 R5는 `READY TO START`; fresh R5/R6 reviewer closure가 남아 있다.
+제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 clean tuple은 역사 자료로만 보존한다. R5 다섯 reviewer는 같은 frozen input에서 전수 검토를 완료했고 D1/D3/D5가 objective S2 세 건을 제출했으며 D2/D4는 CLEAN이었다. Retry candidate에 `3/3 FIXED AND AUTOMATED`가 포함됐고 exact-tuple full automated receipts가 통과했지만 reviewer CLEAN이 아니다. Fresh two-round closure가 남아 있다.
 
 ## 2. Sleekness의 조작적 정의
 
@@ -57,11 +57,11 @@ Sleek는 단순히 카드와 색을 줄이는 취향이 아니다. 다음 조건
 
 - `18/18 Flow` 확인
 - `14/14 content surface family` 확인
-- 현재 `46/46 visual case` 확인
-- 현재 `44/44 distinct state ID` 확인
+- 현재 `47/47 visual case` 확인
+- 현재 `45/45 distinct state ID` 확인
 - `KO/EN` copy-heavy surface 확인
 - `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` 전수 확인
-- `46 cases × 6 viewports = 276` image census 확인
+- `47 cases × 6 viewports = 282` image census 확인
 - 126 checkpoint의 `pixel | functional_only` disposition 확인
 - loading, empty, pending, success, error, cancel, locked, unsupported 상태 확인 또는 사유 있는 N/A
 - shell/nav/toast/sheet/focus/scroll 같은 shared component 확인
@@ -98,7 +98,7 @@ proposed fix · owner · status · fix SHA · retest evidence
 3. token/shared component 문제를 먼저, flow-local 문제를 다음으로 묶는다.
 4. product fix와 regression harness를 분리해 커밋한다.
 5. 영향 surface의 실제 browser, geometry, Axe, KO/EN, pixel을 먼저 통과시킨다.
-6. G0~G6와 `FL-001`~`FL-018`, 276-image full pixel matrix를 no-update로 다시 실행한다.
+6. G0~G6와 `FL-001`~`FL-018`, 282-image full pixel matrix를 no-update로 다시 실행한다.
 7. 새 tuple에서 다섯 reviewer가 다시 blind review한다.
 8. 같은 tuple에서 두 번 연속 `5/5 CLEAN`이 될 때 종료한다.
 
@@ -136,4 +136,4 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
 
-`evidence/SLEEK-R1/`, `evidence/SLEEK-R2/`, `evidence/SLEEK-R3/reviews|coverage/`, `evidence/SLEEK-R4/reviews|coverage/`는 수정하지 않는 역사 원본이다. R4 검토 tuple은 product `05f3002…`, harness `2d7e0f0…`, baseline digest `74100b05…`였고 verdict는 `NOT CLEAN`이다. 원본 aggregate checksum은 `10c68bebb3d90af971e5fc98f7e7d6884a47707266ac95e3a71c3a5067e453a0`이다. [`evidence/SLEEK-R4/frozen-receipt.md`](./evidence/SLEEK-R4/frozen-receipt.md)는 frozen successor를 별도로 고정한다. Reviewer CLEAN 또는 release PASS는 미리 기록하지 않는다.
+`evidence/SLEEK-R1/`~`SLEEK-R5/reviews|coverage/`는 수정하지 않는 역사 원본이다. R4 원본 aggregate checksum은 `10c68bebb3d90af971e5fc98f7e7d6884a47707266ac95e3a71c3a5067e453a0`, R5 원본은 `5a5699b3c1dfb14f9ed7c11be37839d324801774a833dc6e3a529963758265e0`이다. [`evidence/SLEEK-R5/frozen-receipt.md`](./evidence/SLEEK-R5/frozen-receipt.md)는 retry candidate를 별도로 고정한다. Reviewer CLEAN 또는 release PASS는 미리 기록하지 않는다.

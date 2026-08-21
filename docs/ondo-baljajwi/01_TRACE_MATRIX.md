@@ -1,10 +1,10 @@
 # ONDO B · Requirement → Flow → Actual Evidence Matrix
 
-상태: `HONEST REGISTRY · R4 COMPLETE NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `HONEST REGISTRY · R5 COMPLETE NOT CLEAN · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
-R4 검토 제품 SHA: `05f3002899485c528e31730bfebd57d71c3d788d`
+R5 검토 제품 SHA: `9ec3d192d0ebdc9614d980bdb173633aee16fc17`
 
-R4 검토 Harness SHA: `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`. Frozen successor는 Product `9ec3d192d0ebdc9614d980bdb173633aee16fc17`, Harness/HEAD `12354bcf71621c00a08433faf09cbb000683ae61`, digest `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b`다.
+R5 검토 Harness SHA는 `12354bcf71621c00a08433faf09cbb000683ae61`, reviewed digest는 `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b`다. Frozen retry candidate는 Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc`, Harness/HEAD `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f`, digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91`다.
 
 ## 1. 판정 규칙
 
@@ -60,7 +60,7 @@ R4 검토 Harness SHA: `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`. Frozen succes
 | `FL-017` | `B-E2E-FL-017-ENTRY` ACTUAL | `B-E2E-FL-017-DECISION` ACTUAL | `B-E2E-FL-017-CANCEL` ACTUAL | `B-E2E-FL-017-ERROR` ACTUAL | `B-E2E-FL-017-RETRY` ACTUAL | `B-E2E-FL-017-TERMINAL` ACTUAL | `B-E2E-FL-017-RETURN` ACTUAL |
 | `FL-018` | `B-E2E-FL-018-ENTRY` ACTUAL | `B-E2E-FL-018-DECISION` ACTUAL | `B-E2E-FL-018-CANCEL` ACTUAL | `B-E2E-FL-018-ERROR` ACTUAL | `B-E2E-FL-018-RETRY` ACTUAL | `B-E2E-FL-018-TERMINAL` ACTUAL | `B-E2E-FL-018-RETURN` ACTUAL |
 
-현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. 동결 tuple의 discovery는 `348 tests / 25 files`, B E2E는 `323 pass / 25 intentional viewport skips / 0 fail`이며, checkpoint mapping은 `121 actual + 5 N/A + 0 GAP`으로 통과했다.
+현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. Retry static discovery는 `B 504 tests / 31 files`, registry는 `5/5 PASS`; full browser result는 automated gate가 끝난 뒤에만 봉인한다.
 
 ## 4. Browser suites
 
@@ -74,19 +74,19 @@ R4 검토 Harness SHA: `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`. Frozen succes
 
 ## 5. Pixel evidence
 
-실제 layout/state가 다른 `46 visual cases / 44 distinct state IDs`를 아래 여섯 viewport에서 각각 실행한다.
+실제 layout/state가 다른 `47 visual cases / 45 distinct state IDs`를 아래 여섯 viewport에서 각각 실행한다.
 
 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 
-SLEEK R4는 위 검토 tuple에서 `5/5 COMPLETE · NOT CLEAN`이며 raw `S2 12 + S3 2`, 중복 통합 후 `objective S2 10 + accepted S3 2`를 남겼다. Frozen successor tuple에 `12/12 FIXED AND AUTOMATED`가 포함됐고 exact-tuple automated gate는 통과했지만 fresh reviewer closure 전에는 닫히지 않는다. R5는 `READY TO START`, clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+SLEEK R5는 reviewed tuple에서 `5/5 COMPLETE · NOT CLEAN`이며 D1/D3/D5가 서로 다른 objective S2 세 건을 남겼고 D2/D4는 `CLEAN`이었다. Retry tuple에 `3/3 FIXED AND AUTOMATED`가 포함됐고 exact-tuple full automated gate가 통과했다. R5 retry는 `READY TO START`, clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
 
-목표 baseline은 `46 × 6 = 276` PNG다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 prompt/locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
+목표 baseline은 `47 × 6 = 282` PNG다. 기존 surface에 `CITY-FILTERED-MAP`을 추가해 한 건 검색 후 Map/selection/legend 동기화를 고정한다.
 
-`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. R4 검토 baseline digest `74100b05…`는 당시 same-tuple unchanged-baseline `276/276 PASS`였다. Frozen successor digest는 `4cfbed3…`, 276장은 `84 R4-FIX + 192 R4-CARRY`이며 full no-update `276/276 PASS`다.
+`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. Retry digest는 `f1ec9b0c…`, 282장은 `18 R5-FIX + 264 R5-CARRY`; exact uninterrupted no-update full result는 `282/282 PASS`, high-risk는 `216/216 PASS`다. Nonpixel B `420+84/504`와 A `22/22`도 통과했다.
 
 ## 6. Content evidence
 
-다음 KO/EN surface evidence ID가 registry에 있으며 R4 검토 tuple의 content/browser gate에서 통과했다. Frozen successor의 exact-tuple content/browser receipt도 full automated gate에서 통과했다.
+다음 KO/EN surface evidence ID가 registry에 있으며 retry tuple의 exact content/browser result도 full automated gate에서 통과했다.
 
 `B-COPY-ONBOARDING-KO`, `B-COPY-ONBOARDING-EN`, `B-COPY-NATION-KO`, `B-COPY-NATION-EN`, `B-COPY-CITY-LIST-KO`, `B-COPY-CITY-LIST-EN`, `B-COPY-PLACE-KO`, `B-COPY-PLACE-EN`, `B-COPY-ACCOUNT-GATE-KO`, `B-COPY-ACCOUNT-GATE-EN`, `B-COPY-AGE-GATE-KO`, `B-COPY-AGE-GATE-EN`, `B-COPY-TABLES-KO`, `B-COPY-TABLES-EN`, `B-COPY-TABLE-CHAT-KO`, `B-COPY-TABLE-CHAT-EN`, `B-COPY-LOCAL-SIGNAL-KO`, `B-COPY-LOCAL-SIGNAL-EN`, `B-COPY-CHECKOUT-KO`, `B-COPY-CHECKOUT-EN`, `B-COPY-IDENTITY-KO`, `B-COPY-IDENTITY-EN`, `B-COPY-PROFILE-KO`, `B-COPY-PROFILE-EN`, `B-COPY-LABS-KO`, `B-COPY-LABS-EN`, `B-COPY-AFTER19-KO`, `B-COPY-AFTER19-EN`.
 

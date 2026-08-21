@@ -1,12 +1,12 @@
 # ONDO B · 발자취형 Surface Matrix
 
-상태: `R4 COMPLETE NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN 0/2 · NOT DEPLOYED`
+상태: `R5 COMPLETE NOT CLEAN · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN 0/2 · NOT DEPLOYED`
 
 발자취의 고유 화면을 복제하지 않고 거의 흰 canvas, 큰 여백, hairline 구획, 절제된 점·기록 메타포, 한 개의 우세한 행동을 ONDO의 F&B heat/identity 흐름에 맞게 번역했다. Map, Place, App shell, Onboarding, Gate, Tables, Chat, Checkout, My, ID, Labs가 모두 같은 B 제품에 통합돼 있다.
 
 | Flow | 정확한 의미 | 주요 B surface | 잠긴 경계 |
 |---|---|---|---|
-| `FL-001` | Guest Discover | Onboarding, Nation, City map/list/fallback, Place | Guest 즉시 탐색, 실제 400과 simulated 80 분리 |
+| `FL-001` | Guest Discover | Onboarding, Nation, City map/list/filtered map/fallback, Place | Guest 즉시 탐색, 실제 400과 simulated 80 분리; search/list/map/selection/legend 동기화 |
 | `FL-002` | 19+ proof → After19 exact venue | Place locked teaser, Age Gate, unlocked detail | Person/Passport를 강제하지 않고 Age만 독립 확인 |
 | `FL-003` | Table → image chat → feedback/report | Tables, Table, Chat, Media, Feedback, Report | confirmed member 전 chat 금지, 국적/성별 matching 없음 |
 | `FL-004` | Checkout → receipt → separate visit → stamp | Checkout, My, Labs milestone | payment≠visit, simulated record truth |
@@ -39,7 +39,7 @@
 
 ## 현재 visual 검수 계약
 
-- `46` visual case / `44` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R4 검토 baseline은 harness `2d7e0f0…`, digest `74100b05…`였고 당시 `276/276`을 통과했다. Frozen successor baseline은 harness/HEAD `12354bc…`, digest `4cfbed3…`, `276 = 84 R4-FIX + 192 R4-CARRY`, 각 viewport `46`이며 full no-update `276/276`을 통과했다.
+- `47` visual case / `45` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-reviewed baseline은 harness `12354bc…`, digest `4cfbed3…`, 46/44/276이었다. Retry baseline은 harness/HEAD `ee19adb…`, digest `f1ec9b0c…`, `282 = 18 R5-FIX + 264 R5-CARRY`, 각 viewport `47`; exact full no-update `282/282`, high-risk `216/216`, landscape `2/2`가 통과했다.
 - 126 flow checkpoint 각각은 machine registry에서 `pixel` 또는 사유 있는 `functional_only`로 연결한다.
 - visible metadata 12px 이상, control 44×44 이상, horizontal overflow·nav/CTA overlap 0.
 - serious/critical Axe issue 0; keyboard focus, Escape, focus return을 실제 surface에서 검사.
@@ -47,4 +47,4 @@
 - heat score는 solid color circle, neutral cluster count는 outline geometry로 구분한다.
 - near-white/hairline/negative-space 문법을 전체 surface에 적용하고 heat 이외 색은 status 의미에만 쓴다.
 
-제품 SHA `05f3002899485c528e31730bfebd57d71c3d788d`, Harness SHA `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`는 R4 reviewer provenance용 historical tuple이다. 이 tuple의 automated gates는 통과했지만 R4는 `5/5 COMPLETE · NOT CLEAN`, raw `S2 12 + S3 2`, consolidated `10 S2 + 2 accepted S3`였다. Frozen successor Product `9ec3d19…`, Harness/HEAD `12354bc…`, digest `4cfbed3…`에 `12/12 FIXED AND AUTOMATED`가 포함됐고 exact-tuple automated gate를 통과했다. Fresh R5/R6 closure는 `PENDING`; R5 `READY TO START`, clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다. 두 번의 동일-tuple 5/5 clean round 전에는 이 matrix를 reviewer CLEAN 또는 release PASS로 표시하지 않는다.
+R5-reviewed tuple은 Product `9ec3d19…`, Harness `12354bc…`, digest `4cfbed3…`이고 verdict는 `5/5 COMPLETE · NOT CLEAN · objective S2 3`이었다. Frozen retry Product `30dcb13…`, Harness/HEAD `ee19adb…`, digest `f1ec9b0c…`에 `3/3 FIXED AND AUTOMATED`가 포함됐고 exact-tuple automated gate는 `FULL PASS`다. Fresh closure는 `PENDING`; R5 retry `READY TO START`, clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다. 두 번의 동일-tuple 5/5 clean round 전에는 reviewer CLEAN 또는 release PASS로 표시하지 않는다.

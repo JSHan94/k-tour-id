@@ -1,11 +1,11 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `R4 COMPLETE NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `R5 COMPLETE NOT CLEAN · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 ## 1. Fixed-tuple rule
 
-1. R4가 검토한 historical tuple은 product `05f3002899485c528e31730bfebd57d71c3d788d`, harness `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`다. 이 tuple의 verdict는 `NOT CLEAN`이다.
-2. Frozen successor는 Product `9ec3d192d0ebdc9614d980bdb173633aee16fc17`, Harness/HEAD `12354bcf71621c00a08433faf09cbb000683ae61`, digest `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b`다. G0~G6 final receipts는 `FULL AUTOMATED GATE PASS`, R5는 `READY TO START`다.
+1. R5가 검토한 historical tuple은 evidence `39687c33…`, Product `9ec3d192…`, Harness `12354bcf…`, digest `4cfbed3b…`다. Verdict는 `5/5 COMPLETE · NOT CLEAN · objective S2 3`이다.
+2. Frozen retry candidate는 Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc`, Harness/HEAD `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f`, digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91`다. G0~G6 final receipts는 `FULL AUTOMATED GATE PASS`, R5 retry는 `READY TO START`다.
 3. 제품 fix commit 뒤의 QA evidence commit은 제품 source를 수정하지 않는다.
 4. `PLAYWRIGHT_BASE_URL`은 고정 product SHA를 serving하는 URL만 허용한다.
 5. product, harness, 승인 baseline 중 하나라도 바뀌면 진행 중 verdict와 clean streak를 `0/2`로 되돌린다.
@@ -20,11 +20,11 @@ G1 typecheck + webpack production build
 G2 contracts + real browser: 18 composite journeys and data/map boundaries
 G3 content/localization: reachable KO/EN surfaces
 G4 a11y/interaction: focus, modal isolation, name, 44px, contrast, overflow
-G5 pixel: 46 cases × 6 exact viewports = 276 committed baselines
+G5 pixel: 47 cases × 6 exact viewports = 282 committed baselines
 G6 runtime: pageerror/console/requestfailed/first-party HTTP 4xx·5xx = 0
-G7 historical five-role blind SLEEK R4 review = COMPLETE · NOT CLEAN
-G8 successor frozen tuple five-role blind SLEEK R5 review
-G9 same successor tuple five-role blind SLEEK R6 confirmation
+G7 historical five-role blind SLEEK R5 review = COMPLETE · NOT CLEAN
+G8 retry frozen tuple five-role blind R5 closure review, only after G0~G6 PASS
+G9 same retry tuple five-role blind confirmation round
 ```
 
 `GAP`은 skip이나 N/A가 아니다. 현재 registry는 `0 GAP`이지만, 실제 여정 증거가 깨지면 즉시 GAP으로 되돌린다.
@@ -64,14 +64,14 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm test:visual:b
 ## 6. Pixel baseline
 
 - exact viewport: `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`.
-- registry: `46 cases`, `44 distinct state IDs`, `276 PNG target`.
+- registry: `47 cases`, `45 distinct state IDs`, `282 PNG target`.
 - fixed time: `2026-08-19 20:30 KST`; local fonts ready; animation/transition/caret/smooth scroll off.
 - 외부 vector basemap만 deterministic empty source로 대체한다.
 - ONDO marker/cluster/label, legend, list, sheet, nav, error/retry, focus, truth copy는 mask하지 않는다.
 - 모든 126 checkpoint는 `pixel` 또는 사유 있는 `functional_only` disposition을 가진다.
 - baseline 변경은 issue 단위로 승인하며 blanket `--update-snapshots`를 release evidence로 인정하지 않는다.
-- 276 PNG가 모두 git tracked이고 정확한 viewport dimension을 가질 때만 baseline을 freeze한다.
-- R4 검토 baseline digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`의 uninterrupted workers-1 unchanged-baseline run은 당시 `276/276 PASS`, 각 viewport `46/46`, high-risk repeat `72/72 PASS`였다. Frozen successor는 digest `4cfbed3…`, `84` changed + `192` carried, 46×6 inventory이며 full no-update `276/276 PASS`, high-risk required `180/180 PASS`다.
+- 282 PNG가 모두 git tracked이고 정확한 viewport dimension을 가질 때만 baseline을 freeze한다.
+- Retry digest는 `f1ec9b0c…`, `18 R5-FIX + 264 R5-CARRY`, `47×6` inventory다. Exact uninterrupted workers-1 no-update `282/282`, high-risk `216/216`, landscape `2/2`, nonpixel B `420+84/504`, A `22/22`가 통과했다.
 
 ## 7. Five-role blind review
 
@@ -91,11 +91,11 @@ Clean round는 같은 product+harness+baseline tuple에서 다음을 모두 만�
 
 - registry/browser/content/a11y/runtime/pixel 명령 실패와 unexpected skip 0
 - `121 ACTUAL · 5 N/A · 0 GAP`, checkpoint mapping 126/126
-- 276/276 no-update pixel PASS와 committed baseline census PASS
+- 282/282 no-update pixel PASS와 committed baseline census PASS
 - product runtime error 0; 외부 map failure의 usable fallback PASS
 - unresolved actionable `S0/S1/S2=0`
 - truth/privacy/a11y regression 0
 - reviewer coverage receipt `5/5 COMPLETE`
 - reviewer 원문, issue closure, 명령 log, checksum과 frozen tuple 기록
 
-동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. R4 검토 tuple은 자동 gate를 통과했지만 reviewer verdict는 `5/5 COMPLETE · NOT CLEAN`이었다. Raw `S2 12 + S3 2`는 `10 S2 + 2 accepted S3`로 통합됐고 frozen successor에서 `12/12 FIXED AND AUTOMATED`다. Successor final G0~G6 receipt는 `FULL AUTOMATED GATE PASS`, fresh R5/R6 closure는 `PENDING`; R5는 `READY TO START`, clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. R5 reviewed tuple은 `5/5 COMPLETE · NOT CLEAN`, objective S2 세 건이다. Retry candidate는 `3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS`; R5 retry는 `READY TO START`, clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.

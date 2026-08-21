@@ -1,23 +1,23 @@
 # ONDO B · Current As-built
 
-상태: `PRODUCT IMPLEMENTED · R4 COMPLETE NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `PRODUCT IMPLEMENTED · R5 COMPLETE NOT CLEAN · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | 항목 | 최종 값 |
 |---|---|
-| R4-reviewed Product/Harness | `05f3002899485c528e31730bfebd57d71c3d788d` / `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
-| Frozen successor | Product `9ec3d192d0ebdc9614d980bdb173633aee16fc17` · Harness/HEAD `12354bcf71621c00a08433faf09cbb000683ae61` · digest `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b` |
+| R5-reviewed Evidence/Product/Harness/digest | `39687c33…` / `9ec3d192…` / `12354bcf…` / `4cfbed3b…` |
+| Frozen retry | Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc` · Harness/HEAD `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f` · digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91` |
 | Route | `/ondo-b` |
 | Current preview | `NOT DEPLOYED`; 기존 private B URL은 이전 tuple의 역사 preview |
 | 제품 형태 | responsive Next.js web app |
 | Product scope | 외국인 우선 서울·부산 F&B discovery + JIT identity/commerce/community demo |
 | Requirement trace | `19/19` |
 | Flow trace | `18/18 · 126 checkpoints · 121 ACTUAL · 5 reasoned N/A · 0 GAP` |
-| Pixel target | `46 cases · 44 states · 6 viewports = 276 committed baselines` |
+| Pixel target | `47 cases · 45 states · 6 viewports = 282 committed baselines` |
 | Data | 공식 장소 `400` (`서울 200 / 부산 200`) |
 | ONDO preview | `SIMULATED` signal `80` (`40 / 40`) |
 | After19 preview | `SIMULATED` night-category signal `17` (`서울 7 / 부산 10`) |
 
-이 문서가 B 제품 source의 실제 구현 상태 정본이다. Frozen successor는 `12/12 FIXED AND AUTOMATED`지만 reviewer acceptance는 별개다. [`docs/ondo-execution/13_AS_BUILT.md`](../ondo-execution/13_AS_BUILT.md)는 `/ondo` A/v2 후보의 역사 기록이며 이 문서의 수치와 상태를 덮어쓰지 않는다.
+이 문서가 B 제품 source의 실제 구현 상태 정본이다. Frozen retry는 `3/3 FIXED AND AUTOMATED`지만 automated/reviewer acceptance는 별개다. [`docs/ondo-execution/13_AS_BUILT.md`](../ondo-execution/13_AS_BUILT.md)는 `/ondo` A/v2 후보의 역사 기록이며 이 문서의 수치와 상태를 덮어쓰지 않는다.
 
 ## 1. 실제 구현된 제품 구조
 
@@ -25,7 +25,7 @@
 |---|---|
 | App entry | `/ondo-b`가 B shell/provider 안에 Map, Place, Identity, After19, Tables, Chat, Local Signal, Checkout, My, Labs를 mount한다. |
 | Onboarding | 가치 설명 → 단기 여행자/한국인/장기체류자 → 관심사 → Guest map. skip/failure도 KYC 없이 map으로 간다. |
-| Map | MapLibre vector map, Nation → Seoul/Busan → list/place, score와 cluster geometry 분리, tile error 시 동일 200개 list+Retry. |
+| Map | MapLibre vector map, Nation → Seoul/Busan → list/place, score와 cluster geometry 분리, filtered List→Map/selection/legend 동기화, tile error 시 동일 200개 list+Retry. |
 | Place | 공식 한글명·좌표·주소·source snapshot을 보여주며 영업시간·카드·메뉴·영어 지원은 evidence가 없으면 UNKNOWN이다. |
 | Identity | Guest, Account, Person, Age, Payment KYC를 독립 상태로 유지하고 one-shot returnTo로 원 행동을 재개한다. |
 | After19 | simulated signal 중 `night` category만 ONDO 자체 19+ preview policy 대상이다. 공식 장소의 법적 연령·주류·영업 사실을 주장하지 않는다. |
@@ -65,13 +65,14 @@
 
 | Gate | 현재 상태 |
 |---|---|
-| R4-reviewed tuple | `05f3002… / 2d7e0f0… / 74100b05…`; historical `NOT CLEAN` review provenance |
-| Frozen successor | Product `9ec3d19…` · Harness/HEAD `12354bc…` · digest `4cfbed3…`; `12/12 FIXED AND AUTOMATED` |
+| R5-reviewed tuple | `39687c3… / 9ec3d19… / 12354bc… / 4cfbed3…`; historical `5/5 COMPLETE · NOT CLEAN` provenance |
+| Frozen retry | Product `30dcb13…` · Harness/HEAD `ee19adb…` · digest `f1ec9b0c…`; `3/3 FIXED AND AUTOMATED` |
 | Checkpoint registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP`; `pixel | functional_only` mapping present |
 | R4-reviewed automated receipt | historical `PASS` — discovery `348 tests / 25 files` · typecheck/build/contracts/E2E · visual `276/276` · errors `0`; successor에 재사용하지 않음 |
-| Successor automated receipt | frozen baseline `276 = 84 R4-FIX + 192 R4-CARRY`; final nonpixel/no-update pixel/integrity receipt `FULL AUTOMATED GATE PASS` |
+| Retry automated receipt | baseline `282 = 18 R5-FIX + 264 R5-CARRY`; exact visual `282/282`, high-risk `216/216`, landscape `2/2`; nonpixel B `420+84/504`, A `22/22`; `FULL AUTOMATED GATE PASS` |
 | SLEEK R3 | historical `5/5 COMPLETE · NOT CLEAN · 11 actionable`; successor `11/11 FIXED · CLOSURE PENDING` |
-| SLEEK R4 | historical `5/5 COMPLETE · NOT CLEAN`; raw `S2 12/S3 2`, consolidated `10 S2 + 2 accepted S3`; successor `12/12 FIXED AND AUTOMATED · REVIEWER CLOSURE PENDING`; R5 `READY TO START` |
+| SLEEK R4 | historical `5/5 COMPLETE · NOT CLEAN`; successor fixes and automated PASS are historical |
+| SLEEK R5 | historical `5/5 COMPLETE · NOT CLEAN`; objective S2 3; retry `3/3 FIXED AND AUTOMATED · REVIEWER CLOSURE PENDING`; R5 retry `READY TO START` |
 | Clean streak | `0/2` |
 
 이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS와 R3/R4는 [`04_EVIDENCE_MANIFEST.md`](./04_EVIDENCE_MANIFEST.md)와 `evidence/RUN-20260819-*-FINAL/`에 역사적으로 보존한다. 제품 변경 뒤 현재 결과로 합산하지 않는다.
@@ -92,4 +93,4 @@
 
 제품 또는 harness가 바뀌면 clean streak를 0으로 되돌린다. 같은 tuple에서 다섯 독립 역할의 actionable `S0/S1/S2=0` round가 두 번 연속 끝나고 durable evidence가 연결된 뒤에만 B preview를 승격한다.
 
-이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 현재 frozen successor와 다르다. 현재 sleek B는 SLEEK R4의 consolidated 12개 finding을 fixed and automated 상태로 포함하고 exact-tuple automated final receipts를 통과했다. R5/R6 두 차례 5/5 clean round와 별도 deployment smoke는 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo`는 변경하지 않는다.
+이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 현재 frozen retry와 다르다. 현재 sleek B는 SLEEK R5의 objective S2 세 건을 fixed and automated 상태로 포함하고 exact-tuple automated final receipts를 통과했다. 두 차례 5/5 clean round와 별도 deployment smoke는 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo`는 변경하지 않는다.

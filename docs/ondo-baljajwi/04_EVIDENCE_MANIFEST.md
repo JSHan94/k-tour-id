@@ -1,24 +1,23 @@
 # ONDO B · Evidence Index
 
-상태: `R4 5/5 COMPLETE · NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `R5 5/5 COMPLETE · NOT CLEAN · OBJECTIVE S2 3 · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
-## Current lifecycle and R4-reviewed tuple
+## Current lifecycle and R5-reviewed tuple
 
 | Field | Value |
 |---|---|
-| R4-reviewed Product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
-| R4-reviewed Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
-| R4-reviewed baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`; 276 committed PNGs |
-| Frozen successor Product | `9ec3d192d0ebdc9614d980bdb173633aee16fc17` |
-| Frozen successor Harness / exact HEAD | `12354bcf71621c00a08433faf09cbb000683ae61` |
-| Frozen successor digest | `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b` · `84 R4-FIX + 192 R4-CARRY` |
+| R5-reviewed Evidence / Product | `39687c33ca5d14b60304b762b373e719bb4bdbbd` / `9ec3d192d0ebdc9614d980bdb173633aee16fc17` |
+| R5-reviewed Harness / digest | `12354bcf71621c00a08433faf09cbb000683ae61` / `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b` |
+| Frozen retry Product | `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc` |
+| Frozen retry Harness / exact HEAD | `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f` |
+| Frozen retry digest | `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91` · `18 R5-FIX + 264 R5-CARRY` |
 | Route | `/ondo-b` |
 | Flow registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
-| Visual registry | `46 cases · 44 state IDs` |
+| Visual registry | `47 cases · 45 state IDs` |
 | Exact viewports | `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` |
-| Baseline target | `276 committed PNGs` |
+| Baseline target | `282 committed PNGs` |
 | R4-reviewed automated run | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276 PASS` · high-risk repeat `72/72 PASS` · unexpected/flaky/runtime/geometry/Axe/modal errors `0`; successor에 재사용하지 않음 |
-| Current lifecycle | SLEEK R4 historical `5/5 COMPLETE · NOT CLEAN`; frozen successor `12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · REVIEWER CLOSURE PENDING · R5 READY TO START`; clean streak `0/2` |
+| Current lifecycle | SLEEK R5 historical `5/5 COMPLETE · NOT CLEAN · objective S2 3`; retry `3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · REVIEWER CLOSURE PENDING · R5 RETRY READY TO START`; clean streak `0/2` |
 | Current deployment | `NOT DEPLOYED` |
 
 ## Historical private B — not current evidence
@@ -38,7 +37,7 @@ successor tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로
 
 1. product SHA, harness SHA, baseline digest가 고정돼 있다.
 2. 명령이 같은 product SHA의 production server를 사용한다.
-3. registry가 `18 / 126 / 121 / 5 / 0`, visual이 `46 / 44 / 6 / 276` exact census를 통과한다.
+3. registry가 `18 / 126 / 121 / 5 / 0`, visual이 `47 / 45 / 6 / 282` exact census를 통과한다.
 4. 모든 126 checkpoint가 `pixel | functional_only` machine disposition을 가진다.
 5. grouped flow journey를 126개 exact named `test.step`으로 과장하지 않는다.
 6. runtime guard 설치와 first-party request/HTTP failure 검사가 모든 accepted browser/pixel run에 적용된다.
@@ -56,8 +55,9 @@ successor tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로
 | `B-SLK-R4-RUNTIME` | runtime, geometry, Axe, and modal assertions | product/runtime/layout/accessibility/modal failure 0 | `PASS · 0` |
 | `B-SLK-R3-REVIEW` | five blind roles on historical tuple | record actual verdict | `5/5 COMPLETE · NOT CLEAN · 11 actionable` |
 | `B-SLK-R4-REVIEW` | five blind roles on reviewed tuple | record actual verdict | `5/5 COMPLETE · NOT CLEAN · raw S2 12/S3 2 · consolidated S2 10 + accepted S3 2` |
-| `B-SLK-R5-REVIEW` | fresh five blind roles on frozen successor tuple | first 5/5 clean | `READY TO START` — successor final receipts sealed |
-| `B-SLK-R6-CONFIRM` | same successor tuple five blind roles | second 5/5 clean | not started |
+| `B-SLK-R5-REVIEW` | five blind roles on reviewed successor | record actual verdict | `5/5 COMPLETE · NOT CLEAN · objective S2 3`; D1/D3/D5 NOT CLEAN, D2/D4 CLEAN |
+| `B-SLK-R5-RETRY-GATE` | exact retry full nonpixel + uninterrupted visual | all PASS before review | visual `282/282` + high-risk `216/216` + landscape `2/2`; B `420+84/504`; A `22/22`; `FULL AUTOMATED GATE PASS` |
+| `B-SLK-R6-CONFIRM` | same clean retry tuple five blind roles | second 5/5 clean | not started |
 
 ## Integrated implementation receipt — not a PASS ledger
 
@@ -67,7 +67,7 @@ successor tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로
 | Connect / Profile / Checkout | `f9dabea60948ca517518ee5c472c0405602c407a` | `17fa01ddbce3321b71ee22cc844cf3fe901932f7` | fixed · reviewer closure pending |
 | Map / Shell / Place | `9ec3d192d0ebdc9614d980bdb173633aee16fc17` | `6ca5c6bada0be665b9571c3b39cfeacf67045d3c` | fixed · reviewer closure pending |
 
-이 표는 12개 finding의 fix commit 연결을 증명한다. Frozen successor는 통합 typecheck/build/contracts/full B E2E, full no-update pixel과 integrity final receipts에서 `FULL AUTOMATED GATE PASS`; fresh reviewer closure는 아직 `PENDING`이다.
+이 표는 R4 열두 finding의 역사 fix 연결이다. R5 세 finding의 retry commits는 [`evidence/SLEEK-R5/fixes.md`](./evidence/SLEEK-R5/fixes.md)가 소유한다. Retry exact visual/nonpixel receipts는 모두 `PASS`; fresh reviewer closure는 `PENDING`이다.
 
 ## Pixel evidence contract
 
@@ -81,10 +81,10 @@ k-tour-id-app/tests/visual/ondo-b-flow-pixels-responsive.spec.ts-snapshots/
 
 Exact census:
 
-- mobile canonical: `46` at `390×844`
-- desktop canonical: `46` at `1440×1000`
-- responsive: `184` = `46` each at `360×800`, `430×932`, `768×1024`, `801×1000`
-- total: `276`
+- mobile canonical: `47` at `390×844`
+- desktop canonical: `47` at `1440×1000`
+- responsive: `188` = `47` each at `360×800`, `430×932`, `768×1024`, `801×1000`
+- total: `282`
 
 각 결과는 case metadata, geometry, Axe, runtime evidence를 붙인다. viewport dimension, case/state uniqueness, git-tracked count를 registry test가 검사한다. 외부 vector basemap만 deterministic empty source로 대체하며 ONDO overlay와 UI는 숨기지 않는다.
 
@@ -114,5 +114,6 @@ Exact census:
 - `evidence/SLEEK-R2/` — immutable R2 history
 - [`evidence/SLEEK-R3/manifest.md`](./evidence/SLEEK-R3/manifest.md), `frozen-receipt.md`, `baseline-files.tsv`, `issues.md`, `fixes.md`, `reviews/`, `coverage/` — historical R3 NOT CLEAN 원문과 11개 successor fix/evidence 연결
 - [`evidence/SLEEK-R4/manifest.md`](./evidence/SLEEK-R4/manifest.md), [`frozen-receipt.md`](./evidence/SLEEK-R4/frozen-receipt.md), [`baseline-files.tsv`](./evidence/SLEEK-R4/baseline-files.tsv), [`issues.md`](./evidence/SLEEK-R4/issues.md), [`fixes.md`](./evidence/SLEEK-R4/fixes.md), `reviews/`, `coverage/` — R4 `5/5 COMPLETE · NOT CLEAN` 원문, consolidated 12개 fix, frozen successor tuple/inventory
+- [`evidence/SLEEK-R5/manifest.md`](./evidence/SLEEK-R5/manifest.md), [`frozen-receipt.md`](./evidence/SLEEK-R5/frozen-receipt.md), [`baseline-files.tsv`](./evidence/SLEEK-R5/baseline-files.tsv), [`issues.md`](./evidence/SLEEK-R5/issues.md), [`fixes.md`](./evidence/SLEEK-R5/fixes.md), `reviews/`, `coverage/` — R5 `5/5 COMPLETE · NOT CLEAN` 원문과 세 fix의 retry candidate
 
-`RUN-*`, `SLEEK-R1`, `SLEEK-R2`, SLEEK-R3와 SLEEK-R4의 review/coverage 원본은 immutable history다. successor Product/Harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. R4는 `NOT CLEAN`; 12개 finding은 successor에서 fixed and automated이나 fresh closure pending이다. R5는 `READY TO START`, clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.
+`RUN-*`와 SLEEK-R1~R5 review/coverage 원본은 immutable history다. Retry Product/Harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. R5는 `NOT CLEAN`; 세 finding은 retry에서 fixed and automated이며 full gate가 통과했지만 fresh closure는 pending이다. R5 retry는 `READY TO START`, clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.

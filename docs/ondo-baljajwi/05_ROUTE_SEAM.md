@@ -1,8 +1,8 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE · R4 REVIEW COMPLETE NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN 0/2 · NOT DEPLOYED`
+상태: `ACTIVE · R5 REVIEW COMPLETE NOT CLEAN · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN 0/2 · NOT DEPLOYED`
 
-R4가 검토한 tuple은 product `05f3002899485c528e31730bfebd57d71c3d788d`, harness `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, baseline digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`다. 이 tuple은 자동 gate를 통과했지만 reviewer verdict는 `5/5 COMPLETE · NOT CLEAN`이었다. Frozen successor Product `9ec3d192…`, Harness/HEAD `12354bcf…`, digest `4cfbed3b…`에 `12/12 FIXED AND AUTOMATED`와 issue-scoped harness가 포함됐다. Exact-tuple automated gate는 통과했고 R5는 `READY TO START`; clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다.
+R5가 검토한 tuple은 evidence `39687c33…`, Product `9ec3d192…`, Harness `12354bcf…`, digest `4cfbed3b…`이며 verdict는 `5/5 COMPLETE · NOT CLEAN · objective S2 3`이었다. Frozen retry Product `30dcb136…`, Harness/HEAD `ee19adb…`, digest `f1ec9b0c…`에 `3/3 FIXED AND AUTOMATED`와 issue-scoped harness가 포함됐다. Exact visual/nonpixel gates는 모두 PASS; R5 retry는 `READY TO START`, clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다.
 
 ## 원칙
 
@@ -15,6 +15,7 @@ QA는 `/ondo-b`의 **actual product UI**만 조작한다. 제품에 테스트 �
 | B root | `/ondo-b`, `[data-testid="ondo-b-root"][data-variant="B"]` |
 | B map | `[data-testid="ondo-b-map-entry"]`, `data-map-state` |
 | City | `[data-city="seoul"]`, `[data-city="busan"]` |
+| Filtered map synchronization | non-empty search → Map / place close keeps the filtered marker, rendered/source signal counts, selection and filtered legend aligned |
 | Canonical place | `?venueId=<public venue id>`, `canonical-place-peek/overlay` |
 | Venue-scoped After19 return | `canonical-after19-access/unlock`; consumed gate restores exact `venueId` and expanded detail |
 | Local save recovery | `?scenario=save-failed`; `canonical-save-error/retry/dismiss` preserves the same venue |
