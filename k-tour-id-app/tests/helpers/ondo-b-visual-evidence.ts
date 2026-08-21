@@ -669,10 +669,9 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
   } else if (state === "PLACE-PEEK") {
     await seedB(page, { locale })
-    await openCity(page)
-    await page.getByRole("button", { name: locale === "ko" ? "목록" : "List", exact: true }).click()
-    await page.getByTestId("ondo-b-venue-list").locator("li button").filter({ hasText: locale === "ko" ? "로바" : "Roba" }).click()
+    await openCanonicalVenue(page, { expanded: false })
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
   } else if (state === "PLACE-DETAIL") {
     await seedB(page, { locale })
     await openCanonicalVenue(page)
@@ -1018,7 +1017,7 @@ export async function collectBGeometryIssues(page: Page) {
     const bottomNavOverlaps = bottomNavControls.flatMap((navControl) => controls
       .filter(({ element }) => !bottomNav?.contains(element))
       .flatMap((other) => intersects(navControl.rect, other.rect) ? [{ navigation: label(navControl.element), content: label(other.element) }] : []))
-    const exitPattern = /close|back|return|cancel|stay|not now|dismiss|닫|뒤로|돌아|취소|머물|나중/i
+    const exitPattern = /close|back|return|cancel|stay|keep|not now|dismiss|닫|뒤로|돌아|취소|머물|유지|나중/i
     const allVisibleDialogs = Array.from(root.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']"))
       .map((element) => ({ element, rect: element.getBoundingClientRect() }))
       .filter(({ element, rect }) => {
