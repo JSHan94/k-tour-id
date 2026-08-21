@@ -97,6 +97,7 @@ type BVisualRect = {
 export type BMapPaintProbe = {
   blockers: BVisualRect[]
   canvas: BVisualRect
+  edgeReceiptRegions: BVisualRect[]
   exposedRatio: number
   renderedSignalCount: number
   signalSourceCount: number
@@ -105,6 +106,74 @@ export type BMapPaintProbe = {
 export const B_MAP_PAINT_MIN_EXPOSED_RATIO = 0.12
 export const B_MAP_PAINT_MIN_COMPONENT_PIXELS = 64
 export const B_MAP_PAINT_MIN_HEAT_PIXELS = 96
+export const B_MAP_PAINT_EDGE_BAND_CSS_PIXELS = 8
+export const B_MAP_PAINT_EDGE_MIN_COMPONENT_PIXELS = 4
+export const B_MAP_PAINT_EDGE_MIN_HEAT_PIXELS = 3
+export const B_MAP_PAINT_MAX_RECOVERY_ATTEMPTS = 3
+// These case×viewport contracts are sealed from the reviewed 1a0e5ad PNGs.
+// A case outside the registry uses the ordinary full-frame snapshot matcher;
+// DOM geometry must not silently opt a case into or out of paint recovery.
+export const B_MAP_PAINT_CANVAS_RECEIPTS = [
+  "B-PX-AFTER19-PROMPT-EN:1440x1000",
+  "B-PX-AFTER19-PROMPT-EN:430x932",
+  "B-PX-AFTER19-PROMPT-EN:768x1024",
+  "B-PX-AFTER19-PROMPT-EN:801x1000",
+  "B-PX-CITY-LIVE-EN:1440x1000",
+  "B-PX-CITY-LIVE-EN:360x800",
+  "B-PX-CITY-LIVE-EN:390x844",
+  "B-PX-CITY-LIVE-EN:430x932",
+  "B-PX-CITY-LIVE-EN:768x1024",
+  "B-PX-CITY-LIVE-EN:801x1000",
+  "B-PX-CITY-LIVE-KO:1440x1000",
+  "B-PX-CITY-LIVE-KO:360x800",
+  "B-PX-CITY-LIVE-KO:390x844",
+  "B-PX-CITY-LIVE-KO:430x932",
+  "B-PX-CITY-LIVE-KO:768x1024",
+  "B-PX-CITY-LIVE-KO:801x1000",
+  "B-PX-GATE-ACCOUNT-FAIL-KO:1440x1000",
+  "B-PX-GATE-ACCOUNT-FAIL-KO:360x800",
+  "B-PX-GATE-ACCOUNT-FAIL-KO:390x844",
+  "B-PX-GATE-ACCOUNT-FAIL-KO:430x932",
+  "B-PX-GATE-ACCOUNT-FAIL-KO:768x1024",
+  "B-PX-GATE-ACCOUNT-FAIL-KO:801x1000",
+  "B-PX-GATE-AGE-FAIL-KO:1440x1000",
+  "B-PX-GATE-AGE-FAIL-KO:430x932",
+  "B-PX-GATE-AGE-FAIL-KO:768x1024",
+  "B-PX-GATE-AGE-FAIL-KO:801x1000",
+  "B-PX-GATE-PAYMENT-EN:1440x1000",
+  "B-PX-GATE-PAYMENT-EN:390x844",
+  "B-PX-GATE-PAYMENT-EN:430x932",
+  "B-PX-GATE-PAYMENT-EN:768x1024",
+  "B-PX-GATE-PAYMENT-EN:801x1000",
+  "B-PX-GATE-PAYMENT-FAIL-KO:1440x1000",
+  "B-PX-GATE-PAYMENT-FAIL-KO:390x844",
+  "B-PX-GATE-PAYMENT-FAIL-KO:430x932",
+  "B-PX-GATE-PAYMENT-FAIL-KO:768x1024",
+  "B-PX-GATE-PAYMENT-FAIL-KO:801x1000",
+  "B-PX-GATE-PERSON-CX-KO:1440x1000",
+  "B-PX-GATE-PERSON-CX-KO:390x844",
+  "B-PX-GATE-PERSON-CX-KO:430x932",
+  "B-PX-GATE-PERSON-CX-KO:768x1024",
+  "B-PX-GATE-PERSON-CX-KO:801x1000",
+  "B-PX-GATE-PERSON-PASSPORT-EN:1440x1000",
+  "B-PX-GATE-PERSON-PASSPORT-EN:390x844",
+  "B-PX-GATE-PERSON-PASSPORT-EN:430x932",
+  "B-PX-GATE-PERSON-PASSPORT-EN:768x1024",
+  "B-PX-GATE-PERSON-PASSPORT-EN:801x1000",
+  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:1440x1000",
+  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:390x844",
+  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:430x932",
+  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:768x1024",
+  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:801x1000",
+  "B-PX-PLACE-PEEK-EN:1440x1000",
+  "B-PX-PLACE-PEEK-EN:390x844",
+  "B-PX-PLACE-PEEK-EN:430x932",
+  "B-PX-PLACE-PEEK-EN:768x1024",
+  "B-PX-PLACE-PEEK-EN:801x1000",
+] as const
+export const B_MAP_PAINT_EDGE_RECEIPTS = [
+  "B-PX-PLACE-PEEK-EN:360x800",
+] as const
 
 /**
  * Reachable, layout-distinct B surfaces. Every case runs at both 390×844 and
@@ -1026,7 +1095,7 @@ export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
 export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe | null> {
   const mapEntry = page.getByTestId("ondo-b-map-entry")
   if (await mapEntry.count() === 0) return null
-  return mapEntry.evaluate((root, minimumExposedRatio) => {
+  return mapEntry.evaluate((root, { edgeBand, minimumExposedRatio }) => {
     const app = root.closest<HTMLElement>("[data-testid='ondo-b-root']") ?? root
     const viewport = { width: window.innerWidth, height: window.innerHeight }
     const canvas = root.querySelector<HTMLCanvasElement>("canvas.maplibregl-canvas")
@@ -1047,20 +1116,18 @@ export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe 
     const canvasArea = Math.max(0, clippedCanvas.right - clippedCanvas.left) * Math.max(0, clippedCanvas.bottom - clippedCanvas.top)
     if (canvasArea === 0) return null
 
-    const blockerNodes = new Set<HTMLElement>()
+    const overlayNodes = new Set<HTMLElement>()
     for (const candidate of app.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog'],[data-testid='ondo-sheet']")) {
       // The canonical detail's role lives on its full-screen positioning
       // layer. Only its opaque article hides MapLibre pixels.
       if (candidate.dataset.testid === "canonical-place-overlay") {
         const article = candidate.querySelector<HTMLElement>(":scope > article")
-        if (article) blockerNodes.add(article)
-      } else blockerNodes.add(candidate)
+        if (article) overlayNodes.add(article)
+      } else overlayNodes.add(candidate)
     }
     // The legend contains a real heat-color swatch but is DOM chrome, not a
     // rendered MapLibre signal. It must never make a blank canvas look ready.
-    blockerNodes.add(mapKey)
-
-    const blockers = Array.from(blockerNodes).flatMap((element) => {
+    const overlayBlockers = Array.from(overlayNodes).flatMap((element) => {
       const style = getComputedStyle(element)
       const rect = element.getBoundingClientRect()
       if (style.display === "none" || style.visibility === "hidden" || Number.parseFloat(style.opacity) <= 0) return []
@@ -1072,6 +1139,36 @@ export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe 
       }
       return clipped.right > clipped.left && clipped.bottom > clipped.top ? [clipped] : []
     })
+    const blockers = [...overlayBlockers, ...[mapKey].flatMap((element) => {
+      const style = getComputedStyle(element)
+      const rect = element.getBoundingClientRect()
+      if (style.display === "none" || style.visibility === "hidden" || Number.parseFloat(style.opacity) <= 0) return []
+      const clipped = {
+        left: Math.max(clippedCanvas.left, rect.left),
+        top: Math.max(clippedCanvas.top, rect.top),
+        right: Math.min(clippedCanvas.right, rect.right),
+        bottom: Math.min(clippedCanvas.bottom, rect.bottom),
+      }
+      return clipped.right > clipped.left && clipped.bottom > clipped.top ? [clipped] : []
+    })]
+    // A narrow place peek can expose only a seven-pixel marker sliver. Its
+    // reliable receipt lives immediately outside the opaque sheet, while all
+    // plum modal controls are inside the blocked rect. Keep this fallback ROI
+    // separate from the global heat analysis so ordinary page chrome cannot
+    // make a blank MapLibre frame pass.
+    const band = edgeBand
+    const edgeReceiptRegions: BVisualRect[] = []
+    for (const rect of overlayBlockers) {
+      const regions = [
+        { left: Math.max(clippedCanvas.left, rect.left - band), top: Math.max(clippedCanvas.top, rect.top - band), right: rect.left, bottom: Math.min(clippedCanvas.bottom, rect.bottom + band) },
+        { left: rect.right, top: Math.max(clippedCanvas.top, rect.top - band), right: Math.min(clippedCanvas.right, rect.right + band), bottom: Math.min(clippedCanvas.bottom, rect.bottom + band) },
+        { left: rect.left, top: Math.max(clippedCanvas.top, rect.top - band), right: rect.right, bottom: rect.top },
+        { left: rect.left, top: rect.bottom, right: rect.right, bottom: Math.min(clippedCanvas.bottom, rect.bottom + band) },
+      ]
+      for (const region of regions) {
+        if (region.right > region.left && region.bottom > region.top) edgeReceiptRegions.push(region)
+      }
+    }
 
     // A ready MapLibre instance may remain mounted under a full-height detail
     // or another tab. Treat it as screenshot chrome unless enough of the
@@ -1087,14 +1184,85 @@ export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe 
     }
     const exposedRatio = totalSamples ? exposedSamples / totalSamples : 0
     if (exposedRatio < minimumExposedRatio) return null
-    return { blockers, canvas: clippedCanvas, exposedRatio, renderedSignalCount, signalSourceCount }
-  }, B_MAP_PAINT_MIN_EXPOSED_RATIO)
+    return { blockers, canvas: clippedCanvas, edgeReceiptRegions, exposedRatio, renderedSignalCount, signalSourceCount }
+  }, { edgeBand: B_MAP_PAINT_EDGE_BAND_CSS_PIXELS, minimumExposedRatio: B_MAP_PAINT_MIN_EXPOSED_RATIO })
 }
 
-export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMapPaintProbe) {
+type BMapPaintReceiptMode = "canvas" | "overlay-edge"
+
+type BMapRecoveryInvariant = {
+  canvas: {
+    backingHeight: number
+    backingWidth: number
+    rect: BVisualRect
+  }
+  location: string
+  locationState: string
+  mapAttempt: string
+  mapState: string
+  minimumSignalDistance: string
+  neutralSourceCount: string
+  renderedSignalCount: string
+  signalSourceCount: string
+  signalZoomTier: string
+  storage: {
+    local: [string, string][]
+    session: [string, string][]
+  }
+  userLocation: string
+  viewport: { height: number; width: number }
+}
+
+async function collectBMapRecoveryInvariant(page: Page): Promise<BMapRecoveryInvariant> {
+  return page.getByTestId("ondo-b-map-entry").evaluate((root) => {
+    const canvas = root.querySelector<HTMLCanvasElement>("canvas.maplibregl-canvas")
+    if (!canvas) throw new Error("MapLibre canvas is missing during paint recovery")
+    const rect = canvas.getBoundingClientRect()
+    const storageEntries = (storage: Storage) => Array.from({ length: storage.length }, (_, index) => storage.key(index))
+      .filter((key): key is string => key != null)
+      .sort()
+      .map((key) => [key, storage.getItem(key) ?? ""] as [string, string])
+    return {
+      canvas: {
+        backingHeight: canvas.height,
+        backingWidth: canvas.width,
+        rect: { bottom: rect.bottom, left: rect.left, right: rect.right, top: rect.top },
+      },
+      location: window.location.href,
+      locationState: root.dataset.locationState ?? "",
+      mapAttempt: root.dataset.mapAttempt ?? "",
+      mapState: root.dataset.mapState ?? "",
+      minimumSignalDistance: root.dataset.minSignalDistancePx ?? "",
+      neutralSourceCount: root.dataset.neutralSourceCount ?? "",
+      renderedSignalCount: root.dataset.renderedSignalCount ?? "",
+      signalSourceCount: root.dataset.signalSourceCount ?? "",
+      signalZoomTier: root.dataset.signalZoomTier ?? "",
+      storage: {
+        local: storageEntries(localStorage),
+        session: storageEntries(sessionStorage),
+      },
+      userLocation: root.dataset.userLocation ?? "",
+      viewport: { height: window.innerHeight, width: window.innerWidth },
+    }
+  })
+}
+
+async function requestBMapPaintRecovery(page: Page) {
+  // MapLibre 5 tracks element size with ResizeObserver rather than a window
+  // resize listener. Its existing online listener calls _update(), which marks
+  // intercepted deterministic sources dirty and schedules a fresh render.
+  // Before/after invariants below prove that the re-evaluation keeps URL,
+  // persisted app state, layer receipt, camera tier, and geometry untouched.
+  await page.evaluate(async () => {
+    window.dispatchEvent(new Event("online"))
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  })
+}
+
+export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMapPaintProbe, minimumComponentPixels = B_MAP_PAINT_MIN_COMPONENT_PIXELS, receiptMode: BMapPaintReceiptMode = "canvas") {
   const viewport = page.viewportSize()
   if (!viewport) return 0
-  return page.evaluate(async ({ dataUrl, evidence, minimumComponentPixels, viewportSize }) => {
+  return page.evaluate(async ({ dataUrl, evidence, minimumComponentPixels, receiptMode, viewportSize }) => {
     const image = new Image()
     image.src = dataUrl
     await image.decode()
@@ -1111,11 +1279,13 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
     const right = Math.min(canvas.width, Math.ceil(evidence.canvas.right * scaleX))
     const top = Math.max(0, Math.floor(evidence.canvas.top * scaleY))
     const bottom = Math.min(canvas.height, Math.ceil(evidence.canvas.bottom * scaleY))
+    const receiptRegions = receiptMode === "overlay-edge" ? evidence.edgeReceiptRegions : [evidence.canvas]
     const candidates = new Set<number>()
     for (let y = top; y < bottom; y += 1) {
       const cssY = (y + 0.5) / scaleY
       for (let x = left; x < right; x += 1) {
         const cssX = (x + 0.5) / scaleX
+        if (!receiptRegions.some((rect) => cssX >= rect.left && cssX < rect.right && cssY >= rect.top && cssY < rect.bottom)) continue
         if (evidence.blockers.some((rect) => cssX >= rect.left && cssX < rect.right && cssY >= rect.top && cssY < rect.bottom)) continue
         const offset = (y * canvas.width + x) * 4
         const red = pixels[offset]
@@ -1154,7 +1324,8 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
   }, {
     dataUrl: `data:image/png;base64,${frame.toString("base64")}`,
     evidence: probe,
-    minimumComponentPixels: B_MAP_PAINT_MIN_COMPONENT_PIXELS,
+    minimumComponentPixels,
+    receiptMode,
     viewportSize: viewport,
   })
 }
@@ -1166,13 +1337,26 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
     fullPage: false,
   }
   const initialProbe = await collectBMapPaintProbe(page)
-  const expectedHeatPixels = initialProbe
-    ? await countBMapPaintPixels(page, await readFile(testInfo.snapshotPath(bSnapshotName(item, viewport))), initialProbe)
-    : 0
-  if (!initialProbe || expectedHeatPixels <= B_MAP_PAINT_MIN_HEAT_PIXELS) {
+  const receiptKey = `${item.id}:${viewport}`
+  const canvasReceiptRequired = B_MAP_PAINT_CANVAS_RECEIPTS.includes(receiptKey as (typeof B_MAP_PAINT_CANVAS_RECEIPTS)[number])
+  const edgeReceiptRequired = B_MAP_PAINT_EDGE_RECEIPTS.includes(receiptKey as (typeof B_MAP_PAINT_EDGE_RECEIPTS)[number])
+  if (!canvasReceiptRequired && !edgeReceiptRequired) {
     await expect(page).toHaveScreenshot(bSnapshotName(item, viewport), { ...screenshotOptions, maxDiffPixels: 32 })
     return
   }
+  expect(canvasReceiptRequired && edgeReceiptRequired, `${receiptKey} has conflicting MapLibre paint receipt modes`).toBe(false)
+  expect(initialProbe, `${receiptKey} is missing its required MapLibre paint probe`).not.toBeNull()
+  const thresholdConfig = edgeReceiptRequired
+    ? {
+        minimumComponentPixels: B_MAP_PAINT_EDGE_MIN_COMPONENT_PIXELS,
+        minimumHeatPixels: B_MAP_PAINT_EDGE_MIN_HEAT_PIXELS,
+        mode: "overlay-edge" as const,
+      }
+    : {
+        minimumComponentPixels: B_MAP_PAINT_MIN_COMPONENT_PIXELS,
+        minimumHeatPixels: B_MAP_PAINT_MIN_HEAT_PIXELS,
+        mode: "canvas" as const,
+      }
 
   // Chromium can occasionally composite the MapLibre canvas after its DOM,
   // controls, sources, and queryRenderedFeatures state are ready but before
@@ -1181,43 +1365,163 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
   // used by the matcher only after the heat-marker colors are present.
   let paintedFrame: Buffer | undefined
   let heatPixels = 0
-  let acceptedProbe = initialProbe
-  await expect.poll(async () => {
-    await settle(page)
-    const probe = await collectBMapPaintProbe(page)
-    if (!probe) return 0
-    const frame = await page.screenshot({ ...screenshotOptions, scale: "css" })
-    const count = await countBMapPaintPixels(page, frame, probe)
-    if (count > B_MAP_PAINT_MIN_HEAT_PIXELS) {
-      paintedFrame = frame
-      heatPixels = count
-      acceptedProbe = probe
+  let acceptedProbe = initialProbe!
+  let recoveryAttempts = 0
+  let lastHeatPixels = 0
+  let lastProbe = initialProbe!
+  let lastSnapshotMismatch: string | null = null
+  let invariantBefore: BMapRecoveryInvariant | null = null
+  let invariantAfter: BMapRecoveryInvariant | null = null
+  let expectedCanvasHeatPixels = 0
+  let expectedEdgeHeatPixels = 0
+  let threshold: {
+    expectedHeatPixels: number
+    minimumComponentPixels: number
+    minimumHeatPixels: number
+    mode: BMapPaintReceiptMode
+  } | null = null
+  try {
+    const expectedFrame = await readFile(testInfo.snapshotPath(bSnapshotName(item, viewport)))
+    expectedCanvasHeatPixels = await countBMapPaintPixels(page, expectedFrame, initialProbe!)
+    expectedEdgeHeatPixels = edgeReceiptRequired
+      ? await countBMapPaintPixels(page, expectedFrame, initialProbe!, B_MAP_PAINT_EDGE_MIN_COMPONENT_PIXELS, "overlay-edge")
+      : 0
+    threshold = {
+      ...thresholdConfig,
+      expectedHeatPixels: edgeReceiptRequired ? expectedEdgeHeatPixels : expectedCanvasHeatPixels,
     }
-    return count
-  }, {
-    message: `${item.id} MapLibre compositor frame has no painted heat-marker layers`,
-    timeout: 8_000,
-    intervals: [50, 100, 250, 500],
-  }).toBeGreaterThan(B_MAP_PAINT_MIN_HEAT_PIXELS)
+    expect(
+      threshold.expectedHeatPixels,
+      `${item.id}:${viewport} reviewed baseline has no required ${threshold.mode} MapLibre paint receipt`,
+    ).toBeGreaterThan(threshold.minimumHeatPixels)
+
+    // Seal the state-neutral comparison only after product readiness becomes
+    // true without harness stimulus. A zero query-rendered count is never
+    // eligible for the synthetic online repaint path below.
+    await expect.poll(async () => {
+      const probe = await collectBMapPaintProbe(page)
+      if (probe) lastProbe = probe
+      return probe?.renderedSignalCount ?? 0
+    }, {
+      message: `${item.id} MapLibre query-rendered receipt did not become ready without recovery stimulus`,
+      timeout: 8_000,
+      intervals: [50, 100, 250, 500],
+    }).toBeGreaterThan(0)
+    invariantBefore = await collectBMapRecoveryInvariant(page)
+
+    for (;;) {
+      await settle(page)
+      const probe = await collectBMapPaintProbe(page)
+      if (!probe) throw new Error(`${item.id}:${viewport} lost its required MapLibre paint probe`)
+      lastProbe = probe
+      if (probe.renderedSignalCount <= 0) {
+        // Query-rendered count is a layer/readiness contract, not a compositor
+        // symptom. Never let the screenshot harness stimulate a product state
+        // that has not become ready on its own.
+        throw new Error(`${item.id}:${viewport} lost its query-rendered readiness receipt`)
+      }
+      const frame = await page.screenshot({ ...screenshotOptions, scale: "css" })
+      const count = await countBMapPaintPixels(page, frame, probe, thresholdConfig.minimumComponentPixels, thresholdConfig.mode)
+      lastHeatPixels = count
+      if (count > thresholdConfig.minimumHeatPixels) {
+        try {
+          // The accepted Buffer itself must match the reviewed camera frame;
+          // no later screenshot is substituted for this evidence frame.
+          expect(frame).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
+          paintedFrame = frame
+          heatPixels = count
+          acceptedProbe = probe
+          break
+        } catch (error) {
+          lastSnapshotMismatch = error instanceof Error ? error.message : String(error)
+          // A painted frame is not the blank-compositor failure proven safe
+          // by the recovery experiment. Never let source re-evaluation or
+          // extra time turn an arbitrary pixel regression into a later pass.
+          throw new Error(`${item.id}:${viewport} painted frame differs from its reviewed baseline. ${lastSnapshotMismatch}`)
+        }
+      } else {
+        lastSnapshotMismatch = `paint receipt ${count} did not exceed ${thresholdConfig.minimumHeatPixels}`
+      }
+      if (recoveryAttempts >= B_MAP_PAINT_MAX_RECOVERY_ATTEMPTS) {
+        throw new Error(`${item.id}:${viewport} exhausted ${B_MAP_PAINT_MAX_RECOVERY_ATTEMPTS} state-neutral repaint attempts. Last result: ${lastSnapshotMismatch}`)
+      }
+      recoveryAttempts += 1
+      await requestBMapPaintRecovery(page)
+    }
+  } catch (error) {
+    const invariantAtFailure = await collectBMapRecoveryInvariant(page).catch(() => null)
+    await testInfo.attach("map-paint-failure.json", {
+      body: JSON.stringify({
+        caseId: item.id,
+        error: error instanceof Error ? error.message : String(error),
+        invariantAfter,
+        invariantAtFailure,
+        invariantBefore,
+        lastHeatPixels,
+        lastProbe,
+        lastSnapshotMismatch,
+        maxRecoveryAttempts: B_MAP_PAINT_MAX_RECOVERY_ATTEMPTS,
+        recoveryAttempts,
+        threshold,
+        viewport,
+      }, null, 2),
+      contentType: "application/json",
+    })
+    throw error
+  }
 
   expect(paintedFrame, `${item.id} has no accepted painted frame`).toBeDefined()
-  await testInfo.attach("map-paint.json", {
-    body: JSON.stringify({
-      caseId: item.id,
-      viewport,
-      heatPixels,
-      expectedHeatPixels,
-      minimumComponentPixels: B_MAP_PAINT_MIN_COMPONENT_PIXELS,
-      threshold: B_MAP_PAINT_MIN_HEAT_PIXELS,
-      canvas: acceptedProbe.canvas,
-      blockers: acceptedProbe.blockers,
-      exposedRatio: acceptedProbe.exposedRatio,
-      renderedSignalCount: acceptedProbe.renderedSignalCount,
-      signalSourceCount: acceptedProbe.signalSourceCount,
-    }, null, 2),
-    contentType: "application/json",
-  })
-  expect(paintedFrame!).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
+  try {
+    invariantAfter = await collectBMapRecoveryInvariant(page)
+    expect(invariantAfter, `${item.id} repaint recovery changed URL, app readiness receipts, storage, viewport, or canvas geometry`).toEqual(invariantBefore)
+    expect(paintedFrame!).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
+    await testInfo.attach("map-paint.json", {
+      body: JSON.stringify({
+        caseId: item.id,
+        viewport,
+        heatPixels,
+        expectedCanvasHeatPixels,
+        expectedEdgeHeatPixels,
+        minimumComponentPixels: thresholdConfig.minimumComponentPixels,
+        threshold: thresholdConfig.minimumHeatPixels,
+        thresholdMode: thresholdConfig.mode,
+        canvas: acceptedProbe.canvas,
+        blockers: acceptedProbe.blockers,
+        edgeReceiptRegions: acceptedProbe.edgeReceiptRegions,
+        exposedRatio: acceptedProbe.exposedRatio,
+        renderedSignalCount: acceptedProbe.renderedSignalCount,
+        recoveryAttempts,
+        signalSourceCount: acceptedProbe.signalSourceCount,
+        stateNeutralRecovery: {
+          after: invariantAfter,
+          before: invariantBefore,
+          cameraPixelProof: "accepted Buffer strict-reviewed snapshot match (maxDiffPixels=32)",
+          stimulus: "MapLibre online listener -> _update() -> deterministic source re-evaluation -> triggerRepaint()",
+        },
+      }, null, 2),
+      contentType: "application/json",
+    })
+  } catch (error) {
+    const invariantAtFailure = await collectBMapRecoveryInvariant(page).catch(() => null)
+    await testInfo.attach("map-paint-failure.json", {
+      body: JSON.stringify({
+        caseId: item.id,
+        error: error instanceof Error ? error.message : String(error),
+        invariantAfter,
+        invariantAtFailure,
+        invariantBefore,
+        lastHeatPixels,
+        lastProbe,
+        lastSnapshotMismatch,
+        maxRecoveryAttempts: B_MAP_PAINT_MAX_RECOVERY_ATTEMPTS,
+        recoveryAttempts,
+        threshold,
+        viewport,
+      }, null, 2),
+      contentType: "application/json",
+    })
+    throw error
+  }
 }
 
 export async function closeBVisualCase(page: Page) {
