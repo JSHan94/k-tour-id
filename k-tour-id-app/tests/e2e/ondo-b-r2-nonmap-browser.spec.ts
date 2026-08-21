@@ -108,8 +108,10 @@ test("My Korea edits persona and preferences and labels an English canonical sav
   await myKorea.click()
 
   const saved = page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`)
+  await expect(saved).toContainText("로바")
+  await expect(saved).toContainText("Official Korean source name")
   await expect(saved).toContainText("Roba")
-  await expect(saved).toContainText("로바 · Transliterated for navigation")
+  await expect(saved).toContainText("Transliterated for navigation · Generated, not an official English name")
 
   await page.getByTestId("discovery-persona").selectOption("long_term_resident")
   await page.getByTestId("discovery-preference-cafe").click()
