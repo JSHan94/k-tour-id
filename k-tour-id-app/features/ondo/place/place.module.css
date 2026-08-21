@@ -110,6 +110,12 @@
   .signalMetrics div:last-child { display: none; }
 }
 
+
+@media (min-width: 700px) {
+  :global([data-variant="B"]) .peek,
+  :global([data-variant="B"]) .detail { max-width: 700px; margin-inline: auto; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .detail { scroll-behavior: auto; }
 }

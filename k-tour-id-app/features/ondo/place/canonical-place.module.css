@@ -91,3 +91,8 @@
   .before > div span { display: grid; gap: 2px; }
   .before small { text-align: left; }
 }
+
+@media (min-width: 700px) {
+  :global([data-variant="B"]) .peek,
+  :global([data-variant="B"]) .detail { max-width: 700px; margin-inline: auto; }
+}

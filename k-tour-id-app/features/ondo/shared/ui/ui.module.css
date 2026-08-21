@@ -95,3 +95,7 @@
 @media (min-width: 801px) {
   .sheet { max-width: 640px; }
 }
+
+@media (min-width: 700px) and (max-width: 800px) {
+  :global([data-variant="B"]) .sheet { max-width: 700px; }
+}

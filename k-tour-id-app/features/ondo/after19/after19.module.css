@@ -47,4 +47,20 @@
 @media (min-width: 700px) { .gate { max-width: 430px; margin: 0 auto; border: 1px solid #dedbd5; border-bottom: 0; } }
 @media (min-width: 900px) { .sessionNotice { right: auto; left: 96px; width: min(430px, calc(100% - 124px)); } }
 :global([data-variant="B"]):has(.sessionNotice) :global([data-testid="ondo-b-map-key"]) { visibility: hidden; }
+:global([data-variant="B"]) .chip,
+:global([data-variant="B"]) .chipOn { top: calc(170px + env(safe-area-inset-top)); }
+@media (max-width: 360px) {
+  :global([data-variant="B"]) .chip,
+  :global([data-variant="B"]) .chipOn { right: 10px; }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  :global([data-variant="B"]) .chip,
+  :global([data-variant="B"]) .chipOn { top: calc(54px + env(safe-area-inset-top)); right: 10px; }
+  :global([data-variant="B"]) .sessionNotice {
+    right: 10px;
+    bottom: calc(140px + env(safe-area-inset-bottom));
+    left: 10px;
+    width: auto;
+  }
+}
 @media (prefers-reduced-motion: reduce) { .banner { animation: none; } .autoSetting i { transition: none; } }
