@@ -936,6 +936,61 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
 }
 
 export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
+  if (item.state.startsWith("LOCAL-SIGNAL")) {
+    const title = page.getByTestId("local-signal-overlay").locator("h2").first()
+    await expect(title).toBeVisible()
+
+    // Chromium can occasionally return a compositor frame containing the
+    // Sheet surface and grabber while dropping the scroll viewport's
+    // foreground. DOM visibility and geometry remain correct in that frame,
+    // so they cannot keep an empty pixel baseline from being approved. Probe
+    // the title pixels in a full viewport capture; locator screenshots can
+    // themselves trigger the blank follow-up frame that this guard rejects.
+    const titleBox = await title.boundingBox()
+    expect(titleBox, `${item.id} title has no painted bounding box`).not.toBeNull()
+    await expect.poll(async () => {
+      await settle(page)
+      const viewport = page.viewportSize()
+      const frame = await page.screenshot({ animations: "disabled", caret: "hide", fullPage: false, scale: "css" })
+      return page.evaluate(async ({ box, dataUrl, viewportSize }) => {
+        const image = new Image()
+        image.src = dataUrl
+        await image.decode()
+        const canvas = document.createElement("canvas")
+        const scaleX = image.naturalWidth / viewportSize.width
+        const scaleY = image.naturalHeight / viewportSize.height
+        canvas.width = Math.max(1, Math.round(box.width * scaleX))
+        canvas.height = Math.max(1, Math.round(box.height * scaleY))
+        const context = canvas.getContext("2d", { willReadFrequently: true })
+        if (!context) return 0
+        context.drawImage(
+          image,
+          Math.round(box.x * scaleX),
+          Math.round(box.y * scaleY),
+          canvas.width,
+          canvas.height,
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        )
+        const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+        let darkPixels = 0
+        for (let offset = 0; offset < pixels.length; offset += 4) {
+          if (pixels[offset + 3] > 0 && pixels[offset] + pixels[offset + 1] + pixels[offset + 2] < 660) darkPixels += 1
+        }
+        return darkPixels
+      }, {
+        box: titleBox!,
+        dataUrl: `data:image/png;base64,${frame.toString("base64")}`,
+        viewportSize: viewport!,
+      })
+    }, {
+      message: `${item.id} full viewport title crop has no foreground pixels; wait for a painted compositor frame`,
+      timeout: 8_000,
+      intervals: [50, 100, 250, 500],
+    }).toBeGreaterThan(16)
+  }
   if (item.state === "PROFILE") {
     await stabilizeMobileEvidenceScroll(page, page.getByTestId("ondo-profile-panel"), { kind: "bottom" })
   }
