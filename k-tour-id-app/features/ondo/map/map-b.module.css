@@ -134,6 +134,10 @@
   .preferenceSummary { left: 10px; max-width: calc(100% - 140px); }
   .resultBar { right: 10px; left: 10px; }
   .mapKey { left: 10px; }
+  .locationFeedback { right: 10px; left: 10px; max-width: calc(100% - 20px); }
+}
+
+@media (max-width: 340px) {
   .mapKey {
     width: 184px;
     overflow: hidden;
@@ -142,7 +146,6 @@
   .mapKey > div > span { font-size: 0; }
   .mapKey > div > b { display: none; }
   .mapKey > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .locationFeedback { right: 10px; left: 10px; max-width: calc(100% - 20px); }
 }
 
 @media (min-width: 900px) {
