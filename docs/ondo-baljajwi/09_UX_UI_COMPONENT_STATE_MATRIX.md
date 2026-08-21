@@ -1,6 +1,6 @@
 # ONDO B · UX/UI Component & State Matrix
 
-상태: `EXECUTABLE REGISTRY · R4 COMPLETE NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR BASELINE/FULL GATES/TUPLE/FRESH CLOSURE PENDING`
+상태: `EXECUTABLE REGISTRY · R4 COMPLETE NOT CLEAN · 12/12 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 READY TO START · CLEAN 0/2 · NOT DEPLOYED`
 
 ## 1. Exact registry and R4-reviewed tuple
 
@@ -9,7 +9,7 @@
 | R4-reviewed Product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
 | R4-reviewed Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
 | R4-reviewed baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d` |
-| Current integration | `06619cf4d1d8460b4af2cdb8f887deca7c76c208`; successor Product/Harness/digest not frozen |
+| Frozen successor Product/Harness/digest | `9ec3d192d0ebdc9614d980bdb173633aee16fc17` / `12354bcf71621c00a08433faf09cbb000683ae61` / `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b` |
 | B route | `1` — `/ondo-b` |
 | Tab roots | `4` — ONDO, My Korea, Tables, ID |
 | Reducer surface kinds | `7` — map, venue, table, chat, local_signal, checkout, labs |
@@ -88,4 +88,4 @@ Setup fixture와 truth/geometry/a11y assertions는 case registry를 소비하는
 8. serious/critical Axe, contrast/name/label violation, product runtime failure `0`이어야 한다.
 9. baseline update는 issue-scoped approval 후 수행하고 최종에는 no-update full 276 run을 통과해야 한다.
 
-R4가 검토한 276 PNG baseline set은 harness `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`였고 uninterrupted workers-1 unchanged-baseline `276/276`, 각 viewport `46/46`, high-risk repeat `72/72`가 통과했다. 같은 tuple의 discovery `348 tests / 25 files`, typecheck, build, contracts, B E2E, runtime/geometry/Axe/modal gate도 통과했지만 R4 reviewer verdict는 `5/5 COMPLETE · NOT CLEAN`이었다. Raw `S2 12 + S3 2`는 `10 S2 + 2 accepted S3`로 통합됐고 12개 구현이 `06619cf…`까지 합쳐졌다. 영향 baseline 승인, full six-viewport no-update pixel, integrated nonpixel gate와 successor Product/Harness/digest freeze, fresh R5/R6 closure는 `PENDING`; clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+R4가 검토한 276 PNG baseline set은 harness `2d7e0f0…`, digest `74100b05…`였고 당시 automated gate를 통과했지만 reviewer verdict는 `5/5 COMPLETE · NOT CLEAN`이었다. Raw `S2 12 + S3 2`는 `10 S2 + 2 accepted S3`로 통합됐고 frozen successor에서 `12/12 FIXED AND AUTOMATED`다. Baseline은 digest `4cfbed3…`, `84 R4-FIX + 192 R4-CARRY`, 각 viewport 46장으로 동결됐고 full exact-tuple automated gate를 통과했다. R5는 `READY TO START`; clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
