@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises"
-import path from "node:path"
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import {
@@ -8,6 +6,7 @@ import {
   expectBRuntimeClean,
   gotoB,
   installBRuntimeGuard,
+  openCanonicalVenue,
   prepareBPage,
   seedB,
 } from "../helpers/ondo-b-qa"
@@ -27,6 +26,26 @@ const READY_SESSION = {
   age: "AGE-VERIFIED",
   ageExpiresAt: "2026-08-20T20:30:00+09:00",
   paymentKyc: "PKY-VERIFIED",
+}
+
+function pendingAccountGate(cta: "JOIN_TABLE" | "OPEN_CHAT", tableId: string) {
+  return {
+    tokenId: `RT-R4-${cta}-${tableId}`,
+    cta,
+    gateQueue: ["account"],
+    activeGate: "account",
+    tableId,
+    createdAt: "2026-08-19T20:30:00+09:00",
+    expiresAt: "2026-08-19T20:45:00+09:00",
+  }
+}
+
+async function completeKoreanAccountGate(page: Page) {
+  const gate = page.getByTestId("ondo-gate-overlay")
+  await expect(gate).toBeVisible()
+  await gate.getByRole("button", { name: "계정 만들기 · 시뮬레이션", exact: true }).click()
+  await gate.getByRole("button", { name: "계정 시뮬레이션 완료", exact: true }).click()
+  await expect(gate).toBeHidden()
 }
 
 async function expectVisibleFocus(page: Page, target: Locator) {
@@ -146,6 +165,7 @@ for (const locale of ["en", "ko"] as const) {
             title: "브라우저 로컬 프로필 미리보기",
             private: "이 브라우저 세션에서는 기본 비공개",
             edit: "프로필 미리보기 편집",
+            name: "표시 이름",
             field: "출신",
             value: "캐나다",
             toggle: "출신: 브라우저 미리보기에서 제외됨. 출신 포함하기",
@@ -161,6 +181,7 @@ for (const locale of ["en", "ko"] as const) {
             title: "Browser-local profile preview",
             private: "Private in this browser session by default",
             edit: "Edit profile preview",
+            name: "Display name",
             field: "From",
             value: "Canada",
             toggle: "From: excluded from browser preview. Include From in preview",
@@ -188,8 +209,12 @@ for (const locale of ["en", "ko"] as const) {
       for (const oldClaim of copy.oldClaims) await expect(profile).not.toContainText(oldClaim)
 
       await profile.getByRole("button", { name: copy.edit, exact: true }).click()
-      await profile.getByRole("textbox", { name: copy.field, exact: true }).fill(copy.value)
+      await expect(profile.getByRole("textbox", { name: copy.name, exact: true })).toBeFocused()
+      const fromField = profile.getByRole("textbox", { name: copy.field, exact: true })
+      await fromField.fill(copy.value)
+      await expect(fromField).toHaveValue(copy.value)
       await profile.getByRole("button", { name: copy.toggle, exact: true }).click()
+      await expect(fromField).toHaveValue(copy.value)
       await profile.getByRole("button", { name: copy.save, exact: true }).click()
       await expect(profile.getByRole("alert")).toHaveText(copy.error)
       const retry = profile.getByRole("button", { name: copy.retry, exact: true })
@@ -199,6 +224,19 @@ for (const locale of ["en", "ko"] as const) {
       await expect(profile).toContainText(copy.partial)
       await expect(profile).toContainText(copy.value)
       await expectNoSeriousAxe(page, "[data-testid='ondo-profile-panel']")
+
+      await expect.poll(() => page.evaluate(() => {
+        const saved = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}").profile
+        return { from: saved?.from, included: saved?.shareFrom }
+      })).toEqual({ from: copy.value, included: true })
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await page.getByTestId("nav-id").click()
+      const restored = page.getByTestId("ondo-profile-panel")
+      await expect(restored.getByRole("heading", { name: copy.title, exact: true })).toBeVisible()
+      await expect(restored).toContainText(copy.partial)
+      await expect(restored).toContainText(copy.value)
+      await expect(restored).toContainText(copy.truth)
+      for (const oldClaim of copy.oldClaims) await expect(restored).not.toContainText(oldClaim)
     })
   }
 
@@ -219,19 +257,50 @@ for (const locale of ["en", "ko"] as const) {
     })
 
   }
+
+  test(`R4 truth ${locale} existing tenth stamp remains a qualified local-preview record`, async ({ page }) => {
+    await seedB(page, { locale, session: { ...READY_SESSION, stamps: 10 } })
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-venue-checkout").click()
+    await page.getByTestId("checkout-start").click()
+    await page.getByTestId("checkout-confirm").click()
+    const checkout = page.getByTestId("checkout-overlay")
+    const qualified = locale === "ko"
+      ? "시뮬레이션된 로컬 미리보기 방문으로 이 결제 전에 열 번째 스탬프가 이미 기록되었습니다."
+      : "A simulated local-preview visit had already recorded the tenth stamp before this checkout."
+    await expect(checkout).toContainText(qualified)
+    await expect(checkout).not.toContainText(locale === "ko" ? "열 번째 방문은 이전에 별도 확인되어 있습니다." : "The tenth visit was confirmed separately before this checkout.")
+  })
 }
 
-test("R4 localized edge Sheet names and simulated tenth-stamp truth remain exact contracts", async ({}, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop-chromium")
-  const [connectSource, checkoutSource] = await Promise.all([
-    readFile(path.join(process.cwd(), "features/ondo/connect/connect-overlays.tsx"), "utf8"),
-    readFile(path.join(process.cwd(), "features/ondo/commerce/checkout-overlay.tsx"), "utf8"),
-  ])
-  expect(connectSource).toContain('locale === "ko" ? "이용할 수 없는 Table" : "Table unavailable"')
-  expect(connectSource).toContain('locale === "ko" ? "잠긴 대화" : "Chat locked"')
-  expect(connectSource).not.toContain('<Sheet label="Table unavailable"')
-  expect(connectSource).not.toContain('<Sheet label="Chat locked"')
-  expect(checkoutSource).toContain("A simulated local-preview visit had already recorded the tenth stamp before this checkout.")
-  expect(checkoutSource).toContain("시뮬레이션된 로컬 미리보기 방문으로 이 결제 전에 열 번째 스탬프가 이미 기록되었습니다.")
-  expect(checkoutSource).not.toContain("The tenth visit was confirmed separately before this checkout.")
-})
+for (const viewport of TRUTH_VIEWPORTS) {
+  test(`R4 KO ${viewport.id} edge Sheets expose localized runtime dialog names`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium")
+    await page.setViewportSize(viewport)
+    await seedB(page, {
+      locale: "ko",
+      session: {
+        account: "ACC-GUEST",
+        person: "PER-UNVERIFIED",
+        gate: pendingAccountGate("JOIN_TABLE", "table-missing-r4"),
+        gateState: "pending",
+      },
+    })
+    await gotoB(page)
+    await completeKoreanAccountGate(page)
+    await expect(page.getByRole("dialog", { name: "이용할 수 없는 Table", exact: true })).toBeVisible()
+
+    await page.evaluate((nextGate) => {
+      const current = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
+      sessionStorage.setItem("ondo.session.v3", JSON.stringify({
+        ...current,
+        account: "ACC-GUEST",
+        gate: nextGate,
+        gateState: "pending",
+      }))
+    }, pendingAccountGate("OPEN_CHAT", TABLE_ID))
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await completeKoreanAccountGate(page)
+    await expect(page.getByRole("dialog", { name: "잠긴 대화", exact: true })).toBeVisible()
+  })
+}
