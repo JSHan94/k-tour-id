@@ -4,6 +4,7 @@ import {
   expectBRuntimeClean,
   expectMinimumControlTargets,
   expectNoHorizontalOverflow,
+  getBRuntimeEvidence,
   gotoB,
   installBRuntimeGuard,
   prepareBPage,
@@ -12,6 +13,7 @@ import {
 
 const FILTER_QUERY = "느린마을 양조장"
 const FILTERED_VENUE_ID = "mois-18939eecb43c15ab4305"
+const DISCOVERY_HISTORY_KEYS = ["city", "documentId", "focus", "heat", "level", "query", "v", "venueId", "view"]
 const FROZEN_VIEWPORTS = [
   { width: 360, height: 800 },
   { width: 390, height: 844 },
@@ -61,6 +63,26 @@ async function openFilteredDetail(page: Page, locale: "en" | "ko") {
   await page.getByTestId("canonical-place-details").click()
   await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
   return { search, opener }
+}
+
+async function seedExpiredAfter19Proof(page: Page) {
+  await page.evaluate(() => {
+    const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}") as Record<string, unknown>
+    sessionStorage.setItem("ondo.session.v3", JSON.stringify({
+      ...session,
+      age: "AGE-VERIFIED",
+      ageExpiresAt: "2020-08-19T20:30:00+09:00",
+      after19: "A19-ON",
+    }))
+  })
+}
+
+function discardExpectedDetailNavigationAbort(page: Page) {
+  const evidence = getBRuntimeEvidence(page)
+  const expectedAbort = new RegExp(`^requestfailed: .*/api/ondo/venues/${FILTERED_VENUE_ID} · net::ERR_ABORTED$`)
+  for (let index = evidence.product.length - 1; index >= 0; index -= 1) {
+    if (expectedAbort.test(evidence.product[index])) evidence.product.splice(index, 1)
+  }
 }
 
 async function rapidlyTraverseHistory(page: Page, delta: -1 | 1, count: number) {
@@ -153,6 +175,7 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
     await seedB(page)
     await gotoB(page, `?scenario=save-failed&campaign=direct&city=seoul&view=list&venueId=${FILTERED_VENUE_ID}&detail=1&q=private-search&heat=pending`)
     await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    await expect(page.getByTestId("canonical-place-overlay").locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
     await expect(page).toHaveURL(/scenario=save-failed/)
     await expect(page).toHaveURL(/campaign=direct/)
     await expect(page).not.toHaveURL(/[?&](q|heat)=/)
@@ -174,6 +197,99 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
     await expect(page.getByRole("button", { name: "All places", exact: true })).toHaveAttribute("aria-pressed", "true")
     await expect(page).toHaveURL(/city=seoul/)
     await expect(page).toHaveURL(/view=list/)
+    discardExpectedDetailNavigationAbort(page)
+  })
+
+  test("R5R-D2-001 hard reload also clears state-only filters from older Back entries without replacing unrelated history state", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seedB(page)
+    await gotoB(page, "?scenario=save-failed&campaign=nested-reload")
+    const initialHistory = await page.evaluate(() => {
+      const state = history.state as Record<string, unknown>
+      History.prototype.replaceState.call(history, { ...state, auditSentinel: { source: "next-state", count: 1 } }, "", location.href)
+      return {
+        length: history.length,
+        nextKeys: Object.keys(state).filter((key) => key !== "__ondoBDiscovery").sort(),
+      }
+    })
+    await openFilteredDetail(page, "en")
+    await expect(page.locator("[data-detail-state='ready']")).toBeVisible()
+    await page.goBack()
+    await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    await page.evaluate(() => {
+      const state = history.state as Record<string, unknown> & { __ondoBDiscovery: Record<string, unknown> }
+      History.prototype.replaceState.call(history, {
+        ...state,
+        __ondoBDiscovery: {
+          ...state.__ondoBDiscovery,
+          query: "private search ".repeat(30),
+          heat: "identity",
+          focus: { kind: "venue", venueId: "private-account-id" },
+          sensitiveExtra: { account: "ACC-ACTIVE", ageExpiresAt: "private" },
+        },
+      }, "", location.href)
+    })
+    await page.goForward()
+    await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    await expect(page.locator("[data-detail-state='ready']")).toBeVisible()
+    const beforeReload = await page.evaluate(() => ({
+      length: history.length,
+      entry: history.state.__ondoBDiscovery as Record<string, unknown>,
+      sentinel: history.state.auditSentinel,
+      nextKeys: Object.keys(history.state).filter((key) => key !== "__ondoBDiscovery" && key !== "auditSentinel").sort(),
+    }))
+    expect(beforeReload.length).toBe(initialHistory.length + 3)
+    expect(beforeReload.entry).toMatchObject({ query: FILTER_QUERY, heat: "signal", level: "detail" })
+    expect(beforeReload.sentinel).toEqual({ source: "next-state", count: 1 })
+    expect(beforeReload.nextKeys).toEqual(initialHistory.nextKeys)
+    const originalDocumentId = beforeReload.entry.documentId
+
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    await expect(page.locator("[data-detail-state='ready']")).toBeVisible()
+    const reloadedEntry = await page.evaluate(() => history.state.__ondoBDiscovery as Record<string, unknown>)
+    expect(reloadedEntry).toMatchObject({ query: "", heat: "all", level: "detail" })
+    expect(reloadedEntry.documentId).not.toBe(originalDocumentId)
+
+    await page.goBack()
+    await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    await expect.poll(() => page.evaluate(() => history.state?.__ondoBDiscovery?.level)).toBe("peek")
+    const peekEntry = await page.evaluate(() => ({
+      length: history.length,
+      entry: history.state.__ondoBDiscovery as Record<string, unknown>,
+      sentinel: history.state.auditSentinel,
+      nextKeys: Object.keys(history.state).filter((key) => key !== "__ondoBDiscovery" && key !== "auditSentinel").sort(),
+    }))
+    expect(peekEntry.length).toBe(initialHistory.length + 3)
+    expect(peekEntry.entry).toMatchObject({ query: "", heat: "all", level: "peek" })
+    expect(Object.keys(peekEntry.entry).sort()).toEqual(DISCOVERY_HISTORY_KEYS)
+    expect(peekEntry.entry.documentId).toBe(reloadedEntry.documentId)
+    expect(peekEntry.sentinel).toEqual({ source: "next-state", count: 1 })
+    expect(peekEntry.nextKeys).toEqual(initialHistory.nextKeys)
+    await expect(page).not.toHaveURL(/[?&](q|heat)=/)
+
+    await page.goBack()
+    const search = page.getByRole("search").getByRole("textbox")
+    await expect(search).toHaveValue("")
+    await expect(page.getByRole("button", { name: "All places", exact: true })).toHaveAttribute("aria-pressed", "true")
+    await expect.poll(() => page.evaluate(() => history.state?.__ondoBDiscovery?.level)).toBe("city")
+    const cityEntry = await page.evaluate(() => ({
+      length: history.length,
+      entry: history.state.__ondoBDiscovery as Record<string, unknown>,
+      sentinel: history.state.auditSentinel,
+      nextKeys: Object.keys(history.state).filter((key) => key !== "__ondoBDiscovery" && key !== "auditSentinel").sort(),
+    }))
+    expect(cityEntry.length).toBe(initialHistory.length + 3)
+    expect(cityEntry.entry).toMatchObject({ query: "", heat: "all", level: "city" })
+    expect(Object.keys(cityEntry.entry).sort()).toEqual(DISCOVERY_HISTORY_KEYS)
+    expect(cityEntry.entry.documentId).toBe(reloadedEntry.documentId)
+    expect(cityEntry.sentinel).toEqual({ source: "next-state", count: 1 })
+    expect(cityEntry.nextKeys).toEqual(initialHistory.nextKeys)
+    await expect(page).not.toHaveURL(/[?&](q|heat)=/)
+
+    // Reloading the open detail intentionally cancels that document's detail
+    // request. Keep the global guard strict for every other runtime failure.
+    discardExpectedDetailNavigationAbort(page)
   })
 
   test("R5R-D2-001 rapid popstate traversal converges on one stable surface and meaningful focus", async ({ page }) => {
@@ -261,6 +377,63 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
     await expect(notice.getByRole("status")).toContainText("Your 19+ check expired, so the main map is shown.")
     await expect(page.getByTestId("after19-toggle")).toHaveText("After 19")
   })
+
+  for (const locale of ["en", "ko"] as const) {
+    for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000 }] as const) {
+      test(`R5R-D5-003 ${locale.toUpperCase()} ${viewport.width}x${viewport.height} expiry recheck returns exact focus after Escape and Stay`, async ({ page }) => {
+        await page.setViewportSize(viewport)
+        await seedB(page, {
+          locale,
+          session: {
+            age: "AGE-VERIFIED",
+            ageExpiresAt: "2020-08-19T20:30:00+09:00",
+            after19: "A19-ON",
+          },
+        })
+        await gotoB(page, "?city=seoul&view=list")
+
+        for (const closeMode of ["escape", "stay"] as const) {
+          if (closeMode === "stay") {
+            await seedExpiredAfter19Proof(page)
+            await page.reload({ waitUntil: "domcontentloaded" })
+          }
+          const notice = page.getByTestId("after19-expiry-notice")
+          await expect(notice).toBeVisible()
+          await notice.getByRole("button", { name: locale === "ko" ? "19+ 다시 확인" : "Check 19+ again" }).click()
+          const prompt = page.getByTestId("after19-prompt-layer")
+          await expect(prompt).toBeVisible()
+          await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("inert", "")
+          await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
+          if (locale === "en" && viewport.width === 390 && closeMode === "escape") {
+            const axe = await new AxeBuilder({ page }).include("[data-testid='after19-prompt-layer']").analyze()
+            expect(axe.violations.filter((violation) => violation.impact === "serious" || violation.impact === "critical")).toEqual([])
+          }
+
+          if (closeMode === "escape") await page.keyboard.press("Escape")
+          else await prompt.getByRole("button", { name: locale === "ko" ? "기본 지도에 머물기" : "Stay on the main map" }).click()
+          await expect(prompt).toHaveCount(0)
+          await expect(page.getByTestId("after19-expiry-notice")).toHaveCount(0)
+          const toggle = page.getByTestId("after19-toggle")
+          await expect(toggle).toBeFocused()
+          expect(await toggle.evaluate((element) => element.isConnected && document.activeElement === element && document.activeElement !== document.body)).toBe(true)
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            await page.keyboard.press("Tab")
+            const activeTag = await page.evaluate(() => document.activeElement?.tagName)
+            if (activeTag !== "NEXTJS-PORTAL" && activeTag !== "BODY") break
+          }
+          expect(await page.evaluate(() => {
+            const active = document.activeElement
+            return active instanceof HTMLElement
+              && active !== document.body
+              && active.isConnected
+              && !active.closest("[inert], [aria-hidden='true']")
+          })).toBe(true)
+          await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("inert", "")
+          await expect(page.locator("[data-testid='ondo-canvas'] [inert]")).toHaveCount(0)
+        }
+      })
+    }
+  }
 
   test("R5R-D5-005 successful map retry restores keyboard focus to the recovered discovery controls", async ({ page }) => {
     await seedB(page)
