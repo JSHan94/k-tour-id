@@ -47,6 +47,35 @@ const SESSION_SEED = {
   },
 }
 
+const RESET_SESSION_EXPECTED = {
+  onboarding: SESSION_SEED.onboarding,
+  persona: SESSION_SEED.persona,
+  account: "ACC-GUEST",
+  person: "PER-UNVERIFIED",
+  age: "AGE-UNVERIFIED",
+  paymentKyc: "PKY-NOT-STARTED",
+  after19: "A19-OFF",
+  gate: null,
+  gateState: "idle",
+  tableMembershipById: {},
+  reputation: { identity: "unverified", visit: "new", contribution: "new", meetup: "new" },
+  acceptedActivityEventKeys: [],
+  stamps: 9,
+  profile: {
+    displayName: "Daniel Kim",
+    languages: ["English"],
+    shareFrom: false,
+    shareLivesIn: false,
+    shareLanguages: false,
+  },
+}
+
+const CLEARED_SENSITIVE_SESSION_PATHS = [
+  "ageExpiresAt",
+  "profile.from",
+  "profile.livesIn",
+] as const
+
 const COPY = {
   en: {
     sessionOpen: "Sign out and clear this session",
@@ -83,7 +112,6 @@ async function seedPrivacyState(page: Page, locale: "en" | "ko") {
     sessionStorage.setItem(keys[1], JSON.stringify({ "table-seongsu-dinner": { reportReason: "harassment", participantBlocked: true } }))
     sessionStorage.setItem(keys[2], JSON.stringify({ acknowledged: true, wallet: "WAL-READY", bridge: "BRG-QUOTED" }))
     sessionStorage.setItem(keys[3], JSON.stringify(["visit-r5r"]))
-    sessionStorage.setItem("ondo.payment.runtime.v1", JSON.stringify({ state: "PAY-PROCESSING" }))
     sessionStorage.setItem("unrelated.session.fixture", "preserve-session-byte")
     localStorage.setItem("unrelated.local.fixture", "preserve-local-byte")
   }, FEATURE_SESSION_KEYS)
@@ -176,22 +204,12 @@ for (const locale of ["en", "ko"] as const) {
     await expect(page.getByTestId("session-reset-open")).toBeFocused()
     await expect(page.getByTestId("ondo-toast")).toContainText(copy.sessionReceipt)
 
-    await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}"))).toMatchObject({
-      account: "ACC-GUEST",
-      person: "PER-UNVERIFIED",
-      age: "AGE-UNVERIFIED",
-      paymentKyc: "PKY-NOT-STARTED",
-      after19: "A19-OFF",
-      gate: null,
-      gateState: "idle",
-      tableMembershipById: {},
-      acceptedActivityEventKeys: [],
-      stamps: 9,
-      reputation: { identity: "unverified", visit: "new", contribution: "new", meetup: "new" },
-      profile: { displayName: "Daniel Kim", languages: ["English"], shareFrom: false, shareLivesIn: false, shareLanguages: false },
-    })
+    await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}"))).toEqual(RESET_SESSION_EXPECTED)
+    const resetSession = await page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}"))
+    expect(resetSession.onboarding).toBe(SESSION_SEED.onboarding)
+    expect(resetSession.persona).toBe(SESSION_SEED.persona)
+    for (const path of CLEARED_SENSITIVE_SESSION_PATHS) expect(resetSession, `cleared sensitive path: ${path}`).not.toHaveProperty(path)
     await expect.poll(() => page.evaluate((keys) => keys.map((key) => sessionStorage.getItem(key)), FEATURE_SESSION_KEYS)).toEqual([null, null, null, null])
-    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.payment.runtime.v1"))).toBeNull()
     expect(await page.evaluate(() => localStorage.getItem("ondo.preferences.v3"))).toBe(localBefore)
     expect(await page.evaluate(() => localStorage.getItem("unrelated.local.fixture"))).toBe("preserve-local-byte")
     expect(await page.evaluate(() => sessionStorage.getItem("unrelated.session.fixture"))).toBe("preserve-session-byte")
@@ -200,6 +218,8 @@ for (const locale of ["en", "ko"] as const) {
     await page.getByTestId("nav-id").click()
     await expect(page.getByTestId("ondo-identity-entry")).toBeVisible()
     await expect(page.getByTestId("ondo-identity-entry")).toContainText(locale === "ko" ? "계정 없이 둘러보는 중" : "Exploring without an account")
+    await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}"))).toEqual(RESET_SESSION_EXPECTED)
+    await expect.poll(() => page.evaluate((keys) => keys.map((key) => sessionStorage.getItem(key)), FEATURE_SESSION_KEYS)).toEqual([null, null, null, null])
     expect(await page.evaluate(() => localStorage.getItem("ondo.preferences.v3"))).toBe(localBefore)
   })
 
