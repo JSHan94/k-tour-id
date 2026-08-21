@@ -85,6 +85,8 @@ const COPY = {
     topSignals: "Highest simulated scores at this zoom",
     moreSignals: "More simulated scores as you zoom in",
     allSignals: "All simulated scores at this zoom",
+    filteredResult: "Filtered result shown on the map",
+    filteredResults: "Filtered results shown on the map",
     preferences: "Starting interests",
     editPreferences: "Edit interests",
     noPreferences: "Tune interests",
@@ -146,6 +148,8 @@ const COPY = {
     topSignals: "이 줌의 높은 시뮬레이션 점수",
     moreSignals: "확대하면 시뮬레이션 점수가 더 보여요",
     allSignals: "이 줌의 모든 시뮬레이션 점수",
+    filteredResult: "검색 결과를 지도에 표시",
+    filteredResults: "검색 결과를 지도에 표시",
     preferences: "시작 관심사",
     editPreferences: "관심사 수정",
     noPreferences: "관심사 설정",
@@ -363,6 +367,24 @@ function signalLayerFilter(minimumScore: number) {
   return [">=", ["get", "score"], minimumScore] as never
 }
 
+function focusFilteredVenues(map: MapLibreMap, venues: readonly BMapVenue[]) {
+  if (venues.length === 0) return
+  if (venues.length === 1) {
+    map.jumpTo({ center: [venues[0].longitude, venues[0].latitude], zoom: 15 })
+    return
+  }
+  const longitudes = venues.map((venue) => venue.longitude)
+  const latitudes = venues.map((venue) => venue.latitude)
+  map.fitBounds([
+    [Math.min(...longitudes), Math.min(...latitudes)],
+    [Math.max(...longitudes), Math.max(...latitudes)],
+  ], {
+    duration: 0,
+    maxZoom: 14.5,
+    padding: { top: 220, right: 72, bottom: 160, left: 72 },
+  })
+}
+
 function toContributionFeatureCollection(venues: readonly BMapVenue[], contributedVenueIds: ReadonlySet<string>) {
   return toFeatureCollection(venues.filter((venue) => contributedVenueIds.has(venue.id)))
 }
@@ -416,6 +438,7 @@ export function MapEntryB() {
   const copy = COPY[locale]
   const mapNode = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const filteredMapRef = useRef(false)
   const userLocationRef = useRef<UserLocation | null>(null)
   const urlHydrated = useRef(false)
   const [city, setCity] = useState<CityId | null>(null)
@@ -467,6 +490,13 @@ export function MapEntryB() {
     if (heat === "pending" && venue.signalTruth !== "UNKNOWN") return false
     return true
   }), [after19On, city, heat, query])
+  const filteredMap = query.trim().length > 0 || heat !== "all"
+  filteredMapRef.current = filteredMap
+  const filteredSignalVenues = venues.filter((venue) => venue.signalTruth === "SIMULATED")
+  const filteredLegendScore = filteredSignalVenues.length
+    ? Math.max(...filteredSignalVenues.map((venue) => venue.ondoScore ?? 0))
+    : null
+  const filteredLegendCopy = venues.length === 1 ? copy.filteredResult : copy.filteredResults
   const nearestVenue = useMemo(() => {
     if (!userLocation || !venues.length) return null
     return venues.reduce<{ venue: BMapVenue; distance: number } | null>((nearest, venue) => {
@@ -498,11 +528,12 @@ export function MapEntryB() {
     loadDeadline = window.setTimeout(failMap, 8_000)
     void import("maplibre-gl").then(({ Map, NavigationControl }) => {
       if (disposed || !mapNode.current) return
+      const initialFilteredVenue = filteredMapRef.current && venues.length === 1 ? venues[0] : null
       const instance = new Map({
         container: mapNode.current,
         style: ondoMapStyle(locale),
-        center: CITY[city].center,
-        zoom: CITY[city].zoom,
+        center: initialFilteredVenue ? [initialFilteredVenue.longitude, initialFilteredVenue.latitude] : CITY[city].center,
+        zoom: initialFilteredVenue ? 15 : CITY[city].zoom,
         minZoom: 8.5,
         maxZoom: 18,
         attributionControl: false,
@@ -576,7 +607,7 @@ export function MapEntryB() {
           setMinimumSignalDistance(Number.isFinite(minimumDistance) ? Math.round(minimumDistance) : null)
         }
         const applySignalDensity = () => {
-          const density = signalDensityForZoom(instance.getZoom())
+          const density = filteredMapRef.current ? { tier: "all" as const, minimumScore: 0 } : signalDensityForZoom(instance.getZoom())
           const filter = signalLayerFilter(density.minimumScore)
           instance.setFilter("ondo-signal-points", filter)
           instance.setFilter("ondo-score", filter)
@@ -584,6 +615,7 @@ export function MapEntryB() {
           window.requestAnimationFrame(updateRenderedSignalCount)
         }
         applySignalDensity()
+        if (filteredMapRef.current && venues.length > 1) focusFilteredVenues(instance, venues)
         instance.on("zoomend", applySignalDensity)
         instance.on("idle", updateRenderedSignalCount)
         if (loadDeadline != null) window.clearTimeout(loadDeadline)
@@ -605,7 +637,16 @@ export function MapEntryB() {
     if (signalSource) void signalSource.setData(toSignalFeatureCollection(venues))
     const contributionSource = mapRef.current?.getSource("ondo-contributions") as GeoJSONSource | undefined
     if (contributionSource) void contributionSource.setData(toContributionFeatureCollection(venues, contributedVenueIds))
-  }, [contributedVenueIds, venues])
+    const instance = mapRef.current
+    if (instance?.getLayer("ondo-signal-points")) {
+      const density = filteredMap ? { tier: "all" as const, minimumScore: 0 } : signalDensityForZoom(instance.getZoom())
+      const filter = signalLayerFilter(density.minimumScore)
+      instance.setFilter("ondo-signal-points", filter)
+      instance.setFilter("ondo-score", filter)
+      setSignalZoomTier(density.tier)
+      if (filteredMap) focusFilteredVenues(instance, venues)
+    }
+  }, [contributedVenueIds, filteredMap, venues])
 
   useEffect(() => {
     userLocationRef.current = userLocation
@@ -711,7 +752,16 @@ export function MapEntryB() {
 
         {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onClear={() => { setQuery(""); setHeat("all") }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
 
-        {view === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKeyLabel} ${signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}.`}><div><span><i className={styles.clusterSwatch}>12×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>82</i>{copy.scoreKey}</span></div><small>{signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}</small></div> : null}
+        {view === "map" && mapState !== "error" ? <div
+          className={styles.mapKey}
+          data-testid="ondo-b-map-key"
+          data-filtered={filteredMap}
+          data-place-count={filteredMap ? venues.length : undefined}
+          data-score={filteredMap ? filteredLegendScore ?? "none" : undefined}
+          aria-label={filteredMap
+            ? `${venues.length} ${copy.places}. ${filteredLegendScore ?? "—"} ${copy.scoreKey}. ${filteredLegendCopy}. ${copy.mapKeyLabel}`
+            : `${copy.mapKeyLabel} ${signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}.`}
+        ><div><span><i className={styles.clusterSwatch}>{filteredMap ? venues.length : 12}×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>{filteredMap ? filteredLegendScore ?? "—" : 82}</i>{copy.scoreKey}</span></div><small>{filteredMap ? filteredLegendCopy : signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}</small></div> : null}
         {view === "map" && mapState !== "error" && locationState !== "idle" ? <p id="ondo-b-location-status" className={styles.locationFeedback} role="status" data-testid="ondo-b-location-status">{locationState === "locating" ? copy.locating : locationState === "ready" && nearestVenue ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}` : locationState === "ready" ? copy.locationReady : locationState === "denied" ? copy.locationDenied : copy.locationUnsupported}</p> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
         {view === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby={locationState === "idle" ? undefined : "ondo-b-location-status"} aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
