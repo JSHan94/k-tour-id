@@ -3,8 +3,8 @@ import {
   B_VISUAL_CASES,
   attachAndAssertBVisualRuntime,
   attachBCaseMetadata,
-  bSnapshotName,
   closeBVisualCase,
+  expectBVisualSnapshot,
   expectBVisualGuards,
   prepareBVisualPage,
   setupBVisualCase,
@@ -30,12 +30,7 @@ test.describe("ONDO B complete mobile visual evidence · 390×844", () => {
 
       // External vector tiles are replaced before MapLibre renders. The ONDO
       // marker, score, cluster, label, sheet, and navigation layers stay visible.
-      await expect(page).toHaveScreenshot(bSnapshotName(item, "390x844"), {
-        animations: "disabled",
-        caret: "hide",
-        fullPage: false,
-        maxDiffPixels: 32,
-      })
+      await expectBVisualSnapshot(page, item, "390x844", testInfo)
       await closeBVisualCase(page)
     })
   }

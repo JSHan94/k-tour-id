@@ -3,8 +3,8 @@ import {
   B_VISUAL_CASES,
   attachAndAssertBVisualRuntime,
   attachBCaseMetadata,
-  bSnapshotName,
   closeBVisualCase,
+  expectBVisualSnapshot,
   expectBVisualGuards,
   prepareBVisualPage,
   setupBVisualCase,
@@ -28,12 +28,7 @@ test.describe("ONDO B complete desktop visual evidence · 1440×1000", () => {
       await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
       await stabilizeBVisualSnapshot(page, item)
 
-      await expect(page).toHaveScreenshot(bSnapshotName(item, "1440x1000"), {
-        animations: "disabled",
-        caret: "hide",
-        fullPage: false,
-        maxDiffPixels: 32,
-      })
+      await expectBVisualSnapshot(page, item, "1440x1000", testInfo)
       await closeBVisualCase(page)
     })
   }

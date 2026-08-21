@@ -1003,6 +1003,69 @@ export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
   }
 }
 
+export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewport: BSleekViewportId, testInfo: TestInfo) {
+  const screenshotOptions = {
+    animations: "disabled" as const,
+    caret: "hide" as const,
+    fullPage: false,
+  }
+  if (item.state !== "CITY-LIVE") {
+    await expect(page).toHaveScreenshot(bSnapshotName(item, viewport), { ...screenshotOptions, maxDiffPixels: 32 })
+    return
+  }
+
+  // Chromium can occasionally composite the MapLibre canvas after its DOM,
+  // controls, sources, and queryRenderedFeatures state are ready but before
+  // the WebGL marker layers are painted. A blank frame is not valid evidence
+  // and must never replace the reviewed map baseline. Capture the exact frame
+  // used by the matcher only after the heat-marker colors are present.
+  let paintedFrame: Buffer | undefined
+  let heatPixels = 0
+  await expect.poll(async () => {
+    await settle(page)
+    const viewportSize = page.viewportSize()
+    const frame = await page.screenshot({ ...screenshotOptions, scale: "css" })
+    const count = await page.evaluate(async ({ dataUrl, size }) => {
+      const image = new Image()
+      image.src = dataUrl
+      await image.decode()
+      const canvas = document.createElement("canvas")
+      canvas.width = image.naturalWidth
+      canvas.height = image.naturalHeight
+      const context = canvas.getContext("2d", { willReadFrequently: true })
+      if (!context) return 0
+      context.drawImage(image, 0, 0)
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+      let markerPixels = 0
+      for (let offset = 0; offset < pixels.length; offset += 4) {
+        const red = pixels[offset]
+        const green = pixels[offset + 1]
+        const blue = pixels[offset + 2]
+        const peak = red >= 70 && red <= 130 && green >= 30 && green <= 75 && blue >= 50 && blue <= 100
+        const hot = red >= 130 && red <= 190 && green >= 60 && green <= 115 && blue >= 50 && blue <= 105
+        if (peak || hot) markerPixels += 1
+      }
+      return markerPixels * (size.width === canvas.width && size.height === canvas.height ? 1 : 0)
+    }, { dataUrl: `data:image/png;base64,${frame.toString("base64")}`, size: viewportSize! })
+    if (count > 1_000) {
+      paintedFrame = frame
+      heatPixels = count
+    }
+    return count
+  }, {
+    message: `${item.id} MapLibre compositor frame has no painted heat-marker layers`,
+    timeout: 8_000,
+    intervals: [50, 100, 250, 500],
+  }).toBeGreaterThan(1_000)
+
+  expect(paintedFrame, `${item.id} has no accepted painted frame`).toBeDefined()
+  await testInfo.attach("map-paint.json", {
+    body: JSON.stringify({ caseId: item.id, viewport, heatPixels, threshold: 1_000 }, null, 2),
+    contentType: "application/json",
+  })
+  expect(paintedFrame!).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
+}
+
 export async function closeBVisualCase(page: Page) {
   await expectBRuntimeClean(page)
 }

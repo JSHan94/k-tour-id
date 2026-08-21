@@ -4,8 +4,8 @@ import {
   B_VISUAL_CASES,
   attachAndAssertBVisualRuntime,
   attachBCaseMetadata,
-  bSnapshotName,
   closeBVisualCase,
+  expectBVisualSnapshot,
   expectBVisualGuards,
   prepareBVisualPage,
   setupBVisualCase,
@@ -32,12 +32,7 @@ test.describe("ONDO B sleek responsive pixel evidence", () => {
         await expectBVisualGuards(page, page.getByTestId("ondo-b-root"), testInfo)
         await stabilizeBVisualSnapshot(page, item)
 
-        await expect(page).toHaveScreenshot(bSnapshotName(item, viewport.id), {
-          animations: "disabled",
-          caret: "hide",
-          fullPage: false,
-          maxDiffPixels: 32,
-        })
+        await expectBVisualSnapshot(page, item, viewport.id, testInfo)
         await closeBVisualCase(page)
       })
     }
