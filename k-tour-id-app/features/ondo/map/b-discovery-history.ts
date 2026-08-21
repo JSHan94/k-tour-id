@@ -91,9 +91,10 @@ function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
   }
 }
 
-function mergedState(entry: BDiscoveryHistoryEntry) {
+function mergedState(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
+  const preserved = isRecord(preservedState) ? preservedState : {}
   const current = isRecord(window.history.state) ? window.history.state : {}
-  return { ...current, [HISTORY_KEY]: entry }
+  return { ...preserved, ...current, [HISTORY_KEY]: entry }
 }
 
 function entryUrl(entry: BDiscoveryHistoryEntry) {
@@ -110,8 +111,8 @@ function entryUrl(entry: BDiscoveryHistoryEntry) {
   return `${url.pathname}${url.search}${url.hash}`
 }
 
-function replaceEntry(entry: BDiscoveryHistoryEntry) {
-  History.prototype.replaceState.call(window.history, mergedState(entry), "", entryUrl(entry))
+function replaceEntry(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
+  History.prototype.replaceState.call(window.history, mergedState(entry, preservedState), "", entryUrl(entry))
 }
 
 function pushEntry(entry: BDiscoveryHistoryEntry) {
@@ -129,13 +130,29 @@ export function readBDiscoveryHistory(state?: unknown): BDiscoveryHistoryEntry |
   return isRecord(source) ? sanitizeEntry(source[HISTORY_KEY]) : null
 }
 
-export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDiscoveryCity | undefined) {
+export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preservedState?: unknown) {
+  const existing = sanitizeEntry(entry)
+  if (!existing) return null
+  const currentDocumentId = documentId()
+  const current: BDiscoveryHistoryEntry = existing.documentId === currentDocumentId
+    ? existing
+    : { ...existing, documentId: currentDocumentId, query: "", heat: "all" }
+  replaceEntry(current, preservedState)
+  return current
+}
+
+export function normalizeBDiscoveryHistoryForActiveDocument() {
   const existing = readBDiscoveryHistory()
+  if (!existing) return null
+  const currentDocumentId = documentId()
+  if (existing.documentId === currentDocumentId) return existing
+  return replaceBDiscoveryHistoryForActiveDocument(existing)
+}
+
+export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDiscoveryCity | undefined) {
+  const existing = normalizeBDiscoveryHistoryForActiveDocument()
   if (existing) {
-    const reloadedDocument = existing.documentId !== documentId()
-    const current = { ...existing, documentId: documentId(), query: reloadedDocument ? "" : existing.query, heat: reloadedDocument ? "all" as const : existing.heat }
-    replaceEntry(current)
-    return current
+    return existing
   }
 
   const url = new URL(window.location.href)

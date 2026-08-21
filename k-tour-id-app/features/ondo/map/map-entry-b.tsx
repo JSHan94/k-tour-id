@@ -19,9 +19,10 @@ import {
   focusBDiscoveryTarget,
   goBackFromBDiscovery,
   initializeBDiscoveryHistory,
+  normalizeBDiscoveryHistoryForActiveDocument,
   openBDiscoveryVenue,
-  readBDiscoveryHistory,
   replaceBDiscoveryCityContext,
+  replaceBDiscoveryHistoryForActiveDocument,
   type BDiscoveryHeat,
   type BDiscoveryHistoryEntry,
 } from "./b-discovery-history"
@@ -486,6 +487,24 @@ export function MapEntryB() {
   useEffect(() => {
     if (urlHydrated.current) return
     urlHydrated.current = true
+    let stabilizationFrame: number | null = null
+    let stabilizationTimer: number | null = null
+    const stabilizeHistoryEntry = (entry: BDiscoveryHistoryEntry, preservedState: unknown) => {
+      if (stabilizationFrame != null) window.cancelAnimationFrame(stabilizationFrame)
+      if (stabilizationTimer != null) window.clearTimeout(stabilizationTimer)
+      const preserveEntry = () => {
+        const current = normalizeBDiscoveryHistoryForActiveDocument()
+        replaceBDiscoveryHistoryForActiveDocument(current ?? entry, preservedState)
+      }
+      stabilizationFrame = window.requestAnimationFrame(() => {
+        stabilizationFrame = null
+        preserveEntry()
+        stabilizationTimer = window.setTimeout(() => {
+          stabilizationTimer = null
+          preserveEntry()
+        }, 50)
+      })
+    }
     const applyHistoryEntry = (entry: BDiscoveryHistoryEntry, restoreFocus: boolean) => {
       setCity(entry.city ?? null)
       setView(entry.view)
@@ -497,14 +516,24 @@ export function MapEntryB() {
         window.setTimeout(() => focusBDiscoveryTarget(entry)?.focus({ preventScroll: true }), 0)
       }
     }
+    const initialState = window.history.state
     const initial = initializeBDiscoveryHistory((venueId) => CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === venueId)?.cityId)
     applyHistoryEntry(initial, false)
+    stabilizeHistoryEntry(initial, initialState)
     const onPopState = () => {
-      const entry = readBDiscoveryHistory()
-      if (entry) applyHistoryEntry(entry, true)
+      const poppedState = window.history.state
+      const entry = normalizeBDiscoveryHistoryForActiveDocument()
+      if (entry) {
+        applyHistoryEntry(entry, true)
+        stabilizeHistoryEntry(entry, poppedState)
+      }
     }
     window.addEventListener("popstate", onPopState)
-    return () => window.removeEventListener("popstate", onPopState)
+    return () => {
+      window.removeEventListener("popstate", onPopState)
+      if (stabilizationFrame != null) window.cancelAnimationFrame(stabilizationFrame)
+      if (stabilizationTimer != null) window.clearTimeout(stabilizationTimer)
+    }
   }, [actions])
 
   useEffect(() => {

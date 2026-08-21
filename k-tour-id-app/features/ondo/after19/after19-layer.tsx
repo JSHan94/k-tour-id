@@ -114,9 +114,16 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
 
   useEffect(() => {
     if (!showGate) return
-    returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const active = document.activeElement
+    returnFocusRef.current = active instanceof HTMLElement && active !== document.body ? active : chipRef.current
     return () => {
-      if (restoreGateOpenerRef.current) window.requestAnimationFrame(() => returnFocusRef.current?.focus())
+      if (restoreGateOpenerRef.current) {
+        window.requestAnimationFrame(() => {
+          const opener = returnFocusRef.current
+          const target = opener?.isConnected && opener !== document.body ? opener : chipRef.current
+          target?.focus({ preventScroll: true })
+        })
+      }
     }
   }, [showGate])
 
