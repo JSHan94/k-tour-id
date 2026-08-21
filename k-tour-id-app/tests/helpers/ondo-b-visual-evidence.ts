@@ -1456,6 +1456,7 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
   let invariantAfter: BMapRecoveryInvariant | null = null
   let expectedCanvasHeatPixels = 0
   let expectedEdgeHeatPixels = 0
+  const updatingReviewedSnapshot = testInfo.config.updateSnapshots === "all" || testInfo.config.updateSnapshots === "changed"
   let threshold: {
     expectedHeatPixels: number
     minimumComponentPixels: number
@@ -1472,10 +1473,12 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
       ...thresholdConfig,
       expectedHeatPixels: edgeReceiptRequired ? expectedEdgeHeatPixels : expectedCanvasHeatPixels,
     }
-    expect(
-      threshold.expectedHeatPixels,
-      `${item.id}:${viewport} reviewed baseline has no required ${threshold.mode} MapLibre paint receipt`,
-    ).toBeGreaterThan(threshold.minimumHeatPixels)
+    if (!updatingReviewedSnapshot) {
+      expect(
+        threshold.expectedHeatPixels,
+        `${item.id}:${viewport} reviewed baseline has no required ${threshold.mode} MapLibre paint receipt`,
+      ).toBeGreaterThan(threshold.minimumHeatPixels)
+    }
 
     // Seal the state-neutral comparison only after product readiness becomes
     // true without harness stimulus. A zero query-rendered count is never
