@@ -169,6 +169,7 @@
   .cityHeader { top: max(4px, env(safe-area-inset-top)); right: 10px; left: 10px; gap: 6px; }
   .search { min-height: 44px; max-width: calc(100% - 126px); }
   .rail { max-width: calc(100% - 144px); }
+  .rail button { padding-inline: 7px; font-size: 11px; }
   .preferenceSummary {
     top: calc(104px + env(safe-area-inset-top));
     right: 10px;

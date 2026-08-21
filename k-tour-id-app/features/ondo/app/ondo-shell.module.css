@@ -236,5 +236,5 @@
   .nav button, .toast { transition: none; }
   .stage[data-variant="B"] button { transition: none !important; }
   .stage[data-variant="B"] button:hover,
-  .stage[data-variant="B"] button:active { transform: none; }
+  .stage[data-variant="B"] button:active { transform: none !important; }
 }
