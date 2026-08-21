@@ -248,7 +248,7 @@ export function LabsEntry() {
 
   return (
     <Sheet label="Labs" onClose={close} showClose={false} size="full">
-      <main className={styles.body} data-wallet-state={wallet} data-bridge-state={bridge} data-bridge-phase={phase} data-mint-state={mint} data-testid="labs-overlay">
+      <div className={styles.body} data-wallet-state={wallet} data-bridge-state={bridge} data-bridge-phase={phase} data-mint-state={mint} data-testid="labs-overlay">
         <header className={styles.header}>
           <button type="button" data-sheet-initial-focus onClick={close} aria-label={returnLabel}><ArrowLeft size={20} /></button>
           <div><p className={styles.eyebrow}>{locale === "ko" ? "기술 실험실 · 시뮬레이션" : "LABS · SIMULATED"}</p><h2>{locale === "ko" ? "기술 실험실" : "Labs"}</h2></div>
@@ -340,7 +340,7 @@ export function LabsEntry() {
           {mint === "NFT-MINTED" ? <InlineNotice tone="success"><Check size={18} /><span>{locale === "ko" ? "기념 배지 시뮬레이션 완료 · 실제 NFT나 거래는 생성되지 않았습니다." : "Badge simulation complete. No real NFT or transaction was created."}</span></InlineNotice> : null}
           {mint === "NFT-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{locale === "ko" ? "기념 배지 시뮬레이션을 완료하지 못했어요. 공개 기록은 생성되지 않았습니다." : "Badge simulation did not complete. No public record was created."}</span></InlineNotice> : null}
         </section>
-      </main>
+      </div>
     </Sheet>
   )
 }

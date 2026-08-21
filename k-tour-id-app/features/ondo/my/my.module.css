@@ -30,6 +30,7 @@
 .preferenceChips button { min-height: 44px; padding: 0 13px; border: 1px solid #d9d7d1; border-radius: 11px; background: transparent; color: #64615c; font-size: 12px; font-weight: 680; }
 .preferenceChips button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
 .preferenceTruth { margin: 0; padding-top: 12px; border-top: 1px solid #e5e3de; color: #706d67; font-size: 12px; line-height: 1.55; }
+.discoveryReset { display: flex; width: 100%; min-width: 44px; min-height: 48px; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; border: 1px solid #d5d2cc; border-radius: 12px; background: transparent; color: #4f4c47; font: inherit; font-size: 13px; font-weight: 720; }
 .stampCard { display: grid; gap: 17px; padding: 18px 0; border-top: 1px solid #d9d7d1; border-bottom: 1px solid #d9d7d1; color: #20201e; }
 .stampGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px; }
 .stampGrid > span { aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; font-size: 12px; font-weight: 720; }

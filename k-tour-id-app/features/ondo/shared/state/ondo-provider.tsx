@@ -76,6 +76,7 @@ type OndoActions = {
   setSurface(surface: Surface): void
   setPersona(persona: Persona): void
   setDiscoveryPreferences(preferences: DiscoveryPreference[]): void
+  resetDiscoveryPreferences(): void
   beginOnboarding(): void
   completeOnboarding(): void
   markGuideSeen(): void
@@ -134,7 +135,7 @@ const initialState: OndoState = {
 
 const LOCAL_KEY = "ondo.preferences.v3"
 const SESSION_KEY = "ondo.session.v3"
-const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.labs.v2", "ondo.accepted-visits.v2"] as const
+const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.labs.v2", "ondo.accepted-visits.v2", "ondo.payment.runtime.v1"] as const
 const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
@@ -288,6 +289,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     setSurface: (surface) => setState((current) => ({ ...current, surface })),
     setPersona: (persona) => setState((current) => ({ ...current, persona })),
     setDiscoveryPreferences: (discoveryPreferences) => setState((current) => ({ ...current, discoveryPreferences })),
+    resetDiscoveryPreferences: () => setState((current) => ({ ...current, discoveryPreferences: [] })),
     beginOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-IN-PROGRESS" })),
     completeOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } })),
     markGuideSeen: () => setState((current) => ({ ...current, guideSeen: true })),
@@ -346,7 +348,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     resetSession: () => {
       window.sessionStorage.removeItem(SESSION_KEY)
       FEATURE_SESSION_KEYS.forEach((key) => window.sessionStorage.removeItem(key))
-      setState((current) => ({ ...initialState, locale: current.locale, guideSeen: current.guideSeen, autoNight: current.autoNight, savedVenueIds: current.savedVenueIds, discoveryPreferences: current.discoveryPreferences, hydrated: true }))
+      setState((current) => ({ ...initialState, tab: current.tab, surface: { kind: "map" }, onboarding: current.onboarding, persona: current.persona, locale: current.locale, guideSeen: current.guideSeen, autoNight: current.autoNight, savedVenueIds: current.savedVenueIds, discoveryPreferences: current.discoveryPreferences, hydrated: true }))
     },
   }), [notify])
 

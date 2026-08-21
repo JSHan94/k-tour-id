@@ -1,8 +1,10 @@
 "use client"
 
-import { BadgeCheck, ChevronRight, CircleUserRound, Clock3, CreditCard, FlaskConical, Globe2, Shield, UserRound } from "lucide-react"
+import { useState } from "react"
+import { BadgeCheck, ChevronRight, CircleUserRound, Clock3, CreditCard, FlaskConical, Globe2, LogOut, Shield, UserRound } from "lucide-react"
 import type { Locale } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
+import { ResetConfirmationSheet } from "../shared/ui/reset-confirmation-sheet"
 import { ProfilePanel } from "../profile/profile-panel"
 import { TrustPanel } from "../trust/trust-panel"
 import styles from "./identity.module.css"
@@ -37,6 +39,19 @@ const COPY = {
     labsBody: "Experimental signing, asset, chain-link, and souvenir hypotheses",
     after19Setting: "After 19 auto-open",
     after19SettingBody: "Open the night preview automatically only after a current 19+ check and 19:00 Korea time.",
+    sessionTitle: "Browser session",
+    sessionBody: "Manage the simulated account and private activity kept only in this browser tab.",
+    sessionOpen: "Sign out and clear this session",
+    sessionOpenGuest: "Clear this session",
+    sessionDialog: "Sign out and clear this session?",
+    sessionDialogGuest: "Clear this session?",
+    sessionDescription: "This signs out of the simulated browser account and clears identity, 19+, Payment KYC, profile, activity, Tables, chat, reports, Labs, accepted visits, and payment progress. No server account is created or deleted.",
+    sessionDescriptionGuest: "This clears identity, 19+, Payment KYC, profile, activity, Tables, chat, reports, Labs, accepted visits, and payment progress from this browser tab. This preview has no connected server account.",
+    sessionPreserved: "Your language, guide, After 19 setting, saved places, and discovery choices stay on this device.",
+    sessionCancel: "Keep this session",
+    sessionConfirm: "Sign out and clear",
+    sessionConfirmGuest: "Clear session",
+    sessionReceipt: "Browser session cleared. You are now exploring without an account. Saved places and discovery settings remain.",
   },
   ko: {
     eyebrow: "ONDO ID",
@@ -67,12 +82,27 @@ const COPY = {
     labsBody: "서명·자산·체인 연결·기념 배지 기술 가설 실험 영역",
     after19Setting: "After 19 자동 열기",
     after19SettingBody: "현재 유효한 19+ 확인과 한국 시간 19:00 이후 조건이 모두 맞을 때만 밤 프리뷰를 자동으로 열어요.",
+    sessionTitle: "브라우저 세션",
+    sessionBody: "이 브라우저 탭에만 남는 시뮬레이션 계정과 비공개 활동을 관리해요.",
+    sessionOpen: "로그아웃하고 이 세션 지우기",
+    sessionOpenGuest: "이 세션 지우기",
+    sessionDialog: "로그아웃하고 이 세션을 지울까요?",
+    sessionDialogGuest: "이 세션을 지울까요?",
+    sessionDescription: "시뮬레이션 브라우저 계정에서 로그아웃하고 본인·19+·결제용 KYC·프로필·활동·모임·대화·신고·Labs·인정된 방문·결제 진행 상태를 지웁니다. 서버 계정을 만들거나 삭제하지 않아요.",
+    sessionDescriptionGuest: "본인·19+·결제용 KYC·프로필·활동·모임·대화·신고·Labs·인정된 방문·결제 진행 상태를 이 브라우저 탭에서 지웁니다. 이 미리보기에는 연결된 서버 계정이 없어요.",
+    sessionPreserved: "언어, 가이드, After 19 설정, 저장한 장소와 둘러보기 선택은 이 기기에 남아요.",
+    sessionCancel: "이 세션 유지",
+    sessionConfirm: "로그아웃하고 지우기",
+    sessionConfirmGuest: "세션 지우기",
+    sessionReceipt: "브라우저 세션을 지웠어요. 계정 없이 둘러보는 중이며 저장한 장소와 둘러보기 설정은 남아 있어요.",
   },
 } satisfies Record<Locale, Record<string, string>>
 
 export function IdentityEntry() {
   const { state, actions } = useOndo()
+  const [sessionResetOpen, setSessionResetOpen] = useState(false)
   const t = COPY[state.locale]
+  const hasAccount = state.account === "ACC-ACTIVE"
   const personLabel = state.person === "PER-VERIFIED" ? t.personReady : state.person === "PER-PENDING" ? t.personPending : state.person === "PER-UNSUPPORTED" ? t.personUnavailable : ["PER-FAILED", "PER-EXPIRED"].includes(state.person) ? t.personFailed : t.personNone
   const ageLabel = state.age === "AGE-VERIFIED" ? t.ageReady : ["AGE-FAILED", "AGE-EXPIRED"].includes(state.age) ? t.ageFailed : t.ageNone
   const paymentLabel = state.paymentKyc === "PKY-VERIFIED" ? t.paymentReady : state.paymentKyc === "PKY-PENDING" ? t.paymentPending : ["PKY-FAILED", "PKY-EXPIRED"].includes(state.paymentKyc) ? t.paymentFailed : t.paymentNone
@@ -121,9 +151,28 @@ export function IdentityEntry() {
       <ProfilePanel />
       <TrustPanel />
 
+      <section className={styles.sessionCard} aria-labelledby="session-controls-title">
+        <span className={styles.sessionIcon}><LogOut size={19} /></span>
+        <div><h2 id="session-controls-title">{t.sessionTitle}</h2><p>{t.sessionBody}</p></div>
+        <button type="button" data-testid="session-reset-open" onClick={() => setSessionResetOpen(true)}>{hasAccount ? t.sessionOpen : t.sessionOpenGuest}</button>
+      </section>
+
       <button type="button" className={styles.labsEntry} onClick={() => actions.setSurface({ kind: "labs" })} data-testid="open-labs-id">
         <span><FlaskConical size={19} /></span><div><strong>{t.labs}</strong><small>{t.labsBody}</small></div><ChevronRight size={18} />
       </button>
+      {sessionResetOpen ? <ResetConfirmationSheet
+        testId="session-reset-confirm"
+        title={hasAccount ? t.sessionDialog : t.sessionDialogGuest}
+        description={hasAccount ? t.sessionDescription : t.sessionDescriptionGuest}
+        preserved={t.sessionPreserved}
+        cancelLabel={t.sessionCancel}
+        confirmLabel={hasAccount ? t.sessionConfirm : t.sessionConfirmGuest}
+        onCancel={() => setSessionResetOpen(false)}
+        onConfirm={() => {
+          actions.resetSession()
+          actions.notify(t.sessionReceipt)
+        }}
+      /> : null}
     </div>
   )
 }

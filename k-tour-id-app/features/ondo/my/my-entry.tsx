@@ -1,10 +1,12 @@
 "use client"
 
-import { Bookmark, Check, ChevronRight, FlaskConical, MapPin, MessageCircle, ShieldCheck, Sparkles, Stamp } from "lucide-react"
+import { useState } from "react"
+import { Bookmark, Check, ChevronRight, FlaskConical, MapPin, MessageCircle, RotateCcw, ShieldCheck, Sparkles, Stamp } from "lucide-react"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { DISCOVERY_PREFERENCE_OPTIONS, PERSONA_OPTIONS } from "../onboarding/discovery-options"
 import { useOndo } from "../shared/state/ondo-provider"
+import { ResetConfirmationSheet } from "../shared/ui/reset-confirmation-sheet"
 import styles from "./my.module.css"
 
 const VENUE_NAMES: Record<string, { en: string; ko: string }> = {
@@ -16,6 +18,7 @@ const VENUE_NAMES: Record<string, { en: string; ko: string }> = {
 
 export function MyEntry() {
   const { state, actions } = useOndo()
+  const [discoveryResetOpen, setDiscoveryResetOpen] = useState(false)
   const locale = state.locale
   const history = [
     { key: "identity", icon: <ShieldCheck size={17} />, label: locale === "ko" ? "본인 확인" : "Identity check", value: state.reputation.identity === "verified" ? locale === "ko" ? "완료 · 시뮬레이션" : "Completed · Simulated" : locale === "ko" ? "미완료" : "Not completed" },
@@ -40,7 +43,7 @@ export function MyEntry() {
   }
 
   return (
-    <main className={styles.screen} data-testid="ondo-my-entry">
+    <div className={styles.screen} data-testid="ondo-my-entry">
       <header className={styles.header}><p>MY KOREA</p><h1>{locale === "ko" ? "나의 한국 여행" : "My Korea"}</h1><span>{locale === "ko" ? "저장한 장소와 분리된 활동 이력을 확인해요." : "Saved places and separate activity histories, in one quiet place."}</span></header>
 
       <section className={styles.section} aria-labelledby="saved-heading">
@@ -67,6 +70,7 @@ export function MyEntry() {
           return <button key={option.id} type="button" aria-pressed={selected} onClick={() => togglePreference(option.id)} data-testid={`discovery-preference-${option.id}`}>{option.label[locale]}</button>
         })}</div></fieldset>
         <p className={styles.preferenceTruth} data-testid="discovery-preference-truth">{locale === "ko" ? "이 기기의 둘러보기 맥락으로만 저장됩니다. 공식 장소 기록은 식이 요구사항 지원 여부를 확인하지 않으며, 이 선택으로 장소를 숨기거나 지원 장소라고 표시하지 않아요." : "Saved only as discovery context on this device. Official place records do not confirm dietary support, so these choices neither hide venues nor label them as supported."}</p>
+        <button type="button" className={styles.discoveryReset} data-testid="discovery-reset-open" onClick={() => setDiscoveryResetOpen(true)}><RotateCcw size={17} />{locale === "ko" ? "둘러보기 선택 초기화" : "Reset discovery choices"}</button>
       </section>
 
       <section className={styles.section} aria-labelledby="stamp-heading">
@@ -89,6 +93,19 @@ export function MyEntry() {
       <section className={styles.labsCard}>
         <span><FlaskConical size={20} /></span><div><strong>Labs</strong><p>{locale === "ko" ? "지갑·체인 연결·증거 변환 가설은 소비자 흐름과 분리되어 있어요." : "Wallet, bridge, and evidence-adapter hypotheses stay outside the consumer journey."}</p></div><button type="button" onClick={() => actions.setSurface({ kind: "labs" })} aria-label={locale === "ko" ? "Labs 열기" : "Open Labs"} data-testid="open-labs"><ChevronRight size={18} /></button>
       </section>
-    </main>
+      {discoveryResetOpen ? <ResetConfirmationSheet
+        testId="discovery-reset-confirm"
+        title={locale === "ko" ? "둘러보기 선택을 초기화할까요?" : "Reset discovery choices?"}
+        description={locale === "ko" ? "먹고 싶은 것, 분위기, 시간대와 식이 요구사항 선택만 비웁니다." : "Only your food, mood, timing, and dietary requirement choices will be cleared."}
+        preserved={locale === "ko" ? "저장한 장소, 브라우저 세션, 언어와 설정, 현재 검색 기록은 그대로 유지됩니다." : "Saved places, your browser session, language and settings, and current search history stay unchanged."}
+        cancelLabel={locale === "ko" ? "선택 유지" : "Keep choices"}
+        confirmLabel={locale === "ko" ? "선택 초기화" : "Reset choices"}
+        onCancel={() => setDiscoveryResetOpen(false)}
+        onConfirm={() => {
+          actions.resetDiscoveryPreferences()
+          actions.notify(locale === "ko" ? "둘러보기 선택을 초기화했어요. 저장한 장소와 브라우저 세션은 그대로예요." : "Discovery choices reset. Saved places and your browser session remain unchanged.")
+        }}
+      /> : null}
+    </div>
   )
 }
