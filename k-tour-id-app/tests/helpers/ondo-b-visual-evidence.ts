@@ -29,6 +29,7 @@ export type BVisualStateId =
   | "NATION"
   | "CITY-LIVE"
   | "CITY-LIST"
+  | "CITY-FILTERED-MAP"
   | "CITY-FALLBACK"
   | "PLACE-PEEK"
   | "PLACE-DETAIL"
@@ -130,6 +131,12 @@ export const B_MAP_PAINT_CANVAS_RECEIPTS = [
   "B-PX-CITY-LIVE-KO:430x932",
   "B-PX-CITY-LIVE-KO:768x1024",
   "B-PX-CITY-LIVE-KO:801x1000",
+  "B-PX-CITY-FILTERED-MAP-EN:1440x1000",
+  "B-PX-CITY-FILTERED-MAP-EN:360x800",
+  "B-PX-CITY-FILTERED-MAP-EN:390x844",
+  "B-PX-CITY-FILTERED-MAP-EN:430x932",
+  "B-PX-CITY-FILTERED-MAP-EN:768x1024",
+  "B-PX-CITY-FILTERED-MAP-EN:801x1000",
   "B-PX-GATE-ACCOUNT-FAIL-KO:1440x1000",
   "B-PX-GATE-ACCOUNT-FAIL-KO:360x800",
   "B-PX-GATE-ACCOUNT-FAIL-KO:390x844",
@@ -189,6 +196,7 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-CITY-LIVE-EN", state: "CITY-LIVE", flows: ["FL-001", "FL-014"], locale: "en", description: "deterministic map with real ONDO overlays" },
   { id: "B-PX-CITY-LIVE-KO", state: "CITY-LIVE", flows: ["FL-001", "FL-014"], locale: "ko", description: "city controls and map key in Korean" },
   { id: "B-PX-CITY-LIST-EN", state: "CITY-LIST", flows: ["FL-001"], locale: "en", description: "sourced food list" },
+  { id: "B-PX-CITY-FILTERED-MAP-EN", state: "CITY-FILTERED-MAP", flows: ["FL-001"], locale: "en", description: "one-result search stays mapped with a truthful filtered legend" },
   { id: "B-PX-CITY-FALLBACK-KO", state: "CITY-FALLBACK", flows: ["FL-001"], locale: "ko", description: "tile failure list and retry" },
   { id: "B-PX-PLACE-PEEK-EN", state: "PLACE-PEEK", flows: ["FL-001"], locale: "en", description: "canonical selected place peek" },
   { id: "B-PX-PLACE-DETAIL-EN", state: "PLACE-DETAIL", flows: ["FL-001", "FL-010", "FL-011", "FL-012", "FL-016"], locale: "en", description: "canonical place facts and actions" },
@@ -246,12 +254,12 @@ const pixel = (...caseIds: BVisualCase["id"][]) => caseIds
  */
 const B_PIXEL_BY_CHECKPOINT: Partial<Record<CheckpointKey, readonly BVisualCase["id"][]>> = {
   "FL-001:ENTRY": pixel("B-PX-NATION-EN", "B-PX-NATION-KO"),
-  "FL-001:DECISION": pixel("B-PX-CITY-LIVE-EN", "B-PX-CITY-LIVE-KO", "B-PX-CITY-LIST-EN", "B-PX-PLACE-PEEK-EN"),
+  "FL-001:DECISION": pixel("B-PX-CITY-LIVE-EN", "B-PX-CITY-LIVE-KO", "B-PX-CITY-LIST-EN", "B-PX-CITY-FILTERED-MAP-EN", "B-PX-PLACE-PEEK-EN"),
   "FL-001:CANCEL": pixel("B-PX-PLACE-PEEK-EN"),
   "FL-001:ERROR": pixel("B-PX-CITY-FALLBACK-KO"),
   "FL-001:RETRY": pixel("B-PX-CITY-FALLBACK-KO"),
   "FL-001:TERMINAL": pixel("B-PX-PLACE-DETAIL-EN"),
-  "FL-001:RETURN": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-001:RETURN": pixel("B-PX-CITY-LIVE-EN", "B-PX-CITY-FILTERED-MAP-EN"),
   "FL-002:ENTRY": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
   "FL-002:DECISION": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
   "FL-002:CANCEL": pixel("B-PX-AFTER19-VENUE-LOCKED-EN"),
@@ -626,10 +634,23 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   if (state === "NATION") {
     await seedB(page, { locale })
     await gotoB(page)
-  } else if (state === "CITY-LIVE" || state === "CITY-LIST") {
+  } else if (state === "CITY-LIVE" || state === "CITY-LIST" || state === "CITY-FILTERED-MAP") {
     await seedB(page, { locale })
     await openCity(page)
-    if (state === "CITY-LIST") await page.getByRole("button", { name: locale === "ko" ? "목록" : "List" }).click()
+    if (state === "CITY-LIST" || state === "CITY-FILTERED-MAP") {
+      await page.getByRole("button", { name: locale === "ko" ? "목록" : "List", exact: true }).click()
+    }
+    if (state === "CITY-FILTERED-MAP") {
+      await page.getByRole("search").getByRole("textbox").fill("느린마을 양조장")
+      const list = page.getByTestId("ondo-b-venue-list")
+      await expect(list.locator("li")).toHaveCount(1)
+      await expect(list.locator("[data-venue-opener='mois-18939eecb43c15ab4305']")).toContainText("Simulated score 59/100")
+      await page.getByTestId("ondo-b-view-toggle").click()
+      const mapEntry = page.getByTestId("ondo-b-map-entry")
+      await expect(mapEntry).toHaveAttribute("data-signal-source-count", "1")
+      await expect.poll(async () => Number(await mapEntry.getAttribute("data-rendered-signal-count"))).toBe(1)
+      await expect(page.getByTestId("ondo-b-map-key")).toHaveAttribute("data-score", "59")
+    }
   } else if (state === "CITY-FALLBACK") {
     await seedB(page, { locale })
     await gotoB(page)
@@ -1293,7 +1314,9 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
         const blue = pixels[offset + 2]
         const peak = red >= 70 && red <= 130 && green >= 30 && green <= 75 && blue >= 50 && blue <= 100
         const hot = red >= 130 && red <= 190 && green >= 60 && green <= 115 && blue >= 50 && blue <= 105
-        if (peak || hot) candidates.add(y * canvas.width + x)
+        const rising = red >= 195 && red <= 245 && green >= 105 && green <= 160 && blue >= 40 && blue <= 90
+        const warming = red >= 200 && red <= 250 && green >= 165 && green <= 220 && blue >= 70 && blue <= 165
+        if (peak || hot || rising || warming) candidates.add(y * canvas.width + x)
       }
     }
     let markerPixels = 0

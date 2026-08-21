@@ -15,7 +15,7 @@ test("B registry is exact, honest, and contains no synthetic qaCase adapter", ()
   expect(B_FLOW_IDS).toHaveLength(18)
   expect(B_FLOW_CONTRACTS).toHaveLength(18)
   expect(new Set(B_FLOW_CONTRACTS.map((item) => item.flow)).size).toBe(18)
-  expect(B_VISUAL_CASES).toHaveLength(46)
+  expect(B_VISUAL_CASES).toHaveLength(47)
   expect(B_CONTENT_CASES.length).toBeGreaterThanOrEqual(20)
 
   const checkpoints = B_FLOW_CONTRACTS.flatMap((item) => item.checkpoints)
