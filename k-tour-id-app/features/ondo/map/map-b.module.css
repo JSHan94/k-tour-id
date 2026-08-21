@@ -145,6 +145,49 @@
   .cityTruthLegend { gap: 8px; margin-bottom: 5px; padding-top: 8px; }
 }
 
+@media (orientation: landscape) and (max-height: 500px) {
+  .nation {
+    grid-template-columns: minmax(190px, 1fr) minmax(424px, 1fr);
+    grid-template-rows: auto auto auto;
+    column-gap: 12px;
+    align-content: start;
+    overflow-y: auto;
+    padding-top: max(70px, calc(58px + env(safe-area-inset-top)));
+    padding-right: max(22px, env(safe-area-inset-right));
+    padding-left: max(22px, env(safe-area-inset-left));
+  }
+  .nationIntro { grid-area: 1 / 1; }
+  .dotMap {
+    grid-area: 1 / 2;
+    width: 100%;
+    max-width: none;
+    height: 132px;
+  }
+  .cityNode[data-city="seoul"],
+  .cityNode[data-city="busan"] {
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+  }
+  .cityNode[data-city="seoul"] { left: 0; }
+  .cityNode[data-city="busan"] { right: 0; }
+  .cityTruthLegend {
+    grid-area: 2 / 1 / auto / -1;
+    gap: 6px;
+    margin: 0 0 3px;
+    padding-top: 6px;
+  }
+  .cityTruthLegend > div { gap: 1px; }
+  .cityTruthLegend strong { font-size: 11px; }
+  .cityTruthLegend span,
+  .cityTruthLegend small { font-size: 10px; line-height: 1.2; }
+  .nation footer { grid-area: 3 / 1 / auto / -1; }
+}
+
+@media (min-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  .header { left: max(96px, calc(76px + env(safe-area-inset-left))); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .root *, .root *::before, .root *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
