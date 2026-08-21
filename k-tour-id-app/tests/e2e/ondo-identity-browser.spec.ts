@@ -26,8 +26,9 @@ async function seedReady(page: Page, seed: Seed = {}, onlyWhenMissing = false) {
   }, { next: seed, preserve: onlyWhenMissing })
 }
 
-async function openVenue(page: Page, venueId = "seoul-seongsu-gukbap") {
-  await page.goto(`/ondo?venueId=${venueId}`)
+async function openVenue(page: Page, options: { venueId?: string; qa?: boolean } = {}) {
+  const { venueId = "seoul-seongsu-gukbap", qa = false } = options
+  await page.goto(`/ondo?venueId=${venueId}${qa ? "&qa=1" : ""}`)
   await expect(page.getByTestId("place-peek")).toBeVisible()
   await page.getByTestId("place-details").click()
   await expect(page.getByTestId("place-overlay")).toBeVisible()
@@ -46,6 +47,7 @@ test("account JIT cancel preserves the unsaved venue and restores focus", async 
 
   const gate = page.getByTestId("ondo-gate-overlay")
   await expect(gate).toContainText("Create an account to save this place")
+  await expect(gate.getByRole("button", { name: "Simulate failure" })).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Return to previous screen" })).toBeFocused()
   await page.keyboard.press("Escape")
 
@@ -74,14 +76,14 @@ test("an unfinished account gate survives reload and resumes the original save o
   await expect(page.getByTestId("venue-save")).toBeDisabled()
 })
 
-test("account and person JIT failures retry, succeed, and return to the visit signal draft", async ({ page }) => {
+test("account and person JIT failures retry, succeed, and return to the local tip draft", async ({ page }) => {
   await seedReady(page, { persona: "short_term" })
-  await openVenue(page)
+  await openVenue(page, { qa: true })
   await page.getByTestId("venue-local-signal").click()
-  const signal = page.getByRole("dialog", { name: "Share a visit signal" })
+  const signal = page.getByRole("dialog", { name: "Share a local tip" })
   await expect(signal).toBeVisible()
   await page.getByLabel("Helpful note · Add a note or photo").fill("The menu is available at the counter.")
-  await page.getByRole("button", { name: "Submit signal" }).click()
+  await page.getByRole("button", { name: "Submit local tip" }).click()
 
   const gate = page.getByTestId("ondo-gate-overlay")
   await expect(gate).toContainText("Create an account to continue")
@@ -91,7 +93,7 @@ test("account and person JIT failures retry, succeed, and return to the visit si
   await page.getByRole("button", { name: "Create account · Simulated" }).click()
   await page.getByRole("button", { name: "Complete account simulation" }).click()
 
-  await expect(gate).toContainText("Complete a person check")
+  await expect(gate).toContainText("Complete an identity check")
   await page.getByRole("button", { name: "Start check" }).click()
   await page.getByRole("button", { name: "Simulate failure" }).click()
   await expect(page.getByTestId("gate-failure")).toBeVisible()
@@ -109,7 +111,7 @@ test("account and person JIT failures retry, succeed, and return to the visit si
 
 test("age JIT cancel, failure, retry, and success are isolated from Payment KYC", async ({ page }) => {
   await seedReady(page, { account: "ACC-ACTIVE", person: "PER-VERIFIED" })
-  await page.goto("/ondo")
+  await page.goto("/ondo?qa=1")
   await enterCityWhenVariantB(page)
 
   await page.getByRole("button", { name: "After 19", exact: true }).click()
@@ -164,7 +166,7 @@ test("common Sheet traps focus, closes with Escape, and restores a safe return t
   const launcher = page.getByTestId("venue-local-signal")
   await launcher.click()
 
-  const sheet = page.getByRole("dialog", { name: "Share a visit signal" })
+  const sheet = page.getByRole("dialog", { name: "Share a local tip" })
   await expect(sheet.getByRole("button", { name: "Close" })).toBeFocused()
   await page.keyboard.press("Shift+Tab")
   await expect.poll(() => sheet.evaluate((dialog) => dialog.contains(document.activeElement))).toBe(true)
