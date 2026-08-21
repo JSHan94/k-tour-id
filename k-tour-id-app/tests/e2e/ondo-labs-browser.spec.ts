@@ -28,7 +28,7 @@ async function seedLabs(page: Page, scenario = "") {
     }))
     sessionStorage.removeItem("ondo.labs.v2")
   })
-  await page.goto(`/ondo${scenario ? `?scenario=${scenario}` : ""}`)
+  await page.goto(`/ondo?qa=1${scenario ? `&scenario=${scenario}` : ""}`)
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
   await page.getByRole("button", { name: "My Korea", exact: true }).click()
   await page.getByTestId("open-labs-milestone").click()
@@ -52,7 +52,7 @@ test("@core FL-016/017/018 Labs shows ordered bridge receipt, trait retry, and o
   await expect(page.getByTestId("labs-bridge-receipt")).toContainText("Projected before and after · Read only")
   await expect(page.getByTestId("labs-bridge-receipt")).toContainText("Actual balances and transactions were not changed.")
 
-  await page.getByTestId("trait-retry-offer-foreign-card").click()
+  await page.getByTestId("trait-retry-seongsu-card").click()
   await expect(page.locator("[data-trait-state='eligible']").first()).toBeVisible()
   await page.getByLabel("I consent to the public badge simulation.").check()
   await page.getByTestId("labs-badge-mint").click()
