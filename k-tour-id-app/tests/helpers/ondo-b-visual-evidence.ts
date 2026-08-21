@@ -34,6 +34,7 @@ export type BVisualStateId =
   | "PLACE-PEEK"
   | "PLACE-DETAIL"
   | "AFTER19-PROMPT"
+  | "AFTER19-EXPIRED-REASON"
   | "AFTER19-VENUE-LOCKED"
   | "AFTER19-VENUE-RETURN"
   | "SAVE-FAILURE"
@@ -62,6 +63,8 @@ export type BVisualStateId =
   | "CHECKOUT-RECEIPT"
   | "CHECKOUT-STAMP"
   | "MY"
+  | "SESSION-RESET-CONFIRM"
+  | "DISCOVERY-RESET-CONFIRM"
   | "PROFILE"
   | "TRUST-FOUR-AXES"
   | "LABS"
@@ -201,6 +204,7 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-PLACE-PEEK-EN", state: "PLACE-PEEK", flows: ["FL-001"], locale: "en", description: "canonical selected place peek" },
   { id: "B-PX-PLACE-DETAIL-EN", state: "PLACE-DETAIL", flows: ["FL-001", "FL-010", "FL-011", "FL-012", "FL-016"], locale: "en", description: "canonical place facts and actions" },
   { id: "B-PX-AFTER19-PROMPT-EN", state: "AFTER19-PROMPT", flows: ["FL-013"], locale: "en", description: "manual After19 decision with an isolated background" },
+  { id: "B-PX-AFTER19-EXPIRED-REASON-EN", state: "AFTER19-EXPIRED-REASON", flows: ["FL-014"], locale: "en", description: "expired 19+ reason and recovery action" },
   { id: "B-PX-SAVE-RECOVERED-KO", state: "SAVE-RECOVERED", flows: ["FL-011"], locale: "ko", description: "save fail, dismiss, retry, and persisted saved state" },
   { id: "B-PX-SAVE-FAILURE-EN", state: "SAVE-FAILURE", flows: ["FL-011"], locale: "en", description: "local save failure preserves exact venue and recovery actions" },
   { id: "B-PX-GATE-ACCOUNT-FAIL-KO", state: "GATE-ACCOUNT-FAIL", flows: ["FL-010"], locale: "ko", description: "account retry and unchanged return" },
@@ -229,6 +233,8 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-CHECKOUT-RECEIPT-EN", state: "CHECKOUT-RECEIPT", flows: ["FL-004"], locale: "en", description: "simulated receipt before visit proof" },
   { id: "B-PX-CHECKOUT-STAMP-KO", state: "CHECKOUT-STAMP", flows: ["FL-004"], locale: "ko", description: "separate unique visit creates stamp ten" },
   { id: "B-PX-MY-EN", state: "MY", flows: ["FL-004", "FL-011", "FL-015"], locale: "en", description: "saved canonical venue and stamp milestone" },
+  { id: "B-PX-SESSION-RESET-CONFIRM-KO", state: "SESSION-RESET-CONFIRM", flows: ["FL-010", "FL-015"], locale: "ko", description: "session-clear scope and preserved-data confirmation" },
+  { id: "B-PX-DISCOVERY-RESET-CONFIRM-EN", state: "DISCOVERY-RESET-CONFIRM", flows: ["FL-007", "FL-008", "FL-009"], locale: "en", description: "discovery-only reset and preserved-data confirmation" },
   { id: "B-PX-PROFILE-KO", state: "PROFILE", flows: ["FL-015"], locale: "ko", description: "optional public profile controls" },
   { id: "B-PX-TRUST-FOUR-AXES-EN", state: "TRUST-FOUR-AXES", flows: ["FL-003", "FL-012", "FL-015"], locale: "en", description: "separate reputation axes" },
   { id: "B-PX-LABS-EN", state: "LABS", flows: ["FL-004", "FL-016", "FL-018"], locale: "en", description: "Labs truth and signer boundary" },
@@ -290,21 +296,22 @@ const B_PIXEL_BY_CHECKPOINT: Partial<Record<CheckpointKey, readonly BVisualCase[
   "FL-006:RETRY": pixel("B-PX-GATE-PERSON-PASSPORT-EN"),
   "FL-007:ENTRY": pixel("B-PX-ONBOARDING-VALUE-EN"),
   "FL-007:DECISION": pixel("B-PX-ONBOARDING-PERSONAS-KO", "B-PX-ONBOARDING-PREFERENCES-EN"),
-  "FL-007:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-007:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN", "B-PX-DISCOVERY-RESET-CONFIRM-EN"),
   "FL-007:TERMINAL": pixel("B-PX-NATION-EN"),
   "FL-007:RETURN": pixel("B-PX-NATION-EN"),
   "FL-008:ENTRY": pixel("B-PX-ONBOARDING-VALUE-EN"),
   "FL-008:DECISION": pixel("B-PX-ONBOARDING-PERSONAS-KO", "B-PX-ONBOARDING-PREFERENCES-EN"),
-  "FL-008:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-008:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN", "B-PX-DISCOVERY-RESET-CONFIRM-EN"),
   "FL-008:TERMINAL": pixel("B-PX-NATION-KO"),
   "FL-008:RETURN": pixel("B-PX-NATION-KO"),
   "FL-009:ENTRY": pixel("B-PX-ONBOARDING-VALUE-EN"),
   "FL-009:DECISION": pixel("B-PX-ONBOARDING-PERSONAS-KO", "B-PX-ONBOARDING-PREFERENCES-EN"),
-  "FL-009:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN"),
+  "FL-009:CANCEL": pixel("B-PX-ONBOARDING-VALUE-EN", "B-PX-DISCOVERY-RESET-CONFIRM-EN"),
   "FL-009:TERMINAL": pixel("B-PX-NATION-EN"),
   "FL-009:RETURN": pixel("B-PX-NATION-EN"),
   "FL-010:ENTRY": pixel("B-PX-PLACE-DETAIL-EN"),
   "FL-010:DECISION": pixel("B-PX-GATE-ACCOUNT-FAIL-KO"),
+  "FL-010:CANCEL": pixel("B-PX-SESSION-RESET-CONFIRM-KO"),
   "FL-010:ERROR": pixel("B-PX-GATE-ACCOUNT-FAIL-KO"),
   "FL-010:RETRY": pixel("B-PX-GATE-ACCOUNT-FAIL-KO"),
   "FL-010:TERMINAL": pixel("B-PX-SAVE-RECOVERED-KO"),
@@ -332,10 +339,13 @@ const B_PIXEL_BY_CHECKPOINT: Partial<Record<CheckpointKey, readonly BVisualCase[
   "FL-014:ENTRY": pixel("B-PX-CITY-LIVE-EN"),
   "FL-014:DECISION": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
   "FL-014:CANCEL": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-014:ERROR": pixel("B-PX-AFTER19-EXPIRED-REASON-EN"),
+  "FL-014:RETRY": pixel("B-PX-AFTER19-EXPIRED-REASON-EN"),
   "FL-014:TERMINAL": pixel("B-PX-AFTER19-VENUE-RETURN-EN"),
-  "FL-014:RETURN": pixel("B-PX-CITY-LIVE-EN"),
+  "FL-014:RETURN": pixel("B-PX-CITY-LIVE-EN", "B-PX-AFTER19-EXPIRED-REASON-EN"),
   "FL-015:ENTRY": pixel("B-PX-PROFILE-KO"),
   "FL-015:DECISION": pixel("B-PX-PROFILE-KO"),
+  "FL-015:CANCEL": pixel("B-PX-SESSION-RESET-CONFIRM-KO"),
   "FL-015:TERMINAL": pixel("B-PX-PROFILE-KO", "B-PX-TRUST-FOUR-AXES-EN", "B-PX-LOCAL-SIGNAL-SUCCESS-EN", "B-PX-FEEDBACK-KO"),
   "FL-015:RETURN": pixel("B-PX-MY-EN"),
   "FL-016:ENTRY": pixel("B-PX-PLACE-DETAIL-EN", "B-PX-LABS-EN"),
@@ -671,6 +681,17 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await openCity(page)
     await page.getByRole("button", { name: "After 19", exact: true }).click()
     await expect(page.getByTestId("after19-prompt-layer")).toBeVisible()
+  } else if (state === "AFTER19-EXPIRED-REASON") {
+    await seedB(page, {
+      locale,
+      session: { age: "AGE-VERIFIED", ageExpiresAt: "2020-08-19T20:30:00+09:00", after19: "A19-ON" },
+    })
+    await gotoB(page, "?city=seoul&view=list")
+    const notice = page.getByTestId("after19-expiry-notice")
+    await expect(notice).toBeVisible()
+    await expect(notice.getByRole("status")).toContainText(locale === "ko" ? "19+ 확인이 만료되어 기본 지도로 돌아왔어요." : "Your 19+ check expired, so the main map is shown.")
+    await expect(notice.getByRole("button", { name: locale === "ko" ? "19+ 다시 확인" : "Check 19+ again", exact: true })).toBeVisible()
+    await expect(page.getByTestId("after19-toggle")).toHaveText("After 19")
   } else if (state === "AFTER19-VENUE-LOCKED" || state === "AFTER19-VENUE-RETURN") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
     await openCanonicalVenue(page)
@@ -703,8 +724,8 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await page.getByTestId("canonical-save-dismiss").click()
       await expect(page.getByTestId("canonical-save-error")).toHaveCount(0)
       await page.reload({ waitUntil: "domcontentloaded" })
-      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
-      await page.getByTestId("canonical-place-details").click()
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      await expectCanonicalDetailReady(page)
       await page.getByTestId("canonical-venue-save").click()
       await expect(page.getByTestId("canonical-save-error")).toBeVisible()
       await page.getByTestId("canonical-save-retry").click()
@@ -796,6 +817,45 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await gotoB(page)
     await page.getByRole("navigation").locator("button").nth(1).click()
     await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
+  } else if (state === "SESSION-RESET-CONFIRM") {
+    await seedB(page, {
+      locale,
+      local: { savedVenueIds: [CANONICAL_VENUE_ID], discoveryPreferences: ["vegan", "late"] },
+      session: {
+        persona: "long_term_resident",
+        account: "ACC-ACTIVE",
+        person: "PER-VERIFIED",
+        age: "AGE-VERIFIED",
+        ageExpiresAt: "2027-08-19T20:30:00+09:00",
+        paymentKyc: "PKY-VERIFIED",
+        after19: "A19-MANUAL-OFF",
+        stamps: 10,
+      },
+    })
+    await gotoB(page)
+    await page.getByTestId("nav-id").click()
+    const opener = page.getByTestId("session-reset-open")
+    await opener.scrollIntoViewIfNeeded()
+    await opener.click()
+    const confirm = page.getByTestId("session-reset-confirm")
+    await expect(confirm).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "로그아웃하고 이 세션을 지울까요?" })).toBeVisible()
+    await expect(confirm.getByRole("button", { name: "이 세션 유지", exact: true })).toBeFocused()
+  } else if (state === "DISCOVERY-RESET-CONFIRM") {
+    await seedB(page, {
+      locale,
+      local: { savedVenueIds: [CANONICAL_VENUE_ID], discoveryPreferences: ["vegan", "late"] },
+      session: { persona: "long_term_resident", account: "ACC-ACTIVE", person: "PER-VERIFIED" },
+    })
+    await gotoB(page, "?city=seoul&query=tteokbokki")
+    await page.getByTestId("nav-my").click()
+    const opener = page.getByTestId("discovery-reset-open")
+    await opener.scrollIntoViewIfNeeded()
+    await opener.click()
+    const confirm = page.getByTestId("discovery-reset-confirm")
+    await expect(confirm).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "Reset discovery choices?" })).toBeVisible()
+    await expect(confirm.getByRole("button", { name: "Keep choices", exact: true })).toBeFocused()
   } else if (state === "PROFILE" || state === "TRUST-FOUR-AXES") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", reputation: { identity: "verified", visit: "repeat", contribution: "established", meetup: "reliable" } } })
     await gotoB(page)

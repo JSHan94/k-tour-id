@@ -115,7 +115,7 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   }),
   flow("FL-014", "Auto After19", {
     ENTRY: A("fixed KST evening resume"), DECISION: A("four guards cause banner"), CANCEL: A("manual off"),
-    ERROR: N("a failed guard deliberately renders normal ONDO, not an error surface"), RETRY: N("guards are reevaluated on a later resume; there is no user retry CTA"), TERMINAL: A("A19-ON"), RETURN: A("same-session manual-off survives reload"),
+    ERROR: A("an expired-proof reason status explains why the main map returned"), RETRY: A("Check 19+ again reopens the age-check recovery path"), TERMINAL: A("A19-ON"), RETURN: A("same-session manual-off survives reload"),
   }),
   flow("FL-015", "Optional public profile", {
     ENTRY: A("ID public profile"), DECISION: A("per-field public consent"), CANCEL: A("cancel keeps prior fields"),
