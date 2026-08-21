@@ -1,9 +1,18 @@
-.layer {
+.backdrop {
   position: absolute;
   z-index: 95;
   inset: 0;
   min-height: 100%;
+  overflow: hidden;
+  background: var(--ondo-paper, #fbfaf7);
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: calc(18px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));
   background: var(--ondo-paper, #fbfaf7);
   color: #171716;

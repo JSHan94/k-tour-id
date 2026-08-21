@@ -145,7 +145,8 @@ export function OnboardingLayer() {
   }
 
   return (
-    <section ref={dialogRef} className={styles.layer} data-testid="ondo-onboarding" role="dialog" aria-modal="true" aria-label={state.locale === "ko" ? "ONDO 시작 안내" : "ONDO onboarding"} tabIndex={-1} onKeyDown={handleKeyDown}>
+    <div className={styles.backdrop} data-testid="ondo-onboarding-backdrop">
+      <section ref={dialogRef} className={styles.layer} data-testid="ondo-onboarding" role="dialog" aria-modal="true" aria-label={state.locale === "ko" ? "ONDO 시작 안내" : "ONDO onboarding"} tabIndex={-1} onKeyDown={handleKeyDown}>
       <div className={styles.ambient} aria-hidden="true"><i /><i /><i /></div>
       <header className={styles.header}>
         {step !== "value" ? (
@@ -231,6 +232,7 @@ export function OnboardingLayer() {
           </div>
         </div>
       ) : null}
-    </section>
+      </section>
+    </div>
   )
 }
