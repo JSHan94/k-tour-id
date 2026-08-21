@@ -86,6 +86,12 @@ async function expectLandscapeNation(page: Page, locale: BLocale) {
       await expectNoIntersection(busan, nav)
       await expectUnobscured44pxTarget(page, seoul)
       await expectUnobscured44pxTarget(page, busan)
+      if (viewport.width >= 900) {
+        const mapRoot = page.getByTestId("ondo-b-map-entry")
+        await expectNoIntersection(mapRoot.locator(":scope > header > div").first(), nav)
+        await expectNoIntersection(nation.getByTestId("ondo-b-city-truth-legend"), nav)
+        await expectNoIntersection(nation.locator("footer"), nav)
+      }
       await expectNoHorizontalOverflow(page)
       await expectNoHorizontalOverflow(page, nation)
       await expectNoSeriousAxe(page, nation)
