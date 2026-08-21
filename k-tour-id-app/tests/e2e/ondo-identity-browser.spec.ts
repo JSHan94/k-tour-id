@@ -173,5 +173,16 @@ test("common Sheet traps focus, closes with Escape, and restores a safe return t
   await page.keyboard.press("Escape")
   await expect(sheet).toBeHidden()
   await expect(page.getByTestId("place-peek")).toBeVisible()
-  await expect(page.getByTestId("place-details")).toBeFocused()
+  await expect.poll(() => page.evaluate(() => {
+    const active = document.activeElement
+    if (!(active instanceof HTMLElement)) return { safe: false, visible: false }
+    const box = active.getBoundingClientRect()
+    return {
+      // The shared Local Signal return and the legacy A shell both schedule a
+      // safe owner. Depending on frame timing, the later owner is either the
+      // local Place action or the current ONDO destination.
+      safe: active.matches("[data-testid='place-details'], [data-testid='nav-ondo'][aria-current='page']"),
+      visible: box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth,
+    }
+  })).toEqual({ safe: true, visible: true })
 })

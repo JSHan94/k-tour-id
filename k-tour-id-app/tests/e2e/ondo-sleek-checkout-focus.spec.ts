@@ -218,8 +218,19 @@ for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
     await holdSheetReturnFocus(page)
     await returnToVenue.click()
     await expect(checkout).toHaveCount(0)
-    await page.getByTestId("nav-tables").focus()
-    await page.keyboard.press("Enter")
+
+    // Checkout returns into the active Place surface. Settle that surface
+    // through its real close action before interacting with app nav;
+    // programmatic focus can otherwise bypass its focus boundary.
+    const place = page.getByTestId("canonical-place-peek")
+    await expect(place).toBeVisible()
+    await place.getByRole("button", { name: locale === "ko" ? "장소 닫기" : "Close place", exact: true }).click()
+    await expect(place).toHaveCount(0)
+    await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
+    await settleFocusOwner(page)
+    await expect(page.getByTestId("ondo-b-view-toggle")).toBeFocused()
+
+    await page.getByTestId("nav-tables").click()
     await expect(page.getByTestId("tables-entry")).toBeVisible()
     const newerOwner = page.getByTestId("nav-my")
     await newerOwner.focus()

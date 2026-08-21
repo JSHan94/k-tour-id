@@ -35,8 +35,11 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
         expect(copy).not.toMatch(/dense food|early coverage|서울의 촘촘|부산의 초기/i)
       }
       if (item.surface === "place") {
-        if (item.locale === "ko") expect(copy).toContain("공식 영문명 미제공 · 공식 한글명 표시")
-        else expect(copy).toContain("Transliterated for navigation")
+        if (item.locale === "ko") {
+          expect(copy).toContain("공식 출처 한글명")
+          expect(copy).toContain("길찾기용 생성 로마자 표기 · 공식 영문명 아님")
+          expect(copy).not.toContain("공식 영문명 미제공 · 공식 한글명 표시")
+        } else expect(copy).toContain("Transliterated for navigation")
         if (item.locale === "ko") {
           expect(copy).toContain("ONDO 자체 19+ 정책으로 이 시뮬레이션 야간 프리뷰를 잠가요.")
           expect(copy).toContain("공식 연령 제한이 아니며")
