@@ -139,7 +139,7 @@ const initialState: OndoState = {
 
 const LOCAL_KEY = "ondo.preferences.v3"
 const SESSION_KEY = "ondo.session.v3"
-const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.labs.v2", "ondo.accepted-visits.v2", "ondo.payment.runtime.v1"] as const
+const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.labs.v2", "ondo.accepted-visits.v2"] as const
 const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
