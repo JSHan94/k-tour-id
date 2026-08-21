@@ -1,15 +1,15 @@
 # ONDO B · Requirement → Flow → Actual Evidence Matrix
 
-상태: `HONEST REGISTRY · PRODUCT/HARNESS/BASELINE FROZEN · FULL AUTOMATED QA PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START`
+상태: `HONEST REGISTRY · R4 COMPLETE NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR FULL GATES/TUPLE/REVIEW CLOSURE PENDING · CLEAN STREAK 0/2`
 
-고정 제품 SHA: `05f3002899485c528e31730bfebd57d71c3d788d`
+R4 검토 제품 SHA: `05f3002899485c528e31730bfebd57d71c3d788d`
 
-검수 Harness SHA: `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`
+R4 검토 Harness SHA: `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`; 현재 integration head `06619cf4d1d8460b4af2cdb8f887deca7c76c208`의 successor Product/Harness/digest는 아직 동결되지 않았다.
 
 ## 1. 판정 규칙
 
 - `ACTUAL`: `/ondo-b`의 실제 UI interaction 또는 state persistence로 증명한다.
-- `GAP`: Flow Catalog가 요구하지만 고정 제품 SHA에서 도달할 수 없다. PASS/N/A로 세지 않는다.
+- `GAP`: Flow Catalog가 요구하지만 검증 대상 제품 SHA에서 도달할 수 없다. PASS/N/A로 세지 않는다.
 - `N/A`: 제품 계약상 별도 오류·retry 화면이 없어야 하며 정상 fallback/재평가가 대신한다. 이유가 필수다.
 - 하나의 composite browser test가 여러 checkpoint를 증명할 수 있다. checkpoint 수를 화면 수나 test 수로 부풀리지 않는다.
 
@@ -78,15 +78,15 @@
 
 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 
-SLEEK R3는 `5/5 COMPLETE · NOT CLEAN`이며 `11 actionable = S1 2 + S2 9`를 남겼다. 현재 successor tuple에서 11개를 모두 수정했지만 fresh reviewer closure 전에는 닫히지 않는다. Full automated gate가 통과해 SLEEK R4는 `READY TO START`이며 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+SLEEK R4는 위 검토 tuple에서 `5/5 COMPLETE · NOT CLEAN`이며 raw `S2 12 + S3 2`, 중복 통합 후 `objective S2 10 + accepted S3 2`를 남겼다. 세 product/test slice와 legacy harness alignment가 `06619cf…`까지 합쳐져 12개 구현은 완료됐지만 통합 full nonpixel/pixel gate와 fresh reviewer closure 전에는 닫히지 않는다. Successor tuple은 미동결이고 clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
 
 목표 baseline은 `46 × 6 = 276` PNG다. 온보딩 3단계, Nation/City/List/Fallback, Place peek/detail, After19 prompt/locked/return, Save error/recovery, Account/Person/Age/Payment gate, Tables/chat/media/feedback/report, Local Signal, Checkout, My/Profile/Trust, Labs trait/bridge를 포함한다.
 
-`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. 동결된 276장 baseline digest는 `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`이며 same-tuple unchanged-baseline `276/276 PASS`, 각 viewport `46/46`, high-risk repeat `72/72 PASS`를 통과했다.
+`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. `pixel`은 하나 이상의 canonical visual case ID를, `functional_only`는 별도 layout screenshot을 만들지 않는 이유와 browser proof를 가진다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. R4 검토 baseline digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`는 당시 same-tuple unchanged-baseline `276/276 PASS`, 각 viewport `46/46`, high-risk repeat `72/72 PASS`를 통과했다. 구현 변경 뒤 successor baseline 승인·digest와 full no-update 결과는 `PENDING`이다.
 
 ## 6. Content evidence
 
-다음 KO/EN surface evidence ID가 registry에 있으며 동결 tuple의 content/browser gate에서 통과했다.
+다음 KO/EN surface evidence ID가 registry에 있으며 R4 검토 tuple의 content/browser gate에서 통과했다. successor 통합 gate 결과는 아직 기록하지 않는다.
 
 `B-COPY-ONBOARDING-KO`, `B-COPY-ONBOARDING-EN`, `B-COPY-NATION-KO`, `B-COPY-NATION-EN`, `B-COPY-CITY-LIST-KO`, `B-COPY-CITY-LIST-EN`, `B-COPY-PLACE-KO`, `B-COPY-PLACE-EN`, `B-COPY-ACCOUNT-GATE-KO`, `B-COPY-ACCOUNT-GATE-EN`, `B-COPY-AGE-GATE-KO`, `B-COPY-AGE-GATE-EN`, `B-COPY-TABLES-KO`, `B-COPY-TABLES-EN`, `B-COPY-TABLE-CHAT-KO`, `B-COPY-TABLE-CHAT-EN`, `B-COPY-LOCAL-SIGNAL-KO`, `B-COPY-LOCAL-SIGNAL-EN`, `B-COPY-CHECKOUT-KO`, `B-COPY-CHECKOUT-EN`, `B-COPY-IDENTITY-KO`, `B-COPY-IDENTITY-EN`, `B-COPY-PROFILE-KO`, `B-COPY-PROFILE-EN`, `B-COPY-LABS-KO`, `B-COPY-LABS-EN`, `B-COPY-AFTER19-KO`, `B-COPY-AFTER19-EN`.
 

@@ -1,11 +1,11 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `PRODUCT/HARNESS/BASELINE TUPLE FROZEN · G0~G6 PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `R4 COMPLETE NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR G0~G6/TUPLE/REVIEW CLOSURE PENDING · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 ## 1. Fixed-tuple rule
 
-1. B product는 `05f3002899485c528e31730bfebd57d71c3d788d`로 고정한다.
-2. Harness는 `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, 276-baseline digest는 `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`로 고정한다.
+1. R4가 검토한 historical tuple은 product `05f3002899485c528e31730bfebd57d71c3d788d`, harness `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`다. 이 tuple의 verdict는 `NOT CLEAN`이다.
+2. 세 fix slice와 legacy harness alignment를 포함한 integration head `06619cf4d1d8460b4af2cdb8f887deca7c76c208`는 작업 receipt일 뿐 successor frozen tuple이 아니다. G0~G6 완료 뒤 Product/Harness/digest를 새로 동결한다.
 3. 제품 fix commit 뒤의 QA evidence commit은 제품 source를 수정하지 않는다.
 4. `PLAYWRIGHT_BASE_URL`은 고정 product SHA를 serving하는 URL만 허용한다.
 5. product, harness, 승인 baseline 중 하나라도 바뀌면 진행 중 verdict와 clean streak를 `0/2`로 되돌린다.
@@ -22,8 +22,9 @@ G3 content/localization: reachable KO/EN surfaces
 G4 a11y/interaction: focus, modal isolation, name, 44px, contrast, overflow
 G5 pixel: 46 cases × 6 exact viewports = 276 committed baselines
 G6 runtime: pageerror/console/requestfailed/first-party HTTP 4xx·5xx = 0
-G7 five-role blind SLEEK R4 review
-G8 same frozen tuple five-role blind R5 clean confirmation
+G7 historical five-role blind SLEEK R4 review = COMPLETE · NOT CLEAN
+G8 successor frozen tuple five-role blind SLEEK R5 review
+G9 same successor tuple five-role blind SLEEK R6 confirmation
 ```
 
 `GAP`은 skip이나 N/A가 아니다. 현재 registry는 `0 GAP`이지만, 실제 여정 증거가 깨지면 즉시 GAP으로 되돌린다.
@@ -70,7 +71,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm test:visual:b
 - 모든 126 checkpoint는 `pixel` 또는 사유 있는 `functional_only` disposition을 가진다.
 - baseline 변경은 issue 단위로 승인하며 blanket `--update-snapshots`를 release evidence로 인정하지 않는다.
 - 276 PNG가 모두 git tracked이고 정확한 viewport dimension을 가질 때만 baseline을 freeze한다.
-- 동결 baseline digest는 `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`이고 uninterrupted workers-1 unchanged-baseline run은 `276/276 PASS`, 각 viewport `46/46`, high-risk repeat는 `72/72 PASS`다.
+- R4 검토 baseline digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`의 uninterrupted workers-1 unchanged-baseline run은 당시 `276/276 PASS`, 각 viewport `46/46`, high-risk repeat `72/72 PASS`였다. 구현 변경 뒤 successor baseline/digest와 pixel PASS는 `PENDING`이다.
 
 ## 7. Five-role blind review
 
@@ -97,4 +98,4 @@ Clean round는 같은 product+harness+baseline tuple에서 다음을 모두 만�
 - reviewer coverage receipt `5/5 COMPLETE`
 - reviewer 원문, issue closure, 명령 log, checksum과 frozen tuple 기록
 
-동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. 현재 동결 tuple은 discovery `348 tests / 25 files`, typecheck PASS, Webpack build `28/28` PASS, contracts `26/26`, B E2E `323 pass / 25 intentional viewport skips / 0 fail`, visual `276/276 PASS`, high-risk repeat `72/72 PASS`, unexpected/flaky/runtime/geometry/Axe/modal errors `0`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`을 통과했다. 역사 SLEEK R3는 `5/5 COMPLETE · NOT CLEAN`이고 11개 finding은 current successor에서 fixed/closure-pending이다. SLEEK R4는 `READY TO START`; clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. R4 검토 tuple은 discovery `348 tests / 25 files`, typecheck PASS, Webpack build `28/28` PASS, contracts `26/26`, B E2E `323 pass / 25 intentional viewport skips / 0 fail`, visual `276/276 PASS`, high-risk repeat `72/72 PASS`, unexpected/flaky/runtime/geometry/Axe/modal errors `0`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`을 통과했지만 R4 reviewer verdict는 `5/5 COMPLETE · NOT CLEAN`이었다. Raw `S2 12 + S3 2`는 `10 S2 + 2 accepted S3`로 통합됐고 12개 구현은 완료됐다. successor integrated full G0~G6, Product/Harness/digest 동결, fresh R5/R6 closure는 `PENDING`; clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.

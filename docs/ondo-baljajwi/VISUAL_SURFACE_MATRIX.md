@@ -1,6 +1,6 @@
 # ONDO B · 발자취형 Surface Matrix
 
-상태: `CURRENT TUPLE FROZEN · SIX-VIEWPORT 276/276 PASS · FULL AUTOMATED QA PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START`
+상태: `R4 COMPLETE NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR SIX-VIEWPORT BASELINE/FULL GATES/TUPLE/FRESH CLOSURE PENDING`
 
 발자취의 고유 화면을 복제하지 않고 거의 흰 canvas, 큰 여백, hairline 구획, 절제된 점·기록 메타포, 한 개의 우세한 행동을 ONDO의 F&B heat/identity 흐름에 맞게 번역했다. Map, Place, App shell, Onboarding, Gate, Tables, Chat, Checkout, My, ID, Labs가 모두 같은 B 제품에 통합돼 있다.
 
@@ -39,7 +39,7 @@
 
 ## 현재 visual 검수 계약
 
-- `46` visual case / `44` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. 동결된 276장 baseline set은 harness `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`이며 uninterrupted workers-1 unchanged-baseline `276/276`, 각 viewport `46/46`, high-risk repeat `72/72`가 통과했다.
+- `46` visual case / `44` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R4 검토 baseline set은 harness `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`였고 당시 uninterrupted workers-1 unchanged-baseline `276/276`, 각 viewport `46/46`, high-risk repeat `72/72`가 통과했다. 구현 변경 뒤 successor baseline/digest와 full no-update 결과는 `PENDING`이다.
 - 126 flow checkpoint 각각은 machine registry에서 `pixel` 또는 사유 있는 `functional_only`로 연결한다.
 - visible metadata 12px 이상, control 44×44 이상, horizontal overflow·nav/CTA overlap 0.
 - serious/critical Axe issue 0; keyboard focus, Escape, focus return을 실제 surface에서 검사.
@@ -47,4 +47,4 @@
 - heat score는 solid color circle, neutral cluster count는 outline geometry로 구분한다.
 - near-white/hairline/negative-space 문법을 전체 surface에 적용하고 heat 이외 색은 status 의미에만 쓴다.
 
-제품 SHA `05f3002899485c528e31730bfebd57d71c3d788d`, Harness SHA `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, baseline digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`는 frozen이다. Discovery `348 tests / 25 files`, typecheck PASS, Webpack build `28/28` PASS, contracts `26/26`, B E2E `323 pass / 25 intentional viewport skips / 0 fail`, visual `276/276 PASS`, high-risk repeat `72/72 PASS`, unexpected/flaky/runtime/geometry/Axe/modal errors `0`, checkpoint mapping `121 ACTUAL / 5 N/A / 0 GAP`으로 full automated QA를 통과했다. 역사 SLEEK R3는 `5/5 COMPLETE · NOT CLEAN · 11 actionable`; successor에서 11개를 수정했지만 closure pending이다. R4는 `READY TO START`이며 clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다. 다섯 reviewer의 동일-tuple clean round 두 번이 끝나기 전에는 이 matrix를 reviewer CLEAN 또는 release PASS로 표시하지 않는다.
+제품 SHA `05f3002899485c528e31730bfebd57d71c3d788d`, Harness SHA `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4`, digest `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`는 R4 reviewer provenance용 historical tuple이다. 이 tuple의 automated gates는 통과했지만 R4는 `5/5 COMPLETE · NOT CLEAN`, raw `S2 12 + S3 2`, consolidated `10 S2 + 2 accepted S3`였다. Product `81eef07…`, `f9dabea…`, `9ec3d19…`와 harness `6a0613a…`, `17fa01d…`, `6ca5c6b…`, `06619cf…`가 합쳐져 12개 구현은 완료됐다. Successor Product/Harness/digest 동결, full nonpixel/pixel gate, fresh R5/R6 closure는 `PENDING`; clean streak는 `0/2`, 새 sleek B는 `NOT DEPLOYED`다. 두 번의 동일-tuple 5/5 clean round 전에는 이 matrix를 reviewer CLEAN 또는 release PASS로 표시하지 않는다.

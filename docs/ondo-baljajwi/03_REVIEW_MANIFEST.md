@@ -1,12 +1,11 @@
 # ONDO B · Five-role Review Manifest
 
-상태: `SUCCESSOR TUPLE FROZEN · FULL AUTOMATED QA PASS · SLEEK R3 NOT CLEAN · 11/11 FIXED/CLOSURE PENDING · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `SLEEK R4 5/5 COMPLETE · NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR TUPLE/FULL GATES/FRESH CLOSURE PENDING · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 | Field | Current value |
 |---|---|
-| Product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
-| Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
-| Baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d` · 276 committed PNGs |
+| R4-reviewed Product/Harness/digest | `05f3002899485c528e31730bfebd57d71c3d788d` / `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` / `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d` |
+| Integration receipt | `06619cf4d1d8460b4af2cdb8f887deca7c76c208` · 12/12 implementation complete; successor Product/Harness/digest not frozen |
 | Route | `/ondo-b` |
 | Visual scope | `46 cases · 44 state IDs · 6 viewports · 276 baselines` |
 | Flow scope | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
@@ -21,10 +20,11 @@
 | `SLEEK-R1` | 이전 sleek baseline tuple | `5/5 NOT CLEAN` | 22개 finding이 fix/retest loop로 들어감 | `NO` |
 | `SLEEK-R2` | `b00d5d6… / b00d5d6… / e24d5fe…`; historical tuple | `5/5 COMPLETE · NOT CLEAN` | 14개 actionable finding; 현재 tuple에서 fixed, closure pending | `NO` |
 | `SLEEK-R3` | `997d671… / 594dbf9… / eca21a93…`; 45/43/270 historical tuple | `5/5 COMPLETE · NOT CLEAN` | `11 actionable = S1 2 + S2 9`; successor에서 11/11 fixed, closure pending | `NO · 0/2` |
-| `SLEEK-R4` | `05f3002… / 2d7e0f0… / 74100b05…`; 46/44/276 successor tuple | `READY TO START` | fresh five-role closure review | `NO · 0/2` |
-| clean confirmation | R4와 동일 tuple에서만 실행 | `NOT STARTED` | R4 5/5 clean 뒤에만 가능 | `NO · 0/2` |
+| `SLEEK-R4` | `05f3002… / 2d7e0f0… / 74100b05…`; 46/44/276 reviewed tuple | `5/5 COMPLETE · NOT CLEAN` | raw `S2 12 + S3 2`; consolidated `10 S2 + 2 accepted S3`; `12/12 IMPLEMENTED · CLOSURE PENDING` | `NO · 0/2` |
+| `SLEEK-R5` | successor Product/Harness/digest freeze 뒤 | `NOT STARTED` | first fresh five-role closure review | `NO · 0/2` |
+| `SLEEK-R6` | R5와 동일 successor tuple에서만 실행 | `NOT STARTED` | R5 5/5 clean 뒤 두 번째 독립 confirmation | `NO · 0/2` |
 
-`SLEEK-R1`, b00d tuple의 `SLEEK-R2`, `997d671… / 594dbf9… / eca21a93…` tuple의 `SLEEK-R3` reviewer 원문·issue ledger는 immutable 역사 증거다. R3는 다섯 역할 모두 coverage를 완료했지만 11개 actionable finding으로 `NOT CLEAN`이었다. 현재 successor tuple은 product `05f3002…`, harness `2d7e0f0…`, baseline `74100b05…`로 고정됐고 11개 fix 및 full automated gate가 통과했다. R4는 시작 준비가 됐으며 R3를 CLEAN으로 재해석하지 않는다.
+`SLEEK-R1`, b00d tuple의 `SLEEK-R2`, `997d671… / 594dbf9… / eca21a93…` tuple의 `SLEEK-R3`, `05f3002… / 2d7e0f0… / 74100b05…` tuple의 `SLEEK-R4` reviewer 원문·issue ledger는 immutable 역사 증거다. R4 다섯 역할은 전수 coverage를 완료했지만 consolidated 12개 finding으로 `NOT CLEAN`이었다. Product commits `81eef07…`, `f9dabea…`, `9ec3d19…`와 harness commits `6a0613a…`, `17fa01d…`, `6ca5c6b…`, `06619cf…`가 통합됐지만 full successor gates와 fresh closure 전에는 R4를 CLEAN으로 재해석하지 않는다.
 
 ## Older accepted tuple — history only
 
@@ -50,9 +50,9 @@
 
 ## Next admissible evidence
 
-1. 동결 tuple의 receipt(discovery `348/25 files`, typecheck PASS, Webpack build `28/28`, contracts `26/26`, E2E `323 pass / 25 intentional viewport skips / 0 fail`, visual `276/276`, high-risk repeat `72/72`, runtime/geometry/Axe/modal failures `0`)를 유지한다.
-2. 같은 tuple을 다섯 reviewer에게 blind 배포한다.
-3. actionable issue가 있으면 product/harness fix 후 tuple을 다시 고정하고 다음 blind round를 처음부터 재시작한다.
-4. R4가 5/5 clean이면 같은 tuple에서 두 번째 독립 5/5 clean round를 실행한다.
+1. Integration head에서 issue-scoped 회귀군과 full nonpixel/pixel gate를 실행하고 baseline 변경을 issue 단위로 승인한다.
+2. successor Product SHA, Harness SHA, baseline digest와 full command receipt를 동결한다.
+3. 같은 successor tuple을 R5 다섯 reviewer에게 blind 배포한다.
+4. R5가 5/5 clean이면 같은 tuple에서 두 번째 독립 R6 5/5 clean round를 실행한다. finding이 나오면 fix 뒤 새 tuple에서 streak를 `0/2`로 다시 시작한다.
 
 두 round가 모두 clean이 되기 전에는 새 sleek preview를 final 또는 release candidate로 표시하지 않는다.

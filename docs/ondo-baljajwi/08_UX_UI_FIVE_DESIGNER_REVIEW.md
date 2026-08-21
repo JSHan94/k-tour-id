@@ -1,25 +1,26 @@
 # ONDO B · Five-Designer Sleekness Review
 
-상태: `FROZEN SUCCESSOR TUPLE · FULL AUTOMATED QA PASS · SLEEK R3 NOT CLEAN · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `SLEEK R4 5/5 COMPLETE · NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR FULL GATES/TUPLE/R5-R6 CLOSURE PENDING · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 이 문서는 기존 기능·진실·접근성 계약을 보존하면서 `/ondo-b`의 모든 Flow, surface, component, state를 더 sleek하고 일관된 제품 언어로 개선하는 실행 정본이다. 목표는 의견을 억지로 없애는 것이 아니라 **동일 제품 SHA에서 unresolved actionable UX/UI issue를 0으로 수렴**시키는 것이다.
 
-## 1. Frozen input
+## 1. R4 frozen input and current integration
 
 | Field | Value |
 |---|---|
-| Current product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
-| Current harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
-| Current baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`; 276 committed PNGs |
+| R4-reviewed product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
+| R4-reviewed harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
+| R4-reviewed baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`; 276 committed PNGs |
+| Current integration | `06619cf4d1d8460b4af2cdb8f887deca7c76c208` · 12/12 implemented; successor tuple/gates pending |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
 | Current visual target | `46 cases · 44 state IDs · 6 viewports = 276 committed screenshots` |
 | Checkpoint registry | `126 exact rows · pixel | functional_only` |
-| Automated gate | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276` · high-risk repeat `72/72` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
+| R4-reviewed automated gate | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276` · high-risk repeat `72/72` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
 | Historical round | `SLEEK R3 5/5 COMPLETE · NOT CLEAN · 11 actionable = S1 2 + S2 9` |
-| Current round | successor `11/11 FIXED · CLOSURE PENDING`; `SLEEK R4 READY TO START` |
+| Current round | `SLEEK R4 5/5 COMPLETE · NOT CLEAN`; raw `S2 12 + S3 2`; consolidated `10 S2 + 2 accepted S3`; `12/12 IMPLEMENTED · CLOSURE PENDING` |
 
-제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. b00d SLEEK-R2는 14개, SLEEK-R3는 11개의 actionable finding을 남긴 `NOT CLEAN` 역사 review다. 현재 successor의 세 값은 다시 고정됐고 11개 fix 및 full automated gate가 통과해 R4가 시작 준비 상태다. Current reviewer CLEAN 결과는 아직 없다.
+제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 이전 clean tuple은 비교·역사 자료로만 보존한다. R4 다섯 reviewer는 같은 frozen input에서 전수 검토를 완료했고 raw `S2 12 + S3 2`를 제출했다. 중복 통합 결과는 `objective S2 10 + accepted polish S3 2`이며 세 product/test slice와 legacy harness alignment로 12개 구현이 integration head에 합쳐졌다. 이는 CLEAN/PASS가 아니다. Successor full gates와 tuple freeze, fresh R5/R6 reviewer closure가 남아 있다.
 
 ## 2. Sleekness의 조작적 정의
 
@@ -135,4 +136,4 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
 
-`evidence/SLEEK-R1/`, `evidence/SLEEK-R2/`, `evidence/SLEEK-R3/reviews|coverage/`는 수정하지 않는 역사 원본이다. 현재 successor tuple은 product `05f3002…`, harness `2d7e0f0…`, baseline digest `74100b05…`로 동결됐고 full automated gate와 unchanged-baseline `276/276 PASS`를 통과했다. R4는 `READY TO START`이며 reviewer CLEAN 또는 release PASS를 미리 기록하지 않는다.
+`evidence/SLEEK-R1/`, `evidence/SLEEK-R2/`, `evidence/SLEEK-R3/reviews|coverage/`, `evidence/SLEEK-R4/reviews|coverage/`는 수정하지 않는 역사 원본이다. R4 검토 tuple은 product `05f3002…`, harness `2d7e0f0…`, baseline digest `74100b05…`였고 verdict는 `NOT CLEAN`이다. Fix ledger는 product `81eef07…`, `f9dabea…`, `9ec3d19…`와 harness `6a0613a…`, `17fa01d…`, `6ca5c6b…`, `06619cf…`를 연결한다. Successor reviewer CLEAN 또는 release PASS는 미리 기록하지 않는다.

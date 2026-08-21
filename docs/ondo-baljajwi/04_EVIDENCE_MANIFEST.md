@@ -1,21 +1,22 @@
 # ONDO B · Evidence Index
 
-상태: `CURRENT TUPLE FROZEN · FULL AUTOMATED QA PASS · HISTORICAL R3 NOT CLEAN · R4 READY TO START · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `R4 5/5 COMPLETE · NOT CLEAN · 12/12 IMPLEMENTED · SUCCESSOR TUPLE/FULL GATES/FRESH CLOSURE PENDING · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
-## Current tuple
+## Current lifecycle and R4-reviewed tuple
 
 | Field | Value |
 |---|---|
-| Product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
-| Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
-| Baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`; 276 committed PNGs |
+| R4-reviewed Product SHA | `05f3002899485c528e31730bfebd57d71c3d788d` |
+| R4-reviewed Harness SHA | `2d7e0f05258ab6b39d2a72f6c86db8b4fbc08bb4` |
+| R4-reviewed baseline digest | `74100b05ca1502de3498aca3b6280c8713a67ae9401e94942ce3c82679ba9d6d`; 276 committed PNGs |
+| Current integration head | `06619cf4d1d8460b4af2cdb8f887deca7c76c208`; successor Product/Harness/digest not frozen |
 | Route | `/ondo-b` |
 | Flow registry | `18 flows · 126 checkpoints · 121 ACTUAL · 5 N/A · 0 GAP` |
 | Visual registry | `46 cases · 44 state IDs` |
 | Exact viewports | `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` |
 | Baseline target | `276 committed PNGs` |
-| Current automated run | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276 PASS` · high-risk repeat `72/72 PASS` · unexpected/flaky/runtime/geometry/Axe/modal errors `0` |
-| Current review | historical SLEEK R3 `5/5 COMPLETE · NOT CLEAN · 11 actionable`; successor `11/11 FIXED · CLOSURE PENDING`; R4 ready to start; clean streak `0/2` |
+| R4-reviewed automated run | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276 PASS` · high-risk repeat `72/72 PASS` · unexpected/flaky/runtime/geometry/Axe/modal errors `0`; successor에 재사용하지 않음 |
+| Current review | SLEEK R4 `5/5 COMPLETE · NOT CLEAN`; raw `S2 12 + S3 2`; consolidated `10 S2 + 2 accepted S3`; `12/12 IMPLEMENTED · FULL GATE/REVIEW CLOSURE PENDING`; clean streak `0/2` |
 | Current deployment | `NOT DEPLOYED` |
 
 ## Historical private B — not current evidence
@@ -31,7 +32,7 @@
 
 ## Evidence admission rules
 
-현재 tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로 기록할 수 있다.
+successor tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로 기록할 수 있다.
 
 1. product SHA, harness SHA, baseline digest가 고정돼 있다.
 2. 명령이 같은 product SHA의 production server를 사용한다.
@@ -41,7 +42,7 @@
 6. runtime guard 설치와 first-party request/HTTP failure 검사가 모든 accepted browser/pixel run에 적용된다.
 7. baseline은 issue-scoped approval 뒤 commit되며 no-update run으로 재검증된다.
 
-## Current command ledger — frozen-tuple execution receipt
+## R4-reviewed command ledger — historical tuple receipt
 
 | Evidence ID | Command family | Required result | Current state |
 |---|---|---|---|
@@ -52,8 +53,19 @@
 | `B-SLK-R4-REGISTRY` | registry and baseline census specs | exact counts + 276 tracked PNGs | `PASS` — `121 actual / 5 N/A / 0 GAP` |
 | `B-SLK-R4-RUNTIME` | runtime, geometry, Axe, and modal assertions | product/runtime/layout/accessibility/modal failure 0 | `PASS · 0` |
 | `B-SLK-R3-REVIEW` | five blind roles on historical tuple | record actual verdict | `5/5 COMPLETE · NOT CLEAN · 11 actionable` |
-| `B-SLK-R4-REVIEW` | five blind roles on successor tuple | 5/5 complete, actionable 0 | ready to start; no verdict |
-| `B-SLK-R5-CONFIRM` | same successor tuple five blind roles | second 5/5 clean | not started |
+| `B-SLK-R4-REVIEW` | five blind roles on reviewed tuple | record actual verdict | `5/5 COMPLETE · NOT CLEAN · raw S2 12/S3 2 · consolidated S2 10 + accepted S3 2` |
+| `B-SLK-R5-REVIEW` | fresh five blind roles on frozen successor tuple | first 5/5 clean | successor tuple/gates pending |
+| `B-SLK-R6-CONFIRM` | same successor tuple five blind roles | second 5/5 clean | not started |
+
+## Integrated implementation receipt — not a PASS ledger
+
+| Slice | Product | Harness | State |
+|---|---|---|---|
+| Onboarding / Identity / After19 | `81eef070e997bbb8c7f8af0be0486b60c1721570` | `6a0613a1112312dd9014471349300da17c2ffdf2`; legacy alignment `06619cf4d1d8460b4af2cdb8f887deca7c76c208` | integrated · full gate/review pending |
+| Connect / Profile / Checkout | `f9dabea60948ca517518ee5c472c0405602c407a` | `17fa01ddbce3321b71ee22cc844cf3fe901932f7` | integrated · full gate/review pending |
+| Map / Shell / Place | `9ec3d192d0ebdc9614d980bdb173633aee16fc17` | `6ca5c6bada0be665b9571c3b39cfeacf67045d3c` | integrated · full gate/review pending |
+
+이 표는 12개 finding의 implementation commit 연결만 증명한다. 통합 typecheck/build/contracts/full B E2E, baseline 승인, full no-update pixel, fresh reviewer closure는 아직 `PENDING`이다.
 
 ## Pixel evidence contract
 
@@ -99,5 +111,6 @@ Exact census:
 - `evidence/SLEEK-R1/`
 - `evidence/SLEEK-R2/` — immutable R2 history
 - [`evidence/SLEEK-R3/manifest.md`](./evidence/SLEEK-R3/manifest.md), `frozen-receipt.md`, `baseline-files.tsv`, `issues.md`, `fixes.md`, `reviews/`, `coverage/` — historical R3 NOT CLEAN 원문과 11개 successor fix/evidence 연결
+- [`evidence/SLEEK-R4/manifest.md`](./evidence/SLEEK-R4/manifest.md), [`issues.md`](./evidence/SLEEK-R4/issues.md), [`fixes.md`](./evidence/SLEEK-R4/fixes.md), `reviews/`, `coverage/` — R4 `5/5 COMPLETE · NOT CLEAN` 원문, consolidated 12개 finding, integrated implementation 연결
 
-`RUN-*`, `SLEEK-R1`, `SLEEK-R2`, SLEEK-R3의 열 개 review/coverage 원본은 immutable history다. 현재 product/harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. 역사 R3는 `NOT CLEAN`이고 11개 finding은 successor tuple에서 fixed/closure-pending이다. Full automated receipt가 닫혀 fresh R4는 `READY TO START`이며, clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.
+`RUN-*`, `SLEEK-R1`, `SLEEK-R2`, SLEEK-R3와 SLEEK-R4의 review/coverage 원본은 immutable history다. successor Product/Harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. R4는 `NOT CLEAN`; 12개 finding은 implementation-complete이지만 integrated full gates와 fresh closure pending이다. Clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.

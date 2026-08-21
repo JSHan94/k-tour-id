@@ -1,6 +1,6 @@
 # SLEEK R4 review manifest
 
-상태: `5/5 COMPLETE · NOT CLEAN · FIX LOOP IN PROGRESS · CLEAN STREAK 0/2 · NOT DEPLOYED`
+상태: `5/5 COMPLETE · NOT CLEAN · 12/12 IMPLEMENTATION COMPLETE · INTEGRATED FULL GATES + FRESH REVIEWER CLOSURE PENDING · CLEAN STREAK 0/2 · NOT DEPLOYED`
 
 ## Frozen review tuple
 
@@ -27,6 +27,6 @@
 
 ## Consensus
 
-Raw finding은 `S2 12 + S3 2`다. 동일 fingerprint를 합친 결과는 `objective S2 10 + accepted polish S3 2`다. D2의 Place peek finding과 D3의 동일 finding, D2의 terminal-focus finding 중 onboarding 부분과 D3의 onboarding finding을 각각 하나로 합쳤다. 미해결 항목은 [`issues.md`](./issues.md)에 기록한다.
+Raw finding은 `S2 12 + S3 2`다. 동일 fingerprint를 합친 결과는 `objective S2 10 + accepted polish S3 2`다. D2의 Place peek finding과 D3의 동일 finding, D2의 terminal-focus finding 중 onboarding 부분과 D3의 onboarding finding을 각각 하나로 합쳤다. 통합 구현 상태와 아직 닫히지 않은 항목은 [`issues.md`](./issues.md), 제품/회귀 commit 연결은 [`fixes.md`](./fixes.md)에 기록한다.
 
-이 round는 `NOT CLEAN`이며 clean streak에 포함되지 않는다. 제품, harness, baseline 중 하나라도 바뀌면 이 tuple의 verdict를 successor tuple에 재사용하지 않는다. 모든 항목을 제품 수정과 회귀 harness로 닫고 full automated gate를 다시 통과한 뒤, fresh blind R5와 동일 tuple의 fresh blind R6가 각각 `5/5 CLEAN`일 때만 `2/2`로 종료한다.
+이 round는 `NOT CLEAN`이며 clean streak에 포함되지 않는다. 세 제품/회귀 slice가 integration head `06619cf4d1d8460b4af2cdb8f887deca7c76c208`까지 합쳐졌고 12개 항목의 구현은 완료됐다. 그러나 이 SHA는 successor Product/Harness/baseline tuple의 동결 receipt가 아니다. 통합 full nonpixel gate, 영향 baseline 승인과 full no-update pixel gate, 새 Product/Harness/digest 동결, fresh blind R5/R6 closure는 모두 `PENDING`이다. 제품, harness, baseline 중 하나라도 바뀌면 이 R4 tuple의 verdict를 successor tuple에 재사용하지 않는다. successor 동일 tuple에서 fresh blind R5와 R6가 각각 `5/5 CLEAN`일 때만 `2/2`로 종료한다.
