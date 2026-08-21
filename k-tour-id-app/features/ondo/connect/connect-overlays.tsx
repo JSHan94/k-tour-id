@@ -7,6 +7,7 @@ import { venueLabelById } from "@/lib/ondo/venues/display"
 import type { MessageStatus } from "../contracts/domain"
 import { LocalPhotoPicker, withUploadState } from "../media/local-photo-picker"
 import type { LocalPhoto } from "../media/media-model"
+import { returnToBDiscoveryPeek } from "../map/b-discovery-history"
 import { InlineNotice, Sheet } from "../shared/ui/sheet"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { useOndo } from "../shared/state/ondo-provider"
@@ -624,7 +625,7 @@ function LocalSignal({ venueId }: { venueId: string }) {
   }, [status, terminal])
 
   function returnToVenue() {
-    actions.setSurface({ kind: "venue", venueId })
+    if (!returnToBDiscoveryPeek(venueId)) actions.setSurface({ kind: "venue", venueId })
     focusAfterSurfaceTransition(["[data-testid='canonical-place-details']", "[data-testid='canonical-place-peek'] button", "[aria-current='page']"])
   }
 

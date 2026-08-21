@@ -42,6 +42,7 @@ export type OndoState = {
   paymentKyc: PaymentKycStatus
   autoNight: boolean
   after19: After19Mode
+  after19ExpiryNotice: boolean
   gate: ReturnToEnvelope | null
   gateState: GateState
   savedVenueIds: string[]
@@ -86,6 +87,8 @@ type OndoActions = {
   failGate(kind: GateKind, unsupported?: boolean): void
   cancelGate(): void
   setAfter19(mode: After19Mode): void
+  expireAfter19(): void
+  dismissAfter19ExpiryNotice(): void
   setAutoNight(value: boolean): void
   setSaveStatus(venueId: string, status: SaveStatus): void
   setMembership(tableId: string, status: TableMembershipState): void
@@ -114,6 +117,7 @@ const initialState: OndoState = {
   paymentKyc: "PKY-NOT-STARTED",
   autoNight: true,
   after19: "A19-OFF",
+  after19ExpiryNotice: false,
   gate: null,
   gateState: "idle",
   savedVenueIds: [],
@@ -209,6 +213,10 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       const local = JSON.parse(window.localStorage.getItem(LOCAL_KEY) ?? "{}") as Partial<OndoState>
       const session = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? "{}") as Partial<OndoState>
       const pendingGate = restorePendingGate(session.gate)
+      const restoredAgeExpiry = typeof session.ageExpiresAt === "string" ? new Date(session.ageExpiresAt).getTime() : Number.NaN
+      const after19ExpiryNotice = session.after19 === "A19-ON"
+        && session.age === "AGE-VERIFIED"
+        && (!Number.isFinite(restoredAgeExpiry) || restoredAgeExpiry <= Date.now())
       setState((current) => ({
         ...current,
         locale: local.locale === "ko" ? "ko" : "en",
@@ -226,6 +234,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
         ageExpiresAt: session.ageExpiresAt,
         paymentKyc: session.paymentKyc ?? "PKY-NOT-STARTED",
         after19: session.after19 === "A19-MANUAL-OFF" ? "A19-MANUAL-OFF" : "A19-OFF",
+        after19ExpiryNotice,
         gate: pendingGate,
         gateState: pendingGate && ["pending", "failed", "unsupported"].includes(session.gateState ?? "")
           ? session.gateState as GateState
@@ -321,7 +330,9 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       return { ...current, paymentKyc: "PKY-FAILED", gateState: "failed" }
     }),
     cancelGate: () => setState((current) => ({ ...current, gate: null, gateState: "idle" })),
-    setAfter19: (after19) => setState((current) => ({ ...current, after19 })),
+    setAfter19: (after19) => setState((current) => ({ ...current, after19, after19ExpiryNotice: after19 === "A19-ON" || after19 === "A19-PROMPT" ? false : current.after19ExpiryNotice })),
+    expireAfter19: () => setState((current) => ({ ...current, after19: "A19-OFF", after19ExpiryNotice: true })),
+    dismissAfter19ExpiryNotice: () => setState((current) => ({ ...current, after19ExpiryNotice: false })),
     setAutoNight: (autoNight) => setState((current) => ({ ...current, autoNight })),
     setSaveStatus: (venueId, status) => setState((current) => ({ ...current, saveStatusByVenue: { ...current.saveStatusByVenue, [venueId]: status } })),
     setMembership: (tableId, status) => setState((current) => {

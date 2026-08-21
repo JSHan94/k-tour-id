@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { AlertTriangle, Check, CreditCard, MapPin, ReceiptText, ShieldCheck } from "lucide-react"
 import { acceptUniqueMilestoneVisit } from "../rewards/reward-model"
 import { venueLabelById } from "@/lib/ondo/venues/display"
+import { returnToBDiscoveryPeek } from "../map/b-discovery-history"
 import { useOndo } from "../shared/state/ondo-provider"
 import { InlineNotice, Sheet } from "../shared/ui/sheet"
 import { useQaControls } from "../shared/ui/use-qa-controls"
@@ -97,8 +98,12 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
     }, 420)
   }
 
+  function returnToVenue() {
+    if (!returnToBDiscoveryPeek(venueId)) actions.setSurface({ kind: "venue", venueId })
+  }
+
   return (
-    <Sheet label={locale === "ko" ? "결제 시뮬레이션" : "Checkout simulation"} onClose={() => actions.setSurface({ kind: "venue", venueId })} size="full">
+    <Sheet label={locale === "ko" ? "결제 시뮬레이션" : "Checkout simulation"} onClose={returnToVenue} size="full">
       <div className={styles.body} data-payment-state={checkout.payment} data-payment-kyc={state.paymentKyc} data-stamp-count={state.stamps} data-venue-id={venueId} data-testid="checkout-overlay">
         <p className={styles.eyebrow}>CHECKOUT · SIMULATED</p>
         <h2>{locale === "ko" ? "결제 시뮬레이션" : "Checkout simulation"}</h2>
@@ -145,7 +150,7 @@ export function CheckoutOverlay({ venueId }: { venueId: string }) {
           </div>
         ) : null}
 
-        <button type="button" className={styles.textButton} onClick={() => actions.setSurface({ kind: "venue", venueId })}>{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button>
+        <button type="button" className={styles.textButton} onClick={returnToVenue}>{locale === "ko" ? "장소로 돌아가기" : "Return to venue"}</button>
       </div>
     </Sheet>
   )

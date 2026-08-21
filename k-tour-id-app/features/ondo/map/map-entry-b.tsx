@@ -14,6 +14,17 @@ import { mapFoodIntentAliases } from "@/lib/ondo/venues/map-discovery-aliases"
 import type { DiscoveryPreference, HeatLevel } from "../contracts/domain"
 import { useOndo } from "../shared/state/ondo-provider"
 import type { Locale } from "../contracts/domain"
+import {
+  enterBDiscoveryCity,
+  focusBDiscoveryTarget,
+  goBackFromBDiscovery,
+  initializeBDiscoveryHistory,
+  openBDiscoveryVenue,
+  readBDiscoveryHistory,
+  replaceBDiscoveryCityContext,
+  type BDiscoveryHeat,
+  type BDiscoveryHistoryEntry,
+} from "./b-discovery-history"
 import styles from "./map-b.module.css"
 
 type CityId = "seoul" | "busan"
@@ -51,6 +62,8 @@ const COPY = {
     mapA11y: "The map is visual. Open the List for keyboard-accessible place results.",
     mapUnavailable: "The map could not load. The same sourced place list remains available.",
     retryMap: "Retry map",
+    offlineTitle: "Offline · Saved information",
+    offlineSnapshot: "MOIS LOCALDATA fixture snapshot · Aug 19, 2026, 11:34 KST",
     locationUnavailable: "Your location was not used. Search or choose a place from the map.",
     locating: "Finding your location…",
     locationReady: "You’re here",
@@ -114,6 +127,8 @@ const COPY = {
     mapA11y: "지도는 시각 정보예요. 키보드로 장소를 찾으려면 목록을 여세요.",
     mapUnavailable: "지도를 불러오지 못했어요. 같은 공식 장소 목록은 계속 볼 수 있어요.",
     retryMap: "지도 다시 불러오기",
+    offlineTitle: "오프라인 · 저장된 정보",
+    offlineSnapshot: "행정안전부 LOCALDATA fixture 스냅샷 · 2026. 8. 19. 11:34 KST",
     locationUnavailable: "현재 위치를 사용하지 않았어요. 검색하거나 지도에서 장소를 골라보세요.",
     locating: "현재 위치를 찾는 중…",
     locationReady: "현재 위치",
@@ -265,7 +280,8 @@ function inputSignalCount(count: number, locale: Locale) {
 
 function resultCount(count: number, locale: Locale, after19: boolean) {
   if (locale === "ko") return after19 ? `${count}곳의 ONDO 시뮬레이션 19+ 야간 프리뷰 장소` : `${count}곳의 공식 식음료 장소`
-  return `${count} ${after19 ? COPY.en.after19Mode : COPY.en.places}`
+  if (after19) return `${count} ${count === 1 ? "ONDO simulated 19+ night-preview place" : COPY.en.after19Mode}`
+  return `${count} ${count === 1 ? "sourced food place" : COPY.en.places}`
 }
 
 function distanceInMeters(from: UserLocation, venue: Pick<BMapVenue, "longitude" | "latitude">) {
@@ -441,6 +457,7 @@ export function MapEntryB() {
   const filteredMapRef = useRef(false)
   const userLocationRef = useRef<UserLocation | null>(null)
   const urlHydrated = useRef(false)
+  const retryFocusPending = useRef(false)
   const [city, setCity] = useState<CityId | null>(null)
   const [view, setView] = useState<ViewMode>("map")
   const [query, setQuery] = useState("")
@@ -454,6 +471,7 @@ export function MapEntryB() {
   const [minimumSignalDistance, setMinimumSignalDistance] = useState<number | null>(null)
   const [locationState, setLocationState] = useState<LocationState>("idle")
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [online, setOnline] = useState(true)
   const after19On = state.after19 === "A19-ON"
   const preferenceLabels = state.discoveryPreferences.map((preference) => PREFERENCE_COPY[preference][locale])
   const preferenceSummary = preferenceLabels.length
@@ -468,18 +486,37 @@ export function MapEntryB() {
   useEffect(() => {
     if (urlHydrated.current) return
     urlHydrated.current = true
-    const params = new URLSearchParams(window.location.search)
-    const urlCity = params.get("city")
-    const urlVenueId = params.get("venueId")
-    const urlView = params.get("view")
-    if (urlCity === "seoul" || urlCity === "busan") setCity(urlCity)
-    if (urlView === "list") setView("list")
-    if (urlVenueId) {
-      const canonical = CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === urlVenueId)
-      if (canonical) setCity(canonical.cityId)
-      actions.setSurface({ kind: "venue", venueId: urlVenueId })
+    const applyHistoryEntry = (entry: BDiscoveryHistoryEntry, restoreFocus: boolean) => {
+      setCity(entry.city ?? null)
+      setView(entry.view)
+      setQuery(entry.query)
+      setHeat(entry.heat)
+      if ((entry.level === "peek" || entry.level === "detail") && entry.venueId) actions.setSurface({ kind: "venue", venueId: entry.venueId })
+      else actions.setSurface({ kind: "map" })
+      if (restoreFocus && (entry.level === "nation" || entry.level === "city")) {
+        window.setTimeout(() => focusBDiscoveryTarget(entry)?.focus({ preventScroll: true }), 0)
+      }
     }
+    const initial = initializeBDiscoveryHistory((venueId) => CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === venueId)?.cityId)
+    applyHistoryEntry(initial, false)
+    const onPopState = () => {
+      const entry = readBDiscoveryHistory()
+      if (entry) applyHistoryEntry(entry, true)
+    }
+    window.addEventListener("popstate", onPopState)
+    return () => window.removeEventListener("popstate", onPopState)
   }, [actions])
+
+  useEffect(() => {
+    const update = () => setOnline(navigator.onLine)
+    update()
+    window.addEventListener("online", update)
+    window.addEventListener("offline", update)
+    return () => {
+      window.removeEventListener("online", update)
+      window.removeEventListener("offline", update)
+    }
+  }, [])
 
   const venues = useMemo(() => B_MAP_VENUES.filter((venue) => {
     if (!city || venue.cityId !== city) return false
@@ -579,11 +616,17 @@ export function MapEntryB() {
         })
         instance.on("click", "ondo-points", (event: MapLayerMouseEvent) => {
           const id = event.features?.[0]?.properties?.id
-          if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) actions.setSurface({ kind: "venue", venueId: id })
+          if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
+            openBDiscoveryVenue(id)
+            actions.setSurface({ kind: "venue", venueId: id })
+          }
         })
         instance.on("click", "ondo-signal-points", (event: MapLayerMouseEvent) => {
           const id = event.features?.[0]?.properties?.id
-          if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) actions.setSurface({ kind: "venue", venueId: id })
+          if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
+            openBDiscoveryVenue(id)
+            actions.setSurface({ kind: "venue", venueId: id })
+          }
         })
         instance.on("mouseenter", "ondo-clusters", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseenter", "ondo-points", () => { instance.getCanvas().style.cursor = "pointer" })
@@ -619,7 +662,13 @@ export function MapEntryB() {
         instance.on("zoomend", applySignalDensity)
         instance.on("idle", updateRenderedSignalCount)
         if (loadDeadline != null) window.clearTimeout(loadDeadline)
-        if (!failed) setMapState("ready")
+        if (!failed) {
+          setMapState("ready")
+          if (retryFocusPending.current) {
+            retryFocusPending.current = false
+            window.setTimeout(() => document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")?.focus({ preventScroll: true }), 0)
+          }
+        }
       })
     }).catch(failMap)
     return () => {
@@ -655,17 +704,32 @@ export function MapEntryB() {
   }, [userLocation])
 
   function chooseCity(next: CityId) {
+    enterBDiscoveryCity(next)
     setCity(next)
     setView("map")
+    setQuery("")
+    setHeat("all")
   }
 
   function selectVenue(venue: BMapVenue) {
+    replaceBDiscoveryCityContext({ city: venue.cityId, view, query, heat, focus: { kind: "venue", venueId: venue.id } })
+    openBDiscoveryVenue(venue.id)
     actions.setSurface({ kind: "venue", venueId: venue.id })
-    setView("map")
     mapRef.current?.easeTo({ center: [venue.longitude, venue.latitude], zoom: 15 })
   }
 
+  function updateCityContext(next: { view?: ViewMode; query?: string; heat?: BDiscoveryHeat }) {
+    if (!city) return
+    replaceBDiscoveryCityContext({
+      city,
+      view: next.view ?? view,
+      query: next.query ?? query,
+      heat: next.heat ?? heat,
+    })
+  }
+
   function retryMap() {
+    retryFocusPending.current = true
     mapRef.current?.remove()
     mapRef.current = null
     setMapState("idle")
@@ -716,19 +780,19 @@ export function MapEntryB() {
 
   return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
-      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState} data-map-attempt={retryToken + 1} data-location-state={locationState} data-user-location={userLocation ? "present" : "absent"} data-cluster-grammar="outlined-count" data-score-grammar="solid-heat" data-signal-zoom-tier={signalZoomTier} data-rendered-signal-count={renderedSignalCount} data-min-signal-distance-px={minimumSignalDistance ?? "none"} data-neutral-source-count={venues.filter((venue) => venue.signalTruth === "UNKNOWN").length} data-signal-source-count={venues.filter((venue) => venue.signalTruth === "SIMULATED").length}>
+      <section className={styles.root} data-testid="ondo-b-map-entry" data-map-state={mapState} data-map-attempt={retryToken + 1} data-connectivity={online ? "online" : "offline"} data-location-state={locationState} data-user-location={userLocation ? "present" : "absent"} data-cluster-grammar="outlined-count" data-score-grammar="solid-heat" data-signal-zoom-tier={signalZoomTier} data-rendered-signal-count={renderedSignalCount} data-min-signal-distance-px={minimumSignalDistance ?? "none"} data-neutral-source-count={venues.filter((venue) => venue.signalTruth === "UNKNOWN").length} data-signal-source-count={venues.filter((venue) => venue.signalTruth === "SIMULATED").length}>
         <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
         <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={locale === "ko" ? "ONDO 식음료 지도" : "ONDO food map"} aria-describedby="ondo-b-map-instruction" />
         {view === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{copy.mapLoading}</p> : null}
         <header className={styles.cityHeader}>
         <div className={styles.topline}>
-          <button type="button" className={styles.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
+          <button type="button" className={styles.back} data-testid="ondo-b-city-back" onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
           <h1>{CITY[city].label[locale]}</h1>
           <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
         </div>
-        <div className={styles.search} role="search"><Search size={18} /><input aria-label={copy.search} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy.search} />{query ? <button type="button" onClick={() => setQuery("")} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
+        <div className={styles.search} role="search"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} onChange={(event) => { const nextQuery = event.target.value; setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
         <div className={styles.rail} aria-label={locale === "ko" ? "장소 신호 필터" : "Place signal filters"}>
-          {(["all", "signal", "pending"] as const).map((item) => <button key={item} type="button" aria-pressed={heat === item} onClick={() => setHeat(item)}>{copy[item]}</button>)}
+          {(["all", "signal", "pending"] as const).map((item) => <button key={item} type="button" aria-pressed={heat === item} onClick={() => { setHeat(item); updateCityContext({ heat: item }) }}>{copy[item]}</button>)}
         </div>
         </header>
 
@@ -747,10 +811,10 @@ export function MapEntryB() {
 
         <div className={styles.resultBar}>
           <span><b>{resultCount(venues.length, locale, after19On)}</b><small>{copy.citySnapshotBoundary}</small></span>
-          <button type="button" onClick={() => setView(view === "map" ? "list" : "map")} data-testid="ondo-b-view-toggle">{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
+          <button type="button" onClick={() => { const nextView = view === "map" ? "list" : "map"; setView(nextView); updateCityContext({ view: nextView }) }} data-testid="ondo-b-view-toggle">{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
         </div>
 
-        {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onClear={() => { setQuery(""); setHeat("all") }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
+        {view === "list" || mapState === "error" ? <div className={styles.listPanel}>{mapState === "error" ? <div className={styles.mapError} role="status" data-testid="ondo-b-map-fallback-status"><span>{copy.mapUnavailable} {copy.offlineSnapshot}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}<VenueList venues={venues} locale={locale} visibleCount={visibleCount} contributedVenueIds={contributedVenueIds} onClear={() => { setQuery(""); setHeat("all"); updateCityContext({ query: "", heat: "all" }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} /></div> : null}
 
         {view === "map" && mapState !== "error" ? <div
           className={styles.mapKey}
@@ -759,10 +823,11 @@ export function MapEntryB() {
           data-place-count={filteredMap ? venues.length : undefined}
           data-score={filteredMap ? filteredLegendScore ?? "none" : undefined}
           aria-label={filteredMap
-            ? `${venues.length} ${copy.places}. ${filteredLegendScore ?? "—"} ${copy.scoreKey}. ${filteredLegendCopy}. ${copy.mapKeyLabel}`
+            ? `${resultCount(venues.length, locale, after19On)}. ${filteredLegendScore ?? "—"} ${copy.scoreKey}. ${filteredLegendCopy}. ${copy.mapKeyLabel}`
             : `${copy.mapKeyLabel} ${signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}.`}
         ><div><span><i className={styles.clusterSwatch}>{filteredMap ? venues.length : 12}×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>{filteredMap ? filteredLegendScore ?? "—" : 82}</i>{copy.scoreKey}</span></div><small>{filteredMap ? filteredLegendCopy : signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}</small></div> : null}
-        {view === "map" && mapState !== "error" && locationState !== "idle" ? <p id="ondo-b-location-status" className={styles.locationFeedback} role="status" data-testid="ondo-b-location-status">{locationState === "locating" ? copy.locating : locationState === "ready" && nearestVenue ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}` : locationState === "ready" ? copy.locationReady : locationState === "denied" ? copy.locationDenied : copy.locationUnsupported}</p> : null}
+        {!online && mapState !== "error" ? <p className={styles.locationFeedback} role="status" data-testid="ondo-b-offline-status"><strong>{copy.offlineTitle}</strong> · {copy.offlineSnapshot}</p> : null}
+        {online && view === "map" && mapState !== "error" && locationState !== "idle" ? <p id="ondo-b-location-status" className={styles.locationFeedback} role="status" data-testid="ondo-b-location-status">{locationState === "locating" ? copy.locating : locationState === "ready" && nearestVenue ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}` : locationState === "ready" ? copy.locationReady : locationState === "denied" ? copy.locationDenied : copy.locationUnsupported}</p> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
         {view === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby={locationState === "idle" ? undefined : "ondo-b-location-status"} aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
         {view === "map" && mapState !== "error" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}

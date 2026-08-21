@@ -9,6 +9,7 @@ import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { HEAT_COLORS } from "@/lib/ondo/map/heat"
 import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
+import { closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryHistory, replaceBDiscoveryUrl } from "../map/b-discovery-history"
 import { useOndo } from "../shared/state/ondo-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
@@ -132,7 +133,7 @@ const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]),select:n
 
 export function CanonicalPlaceOverlay() {
   const { state, actions } = useOndo()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(() => readBDiscoveryHistory()?.level === "detail")
   const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const closeRef = useRef<HTMLButtonElement | null>(null)
@@ -161,7 +162,10 @@ export function CanonicalPlaceOverlay() {
       return
     }
     const url = new URL(window.location.href)
-    if (url.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) {
+    const returnedFromAfter19 = url.searchParams.get(AFTER19_VENUE_RETURN_PARAM) === venueId
+    const historyEntry = readBDiscoveryHistory()
+    const historyWantsDetail = historyEntry?.level === "detail" && historyEntry.venueId === venueId
+    if (!returnedFromAfter19 && !historyWantsDetail) {
       setExpanded(false)
       return
     }
@@ -170,13 +174,23 @@ export function CanonicalPlaceOverlay() {
     // replay. Removing it synchronously let the replay collapse the exact
     // venue detail that the 19+ gate was meant to restore.
     setExpanded(true)
+    if (!returnedFromAfter19) return
     const returnCleanupTimer = window.setTimeout(() => {
       const currentUrl = new URL(window.location.href)
       if (currentUrl.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) return
       currentUrl.searchParams.delete(AFTER19_VENUE_RETURN_PARAM)
-      window.history.replaceState({}, "", `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`)
+      replaceBDiscoveryUrl(`${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`)
     }, 0)
     return () => window.clearTimeout(returnCleanupTimer)
+  }, [venueId])
+  useEffect(() => {
+    const syncHistory = () => {
+      const entry = readBDiscoveryHistory()
+      if (!entry || entry.venueId !== venueId) return
+      setExpanded(entry.level === "detail")
+    }
+    window.addEventListener("popstate", syncHistory)
+    return () => window.removeEventListener("popstate", syncHistory)
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
@@ -233,10 +247,12 @@ export function CanonicalPlaceOverlay() {
     target?.focus({ preventScroll: true })
   }
   function close() {
+    if (closeBDiscoveryPlace()) return
     actions.setSurface({ kind: "map" })
     window.requestAnimationFrame(restorePeekOpener)
   }
   function closeDetails() {
+    if (goBackFromBDiscovery("detail")) return
     setExpanded(false)
     window.requestAnimationFrame(() => openRef.current?.focus())
   }
@@ -314,7 +330,7 @@ export function CanonicalPlaceOverlay() {
         <dl>{[[copy.hours, copy.unknownShort], [copy.payment, copy.unknownShort], [copy.access, copy.unknownShort]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
       </section>
       <div className={styles.peekActions}>
-        <button ref={openRef} type="button" onClick={() => setExpanded(true)} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
+        <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
         <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>
       </div>
     </div>

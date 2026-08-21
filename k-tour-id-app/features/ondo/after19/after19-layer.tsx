@@ -17,6 +17,7 @@ const COPY = {
     off: "Return to the main map",
     sessionOff: "After 19 will not reopen automatically in this session.",
     expired: "Your 19+ check expired, so the main map is shown.",
+    checkAgain: "Check 19+ again",
     nonAlcohol: "Late-night restaurants and cafés remain available on the main map.",
     chipOn: "After 19 on",
     chipOff: "After 19",
@@ -37,6 +38,7 @@ const COPY = {
     off: "기본 지도로 돌아가기",
     sessionOff: "이 세션에서는 자동으로 다시 열지 않아요.",
     expired: "19+ 확인이 만료되어 기본 지도로 돌아왔어요.",
+    checkAgain: "19+ 다시 확인",
     nonAlcohol: "일반 심야 식당과 카페는 기본 지도에서도 볼 수 있어요.",
     chipOn: "After 19 켜짐",
     chipOff: "After 19",
@@ -105,8 +107,8 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
     if (state.after19 !== "A19-ON") return
     const proofExpired = state.ageExpiresAt == null || new Date(state.ageExpiresAt).getTime() <= clock.getTime()
     if (state.age !== "AGE-VERIFIED" || proofExpired || (autoOpened.current && !autoEligible)) {
-      actions.setAfter19("A19-OFF")
-      if (state.age !== "AGE-VERIFIED" || proofExpired) actions.notify(t.expired)
+      if (state.age !== "AGE-VERIFIED" || proofExpired) actions.expireAfter19()
+      else actions.setAfter19("A19-OFF")
     }
   }, [actions, autoEligible, clock, state.after19, state.age, state.ageExpiresAt, t.expired])
 
@@ -133,6 +135,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
   if (!state.hydrated) return null
 
   const manualOpen = () => {
+    actions.dismissAfter19ExpiryNotice()
     if (state.age === "AGE-VERIFIED" && state.ageExpiresAt && new Date(state.ageExpiresAt).getTime() > clock.getTime()) {
       autoOpened.current = false
       actions.setAfter19("A19-ON")
@@ -211,6 +214,10 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
 
       {showSessionNotice ? (
         <section className={styles.sessionNotice} data-testid="after19-session-notice" aria-label={t.sessionOff}><span role="status">{t.sessionOff}</span><button ref={noticeUndoRef} type="button" className={styles.reset} onClick={undoTurnOff}>{t.reset}</button><button type="button" onClick={closeSessionNotice} aria-label={t.close}><X size={15} /></button></section>
+      ) : null}
+
+      {variant === "B" && state.after19ExpiryNotice ? (
+        <section className={styles.sessionNotice} data-testid="after19-expiry-notice" aria-label={t.expired}><span role="status">{t.expired}</span><button type="button" className={styles.reset} onClick={manualOpen}>{t.checkAgain}</button><button type="button" onClick={() => actions.dismissAfter19ExpiryNotice()} aria-label={t.close}><X size={15} /></button></section>
       ) : null}
 
       {showGate ? (

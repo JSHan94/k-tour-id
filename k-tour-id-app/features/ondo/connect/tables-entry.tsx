@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarClock, ChevronRight, Languages, MapPin, ShieldCheck,
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
 import type { Locale } from "../contracts/domain"
+import { returnToBDiscoveryPeek } from "../map/b-discovery-history"
 import { useOndo } from "../shared/state/ondo-provider"
 import { TABLES, tableStatusCopy } from "./table-model"
 import styles from "./connect.module.css"
@@ -67,7 +68,7 @@ export function TablesEntry() {
     actions.setTab("ondo")
     // This explicit surface restore also keeps the handoff safe before the shared
     // tab-preservation update lands in the integration branch.
-    actions.setSurface({ kind: "venue", venueId: selectedVenue.id })
+    if (!returnToBDiscoveryPeek(selectedVenue.id)) actions.setSurface({ kind: "venue", venueId: selectedVenue.id })
   }
 
   return (
