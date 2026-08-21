@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, type Locator, type Page, type TestInfo } from "@playwright/test"
+import { readFile } from "node:fs/promises"
 import {
   CANONICAL_VENUE_ID,
   TABLE_ID,
@@ -85,6 +86,25 @@ export const B_SLEEK_VIEWPORTS = [
 ] as const
 
 export type BSleekViewportId = (typeof B_SLEEK_VIEWPORTS)[number]["id"]
+
+type BVisualRect = {
+  bottom: number
+  left: number
+  right: number
+  top: number
+}
+
+export type BMapPaintProbe = {
+  blockers: BVisualRect[]
+  canvas: BVisualRect
+  exposedRatio: number
+  renderedSignalCount: number
+  signalSourceCount: number
+}
+
+export const B_MAP_PAINT_MIN_EXPOSED_RATIO = 0.12
+export const B_MAP_PAINT_MIN_COMPONENT_PIXELS = 64
+export const B_MAP_PAINT_MIN_HEAT_PIXELS = 96
 
 /**
  * Reachable, layout-distinct B surfaces. Every case runs at both 390×844 and
@@ -1003,13 +1023,153 @@ export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
   }
 }
 
+export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe | null> {
+  const mapEntry = page.getByTestId("ondo-b-map-entry")
+  if (await mapEntry.count() === 0) return null
+  return mapEntry.evaluate((root, minimumExposedRatio) => {
+    const app = root.closest<HTMLElement>("[data-testid='ondo-b-root']") ?? root
+    const viewport = { width: window.innerWidth, height: window.innerHeight }
+    const canvas = root.querySelector<HTMLCanvasElement>("canvas.maplibregl-canvas")
+    const mapKey = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")
+    const renderedSignalCount = Number(root.dataset.renderedSignalCount ?? 0)
+    const signalSourceCount = Number(root.dataset.signalSourceCount ?? 0)
+    if (!canvas || !mapKey || root.dataset.mapState !== "ready" || signalSourceCount <= 0) return null
+
+    const canvasStyle = getComputedStyle(canvas)
+    const canvasRect = canvas.getBoundingClientRect()
+    if (canvasStyle.display === "none" || canvasStyle.visibility === "hidden" || Number.parseFloat(canvasStyle.opacity) <= 0) return null
+    const clippedCanvas = {
+      left: Math.max(0, canvasRect.left),
+      top: Math.max(0, canvasRect.top),
+      right: Math.min(viewport.width, canvasRect.right),
+      bottom: Math.min(viewport.height, canvasRect.bottom),
+    }
+    const canvasArea = Math.max(0, clippedCanvas.right - clippedCanvas.left) * Math.max(0, clippedCanvas.bottom - clippedCanvas.top)
+    if (canvasArea === 0) return null
+
+    const blockerNodes = new Set<HTMLElement>()
+    for (const candidate of app.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog'],[data-testid='ondo-sheet']")) {
+      // The canonical detail's role lives on its full-screen positioning
+      // layer. Only its opaque article hides MapLibre pixels.
+      if (candidate.dataset.testid === "canonical-place-overlay") {
+        const article = candidate.querySelector<HTMLElement>(":scope > article")
+        if (article) blockerNodes.add(article)
+      } else blockerNodes.add(candidate)
+    }
+    // The legend contains a real heat-color swatch but is DOM chrome, not a
+    // rendered MapLibre signal. It must never make a blank canvas look ready.
+    blockerNodes.add(mapKey)
+
+    const blockers = Array.from(blockerNodes).flatMap((element) => {
+      const style = getComputedStyle(element)
+      const rect = element.getBoundingClientRect()
+      if (style.display === "none" || style.visibility === "hidden" || Number.parseFloat(style.opacity) <= 0) return []
+      const clipped = {
+        left: Math.max(clippedCanvas.left, rect.left),
+        top: Math.max(clippedCanvas.top, rect.top),
+        right: Math.min(clippedCanvas.right, rect.right),
+        bottom: Math.min(clippedCanvas.bottom, rect.bottom),
+      }
+      return clipped.right > clipped.left && clipped.bottom > clipped.top ? [clipped] : []
+    })
+
+    // A ready MapLibre instance may remain mounted under a full-height detail
+    // or another tab. Treat it as screenshot chrome unless enough of the
+    // canvas is actually exposed for signal paint to be part of the contract.
+    const step = 8
+    let exposedSamples = 0
+    let totalSamples = 0
+    for (let y = clippedCanvas.top + step / 2; y < clippedCanvas.bottom; y += step) {
+      for (let x = clippedCanvas.left + step / 2; x < clippedCanvas.right; x += step) {
+        totalSamples += 1
+        if (!blockers.some((rect) => x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom)) exposedSamples += 1
+      }
+    }
+    const exposedRatio = totalSamples ? exposedSamples / totalSamples : 0
+    if (exposedRatio < minimumExposedRatio) return null
+    return { blockers, canvas: clippedCanvas, exposedRatio, renderedSignalCount, signalSourceCount }
+  }, B_MAP_PAINT_MIN_EXPOSED_RATIO)
+}
+
+export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMapPaintProbe) {
+  const viewport = page.viewportSize()
+  if (!viewport) return 0
+  return page.evaluate(async ({ dataUrl, evidence, minimumComponentPixels, viewportSize }) => {
+    const image = new Image()
+    image.src = dataUrl
+    await image.decode()
+    const canvas = document.createElement("canvas")
+    canvas.width = image.naturalWidth
+    canvas.height = image.naturalHeight
+    const context = canvas.getContext("2d", { willReadFrequently: true })
+    if (!context) return 0
+    context.drawImage(image, 0, 0)
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+    const scaleX = canvas.width / viewportSize.width
+    const scaleY = canvas.height / viewportSize.height
+    const left = Math.max(0, Math.floor(evidence.canvas.left * scaleX))
+    const right = Math.min(canvas.width, Math.ceil(evidence.canvas.right * scaleX))
+    const top = Math.max(0, Math.floor(evidence.canvas.top * scaleY))
+    const bottom = Math.min(canvas.height, Math.ceil(evidence.canvas.bottom * scaleY))
+    const candidates = new Set<number>()
+    for (let y = top; y < bottom; y += 1) {
+      const cssY = (y + 0.5) / scaleY
+      for (let x = left; x < right; x += 1) {
+        const cssX = (x + 0.5) / scaleX
+        if (evidence.blockers.some((rect) => cssX >= rect.left && cssX < rect.right && cssY >= rect.top && cssY < rect.bottom)) continue
+        const offset = (y * canvas.width + x) * 4
+        const red = pixels[offset]
+        const green = pixels[offset + 1]
+        const blue = pixels[offset + 2]
+        const peak = red >= 70 && red <= 130 && green >= 30 && green <= 75 && blue >= 50 && blue <= 100
+        const hot = red >= 130 && red <= 190 && green >= 60 && green <= 115 && blue >= 50 && blue <= 105
+        if (peak || hot) candidates.add(y * canvas.width + x)
+      }
+    }
+    let markerPixels = 0
+    while (candidates.size) {
+      const first = candidates.values().next().value as number
+      candidates.delete(first)
+      const stack = [first]
+      let componentPixels = 0
+      while (stack.length) {
+        const current = stack.pop()!
+        componentPixels += 1
+        const x = current % canvas.width
+        const y = Math.floor(current / canvas.width)
+        for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+          for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+            if (offsetX === 0 && offsetY === 0) continue
+            const nextX = x + offsetX
+            const nextY = y + offsetY
+            if (nextX < left || nextX >= right || nextY < top || nextY >= bottom) continue
+            const next = nextY * canvas.width + nextX
+            if (candidates.delete(next)) stack.push(next)
+          }
+        }
+      }
+      if (componentPixels >= minimumComponentPixels) markerPixels += componentPixels
+    }
+    return markerPixels
+  }, {
+    dataUrl: `data:image/png;base64,${frame.toString("base64")}`,
+    evidence: probe,
+    minimumComponentPixels: B_MAP_PAINT_MIN_COMPONENT_PIXELS,
+    viewportSize: viewport,
+  })
+}
+
 export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewport: BSleekViewportId, testInfo: TestInfo) {
   const screenshotOptions = {
     animations: "disabled" as const,
     caret: "hide" as const,
     fullPage: false,
   }
-  if (item.state !== "CITY-LIVE") {
+  const initialProbe = await collectBMapPaintProbe(page)
+  const expectedHeatPixels = initialProbe
+    ? await countBMapPaintPixels(page, await readFile(testInfo.snapshotPath(bSnapshotName(item, viewport))), initialProbe)
+    : 0
+  if (!initialProbe || expectedHeatPixels <= B_MAP_PAINT_MIN_HEAT_PIXELS) {
     await expect(page).toHaveScreenshot(bSnapshotName(item, viewport), { ...screenshotOptions, maxDiffPixels: 32 })
     return
   }
@@ -1021,46 +1181,40 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
   // used by the matcher only after the heat-marker colors are present.
   let paintedFrame: Buffer | undefined
   let heatPixels = 0
+  let acceptedProbe = initialProbe
   await expect.poll(async () => {
     await settle(page)
-    const viewportSize = page.viewportSize()
+    const probe = await collectBMapPaintProbe(page)
+    if (!probe) return 0
     const frame = await page.screenshot({ ...screenshotOptions, scale: "css" })
-    const count = await page.evaluate(async ({ dataUrl, size }) => {
-      const image = new Image()
-      image.src = dataUrl
-      await image.decode()
-      const canvas = document.createElement("canvas")
-      canvas.width = image.naturalWidth
-      canvas.height = image.naturalHeight
-      const context = canvas.getContext("2d", { willReadFrequently: true })
-      if (!context) return 0
-      context.drawImage(image, 0, 0)
-      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
-      let markerPixels = 0
-      for (let offset = 0; offset < pixels.length; offset += 4) {
-        const red = pixels[offset]
-        const green = pixels[offset + 1]
-        const blue = pixels[offset + 2]
-        const peak = red >= 70 && red <= 130 && green >= 30 && green <= 75 && blue >= 50 && blue <= 100
-        const hot = red >= 130 && red <= 190 && green >= 60 && green <= 115 && blue >= 50 && blue <= 105
-        if (peak || hot) markerPixels += 1
-      }
-      return markerPixels * (size.width === canvas.width && size.height === canvas.height ? 1 : 0)
-    }, { dataUrl: `data:image/png;base64,${frame.toString("base64")}`, size: viewportSize! })
-    if (count > 1_000) {
+    const count = await countBMapPaintPixels(page, frame, probe)
+    if (count > B_MAP_PAINT_MIN_HEAT_PIXELS) {
       paintedFrame = frame
       heatPixels = count
+      acceptedProbe = probe
     }
     return count
   }, {
     message: `${item.id} MapLibre compositor frame has no painted heat-marker layers`,
     timeout: 8_000,
     intervals: [50, 100, 250, 500],
-  }).toBeGreaterThan(1_000)
+  }).toBeGreaterThan(B_MAP_PAINT_MIN_HEAT_PIXELS)
 
   expect(paintedFrame, `${item.id} has no accepted painted frame`).toBeDefined()
   await testInfo.attach("map-paint.json", {
-    body: JSON.stringify({ caseId: item.id, viewport, heatPixels, threshold: 1_000 }, null, 2),
+    body: JSON.stringify({
+      caseId: item.id,
+      viewport,
+      heatPixels,
+      expectedHeatPixels,
+      minimumComponentPixels: B_MAP_PAINT_MIN_COMPONENT_PIXELS,
+      threshold: B_MAP_PAINT_MIN_HEAT_PIXELS,
+      canvas: acceptedProbe.canvas,
+      blockers: acceptedProbe.blockers,
+      exposedRatio: acceptedProbe.exposedRatio,
+      renderedSignalCount: acceptedProbe.renderedSignalCount,
+      signalSourceCount: acceptedProbe.signalSourceCount,
+    }, null, 2),
     contentType: "application/json",
   })
   expect(paintedFrame!).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
