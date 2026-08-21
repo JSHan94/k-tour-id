@@ -7,13 +7,18 @@
   --ondo-line: rgb(31 30 28 / 14%);
   --ondo-heat-warm: #c84936;
   --ondo-night: #5d2947;
-  --ondo-focus: #135fc2;
+  --ondo-focus: var(--focus, #1d66d1);
   min-height: 100dvh;
   height: 100dvh;
   overflow: hidden;
   background: #efefed;
   color: var(--ondo-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+.stage :focus-visible {
+  outline: 2px solid var(--ondo-focus);
+  outline-offset: 2px;
 }
 
 .canvas {

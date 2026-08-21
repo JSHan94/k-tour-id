@@ -8,6 +8,6 @@
 .removeButton { border: 1px solid #d7aaa6; background: transparent; color: #8b302b; }
 .photoButton[aria-disabled="true"], .removeButton:disabled { cursor: not-allowed; opacity: .5; }
 .fileInput { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.actions:has(.fileInput:focus-visible) .photoButton { outline: 2px solid #1d66d1; outline-offset: 2px; }
+.actions:has(.fileInput:focus-visible) .photoButton { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
 .truth { margin: 0; color: #625f5a; font-size: 12px; line-height: 1.6; }
 .error { margin: 0; padding: 10px 0; border-top: 1px solid #c86258; border-bottom: 1px solid #c86258; color: #8b302b; font-size: 13px; font-weight: 650; }

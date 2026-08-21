@@ -1,7 +1,7 @@
 .root { pointer-events: none; position: absolute; z-index: 72; inset: 0; }
 .root[data-prompt-open="true"] { z-index: 105; }
 .root button, .root input, .root label { pointer-events: auto; }
-.root :focus-visible { outline: 2px solid #1d66d1; outline-offset: 2px; }
+.root :focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
 .chip, .chipOn { position: absolute; top: calc(166px + env(safe-area-inset-top)); right: 64px; display: flex; min-height: 44px; align-items: center; gap: 6px; border: 1px solid #dedbd5; border-radius: 12px; padding: 0 13px; background: rgb(255 255 255 / 94%); color: #40343b; font-size: 12px; font-weight: 760; }
 .chipOn { border-color: #30232a; background: #30232a; color: #fff; }
 .banner { pointer-events: auto; position: absolute; top: calc(218px + env(safe-area-inset-top)); right: 15px; left: 15px; display: grid; grid-template-columns: 36px 1fr; gap: 10px; border: 1px solid #ded9dc; border-radius: 14px; padding: 13px 14px; background: rgb(255 255 255 / 96%); color: #241e22; animation: bannerIn 200ms ease-out; }

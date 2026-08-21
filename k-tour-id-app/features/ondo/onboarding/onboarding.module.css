@@ -8,7 +8,7 @@
   background: var(--ondo-paper, #fbfaf7);
   color: #171716;
 }
-.layer :focus-visible { outline: 2px solid var(--ondo-focus, #245fc7); outline-offset: 2px; }
+.layer :focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 2px; }
 
 .ambient { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .ambient i { position: absolute; border: 1px solid rgb(23 23 22 / 4%); border-radius: 50%; }

@@ -25,7 +25,8 @@
 
   --border: rgba(25, 24, 22, 0.10);
   --input: rgba(25, 24, 22, 0.12);
-  --ring: #b34438;
+  --focus: #1d66d1;
+  --ring: var(--focus);
 
   --chart-1: #c2392f;
   --chart-2: #1e2745;
@@ -58,7 +59,7 @@
   --sidebar-accent: #b88a3d;
   --sidebar-accent-foreground: #1c1813;
   --sidebar-border: #e4ddcf;
-  --sidebar-ring: #c2392f;
+  --sidebar-ring: var(--focus);
 
   --font-sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Noto Serif KR", "AppleMyungjo", Georgia, serif;
@@ -83,7 +84,8 @@
   --destructive-foreground: #fdf6f0;
   --border: #e4ddcf;
   --input: #e4ddcf;
-  --ring: #c2392f;
+  --focus: #1d66d1;
+  --ring: var(--focus);
   --sidebar: #fffdf8;
   --sidebar-foreground: #1c1813;
   --sidebar-primary: #c2392f;
@@ -91,7 +93,7 @@
   --sidebar-accent: #b88a3d;
   --sidebar-accent-foreground: #1c1813;
   --sidebar-border: #e4ddcf;
-  --sidebar-ring: #c2392f;
+  --sidebar-ring: var(--focus);
 }
 
 @theme inline {
@@ -117,6 +119,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-focus: var(--focus);
   --color-ring: var(--ring);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -151,7 +154,8 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
+    outline-color: var(--focus);
   }
   html,
   body {
@@ -188,8 +192,10 @@
   button:focus-visible,
   a:focus-visible,
   input:focus-visible,
-  select:focus-visible {
-    outline: 2px solid var(--ring);
+  select:focus-visible,
+  textarea:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
 
