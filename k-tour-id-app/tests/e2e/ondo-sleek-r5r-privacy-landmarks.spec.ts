@@ -108,10 +108,13 @@ const COPY = {
 async function seedPrivacyState(page: Page, locale: "en" | "ko") {
   await seedB(page, { locale, local: LOCAL_SEED, session: SESSION_SEED, clearFeatures: false })
   await page.addInitScript((keys) => {
-    sessionStorage.setItem(keys[0], JSON.stringify({ table: [{ body: "hello" }] }))
-    sessionStorage.setItem(keys[1], JSON.stringify({ "table-seongsu-dinner": { reportReason: "harassment", participantBlocked: true } }))
-    sessionStorage.setItem(keys[2], JSON.stringify({ acknowledged: true, wallet: "WAL-READY", bridge: "BRG-QUOTED" }))
-    sessionStorage.setItem(keys[3], JSON.stringify(["visit-r5r"]))
+    if (sessionStorage.getItem("ondo.qa.r5r-privacy-seeded") !== "1") {
+      sessionStorage.setItem(keys[0], JSON.stringify({ table: [{ body: "hello" }] }))
+      sessionStorage.setItem(keys[1], JSON.stringify({ "table-seongsu-dinner": { reportReason: "harassment", participantBlocked: true } }))
+      sessionStorage.setItem(keys[2], JSON.stringify({ acknowledged: true, wallet: "WAL-READY", bridge: "BRG-QUOTED" }))
+      sessionStorage.setItem(keys[3], JSON.stringify(["visit-r5r"]))
+      sessionStorage.setItem("ondo.qa.r5r-privacy-seeded", "1")
+    }
     sessionStorage.setItem("unrelated.session.fixture", "preserve-session-byte")
     localStorage.setItem("unrelated.local.fixture", "preserve-local-byte")
   }, FEATURE_SESSION_KEYS)
