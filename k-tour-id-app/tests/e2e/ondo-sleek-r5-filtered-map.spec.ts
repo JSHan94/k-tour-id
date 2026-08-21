@@ -56,7 +56,7 @@ async function expectFilteredMap(page: Page, locale: BLocale) {
   await expect(key).toContainText(locale === "ko" ? "1×공식 장소" : "1×Places")
   await expect(key).toContainText(locale === "ko" ? "59시뮬레이션 점수" : "59Simulated score")
   await expect(key).toContainText(locale === "ko" ? "검색 결과를 지도에 표시" : "Filtered result shown on the map")
-  await expect(page.getByText(locale === "ko" ? "1곳의 공식 식음료 장소" : "1 sourced food places", { exact: true })).toBeVisible()
+  await expect(page.getByText(locale === "ko" ? "1곳의 공식 식음료 장소" : "1 sourced food place", { exact: true })).toBeVisible()
 }
 
 async function exerciseFilteredRoundTrip(page: Page, locale: BLocale) {
@@ -77,6 +77,9 @@ async function exerciseFilteredRoundTrip(page: Page, locale: BLocale) {
   await page.getByTestId("canonical-place-peek").getByRole("button", { name: locale === "ko" ? "장소 닫기" : "Close place", exact: true }).click()
   await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
   await expect(search).toHaveValue(FILTER_QUERY)
+  await expect(result).toBeVisible()
+
+  await page.getByTestId("ondo-b-view-toggle").click()
   await expectFilteredMap(page, locale)
 
   await page.getByTestId("ondo-b-view-toggle").click()

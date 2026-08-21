@@ -106,7 +106,6 @@ test.describe("SLEEK-R1 map and place closure", () => {
 
     await context.clearPermissions()
     await page.reload({ waitUntil: "domcontentloaded" })
-    await page.locator("[data-city='seoul']").dispatchEvent("click")
     await expect(root).toHaveAttribute("data-map-state", /loading|ready/)
     await page.getByTestId("ondo-b-locate").click()
     await expect(root).toHaveAttribute("data-location-state", "denied")

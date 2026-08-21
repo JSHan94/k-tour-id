@@ -78,16 +78,13 @@ async function expectPeekFocusContract(page: Page, locale: BLocale) {
       await expect(details).toBeFocused()
       await page.keyboard.press("Escape")
       await expect(peek).toHaveCount(0)
-      const fallback = page.getByTestId("ondo-b-view-toggle")
-      await expect(fallback).toBeFocused()
-
-      await fallback.click()
       const restoredListOpener = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-opener='${CANONICAL_VENUE_ID}']`)
+      await expect(restoredListOpener).toBeFocused()
       await restoredListOpener.click()
       await expect(details).toBeFocused()
       await peek.getByRole("button", { name: locale === "ko" ? "장소 닫기" : "Close place", exact: true }).click()
       await expect(peek).toHaveCount(0)
-      await expect(fallback).toBeFocused()
+      await expect(restoredListOpener).toBeFocused()
     })
   }
 }

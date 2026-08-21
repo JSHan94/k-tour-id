@@ -16,7 +16,7 @@ const RESULT_SUFFIX = {
 } as const
 
 function resultLabel(locale: Locale, count: number) {
-  return locale === "ko" ? `${count}${RESULT_SUFFIX.ko}` : `${count} ${RESULT_SUFFIX.en}`
+  return locale === "ko" ? `${count}${RESULT_SUFFIX.ko}` : `${count} ${count === 1 ? "sourced food place" : RESULT_SUFFIX.en}`
 }
 
 async function openCityList(page: Page, city: CityId) {

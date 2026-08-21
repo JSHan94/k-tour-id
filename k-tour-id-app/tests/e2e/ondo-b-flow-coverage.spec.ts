@@ -296,8 +296,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     })
     await test.step(evidence("FL-011", "ERROR/RETRY"), async () => {
       await page.reload({ waitUntil: "domcontentloaded" })
-      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
-      await page.getByTestId("canonical-place-details").click()
+      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
       await page.getByTestId("canonical-venue-save").click()
       await expect(page.getByTestId("canonical-save-error")).toBeVisible()
       await page.getByTestId("canonical-save-retry").click()
