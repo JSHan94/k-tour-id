@@ -24,20 +24,20 @@ const DIETARY = {
 
 const PROFILE = {
   en: {
-    edit: "Edit public fields",
+    edit: "Edit profile preview",
     fields: [
-      { id: "profile-from", name: "From", privateName: "From: private. Show From publicly", publicName: "From: public. Make From private" },
-      { id: "profile-lives-in", name: "Lives in", privateName: "Lives in: private. Show Lives in publicly", publicName: "Lives in: public. Make Lives in private" },
-      { id: "profile-languages", name: "Languages", privateName: "Languages: private. Show Languages publicly", publicName: "Languages: public. Make Languages private" },
+      { id: "profile-from", name: "From", privateName: "From: excluded from browser preview. Include From in preview", publicName: "From: included in browser preview. Remove From from preview" },
+      { id: "profile-lives-in", name: "Lives in", privateName: "Lives in: excluded from browser preview. Include Lives in in preview", publicName: "Lives in: included in browser preview. Remove Lives in from preview" },
+      { id: "profile-languages", name: "Languages", privateName: "Languages: excluded from browser preview. Include Languages in preview", publicName: "Languages: included in browser preview. Remove Languages from preview" },
     ],
     description: "Self-declared",
   },
   ko: {
-    edit: "공개 필드 편집",
+    edit: "프로필 미리보기 편집",
     fields: [
-      { id: "profile-from", name: "출신", privateName: "출신: 비공개. 출신 공개하기", publicName: "출신: 공개 중. 출신 비공개로 전환" },
-      { id: "profile-lives-in", name: "거주지", privateName: "거주지: 비공개. 거주지 공개하기", publicName: "거주지: 공개 중. 거주지 비공개로 전환" },
-      { id: "profile-languages", name: "사용 언어", privateName: "사용 언어: 비공개. 사용 언어 공개하기", publicName: "사용 언어: 공개 중. 사용 언어 비공개로 전환" },
+      { id: "profile-from", name: "출신", privateName: "출신: 브라우저 미리보기에서 제외됨. 출신 포함하기", publicName: "출신: 브라우저 미리보기에 포함됨. 출신 제외하기" },
+      { id: "profile-lives-in", name: "거주지", privateName: "거주지: 브라우저 미리보기에서 제외됨. 거주지 포함하기", publicName: "거주지: 브라우저 미리보기에 포함됨. 거주지 제외하기" },
+      { id: "profile-languages", name: "사용 언어", privateName: "사용 언어: 브라우저 미리보기에서 제외됨. 사용 언어 포함하기", publicName: "사용 언어: 브라우저 미리보기에 포함됨. 사용 언어 제외하기" },
     ],
     description: "본인 입력",
   },
