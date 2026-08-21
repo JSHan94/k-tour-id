@@ -45,15 +45,29 @@
 
 @keyframes bannerIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 @media (min-width: 700px) { .gate { max-width: 430px; margin: 0 auto; border: 1px solid #dedbd5; border-bottom: 0; } }
-@media (min-width: 900px) { .sessionNotice { right: auto; left: 96px; width: min(430px, calc(100% - 124px)); } }
+@media (min-width: 900px) {
+  .sessionNotice { right: auto; left: 96px; width: min(430px, calc(100% - 124px)); }
+  :global([data-variant="B"]) .expiryNotice { right: 14px; left: 14px; width: auto; }
+}
 :global([data-variant="B"]):has(.sessionNotice) :global([data-testid="ondo-b-map-key"]) { visibility: hidden; }
+:global([data-variant="B"]):has(.expiryNotice) :global([data-testid="ondo-b-list-panel"]) {
+  bottom: calc(230px + env(safe-area-inset-bottom));
+}
 @media (min-width: 801px) {
   :global([data-variant="B"]) .chip,
   :global([data-variant="B"]) .chipOn { top: calc(170px + env(safe-area-inset-top)); }
 }
+@media (max-width: 360px) {
+  :global([data-variant="B"]):has(.expiryNotice) :global([data-testid="ondo-b-list-panel"]) {
+    bottom: calc(238px + env(safe-area-inset-bottom));
+  }
+}
 @media (max-width: 340px) {
   :global([data-variant="B"]) .chip,
   :global([data-variant="B"]) .chipOn { top: calc(170px + env(safe-area-inset-top)); right: 10px; }
+  :global([data-variant="B"]):has(.expiryNotice) :global([data-testid="ondo-b-list-panel"]) {
+    bottom: calc(255px + env(safe-area-inset-bottom));
+  }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   :global([data-variant="B"]) .chip,
@@ -63,6 +77,12 @@
     bottom: calc(140px + env(safe-area-inset-bottom));
     left: 10px;
     width: auto;
+  }
+  :global([data-variant="B"]):has(.expiryNotice) :global([data-testid="ondo-b-list-panel"]) {
+    top: calc(154px + env(safe-area-inset-top));
+    bottom: calc(124px + env(safe-area-inset-bottom));
+    height: auto;
+    padding-bottom: 0;
   }
 }
 @media (prefers-reduced-motion: reduce) { .banner { animation: none; } .autoSetting i { transition: none; } }

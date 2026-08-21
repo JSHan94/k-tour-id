@@ -224,7 +224,7 @@ export function After19Layer({ now, variant = "A" }: { now?: Date; variant?: "A"
       ) : null}
 
       {variant === "B" && state.after19ExpiryNotice ? (
-        <section className={styles.sessionNotice} data-testid="after19-expiry-notice" aria-label={t.expired}><span role="status">{t.expired}</span><button type="button" className={styles.reset} onClick={manualOpen}>{t.checkAgain}</button><button type="button" onClick={() => actions.dismissAfter19ExpiryNotice()} aria-label={t.close}><X size={15} /></button></section>
+        <section className={`${styles.sessionNotice} ${styles.expiryNotice}`} data-testid="after19-expiry-notice" aria-label={t.expired}><span role="status">{t.expired}</span><button type="button" className={styles.reset} onClick={manualOpen}>{t.checkAgain}</button><button type="button" onClick={() => actions.dismissAfter19ExpiryNotice()} aria-label={t.close}><X size={15} /></button></section>
       ) : null}
 
       {showGate ? (
