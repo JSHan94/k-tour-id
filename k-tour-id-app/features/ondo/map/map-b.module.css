@@ -186,6 +186,8 @@
 
 @media (min-width: 900px) and (orientation: landscape) and (max-height: 500px) {
   .header { left: max(96px, calc(76px + env(safe-area-inset-left))); }
+  .cityTruthLegend,
+  .nation footer { margin-left: 74px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
