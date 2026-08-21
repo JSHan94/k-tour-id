@@ -2,6 +2,24 @@ import { expect, test, type Page } from "@playwright/test"
 
 const ALL_INTERESTS = ["Local classics", "Cafés and dessert", "Late-night food", "Lively", "A little calmer", "Vegetarian", "Vegan", "Halal", "Allergy-aware"]
 
+const DETERMINISTIC_TILEJSON = {
+  tilejson: "3.0.0",
+  name: "ONDO map truth blank basemap",
+  tiles: ["https://tiles.openfreemap.org/ondo-qa-empty/{z}/{x}/{y}.pbf"],
+  minzoom: 0,
+  maxzoom: 18,
+  bounds: [124, 33, 132, 39],
+}
+
+async function stubDeterministicBasemap(page: Page) {
+  await page.route("https://tiles.openfreemap.org/planet", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(DETERMINISTIC_TILEJSON) }),
+  )
+  await page.route("https://tiles.openfreemap.org/ondo-qa-empty/**", (route) =>
+    route.fulfill({ status: 200, contentType: "application/x-protobuf", body: Buffer.alloc(0) }),
+  )
+}
+
 async function seed(page: Page, discoveryPreferences: string[] = [], session: Record<string, unknown> = {}) {
   await page.addInitScript(({ discoveryPreferences, session }) => {
     localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "en", guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences }))
@@ -45,6 +63,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
 
   test("city cards and marker key separate official records from simulated ONDO inputs", async ({ page }) => {
     await seed(page)
+    await stubDeterministicBasemap(page)
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
 
     const seoul = page.locator("[data-city='seoul']")
