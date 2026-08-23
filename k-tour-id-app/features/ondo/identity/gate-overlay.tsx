@@ -349,7 +349,7 @@ export function GateOverlay() {
         <p className={styles.previewTruth}>{t.previewTruth}</p>
 
         {state.gateState === "failed" ? (
-          <div className={styles.gateBody} data-testid="gate-failure">
+          <div className={styles.gateBody} role="alert" aria-atomic="true" data-testid="gate-failure">
             <span className={styles.stateIconDanger}><AlertCircle size={25} /></span>
             <h2 id="gate-title">{t.failedTitle}</h2>
             <p>{t.failedBody}</p>

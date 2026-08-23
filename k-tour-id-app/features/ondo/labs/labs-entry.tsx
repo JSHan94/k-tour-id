@@ -66,7 +66,14 @@ export function LabsEntry() {
   const locale = state.locale
   const qaControls = useQaControls()
   const originTab = useRef(state.tab).current
-  const originOpener = useRef<HTMLElement | null>(typeof document !== "undefined" && document.activeElement instanceof HTMLElement ? document.activeElement : null)
+  const originOpener = useRef<HTMLElement | null>(
+    typeof document !== "undefined"
+      && document.activeElement instanceof HTMLElement
+      && document.activeElement !== document.body
+      && document.activeElement !== document.documentElement
+      ? document.activeElement
+      : null,
+  )
   const [acknowledged, setAcknowledged] = useState(false)
   const [wallet, setWallet] = useState<WalletState>("WAL-DISCONNECTED")
   const [bridge, setBridge] = useState<BridgeState>("BRG-IDLE")
@@ -138,7 +145,7 @@ export function LabsEntry() {
     actions.setSurface({ kind: "map" })
     actions.setTab(originTab)
     window.setTimeout(() => {
-      if (opener?.isConnected) opener.focus({ preventScroll: true })
+      if (opener?.isConnected && opener !== document.body && opener !== document.documentElement) opener.focus({ preventScroll: true })
       else document.querySelector<HTMLElement>(originTab === "id" ? "[data-testid='open-labs-id']" : "[data-testid='open-labs-milestone'], [data-testid='open-labs']")?.focus({ preventScroll: true })
     }, 120)
   }

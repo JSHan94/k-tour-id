@@ -175,7 +175,7 @@
   .cityHeader { top: max(4px, env(safe-area-inset-top)); right: 10px; left: 10px; gap: 6px; }
   .search { min-height: 44px; max-width: calc(100% - 126px); }
   .rail { max-width: calc(100% - 144px); }
-  .rail button { padding-inline: 7px; font-size: 11px; }
+  .rail button { padding-inline: 7px; font-size: 12px; }
   .preferenceSummary {
     top: calc(112px + env(safe-area-inset-top));
     right: 10px;
@@ -297,9 +297,9 @@
     padding-top: 6px;
   }
   .cityTruthLegend > div { gap: 1px; }
-  .cityTruthLegend strong { font-size: 11px; }
+  .cityTruthLegend strong { font-size: 12px; }
   .cityTruthLegend span,
-  .cityTruthLegend small { font-size: 10px; line-height: 1.2; }
+  .cityTruthLegend small { font-size: 12px; line-height: 1.2; }
   .nation footer { grid-area: 3 / 1 / auto / -1; }
 }
 
@@ -320,7 +320,7 @@
   .cityNode small,
   .cityNode .cityScoreTruth { display: none; }
   .cityTruthLegend small { display: none; }
-  .nation footer { font-size: 10px; }
+  .nation footer { font-size: 12px; }
   .cityNode[data-city="seoul"] {
     top: 2px;
     bottom: auto;
