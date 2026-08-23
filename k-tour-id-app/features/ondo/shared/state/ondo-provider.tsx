@@ -21,7 +21,7 @@ import type {
   SaveStatus,
   Surface,
 } from "../../contracts/domain"
-import { createReturnTo, isReturnToUsable } from "../../contracts/return-to"
+import { createReturnTo, isReturnToUsable, restoreReturnTo } from "../../contracts/return-to"
 import { applyActivityEvents, type ActivityEvent } from "../../contracts/activity"
 
 export type TableMembershipState = "none" | "requesting" | "confirmed" | "checked_in" | "completed" | "left" | "failed"
@@ -143,20 +143,6 @@ const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.la
 const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
-function restorePendingGate(value: unknown): ReturnToEnvelope | null {
-  if (!value || typeof value !== "object") return null
-  const candidate = value as Partial<ReturnToEnvelope>
-  if (
-    typeof candidate.tokenId !== "string"
-    || typeof candidate.cta !== "string"
-    || !Array.isArray(candidate.gateQueue)
-    || typeof candidate.activeGate !== "string"
-    || typeof candidate.createdAt !== "string"
-    || typeof candidate.expiresAt !== "string"
-  ) return null
-  return isReturnToUsable(candidate as ReturnToEnvelope) ? candidate as ReturnToEnvelope : null
-}
-
 function gateSatisfied(state: OndoState, gate: GateKind) {
   if (gate === "account") return state.account === "ACC-ACTIVE"
   if (gate === "person") return state.person === "PER-VERIFIED"
@@ -212,7 +198,7 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     try {
       const local = JSON.parse(window.localStorage.getItem(LOCAL_KEY) ?? "{}") as Partial<OndoState>
       const session = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? "{}") as Partial<OndoState>
-      const pendingGate = restorePendingGate(session.gate)
+      const pendingGate = restoreReturnTo(session.gate)
       const restoredAgeExpiry = typeof session.ageExpiresAt === "string" ? new Date(session.ageExpiresAt).getTime() : Number.NaN
       const after19ExpiryNotice = session.after19 === "A19-ON"
         && session.age === "AGE-VERIFIED"

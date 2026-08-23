@@ -500,7 +500,7 @@ function TableChat({ tableId }: { tableId: string }) {
 
         <div className={styles.messageList} aria-live="polite">
           <div className={styles.systemMessage}>{locale === "ko" ? "사진과 메시지는 이 세션의 시뮬레이션에만 남습니다." : "Photos and messages remain only in this session simulation."}</div>
-          {outcome.participantBlocked ? <div className={styles.systemMessage}>{locale === "ko" ? "신고한 참가자는 이 미리보기에서 차단됐어요. 이 차단은 로컬 시뮬레이션 미리보기에만 적용돼요." : "The reported participant is blocked in this preview. This block exists only in this local simulated preview."}</div> : <div className={styles.received}><strong>Jieun</strong><p>{locale === "ko" ? "입구 오른쪽에서 만나요!" : "Let’s meet to the right of the entrance!"}</p><time>8:12 PM</time></div>}
+          {outcome.participantBlocked ? <div className={styles.systemMessage}>{locale === "ko" ? "신고한 참가자는 이 미리보기에서 차단됐어요. 이 차단은 로컬 시뮬레이션 미리보기에만 적용돼요." : "The reported participant is blocked in this preview. This block exists only in this local simulated preview."}</div> : <div className={styles.received}><strong>Jieun</strong><p>{locale === "ko" ? "입구 오른쪽에서 만나요!" : "Let’s meet to the right of the entrance!"}</p><time dateTime="2026-08-19T20:12:00+09:00">{locale === "ko" ? "오후 8:12" : "8:12 PM"}</time></div>}
           {messages.map((message) => (
             <div key={message.id} className={`${styles.sent} ${message.status === "MSG-FAILED" ? styles.failedMessage : ""}`} data-message-status={message.status}>
               {message.kind === "image" ? message.previewUrl ? <img src={message.previewUrl} alt={locale === "ko" ? "대화 사진 로컬 미리보기" : "Chat photo local preview"} /> : <p>{locale === "ko" ? "이 기기의 사진 미리보기가 종료됐어요." : "This device-local photo preview has expired."}</p> : <p>{message.text}</p>}
