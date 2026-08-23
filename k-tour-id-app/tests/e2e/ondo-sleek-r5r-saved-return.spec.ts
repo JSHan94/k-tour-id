@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "@playwright/test"
 import {
   CANONICAL_VENUE_ID,
+  expectBRuntimeClean,
   gotoB,
+  installBRuntimeGuard,
   prepareBPage,
   seedB,
 } from "../helpers/ondo-b-qa"
@@ -96,9 +98,55 @@ test.describe("SLEEK saved places enter canonical B discovery history", () => {
         })
       }
     })
+
+    test(`${locale.toUpperCase()} same peek returns through real My navigation without growing history`, async ({ page }) => {
+      installBRuntimeGuard(page)
+      await seedB(page, { locale, local: { savedVenueIds: [CANONICAL_VENUE_ID] } })
+      await gotoB(page, `?campaign=saved-from-same-peek-${locale}&city=seoul&view=list&venueId=${CANONICAL_VENUE_ID}`)
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await expect.poll(() => discoveryEntry(page)).toMatchObject({
+        level: "peek",
+        city: "seoul",
+        view: "list",
+        venueId: CANONICAL_VENUE_ID,
+      })
+      const before = await page.evaluate(() => ({
+        url: `${location.pathname}${location.search}${location.hash}`,
+        historyLength: history.length,
+        historyState: JSON.stringify(history.state?.__ondoBDiscovery),
+      }))
+
+      await page.getByTestId("nav-my").click()
+      await expect(page.getByTestId("nav-my")).toHaveAttribute("aria-current", "page")
+      await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
+      await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
+      await expect.poll(() => discoveryEntry(page)).toMatchObject({ level: "peek", venueId: CANONICAL_VENUE_ID })
+
+      await page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`).click()
+      await expect(page.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await expect(page.getByTestId("canonical-place-details")).toBeFocused()
+      await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
+      await expect(page.locator("[role='dialog']:visible")).toHaveCount(1)
+      expect(await page.evaluate(() => ({
+        url: `${location.pathname}${location.search}${location.hash}`,
+        historyLength: history.length,
+        historyState: JSON.stringify(history.state?.__ondoBDiscovery),
+      }))).toEqual(before)
+      await expectPrivateDiscoveryFieldsAbsent(page)
+
+      await page.evaluate(() => history.back())
+      await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
+      await expect.poll(() => discoveryEntry(page)).toMatchObject({ level: "city", city: "seoul", view: "list" })
+      await expect(page.getByRole("search").getByRole("textbox")).toBeFocused()
+      await page.evaluate(() => history.forward())
+      await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+      await expect(page.getByTestId("canonical-place-details")).toBeFocused()
+      await expectBRuntimeClean(page)
+    })
   }
 
-  test("nation, another city, and direct detail contexts produce one unwindable saved-place peek", async ({ page }) => {
+  test("nation, another city, and the city restored after direct detail produce one unwindable saved-place peek", async ({ page }) => {
     await seedB(page, { local: { savedVenueIds: [CANONICAL_VENUE_ID] } })
 
     await gotoB(page, "?campaign=saved-from-nation")
