@@ -543,6 +543,7 @@ export function MapEntryB() {
     applyHistoryEntry(initial, false)
     stabilizeHistoryEntry(initial, initialState)
     return () => {
+      traversalFocusVersion.current += 1
       removeTraversalGuard()
       window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, onTraversal)
       if (stabilizationFrame != null) window.cancelAnimationFrame(stabilizationFrame)
