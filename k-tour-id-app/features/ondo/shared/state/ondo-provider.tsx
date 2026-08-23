@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react"
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import type {
   AccountStatus,
   After19Mode,
@@ -23,6 +24,7 @@ import type {
 } from "../../contracts/domain"
 import { createReturnTo, isReturnToUsable, restoreReturnTo } from "../../contracts/return-to"
 import { applyActivityEvents, type ActivityEvent } from "../../contracts/activity"
+import { TABLES } from "../../connect/table-model"
 
 export type TableMembershipState = "none" | "requesting" | "confirmed" | "checked_in" | "completed" | "left" | "failed"
 
@@ -152,8 +154,20 @@ function gateSatisfied(state: OndoState, gate: GateKind) {
     && new Date(state.ageExpiresAt).getTime() > Date.now()
 }
 
+function hasRegisteredReturnContext(envelope: ReturnToEnvelope) {
+  const table = envelope.tableId ? TABLES.find((candidate) => candidate.id === envelope.tableId) : undefined
+  const venueIsRegistered = envelope.venueId === undefined
+    || canonicalMapVenueById(envelope.venueId) !== undefined
+    || TABLES.some((candidate) => candidate.venueId === envelope.venueId)
+  if (!venueIsRegistered || (envelope.tableId !== undefined && !table)) return false
+  if (envelope.cta === "JOIN_TABLE") return table !== undefined && table.venueId === envelope.venueId
+  return true
+}
+
 function applyReturnTo(state: OndoState, envelope: ReturnToEnvelope): OndoState {
-  if (!isReturnToUsable(envelope)) return { ...state, gate: null, gateState: "idle", surface: { kind: "map" } }
+  if (!isReturnToUsable(envelope) || !hasRegisteredReturnContext(envelope)) {
+    return { ...state, gate: null, gateState: "idle", surface: { kind: "map" } }
+  }
   const consumed = { ...envelope, consumedAt: new Date().toISOString() }
   if (envelope.cta === "SAVE_VENUE" && envelope.venueId) {
     return {
@@ -201,7 +215,8 @@ export function OndoProvider({ children }: { children: ReactNode }) {
     try {
       const local = JSON.parse(window.localStorage.getItem(LOCAL_KEY) ?? "{}") as Partial<OndoState>
       const session = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? "{}") as Partial<OndoState>
-      const pendingGate = restoreReturnTo(session.gate)
+      const restoredGate = restoreReturnTo(session.gate)
+      const pendingGate = restoredGate && hasRegisteredReturnContext(restoredGate) ? restoredGate : null
       const restoredAgeExpiry = typeof session.ageExpiresAt === "string" ? new Date(session.ageExpiresAt).getTime() : Number.NaN
       const after19ExpiryNotice = session.after19 === "A19-ON"
         && session.age === "AGE-VERIFIED"
@@ -262,8 +277,8 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       ageExpiresAt: state.ageExpiresAt,
       paymentKyc: state.paymentKyc,
       after19: state.after19,
-      gate: state.gate && isReturnToUsable(state.gate) ? state.gate : null,
-      gateState: state.gate && isReturnToUsable(state.gate) ? state.gateState : "idle",
+      gate: state.gate && isReturnToUsable(state.gate) && hasRegisteredReturnContext(state.gate) ? state.gate : null,
+      gateState: state.gate && isReturnToUsable(state.gate) && hasRegisteredReturnContext(state.gate) ? state.gateState : "idle",
       tableMembershipById: state.tableMembershipById,
       reputation: state.reputation,
       acceptedActivityEventKeys: state.acceptedActivityEventKeys,
