@@ -35,6 +35,7 @@ function pendingAccountGate(cta: "JOIN_TABLE" | "OPEN_CHAT", tableId: string) {
     cta,
     gateQueue: ["account"],
     activeGate: "account",
+    venueId: cta === "JOIN_TABLE" ? CANONICAL_VENUE_ID : undefined,
     tableId,
     createdAt,
     expiresAt: "2026-08-19T20:45:00+09:00",
