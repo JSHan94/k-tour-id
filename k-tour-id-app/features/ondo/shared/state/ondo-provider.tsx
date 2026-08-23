@@ -22,7 +22,13 @@ import type {
   SaveStatus,
   Surface,
 } from "../../contracts/domain"
-import { createReturnTo, isReturnToUsable, restoreReturnTo } from "../../contracts/return-to"
+import {
+  areReturnToGatesSatisfied,
+  createReturnTo,
+  hasCoherentReturnToProgress,
+  isReturnToUsable,
+  restoreReturnTo,
+} from "../../contracts/return-to"
 import { applyActivityEvents, type ActivityEvent } from "../../contracts/activity"
 import { TABLES } from "../../connect/table-model"
 
@@ -145,7 +151,9 @@ const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.la
 const DISCOVERY_PREFERENCES = new Set<DiscoveryPreference>(["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"])
 const OndoContext = createContext<OndoContextValue | null>(null)
 
-function gateSatisfied(state: OndoState, gate: GateKind) {
+type GateSatisfactionState = Pick<OndoState, "account" | "person" | "age" | "ageExpiresAt" | "paymentKyc">
+
+function gateSatisfied(state: GateSatisfactionState, gate: GateKind) {
   if (gate === "account") return state.account === "ACC-ACTIVE"
   if (gate === "person") return state.person === "PER-VERIFIED"
   if (gate === "payment_kyc") return state.paymentKyc === "PKY-VERIFIED"
@@ -165,7 +173,11 @@ function hasRegisteredReturnContext(envelope: ReturnToEnvelope) {
 }
 
 function applyReturnTo(state: OndoState, envelope: ReturnToEnvelope): OndoState {
-  if (!isReturnToUsable(envelope) || !hasRegisteredReturnContext(envelope)) {
+  if (
+    !isReturnToUsable(envelope)
+    || !hasRegisteredReturnContext(envelope)
+    || !areReturnToGatesSatisfied(envelope, (gate) => gateSatisfied(state, gate))
+  ) {
     return { ...state, gate: null, gateState: "idle", surface: { kind: "map" } }
   }
   const consumed = { ...envelope, consumedAt: new Date().toISOString() }
@@ -216,7 +228,18 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       const local = JSON.parse(window.localStorage.getItem(LOCAL_KEY) ?? "{}") as Partial<OndoState>
       const session = JSON.parse(window.sessionStorage.getItem(SESSION_KEY) ?? "{}") as Partial<OndoState>
       const restoredGate = restoreReturnTo(session.gate)
-      const pendingGate = restoredGate && hasRegisteredReturnContext(restoredGate) ? restoredGate : null
+      const restoredGateState: GateSatisfactionState = {
+        account: session.account ?? "ACC-GUEST",
+        person: session.person ?? "PER-UNVERIFIED",
+        age: session.age ?? "AGE-UNVERIFIED",
+        ageExpiresAt: session.ageExpiresAt,
+        paymentKyc: session.paymentKyc ?? "PKY-NOT-STARTED",
+      }
+      const pendingGate = restoredGate
+        && hasRegisteredReturnContext(restoredGate)
+        && hasCoherentReturnToProgress(restoredGate, (gate) => gateSatisfied(restoredGateState, gate))
+        ? restoredGate
+        : null
       const restoredAgeExpiry = typeof session.ageExpiresAt === "string" ? new Date(session.ageExpiresAt).getTime() : Number.NaN
       const after19ExpiryNotice = session.after19 === "A19-ON"
         && session.age === "AGE-VERIFIED"
@@ -261,6 +284,12 @@ export function OndoProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!state.hydrated) return
+    const persistentGate = state.gate
+      && isReturnToUsable(state.gate)
+      && hasRegisteredReturnContext(state.gate)
+      && hasCoherentReturnToProgress(state.gate, (gate) => gateSatisfied(state, gate))
+      ? state.gate
+      : null
     window.localStorage.setItem(LOCAL_KEY, JSON.stringify({
       locale: state.locale,
       guideSeen: state.guideSeen,
@@ -277,8 +306,8 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       ageExpiresAt: state.ageExpiresAt,
       paymentKyc: state.paymentKyc,
       after19: state.after19,
-      gate: state.gate && isReturnToUsable(state.gate) && hasRegisteredReturnContext(state.gate) ? state.gate : null,
-      gateState: state.gate && isReturnToUsable(state.gate) && hasRegisteredReturnContext(state.gate) ? state.gateState : "idle",
+      gate: persistentGate,
+      gateState: persistentGate ? state.gateState : "idle",
       tableMembershipById: state.tableMembershipById,
       reputation: state.reputation,
       acceptedActivityEventKeys: state.acceptedActivityEventKeys,

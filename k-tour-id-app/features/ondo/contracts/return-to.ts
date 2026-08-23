@@ -120,6 +120,23 @@ export function restoreReturnTo(value: unknown, now = new Date()): ReturnToEnvel
   }
 }
 
+export function hasCoherentReturnToProgress(
+  envelope: ReturnToEnvelope,
+  isGateSatisfied: (gate: GateKind) => boolean,
+) {
+  const activeIndex = envelope.gateQueue.indexOf(envelope.activeGate)
+  return activeIndex >= 0
+    && envelope.gateQueue.slice(0, activeIndex).every(isGateSatisfied)
+    && !isGateSatisfied(envelope.activeGate)
+}
+
+export function areReturnToGatesSatisfied(
+  envelope: ReturnToEnvelope,
+  isGateSatisfied: (gate: GateKind) => boolean,
+) {
+  return envelope.gateQueue.every(isGateSatisfied)
+}
+
 export function advanceReturnTo(envelope: ReturnToEnvelope, completedGate: GateKind): ReturnToEnvelope {
   if (envelope.activeGate !== completedGate) return envelope
   const index = envelope.gateQueue.indexOf(completedGate)
