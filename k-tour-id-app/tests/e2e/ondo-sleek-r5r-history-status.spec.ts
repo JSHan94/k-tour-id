@@ -206,6 +206,7 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
     await page.setViewportSize({ width: 390, height: 844 })
     await seedB(page)
     await gotoB(page, "?scenario=save-failed&campaign=nested-reload")
+    await expect.poll(() => page.evaluate(() => history.state?.__ondoBDiscovery?.level)).toBe("nation")
     const initialHistory = await page.evaluate(() => {
       const state = history.state as Record<string, unknown>
       History.prototype.replaceState.call(history, { ...state, auditSentinel: { source: "next-state", count: 1 } }, "", location.href)

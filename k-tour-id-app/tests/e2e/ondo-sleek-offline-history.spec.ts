@@ -255,5 +255,14 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
       activeCity: "seoul",
       entry: { level: "nation", focus: { kind: "city", city: "seoul" } },
     })
+
+    await page.evaluate(() => window.dispatchEvent(new PopStateEvent("popstate", { state: history.state })))
+    await page.getByTestId("nav-my").click()
+    await expect(page.getByTestId("nav-my")).toHaveAttribute("aria-current", "page")
+    await page.getByTestId("nav-ondo").click()
+    await expect(page.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
+    await page.getByTestId("nav-ondo").focus()
+    await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))))
+    await expect(page.getByTestId("nav-ondo")).toBeFocused()
   })
 })
