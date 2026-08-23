@@ -21,10 +21,17 @@ export type BDiscoveryHistoryEntry = {
 }
 
 const HISTORY_KEY = "__ondoBDiscovery"
+export const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
 const OWNED_URL_KEYS = ["city", "view", "venueId", "detail", "q", "heat", "hot", "calm", "open", "time", "neighborhood"] as const
 const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
+let traversalGuardReferences = 0
+
+export type BDiscoveryTraversalDetail = {
+  entry: BDiscoveryHistoryEntry
+  preservedState: unknown
+}
 
 function documentId() {
   if (typeof window === "undefined") return "server"
@@ -89,6 +96,31 @@ function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
     venueId: level === "peek" || level === "detail" ? venueId : undefined,
     focus: focusValue(value.focus),
   }
+}
+
+function dispatchBDiscoveryTraversal(event: PopStateEvent) {
+  if (window.location.pathname !== "/ondo-b") return
+  const entry = readBDiscoveryHistory(event.state)
+  if (!entry) return
+  event.stopImmediatePropagation()
+  window.dispatchEvent(new CustomEvent<BDiscoveryTraversalDetail>(B_DISCOVERY_TRAVERSAL_EVENT, {
+    detail: { entry, preservedState: event.state },
+  }))
+}
+
+export function installBDiscoveryTraversalGuard() {
+  traversalGuardReferences += 1
+  if (traversalGuardReferences === 1) window.addEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+  return () => {
+    traversalGuardReferences = Math.max(0, traversalGuardReferences - 1)
+    if (traversalGuardReferences === 0) window.removeEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+  }
+}
+
+export function readBDiscoveryTraversal(event: Event) {
+  if (!(event instanceof CustomEvent) || event.type !== B_DISCOVERY_TRAVERSAL_EVENT || !isRecord(event.detail)) return null
+  const entry = sanitizeEntry(event.detail.entry)
+  return entry ? { entry, preservedState: event.detail.preservedState } satisfies BDiscoveryTraversalDetail : null
 }
 
 function mergedState(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {

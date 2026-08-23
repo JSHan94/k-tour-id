@@ -9,7 +9,7 @@ import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { HEAT_COLORS } from "@/lib/ondo/map/heat"
 import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
-import { closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryHistory, replaceBDiscoveryUrl } from "../map/b-discovery-history"
+import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryTraversal, readBDiscoveryHistory, replaceBDiscoveryUrl } from "../map/b-discovery-history"
 import { useOndo } from "../shared/state/ondo-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
@@ -184,13 +184,13 @@ export function CanonicalPlaceOverlay() {
     return () => window.clearTimeout(returnCleanupTimer)
   }, [venueId])
   useEffect(() => {
-    const syncHistory = () => {
-      const entry = readBDiscoveryHistory()
+    const syncHistory = (event: Event) => {
+      const entry = readBDiscoveryTraversal(event)?.entry
       if (!entry || entry.venueId !== venueId) return
       setExpanded(entry.level === "detail")
     }
-    window.addEventListener("popstate", syncHistory)
-    return () => window.removeEventListener("popstate", syncHistory)
+    window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, syncHistory)
+    return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, syncHistory)
   }, [venueId])
   useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
@@ -207,22 +207,29 @@ export function CanonicalPlaceOverlay() {
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
     const controller = new AbortController()
+    let requestFrame: number | null = null
     setDetailState("loading")
-    fetch(`/api/ondo/venues/${encodeURIComponent(venueId)}`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`Venue detail request failed: ${response.status}`)
-        return response.json() as Promise<CanonicalVenueDetailResponse>
-      })
-      .then((payload) => {
-        if (payload.venue.id !== venueId) throw new Error("Venue detail id mismatch")
-        setDetail(payload.venue)
-        setDetailState("ready")
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return
-        setDetailState("error")
-      })
-    return () => controller.abort()
+    requestFrame = window.requestAnimationFrame(() => {
+      requestFrame = null
+      fetch(`/api/ondo/venues/${encodeURIComponent(venueId)}`, { signal: controller.signal })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`Venue detail request failed: ${response.status}`)
+          return response.json() as Promise<CanonicalVenueDetailResponse>
+        })
+        .then((payload) => {
+          if (payload.venue.id !== venueId) throw new Error("Venue detail id mismatch")
+          setDetail(payload.venue)
+          setDetailState("ready")
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return
+          setDetailState("error")
+        })
+    })
+    return () => {
+      if (requestFrame != null) window.cancelAnimationFrame(requestFrame)
+      controller.abort()
+    }
   }, [detail?.id, expanded, venueId])
 
   if (!venue || state.tab !== "ondo") return null

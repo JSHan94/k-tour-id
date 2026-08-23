@@ -1,7 +1,7 @@
 "use client"
 
 import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, SlidersHorizontal, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { HEAT_COLORS } from "@/lib/ondo/map/heat"
@@ -16,13 +16,16 @@ import { useOndo } from "../shared/state/ondo-provider"
 import type { Locale } from "../contracts/domain"
 import {
   enterBDiscoveryCity,
+  B_DISCOVERY_TRAVERSAL_EVENT,
   focusBDiscoveryTarget,
   goBackFromBDiscovery,
   initializeBDiscoveryHistory,
+  installBDiscoveryTraversalGuard,
   normalizeBDiscoveryHistoryForActiveDocument,
   openBDiscoveryVenue,
   replaceBDiscoveryCityContext,
   replaceBDiscoveryHistoryForActiveDocument,
+  readBDiscoveryTraversal,
   type BDiscoveryHeat,
   type BDiscoveryHistoryEntry,
 } from "./b-discovery-history"
@@ -458,6 +461,7 @@ export function MapEntryB() {
   const filteredMapRef = useRef(false)
   const userLocationRef = useRef<UserLocation | null>(null)
   const urlHydrated = useRef(false)
+  const traversalFocusVersion = useRef(0)
   const retryFocusPending = useRef(false)
   const [city, setCity] = useState<CityId | null>(null)
   const [view, setView] = useState<ViewMode>("map")
@@ -484,6 +488,8 @@ export function MapEntryB() {
   })), [state.acceptedActivityEventKeys])
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
 
+  useLayoutEffect(() => installBDiscoveryTraversalGuard(), [])
+
   useEffect(() => {
     if (urlHydrated.current) return
     urlHydrated.current = true
@@ -506,6 +512,7 @@ export function MapEntryB() {
       })
     }
     const applyHistoryEntry = (entry: BDiscoveryHistoryEntry, restoreFocus: boolean) => {
+      const focusVersion = ++traversalFocusVersion.current
       setCity(entry.city ?? null)
       setView(entry.view)
       setQuery(entry.query)
@@ -513,24 +520,34 @@ export function MapEntryB() {
       if ((entry.level === "peek" || entry.level === "detail") && entry.venueId) actions.setSurface({ kind: "venue", venueId: entry.venueId })
       else actions.setSurface({ kind: "map" })
       if (restoreFocus && (entry.level === "nation" || entry.level === "city")) {
-        window.setTimeout(() => focusBDiscoveryTarget(entry)?.focus({ preventScroll: true }), 0)
+        const focusAfterCommit = (attempt = 0) => {
+          if (traversalFocusVersion.current !== focusVersion) return
+          const target = focusBDiscoveryTarget(entry)
+          if (target) {
+            target.focus({ preventScroll: true })
+            return
+          }
+          if (attempt < 3) window.requestAnimationFrame(() => focusAfterCommit(attempt + 1))
+        }
+        window.requestAnimationFrame(() => focusAfterCommit())
       }
     }
     const initialState = window.history.state
     const initial = initializeBDiscoveryHistory((venueId) => CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === venueId)?.cityId)
     applyHistoryEntry(initial, false)
     stabilizeHistoryEntry(initial, initialState)
-    const onPopState = () => {
-      const poppedState = window.history.state
-      const entry = normalizeBDiscoveryHistoryForActiveDocument()
+    const onTraversal = (event: Event) => {
+      const traversal = readBDiscoveryTraversal(event)
+      if (!traversal) return
+      const entry = replaceBDiscoveryHistoryForActiveDocument(traversal.entry, traversal.preservedState)
       if (entry) {
         applyHistoryEntry(entry, true)
-        stabilizeHistoryEntry(entry, poppedState)
+        stabilizeHistoryEntry(entry, traversal.preservedState)
       }
     }
-    window.addEventListener("popstate", onPopState)
+    window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, onTraversal)
     return () => {
-      window.removeEventListener("popstate", onPopState)
+      window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, onTraversal)
       if (stabilizationFrame != null) window.cancelAnimationFrame(stabilizationFrame)
       if (stabilizationTimer != null) window.clearTimeout(stabilizationTimer)
     }
