@@ -396,7 +396,19 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 
 - main key는 `ondo.preferences.v3`, `ondo.session.v3`다. 별도 `ondo.returnTo.*` key는 없고 allowlisted active `gate` envelope 하나만 `ondo.session.v3` 안에 둔다.
 - feature session key는 `ondo.chat.v2`, `ondo.table-outcomes.v2`, `ondo.labs.v2`, `ondo.accepted-visits.v2`다. 각각 preview URL을 뺀 session chat item, Table outcome/receipt, 비민감 Labs simulation state, 중복 방지용 공개 evidence ID만 보관한다.
-- `gate`는 [Flow Catalog의 v3 shape와 allowlist](./03_FLOW_CATALOG.md#0-id와-표기-규칙)만 복원한다. token은 `RT-${cta}-${epochMs}` 형식이며 unknown field를 버린다. `cta`는 최종 원 행동이고 `activeGate`만 바꾼다. Account→Person 같은 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한다. cancel은 직전 공개 context 복구 뒤 `gate=null`로 만들고 retry만 미소비 envelope를 유지한다.
+- `gate`는 아래 CTA별 v3 matrix와 [Flow Catalog의 v3 shape](./03_FLOW_CATALOG.md#0-id와-표기-규칙)가 모두 맞을 때만 복원한다. token은 정확히 `RT-${cta}-${Date.parse(createdAt)}`여야 하고 unknown field를 버린다. `cta`는 최종 원 행동이고 `activeGate`만 바꾼다. Account→Person 같은 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한다. cancel은 직전 공개 context 복구 뒤 `gate=null`로 만들고 retry만 미소비 envelope를 유지한다.
+
+| CTA | 허용 `gateQueue` | `venueId` | `tableId` |
+|---|---|---|---|
+| `SAVE_VENUE` | `account` | required | forbidden |
+| `JOIN_TABLE` | ordered subset of `account → person → age` | required | required |
+| `OPEN_CHAT` | `account` | forbidden | required |
+| `SUBMIT_LOCAL_SIGNAL` | ordered subset of `account → person` | required | forbidden |
+| `START_CHECKOUT` | ordered subset of `account → payment_kyc` | required | forbidden |
+| `OPEN_AFTER19` | `age` | optional | forbidden |
+| `MINT_BADGE` | `person` | forbidden | forbidden |
+
+`ordered subset`은 한 개 이상이며 표의 순서를 보존하고 중복 gate를 허용하지 않는다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix가 잘못된 envelope는 gate를 폐기하고 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
 - migration 실패 시 공개 preference만 기본값으로 되돌리고 Guest discovery는 유지한다.
 - sign-out/reset은 session 검증 상태, Table·payment·Labs fixture를 제거한다. public map preference는 사용자가 별도로 지울 수 있다.
 

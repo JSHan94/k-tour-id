@@ -43,7 +43,7 @@ type ReturnToEnvelope = {
 };
 ```
 
-원본 신분증 값, 국적, 생년월일, credential, 결제수단, 사진 blob은 URL·gate envelope에 넣지 않는다. v3 구현은 `cta`, `gateQueue`, `activeGate`, token 형식, 15분 수명, 선택적 공개 `venueId`/`tableId`를 allowlist로 검사하고 알 수 없는 필드는 복원 시 버린다. `cta`는 최종 resume action이고 `activeGate`만 현재 Account·Person·Age·Payment KYC 단계를 나타낸다. 다단계 gate에서도 같은 tokenId·cta·공개 context를 유지하고 마지막 guard가 충족된 뒤 원 CTA mutation 직전에 정확히 한 번만 소비한다. retry는 미소비 envelope를 유지하고 cancel은 직전 공개 context를 복구한 뒤 `gate=null`로 만든다. 중복 소비, 변조, 만료는 안전한 기본 화면으로 복귀한다. 정규 persistence와 수명은 [상태 모델](./04_STATE_MODEL.md#6-persistence와-개인정보-경계)이 source of truth다.
+원본 신분증 값, 국적, 생년월일, credential, 결제수단, 사진 blob은 URL·gate envelope에 넣지 않는다. v3 구현은 `cta`, CTA별 `gateQueue`·context matrix, `activeGate`, token 형식, 15분 수명, 공개 ID 형식을 allowlist로 검사하고 알 수 없는 필드는 복원 시 버린다. token의 epoch-ms는 `Date.parse(createdAt)`과 정확히 같아야 한다. required context 누락, forbidden context 추가, 명시적 `null` ID, 비정규 gate 순서·중복은 envelope 전체를 무효화한다. `cta`는 최종 resume action이고 `activeGate`만 현재 Account·Person·Age·Payment KYC 단계를 나타낸다. 다단계 gate에서도 같은 tokenId·cta·공개 context를 유지하고 마지막 guard가 충족된 뒤 원 CTA mutation 직전에 정확히 한 번만 소비한다. retry는 미소비 envelope를 유지하고 cancel은 직전 공개 context를 복구한 뒤 `gate=null`로 만든다. 중복 소비, 변조, 만료는 안전한 map surface로 복귀하며 임의 CTA가 Labs로 떨어지는 기본 branch는 없다. CTA별 정규 matrix, persistence와 수명은 [상태 모델](./04_STATE_MODEL.md#6-persistence와-개인정보-경계)이 source of truth다.
 
 허용되는 `cta`와 token prefix는 다음뿐이다: `SAVE_VENUE` / `RT-SAVE_VENUE-<epoch-ms>`, `JOIN_TABLE` / `RT-JOIN_TABLE-<epoch-ms>`, `OPEN_CHAT` / `RT-OPEN_CHAT-<epoch-ms>`, `SUBMIT_LOCAL_SIGNAL` / `RT-SUBMIT_LOCAL_SIGNAL-<epoch-ms>`, `START_CHECKOUT` / `RT-START_CHECKOUT-<epoch-ms>`, `OPEN_AFTER19` / `RT-OPEN_AFTER19-<epoch-ms>`, `MINT_BADGE` / `RT-MINT_BADGE-<epoch-ms>`.
 

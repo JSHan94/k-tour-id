@@ -115,13 +115,25 @@ export interface ReturnToEnvelope {
 ### v3 `gate` 복귀 envelope 안전 계약
 
 - 저장 위치는 `sessionStorage["ondo.session.v3"].gate` 하나이며 localStorage·URL·별도 returnTo key에는 넣지 않는다.
-- 선택적 context는 allowlisted 공개 `venueId`, `tableId`만 허용한다. credential, 생년월일, 국적, payment instrument, 사진 blob, private key, access token, raw provider response는 거절한다.
+- context는 아래 CTA별 matrix에 필요한 allowlisted 공개 `venueId`, `tableId`만 허용한다. credential, 생년월일, 국적, payment instrument, 사진 blob, private key, access token, raw provider response는 거절한다.
 - 허용되는 `cta`와 token prefix는 `SAVE_VENUE` / `RT-SAVE_VENUE-<epoch-ms>`, `JOIN_TABLE` / `RT-JOIN_TABLE-<epoch-ms>`, `OPEN_CHAT` / `RT-OPEN_CHAT-<epoch-ms>`, `SUBMIT_LOCAL_SIGNAL` / `RT-SUBMIT_LOCAL_SIGNAL-<epoch-ms>`, `START_CHECKOUT` / `RT-START_CHECKOUT-<epoch-ms>`, `OPEN_AFTER19` / `RT-OPEN_AFTER19-<epoch-ms>`, `MINT_BADGE` / `RT-MINT_BADGE-<epoch-ms>`뿐이다.
-- 복원은 CTA, token prefix, `gateQueue`, `activeGate`, 15분 수명, 공개 ID 형식을 검사하고 unknown field를 제거한다.
+- 복원은 CTA, token, `gateQueue`, `activeGate`, 15분 수명, 공개 ID 형식을 검사하고 unknown field를 제거한다. token의 `<epoch-ms>`는 `Date.parse(createdAt)`과 정확히 같아야 한다.
 - `cta`는 최종 resume action이고 `activeGate`는 현재 통과 중인 gate다. Account→Person→원 CTA처럼 gate가 연속돼도 `tokenId`, `cta`, 공개 context는 바꾸지 않고 `activeGate`만 갱신한다.
 - 중간 gate 성공에서는 token을 소비하지 않는다. 최종 resume action의 모든 guard가 충족된 뒤 mutation 직전에 compare-and-set으로 정확히 한 번 소비한다. refresh·중복 callback으로 CTA를 두 번 실행하지 않는다.
 - 취소는 mutation 없이 원 surface를 복구하고 token을 지운다. 실패 뒤 `재시도`는 만료되지 않은 같은 token을 미소비로 유지하고, `돌아가기`를 선택하면 token을 지운다.
-- schema 오류·만료·허용되지 않은 route이면 token을 폐기하고 `/ondo`로 보낸 뒤 `다시 시도해 주세요 / Please try again`을 노출한다.
+- schema 오류·만료·허용되지 않은 route이면 token을 폐기하고 안전한 map surface로 복귀한다. malformed CTA를 Labs로 보내지 않으며, 검증된 `MINT_BADGE`만 명시적 branch로 Labs를 연다.
+
+| CTA | 허용 `gateQueue` | `venueId` | `tableId` |
+|---|---|---|---|
+| `SAVE_VENUE` | `account` | required | forbidden |
+| `JOIN_TABLE` | ordered subset of `account → person → age` | required | required |
+| `OPEN_CHAT` | `account` | forbidden | required |
+| `SUBMIT_LOCAL_SIGNAL` | ordered subset of `account → person` | required | forbidden |
+| `START_CHECKOUT` | ordered subset of `account → payment_kyc` | required | forbidden |
+| `OPEN_AFTER19` | `age` | optional | forbidden |
+| `MINT_BADGE` | `person` | forbidden | forbidden |
+
+`ordered subset`은 비어 있지 않고 위 순서를 보존하며 중복을 허용하지 않는다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
 
 ### 실행 진실성 규칙
 
