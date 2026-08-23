@@ -1,7 +1,7 @@
 "use client"
 
 import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, SlidersHorizontal, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { HEAT_COLORS } from "@/lib/ondo/map/heat"
@@ -487,7 +487,7 @@ export function MapEntryB() {
   })), [state.acceptedActivityEventKeys])
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     let stabilizationFrame: number | null = null
     let stabilizationTimer: number | null = null
     const stabilizeHistoryEntry = (entry: BDiscoveryHistoryEntry, preservedState: unknown) => {
