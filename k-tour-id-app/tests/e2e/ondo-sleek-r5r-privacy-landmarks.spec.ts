@@ -160,7 +160,7 @@ for (const locale of ["en", "ko"] as const) {
       sessionStorage.setItem("ondo.session.v3", JSON.stringify({
         ...current,
         gate: {
-          tokenId: "RT-R5R-PRIVACY",
+          tokenId: `RT-OPEN_AFTER19-${Date.parse("2026-08-19T11:25:00.000Z")}`,
           cta: "OPEN_AFTER19",
           gateQueue: ["age"],
           activeGate: "age",

@@ -29,13 +29,14 @@ const READY_SESSION = {
 }
 
 function pendingAccountGate(cta: "JOIN_TABLE" | "OPEN_CHAT", tableId: string) {
+  const createdAt = "2026-08-19T20:30:00+09:00"
   return {
-    tokenId: `RT-R4-${cta}-${tableId}`,
+    tokenId: `RT-${cta}-${Date.parse(createdAt)}`,
     cta,
     gateQueue: ["account"],
     activeGate: "account",
     tableId,
-    createdAt: "2026-08-19T20:30:00+09:00",
+    createdAt,
     expiresAt: "2026-08-19T20:45:00+09:00",
   }
 }

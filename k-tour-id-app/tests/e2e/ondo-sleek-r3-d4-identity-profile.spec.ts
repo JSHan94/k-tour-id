@@ -147,7 +147,7 @@ for (const locale of ["en", "ko"] as const) {
         sessionStorage.setItem("ondo.session.v3", JSON.stringify({
           ...current,
           gate: {
-            tokenId: "RT-MINT_BADGE-D4-002",
+            tokenId: `RT-MINT_BADGE-${Date.parse("2026-08-19T11:29:00.000Z")}`,
             cta: "MINT_BADGE",
             gateQueue: ["person"],
             activeGate: "person",

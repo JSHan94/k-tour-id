@@ -66,6 +66,11 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
         await expect(detail).toContainText(item.locale === "ko" ? "실제 호스트나 예약은 없습니다" : "No live host or reservation")
         await expect(detail.getByTestId("table-join")).toHaveText(item.locale === "ko" ? "참여 미리보기" : "Join preview")
       }
+      if (item.surface === "table-chat") {
+        const fixtureTimestamp = surface.locator("time").first()
+        await expect(fixtureTimestamp).toHaveAttribute("datetime", "2026-08-19T20:12:00+09:00")
+        await expect(fixtureTimestamp).toHaveText(item.locale === "ko" ? "오후 8:12" : "8:12 PM")
+      }
     })
   }
 })
