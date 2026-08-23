@@ -305,7 +305,14 @@ test.describe("ONDO B canonical flow journeys", () => {
     })
     await test.step(evidence("FL-011", "TERMINAL"), async () => {
       await page.reload({ waitUntil: "domcontentloaded" })
-      await page.getByRole("button", { name: "My Korea", exact: true }).click()
+      const detail = page.getByTestId("canonical-place-overlay")
+      await expect(detail).toBeVisible()
+      await expect(page.getByTestId("canonical-venue-save")).toHaveText("Saved")
+      await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+      await detail.getByRole("button", { name: "Close place", exact: true }).click()
+      await expect(detail).toHaveCount(0)
+      await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("inert", "")
+      await page.getByTestId("nav-my").click()
       await expect(page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`)).toBeVisible()
     })
     await test.step(evidence("FL-011", "RETURN"), async () => {
