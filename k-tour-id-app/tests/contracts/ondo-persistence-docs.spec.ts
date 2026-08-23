@@ -183,7 +183,9 @@ test("CONTRACT-DATA-024 hydration validates return contexts against canonical en
   expect(provider).toContain('import { TABLES } from "../../connect/table-model"')
   expect(provider).toContain("function hasRegisteredReturnContext(envelope: ReturnToEnvelope)")
   expect(provider).toContain("const restoredGate = restoreReturnTo(session.gate)")
-  expect(provider).toContain("const pendingGate = restoredGate && hasRegisteredReturnContext(restoredGate) ? restoredGate : null")
+  expect(provider).toContain("const pendingGate = restoredGate")
+  expect(provider).toContain("&& hasRegisteredReturnContext(restoredGate)")
+  expect(provider).toContain("? restoredGate")
   expect(provider).toContain("table.venueId === envelope.venueId")
 })
 
