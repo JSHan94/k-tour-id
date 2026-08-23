@@ -13,6 +13,7 @@ import {
 
 const FILTER_QUERY = "느린마을 양조장"
 const FILTERED_VENUE_ID = "mois-18939eecb43c15ab4305"
+const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
 const DISCOVERY_HISTORY_KEYS = ["city", "documentId", "focus", "heat", "level", "query", "v", "venueId", "view"]
 const FROZEN_VIEWPORTS = [
   { width: 360, height: 800 },
@@ -62,6 +63,7 @@ async function openFilteredDetail(page: Page, locale: "en" | "ko") {
   await expect(page.getByTestId("canonical-place-details")).toBeFocused()
   await page.getByTestId("canonical-place-details").click()
   await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+  await expect(page.getByTestId("canonical-place-overlay").locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
   return { search, opener }
 }
 
@@ -86,27 +88,27 @@ function discardExpectedDetailNavigationAbort(page: Page) {
 }
 
 async function rapidlyTraverseHistory(page: Page, delta: -1 | 1, count: number) {
-  await page.evaluate(async ({ delta, count }) => {
+  await page.evaluate(async ({ delta, count, eventName }) => {
     await new Promise<void>((resolve, reject) => {
       let remaining = count
       const timeoutId = window.setTimeout(() => {
-        window.removeEventListener("popstate", onPopState)
+        window.removeEventListener(eventName, onTraversal)
         reject(new Error(`Timed out after ${count - remaining}/${count} rapid history traversals`))
       }, 10_000)
-      const onPopState = () => {
+      const onTraversal = () => {
         remaining -= 1
         if (remaining === 0) {
           window.clearTimeout(timeoutId)
-          window.removeEventListener("popstate", onPopState)
+          window.removeEventListener(eventName, onTraversal)
           resolve()
           return
         }
         history.go(delta)
       }
-      window.addEventListener("popstate", onPopState)
+      window.addEventListener(eventName, onTraversal)
       history.go(delta)
     })
-  }, { delta, count })
+  }, { delta, count, eventName: B_DISCOVERY_TRAVERSAL_EVENT })
 }
 
 test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", () => {
@@ -306,6 +308,7 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
 
     await rapidlyTraverseHistory(page, 1, 3)
     await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    await expect(page.getByTestId("canonical-place-overlay").locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
     await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(1)
     await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
     await expect(page.getByTestId("canonical-place-overlay").getByRole("article").getByRole("button", { name: "Back to place summary" })).toBeFocused()
