@@ -56,6 +56,22 @@ function pendingSaveGate(venueId: string) {
   }
 }
 
+function pendingMultiGate(input: {
+  cta: "JOIN_TABLE" | "START_CHECKOUT"
+  gateQueue: string[]
+  activeGate: string
+  venueId: string
+  tableId?: string
+}) {
+  const createdAt = "2026-08-19T20:30:00+09:00"
+  return {
+    tokenId: `RT-${input.cta}-${Date.parse(createdAt)}`,
+    ...input,
+    createdAt,
+    expiresAt: "2026-08-19T20:45:00+09:00",
+  }
+}
+
 async function completeKoreanAccountGate(page: Page) {
   const gate = page.getByTestId("ondo-gate-overlay")
   await expect(gate).toBeVisible()
@@ -360,5 +376,67 @@ for (const scenario of INVALID_REGISTRY_GATES) {
       return { gate: session.gate, gateState: session.gateState, membership: session.tableMembershipById }
     })).toEqual({ gate: null, gateState: "idle", membership: {} })
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem("ondo.preferences.v3") ?? "{}").savedVenueIds)).toEqual([])
+  })
+}
+
+test("R5R return progress rejects a registered JOIN that jumps to age without prior gates", async ({ page }) => {
+  const gate = pendingMultiGate({
+    cta: "JOIN_TABLE",
+    gateQueue: ["account", "person", "age"],
+    activeGate: "age",
+    venueId: "seoul-euljiro-nogari",
+    tableId: "table-euljiro-night",
+  })
+  await seedB(page, {
+    locale: "en",
+    session: {
+      account: "ACC-GUEST",
+      person: "PER-UNVERIFIED",
+      age: "AGE-UNVERIFIED",
+      gate,
+      gateState: "pending",
+      tableMembershipById: {},
+    },
+  })
+  await gotoB(page)
+
+  await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
+  await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+  await expect.poll(async () => page.evaluate(() => {
+    const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
+    return { gate: session.gate, gateState: session.gateState, membership: session.tableMembershipById }
+  })).toEqual({ gate: null, gateState: "idle", membership: {} })
+})
+
+const VALID_PARTIAL_PROGRESS = [
+  {
+    id: "JOIN active person after account",
+    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["account", "person", "age"], activeGate: "person", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
+    session: { account: "ACC-ACTIVE", person: "PER-UNVERIFIED", age: "AGE-UNVERIFIED" },
+    heading: "Complete an identity check",
+  },
+  {
+    id: "JOIN active age after account and person",
+    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["account", "person", "age"], activeGate: "age", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
+    session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED" },
+    heading: "Confirm 19+ to continue",
+  },
+  {
+    id: "checkout active payment after account",
+    gate: pendingMultiGate({ cta: "START_CHECKOUT", gateQueue: ["account", "payment_kyc"], activeGate: "payment_kyc", venueId: CANONICAL_VENUE_ID }),
+    session: { account: "ACC-ACTIVE", paymentKyc: "PKY-NOT-STARTED" },
+    heading: "Complete Payment KYC",
+  },
+] as const
+
+for (const scenario of VALID_PARTIAL_PROGRESS) {
+  test(`R5R return progress preserves ${scenario.id}`, async ({ page }) => {
+    await seedB(page, { locale: "en", session: { ...scenario.session, gate: scenario.gate, gateState: "pending" } })
+    await gotoB(page)
+
+    const gate = page.getByTestId("ondo-gate-overlay")
+    await expect(gate).toBeVisible()
+    await expect(gate.getByRole("heading", { name: scenario.heading, exact: true })).toBeVisible()
+    await expect.poll(async () => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}").gate?.activeGate)).toBe(scenario.gate.activeGate)
   })
 }

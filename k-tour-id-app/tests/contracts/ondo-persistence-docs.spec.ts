@@ -2,7 +2,13 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
 import type { GateKind, ReturnToCta } from "../../features/ondo/contracts/domain"
-import { createReturnTo, isReturnToUsable, restoreReturnTo } from "../../features/ondo/contracts/return-to"
+import {
+  areReturnToGatesSatisfied,
+  createReturnTo,
+  hasCoherentReturnToProgress,
+  isReturnToUsable,
+  restoreReturnTo,
+} from "../../features/ondo/contracts/return-to"
 
 const appFile = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 const canonicalDoc = (name: string) => readFileSync(resolve(process.cwd(), `../docs/ondo-execution/${name}`), "utf8")
@@ -198,4 +204,37 @@ test("CONTRACT-DATA-025 canonical docs type and describe registry-safe return re
   }
   expect(adapters).not.toContain("허용되지 않은 route")
   expect(adapters).toContain("허용되지 않은 context")
+})
+
+test("CONTRACT-DATA-026 active gate progress cannot jump or resume an already satisfied gate", () => {
+  const envelope = createReturnTo({
+    cta: "JOIN_TABLE",
+    gateQueue: ["account", "person", "age"],
+    venueId: "seoul-euljiro-nogari",
+    tableId: "table-euljiro-night",
+    now: new Date("2026-08-19T10:00:00.000Z"),
+  })
+  const satisfaction = (satisfied: readonly GateKind[]) => (gate: GateKind) => satisfied.includes(gate)
+
+  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "age" }, satisfaction([]))).toBeFalsy()
+  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "person" }, satisfaction(["account"]))).toBeTruthy()
+  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "age" }, satisfaction(["account", "person"]))).toBeTruthy()
+  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "person" }, satisfaction(["account", "person"]))).toBeFalsy()
+  expect(areReturnToGatesSatisfied(envelope, satisfaction(["account", "person"]))).toBeFalsy()
+  expect(areReturnToGatesSatisfied(envelope, satisfaction(["account", "person", "age"]))).toBeTruthy()
+})
+
+test("CONTRACT-DATA-027 provider and canonical docs enforce progress coherence through mutation", () => {
+  const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
+  const stateModel = canonicalDoc("04_STATE_MODEL.md")
+  const adapters = canonicalDoc("05_DATA_ADAPTER_CONTRACTS.md")
+
+  expect(provider).toContain("hasCoherentReturnToProgress(restoredGate, (gate) => gateSatisfied(restoredGateState, gate))")
+  expect(provider).toContain("hasCoherentReturnToProgress(state.gate, (gate) => gateSatisfied(state, gate))")
+  expect(provider).toContain("!areReturnToGatesSatisfied(envelope, (gate) => gateSatisfied(state, gate))")
+  for (const doc of [stateModel, adapters]) {
+    expect(doc).toContain("`activeGate`보다 앞선 모든 gate는 충족")
+    expect(doc).toContain("`activeGate` 자체는 아직 미충족")
+    expect(doc).toContain("원 CTA mutation 직전에 `gateQueue` 전체를 다시 검증")
+  }
 })
