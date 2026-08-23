@@ -895,6 +895,12 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
   }
 
   await settle(page)
+  if (state === "CITY-FILTERED-MAP") {
+    await expect(page.getByText("1 sourced food place", { exact: true })).toHaveCount(1)
+  }
+  if (state === "LABS-TRAIT-FAIL") {
+    await expect(page.getByTestId("labs-overlay").getByText("Target network: Sui Testnet · Simulated", { exact: true })).toHaveCount(1)
+  }
   if (state === "TRUST-FOUR-AXES") {
     const target = page.getByTestId("ondo-trust-panel")
     const expectedScrollTop = await target.evaluate((element) => {
@@ -1420,10 +1426,11 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
   }
   const initialProbe = await collectBMapPaintProbe(page)
   const receiptKey = `${item.id}:${viewport}`
+  const maxDiffPixels = item.id === "B-PX-CITY-FILTERED-MAP-EN" || item.id === "B-PX-LABS-TRAIT-FAIL-KO" ? 0 : 32
   const canvasReceiptRequired = B_MAP_PAINT_CANVAS_RECEIPTS.includes(receiptKey as (typeof B_MAP_PAINT_CANVAS_RECEIPTS)[number])
   const edgeReceiptRequired = B_MAP_PAINT_EDGE_RECEIPTS.includes(receiptKey as (typeof B_MAP_PAINT_EDGE_RECEIPTS)[number])
   if (!canvasReceiptRequired && !edgeReceiptRequired) {
-    await expect(page).toHaveScreenshot(bSnapshotName(item, viewport), { ...screenshotOptions, maxDiffPixels: 32 })
+    await expect(page).toHaveScreenshot(bSnapshotName(item, viewport), { ...screenshotOptions, maxDiffPixels })
     return
   }
   expect(canvasReceiptRequired && edgeReceiptRequired, `${receiptKey} has conflicting MapLibre paint receipt modes`).toBe(false)
@@ -1512,7 +1519,7 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
         try {
           // The accepted Buffer itself must match the reviewed camera frame;
           // no later screenshot is substituted for this evidence frame.
-          expect(frame).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
+          expect(frame).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels })
           paintedFrame = frame
           heatPixels = count
           acceptedProbe = probe
@@ -1559,7 +1566,7 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
   try {
     invariantAfter = await collectBMapRecoveryInvariant(page)
     expect(invariantAfter, `${item.id} repaint recovery changed URL, app readiness receipts, storage, viewport, or canvas geometry`).toEqual(invariantBefore)
-    expect(paintedFrame!).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels: 32 })
+    expect(paintedFrame!).toMatchSnapshot(bSnapshotName(item, viewport), { maxDiffPixels })
     await testInfo.attach("map-paint.json", {
       body: JSON.stringify({
         caseId: item.id,
@@ -1580,7 +1587,7 @@ export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewp
         stateNeutralRecovery: {
           after: invariantAfter,
           before: invariantBefore,
-          cameraPixelProof: "accepted Buffer strict-reviewed snapshot match (maxDiffPixels=32)",
+          cameraPixelProof: `accepted Buffer strict-reviewed snapshot match (maxDiffPixels=${maxDiffPixels})`,
           stimulus: "MapLibre online listener -> _update() -> deterministic source re-evaluation -> triggerRepaint()",
         },
       }, null, 2),

@@ -22,6 +22,7 @@ const READY_SESSION = {
 }
 
 const BANNED_KO_ENGINEERING_NOUNS = /\b(?:Receipt|fixture|Quote|transaction|adapter|canonical envelope|Deferred|badge|metadata|CONTRACT ONLY)\b/i
+const EXACT_TESTNET_TARGET = "Target network: Sui Testnet · Simulated"
 
 async function seedReady(page: Page, locale: BLocale, clearFeatures = true) {
   await prepareBPage(page)
@@ -81,6 +82,19 @@ test.beforeEach(async ({ page }, testInfo) => {
   testInfo.setTimeout(90_000)
   page.setDefaultTimeout(20_000)
 })
+
+for (const locale of ["en", "ko"] as const) {
+  for (const viewport of B_SLEEK_VIEWPORTS) {
+    test(`D4-006 ${locale.toUpperCase()} ${viewport.id} keeps the locale-invariant Labs target literal`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name === "desktop-chromium", "The mobile project owns this explicit locale/viewport truth matrix once.")
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await seedAcknowledgedLabs(page, locale, "?qa=1")
+      const labs = page.getByTestId("labs-overlay")
+      await expect(labs.getByText(EXACT_TESTNET_TARGET, { exact: true })).toHaveCount(1)
+      await expect(labs).not.toContainText("대상 네트워크 식별자: Sui Testnet · 시뮬레이션")
+    })
+  }
+}
 
 for (const locale of ["en", "ko"] as const) {
   test(`D2-004 ${locale} Checkout cancel and completion hand focus to the local recovery or status`, async ({ page }) => {
