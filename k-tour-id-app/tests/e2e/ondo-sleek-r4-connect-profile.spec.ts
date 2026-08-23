@@ -57,7 +57,7 @@ function pendingSaveGate(venueId: string) {
 }
 
 function pendingMultiGate(input: {
-  cta: "JOIN_TABLE" | "START_CHECKOUT"
+  cta: "JOIN_TABLE" | "SUBMIT_LOCAL_SIGNAL" | "START_CHECKOUT"
   gateQueue: string[]
   activeGate: string
   venueId: string
@@ -379,51 +379,62 @@ for (const scenario of INVALID_REGISTRY_GATES) {
   })
 }
 
-test("R5R return progress rejects a registered JOIN that jumps to age without prior gates", async ({ page }) => {
-  const gate = pendingMultiGate({
-    cta: "JOIN_TABLE",
-    gateQueue: ["account", "person", "age"],
-    activeGate: "age",
-    venueId: "seoul-euljiro-nogari",
-    tableId: "table-euljiro-night",
-  })
-  await seedB(page, {
-    locale: "en",
-    session: {
-      account: "ACC-GUEST",
-      person: "PER-UNVERIFIED",
-      age: "AGE-UNVERIFIED",
-      gate,
-      gateState: "pending",
-      tableMembershipById: {},
-    },
-  })
-  await gotoB(page)
+const INVALID_FULL_GATE_PLANS = [
+  {
+    id: "alcohol JOIN age singleton while account and person are missing",
+    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["age"], activeGate: "age", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
+    session: { account: "ACC-GUEST", person: "PER-UNVERIFIED", age: "AGE-UNVERIFIED" },
+  },
+  {
+    id: "ordinary JOIN age singleton outside the registered table plan",
+    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["age"], activeGate: "age", venueId: TABLE_VENUE_ID, tableId: TABLE_ID }),
+    session: { account: "ACC-GUEST", age: "AGE-UNVERIFIED" },
+  },
+  {
+    id: "local signal person singleton while account is missing",
+    gate: pendingMultiGate({ cta: "SUBMIT_LOCAL_SIGNAL", gateQueue: ["person"], activeGate: "person", venueId: CANONICAL_VENUE_ID }),
+    session: { account: "ACC-GUEST", person: "PER-UNVERIFIED" },
+  },
+  {
+    id: "checkout payment singleton while account is missing",
+    gate: pendingMultiGate({ cta: "START_CHECKOUT", gateQueue: ["payment_kyc"], activeGate: "payment_kyc", venueId: CANONICAL_VENUE_ID }),
+    session: { account: "ACC-GUEST", paymentKyc: "PKY-NOT-STARTED" },
+  },
+] as const
 
-  await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
-  await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
-  await expect.poll(async () => page.evaluate(() => {
-    const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
-    return { gate: session.gate, gateState: session.gateState, membership: session.tableMembershipById }
-  })).toEqual({ gate: null, gateState: "idle", membership: {} })
-})
+for (const scenario of INVALID_FULL_GATE_PLANS) {
+  test(`R5R return full plan rejects ${scenario.id}`, async ({ page }) => {
+    await seedB(page, {
+      locale: "en",
+      session: { ...scenario.session, gate: scenario.gate, gateState: "pending", tableMembershipById: {} },
+    })
+    await gotoB(page)
+
+    await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+    await expect.poll(async () => page.evaluate(() => {
+      const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
+      return { gate: session.gate, gateState: session.gateState, membership: session.tableMembershipById }
+    })).toEqual({ gate: null, gateState: "idle", membership: {} })
+  })
+}
 
 const VALID_PARTIAL_PROGRESS = [
   {
     id: "JOIN active person after account",
-    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["account", "person", "age"], activeGate: "person", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
+    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["person", "age"], activeGate: "person", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
     session: { account: "ACC-ACTIVE", person: "PER-UNVERIFIED", age: "AGE-UNVERIFIED" },
     heading: "Complete an identity check",
   },
   {
     id: "JOIN active age after account and person",
-    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["account", "person", "age"], activeGate: "age", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
+    gate: pendingMultiGate({ cta: "JOIN_TABLE", gateQueue: ["age"], activeGate: "age", venueId: "seoul-euljiro-nogari", tableId: "table-euljiro-night" }),
     session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED" },
     heading: "Confirm 19+ to continue",
   },
   {
     id: "checkout active payment after account",
-    gate: pendingMultiGate({ cta: "START_CHECKOUT", gateQueue: ["account", "payment_kyc"], activeGate: "payment_kyc", venueId: CANONICAL_VENUE_ID }),
+    gate: pendingMultiGate({ cta: "START_CHECKOUT", gateQueue: ["payment_kyc"], activeGate: "payment_kyc", venueId: CANONICAL_VENUE_ID }),
     session: { account: "ACC-ACTIVE", paymentKyc: "PKY-NOT-STARTED" },
     heading: "Complete Payment KYC",
   },

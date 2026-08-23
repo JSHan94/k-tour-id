@@ -3,9 +3,9 @@ import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
 import type { GateKind, ReturnToCta } from "../../features/ondo/contracts/domain"
 import {
-  areReturnToGatesSatisfied,
+  areRequiredReturnToGatesSatisfied,
   createReturnTo,
-  hasCoherentReturnToProgress,
+  hasExactReturnToGatePlan,
   isReturnToUsable,
   restoreReturnTo,
 } from "../../features/ondo/contracts/return-to"
@@ -160,10 +160,10 @@ test("CONTRACT-DATA-023 canonical docs own the CTA gate/context matrix and Labs 
   const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
   const expectedRows = [
     "| `SAVE_VENUE` | `account` | required | forbidden |",
-    "| `JOIN_TABLE` | ordered subset of `account → person → age` | required | required |",
+    "| `JOIN_TABLE` | `account` + `person` when `table.requiresPerson` + `age` when `table.alcohol` | required | required |",
     "| `OPEN_CHAT` | `account` | forbidden | required |",
-    "| `SUBMIT_LOCAL_SIGNAL` | ordered subset of `account → person` | required | forbidden |",
-    "| `START_CHECKOUT` | ordered subset of `account → payment_kyc` | required | forbidden |",
+    "| `SUBMIT_LOCAL_SIGNAL` | `account → person` | required | forbidden |",
+    "| `START_CHECKOUT` | `account → payment_kyc` | required | forbidden |",
     "| `OPEN_AFTER19` | `age` | optional | forbidden |",
     "| `MINT_BADGE` | `person` | forbidden | forbidden |",
   ]
@@ -208,7 +208,7 @@ test("CONTRACT-DATA-025 canonical docs type and describe registry-safe return re
   expect(adapters).toContain("허용되지 않은 context")
 })
 
-test("CONTRACT-DATA-026 active gate progress cannot jump or resume an already satisfied gate", () => {
+test("CONTRACT-DATA-026 return queues equal the unsatisfied gates from the resolved full plan", () => {
   const envelope = createReturnTo({
     cta: "JOIN_TABLE",
     gateQueue: ["account", "person", "age"],
@@ -217,13 +217,17 @@ test("CONTRACT-DATA-026 active gate progress cannot jump or resume an already sa
     now: new Date("2026-08-19T10:00:00.000Z"),
   })
   const satisfaction = (satisfied: readonly GateKind[]) => (gate: GateKind) => satisfied.includes(gate)
+  const joinPlan: readonly GateKind[] = ["account", "person", "age"]
 
-  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "age" }, satisfaction([]))).toBeFalsy()
-  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "person" }, satisfaction(["account"]))).toBeTruthy()
-  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "age" }, satisfaction(["account", "person"]))).toBeTruthy()
-  expect(hasCoherentReturnToProgress({ ...envelope, activeGate: "person" }, satisfaction(["account", "person"]))).toBeFalsy()
-  expect(areReturnToGatesSatisfied(envelope, satisfaction(["account", "person"]))).toBeFalsy()
-  expect(areReturnToGatesSatisfied(envelope, satisfaction(["account", "person", "age"]))).toBeTruthy()
+  expect(hasExactReturnToGatePlan({ ...envelope, gateQueue: ["age"], activeGate: "age" }, joinPlan, satisfaction([]))).toBeFalsy()
+  expect(hasExactReturnToGatePlan({ ...envelope, gateQueue: ["person", "age"], activeGate: "person" }, joinPlan, satisfaction(["account"]))).toBeTruthy()
+  expect(hasExactReturnToGatePlan({ ...envelope, gateQueue: ["age"], activeGate: "age" }, joinPlan, satisfaction(["account", "person"]))).toBeTruthy()
+  expect(hasExactReturnToGatePlan({ ...envelope, gateQueue: ["person", "age"], activeGate: "person" }, joinPlan, satisfaction(["account", "person"]))).toBeFalsy()
+  expect(hasExactReturnToGatePlan({ ...envelope, gateQueue: ["age"], activeGate: "age" }, ["account"], satisfaction([]))).toBeFalsy()
+  expect(hasExactReturnToGatePlan({ ...envelope, cta: "SUBMIT_LOCAL_SIGNAL", gateQueue: ["person"], activeGate: "person" }, ["account", "person"], satisfaction([]))).toBeFalsy()
+  expect(hasExactReturnToGatePlan({ ...envelope, cta: "START_CHECKOUT", gateQueue: ["payment_kyc"], activeGate: "payment_kyc" }, ["account", "payment_kyc"], satisfaction([]))).toBeFalsy()
+  expect(areRequiredReturnToGatesSatisfied(joinPlan, satisfaction(["account", "person"]))).toBeFalsy()
+  expect(areRequiredReturnToGatesSatisfied(joinPlan, satisfaction(["account", "person", "age"]))).toBeTruthy()
 })
 
 test("CONTRACT-DATA-027 provider and canonical docs enforce progress coherence through mutation", () => {
@@ -231,12 +235,17 @@ test("CONTRACT-DATA-027 provider and canonical docs enforce progress coherence t
   const stateModel = canonicalDoc("04_STATE_MODEL.md")
   const adapters = canonicalDoc("05_DATA_ADAPTER_CONTRACTS.md")
 
-  expect(provider).toContain("hasCoherentReturnToProgress(restoredGate, (gate) => gateSatisfied(restoredGateState, gate))")
-  expect(provider).toContain("hasCoherentReturnToProgress(state.gate, (gate) => gateSatisfied(state, gate))")
-  expect(provider).toContain("!areReturnToGatesSatisfied(envelope, (gate) => gateSatisfied(state, gate))")
+  expect(provider).toContain("function requiredReturnToGatePlan(envelope: ReturnToEnvelope)")
+  expect(provider).toContain("table.requiresPerson")
+  expect(provider).toContain("table.alcohol")
+  expect(provider).toContain("hasExactReturnToGatePlan(restoredGate, restoredGatePlan, (gate) => gateSatisfied(restoredGateState, gate))")
+  expect(provider).toContain("hasExactReturnToGatePlan(state.gate, persistentGatePlan, (gate) => gateSatisfied(state, gate))")
+  expect(provider).toContain("!areRequiredReturnToGatesSatisfied(requiredGatePlan, (gate) => gateSatisfied(state, gate))")
+  expect(provider).toContain("gateQueue: remainingQueue")
   for (const doc of [stateModel, adapters]) {
-    expect(doc).toContain("`activeGate`보다 앞선 모든 gate는 충족")
-    expect(doc).toContain("`activeGate` 자체는 아직 미충족")
-    expect(doc).toContain("원 CTA mutation 직전에 `gateQueue` 전체를 다시 검증")
+    expect(doc).toContain("CTA와 등록된 context에서 full required gate plan을 다시 계산")
+    expect(doc).toContain("`gateQueue`는 그 plan에서 현재 session이 아직 충족하지 못한 gate의 정확한 목록")
+    expect(doc).toContain("생략된 required gate는 session에서 이미 충족")
+    expect(doc).toContain("원 CTA mutation 직전에 full required gate plan 전체를 다시 검증")
   }
 })
