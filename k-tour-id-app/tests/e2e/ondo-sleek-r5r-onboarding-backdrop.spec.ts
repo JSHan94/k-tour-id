@@ -139,7 +139,7 @@ test.describe("R5R onboarding tablet backdrop isolation", () => {
     })
   }
 
-  test("focus remains trapped after Escape and reduced motion removes persona transitions", async ({ page }) => {
+  test("Escape takes the guest path and reduced motion removes persona transitions", async ({ page }) => {
     await openFreshOnboarding(page, "en", { width: 768, height: 1024 })
     const dialog = page.getByTestId("ondo-onboarding")
     const exit = dialog.getByRole("button", { name: "Explore as a guest", exact: true })
@@ -148,9 +148,10 @@ test.describe("R5R onboarding tablet backdrop isolation", () => {
     await page.keyboard.press("Tab")
     await expect(dialog.getByRole("button", { name: "KO", exact: true })).toBeFocused()
     await page.keyboard.press("Escape")
-    await expect(dialog).toBeVisible()
-    expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true)
+    await expect(dialog).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-nation").locator("[data-city='seoul']")).toBeFocused()
 
+    await openFreshOnboarding(page, "en", { width: 768, height: 1024 })
     await dialog.getByRole("button", { name: "Get started", exact: true }).click()
     await page.emulateMedia({ reducedMotion: "reduce" })
     await expect(page.getByTestId("persona-short_term")).toHaveCSS("transition-duration", "0s")
