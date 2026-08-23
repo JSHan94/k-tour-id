@@ -224,7 +224,6 @@
 | `auth.failed` | `계정을 만들지 못했어요. 다시 시도하거나 계속 둘러볼 수 있어요.` | `The account could not be created. Try again or keep exploring.` |
 | `auth.retry` | `계정 만들기 다시 시도` | `Try account creation again` |
 | `auth.return` | `이전 화면으로 돌아가기` | `Return to previous screen` |
-| `auth.return_invalid` | `이전 작업을 다시 열지 못했어요. 지도에서 다시 시도해 주세요.` | `We could not reopen your previous task. Please try again from the map.` |
 
 `로그인 완료`를 `신원 인증 완료`로 바꿔 쓰지 않는다.
 

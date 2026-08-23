@@ -121,7 +121,7 @@ export interface ReturnToEnvelope {
 - `cta`는 최종 resume action이고 `activeGate`는 현재 통과 중인 gate다. Account→Person→원 CTA처럼 gate가 연속돼도 `tokenId`, `cta`, 공개 context는 바꾸지 않고 `activeGate`만 갱신한다.
 - 중간 gate 성공에서는 token을 소비하지 않는다. 최종 resume action의 모든 guard가 충족된 뒤 mutation 직전에 compare-and-set으로 정확히 한 번 소비한다. refresh·중복 callback으로 CTA를 두 번 실행하지 않는다.
 - 취소는 mutation 없이 원 surface를 복구하고 token을 지운다. 실패 뒤 `재시도`는 만료되지 않은 같은 token을 미소비로 유지하고, `돌아가기`를 선택하면 token을 지운다.
-- schema 오류·만료·허용되지 않은 route이면 token을 폐기하고 안전한 map surface로 복귀한다. malformed CTA를 Labs로 보내지 않으며, 검증된 `MINT_BADGE`만 명시적 branch로 Labs를 연다.
+- schema 오류·만료·허용되지 않은 route·미등록 context이면 token을 폐기하고 별도 toast 없이 안전한 map surface로 복귀한다. malformed CTA를 Labs로 보내지 않으며, 검증된 `MINT_BADGE`만 명시적 branch로 Labs를 연다.
 
 | CTA | 허용 `gateQueue` | `venueId` | `tableId` |
 |---|---|---|---|
@@ -133,7 +133,7 @@ export interface ReturnToEnvelope {
 | `OPEN_AFTER19` | `age` | optional | forbidden |
 | `MINT_BADGE` | `person` | forbidden | forbidden |
 
-`ordered subset`은 비어 있지 않고 위 순서를 보존하며 중복을 허용하지 않는다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
+`ordered subset`은 비어 있지 않고 위 순서를 보존하며 중복을 허용하지 않는다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. hydration은 venue를 canonical map 또는 Table venue registry에, table을 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair를 함께 검증한다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
 
 ### 실행 진실성 규칙
 

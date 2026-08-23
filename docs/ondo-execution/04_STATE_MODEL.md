@@ -239,7 +239,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 
 | Event | From | Guard | To | Side effect | Persistence | Fixture |
 |---|---|---|---|---|---|---|
-| first open | 없음 | no stored v2 completion | `ONB-NEW` | guide 표시 | memory | `FX-ONB-FIRST` |
+| first open | 없음 | no stored v3 completion | `ONB-NEW` | guide 표시 | memory | `FX-ONB-FIRST` |
 | choose persona | `ONB-NEW` | 유효 persona | `ONB-IN-PROGRESS` | personaId와 기본값 준비 | memory | `FX-ONB-SHORT`, `FX-ONB-KOREAN`, `FX-ONB-RESIDENT` |
 | finish | `ONB-IN-PROGRESS` | 유효 입력 또는 안전한 기본값 | `ONB-COMPLETE` | verification 없이 `SCR-MAP` 이동 | `ondo.session.v3` | persona fixture |
 | skip | `ONB-NEW` 또는 `ONB-IN-PROGRESS` | 없음 | `ONB-COMPLETE` | 기본값으로 Guest `SCR-MAP` 이동 | `ondo.session.v3` | persona fixture |
@@ -249,7 +249,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | account cancel | `ACC-CREATING` | user cancel | `ACC-GUEST` | 원 화면 복귀, mutation 없음 | RT 삭제 | `FX-ACC-CANCEL` |
 | account failure | `ACC-CREATING` | fixture failure | `ACC-FAILED` | retry/Guest 계속 | memory | `FX-ACC-FAIL` |
 | retry | `ACC-FAILED` | user retry | `ACC-CREATING` | 동일 RT 유지 | sessionStorage | `FX-ACC-SUCCESS` |
-| duplicate/invalid RT | any Account | consumed·expired·변조·allowlist 밖 | 현재 account 유지 | `/ondo` fallback, mutation 없음 | RT 삭제 | `FX-ACC-FAIL` |
+| duplicate/invalid RT | any Account | consumed·expired·변조·allowlist·registry 밖 | 현재 account 유지 | 안전한 map surface, mutation·별도 toast 없음 | RT 삭제 | `FX-ACC-FAIL` |
 | save venue | `SAV-IDLE` 또는 `SAV-FAILED` | `ACC-ACTIVE`, venue exists | `SAV-SAVING` | 중복 입력 잠금 | memory | `FX-SAVE-PENDING` |
 | save success | `SAV-SAVING` | fixture success | `SAV-SAVED` | My Korea에 같은 venue 1회 반영 | demo session | `FX-SAVE-SUCCESS` |
 | save failure | `SAV-SAVING` | fixture failure | `SAV-FAILED` | 기존 저장값 불변, retry 제공 | memory | `FX-SAVE-FAIL` |
@@ -379,7 +379,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | OpenDID payload를 EAS 구현으로 표시 | 서로 다른 adapter·신뢰 경계를 혼합 | separate adapter→canonical envelope; EAS 구현 `Deferred` |
 | merchant receipt가 방문·입장·안전을 증명 | receipt 의미 과장 | merchant·offer·policy·redemption fact로 제한 |
 | Age 성공이 Payment KYC를 변경하거나 그 반대 | 독립 gate 혼합 | 비대상 verification state 불변 |
-| 소비·만료·변조된 `returnTo` 재사용 | gated mutation 중복·open redirect 위험 | RT 삭제, `/ondo` fallback, mutation 없음 |
+| 소비·만료·변조·미등록 context의 `returnTo` 재사용 | gated mutation 중복·open redirect 위험 | RT 삭제, 안전한 map surface, mutation·별도 toast 없음 |
 | stale/error merchant trait를 eligible로 사용 | 오래되거나 불확실한 증거 | unknown/stale UI와 재확인 CTA |
 
 ## 6. Persistence와 개인정보 경계
@@ -408,7 +408,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | `OPEN_AFTER19` | `age` | optional | forbidden |
 | `MINT_BADGE` | `person` | forbidden | forbidden |
 
-`ordered subset`은 한 개 이상이며 표의 순서를 보존하고 중복 gate를 허용하지 않는다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix가 잘못된 envelope는 gate를 폐기하고 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
+`ordered subset`은 한 개 이상이며 표의 순서를 보존하고 중복 gate를 허용하지 않는다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. hydration은 `venueId`를 canonical map 또는 Table venue registry에, `tableId`를 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair까지 일치시킨다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix·registry가 잘못된 envelope는 gate를 폐기하고 별도 toast 없이 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
 - migration 실패 시 공개 preference만 기본값으로 되돌리고 Guest discovery는 유지한다.
 - sign-out/reset은 session 검증 상태, Table·payment·Labs fixture를 제거한다. public map preference는 사용자가 별도로 지울 수 있다.
 

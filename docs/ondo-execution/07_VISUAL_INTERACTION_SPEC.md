@@ -377,7 +377,7 @@ open/price · Before you go 2 facts
 - body에 `신원 확인은 아직 필요하지 않음`을 표시한다.
 - 성공 후 새 홈으로 보내지 않고 `returnTo` CTA를 자동 재개한다.
 - cancel은 이전 detail과 scroll/selection을 유지한다.
-- failure는 같은 `returnTo`로 retry하거나 Guest 탐색으로 돌아갈 수 있다. invalid/expired token은 `/ondo`로 안전하게 보내고 재시도 안내를 노출한다.
+- failure는 같은 `returnTo`로 retry하거나 Guest 탐색으로 돌아갈 수 있다. invalid/expired/unregistered token은 폐기하고 원 mutation이나 별도 toast 없이 안전한 map surface로 복귀한다.
 - gate 성공 callback은 token을 한 번만 소비해 중복 저장·중복 join·중복 결제를 만들지 않는다.
 
 ### `SCR-ID`
