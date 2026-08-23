@@ -90,60 +90,35 @@ export interface DataAdapter<Query, Result> {
   read(query: Query, signal?: AbortSignal): Promise<DataState<Result>>
 }
 
-export type ReturnToRoute = "/ondo" | "/ondo/id" | "/ondo/my" | "/ondo/labs"
-export type ReturnToSheet = "venue" | "table" | "checkout" | "after19"
-export type ReturnToId =
-  | "RT-DISCOVER"
-  | "RT-AFTER19-VENUE"
-  | "RT-TABLE-JOIN"
-  | "RT-CHAT-MESSAGE"
-  | "RT-CHECKOUT"
-  | "RT-PERSON-ACTION"
-  | "RT-ONBOARDING"
-  | "RT-SAVE"
-  | "RT-LOCAL-SIGNAL"
-  | "RT-AFTER19-MANUAL"
-  | "RT-MAP-PREVIOUS"
-  | "RT-PROFILE"
-  | "RT-VENUE-FACTS"
-  | "RT-LABS-BRIDGE"
-  | "RT-MINT-BADGE"
 export type ReturnToCta =
-  | "discover"
-  | "save"
-  | "join-table"
-  | "send-message"
-  | "verify-person"
-  | "verify-19"
-  | "checkout"
-  | "onboarding"
-  | "contribute-signal"
-  | "map-previous"
-  | "edit-profile"
-  | "venue-facts"
-  | "labs-bridge"
-  | "mint-badge"
+  | "SAVE_VENUE"
+  | "JOIN_TABLE"
+  | "OPEN_CHAT"
+  | "SUBMIT_LOCAL_SIGNAL"
+  | "START_CHECKOUT"
+  | "OPEN_AFTER19"
+  | "MINT_BADGE"
 
-export interface ReturnTo {
-  tokenId: ReturnToId
-  route: ReturnToRoute
-  query?: Record<string, string> // allowlist: city, neighborhood, venueId, mode
-  selectedId?: string            // public fixture/entity ID only
-  sheet?: ReturnToSheet
+export interface ReturnToEnvelope {
+  tokenId: `RT-${ReturnToCta}-${number}`
   cta: ReturnToCta
-  activeGate: "account" | "person" | "age" | "payment_kyc" | null
+  gateQueue: ("account" | "person" | "age" | "payment_kyc")[]
+  activeGate: "account" | "person" | "age" | "payment_kyc"
+  venueId?: string // allowlisted public entity ID only
+  tableId?: string // allowlisted public entity ID only
   createdAt: ISODateTime
   expiresAt: ISODateTime
   consumedAt?: ISODateTime
 }
 ```
 
-### `returnTo` 안전 계약
+### v3 `gate` 복귀 envelope 안전 계약
 
-- 저장 위치는 `sessionStorage["ondo.returnTo.v2"]` 하나이며 localStorage·URL에는 넣지 않는다.
-- query는 `city`, `neighborhood`, `venueId`, `mode`만 허용한다. credential, DOB, nationality, 결제수단, 사진 blob은 거절한다.
-- `tokenId→cta`는 Flow Catalog의 canonical pair만 허용한다: `RT-DISCOVER→discover`, `RT-AFTER19-VENUE→verify-19`, `RT-TABLE-JOIN→join-table`, `RT-CHAT-MESSAGE→send-message`, `RT-CHECKOUT→checkout`, `RT-PERSON-ACTION→verify-person`, `RT-ONBOARDING→onboarding`, `RT-SAVE→save`, `RT-LOCAL-SIGNAL→contribute-signal`, `RT-AFTER19-MANUAL→verify-19`, `RT-MAP-PREVIOUS→map-previous`, `RT-PROFILE→edit-profile`, `RT-VENUE-FACTS→venue-facts`, `RT-LABS-BRIDGE→labs-bridge`, `RT-MINT-BADGE→mint-badge`. 임의 조합은 invalid다.
-- `cta`는 최종 resume action이고 `activeGate`는 현재 통과 중인 gate다. Account→Person→원 CTA처럼 gate가 연속돼도 `tokenId`, `cta`, 공개 context는 바꾸지 않고 `activeGate`만 갱신한다. `RT-PERSON-ACTION`은 ID 화면에서 사용자가 Person 확인 자체를 시작한 경우에만 쓴다.
+- 저장 위치는 `sessionStorage["ondo.session.v3"].gate` 하나이며 localStorage·URL·별도 returnTo key에는 넣지 않는다.
+- 선택적 context는 allowlisted 공개 `venueId`, `tableId`만 허용한다. credential, 생년월일, 국적, payment instrument, 사진 blob, private key, access token, raw provider response는 거절한다.
+- 허용되는 `cta`와 token prefix는 `SAVE_VENUE` / `RT-SAVE_VENUE-<epoch-ms>`, `JOIN_TABLE` / `RT-JOIN_TABLE-<epoch-ms>`, `OPEN_CHAT` / `RT-OPEN_CHAT-<epoch-ms>`, `SUBMIT_LOCAL_SIGNAL` / `RT-SUBMIT_LOCAL_SIGNAL-<epoch-ms>`, `START_CHECKOUT` / `RT-START_CHECKOUT-<epoch-ms>`, `OPEN_AFTER19` / `RT-OPEN_AFTER19-<epoch-ms>`, `MINT_BADGE` / `RT-MINT_BADGE-<epoch-ms>`뿐이다.
+- 복원은 CTA, token prefix, `gateQueue`, `activeGate`, 15분 수명, 공개 ID 형식을 검사하고 unknown field를 제거한다.
+- `cta`는 최종 resume action이고 `activeGate`는 현재 통과 중인 gate다. Account→Person→원 CTA처럼 gate가 연속돼도 `tokenId`, `cta`, 공개 context는 바꾸지 않고 `activeGate`만 갱신한다.
 - 중간 gate 성공에서는 token을 소비하지 않는다. 최종 resume action의 모든 guard가 충족된 뒤 mutation 직전에 compare-and-set으로 정확히 한 번 소비한다. refresh·중복 callback으로 CTA를 두 번 실행하지 않는다.
 - 취소는 mutation 없이 원 surface를 복구하고 token을 지운다. 실패 뒤 `재시도`는 만료되지 않은 같은 token을 미소비로 유지하고, `돌아가기`를 선택하면 token을 지운다.
 - schema 오류·만료·허용되지 않은 route이면 token을 폐기하고 `/ondo`로 보낸 뒤 `다시 시도해 주세요 / Please try again`을 노출한다.
@@ -176,7 +151,7 @@ export interface ReturnTo {
 | entity fixture | `FX-[ENTITY]-[NAME]` | `FX-VENUE-SEOUL-001` |
 | 화면 | `SCR-[SURFACE]` | `SCR-MAP` |
 | 이벤트 | `EVT-<DOMAIN>-NNN` | `EVT-REP-001` |
-| 복귀 토큰 | `RT-[CONTEXT]` | `RT-TABLE-JOIN` |
+| 복귀 토큰 | `RT-[RETURN_TO_CTA]-<epoch-ms>` | `RT-JOIN_TABLE-1787133600000` |
 | 계약 테스트 | `CONTRACT-DATA-NNN` | `CONTRACT-DATA-001` |
 
 ### 필수 시나리오
@@ -595,7 +570,7 @@ export interface TableFailureReasonState {
 export interface ChatAccessState {
   status: "CHA-LOCKED" | "CHA-OPEN"
   reason?: "account_required" | "membership_required" | "membership_lost" | "table_cancelled"
-  returnTo?: ReturnTo
+  returnTo?: ReturnToEnvelope
 }
 
 export type MessageState = "MSG-IDLE" | "MSG-SENDING" | "MSG-SENT" | "MSG-FAILED"
@@ -648,7 +623,7 @@ export interface LocalSignalSubmission {
   photo?: PhotoAttachment & { purpose: "local_signal" }
   visitEvidence?: VisitEvidence
   status: "draft" | "submitting" | "submitted" | "failed" | "cancelled"
-  returnTo: ReturnTo
+  returnTo: ReturnToEnvelope
   provenance: Provenance
 }
 ```
@@ -885,18 +860,18 @@ export interface SouvenirBadgeMint {
 
 | 상태 | 기본 저장 | Reset |
 |---|---|---|
-| `ondo.pref.v2`: language, onboarding complete, guide seen, autoNight, diet, budget | localStorage | Settings 또는 QA reset |
-| account fixture와 Person/19+/Payment KYC demo status | sessionStorage 또는 in-memory demo session | expiry / Sign out / tab close / QA reset |
-| `ondo.returnTo.v2` | sessionStorage, one active envelope | success 1회 소비 / cancel / invalid / expiry |
-| `A19-MANUAL-OFF` | sessionStorage | 새 session 또는 명시 reset |
-| saved venues | sessionStorage의 비민감 fixture scenario; future server는 Account data | 사용자 action / session end / QA reset |
-| Table membership, chat metadata | sessionStorage | leave / session end / QA reset |
+| `ondo.preferences.v3`: locale, guideSeen, autoNight, savedVenueIds, discoveryPreferences | localStorage | Settings 또는 QA reset |
+| `ondo.session.v3`: onboarding, persona, account, person, age, ageExpiresAt, paymentKyc, after19, gate, gateState, tableMembershipById, reputation, acceptedActivityEventKeys, stamps, profile | sessionStorage, 비민감 demo session + one active allowlisted gate envelope | expiry / Sign out / tab close / QA reset; gate는 success/cancel/invalid/expiry 때 `null` |
+| `ondo.chat.v2` | sessionStorage, preview URL을 제거한 chat simulation item | session end / QA reset |
+| `ondo.table-outcomes.v2` | sessionStorage, Table simulation outcome/receipt | session end / QA reset |
+| `ondo.labs.v2` | sessionStorage, 비민감 Labs acknowledgement와 simulation state | session end / QA reset |
+| `ondo.accepted-visits.v2` | sessionStorage, 중복 방지용 공개 evidence ID | session end / QA reset |
 | raw photo/blob/object URL | memory only | remove / route unmount / session end |
 | reputation, stamp | sessionStorage의 비민감 fixture scenario; future server는 event/receipt | session end / QA reset |
 | Labs acknowledgement | sessionStorage | session end |
 | bridge/mint simulation | session/scenario store, 실제 잔고와 분리 | QA reset |
 
-실제 credential, passport image, face image, raw provider response, private key, access token을 browser storage에 넣지 않는다. URL에는 city/neighborhood/venue/filter 같은 공개 discovery context만 둔다.
+실제 credential, 생년월일, 국적 원문, passport image, face image, 사진/blob, payment instrument, raw provider response, private key, access token을 browser storage에 넣지 않는다. URL에는 city/neighborhood/venue/filter 같은 공개 discovery context만 둔다.
 
 ---
 
@@ -920,7 +895,7 @@ export interface SouvenirBadgeMint {
 |---|---|
 | `CONTRACT-DATA-001` | malformed/out-of-Korea geometry 거절; cluster/spiderfy가 source coordinate를 변경하지 않음 |
 | `CONTRACT-DATA-002` | heat score 정수 0..100; minimum sample 미달은 score null + limited; stale을 live로 승격 금지 |
-| `CONTRACT-DATA-003` | ReturnTo allowlist, session expiry, one-shot consume, invalid token `/ondo` fallback |
+| `CONTRACT-DATA-003` | v3 gate allowlist, 15분 expiry, one-shot consume, invalid token의 안전한 기본 surface fallback |
 | `CONTRACT-DATA-004` | Account/Person/Age/Payment KYC 독립; age proof가 Payment KYC provenance·status를 변경하지 않음; zkLogin signer 연결이 Account·KYC·타 체인 자산을 만들거나 변경하지 않음 |
 | `CONTRACT-DATA-005` | OpenDID/EAS raw input은 서로 다른 adapter·validator를 거쳐 동일 canonical envelope로만 매핑 |
 | `CONTRACT-DATA-006` | expired/invalid evidence와 unsupported CX credential이 valid/verified가 되지 않음 |

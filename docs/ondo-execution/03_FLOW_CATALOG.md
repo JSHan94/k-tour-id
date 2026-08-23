@@ -16,59 +16,36 @@
 | 상태 | `[DOMAIN]-[STATE]` | `AGE-VERIFIED` | 대문자 domain과 state; 전체 목록은 [상태 모델](./04_STATE_MODEL.md#1-정규-state-id) |
 | Fixture | `FX-[DOMAIN]-[SCENARIO]` | `FX-PER-CX-SUCCESS` | 외부 의존성·경계 조건의 결정적 시나리오 |
 | 화면 | `SCR-[SURFACE]` | `SCR-MAP` | PRD 화면과 일치 |
-| 복귀 토큰 | `RT-[CONTEXT]` | `RT-TABLE-JOIN` | 사용자가 gate 이전에 하던 행동의 안전한 참조 |
+| 복귀 토큰 | `RT-[RETURN_TO_CTA]-<epoch-ms>` | `RT-JOIN_TABLE-1787133600000` | v3 session gate가 원 CTA를 한 번 재개하기 위한 안전한 참조 |
 
 `returnTo`의 정규 shape는 다음과 같다.
 
 ```ts
-type ReturnToId =
-  | "RT-DISCOVER"
-  | "RT-AFTER19-VENUE"
-  | "RT-TABLE-JOIN"
-  | "RT-CHAT-MESSAGE"
-  | "RT-CHECKOUT"
-  | "RT-PERSON-ACTION"
-  | "RT-ONBOARDING"
-  | "RT-SAVE"
-  | "RT-LOCAL-SIGNAL"
-  | "RT-AFTER19-MANUAL"
-  | "RT-MAP-PREVIOUS"
-  | "RT-PROFILE"
-  | "RT-VENUE-FACTS"
-  | "RT-LABS-BRIDGE"
-  | "RT-MINT-BADGE";
+type ReturnToCta =
+  | "SAVE_VENUE"
+  | "JOIN_TABLE"
+  | "OPEN_CHAT"
+  | "SUBMIT_LOCAL_SIGNAL"
+  | "START_CHECKOUT"
+  | "OPEN_AFTER19"
+  | "MINT_BADGE";
 
-type ReturnTo = {
-  tokenId: ReturnToId;
-  route: "/ondo" | "/ondo/id" | "/ondo/my" | "/ondo/labs";
-  query?: Record<string, string>; // allowlist된 city, neighborhood, venueId, mode만
-  selectedId?: string;            // fixture/public entity ID만
-  sheet?: "venue" | "table" | "checkout" | "after19";
-  cta:
-    | "discover"
-    | "save"
-    | "join-table"
-    | "send-message"
-    | "verify-person"
-    | "verify-19"
-    | "checkout"
-    | "onboarding"
-    | "contribute-signal"
-    | "map-previous"
-    | "edit-profile"
-    | "venue-facts"
-    | "labs-bridge"
-    | "mint-badge";
-  activeGate: "account" | "person" | "age" | "payment_kyc" | null;
+type ReturnToEnvelope = {
+  tokenId: `RT-${ReturnToCta}-${number}`;
+  cta: ReturnToCta;
+  gateQueue: ("account" | "person" | "age" | "payment_kyc")[];
+  activeGate: "account" | "person" | "age" | "payment_kyc";
+  venueId?: string; // allowlist된 공개 entity ID만
+  tableId?: string; // allowlist된 공개 entity ID만
   createdAt: string;
   expiresAt: string;
   consumedAt?: string;
 };
 ```
 
-원본 신분증 값, 국적, 생년월일, credential, 결제수단, 사진 blob은 URL·`returnTo`에 넣지 않는다. `route`, query key·value, `selectedId`, `sheet`, `cta`는 위 allowlist와 공개 entity registry로 검증한다. `cta`는 최종 resume action이고 `activeGate`만 현재 Account·Person·Age·Payment KYC 단계를 나타낸다. 다단계 gate에서도 같은 tokenId·cta·공개 context를 유지하고 마지막 guard가 충족된 뒤 원 CTA mutation 직전에 정확히 한 번만 소비·삭제한다. retry는 미소비 토큰을 유지하고 cancel은 직전 공개 context를 복구한 뒤 삭제한다. 중복 소비, 변조, 만료는 `/ondo`로 복귀하고 `다시 시도해 주세요 / Please try again`을 표시한다. 정규 persistence와 수명은 [상태 모델](./04_STATE_MODEL.md#6-persistence와-개인정보-경계)이 source of truth다.
+원본 신분증 값, 국적, 생년월일, credential, 결제수단, 사진 blob은 URL·gate envelope에 넣지 않는다. v3 구현은 `cta`, `gateQueue`, `activeGate`, token 형식, 15분 수명, 선택적 공개 `venueId`/`tableId`를 allowlist로 검사하고 알 수 없는 필드는 복원 시 버린다. `cta`는 최종 resume action이고 `activeGate`만 현재 Account·Person·Age·Payment KYC 단계를 나타낸다. 다단계 gate에서도 같은 tokenId·cta·공개 context를 유지하고 마지막 guard가 충족된 뒤 원 CTA mutation 직전에 정확히 한 번만 소비한다. retry는 미소비 envelope를 유지하고 cancel은 직전 공개 context를 복구한 뒤 `gate=null`로 만든다. 중복 소비, 변조, 만료는 안전한 기본 화면으로 복귀한다. 정규 persistence와 수명은 [상태 모델](./04_STATE_MODEL.md#6-persistence와-개인정보-경계)이 source of truth다.
 
-`tokenId`와 `cta`는 임의 조합이 아니라 다음 pair만 허용한다: `RT-DISCOVER→discover`, `RT-AFTER19-VENUE→verify-19`, `RT-TABLE-JOIN→join-table`, `RT-CHAT-MESSAGE→send-message`, `RT-CHECKOUT→checkout`, `RT-PERSON-ACTION→verify-person`, `RT-ONBOARDING→onboarding`, `RT-SAVE→save`, `RT-LOCAL-SIGNAL→contribute-signal`, `RT-AFTER19-MANUAL→verify-19`, `RT-MAP-PREVIOUS→map-previous`, `RT-PROFILE→edit-profile`, `RT-VENUE-FACTS→venue-facts`, `RT-LABS-BRIDGE→labs-bridge`, `RT-MINT-BADGE→mint-badge`.
+허용되는 `cta`와 token prefix는 다음뿐이다: `SAVE_VENUE` / `RT-SAVE_VENUE-<epoch-ms>`, `JOIN_TABLE` / `RT-JOIN_TABLE-<epoch-ms>`, `OPEN_CHAT` / `RT-OPEN_CHAT-<epoch-ms>`, `SUBMIT_LOCAL_SIGNAL` / `RT-SUBMIT_LOCAL_SIGNAL-<epoch-ms>`, `START_CHECKOUT` / `RT-START_CHECKOUT-<epoch-ms>`, `OPEN_AFTER19` / `RT-OPEN_AFTER19-<epoch-ms>`, `MINT_BADGE` / `RT-MINT_BADGE-<epoch-ms>`.
 
 ## 1. Gate 체계
 
@@ -86,24 +63,24 @@ type ReturnTo = {
 
 | Flow ID | 이름 | 연결 REQ | 진입 CTA | 전제 | Success | Cancel | Failure | `returnTo` | 9시간 목표 |
 |---|---|---|---|---|---|---|---|---|---|
-| `FL-001` | Guest Discover | `REQ-007`, `REQ-013`, `REQ-017`~`REQ-019` | 앱 열기, 지역·heat·장소 선택 | 없음 | 서울 장소 상세 또는 외부 길찾기 도착 | sheet 닫고 직전 지도 보존 | 지도 fallback 목록·재시도 | `RT-DISCOVER` | `Implemented` |
-| `FL-002` | Age proof → exact After19 venue | `REQ-005`, `REQ-012` | `19+ 장소 보기`, 잠긴 야간 프리뷰 | 일반 장소 상세 사용 가능 | 독립 19+ fixture 성공 후 같은 확장 장소 After19 상세 | 같은 잠긴 장소 상세로 돌아감 | age 이유·재시도·일반 장소 계속 이용 | `RT-AFTER19-VENUE` | `Simulated` |
-| `FL-003` | Table → Image Chat → Feedback | `REQ-008`~`REQ-010`, `REQ-015` | `Table 참여` | Account; 조건부 Person/19+ | 참가→대화→체크인→피드백→평판 변화 | 직전 장소/Table 복귀 | 단계별 retry·안전한 나가기 | `RT-TABLE-JOIN` | `Simulated` |
-| `FL-004` | Checkout/Labs → Stamp | `REQ-006`, `REQ-011`, `REQ-016` | `결제 시뮬레이션 계속` | Account, Payment KYC | KRW 표시 가격·OOKRW read-only settlement hypothesis→별도 unique visit evidence→9에서 10 stamp→Labs badge opt-in | checkout 또는 Labs 닫고 장소/My Korea 복귀 | 자산·stamp 불변, 재시도 | `RT-CHECKOUT`, badge는 `RT-MINT-BADGE` | `Simulated` |
-| `FL-005` | Korean CX | `REQ-001`, `REQ-005` | 홈 도착 뒤 Local Signal·Table의 Person gate 또는 ID 화면의 명시적 확인 | Account, 한국인 경로 선택 | CX fixture로 `PER-VERIFIED`, 보존된 원 CTA 복귀 | Account 상태로 계속 탐색 | 실패·만료·재시도 | gated action의 기존 `RT-LOCAL-SIGNAL` 또는 `RT-TABLE-JOIN`; ID 자체 확인만 `RT-PERSON-ACTION` | `Simulated` |
-| `FL-006` | Residence Card | `REQ-002`, `REQ-005` | 홈 도착 뒤 Local Signal·Table의 Person gate 또는 ID 화면의 명시적 확인 | Account, 장기체류 경로 선택 | 지원 fixture이면 `PER-VERIFIED`, 보존된 원 CTA 복귀 | Account 상태로 계속 탐색 | 미지원 대체 경로·재시도 | gated action의 기존 `RT-LOCAL-SIGNAL` 또는 `RT-TABLE-JOIN`; ID 자체 확인만 `RT-PERSON-ACTION` | `Simulated` |
-| `FL-007` | Short-term onboarding | `REQ-003`, `REQ-005`, `REQ-018` | 첫 실행 `방문 여행객` | `ONB-NEW` | 언어·관심·식이 저장 후 Guest `SCR-MAP` | skip 후 Guest `SCR-MAP` | validation 실패는 기본값 적용 후 Guest `SCR-MAP` | `RT-ONBOARDING` | `Implemented` |
-| `FL-008` | Korean local onboarding | `REQ-001`, `REQ-005`, `REQ-018` | 첫 실행 `한국 로컬` | `ONB-NEW` | Guest 또는 선택 Account로 `SCR-MAP`; CX 시작 없음 | Guest `SCR-MAP` | preference·선택 Account 실패 후 Guest `SCR-MAP`; CX 미호출 | `RT-ONBOARDING` | `Simulated` |
-| `FL-009` | Resident onboarding | `REQ-002`, `REQ-005`, `REQ-018` | 첫 실행 `한국 거주` | `ONB-NEW` | Guest 또는 선택 Account로 `SCR-MAP`; Residence Card 시작 없음 | Guest `SCR-MAP` | preference·선택 Account 실패 후 Guest `SCR-MAP`; Residence 미호출 | `RT-ONBOARDING` | `Simulated` |
-| `FL-010` | Account gate | `REQ-005`, `REQ-008`, `REQ-011` | 저장·Table·메시지·checkout | `ACC-GUEST` | `ACC-ACTIVE` 후 원 CTA 자동 재개 | 원 화면·선택 장소 보존 | 오류 후 Guest 기능 유지 | allowlist의 `RT-SAVE`, `RT-TABLE-JOIN`, `RT-CHAT-MESSAGE`, `RT-CHECKOUT`, `RT-LOCAL-SIGNAL` | `Simulated` |
-| `FL-011` | Save / My Korea | `REQ-005`, `REQ-016` | `저장` | Account | 저장 토글·My Korea 반영 | gate 취소 시 미저장 | 로컬 저장 실패·재시도 | `RT-SAVE` | `Implemented` |
-| `FL-012` | Local signal / first mission | `REQ-003`, `REQ-007`, `REQ-009`, `REQ-015` | `방문 신호 남기기` | Account + Person; 현장 조건 | browser-local 사진 preview + local signal 제출→해당 Visit/Contribution만 상승 | draft 폐기 또는 유지 선택 | 업로드 실패·교체·재시도 | `RT-LOCAL-SIGNAL` | `Simulated` |
-| `FL-013` | Manual 19+ proof | `REQ-012` | After 19 chip, 주류 메뉴 | Account가 없어도 proof 시작 가능; 보관은 Account 필요 | `AGE-VERIFIED`, After19 또는 원 주류 CTA 재개 | 기본 지도 | 실패·만료·재시도 | `RT-AFTER19-MANUAL` | `Simulated` |
-| `FL-014` | Auto After19 | `REQ-012` | KST 19:00 도달 또는 앱 resume | `AGE-VERIFIED` + 미만료 + KST≥19 + auto on + session manual-off 아님 | `A19-ON` banner와 즉시 off | banner에서 off→`A19-MANUAL-OFF` | 계산 실패 시 기본 ONDO | `RT-MAP-PREVIOUS` | `Simulated` |
-| `FL-015` | Optional public profile | `REQ-008`, `REQ-015` | `프로필에 표시` | Account | 선택한 From/Lives in/Languages만 공개 | 변경 없음 | 저장 오류·재시도 | `RT-PROFILE` | `Implemented` |
-| `FL-016` | Evidence / merchant trait | `REQ-004`, `REQ-014` | `가기 전 확인`, offer eligibility 조회 | venue fixture | 분리된 OpenDID/EAS adapter가 canonical envelope로 정규화한 fact 표시 | sheet 닫기 | stale/unknown/error를 명시 | `RT-VENUE-FACTS` | `Contract-only`; 실제 EAS `Deferred` |
-| `FL-017` | Payment KYC | `REQ-005`, `REQ-011` | mock checkout `결제 계속` | Account | `PKY-VERIFIED` 후 동일 checkout 재개 | 결제 전 장소 복귀 | 실패·만료·재시도, 결제 없음 | `RT-CHECKOUT` | `Simulated` |
-| `FL-018` | Labs wallet / bridge | `REQ-004`~`REQ-006`, `REQ-014`, `REQ-016` | Labs의 `지갑 연결`, `Quote`, `Bridge simulation` | Labs 동의, fixture account | simulated 자산·quote·source/destination phase·receipt 표시 | 자산 변화 없이 Labs | 실패·timeout·retry, 자산 불변 | `RT-LABS-BRIDGE` | `SIMULATED`; `Target network: Sui Testnet · Simulated`; AMM `Deferred` |
+| `FL-001` | Guest Discover | `REQ-007`, `REQ-013`, `REQ-017`~`REQ-019` | 앱 열기, 지역·heat·장소 선택 | 없음 | 서울 장소 상세 또는 외부 길찾기 도착 | sheet 닫고 직전 지도 보존 | 지도 fallback 목록·재시도 | gate 없음; URL/history context | `Implemented` |
+| `FL-002` | Age proof → exact After19 venue | `REQ-005`, `REQ-012` | `19+ 장소 보기`, 잠긴 야간 프리뷰 | 일반 장소 상세 사용 가능 | 독립 19+ fixture 성공 후 같은 확장 장소 After19 상세 | 같은 잠긴 장소 상세로 돌아감 | age 이유·재시도·일반 장소 계속 이용 | `OPEN_AFTER19` | `Simulated` |
+| `FL-003` | Table → Image Chat → Feedback | `REQ-008`~`REQ-010`, `REQ-015` | `Table 참여` | Account; 조건부 Person/19+ | 참가→대화→체크인→피드백→평판 변화 | 직전 장소/Table 복귀 | 단계별 retry·안전한 나가기 | `JOIN_TABLE`; 필요 시 `OPEN_CHAT` | `Simulated` |
+| `FL-004` | Checkout/Labs → Stamp | `REQ-006`, `REQ-011`, `REQ-016` | `결제 시뮬레이션 계속` | Account, Payment KYC | KRW 표시 가격·OOKRW read-only settlement hypothesis→별도 unique visit evidence→9에서 10 stamp→Labs badge opt-in | checkout 또는 Labs 닫고 장소/My Korea 복귀 | 자산·stamp 불변, 재시도 | `START_CHECKOUT`; badge는 `MINT_BADGE` | `Simulated` |
+| `FL-005` | Korean CX | `REQ-001`, `REQ-005` | 홈 도착 뒤 Local Signal·Table의 Person gate 또는 ID 화면의 명시적 확인 | Account, 한국인 경로 선택 | CX fixture로 `PER-VERIFIED`, 보존된 원 CTA 복귀 | Account 상태로 계속 탐색 | 실패·만료·재시도 | gated action의 기존 `SUBMIT_LOCAL_SIGNAL` 또는 `JOIN_TABLE` | `Simulated` |
+| `FL-006` | Residence Card | `REQ-002`, `REQ-005` | 홈 도착 뒤 Local Signal·Table의 Person gate 또는 ID 화면의 명시적 확인 | Account, 장기체류 경로 선택 | 지원 fixture이면 `PER-VERIFIED`, 보존된 원 CTA 복귀 | Account 상태로 계속 탐색 | 미지원 대체 경로·재시도 | gated action의 기존 `SUBMIT_LOCAL_SIGNAL` 또는 `JOIN_TABLE` | `Simulated` |
+| `FL-007` | Short-term onboarding | `REQ-003`, `REQ-005`, `REQ-018` | 첫 실행 `방문 여행객` | `ONB-NEW` | 언어·관심·식이 저장 후 Guest `SCR-MAP` | skip 후 Guest `SCR-MAP` | validation 실패는 기본값 적용 후 Guest `SCR-MAP` | gate 없음 | `Implemented` |
+| `FL-008` | Korean local onboarding | `REQ-001`, `REQ-005`, `REQ-018` | 첫 실행 `한국 로컬` | `ONB-NEW` | Guest 또는 선택 Account로 `SCR-MAP`; CX 시작 없음 | Guest `SCR-MAP` | preference·선택 Account 실패 후 Guest `SCR-MAP`; CX 미호출 | gate 없음 | `Simulated` |
+| `FL-009` | Resident onboarding | `REQ-002`, `REQ-005`, `REQ-018` | 첫 실행 `한국 거주` | `ONB-NEW` | Guest 또는 선택 Account로 `SCR-MAP`; Residence Card 시작 없음 | Guest `SCR-MAP` | preference·선택 Account 실패 후 Guest `SCR-MAP`; Residence 미호출 | gate 없음 | `Simulated` |
+| `FL-010` | Account gate | `REQ-005`, `REQ-008`, `REQ-011` | 저장·Table·메시지·checkout | `ACC-GUEST` | `ACC-ACTIVE` 후 원 CTA 자동 재개 | 원 화면·선택 장소 보존 | 오류 후 Guest 기능 유지 | v3 `ReturnToCta` allowlist | `Simulated` |
+| `FL-011` | Save / My Korea | `REQ-005`, `REQ-016` | `저장` | Account | 저장 토글·My Korea 반영 | gate 취소 시 미저장 | 로컬 저장 실패·재시도 | `SAVE_VENUE` | `Implemented` |
+| `FL-012` | Local signal / first mission | `REQ-003`, `REQ-007`, `REQ-009`, `REQ-015` | `방문 신호 남기기` | Account + Person; 현장 조건 | browser-local 사진 preview + local signal 제출→해당 Visit/Contribution만 상승 | draft 폐기 또는 유지 선택 | 업로드 실패·교체·재시도 | `SUBMIT_LOCAL_SIGNAL` | `Simulated` |
+| `FL-013` | Manual 19+ proof | `REQ-012` | After 19 chip, 주류 메뉴 | Account가 없어도 proof 시작 가능; 보관은 Account 필요 | `AGE-VERIFIED`, After19 또는 원 주류 CTA 재개 | 기본 지도 | 실패·만료·재시도 | `OPEN_AFTER19` | `Simulated` |
+| `FL-014` | Auto After19 | `REQ-012` | KST 19:00 도달 또는 앱 resume | `AGE-VERIFIED` + 미만료 + KST≥19 + auto on + session manual-off 아님 | `A19-ON` banner와 즉시 off | banner에서 off→`A19-MANUAL-OFF` | 계산 실패 시 기본 ONDO | gate 없음; session mode | `Simulated` |
+| `FL-015` | Optional public profile | `REQ-008`, `REQ-015` | `프로필에 표시` | Account | 선택한 From/Lives in/Languages만 공개 | 변경 없음 | 저장 오류·재시도 | gate 없음 | `Implemented` |
+| `FL-016` | Evidence / merchant trait | `REQ-004`, `REQ-014` | `가기 전 확인`, offer eligibility 조회 | venue fixture | 분리된 OpenDID/EAS adapter가 canonical envelope로 정규화한 fact 표시 | sheet 닫기 | stale/unknown/error를 명시 | gate 없음 | `Contract-only`; 실제 EAS `Deferred` |
+| `FL-017` | Payment KYC | `REQ-005`, `REQ-011` | mock checkout `결제 계속` | Account | `PKY-VERIFIED` 후 동일 checkout 재개 | 결제 전 장소 복귀 | 실패·만료·재시도, 결제 없음 | `START_CHECKOUT` | `Simulated` |
+| `FL-018` | Labs wallet / bridge | `REQ-004`~`REQ-006`, `REQ-014`, `REQ-016` | Labs의 `지갑 연결`, `Quote`, `Bridge simulation` | Labs 동의, fixture account | simulated 자산·quote·source/destination phase·receipt 표시 | 자산 변화 없이 Labs | 실패·timeout·retry, 자산 불변 | badge gate만 `MINT_BADGE` | `SIMULATED`; `Target network: Sui Testnet · Simulated`; AMM `Deferred` |
 
 ### 2.1 Canonical scenario mapping
 

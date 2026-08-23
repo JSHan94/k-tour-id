@@ -16,7 +16,7 @@
 | State | `[DOMAIN]-[STATE]` | `PER-VERIFIED` | 아래 정규 domain만 사용; 축약·동의어 금지 |
 | Fixture | `FX-[DOMAIN]-[SCENARIO]` | `FX-AGE-SUCCESS` | 동일 입력에 동일 결과를 주는 결정적 test data |
 | Entity fixture | `FX-[ENTITY]-[NAME]` | `FX-VENUE-SEOUL-001` | 공개 entity ID; 민감 데이터 포함 금지 |
-| 복귀 토큰 | `RT-[CONTEXT]` | `RT-AFTER19-VENUE` | [Flow Catalog의 allowlist](./03_FLOW_CATALOG.md#0-id와-표기-규칙)만 직렬화 |
+| 복귀 토큰 | `RT-[RETURN_TO_CTA]-<epoch-ms>` | `RT-OPEN_AFTER19-1787133600000` | [Flow Catalog의 v3 allowlist](./03_FLOW_CATALOG.md#0-id와-표기-규칙)만 직렬화 |
 
 정규 domain:
 
@@ -116,54 +116,30 @@ type Provenance = {
 };
 
 type ReturnToState = {
-  tokenId:
-    | "RT-DISCOVER"
-    | "RT-AFTER19-VENUE"
-    | "RT-TABLE-JOIN"
-    | "RT-CHAT-MESSAGE"
-    | "RT-CHECKOUT"
-    | "RT-PERSON-ACTION"
-    | "RT-ONBOARDING"
-    | "RT-SAVE"
-    | "RT-LOCAL-SIGNAL"
-    | "RT-AFTER19-MANUAL"
-    | "RT-MAP-PREVIOUS"
-    | "RT-PROFILE"
-    | "RT-VENUE-FACTS"
-    | "RT-LABS-BRIDGE"
-    | "RT-MINT-BADGE";
-  route: "/ondo" | "/ondo/id" | "/ondo/my" | "/ondo/labs";
-  query?: Record<string, string>;
-  selectedId?: string;
-  sheet?: "venue" | "table" | "checkout" | "after19";
+  tokenId: `RT-${ReturnToCta}-${number}`;
   cta:
-    | "discover"
-    | "save"
-    | "join-table"
-    | "send-message"
-    | "verify-person"
-    | "verify-19"
-    | "checkout"
-    | "onboarding"
-    | "contribute-signal"
-    | "map-previous"
-    | "edit-profile"
-    | "venue-facts"
-    | "labs-bridge"
-    | "mint-badge";
-  activeGate: "account" | "person" | "age" | "payment_kyc" | null;
+    | "SAVE_VENUE"
+    | "JOIN_TABLE"
+    | "OPEN_CHAT"
+    | "SUBMIT_LOCAL_SIGNAL"
+    | "START_CHECKOUT"
+    | "OPEN_AFTER19"
+    | "MINT_BADGE";
+  gateQueue: ("account" | "person" | "age" | "payment_kyc")[];
+  activeGate: "account" | "person" | "age" | "payment_kyc";
+  venueId?: string;
+  tableId?: string;
   createdAt: string;
   expiresAt: string;
   consumedAt?: string;
 };
 
-type OndoDemoStateV2 = {
-  version: 2;
+type CanonicalDomainState = {
   scenario: Provenance;
   personaId: "PER-TOURIST-SHORT" | "PER-LOCAL-KR" | "PER-RESIDENT-LONG" | null;
   onboarding: "ONB-NEW" | "ONB-IN-PROGRESS" | "ONB-COMPLETE";
   account: "ACC-GUEST" | "ACC-CREATING" | "ACC-ACTIVE" | "ACC-FAILED";
-  returnTo?: ReturnToState;
+  gate?: ReturnToState;
   person: { status: PersonState; adapter: "cx" | "residence" | "passport" | null; expiresAt?: string; provenance: Provenance };
   age: { status: AgeState; expiresAt?: string; provenance: Provenance };
   paymentKyc: { status: PaymentKycState; expiresAt?: string; provenance: Provenance };
@@ -231,6 +207,8 @@ type OndoDemoStateV2 = {
 };
 ```
 
+`CanonicalDomainState`는 domain 전체의 개념 모델이며 그대로 browser storage에 직렬화하는 DTO가 아니다. 실제 v3 저장 필드 allowlist는 [6절](#6-persistence와-개인정보-경계)만 source of truth로 사용한다. 허용되는 CTA/token prefix는 `SAVE_VENUE` / `RT-SAVE_VENUE-<epoch-ms>`, `JOIN_TABLE` / `RT-JOIN_TABLE-<epoch-ms>`, `OPEN_CHAT` / `RT-OPEN_CHAT-<epoch-ms>`, `SUBMIT_LOCAL_SIGNAL` / `RT-SUBMIT_LOCAL_SIGNAL-<epoch-ms>`, `START_CHECKOUT` / `RT-START_CHECKOUT-<epoch-ms>`, `OPEN_AFTER19` / `RT-OPEN_AFTER19-<epoch-ms>`, `MINT_BADGE` / `RT-MINT_BADGE-<epoch-ms>`뿐이다.
+
 외부 credential 원문, 여권 번호, 외국인등록번호, 생년월일, 신분증 이미지, raw provider response는 이 shape에 저장하지 않는다. demo에서는 상태·adapter type·만료 시각·비민감 receipt/evidence 참조만 가진다. 모든 fixture provenance는 `fixtureId`를 필수로 가진다. wallet·bridge·mint fixture는 `truth="SIMULATED"`이며 `truth="TESTNET"`은 검증 가능한 실제 공개 `txRef`가 있을 때만 허용한다. contract-only와 provider 미구성은 각각 `CONTRACT_ONLY`, `NOT_CONFIGURED`로 구분한다. wallet·bridge·mint fixture UI의 정규 표기는 `Target network: Sui Testnet · Simulated`다.
 
 `assetsById`는 USDC/USDT를 chain별 별도 representation으로 보존한다. 통합 USD는 읽기 전용 추정치일 뿐 합쳐진 실제 자산이 아니다. `OOKRW`는 9시간 동안 test token mock settlement 표현이며 KRW 법정화폐 잔고·예금·상환청구권으로 표시하지 않는다.
@@ -263,9 +241,9 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 |---|---|---|---|---|---|---|
 | first open | 없음 | no stored v2 completion | `ONB-NEW` | guide 표시 | memory | `FX-ONB-FIRST` |
 | choose persona | `ONB-NEW` | 유효 persona | `ONB-IN-PROGRESS` | personaId와 기본값 준비 | memory | `FX-ONB-SHORT`, `FX-ONB-KOREAN`, `FX-ONB-RESIDENT` |
-| finish | `ONB-IN-PROGRESS` | 유효 입력 또는 안전한 기본값 | `ONB-COMPLETE` | verification 없이 `SCR-MAP` 이동 | localStorage | persona fixture |
-| skip | `ONB-NEW` 또는 `ONB-IN-PROGRESS` | 없음 | `ONB-COMPLETE` | 기본값으로 Guest `SCR-MAP` 이동 | localStorage | persona fixture |
-| onboarding failure | `ONB-IN-PROGRESS` | validation/account/provider fixture 실패 | `ONB-COMPLETE` | 실패 이유 안내·기본값 적용·Guest `SCR-MAP`; KYC 미요구 | localStorage | persona fixture |
+| finish | `ONB-IN-PROGRESS` | 유효 입력 또는 안전한 기본값 | `ONB-COMPLETE` | verification 없이 `SCR-MAP` 이동 | `ondo.session.v3` | persona fixture |
+| skip | `ONB-NEW` 또는 `ONB-IN-PROGRESS` | 없음 | `ONB-COMPLETE` | 기본값으로 Guest `SCR-MAP` 이동 | `ondo.session.v3` | persona fixture |
+| onboarding failure | `ONB-IN-PROGRESS` | validation/account/provider fixture 실패 | `ONB-COMPLETE` | 실패 이유 안내·기본값 적용·Guest `SCR-MAP`; KYC 미요구 | `ondo.session.v3` | persona fixture |
 | press gated CTA | `ACC-GUEST` | allowlist 검증된 미소비 `returnTo` | `ACC-CREATING` | one-shot RT 생성·gate 열기 | RT는 sessionStorage | `FX-ACC-START` |
 | account success | `ACC-CREATING` | fixture success + RT 미소비 | `ACC-ACTIVE` | 다음 Person·Age·Payment KYC guard가 있으면 같은 RT의 `activeGate`만 갱신; 없으면 원 CTA mutation 직전 1회 소비 | demo session | `FX-ACC-SUCCESS` |
 | account cancel | `ACC-CREATING` | user cancel | `ACC-GUEST` | 원 화면 복귀, mutation 없음 | RT 삭제 | `FX-ACC-CANCEL` |
@@ -293,7 +271,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | age success/fail | `AGE-PENDING` | scenario | `{ "AGE-VERIFIED", "AGE-FAILED" }` | success만 같은 최종 RT의 After19·주류 CTA를 재개하고 mutation 직전 소비; Payment KYC 불변 | demo session | `FX-AGE-SUCCESS`, `FX-AGE-FAIL` |
 | age expiry | `AGE-VERIFIED` | now ≥ expiresAt | `AGE-EXPIRED` | `A19-OFF` 강제 | demo session | `FX-AGE-EXPIRED` |
 | start payment KYC | `{ "PKY-NOT-STARTED", "PKY-FAILED", "PKY-EXPIRED" }` | `ACC-ACTIVE`, checkout RT | `PKY-PENDING` | checkout mutation 없음; Age 불변 | memory | `FX-PKY-PENDING` |
-| payment KYC success/fail | `PKY-PENDING` | scenario | `{ "PKY-VERIFIED", "PKY-FAILED" }` | success만 같은 `RT-CHECKOUT`을 재개하고 결제 mutation 직전 소비; Age 불변 | demo session | `FX-PKY-SUCCESS`, `FX-PKY-FAIL` |
+| payment KYC success/fail | `PKY-PENDING` | scenario | `{ "PKY-VERIFIED", "PKY-FAILED" }` | success만 같은 `START_CHECKOUT` envelope를 재개하고 결제 mutation 직전 소비; Age 불변 | demo session | `FX-PKY-SUCCESS`, `FX-PKY-FAIL` |
 
 ### 4.3 Discovery·After 19
 
@@ -411,13 +389,14 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | 저장소 | 허용 | 금지 | 수명 |
 |---|---|---|---|
 | URL | city, neighborhood, venueId, 공개 filters, list/map mode | 계정·신원·연령·국적·KYC·사진·잔고 | 공유 가능한 공개 context |
-| `localStorage` | `ondo.pref.v2`의 언어·onboarding complete·guide seen·autoNight·식이·가격; 선택적 비민감 demo reset flag | raw proof, credential, PII, 사진, provider response | 사용자가 reset할 때까지 |
-| `sessionStorage` | allowlisted one-shot `returnTo`, fixture scenario, `A19-MANUAL-OFF`, 비민감 simulation status | 신분증·생년월일·국적 원문·payment instrument | tab/session; RT는 terminal success/cancel 또는 invalidation 때 즉시 삭제 |
+| `localStorage` | `ondo.preferences.v3`: locale, guideSeen, autoNight, savedVenueIds, discoveryPreferences | raw proof, credential, PII, 생년월일, 국적, 사진, payment instrument, private key, access token, raw provider response | 사용자가 reset할 때까지 |
+| `sessionStorage` | `ondo.session.v3`: onboarding, persona, account, person, age, ageExpiresAt, paymentKyc, after19, gate, gateState, tableMembershipById, reputation, acceptedActivityEventKeys, stamps, profile | 신분증 원문·credential·생년월일·국적 원문·payment instrument·사진/blob·private key·access token·raw provider response | tab/session; gate는 terminal success/cancel 또는 invalidation 때 `null` |
 | memory | modal, toast, pending request, object URL, raw 선택 사진 | 페이지 종료 뒤 보존 | route/app lifetime |
 | future server | Account, consented public profile, chat, reputation event, evidence receipt | 최소화되지 않은 raw KYC·불필요한 PII | 별도 retention 정책 필요 |
 
-- 키는 반드시 버전을 포함한다: `ondo.pref.v2`, `ondo.returnTo.v2`, `ondo.fixture.v2`.
-- `returnTo`는 [Flow Catalog의 shape와 allowlist](./03_FLOW_CATALOG.md#0-id와-표기-규칙)만 직렬화한다. `cta`는 최종 원 행동이고 `activeGate`만 바꾼다. Account→Person 같은 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한 뒤 즉시 삭제한다. cancel은 직전 공개 context 복구 뒤 삭제하고 retry만 미소비 토큰을 유지한다.
+- main key는 `ondo.preferences.v3`, `ondo.session.v3`다. 별도 `ondo.returnTo.*` key는 없고 allowlisted active `gate` envelope 하나만 `ondo.session.v3` 안에 둔다.
+- feature session key는 `ondo.chat.v2`, `ondo.table-outcomes.v2`, `ondo.labs.v2`, `ondo.accepted-visits.v2`다. 각각 preview URL을 뺀 session chat item, Table outcome/receipt, 비민감 Labs simulation state, 중복 방지용 공개 evidence ID만 보관한다.
+- `gate`는 [Flow Catalog의 v3 shape와 allowlist](./03_FLOW_CATALOG.md#0-id와-표기-규칙)만 복원한다. token은 `RT-${cta}-${epochMs}` 형식이며 unknown field를 버린다. `cta`는 최종 원 행동이고 `activeGate`만 바꾼다. Account→Person 같은 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한다. cancel은 직전 공개 context 복구 뒤 `gate=null`로 만들고 retry만 미소비 envelope를 유지한다.
 - migration 실패 시 공개 preference만 기본값으로 되돌리고 Guest discovery는 유지한다.
 - sign-out/reset은 session 검증 상태, Table·payment·Labs fixture를 제거한다. public map preference는 사용자가 별도로 지울 수 있다.
 

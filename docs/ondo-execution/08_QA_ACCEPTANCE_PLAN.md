@@ -204,7 +204,7 @@ Core 8개 수를 늘리지 않되 아래는 release-required다.
 - E2E-AUTH-01: Guest는 지도·검색·상세·길찾기 사용 가능
 - E2E-AUTH-02: 저장·Table 진입 시 FL-010 Account 요청 후 FL-011/원 CTA returnTo 복귀
 - E2E-AUTH-03: account failure → 같은 returnTo retry 또는 Guest 탐색
-- E2E-AUTH-04: Account→Person 다단계 gate가 같은 `RT-LOCAL-SIGNAL` 또는 `RT-TABLE-JOIN`의 최종 CTA를 보존하고, success callback 2회에도 원 mutation 1회
+- E2E-AUTH-04: Account→Person 다단계 gate가 같은 `SUBMIT_LOCAL_SIGNAL` 또는 `JOIN_TABLE` envelope의 최종 CTA를 보존하고, success callback 2회에도 원 mutation 1회
 - E2E-AUTH-05: invalid/expired/unsafe returnTo → token 폐기, `/ondo`, 재시도 안내
 - E2E-ID-01: 한국인 CX 성공 → 첫 Local signal 게시
 - E2E-ID-02: CX 거절·취소 → 지도와 작성 draft 유지
@@ -281,7 +281,7 @@ Core 8개 수를 늘리지 않되 아래는 release-required다.
 | age-expired | `AGE-EXPIRED` + 원 CTA `returnTo` |
 | after19-manual-off-remount | `A19-MANUAL-OFF` + route 왕복/remount 후 유지; new session `A19-OFF` |
 | account-failed | `ACC-FAILED` + same valid `RT-*` + retry/Guest return |
-| return-invalid | invalid/expired `ondo.returnTo.v2` 폐기 + `/ondo` |
+| return-invalid | invalid/expired `ondo.session.v3.gate` 폐기 + 안전한 기본 ONDO surface |
 | payment-kyc-failed | `PKY-FAILED` + checkout mutation 0 |
 | payment-kyc-expired | `PKY-EXPIRED` + checkout 차단 + venue return |
 | table-full | `TAV-FULL` + `TMB-FAILED` + `TFR-FULL` + `CHA-LOCKED` |
