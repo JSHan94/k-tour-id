@@ -228,7 +228,10 @@ export function GateOverlay() {
 
   useEffect(() => {
     if (!gate || gate.consumedAt || !isReturnToUsable(gate)) return
-    window.requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[data-gate-initial-focus]")?.focus())
+    const dialog = dialogRef.current
+    if (!dialog?.contains(document.activeElement)) {
+      dialog?.querySelector<HTMLElement>("[data-gate-initial-focus]")?.focus({ preventScroll: true })
+    }
   }, [gate?.activeGate, gate?.tokenId, state.gateState])
 
   const queue = useMemo(() => gate?.gateQueue ?? [], [gate?.gateQueue])
@@ -276,6 +279,7 @@ export function GateOverlay() {
     if (event.detail <= 1) return
     event.preventDefault()
     event.stopPropagation()
+    dialogRef.current?.querySelector<HTMLElement>("[data-gate-initial-focus]")?.focus({ preventScroll: true })
   }
 
   function handleDialogKeyDown(event: KeyboardEvent<HTMLElement>) {
