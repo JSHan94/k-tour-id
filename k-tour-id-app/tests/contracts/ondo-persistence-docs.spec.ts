@@ -180,3 +180,22 @@ test("CONTRACT-DATA-024 hydration validates return contexts against canonical en
   expect(provider).toContain("const pendingGate = restoredGate && hasRegisteredReturnContext(restoredGate) ? restoredGate : null")
   expect(provider).toContain("table.venueId === envelope.venueId")
 })
+
+test("CONTRACT-DATA-025 canonical docs type and describe registry-safe return restoration exactly", () => {
+  const stateModel = canonicalDoc("04_STATE_MODEL.md")
+  const adapters = canonicalDoc("05_DATA_ADAPTER_CONTRACTS.md")
+  const returnCtaType = stateModel.indexOf("type ReturnToCta =")
+  const returnStateType = stateModel.indexOf("type ReturnToState =")
+
+  expect(returnCtaType).toBeGreaterThan(-1)
+  expect(returnCtaType).toBeLessThan(returnStateType)
+  expect(stateModel.slice(returnStateType, stateModel.indexOf("type CanonicalDomainState"))).toContain("cta: ReturnToCta;")
+  for (const doc of [stateModel, adapters]) {
+    expect(doc).toContain("canonical map 또는 Table venue registry")
+    expect(doc).toContain("canonical `TABLES` registry")
+    expect(doc).toContain("table↔venue pair")
+    expect(doc).toContain("별도 toast 없이 안전한 map surface")
+  }
+  expect(adapters).not.toContain("허용되지 않은 route")
+  expect(adapters).toContain("허용되지 않은 context")
+})
