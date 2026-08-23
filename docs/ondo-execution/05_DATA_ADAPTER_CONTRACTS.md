@@ -133,7 +133,7 @@ export interface ReturnToEnvelope {
 | `OPEN_AFTER19` | `age` | optional | forbidden |
 | `MINT_BADGE` | `person` | forbidden | forbidden |
 
-`ordered subset`은 비어 있지 않고 위 순서를 보존하며 중복을 허용하지 않는다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. hydration은 venue를 canonical map 또는 Table venue registry에, table을 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair를 함께 검증한다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
+`ordered subset`은 비어 있지 않고 위 순서를 보존하며 중복을 허용하지 않는다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. hydration은 venue를 canonical map 또는 Table venue registry에, table을 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair를 함께 검증한다. 복원·재저장 시 `activeGate`보다 앞선 모든 gate는 충족 상태여야 하며 `activeGate` 자체는 아직 미충족 상태여야 한다. Account/Person을 통과하지 않고 Age로 점프하는 것처럼 session state와 맞지 않는 진행도는 envelope 전체를 폐기한다. 정상 부분 진행은 Account 충족→active Person, Account+Person 충족→active Age, Account 충족→active Payment KYC처럼 앞 단계 상태와 현재 gate가 일치해야 한다. 소비 시에도 원 CTA mutation 직전에 `gateQueue` 전체를 다시 검증하고 미충족 gate가 있으면 원 mutation 없이 안전한 map surface로 복귀한다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
 
 ### 실행 진실성 규칙
 

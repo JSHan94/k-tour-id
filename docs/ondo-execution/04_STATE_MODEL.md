@@ -410,7 +410,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | `OPEN_AFTER19` | `age` | optional | forbidden |
 | `MINT_BADGE` | `person` | forbidden | forbidden |
 
-`ordered subset`은 한 개 이상이며 표의 순서를 보존하고 중복 gate를 허용하지 않는다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. hydration은 `venueId`를 canonical map 또는 Table venue registry에, `tableId`를 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair까지 일치시킨다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix·registry가 잘못된 envelope는 gate를 폐기하고 별도 toast 없이 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
+`ordered subset`은 한 개 이상이며 표의 순서를 보존하고 중복 gate를 허용하지 않는다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. hydration은 `venueId`를 canonical map 또는 Table venue registry에, `tableId`를 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair까지 일치시킨다. 복원·재저장 시 `activeGate`보다 앞선 모든 gate는 충족 상태여야 하고 `activeGate` 자체는 아직 미충족 상태여야 한다. 예를 들어 Account가 Guest이고 Person이 미확인인데 JOIN queue의 Age로 건너뛴 envelope는 폐기한다. Account 충족 뒤 active Person, Account+Person 충족 뒤 active Age, Account 충족 뒤 active Payment KYC는 정상 부분 진행이다. 소비 시에도 원 CTA mutation 직전에 `gateQueue` 전체를 다시 검증하고 하나라도 미충족이면 mutation 없이 map fallback한다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix·registry·진행도가 잘못된 envelope는 gate를 폐기하고 별도 toast 없이 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
 - migration 실패 시 공개 preference만 기본값으로 되돌리고 Guest discovery는 유지한다.
 - sign-out/reset은 session 검증 상태, Table·payment·Labs fixture를 제거한다. public map preference는 사용자가 별도로 지울 수 있다.
 
