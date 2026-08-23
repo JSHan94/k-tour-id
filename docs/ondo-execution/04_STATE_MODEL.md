@@ -115,16 +115,18 @@ type Provenance = {
   isSimulation: boolean;
 };
 
+type ReturnToCta =
+  | "SAVE_VENUE"
+  | "JOIN_TABLE"
+  | "OPEN_CHAT"
+  | "SUBMIT_LOCAL_SIGNAL"
+  | "START_CHECKOUT"
+  | "OPEN_AFTER19"
+  | "MINT_BADGE";
+
 type ReturnToState = {
   tokenId: `RT-${ReturnToCta}-${number}`;
-  cta:
-    | "SAVE_VENUE"
-    | "JOIN_TABLE"
-    | "OPEN_CHAT"
-    | "SUBMIT_LOCAL_SIGNAL"
-    | "START_CHECKOUT"
-    | "OPEN_AFTER19"
-    | "MINT_BADGE";
+  cta: ReturnToCta;
   gateQueue: ("account" | "person" | "age" | "payment_kyc")[];
   activeGate: "account" | "person" | "age" | "payment_kyc";
   venueId?: string;
