@@ -333,13 +333,13 @@ export function GateOverlay() {
           <span className={styles.truth}><i />{state.gateState === "unsupported" ? t.unavailableTruth : t.simulation}</span>
         </header>
 
-        <div className={styles.gateProgress} aria-label={t.progress}>
+        <div className={styles.gateProgress} role="list" aria-label={t.progress} data-testid="ondo-gate-progress">
           {queue.map((kind, index) => {
             const currentIndex = queue.indexOf(active)
             const done = index < currentIndex
             const current = kind === active
             return (
-              <div key={`${kind}-${index}`} className={current ? styles.gateStepCurrent : done ? styles.gateStepDone : styles.gateStep}>
+              <div key={`${kind}-${index}`} role="listitem" className={current ? styles.gateStepCurrent : done ? styles.gateStepDone : styles.gateStep}>
                 <span>{done ? <Check size={13} /> : index + 1}</span><small>{GATE_LABELS[state.locale][kind]}</small>
                 {index < queue.length - 1 ? <ChevronRight size={13} /> : null}
               </div>

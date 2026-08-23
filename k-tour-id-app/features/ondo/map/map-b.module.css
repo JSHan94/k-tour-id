@@ -100,6 +100,7 @@
 .mapKey > div > span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
 .mapKey > div > b { color: #a5a098; font-weight: 400; }
 .mapKey > small { color: #6c665f; font-size: 12px; line-height: 16px; }
+.mapKeyCompact { display: none; }
 .mapKey i { display: grid; width: 30px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 12px; font-size: 12px; font-style: normal; font-weight: 800; }
 .clusterSwatch { border: 1px solid #6d6861; background: rgb(255 255 255 / 96%); color: #4c4842; }
 .scoreSwatch { background: #c94832; color: #fff; }
@@ -175,14 +176,17 @@
   .rail { max-width: calc(100% - 144px); }
   .rail button { padding-inline: 7px; font-size: 11px; }
   .preferenceSummary {
-    top: calc(104px + env(safe-area-inset-top));
+    top: calc(112px + env(safe-area-inset-top));
     right: 10px;
     left: auto;
-    width: 132px;
-    max-width: 132px;
+    width: 152px;
+    max-width: 152px;
+    gap: 5px;
+    padding-inline: 9px;
   }
+  .preferenceSummary span { overflow: visible; text-overflow: clip; }
   .preferencePanel {
-    top: calc(154px + env(safe-area-inset-top));
+    top: calc(162px + env(safe-area-inset-top));
     right: 10px;
     left: 10px;
     max-height: calc(100% - 238px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
@@ -232,7 +236,9 @@
   .mapKey > div { gap: 3px; }
   .mapKey > div > span { font-size: 0; }
   .mapKey > div > b { display: none; }
-  .mapKey > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mapKey > small { overflow: visible; text-overflow: clip; white-space: nowrap; }
+  .mapKeyFull { display: none; }
+  .mapKeyCompact { display: inline; }
   .locate {
     right: auto;
     bottom: 10px;

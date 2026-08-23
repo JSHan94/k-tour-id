@@ -125,6 +125,12 @@ export function OnboardingLayer() {
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
+      skip()
+      return
+    }
     if (event.key !== "Tab") return
     const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
       .filter((element) => element.offsetParent !== null)

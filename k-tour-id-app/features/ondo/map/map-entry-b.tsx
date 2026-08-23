@@ -102,8 +102,13 @@ const COPY = {
     topSignals: "Highest simulated scores at this zoom",
     moreSignals: "More simulated scores as you zoom in",
     allSignals: "All simulated scores at this zoom",
+    topSignalsCompact: "Top simulated scores here",
+    moreSignalsCompact: "More simulated scores here",
+    allSignalsCompact: "All simulated scores here",
     filteredResult: "Filtered result shown on the map",
     filteredResults: "Filtered results shown on the map",
+    filteredResultCompact: "Filtered result on map",
+    filteredResultsCompact: "Filtered results on map",
     preferences: "Starting interests",
     editPreferences: "Edit interests",
     noPreferences: "Tune interests",
@@ -167,8 +172,13 @@ const COPY = {
     topSignals: "이 줌의 높은 시뮬레이션 점수",
     moreSignals: "확대하면 시뮬레이션 점수가 더 보여요",
     allSignals: "이 줌의 모든 시뮬레이션 점수",
+    topSignalsCompact: "높은 시뮬레이션 점수",
+    moreSignalsCompact: "더 많은 시뮬레이션 점수",
+    allSignalsCompact: "전체 시뮬레이션 점수",
     filteredResult: "검색 결과를 지도에 표시",
     filteredResults: "검색 결과를 지도에 표시",
+    filteredResultCompact: "검색 결과 지도 표시",
+    filteredResultsCompact: "검색 결과 지도 표시",
     preferences: "시작 관심사",
     editPreferences: "관심사 수정",
     noPreferences: "관심사 설정",
@@ -869,7 +879,7 @@ export function MapEntryB() {
           aria-label={filteredMap
             ? `${resultCount(venues.length, locale, after19On)}. ${filteredLegendScore ?? "—"} ${copy.scoreKey}. ${filteredLegendCopy}. ${copy.mapKeyLabel}`
             : `${copy.mapKeyLabel} ${signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}.`}
-        ><div><span><i className={styles.clusterSwatch}>{filteredMap ? venues.length : 12}×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>{filteredMap ? filteredLegendScore ?? "—" : 82}</i>{copy.scoreKey}</span></div><small>{filteredMap ? filteredLegendCopy : signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}</small></div> : null}
+        ><div><span><i className={styles.clusterSwatch}>{filteredMap ? venues.length : 12}×</i>{copy.clusterKey}</span><b>·</b><span><i className={styles.scoreSwatch}>{filteredMap ? filteredLegendScore ?? "—" : 82}</i>{copy.scoreKey}</span></div><small><span className={styles.mapKeyFull}>{filteredMap ? filteredLegendCopy : signalZoomTier === "top" ? copy.topSignals : signalZoomTier === "more" ? copy.moreSignals : copy.allSignals}</span><span className={styles.mapKeyCompact}>{filteredMap ? venues.length === 1 ? copy.filteredResultCompact : copy.filteredResultsCompact : signalZoomTier === "top" ? copy.topSignalsCompact : signalZoomTier === "more" ? copy.moreSignalsCompact : copy.allSignalsCompact}</span></small></div> : null}
         {!online && mapState !== "error" ? <p className={`${styles.locationFeedback} ${styles.offlineFeedback}`} role="status" data-testid="ondo-b-offline-status"><strong>{copy.offlineTitle}</strong> · {copy.offlineSnapshot}</p> : null}
         {online && view === "map" && mapState !== "error" && locationState !== "idle" ? <p id="ondo-b-location-status" className={styles.locationFeedback} role="status" data-testid="ondo-b-location-status">{locationState === "locating" ? copy.locating : locationState === "ready" && nearestVenue ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}` : locationState === "ready" ? copy.locationReady : locationState === "denied" ? copy.locationDenied : copy.locationUnsupported}</p> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
