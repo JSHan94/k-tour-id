@@ -247,7 +247,7 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 | skip | `ONB-NEW` 또는 `ONB-IN-PROGRESS` | 없음 | `ONB-COMPLETE` | 기본값으로 Guest `SCR-MAP` 이동 | `ondo.session.v3` | persona fixture |
 | onboarding failure | `ONB-IN-PROGRESS` | validation/account/provider fixture 실패 | `ONB-COMPLETE` | 실패 이유 안내·기본값 적용·Guest `SCR-MAP`; KYC 미요구 | `ondo.session.v3` | persona fixture |
 | press gated CTA | `ACC-GUEST` | allowlist 검증된 미소비 `returnTo` | `ACC-CREATING` | one-shot RT 생성·gate 열기 | RT는 sessionStorage | `FX-ACC-START` |
-| account success | `ACC-CREATING` | fixture success + RT 미소비 | `ACC-ACTIVE` | 다음 Person·Age·Payment KYC guard가 있으면 같은 RT의 `activeGate`만 갱신; 없으면 원 CTA mutation 직전 1회 소비 | demo session | `FX-ACC-SUCCESS` |
+| account success | `ACC-CREATING` | fixture success + RT 미소비 | `ACC-ACTIVE` | 완료된 Account를 `gateQueue` head에서 제거하고 다음 미충족 gate를 `activeGate`로 지정; remaining gate가 없으면 원 CTA mutation 직전 1회 소비 | demo session | `FX-ACC-SUCCESS` |
 | account cancel | `ACC-CREATING` | user cancel | `ACC-GUEST` | 원 화면 복귀, mutation 없음 | RT 삭제 | `FX-ACC-CANCEL` |
 | account failure | `ACC-CREATING` | fixture failure | `ACC-FAILED` | retry/Guest 계속 | memory | `FX-ACC-FAIL` |
 | retry | `ACC-FAILED` | user retry | `ACC-CREATING` | 동일 RT 유지 | sessionStorage | `FX-ACC-SUCCESS` |
@@ -398,19 +398,19 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 
 - main key는 `ondo.preferences.v3`, `ondo.session.v3`다. 별도 `ondo.returnTo.*` key는 없고 allowlisted active `gate` envelope 하나만 `ondo.session.v3` 안에 둔다.
 - feature session key는 `ondo.chat.v2`, `ondo.table-outcomes.v2`, `ondo.labs.v2`, `ondo.accepted-visits.v2`다. 각각 preview URL을 뺀 session chat item, Table outcome/receipt, 비민감 Labs simulation state, 중복 방지용 공개 evidence ID만 보관한다.
-- `gate`는 아래 CTA별 v3 matrix와 [Flow Catalog의 v3 shape](./03_FLOW_CATALOG.md#0-id와-표기-규칙)가 모두 맞을 때만 복원한다. token은 정확히 `RT-${cta}-${Date.parse(createdAt)}`여야 하고 unknown field를 버린다. `cta`는 최종 원 행동이고 `activeGate`만 바꾼다. Account→Person 같은 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한다. cancel은 직전 공개 context 복구 뒤 `gate=null`로 만들고 retry만 미소비 envelope를 유지한다.
+- `gate`는 아래 CTA별 v3 matrix와 [Flow Catalog의 v3 shape](./03_FLOW_CATALOG.md#0-id와-표기-규칙)가 모두 맞을 때만 복원한다. token은 정확히 `RT-${cta}-${Date.parse(createdAt)}`여야 하고 unknown field를 버린다. `cta`, token, 공개 context는 유지하고 중간 success마다 완료된 `gateQueue` head를 제거해 `activeGate`를 첫 remaining gate로 갱신한다. 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한다. cancel은 직전 공개 context 복구 뒤 `gate=null`로 만들고 retry만 미소비 envelope를 유지한다.
 
-| CTA | 허용 `gateQueue` | `venueId` | `tableId` |
+| CTA | Full required gate plan | `venueId` | `tableId` |
 |---|---|---|---|
 | `SAVE_VENUE` | `account` | required | forbidden |
-| `JOIN_TABLE` | ordered subset of `account → person → age` | required | required |
+| `JOIN_TABLE` | `account` + `person` when `table.requiresPerson` + `age` when `table.alcohol` | required | required |
 | `OPEN_CHAT` | `account` | forbidden | required |
-| `SUBMIT_LOCAL_SIGNAL` | ordered subset of `account → person` | required | forbidden |
-| `START_CHECKOUT` | ordered subset of `account → payment_kyc` | required | forbidden |
+| `SUBMIT_LOCAL_SIGNAL` | `account → person` | required | forbidden |
+| `START_CHECKOUT` | `account → payment_kyc` | required | forbidden |
 | `OPEN_AFTER19` | `age` | optional | forbidden |
 | `MINT_BADGE` | `person` | forbidden | forbidden |
 
-`ordered subset`은 한 개 이상이며 표의 순서를 보존하고 중복 gate를 허용하지 않는다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. hydration은 `venueId`를 canonical map 또는 Table venue registry에, `tableId`를 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair까지 일치시킨다. 복원·재저장 시 `activeGate`보다 앞선 모든 gate는 충족 상태여야 하고 `activeGate` 자체는 아직 미충족 상태여야 한다. 예를 들어 Account가 Guest이고 Person이 미확인인데 JOIN queue의 Age로 건너뛴 envelope는 폐기한다. Account 충족 뒤 active Person, Account+Person 충족 뒤 active Age, Account 충족 뒤 active Payment KYC는 정상 부분 진행이다. 소비 시에도 원 CTA mutation 직전에 `gateQueue` 전체를 다시 검증하고 하나라도 미충족이면 mutation 없이 map fallback한다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix·registry·진행도가 잘못된 envelope는 gate를 폐기하고 별도 toast 없이 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
+CTA와 등록된 context에서 full required gate plan을 다시 계산한다. `gateQueue`는 그 plan에서 현재 session이 아직 충족하지 못한 gate의 정확한 목록이며 canonical order를 보존하고 중복을 허용하지 않는다. 생략된 required gate는 session에서 이미 충족 상태여야 하고 `activeGate`는 `gateQueue[0]`이어야 한다. 따라서 Guest의 Local Signal `[person]`, Guest checkout `[payment_kyc]`, Guest·Person 미확인 상태의 주류 JOIN `[age]`, Age가 필요 없는 일반 Table JOIN `[age]`는 모두 폐기한다. 정상 partial progress는 Account 충족 뒤 JOIN `[person, age]`, Account+Person 충족 뒤 JOIN `[age]`, Account 충족 뒤 checkout `[payment_kyc]`다. 소비 시에도 원 CTA mutation 직전에 full required gate plan 전체를 다시 검증하고 하나라도 미충족이면 mutation 없이 map fallback한다. required context가 빠지거나 forbidden context가 들어오거나 ID가 명시적 `null`이면 envelope 전체를 거절한다. `OPEN_AFTER19.venueId`만 생략할 수 있으며 명시적 `null`은 생략으로 보지 않는다. hydration은 `venueId`를 canonical map 또는 Table venue registry에, `tableId`를 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair까지 일치시킨다. `OPEN_CHAT`과 `MINT_BADGE`는 provider가 명시적으로 소유하는 복원 호환 destination이며 임의 CTA의 catch-all route가 아니다. schema·matrix·registry·full-plan 진행도가 잘못된 envelope는 gate를 폐기하고 별도 toast 없이 안전한 map surface로 복귀하며 Labs로 보내지 않는다.
 - migration 실패 시 공개 preference만 기본값으로 되돌리고 Guest discovery는 유지한다.
 - sign-out/reset은 session 검증 상태, Table·payment·Labs fixture를 제거한다. public map preference는 사용자가 별도로 지울 수 있다.
 

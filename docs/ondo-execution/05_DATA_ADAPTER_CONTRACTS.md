@@ -118,22 +118,22 @@ export interface ReturnToEnvelope {
 - context는 아래 CTA별 matrix에 필요한 allowlisted 공개 `venueId`, `tableId`만 허용한다. credential, 생년월일, 국적, payment instrument, 사진 blob, private key, access token, raw provider response는 거절한다.
 - 허용되는 `cta`와 token prefix는 `SAVE_VENUE` / `RT-SAVE_VENUE-<epoch-ms>`, `JOIN_TABLE` / `RT-JOIN_TABLE-<epoch-ms>`, `OPEN_CHAT` / `RT-OPEN_CHAT-<epoch-ms>`, `SUBMIT_LOCAL_SIGNAL` / `RT-SUBMIT_LOCAL_SIGNAL-<epoch-ms>`, `START_CHECKOUT` / `RT-START_CHECKOUT-<epoch-ms>`, `OPEN_AFTER19` / `RT-OPEN_AFTER19-<epoch-ms>`, `MINT_BADGE` / `RT-MINT_BADGE-<epoch-ms>`뿐이다.
 - 복원은 CTA, token, `gateQueue`, `activeGate`, 15분 수명, 공개 ID 형식을 검사하고 unknown field를 제거한다. token의 `<epoch-ms>`는 `Date.parse(createdAt)`과 정확히 같아야 한다.
-- `cta`는 최종 resume action이고 `activeGate`는 현재 통과 중인 gate다. Account→Person→원 CTA처럼 gate가 연속돼도 `tokenId`, `cta`, 공개 context는 바꾸지 않고 `activeGate`만 갱신한다.
+- `cta`는 최종 resume action이고 `activeGate`는 현재 통과 중인 gate다. Account→Person→원 CTA처럼 gate가 연속돼도 `tokenId`, `cta`, 공개 context는 바꾸지 않으며 완료된 `gateQueue` head를 제거한 뒤 첫 remaining gate로 `activeGate`를 갱신한다.
 - 중간 gate 성공에서는 token을 소비하지 않는다. 최종 resume action의 모든 guard가 충족된 뒤 mutation 직전에 compare-and-set으로 정확히 한 번 소비한다. refresh·중복 callback으로 CTA를 두 번 실행하지 않는다.
 - 취소는 mutation 없이 원 surface를 복구하고 token을 지운다. 실패 뒤 `재시도`는 만료되지 않은 같은 token을 미소비로 유지하고, `돌아가기`를 선택하면 token을 지운다.
 - schema 오류·만료·허용되지 않은 context·미등록 context이면 token을 폐기하고 별도 toast 없이 안전한 map surface로 복귀한다. malformed CTA를 Labs로 보내지 않으며, 검증된 `MINT_BADGE`만 명시적 branch로 Labs를 연다.
 
-| CTA | 허용 `gateQueue` | `venueId` | `tableId` |
+| CTA | Full required gate plan | `venueId` | `tableId` |
 |---|---|---|---|
 | `SAVE_VENUE` | `account` | required | forbidden |
-| `JOIN_TABLE` | ordered subset of `account → person → age` | required | required |
+| `JOIN_TABLE` | `account` + `person` when `table.requiresPerson` + `age` when `table.alcohol` | required | required |
 | `OPEN_CHAT` | `account` | forbidden | required |
-| `SUBMIT_LOCAL_SIGNAL` | ordered subset of `account → person` | required | forbidden |
-| `START_CHECKOUT` | ordered subset of `account → payment_kyc` | required | forbidden |
+| `SUBMIT_LOCAL_SIGNAL` | `account → person` | required | forbidden |
+| `START_CHECKOUT` | `account → payment_kyc` | required | forbidden |
 | `OPEN_AFTER19` | `age` | optional | forbidden |
 | `MINT_BADGE` | `person` | forbidden | forbidden |
 
-`ordered subset`은 비어 있지 않고 위 순서를 보존하며 중복을 허용하지 않는다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. hydration은 venue를 canonical map 또는 Table venue registry에, table을 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair를 함께 검증한다. 복원·재저장 시 `activeGate`보다 앞선 모든 gate는 충족 상태여야 하며 `activeGate` 자체는 아직 미충족 상태여야 한다. Account/Person을 통과하지 않고 Age로 점프하는 것처럼 session state와 맞지 않는 진행도는 envelope 전체를 폐기한다. 정상 부분 진행은 Account 충족→active Person, Account+Person 충족→active Age, Account 충족→active Payment KYC처럼 앞 단계 상태와 현재 gate가 일치해야 한다. 소비 시에도 원 CTA mutation 직전에 `gateQueue` 전체를 다시 검증하고 미충족 gate가 있으면 원 mutation 없이 안전한 map surface로 복귀한다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
+CTA와 등록된 context에서 full required gate plan을 다시 계산한다. `gateQueue`는 그 plan에서 현재 session이 아직 충족하지 못한 gate의 정확한 목록이며 canonical order를 보존하고 `activeGate`는 첫 remaining gate다. 생략된 required gate는 session에서 이미 충족 상태여야 한다. Guest의 Local Signal `[person]`, Guest checkout `[payment_kyc]`, Guest·Person 미확인 상태의 주류 JOIN `[age]`, Age가 필요 없는 일반 Table JOIN `[age]`는 거절한다. 정상 partial progress는 Account 충족 뒤 JOIN `[person, age]`, Account+Person 충족 뒤 JOIN `[age]`, Account 충족 뒤 checkout `[payment_kyc]`다. 원 CTA mutation 직전에 full required gate plan 전체를 다시 검증하고 미충족 gate가 있으면 원 mutation 없이 안전한 map surface로 복귀한다. required context 누락, forbidden context 추가, 명시적 `null` ID는 모두 envelope 단위로 거절한다. `OPEN_AFTER19.venueId`만 생략 가능하고 명시적 `null`은 생략이 아니다. hydration은 venue를 canonical map 또는 Table venue registry에, table을 canonical `TABLES` registry에 대조하고 `JOIN_TABLE`의 table↔venue pair를 함께 검증한다. 현재 제품 `beginAction` 호출이 직접 만드는 `SAVE_VENUE`, `JOIN_TABLE`, `SUBMIT_LOCAL_SIGNAL`, `START_CHECKOUT`, `OPEN_AFTER19` 규칙과 provider가 명시적으로 복원하는 `OPEN_CHAT`, `MINT_BADGE` compatibility destination을 함께 고정한 계약이다.
 
 ### 실행 진실성 규칙
 
