@@ -23,9 +23,9 @@ import type {
   Surface,
 } from "../../contracts/domain"
 import {
-  areReturnToGatesSatisfied,
+  areRequiredReturnToGatesSatisfied,
   createReturnTo,
-  hasCoherentReturnToProgress,
+  hasExactReturnToGatePlan,
   isReturnToUsable,
   restoreReturnTo,
 } from "../../contracts/return-to"
@@ -172,11 +172,30 @@ function hasRegisteredReturnContext(envelope: ReturnToEnvelope) {
   return true
 }
 
+function requiredReturnToGatePlan(envelope: ReturnToEnvelope): readonly GateKind[] | null {
+  if (envelope.cta === "SAVE_VENUE" || envelope.cta === "OPEN_CHAT") return ["account"]
+  if (envelope.cta === "SUBMIT_LOCAL_SIGNAL") return ["account", "person"]
+  if (envelope.cta === "START_CHECKOUT") return ["account", "payment_kyc"]
+  if (envelope.cta === "OPEN_AFTER19") return ["age"]
+  if (envelope.cta === "MINT_BADGE") return ["person"]
+  if (envelope.cta === "JOIN_TABLE") {
+    const table = envelope.tableId ? TABLES.find((candidate) => candidate.id === envelope.tableId) : undefined
+    if (!table) return null
+    const plan: GateKind[] = ["account"]
+    if (table.requiresPerson) plan.push("person")
+    if (table.alcohol) plan.push("age")
+    return plan
+  }
+  return null
+}
+
 function applyReturnTo(state: OndoState, envelope: ReturnToEnvelope): OndoState {
+  const requiredGatePlan = requiredReturnToGatePlan(envelope)
   if (
     !isReturnToUsable(envelope)
     || !hasRegisteredReturnContext(envelope)
-    || !areReturnToGatesSatisfied(envelope, (gate) => gateSatisfied(state, gate))
+    || !requiredGatePlan
+    || !areRequiredReturnToGatesSatisfied(requiredGatePlan, (gate) => gateSatisfied(state, gate))
   ) {
     return { ...state, gate: null, gateState: "idle", surface: { kind: "map" } }
   }
@@ -235,9 +254,11 @@ export function OndoProvider({ children }: { children: ReactNode }) {
         ageExpiresAt: session.ageExpiresAt,
         paymentKyc: session.paymentKyc ?? "PKY-NOT-STARTED",
       }
+      const restoredGatePlan = restoredGate ? requiredReturnToGatePlan(restoredGate) : null
       const pendingGate = restoredGate
+        && restoredGatePlan
         && hasRegisteredReturnContext(restoredGate)
-        && hasCoherentReturnToProgress(restoredGate, (gate) => gateSatisfied(restoredGateState, gate))
+        && hasExactReturnToGatePlan(restoredGate, restoredGatePlan, (gate) => gateSatisfied(restoredGateState, gate))
         ? restoredGate
         : null
       const restoredAgeExpiry = typeof session.ageExpiresAt === "string" ? new Date(session.ageExpiresAt).getTime() : Number.NaN
@@ -284,10 +305,12 @@ export function OndoProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!state.hydrated) return
+    const persistentGatePlan = state.gate ? requiredReturnToGatePlan(state.gate) : null
     const persistentGate = state.gate
+      && persistentGatePlan
       && isReturnToUsable(state.gate)
       && hasRegisteredReturnContext(state.gate)
-      && hasCoherentReturnToProgress(state.gate, (gate) => gateSatisfied(state, gate))
+      && hasExactReturnToGatePlan(state.gate, persistentGatePlan, (gate) => gateSatisfied(state, gate))
       ? state.gate
       : null
     window.localStorage.setItem(LOCAL_KEY, JSON.stringify({
@@ -348,11 +371,12 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       let next = current
       if (kind === "account") next = { ...next, account: "ACC-ACTIVE" }
       if (kind === "person") next = { ...next, person: "PER-VERIFIED", reputation: { ...next.reputation, identity: "verified" } }
-      if (kind === "age") next = { ...next, age: "AGE-VERIFIED", ageExpiresAt: new Date(Date.now() + 86_400_000).toISOString() }
-      if (kind === "payment_kyc") next = { ...next, paymentKyc: "PKY-VERIFIED" }
-      const currentIndex = current.gate.gateQueue.indexOf(kind)
-      const nextGate = current.gate.gateQueue[currentIndex + 1]
-      if (nextGate) return { ...next, gate: { ...current.gate, activeGate: nextGate }, gateState: "pending" }
+          if (kind === "age") next = { ...next, age: "AGE-VERIFIED", ageExpiresAt: new Date(Date.now() + 86_400_000).toISOString() }
+          if (kind === "payment_kyc") next = { ...next, paymentKyc: "PKY-VERIFIED" }
+          const currentIndex = current.gate.gateQueue.indexOf(kind)
+          const remainingQueue = current.gate.gateQueue.slice(currentIndex + 1)
+          const nextGate = remainingQueue[0]
+          if (nextGate) return { ...next, gate: { ...current.gate, gateQueue: remainingQueue, activeGate: nextGate }, gateState: "pending" }
       return applyReturnTo(next, current.gate)
     }),
     failGate: (kind, unsupported = false) => setState((current) => {

@@ -120,21 +120,22 @@ export function restoreReturnTo(value: unknown, now = new Date()): ReturnToEnvel
   }
 }
 
-export function hasCoherentReturnToProgress(
+export function hasExactReturnToGatePlan(
   envelope: ReturnToEnvelope,
+  requiredGatePlan: readonly GateKind[],
   isGateSatisfied: (gate: GateKind) => boolean,
 ) {
-  const activeIndex = envelope.gateQueue.indexOf(envelope.activeGate)
-  return activeIndex >= 0
-    && envelope.gateQueue.slice(0, activeIndex).every(isGateSatisfied)
-    && !isGateSatisfied(envelope.activeGate)
+  const remainingGates = requiredGatePlan.filter((gate) => !isGateSatisfied(gate))
+  return remainingGates.length > 0
+    && matchesGateSequence(envelope.gateQueue, remainingGates)
+    && envelope.activeGate === remainingGates[0]
 }
 
-export function areReturnToGatesSatisfied(
-  envelope: ReturnToEnvelope,
+export function areRequiredReturnToGatesSatisfied(
+  requiredGatePlan: readonly GateKind[],
   isGateSatisfied: (gate: GateKind) => boolean,
 ) {
-  return envelope.gateQueue.every(isGateSatisfied)
+  return requiredGatePlan.every(isGateSatisfied)
 }
 
 export function advanceReturnTo(envelope: ReturnToEnvelope, completedGate: GateKind): ReturnToEnvelope {
