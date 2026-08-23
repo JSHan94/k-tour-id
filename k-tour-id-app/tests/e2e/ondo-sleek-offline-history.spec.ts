@@ -209,4 +209,51 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
     expect(getBRuntimeEvidence(page).product).toEqual([])
     await setOffline(context, page, false)
   })
+
+  test("B traversal guard reattaches exactly once after cleanup while invalid and non-B events pass downstream", async ({ page }) => {
+    await seedB(page)
+    await gotoB(page, "?campaign=guard-lifecycle")
+    await page.locator("[data-city='seoul']").click()
+    await page.getByTestId("ondo-b-view-toggle").click()
+    await page.getByTestId("nav-my").click()
+    await expect(page.getByTestId("nav-my")).toHaveAttribute("aria-current", "page")
+    await page.getByTestId("nav-ondo").click()
+    await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+
+    const receipt = await page.evaluate((eventName) => {
+      const originalUrl = `${location.pathname}${location.search}${location.hash}`
+      const state = history.state as Record<string, unknown>
+      const entry = state.__ondoBDiscovery
+      let ownedTraversals = 0
+      let downstreamPopstates = 0
+      const onOwnedTraversal = () => { ownedTraversals += 1 }
+      const onDownstreamPopstate = (event: PopStateEvent) => {
+        downstreamPopstates += 1
+        event.stopImmediatePropagation()
+      }
+      window.addEventListener(eventName, onOwnedTraversal)
+      window.addEventListener("popstate", onDownstreamPopstate, { capture: true })
+
+      History.prototype.replaceState.call(history, state, "", `/ondo-b-shadow${location.search}`)
+      window.dispatchEvent(new PopStateEvent("popstate", { state }))
+      History.prototype.replaceState.call(history, state, "", originalUrl)
+      window.dispatchEvent(new PopStateEvent("popstate", { state: { ...state, __ondoBDiscovery: { v: 0, level: "city" } } }))
+      window.dispatchEvent(new PopStateEvent("popstate", { state: { ...state, __ondoBDiscovery: entry } }))
+
+      window.removeEventListener(eventName, onOwnedTraversal)
+      window.removeEventListener("popstate", onDownstreamPopstate, { capture: true })
+      return { ownedTraversals, downstreamPopstates, pathname: location.pathname }
+    }, "ondo:b-discovery-traversal")
+
+    expect(receipt).toEqual({ ownedTraversals: 1, downstreamPopstates: 2, pathname: "/ondo-b" })
+    await traverse(page, "back")
+    await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
+    await expect.poll(() => page.evaluate(() => ({
+      activeCity: document.activeElement?.getAttribute("data-city"),
+      entry: history.state?.__ondoBDiscovery,
+    }))).toMatchObject({
+      activeCity: "seoul",
+      entry: { level: "nation", focus: { kind: "city", city: "seoul" } },
+    })
+  })
 })
