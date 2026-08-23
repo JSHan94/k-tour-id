@@ -7,15 +7,16 @@
 | R5-reviewed Evidence/Product/Harness | `39687c33…` / `9ec3d192…` / `12354bcf…` |
 | R5-reviewed baseline / verdict | `46 × 6 = 276`, digest `4cfbed3b…` · `5/5 COMPLETE · NOT CLEAN · objective S2 3` |
 | R5-RETRY reviewed tuple / verdict | Evidence `b0d25fe…` · Product `30dcb136…` · Harness `ee19adb…` · digest `f1ec9b0c…` · `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1` |
-| Current successor | Product `5b519e60eb7825e2573ca6692683315cbf508401` · Harness/frozen candidate `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032` · digest `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de` |
-| Current Automated QA | `PASS`; exact nonpixel GREEN plus visual `300/300`, high-risk `144/144`, landscape `2/2`, backdrop `9/9`, reporter anomalies `0`, health `163/163`, postflight clean |
+| Failed CLEAN1 | `5b519e6… / b68fc18… / 1dcfacb7…` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
+| Current successor | Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` · Harness/frozen candidate `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` · digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` |
+| Current Automated QA | `FULL PASS`: nonpixel B `555 PASS + 135 intentional SKIP / 690`, A `22/22`, contracts `27/27`; visual no-update `300/300`, high-risk `144/144`, safeguards `20/20`, aggregate `464/464`; anomalies `0` |
 | Route | `/ondo-b` |
 | 범위 | 외국인 우선 F&B 웹앱 프론트엔드 데모 |
 | 실제 장소 | 서울 200 + 부산 200 = 400 |
 | ONDO preview signal | 도시별 40, 총 80 · `SIMULATED` |
 | After19 subset | night-category signal만 서울 7 + 부산 10 = 17 · `SIMULATED` |
 
-이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. R5-RETRY는 reviewed tuple에서 `5/5 COMPLETE · 0/5 CLEAN`이었고 raw `S2 11 + S3 1`을 남겼다. Current successor에는 모든 raw finding correction과 독립 audit correction이 구현됐고 exact full automated receipt는 PASS로 봉인됐다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. R5-RETRY와 첫 strict CLEAN1은 모두 clean credit 없이 끝났다. Current successor에는 onboarding Escape/hydration, Gate semantics, canonical focus guard, short-landscape/control geometry, Labs target truth, singular filtered-map evidence correction이 구현됐다. Exact full automated receipt는 PASS로 봉인됐고 blind clean round가 ready다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
 
 ## 1. 다섯 가지 실행 질문에 대한 답
 
@@ -23,7 +24,7 @@
 |---|---|---|
 | 온보딩이 빠졌는가? | `아니오` | 새 3단계 온보딩이 실제로 있다. 가치 설명 → 단기 여행자/한국인/장기체류자 선택 → F&B 관심사 → Guest 지도이며, skip/failure도 인증 없이 지도로 간다. 기존 화면의 묵시적 재사용이 아니다. |
 | 9시간 이상 무입력 병렬 실행이 가능한가? | `프론트엔드 데모에는 예` | 19 REQ, 18 Flow, 상태·fixture·실패·복귀·owner·merge·rollback·QA Gate가 고정돼 있다. 품질 Gate 미통과 시 2시간 단위 확장 루프를 자동 반복한다. 외부 계정·법무·provider provisioning·배포 권한은 자동 결정 범위가 아니다. |
-| 만든 것의 명세가 빠짐없이 남는가? | `예, registry 기준` | 19/19 REQ, FL-001~018, 126 checkpoint(`123 ACTUAL / 3 N/A / 0 GAP`), 50 visual cases/48 states, 6 viewport/300 frozen baselines, KO/EN surface와 외부 연동 등급을 추적한다. R5-RETRY raw 원문과 `141 carry / 141 changed / 18 new` provenance를 보존하고 exact automated PASS를 별도 frozen pack에 봉인한다. |
+| 만든 것의 명세가 빠짐없이 남는가? | `예, registry 기준` | 19/19 REQ, FL-001~018, 126 checkpoint(`123 ACTUAL / 3 N/A / 0 GAP`), 50 visual cases/48 states, 6 viewport/300 frozen baselines, KO/EN surface와 외부 연동 등급을 추적한다. Failed CLEAN1 원문을 byte-identical로 보존하고 current 300-file ledger/digest를 별도 pack에 봉인하되 automated PASS는 실제 GREEN 이후에만 기록한다. |
 | 한 번에 높은 완성도로 갈 만큼 구체적인가? | `프론트엔드 후보에는 예` | 성공만이 아니라 cancel/error/retry/returnTo, persistence, privacy, truth, a11y, map fallback까지 잠겼다. 실제 운영 서비스 완성은 백엔드·공급자·법무·운영체계가 별도 필요하다. |
 | 많은 병렬 agent/token을 써도 충돌 없이 실행 가능한가? | `예, 실행팩 기준` | 경로 소유, frozen contracts, CCR, shared SHA 동기화, durable evidence, 동일 tuple의 두 clean round 규칙이 있다. 과거 clean round는 현재 제품에 재사용하지 않으며 현재 streak는 0/2다. 토큰 소진 자체를 품질로 보지 않고 Gate 실패·미해결 issue만 루프 조건으로 쓴다. |
 
@@ -99,4 +100,4 @@
 - 50 visual cases/48 state IDs를 여섯 exact viewport에서 검증해 300/300 committed no-update baseline을 만들고 clipping, nav/CTA overlap, 12px 미만 metadata, 44px 미만 control, serious/critical Axe issue가 없어야 한다.
 - 126 checkpoint 모두 machine registry에서 `pixel | functional_only` disposition을 가져야 하며 grouped journey를 exact named step 126개로 과장하지 않는다.
 - 다섯 독립 역할이 같은 tuple에서 actionable S0/S1/S2를 0으로 판정한 clean round가 두 번 연속이어야 한다.
-- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`; R5-RETRY는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이고 current correction과 full automated gate는 PASS다. Blind clean round는 `READY`다.
+- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`; R5-RETRY와 b68 CLEAN1은 historical NOT CLEAN이다. Current automated gate는 full PASS이고 blind clean round는 `READY`다.

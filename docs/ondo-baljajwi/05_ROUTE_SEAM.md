@@ -2,7 +2,7 @@
 
 상태: `ACTIVE · FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
 
-R5-RETRY가 검토한 tuple은 evidence `b0d25fe…`, Product `30dcb136…`, Harness `ee19adb…`, digest `f1ec9b0c…`이며 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. Current successor는 Product `5b519e6…`, Harness/frozen candidate `b68fc18…`, digest `1dcfacb7…`, `50/48/300`, `123 ACTUAL / 3 N/A / 0 GAP`다. Exact current-tuple full automated gate is PASS; blind review is ready with clean streak `0/2`.
+R5-RETRY가 검토한 tuple은 evidence `b0d25fe…`, Product `30dcb136…`, Harness `ee19adb…`, digest `f1ec9b0c…`이며 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 후속 b68 CLEAN1도 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`으로 실패했다. Current successor는 Product `5c6383e…`, Harness/frozen candidate `c05a2d0…`, digest `addf064…`, `50/48/300`, `123 ACTUAL / 3 N/A / 0 GAP`다. Exact nonpixel과 visual gate는 모두 GREEN이고 blind clean round는 ready이며 clean streak는 `0/2`다.
 
 ## 원칙
 

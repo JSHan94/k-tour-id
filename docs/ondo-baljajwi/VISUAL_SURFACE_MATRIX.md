@@ -39,7 +39,7 @@
 
 ## 현재 visual 검수 계약
 
-- `50` visual case / `48` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-RETRY reviewed baseline은 harness `ee19adb…`, digest `f1ec9b0c…`, 47/45/282였다. Current candidate는 Product `5b519e6…`, Harness/frozen candidate `b68fc18…`, digest `1dcfacb7…`, `300 = 141 carry + 135 fix + 6 fix+helper + 18 new`, 각 viewport `50`; exact no-update acceptance는 `300/300` GREEN으로 봉인됐다.
+- `50` visual case / `48` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-RETRY reviewed baseline은 harness `ee19adb…`, digest `f1ec9b0c…`, 47/45/282였다. Current candidate는 Product `5c6383e…`, Harness/frozen candidate `c05a2d0…`, digest `addf064…`, `300 = 294 unchanged from b68 + 6 unique corrected paths`, 각 viewport `50`; exact first-only no-update `300/300`은 GREEN이다.
 - 126 flow checkpoint 각각은 machine registry에서 `pixel` 또는 사유 있는 `functional_only`로 연결한다.
 - visible metadata 12px 이상, control 44×44 이상, horizontal overflow·nav/CTA overlap 0.
 - serious/critical Axe issue 0; keyboard focus, Escape, focus return을 실제 surface에서 검사.
@@ -47,4 +47,4 @@
 - heat score는 solid color circle, neutral cluster count는 outline geometry로 구분한다.
 - near-white/hairline/negative-space 문법을 전체 surface에 적용하고 heat 이외 색은 status 의미에만 쓴다.
 
-R5-RETRY reviewed tuple은 Product `30dcb13…`, Harness `ee19adb…`, digest `f1ec9b0c…`이고 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. Current successor Product `5b519e6…`, Harness/frozen candidate `b68fc18…`, digest `1dcfacb7…`에는 그 correction과 후속 offline/history/saved-return/Gate-focus/bounded-wait correction이 구현됐다. Exact nonpixel과 visual gate는 GREEN으로 봉인됐다: `300/300`, high-risk `144/144`, landscape `2/2`, backdrop `9/9`. Fresh closure는 `READY`; clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다. 두 번의 동일-tuple 5/5 clean round 전에는 reviewer CLEAN 또는 release PASS로 표시하지 않는다.
+R5-RETRY reviewed tuple은 Product `30dcb13…`, Harness `ee19adb…`, digest `f1ec9b0c…`이고 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 후속 b68 CLEAN1도 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`으로 실패했다. Current successor `5c6383e… / c05a2d0… / addf064…`에는 onboarding/gate/focus, short landscape와 360 pairwise control geometry, Labs token, singular filtered-map correction이 구현됐다. D4 네 번과 D3 세 번의 refresh operation은 `360×800 filtered` 중복 때문에 여섯 고유 PNG를 바꾼다. Exact nonpixel과 visual gate는 GREEN이고 fresh blind clean round는 `READY`; clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다.

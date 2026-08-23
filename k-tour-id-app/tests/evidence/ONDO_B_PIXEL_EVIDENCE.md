@@ -10,11 +10,11 @@ Primary registry: `tests/helpers/ondo-b-visual-evidence.ts`
 
 | Field | Value |
 |---|---|
-| Product boundary | `5b519e60eb7825e2573ca6692683315cbf508401` |
-| Harness / frozen candidate | `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032` |
-| Baseline digest | `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de` |
+| Product boundary | `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` |
+| Harness / frozen candidate | `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` |
+| Baseline digest | `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` |
 | Pixel inventory | `300 = 50 per viewport` |
-| Provenance | `141 R5R-CARRY + 135 R5R-FIX + 6 R5R-FIX+HARNESS + 18 R5R-NEW` |
+| Provenance | `294 unchanged from b68 candidate + 6 unique corrected paths`; D4 4 + D3 3 refresh operations overlap on 360 filtered map |
 | Lifecycle | `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY` |
 
 The immutable R5-RETRY reviewer input remains historical evidence candidate `b0d25fe634d9d50a8668501f0fde5f641153168b`, Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc`, Harness `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f`, digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91`, verdict `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`. It is not current clean credit. R4/R5/R5-RETRY review/coverage originals remain byte-immutable.
@@ -36,7 +36,7 @@ The flow suite uses composite journeys and grouped steps. This harness does not 
 
 ## Frozen capture inputs
 
-- frozen current candidate: Product `5b519e6…`, Harness/frozen candidate `b68fc18…`, digest `1dcfacb7…`
+- frozen current candidate: Product `5c6383e…`, Harness/frozen candidate `c05a2d0…`, digest `addf064…`
 - viewport: the six exact sizes above
 - locale and local/session fixtures: declared per case
 - local application fonts: wait for `document.fonts.ready`
@@ -45,7 +45,7 @@ The flow suite uses composite journeys and grouped steps. This harness does not 
 
 The basemap replacement is not a blanket canvas mask. MapLibre still renders ONDO cluster circles, point markers, heat scores, contribution rings and labels. Every visible map-backed frame is sampled through the common paint guard; blank compositor frames are rejected before capture. Headers, lists, sheets, notices, navigation and truth copy are never masked.
 
-Current Harness retains the paint guard qualified by earlier rounds and extends the registry with expiry/session-reset/discovery-reset closure states. `a9b3193…` makes Place Peek use the history-aware canonical setup and wait for map-ready. `dbb2248…` permits explicit update mode to replace an obsolete painted baseline without demanding a heat receipt from the obsolete image first; ordinary no-update runs still require every paint and state-neutral invariant. Exact full no-update acceptance is now sealed separately from candidate generation.
+Current Harness retains the paint guard qualified by earlier rounds and extends the registry with expiry/session-reset/discovery-reset closure states. It additionally requires exact singular filtered-map truth, the locale-invariant Labs target token, and `maxDiffPixels=0` for the two semantic truth cases. Ordinary no-update runs still require every paint and state-neutral invariant. Exact full no-update acceptance is sealed GREEN at `300/300` for the current tuple.
 
 ## Assertions attached to every screenshot
 
@@ -94,7 +94,7 @@ find tests/visual -path '*ondo-b-flow-pixels*spec.ts-snapshots/*.png' -type f -p
   | shasum -a 256
 ```
 
-Baseline changes are inventoried image-by-image and linked to the R5-RETRY issue/fix ledger. A blanket snapshot update is not accepted as release evidence. The exact full uninterrupted `300/300` no-update gate is sealed with high-risk repeat3 `144/144`, landscape `2/2`, backdrop `9/9`, reporter anomalies `0`, and `163/163` health samples.
+Baseline changes are inventoried image-by-image and linked to the R5-RETRY issue/fix ledger. A blanket snapshot update is not accepted as release evidence. The exact full uninterrupted `300/300` no-update gate is sealed with high-risk repeat3 `144/144`, safeguards `20/20` (including landscape `2/2` and backdrop `9/9`), reporter anomalies `0`, and `254/254` health samples.
 
 ## Baseline census and provenance
 
@@ -115,6 +115,6 @@ The new cases are `AFTER19-EXPIRED-REASON`, `SESSION-RESET-CONFIRM`, and `DISCOV
 
 ## Current acceptance state
 
-The R5-RETRY review found raw `S2 11 + S3 1` across width/pointer feedback, history, landmarks/reflow, reset/localization, offline/expiry/focus. Exact current Product `5b519e6…` and Harness/frozen candidate `b68fc18…` contain that correction set plus offline hitbox/client-local traversal, saved-return/FL-011, Gate-focus, and bounded Age Gate wait audit corrections; the visual registry remains `50/48/300` with digest `1dcfacb7…`.
+The R5-RETRY review found raw `S2 11 + S3 1` across width/pointer feedback, history, landmarks/reflow, reset/localization, offline/expiry/focus. The first b68 CLEAN1 then failed with raw `S1 1 + S2 5`. Exact current Product `5c6383e…` and Harness/frozen candidate `c05a2d0…` contain those corrections plus explicit onboarding Escape/hydration focus, Gate list semantics, canonical `2px + 2px` focus locking, `667/740/844/926` landscape and 360 control pairwise assertions, locale-invariant Labs truth, and singular filtered-map semantic guards. The visual registry remains `50/48/300` with digest `addf064…`.
 
-Current exact frozen-candidate nonpixel and visual GREEN are sealed in [`SLEEK-R5-RETRY/frozen-receipt.md`](../../../docs/ondo-baljajwi/evidence/SLEEK-R5-RETRY/frozen-receipt.md). The separate minimal strict-blind pack is [`SLEEK-R5R-FINAL-b68fc18`](../../../docs/ondo-baljajwi/evidence/SLEEK-R5R-FINAL-b68fc18/frozen-receipt.md). Lifecycle is `FULL AUTOMATED GATE PASS`; blind review is `READY`; clean streak remains `0/2`; deployment remains `NOT DEPLOYED`.
+The current minimal pack is [`SLEEK-R5R-FINAL-c05a2d0`](../../../docs/ondo-baljajwi/evidence/SLEEK-R5R-FINAL-c05a2d0/frozen-receipt.md). Its nonpixel and visual receipts are both `GREEN`; the blind clean round is `READY`; clean streak remains `0/2`; deployment remains `NOT DEPLOYED`. The b68 pack and failed CLEAN1 artifacts remain immutable history.

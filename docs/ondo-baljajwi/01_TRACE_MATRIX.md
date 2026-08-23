@@ -4,7 +4,7 @@
 
 Historical R5 product SHA: `9ec3d192d0ebdc9614d980bdb173633aee16fc17`.
 
-R5-RETRY가 검토한 tuple은 Evidence `b0d25fe634d9d50a8668501f0fde5f641153168b`, Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc`, Harness `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f`, digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91`이며 `5/5 COMPLETE · 0/5 CLEAN`이었다. Current successor는 Product `5b519e60eb7825e2573ca6692683315cbf508401`, Harness/frozen candidate `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032`, digest `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de`다.
+R5-RETRY가 검토한 tuple은 Evidence `b0d25fe634d9d50a8668501f0fde5f641153168b`, Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc`, Harness `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f`, digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91`이며 `5/5 COMPLETE · 0/5 CLEAN`이었다. 후속 `5b519e6… / b68fc18… / 1dcfacb7…` CLEAN1도 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`으로 끝나 clean credit가 없다. Current successor는 Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1`, Harness/frozen candidate `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c`, digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6`다.
 
 ## 1. 판정 규칙
 
@@ -60,7 +60,7 @@ R5-RETRY가 검토한 tuple은 Evidence `b0d25fe634d9d50a8668501f0fde5f641153168
 | `FL-017` | `B-E2E-FL-017-ENTRY` ACTUAL | `B-E2E-FL-017-DECISION` ACTUAL | `B-E2E-FL-017-CANCEL` ACTUAL | `B-E2E-FL-017-ERROR` ACTUAL | `B-E2E-FL-017-RETRY` ACTUAL | `B-E2E-FL-017-TERMINAL` ACTUAL | `B-E2E-FL-017-RETURN` ACTUAL |
 | `FL-018` | `B-E2E-FL-018-ENTRY` ACTUAL | `B-E2E-FL-018-DECISION` ACTUAL | `B-E2E-FL-018-CANCEL` ACTUAL | `B-E2E-FL-018-ERROR` ACTUAL | `B-E2E-FL-018-RETRY` ACTUAL | `B-E2E-FL-018-TERMINAL` ACTUAL | `B-E2E-FL-018-RETURN` ACTUAL |
 
-현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 123 ACTUAL · 3 N/A · 0 GAP`이다. 세 N/A는 FL-007/008/009 RETRY뿐이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. Current exact nonpixel receipt는 B `525 pass + 123 intentional skip`, A `22/22`, contracts `27/27`, fail/flaky/retry `0`으로, visual receipt는 `300/300`, high-risk `144/144`, landscape `2/2`, backdrop `9/9`로 봉인됐다.
+현재 registry 판정은 정확히 `18 flows · 126 checkpoints · 123 ACTUAL · 3 N/A · 0 GAP`이다. 세 N/A는 FL-007/008/009 RETRY뿐이다. 18개 composite journey가 여러 checkpoint를 함께 증명하고 각 checkpoint는 assertion/proof 또는 reasoned N/A와 연결된다. 모든 checkpoint가 같은 이름의 독립 `test.step`을 가진다고 주장하지 않는다. Current static discovery는 B `690/40`, A `22/3`, contracts `27/4`다. Exact nonpixel은 B `555 PASS + 135 intentional SKIP`, A `22/22`, contracts `27/27`, failure/flaky/retry `0`으로 GREEN이며 visual도 no-update `300/300`, high-risk `144/144`, safeguards `20/20`, aggregate `464/464`로 GREEN이다.
 
 ## 4. Browser suites
 
@@ -78,15 +78,15 @@ R5-RETRY가 검토한 tuple은 Evidence `b0d25fe634d9d50a8668501f0fde5f641153168
 
 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`
 
-SLEEK R5-RETRY는 reviewed tuple에서 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. Current successor correction과 exact-tuple full automated gate는 PASS다. Blind clean round는 `READY`, clean streak는 아직 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+SLEEK R5-RETRY는 reviewed tuple에서 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 첫 strict CLEAN1은 D3/D4 finding 때문에 실패했다. Current successor는 onboarding Escape/hydration focus, Gate list semantics, canonical focus `2px + 2px` guard, `667/740/844/926` landscape와 `360` control pairwise geometry, locale-invariant Labs target token, filtered-map singular truth와 strict `0px` semantic pixel guard를 통합했다. Exact nonpixel과 visual gate는 모두 GREEN이고 blind clean round는 `READY`; clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
 
 목표 baseline은 `50 × 6 = 300` PNG다. `AFTER19-EXPIRED-REASON`, `SESSION-RESET-CONFIRM`, `DISCOVERY-RESET-CONFIRM`을 추가해 retry closure UI를 고정한다.
 
-`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. Current digest는 `1dcfacb7…`; 300장은 `141 carry + 135 fix + 6 fix+helper + 18 new`. Exact nonpixel과 uninterrupted no-update visual 결과가 모두 GREEN으로 봉인됐다.
+`B_CHECKPOINT_VISUAL_EVIDENCE`가 126개 checkpoint 각각을 `pixel` 또는 `functional_only`로 매핑한다. 외부 vector tile은 결정론적 empty source로 대체하되 ONDO marker, cluster, label, sheet, navigation, truth copy는 mask하지 않는다. Current digest는 `addf064…`; 이전 b68 candidate 대비 `294`장은 동일하고 `6`개 고유 경로가 바뀌었다. 수정 작업은 D4 네 PNG와 D3 세 PNG 갱신이지만 `360×800 CITY-FILTERED-MAP-EN`이 겹치므로 고유 변경은 여섯이다. Exact first-only no-update `300/300`과 high-risk repeat3 `144/144`가 GREEN으로 봉인됐다.
 
 ## 6. Content evidence
 
-다음 KO/EN surface evidence ID가 registry에 있다. Current exact content/browser result is part of the sealed nonpixel GREEN; screenshot equality is sealed by the exact visual GREEN receipt.
+다음 KO/EN surface evidence ID가 registry에 있다. Current exact content/browser result는 nonpixel GREEN에 포함되고 screenshot equality는 visual no-update `300/300` GREEN으로 봉인됐다.
 
 `B-COPY-ONBOARDING-KO`, `B-COPY-ONBOARDING-EN`, `B-COPY-NATION-KO`, `B-COPY-NATION-EN`, `B-COPY-CITY-LIST-KO`, `B-COPY-CITY-LIST-EN`, `B-COPY-PLACE-KO`, `B-COPY-PLACE-EN`, `B-COPY-ACCOUNT-GATE-KO`, `B-COPY-ACCOUNT-GATE-EN`, `B-COPY-AGE-GATE-KO`, `B-COPY-AGE-GATE-EN`, `B-COPY-TABLES-KO`, `B-COPY-TABLES-EN`, `B-COPY-TABLE-CHAT-KO`, `B-COPY-TABLE-CHAT-EN`, `B-COPY-LOCAL-SIGNAL-KO`, `B-COPY-LOCAL-SIGNAL-EN`, `B-COPY-CHECKOUT-KO`, `B-COPY-CHECKOUT-EN`, `B-COPY-IDENTITY-KO`, `B-COPY-IDENTITY-EN`, `B-COPY-PROFILE-KO`, `B-COPY-PROFILE-EN`, `B-COPY-LABS-KO`, `B-COPY-LABS-EN`, `B-COPY-AFTER19-KO`, `B-COPY-AFTER19-EN`.
 
