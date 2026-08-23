@@ -93,6 +93,7 @@
 .locate { position: absolute; z-index: 5; right: 72px; bottom: calc(176px + env(safe-area-inset-bottom)); display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #dededb; border-radius: 50%; background: #fff; color: #24221f; }
 .locate:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
 .locationFeedback { position: absolute; z-index: 5; right: 14px; bottom: calc(233px + env(safe-area-inset-bottom)); left: 14px; width: fit-content; max-width: calc(100% - 28px); margin: 0 0 0 auto; padding: 9px 11px; border: 1px solid #dedbd5; border-radius: 11px; background: rgb(255 255 255 / 96%); color: #514d47; font-size: 12px; font-weight: 650; line-height: 1.45; }
+.offlineFeedback { top: calc(222px + env(safe-area-inset-top)); right: 14px; bottom: auto; left: 14px; width: auto; max-width: none; margin: 0; pointer-events: none; }
 .mapLoading { position: absolute; z-index: 3; top: 50%; left: 50%; margin: 0; padding: 9px 12px; border: 1px solid #dedbd5; border-radius: 11px; background: rgb(255 255 255 / 94%); color: #5d5953; font-size: 12px; transform: translate(-50%, -50%); }
 .mapKey { position: absolute; z-index: 5; bottom: calc(176px + env(safe-area-inset-bottom)); left: 14px; display: grid; min-height: 44px; gap: 2px; padding: 6px 9px; border: 1px solid #e0ddd8; border-radius: 11px; background: rgb(255 255 255 / 94%); color: #625d56; font-size: 12px; line-height: 16px; }
 .mapKey > div { display: flex; align-items: center; gap: 5px; }
@@ -250,6 +251,12 @@
     left: 10px;
   }
   .map :global(.maplibregl-ctrl-group) { display: flex; }
+  .offlineFeedback {
+    top: auto;
+    right: 10px;
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    left: 10px;
+  }
 
   .nation {
     grid-template-columns: minmax(190px, 1fr) minmax(424px, 1fr);
