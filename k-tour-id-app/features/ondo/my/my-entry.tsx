@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Bookmark, Check, ChevronRight, FlaskConical, MapPin, MessageCircle, RotateCcw, ShieldCheck, Sparkles, Stamp } from "lucide-react"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
-import { returnToBDiscoveryPeek } from "../map/b-discovery-history"
+import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
 import { DISCOVERY_PREFERENCE_OPTIONS, PERSONA_OPTIONS } from "../onboarding/discovery-options"
 import { useOndo } from "../shared/state/ondo-provider"
 import { ResetConfirmationSheet } from "../shared/ui/reset-confirmation-sheet"
@@ -43,6 +43,18 @@ export function MyEntry() {
       : [...state.discoveryPreferences, id])
   }
 
+  function openSavedVenue(venueId: string) {
+    const venue = canonicalMapVenueById(venueId)
+    const openedInBHistory = venue ? openSavedBDiscoveryVenue(venue.id, venue.cityId) : false
+    if (openedInBHistory) {
+      actions.setSurface({ kind: "map" })
+      actions.setTab("ondo")
+      return
+    }
+    actions.setTab("ondo")
+    actions.setSurface({ kind: "venue", venueId })
+  }
+
   return (
     <div className={styles.screen} data-testid="ondo-my-entry">
       <header className={styles.header}><p>MY KOREA</p><h1>{locale === "ko" ? "나의 한국 여행" : "My Korea"}</h1><span>{locale === "ko" ? "저장한 장소와 분리된 활동 이력을 확인해요." : "Saved places and separate activity histories, in one quiet place."}</span></header>
@@ -51,7 +63,7 @@ export function MyEntry() {
         <div className={styles.sectionTitle}><div><Bookmark size={18} /><h2 id="saved-heading">{locale === "ko" ? "저장한 장소" : "Saved places"}</h2></div><span>{state.savedVenueIds.length}</span></div>
         {state.savedVenueIds.length ? <div className={styles.savedList}>{state.savedVenueIds.map((venueId) => {
           const label = savedVenueLabel(venueId)
-          return <button key={venueId} type="button" onClick={() => { actions.setTab("ondo"); if (!returnToBDiscoveryPeek(venueId)) actions.setSurface({ kind: "venue", venueId }) }} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span><strong>{label.primary}</strong>{label.sourceLabel ? <small className={styles.sourceNameTruth}>{label.sourceLabel}</small> : null}{label.transliteration ? <small className={styles.savedTransliteration}><b>{label.transliteration}</b>{label.transliterationLabel ? <> · {label.transliterationLabel}</> : null}</small> : null}</span><ChevronRight size={17} /></button>
+          return <button key={venueId} type="button" onClick={() => openSavedVenue(venueId)} data-testid={`saved-venue-${venueId}`}><MapPin size={17} /><span><strong>{label.primary}</strong>{label.sourceLabel ? <small className={styles.sourceNameTruth}>{label.sourceLabel}</small> : null}{label.transliteration ? <small className={styles.savedTransliteration}><b>{label.transliteration}</b>{label.transliterationLabel ? <> · {label.transliterationLabel}</> : null}</small> : null}</span><ChevronRight size={17} /></button>
         })}</div> : <div className={styles.empty}><Bookmark size={21} /><p>{locale === "ko" ? "ONDO 지도에서 다시 보고 싶은 식음료 장소를 저장해 보세요." : "Save a food or drink place from the ONDO map to find it here."}</p><button type="button" onClick={() => { actions.setTab("ondo"); actions.setSurface({ kind: "map" }) }}>{locale === "ko" ? "ONDO 지도 보기" : "Open ONDO map"}</button></div>}
       </section>
 

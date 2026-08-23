@@ -244,6 +244,44 @@ export function openBDiscoveryVenue(venueId: string) {
   return true
 }
 
+export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryCity) {
+  if (typeof window === "undefined" || window.location.pathname !== "/ondo-b") return false
+  const safeVenueId = venueValue(venueId)
+  const safeVenueCity = cityValue(venueCity)
+  if (!safeVenueId || !safeVenueCity) return false
+
+  const current = readBDiscoveryHistory()
+  if (current?.level === "peek" && current.venueId === safeVenueId) return true
+  if (current?.level === "detail" && current.venueId === safeVenueId) return returnToBDiscoveryPeek(safeVenueId)
+
+  const city: BDiscoveryHistoryEntry = current?.level === "city" && current.city === safeVenueCity
+    ? { ...current, focus: { kind: "venue", venueId: safeVenueId } }
+    : {
+        v: 1,
+        documentId: documentId(),
+        level: "city",
+        city: safeVenueCity,
+        view: "map",
+        query: "",
+        heat: "all",
+        focus: { kind: "venue", venueId: safeVenueId },
+      }
+
+  if (current?.level === "nation") {
+    replaceEntry({ ...current, focus: { kind: "city", city: safeVenueCity } })
+    pushEntry(city)
+  } else if (current?.level === "city" && current.city === safeVenueCity) {
+    replaceEntry(city)
+  } else if (current) {
+    pushEntry(city)
+  } else {
+    replaceEntry({ v: 1, documentId: documentId(), level: "nation", view: "map", query: "", heat: "all", focus: { kind: "city", city: safeVenueCity } })
+    pushEntry(city)
+  }
+  pushEntry({ ...city, level: "peek", venueId: safeVenueId, focus: undefined })
+  return true
+}
+
 export function openBDiscoveryDetail(venueId: string) {
   const current = readBDiscoveryHistory()
   const safeVenueId = venueValue(venueId)
