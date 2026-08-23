@@ -228,7 +228,14 @@ for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
     await expect(place).toHaveCount(0)
     await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
     await settleFocusOwner(page)
-    await expect(page.getByTestId("ondo-b-view-toggle")).toBeFocused()
+    const returnedCitySearch = page.getByTestId("ondo-b-search")
+    await expect(returnedCitySearch).toBeFocused()
+    await expect.poll(() => page.evaluate(() => history.state?.__ondoBDiscovery)).toMatchObject({
+      level: "city",
+      city: "seoul",
+      focus: { kind: "search" },
+    })
+    await expect(page).not.toHaveURL(/[?&](venueId|detail)=/)
 
     await page.getByTestId("nav-tables").click()
     await expect(page.getByTestId("tables-entry")).toBeVisible()

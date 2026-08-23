@@ -59,7 +59,7 @@ async function expectNoSeriousAxe(page: Page, include: string) {
   expect(result.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([])
 }
 
-test("SLK-005 canonical Place opens a venue-first Table scope with explicit global browse and exact return", async ({ page }) => {
+test("SLK-005 canonical Place opens a venue-first Table scope with explicit global browse and exact venue-summary return", async ({ page }) => {
   await seed(page)
   await page.goto(`/ondo-b?venueId=${CANONICAL_VENUE_ID}`)
   await page.getByTestId("canonical-place-details").click()
@@ -75,7 +75,19 @@ test("SLK-005 canonical Place opens a venue-first Table scope with explicit glob
   await expect(page.getByTestId("tables-entry").locator("[data-table-id]")).not.toHaveCount(0)
   await page.getByTestId("tables-back-to-place-scope").click()
   await page.getByTestId("tables-back-to-venue").click()
-  await expect(page.getByTestId("canonical-place-overlay")).toContainText("Roba")
+  const returnedPlace = page.getByTestId("canonical-place-peek")
+  await expect(returnedPlace).toContainText("Roba")
+  await expect(returnedPlace).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
+  await expect(page.getByTestId("canonical-place-details")).toBeFocused()
+  await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
+  await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(0)
+  await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
+  await expect(page).not.toHaveURL(/[?&]detail=/)
+  await expect.poll(() => page.evaluate(() => history.state?.__ondoBDiscovery)).toMatchObject({
+    level: "peek",
+    city: "seoul",
+    venueId: CANONICAL_VENUE_ID,
+  })
 })
 
 test("SLK-006/007 nested preview report owns focus, Tab, Escape, focus return, receipt and reload truth", async ({ page }) => {
