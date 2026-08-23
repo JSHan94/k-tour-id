@@ -188,7 +188,10 @@ function applyReturnTo(state: OndoState, envelope: ReturnToEnvelope): OndoState 
   if (envelope.cta === "OPEN_AFTER19") {
     return { ...state, gate: consumed, gateState: "idle", after19: "A19-ON", tab: "ondo", surface: { kind: "map" } }
   }
-  return { ...state, gate: consumed, gateState: "idle", tab: "id", surface: { kind: "labs" } }
+  if (envelope.cta === "MINT_BADGE") {
+    return { ...state, gate: consumed, gateState: "idle", tab: "id", surface: { kind: "labs" } }
+  }
+  return { ...state, gate: null, gateState: "idle", surface: { kind: "map" } }
 }
 
 export function OndoProvider({ children }: { children: ReactNode }) {

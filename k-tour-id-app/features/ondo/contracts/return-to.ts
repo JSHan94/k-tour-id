@@ -15,6 +15,40 @@ export const RETURN_TO_GATES = ["account", "person", "age", "payment_kyc"] as co
 const RETURN_TO_CTA_ALLOWLIST = new Set<string>(RETURN_TO_CTAS)
 const RETURN_TO_GATE_ALLOWLIST = new Set<string>(RETURN_TO_GATES)
 const PUBLIC_CONTEXT_ID = /^[a-z0-9][a-z0-9-]{0,127}$/
+type ContextRequirement = "required" | "optional" | "forbidden"
+type ReturnToRule = {
+  gateSequences: readonly (readonly GateKind[])[]
+  venueId: ContextRequirement
+  tableId: ContextRequirement
+}
+
+export const RETURN_TO_RULES = {
+  SAVE_VENUE: { gateSequences: [["account"]], venueId: "required", tableId: "forbidden" },
+  JOIN_TABLE: {
+    gateSequences: [
+      ["account"], ["person"], ["age"],
+      ["account", "person"], ["account", "age"], ["person", "age"],
+      ["account", "person", "age"],
+    ],
+    venueId: "required",
+    tableId: "required",
+  },
+  OPEN_CHAT: { gateSequences: [["account"]], venueId: "forbidden", tableId: "required" },
+  SUBMIT_LOCAL_SIGNAL: { gateSequences: [["account"], ["person"], ["account", "person"]], venueId: "required", tableId: "forbidden" },
+  START_CHECKOUT: { gateSequences: [["account"], ["payment_kyc"], ["account", "payment_kyc"]], venueId: "required", tableId: "forbidden" },
+  OPEN_AFTER19: { gateSequences: [["age"]], venueId: "optional", tableId: "forbidden" },
+  MINT_BADGE: { gateSequences: [["person"]], venueId: "forbidden", tableId: "forbidden" },
+} as const satisfies Record<ReturnToCta, ReturnToRule>
+
+function hasAllowedContext(value: string | undefined, requirement: ContextRequirement) {
+  if (requirement === "required") return typeof value === "string" && PUBLIC_CONTEXT_ID.test(value)
+  if (requirement === "forbidden") return value === undefined
+  return value === undefined || PUBLIC_CONTEXT_ID.test(value)
+}
+
+function matchesGateSequence(actual: readonly GateKind[], expected: readonly GateKind[]) {
+  return actual.length === expected.length && actual.every((gate, index) => gate === expected[index])
+}
 
 export function createReturnTo(input: {
   cta: ReturnToCta
@@ -45,17 +79,20 @@ export function isReturnToUsable(envelope: ReturnToEnvelope | null, now = new Da
     || typeof envelope.activeGate !== "string"
     || typeof envelope.createdAt !== "string"
     || typeof envelope.expiresAt !== "string"
-    || (envelope.venueId != null && typeof envelope.venueId !== "string")
-    || (envelope.tableId != null && typeof envelope.tableId !== "string")
+    || envelope.venueId === null
+    || envelope.tableId === null
+    || (envelope.venueId !== undefined && typeof envelope.venueId !== "string")
+    || (envelope.tableId !== undefined && typeof envelope.tableId !== "string")
   ) return false
   const createdAt = new Date(envelope.createdAt).getTime()
   const expiresAt = new Date(envelope.expiresAt).getTime()
+  if (!RETURN_TO_CTA_ALLOWLIST.has(envelope.cta)) return false
+  const rule = RETURN_TO_RULES[envelope.cta]
   return envelope.consumedAt == null
-    && RETURN_TO_CTA_ALLOWLIST.has(envelope.cta)
-    && envelope.tokenId.match(new RegExp(`^RT-${envelope.cta}-\\d+$`)) != null
-    && Array.isArray(envelope.gateQueue)
+    && envelope.tokenId === `RT-${envelope.cta}-${createdAt}`
     && envelope.gateQueue.length > 0
     && envelope.gateQueue.every((gate) => RETURN_TO_GATE_ALLOWLIST.has(gate))
+    && rule.gateSequences.some((expected) => matchesGateSequence(envelope.gateQueue, expected))
     && RETURN_TO_GATE_ALLOWLIST.has(envelope.activeGate)
     && envelope.gateQueue.includes(envelope.activeGate)
     && Number.isFinite(createdAt)
@@ -63,8 +100,8 @@ export function isReturnToUsable(envelope: ReturnToEnvelope | null, now = new Da
     && createdAt <= now.getTime() + 60_000
     && expiresAt > now.getTime()
     && expiresAt - createdAt === RETURN_TO_TTL_MS
-    && (envelope.venueId == null || PUBLIC_CONTEXT_ID.test(envelope.venueId))
-    && (envelope.tableId == null || PUBLIC_CONTEXT_ID.test(envelope.tableId))
+    && hasAllowedContext(envelope.venueId, rule.venueId)
+    && hasAllowedContext(envelope.tableId, rule.tableId)
 }
 
 export function restoreReturnTo(value: unknown, now = new Date()): ReturnToEnvelope | null {
