@@ -371,12 +371,12 @@ export function OndoProvider({ children }: { children: ReactNode }) {
       let next = current
       if (kind === "account") next = { ...next, account: "ACC-ACTIVE" }
       if (kind === "person") next = { ...next, person: "PER-VERIFIED", reputation: { ...next.reputation, identity: "verified" } }
-          if (kind === "age") next = { ...next, age: "AGE-VERIFIED", ageExpiresAt: new Date(Date.now() + 86_400_000).toISOString() }
-          if (kind === "payment_kyc") next = { ...next, paymentKyc: "PKY-VERIFIED" }
-          const currentIndex = current.gate.gateQueue.indexOf(kind)
-          const remainingQueue = current.gate.gateQueue.slice(currentIndex + 1)
-          const nextGate = remainingQueue[0]
-          if (nextGate) return { ...next, gate: { ...current.gate, gateQueue: remainingQueue, activeGate: nextGate }, gateState: "pending" }
+      if (kind === "age") next = { ...next, age: "AGE-VERIFIED", ageExpiresAt: new Date(Date.now() + 86_400_000).toISOString() }
+      if (kind === "payment_kyc") next = { ...next, paymentKyc: "PKY-VERIFIED" }
+      const currentIndex = current.gate.gateQueue.indexOf(kind)
+      const remainingQueue = current.gate.gateQueue.slice(currentIndex + 1)
+      const nextGate = remainingQueue[0]
+      if (nextGate) return { ...next, gate: { ...current.gate, gateQueue: remainingQueue, activeGate: nextGate }, gateState: "pending" }
       return applyReturnTo(next, current.gate)
     }),
     failGate: (kind, unsupported = false) => setState((current) => {
