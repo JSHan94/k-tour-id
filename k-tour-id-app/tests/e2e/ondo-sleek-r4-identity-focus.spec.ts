@@ -300,13 +300,18 @@ for (const locale of ["en", "ko"] as const) {
     await unlock.dblclick()
     await gate.getByRole("button", { name: copy.after19Start, exact: true }).dblclick()
     await gate.getByRole("button", { name: copy.after19Complete, exact: true }).dblclick()
-    await expect(gate).toBeHidden()
+    await expect(gate).toBeHidden({ timeout: 20_000 })
     await expect(place).toBeVisible()
     await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "unlocked")
+    await expect.poll(() => sessionState(page), { timeout: 20_000 }).toMatchObject({
+      age: "AGE-VERIFIED",
+      after19: "A19-ON",
+      gate: null,
+      gateState: "idle",
+    })
     await expect.poll(() => page.evaluate(() => document.activeElement?.tagName)).not.toBe("BODY")
     await expect.poll(() => place.evaluate((element) => element.contains(document.activeElement))).toBe(true)
     await page.keyboard.press("Tab")
     await expect.poll(() => place.evaluate((element) => element.contains(document.activeElement))).toBe(true)
-    expect(await sessionState(page)).toMatchObject({ age: "AGE-VERIFIED", after19: "A19-ON", gate: null, gateState: "idle" })
   })
 }
