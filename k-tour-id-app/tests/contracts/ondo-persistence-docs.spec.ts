@@ -97,3 +97,75 @@ test("CONTRACT-DATA-020 restored gates reject non-allowlisted data and strip unk
     expect(restoreReturnTo(malformed, new Date("2026-08-19T10:01:00.000Z"))).toBeNull()
   }
 })
+
+test("CONTRACT-DATA-021 each return CTA accepts only its real gate sequence and context", () => {
+  const now = new Date("2026-08-19T10:00:00.000Z")
+  const valid = [
+    createReturnTo({ cta: "SAVE_VENUE", gateQueue: ["account"], venueId: "public-venue", now }),
+    createReturnTo({ cta: "JOIN_TABLE", gateQueue: ["account", "person", "age"], venueId: "public-venue", tableId: "public-table", now }),
+    createReturnTo({ cta: "JOIN_TABLE", gateQueue: ["person", "age"], venueId: "public-venue", tableId: "public-table", now }),
+    createReturnTo({ cta: "OPEN_CHAT", gateQueue: ["account"], tableId: "public-table", now }),
+    createReturnTo({ cta: "SUBMIT_LOCAL_SIGNAL", gateQueue: ["account", "person"], venueId: "public-venue", now }),
+    createReturnTo({ cta: "START_CHECKOUT", gateQueue: ["account", "payment_kyc"], venueId: "public-venue", now }),
+    createReturnTo({ cta: "OPEN_AFTER19", gateQueue: ["age"], now }),
+    createReturnTo({ cta: "OPEN_AFTER19", gateQueue: ["age"], venueId: "public-venue", now }),
+    createReturnTo({ cta: "MINT_BADGE", gateQueue: ["person"], now }),
+  ]
+
+  for (const envelope of valid) {
+    expect(isReturnToUsable(envelope, new Date("2026-08-19T10:01:00.000Z"))).toBeTruthy()
+    expect(restoreReturnTo(envelope, new Date("2026-08-19T10:01:00.000Z"))).toEqual(envelope)
+  }
+})
+
+test("CONTRACT-DATA-022 malformed context, gate sequences, and token epochs never restore", () => {
+  const now = new Date("2026-08-19T10:00:00.000Z")
+  const make = (cta: ReturnToCta, gateQueue: [GateKind, ...GateKind[]], context: { venueId?: string; tableId?: string } = {}) => (
+    createReturnTo({ cta, gateQueue, ...context, now })
+  )
+  const invalid = [
+    make("SAVE_VENUE", ["account"]),
+    make("SAVE_VENUE", ["account"], { venueId: "public-venue", tableId: "unrelated-table" }),
+    make("SAVE_VENUE", ["age"], { venueId: "public-venue" }),
+    make("SAVE_VENUE", ["account", "account"], { venueId: "public-venue" }),
+    make("JOIN_TABLE", ["account"], { venueId: "public-venue" }),
+    make("JOIN_TABLE", ["account"], { tableId: "public-table" }),
+    make("OPEN_CHAT", ["account"]),
+    make("OPEN_CHAT", ["account"], { venueId: "unrelated-venue", tableId: "public-table" }),
+    make("SUBMIT_LOCAL_SIGNAL", ["age"], { venueId: "public-venue" }),
+    make("START_CHECKOUT", ["payment_kyc", "account"], { venueId: "public-venue" }),
+    make("OPEN_AFTER19", ["account"], { venueId: "public-venue" }),
+    make("OPEN_AFTER19", ["age"], { venueId: "public-venue", tableId: "unrelated-table" }),
+    make("MINT_BADGE", ["person"], { venueId: "unrelated-venue" }),
+    { ...make("SAVE_VENUE", ["account"], { venueId: "public-venue" }), venueId: null },
+    { ...make("OPEN_AFTER19", ["age"]), venueId: null },
+    { ...make("SAVE_VENUE", ["account"], { venueId: "public-venue" }), tokenId: "RT-SAVE_VENUE-1787133600001" },
+  ]
+
+  for (const envelope of invalid) {
+    expect(isReturnToUsable(envelope as never, new Date("2026-08-19T10:01:00.000Z"))).toBeFalsy()
+    expect(restoreReturnTo(envelope, new Date("2026-08-19T10:01:00.000Z"))).toBeNull()
+  }
+})
+
+test("CONTRACT-DATA-023 canonical docs own the CTA gate/context matrix and Labs has no default fallthrough", () => {
+  const stateModel = canonicalDoc("04_STATE_MODEL.md")
+  const adapters = canonicalDoc("05_DATA_ADAPTER_CONTRACTS.md")
+  const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
+  const expectedRows = [
+    "| `SAVE_VENUE` | `account` | required | forbidden |",
+    "| `JOIN_TABLE` | ordered subset of `account → person → age` | required | required |",
+    "| `OPEN_CHAT` | `account` | forbidden | required |",
+    "| `SUBMIT_LOCAL_SIGNAL` | ordered subset of `account → person` | required | forbidden |",
+    "| `START_CHECKOUT` | ordered subset of `account → payment_kyc` | required | forbidden |",
+    "| `OPEN_AFTER19` | `age` | optional | forbidden |",
+    "| `MINT_BADGE` | `person` | forbidden | forbidden |",
+  ]
+  for (const doc of [stateModel, adapters]) for (const row of expectedRows) expect(doc).toContain(row)
+
+  const applyStart = provider.indexOf("function applyReturnTo")
+  const applyEnd = provider.indexOf("export function OndoProvider")
+  const applyBody = provider.slice(applyStart, applyEnd).trim()
+  expect(applyBody).toContain('if (envelope.cta === "MINT_BADGE")')
+  expect(applyBody).toMatch(/return \{ \.\.\.state, gate: null, gateState: "idle", surface: \{ kind: "map" \} \}\n\}$/)
+})
