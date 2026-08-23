@@ -1,6 +1,6 @@
 # ONDO B · 발자취형 Surface Matrix
 
-상태: `R5 COMPLETE NOT CLEAN · 3/3 FIXED AND AUTOMATED · FULL AUTOMATED GATE PASS · R5 RETRY READY TO START · CLEAN 0/2 · NOT DEPLOYED`
+상태: `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
 
 발자취의 고유 화면을 복제하지 않고 거의 흰 canvas, 큰 여백, hairline 구획, 절제된 점·기록 메타포, 한 개의 우세한 행동을 ONDO의 F&B heat/identity 흐름에 맞게 번역했다. Map, Place, App shell, Onboarding, Gate, Tables, Chat, Checkout, My, ID, Labs가 모두 같은 B 제품에 통합돼 있다.
 
@@ -19,7 +19,7 @@
 | `FL-011` | Save → My → same venue | Place save, failure, retry, My | Guest silent save 금지, venue context 보존 |
 | `FL-012` | Local Signal first mission | Draft, photo, fail/retry, submitted | Visit+Contribution만, Meetup/stamp 불변 |
 | `FL-013` | Manual 19+ proof | After19 control, Age Gate | Account/Person/Payment와 독립 |
-| `FL-014` | Auto After19 | City layer, banner, setting | 4 guard + expiry + same-session manual-off 우선 |
+| `FL-014` | Auto After19 | City layer, banner, expiry reason/recovery, setting | 4 guard + expiry + same-session manual-off 우선 |
 | `FL-015` | Optional profile/reputation | Profile, four-axis Trust | explicit consent, 네 축 분리, 안전 점수 금지 |
 | `FL-016` | Evidence/merchant trait | Place facts, Labs trait valid/stale/error | 특정 fact만, 안전·입장 전체 보증 금지 |
 | `FL-017` | Payment KYC | Checkout Gate fail/retry/return | Age/Person과 독립, 실패 시 결제 없음 |
@@ -39,7 +39,7 @@
 
 ## 현재 visual 검수 계약
 
-- `47` visual case / `45` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-reviewed baseline은 harness `12354bc…`, digest `4cfbed3…`, 46/44/276이었다. Retry baseline은 harness/HEAD `ee19adb…`, digest `f1ec9b0c…`, `282 = 18 R5-FIX + 264 R5-CARRY`, 각 viewport `47`; exact full no-update `282/282`, high-risk `216/216`, landscape `2/2`가 통과했다.
+- `50` visual case / `48` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-RETRY reviewed baseline은 harness `ee19adb…`, digest `f1ec9b0c…`, 47/45/282였다. Current candidate는 Product `5b519e6…`, Harness/frozen candidate `b68fc18…`, digest `1dcfacb7…`, `300 = 141 carry + 135 fix + 6 fix+helper + 18 new`, 각 viewport `50`; exact no-update acceptance는 `300/300` GREEN으로 봉인됐다.
 - 126 flow checkpoint 각각은 machine registry에서 `pixel` 또는 사유 있는 `functional_only`로 연결한다.
 - visible metadata 12px 이상, control 44×44 이상, horizontal overflow·nav/CTA overlap 0.
 - serious/critical Axe issue 0; keyboard focus, Escape, focus return을 실제 surface에서 검사.
@@ -47,4 +47,4 @@
 - heat score는 solid color circle, neutral cluster count는 outline geometry로 구분한다.
 - near-white/hairline/negative-space 문법을 전체 surface에 적용하고 heat 이외 색은 status 의미에만 쓴다.
 
-R5-reviewed tuple은 Product `9ec3d19…`, Harness `12354bc…`, digest `4cfbed3…`이고 verdict는 `5/5 COMPLETE · NOT CLEAN · objective S2 3`이었다. Frozen retry Product `30dcb13…`, Harness/HEAD `ee19adb…`, digest `f1ec9b0c…`에 `3/3 FIXED AND AUTOMATED`가 포함됐고 exact-tuple automated gate는 `FULL PASS`다. Fresh closure는 `PENDING`; R5 retry `READY TO START`, clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다. 두 번의 동일-tuple 5/5 clean round 전에는 reviewer CLEAN 또는 release PASS로 표시하지 않는다.
+R5-RETRY reviewed tuple은 Product `30dcb13…`, Harness `ee19adb…`, digest `f1ec9b0c…`이고 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. Current successor Product `5b519e6…`, Harness/frozen candidate `b68fc18…`, digest `1dcfacb7…`에는 그 correction과 후속 offline/history/saved-return/Gate-focus/bounded-wait correction이 구현됐다. Exact nonpixel과 visual gate는 GREEN으로 봉인됐다: `300/300`, high-risk `144/144`, landscape `2/2`, backdrop `9/9`. Fresh closure는 `READY`; clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다. 두 번의 동일-tuple 5/5 clean round 전에는 reviewer CLEAN 또는 release PASS로 표시하지 않는다.
