@@ -129,6 +129,28 @@ test("SLK-012 active Gate owns the modal tree, traps focus, and restores Checkou
   const checkoutDialog = page.getByTestId("ondo-sheet")
   await expect(checkoutDialog).toHaveAttribute("role", "dialog")
   await expect(checkoutDialog).toHaveAttribute("aria-modal", "true")
+  await page.evaluate(() => new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve())))
+  await page.evaluate(() => {
+    const originalRequest = window.requestAnimationFrame.bind(window)
+    const originalCancel = window.cancelAnimationFrame.bind(window)
+    const queued = new Map<number, FrameRequestCallback>()
+    let nextFrame = 1_000_000
+    window.requestAnimationFrame = (callback) => {
+      const frame = nextFrame++
+      queued.set(frame, callback)
+      return frame
+    }
+    window.cancelAnimationFrame = (frame) => {
+      if (!queued.delete(frame)) originalCancel(frame)
+    }
+    ;(window as Window & { flushGateFocusFrames?: () => void }).flushGateFocusFrames = () => {
+      window.requestAnimationFrame = originalRequest
+      window.cancelAnimationFrame = originalCancel
+      const callbacks = [...queued.values()]
+      queued.clear()
+      callbacks.forEach((callback) => callback(performance.now()))
+    }
+  })
   await page.getByTestId("checkout-start").click()
 
   await expect(checkoutDialog).toHaveAttribute("inert", "")
@@ -141,7 +163,10 @@ test("SLK-012 active Gate owns the modal tree, traps focus, and restores Checkou
   const close = gate.getByRole("button", { name: "Return to previous screen" })
   await expect(close).toBeFocused()
   await page.keyboard.press("Shift+Tab")
-  await expect(gate.getByRole("button", { name: "Return without changes" })).toBeFocused()
+  const returnWithoutChanges = gate.getByRole("button", { name: "Return without changes" })
+  await expect(returnWithoutChanges).toBeFocused()
+  await page.evaluate(() => (window as Window & { flushGateFocusFrames?: () => void }).flushGateFocusFrames?.())
+  await expect(returnWithoutChanges).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(close).toBeFocused()
   await expectNoSeriousAxe(page, "[data-testid='ondo-gate-overlay']")
