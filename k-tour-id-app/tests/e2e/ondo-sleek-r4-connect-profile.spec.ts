@@ -27,6 +27,7 @@ const READY_SESSION = {
   ageExpiresAt: "2026-08-20T20:30:00+09:00",
   paymentKyc: "PKY-VERIFIED",
 }
+const TABLE_VENUE_ID = "seoul-seongsu-gukbap"
 
 function pendingAccountGate(cta: "JOIN_TABLE" | "OPEN_CHAT", tableId: string) {
   const createdAt = "2026-08-19T20:30:00+09:00"
@@ -35,7 +36,7 @@ function pendingAccountGate(cta: "JOIN_TABLE" | "OPEN_CHAT", tableId: string) {
     cta,
     gateQueue: ["account"],
     activeGate: "account",
-    venueId: cta === "JOIN_TABLE" ? CANONICAL_VENUE_ID : undefined,
+    venueId: cta === "JOIN_TABLE" ? TABLE_VENUE_ID : undefined,
     tableId,
     createdAt,
     expiresAt: "2026-08-19T20:45:00+09:00",
@@ -297,13 +298,13 @@ for (const viewport of TRUTH_VIEWPORTS) {
       session: {
         account: "ACC-GUEST",
         person: "PER-UNVERIFIED",
-        gate: pendingAccountGate("JOIN_TABLE", "table-missing-r4"),
+        gate: pendingAccountGate("JOIN_TABLE", TABLE_ID),
         gateState: "pending",
       },
     })
     await gotoB(page)
     await completeKoreanAccountGate(page)
-    await expect(page.getByRole("dialog", { name: "이용할 수 없는 Table", exact: true })).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "처음 먹는 국밥 같이", exact: true })).toBeVisible()
 
     await page.evaluate((nextGate) => {
       const current = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
