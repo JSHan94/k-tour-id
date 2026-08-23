@@ -1,7 +1,7 @@
 "use client"
 
 import type { GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl"
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, SlidersHorizontal, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { HEAT_COLORS } from "@/lib/ondo/map/heat"
@@ -460,7 +460,6 @@ export function MapEntryB() {
   const mapRef = useRef<MapLibreMap | null>(null)
   const filteredMapRef = useRef(false)
   const userLocationRef = useRef<UserLocation | null>(null)
-  const urlHydrated = useRef(false)
   const traversalFocusVersion = useRef(0)
   const retryFocusPending = useRef(false)
   const [city, setCity] = useState<CityId | null>(null)
@@ -488,11 +487,7 @@ export function MapEntryB() {
   })), [state.acceptedActivityEventKeys])
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
 
-  useLayoutEffect(() => installBDiscoveryTraversalGuard(), [])
-
   useEffect(() => {
-    if (urlHydrated.current) return
-    urlHydrated.current = true
     let stabilizationFrame: number | null = null
     let stabilizationTimer: number | null = null
     const stabilizeHistoryEntry = (entry: BDiscoveryHistoryEntry, preservedState: unknown) => {
@@ -532,10 +527,6 @@ export function MapEntryB() {
         window.requestAnimationFrame(() => focusAfterCommit())
       }
     }
-    const initialState = window.history.state
-    const initial = initializeBDiscoveryHistory((venueId) => CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === venueId)?.cityId)
-    applyHistoryEntry(initial, false)
-    stabilizeHistoryEntry(initial, initialState)
     const onTraversal = (event: Event) => {
       const traversal = readBDiscoveryTraversal(event)
       if (!traversal) return
@@ -546,7 +537,13 @@ export function MapEntryB() {
       }
     }
     window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, onTraversal)
+    const removeTraversalGuard = installBDiscoveryTraversalGuard()
+    const initialState = window.history.state
+    const initial = initializeBDiscoveryHistory((venueId) => CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === venueId)?.cityId)
+    applyHistoryEntry(initial, false)
+    stabilizeHistoryEntry(initial, initialState)
     return () => {
+      removeTraversalGuard()
       window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, onTraversal)
       if (stabilizationFrame != null) window.cancelAnimationFrame(stabilizationFrame)
       if (stabilizationTimer != null) window.clearTimeout(stabilizationTimer)
