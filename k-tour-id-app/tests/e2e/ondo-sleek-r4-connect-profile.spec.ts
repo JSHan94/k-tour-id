@@ -42,6 +42,19 @@ function pendingAccountGate(cta: "JOIN_TABLE" | "OPEN_CHAT", tableId: string) {
   }
 }
 
+function pendingSaveGate(venueId: string) {
+  const createdAt = "2026-08-19T20:30:00+09:00"
+  return {
+    tokenId: `RT-SAVE_VENUE-${Date.parse(createdAt)}`,
+    cta: "SAVE_VENUE" as const,
+    gateQueue: ["account"],
+    activeGate: "account",
+    venueId,
+    createdAt,
+    expiresAt: "2026-08-19T20:45:00+09:00",
+  }
+}
+
 async function completeKoreanAccountGate(page: Page) {
   const gate = page.getByTestId("ondo-gate-overlay")
   await expect(gate).toBeVisible()
@@ -304,5 +317,47 @@ for (const viewport of TRUTH_VIEWPORTS) {
     await page.reload({ waitUntil: "domcontentloaded" })
     await completeKoreanAccountGate(page)
     await expect(page.getByRole("dialog", { name: "잠긴 대화", exact: true })).toBeVisible()
+  })
+}
+
+const INVALID_REGISTRY_GATES = [
+  {
+    id: "unregistered venue",
+    envelope: pendingSaveGate("venue-not-registered"),
+    patch: {},
+  },
+  {
+    id: "unregistered table",
+    envelope: pendingAccountGate("OPEN_CHAT", "table-not-registered"),
+    patch: {},
+  },
+  {
+    id: "mismatched JOIN table and venue",
+    envelope: pendingAccountGate("JOIN_TABLE", TABLE_ID),
+    patch: { venueId: CANONICAL_VENUE_ID },
+  },
+] as const
+
+for (const scenario of INVALID_REGISTRY_GATES) {
+  test(`R5R return registry rejects ${scenario.id} during hydration without mutation`, async ({ page }) => {
+    const gate = { ...scenario.envelope, ...scenario.patch }
+    await seedB(page, {
+      locale: "en",
+      session: {
+        account: "ACC-GUEST",
+        gate,
+        gateState: "pending",
+        tableMembershipById: {},
+      },
+    })
+    await gotoB(page)
+
+    await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+    await expect.poll(async () => page.evaluate(() => {
+      const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
+      return { gate: session.gate, gateState: session.gateState, membership: session.tableMembershipById }
+    })).toEqual({ gate: null, gateState: "idle", membership: {} })
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("ondo.preferences.v3") ?? "{}").savedVenueIds)).toEqual([])
   })
 }

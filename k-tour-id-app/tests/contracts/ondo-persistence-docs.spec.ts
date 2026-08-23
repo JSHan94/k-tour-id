@@ -169,3 +169,14 @@ test("CONTRACT-DATA-023 canonical docs own the CTA gate/context matrix and Labs 
   expect(applyBody).toContain('if (envelope.cta === "MINT_BADGE")')
   expect(applyBody).toMatch(/return \{ \.\.\.state, gate: null, gateState: "idle", surface: \{ kind: "map" \} \}\n\}$/)
 })
+
+test("CONTRACT-DATA-024 hydration validates return contexts against canonical entity registries", () => {
+  const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
+
+  expect(provider).toContain('import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"')
+  expect(provider).toContain('import { TABLES } from "../../connect/table-model"')
+  expect(provider).toContain("function hasRegisteredReturnContext(envelope: ReturnToEnvelope)")
+  expect(provider).toContain("const restoredGate = restoreReturnTo(session.gate)")
+  expect(provider).toContain("const pendingGate = restoredGate && hasRegisteredReturnContext(restoredGate) ? restoredGate : null")
+  expect(provider).toContain("table.venueId === envelope.venueId")
+})
