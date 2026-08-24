@@ -143,6 +143,18 @@ test.describe("ONDO B production security and resilience boundaries", () => {
     expect(html).not.toContain("attacker.example")
   })
 
+  test("B-PROD-SEC-002B invalid local ports fail closed without dropping metadata", async ({ request }) => {
+    for (const host of ["localhost:65536", "localhost:99999"]) {
+      const response = await request.get("/ondo-b", { headers: { host } })
+      expect(response.ok()).toBeTruthy()
+      const html = await response.text()
+      expect(html).toContain("ONDO — Licensed food-place records in Seoul and Busan")
+      expect(html).toContain('<link rel="canonical"')
+      expect(html).not.toContain("NEXT_HTTP_ERROR_FALLBACK")
+      expect(html).not.toContain("attacker.example")
+    }
+  })
+
   test("B-PROD-SEC-003 HTML responses apply baseline browser security policy", async ({ request }) => {
     const response = await request.get("/ondo-b")
     expect(response.ok()).toBeTruthy()
