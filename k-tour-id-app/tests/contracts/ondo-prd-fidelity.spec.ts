@@ -84,9 +84,10 @@ test("FID-P0-004 My Korea keeps saved, recently viewed, and planned-meal semanti
 })
 
 test("FID-P0-005 a Local Signal draft can contribute and return to the exact place", () => {
-  expectReachable("features/ondo/place/place-overlay.tsx")
-  expectReachable("features/ondo/connect/connect-overlays.tsx")
-  expectLiveEvidence(["venue-local-signal", "local-signal-overlay", "local-signal-submit", "local-signal-outcome", "local-signal-return"])
+  expectReachable("features/ondo/place/canonical-place-overlay.tsx")
+  expectReachable("features/ondo/local-signal-b/local-signal-layer-b.tsx")
+  expectReachable("features/ondo/identity-b/local-check-walkthrough-b.tsx")
+  expectLiveEvidence(["canonical-local-signal-open", "ondo-b-local-signal", "local-signal-draft", "local-signal-person-check", "local-check-return-success", "local-check-return-failure", "local-check-return-unavailable", "local-check-return-expired"])
 })
 
 test("FID-P0-006 one Pulse Table / Connect journey reaches join, recovery, and participant chat", () => {
@@ -102,13 +103,15 @@ test("FID-P0-007 After 19 keeps success, cancel, failure, unavailable, expiry, a
 })
 
 test("FID-P0-008 ID exposes independent Person, 19+, and consent states", () => {
-  expectReachable("features/ondo/identity/identity-entry.tsx")
-  expectLiveEvidence(["ondo-identity-entry", "data-person-state", "data-age-state", "data-consent-state"])
+  expectReachable("features/ondo/identity-b/traveler-id-entry-b.tsx")
+  expectReachable("features/ondo/identity-b/local-check-walkthrough-b.tsx")
+  expectLiveEvidence(["ondo-b-traveler-id", "traveler-id-person", "traveler-id-age", "local-check-consent", "consent-requester", "consent-purpose", "consent-minimum", "consent-retention", "Person does not prove 19+", "19+ does not prove identity"])
 })
 
 test("FID-P0-009 ID has a truthful one-time interactive walkthrough boundary", () => {
-  expectReachable("features/ondo/identity/gate-overlay.tsx")
-  expectLiveEvidence(["identity-walkthrough", "identity-walkthrough-complete", "identityWalkthroughSeen", "No request is sent to an external provider."])
+  expectReachable("features/ondo/identity-b/local-check-walkthrough-b.tsx")
+  expectReachable("features/ondo/shared/state/ondo-b-provider.tsx")
+  expectLiveEvidence(["ondo-b-local-check-walkthrough", "local-check-boundary", "localInteractionBoundarySeen", "No camera scan, data transmission, provider call, DID, or real verifiable credential occurs"])
 })
 
 test("FID-P0-010 every JIT result preserves and consumes an exact returnTo once", () => {
@@ -124,7 +127,9 @@ test("FID-P0-011 all must-live surfaces retain EN/KO, responsive, and keyboard/f
     "features/ondo/my/my-entry.tsx",
     "features/ondo/connect/tables-entry-b.tsx",
     "features/ondo/after19/after19-jit-b.tsx",
-    "features/ondo/identity/identity-entry.tsx",
+    "features/ondo/identity-b/traveler-id-entry-b.tsx",
+    "features/ondo/identity-b/local-check-walkthrough-b.tsx",
+    "features/ondo/local-signal-b/local-signal-layer-b.tsx",
   ]) expectReachable(path)
   expectLiveEvidence(["locale === \"ko\"", "onKeyDown", "useModalIsolation", "focusFirstAvailableDestination"])
   expect(liveFiles.filter((file) => file.endsWith(".css")).map((file) => readFileSync(file, "utf8")).join("\n")).toContain("@media")

@@ -63,3 +63,8 @@ After the Pulse Table/After19 P0 slice is integrated, the checkpoint remains int
 
 - GREEN (9): preserved Guest Explore, ungated Explore, three-step onboarding, Pulse Table/Connect, After19, exact Table/place/draft `returnTo`, scoped legacy-policy loop, non-removable inventory, and provider/P2 scope.
 - RED (5): My Korea recent/planned semantics, Local Signal, independent ID axes, the one-time ID/consent walkthrough, and inclusive coverage across those still-missing P0 journeys.
+
+After the central Local Signal/Traveler ID integration, the gate remains RED only for the two genuinely unfinished areas:
+
+- GREEN (12): preserved Guest Explore, ungated Explore, three-step onboarding, Local Signal, Pulse Table/Connect, After19, independent Person/19+ plus consent walkthroughs, exact action returns, scoped legacy-policy loop, non-removable inventory, and provider/P2 scope.
+- RED (2): My Korea recently viewed/planned-meal semantics and inclusive coverage for that still-missing P0 surface.

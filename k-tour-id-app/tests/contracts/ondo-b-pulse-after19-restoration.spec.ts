@@ -11,7 +11,7 @@ test("B-PULSE-001 B navigation and product mount one live Pulse Table surface", 
   expect(app).toContain('id: "tables"')
   expect(app).toContain('tables: "Tables"')
   expect(app).toContain('tables: "테이블"')
-  expect(app).toContain('data-nav-count="4"')
+  expect(app).toContain('data-nav-count="5"')
   expect(product).toContain("PulseTablesEntryB")
   expect(product).toContain("tables: <PulseTablesEntryB />")
 })
