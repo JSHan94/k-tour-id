@@ -12,6 +12,7 @@
     "prepare:sites:ondo-b": "node scripts/ondo-b-standalone/prepare.mjs",
     "build:sites:ondo-b": "node scripts/ondo-b-standalone/build.mjs",
     "scan:sites:ondo-b": "node scripts/ondo-b-standalone/scan-artifact.mjs",
+    "scan:next:ondo-b": "node scripts/ondo-b-next-client-artifact.mjs",
     "probe:sites:ondo-b": "node scripts/ondo-b-standalone/probe-http.mjs",
     "dev": "next dev",
     "lint": "tsc --noEmit",
