@@ -20,7 +20,13 @@ function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
   const configured = configuredOrigin()
   if (configured) return configured
   const host = requestHeaders.get("host")?.toLowerCase() ?? ""
-  if (/^(?:localhost|127\.0\.0\.1)(?::\d{1,5})?$/.test(host)) return `http://${host}`
+  if (/^(?:localhost|127\.0\.0\.1)(?::\d{1,5})?$/.test(host)) {
+    try {
+      return new URL(`http://${host}`).origin
+    } catch {
+      return "https://ondo-directory.invalid"
+    }
+  }
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.phenixnet-jl\.chatgpt\.site$/.test(host)) return `https://${host}`
   return "https://ondo-directory.invalid"
 }
