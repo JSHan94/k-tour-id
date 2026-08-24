@@ -8,6 +8,7 @@ export default defineConfig({
     "tests/visual/ondo-b-production-visual-mobile.spec.ts",
     "tests/visual/ondo-b-production-visual-desktop.spec.ts",
     "tests/visual/ondo-b-production-visual-responsive.spec.ts",
+    "tests/visual/ondo-b-production-visual-structural.spec.ts",
   ],
   outputDir: "artifacts/qa/production-visual",
   snapshotPathTemplate: "tests/visual/ondo-b-production-snapshots/{projectName}/{arg}{ext}",
@@ -53,6 +54,7 @@ export default defineConfig({
       testMatch: [
         "tests/visual/ondo-b-production-visual-desktop.spec.ts",
         "tests/visual/ondo-b-production-visual-responsive.spec.ts",
+        "tests/visual/ondo-b-production-visual-structural.spec.ts",
       ],
       use: {
         ...devices["Desktop Chrome"],

@@ -1,10 +1,20 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, type Locator, type Page, type TestInfo } from "@playwright/test"
-import type { BProductionVisualCase } from "./ondo-b-production-registry"
+import type {
+  BProductionStructuralVisualCase,
+  BProductionVisualCase,
+} from "./ondo-b-production-registry"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 const MAP_HOSTS = new Set(["tiles.openfreemap.org"])
+const STRUCTURAL_TILEJSON = {
+  tilejson: "3.0.0",
+  tiles: ["https://tiles.openfreemap.org/ondo-production-visual-empty/{z}/{x}/{y}.pbf"],
+  minzoom: 0,
+  maxzoom: 18,
+  bounds: [124, 33, 132, 39],
+} as const
 
 export const PRODUCTION_VISUAL_VIEWPORTS = [
   { id: "360x800", width: 360, height: 800, owner: "responsive" },
@@ -16,6 +26,7 @@ export const PRODUCTION_VISUAL_VIEWPORTS = [
 ] as const
 
 export type ProductionVisualViewport = (typeof PRODUCTION_VISUAL_VIEWPORTS)[number]
+export type ProductionVisualViewportLike = ProductionVisualViewport | BProductionStructuralVisualCase["viewport"]
 
 type RuntimeEvidence = {
   product: string[]
@@ -77,6 +88,20 @@ export async function prepareBProductionVisualPage(page: Page) {
       document.head.append(style)
     }, { once: true })
   })
+}
+
+export async function prepareBProductionStructuralVisualPage(page: Page) {
+  await page.route("https://tiles.openfreemap.org/planet", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(STRUCTURAL_TILEJSON),
+  }))
+  await page.route("https://tiles.openfreemap.org/ondo-production-visual-empty/**", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/x-protobuf",
+    body: Buffer.alloc(0),
+  }))
+  await prepareBProductionVisualPage(page)
 }
 
 async function seedDevice(page: Page, item: BProductionVisualCase, options: {
@@ -242,6 +267,24 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
   return scope
 }
 
+export async function setupBProductionStructuralVisualCase(page: Page, item: BProductionStructuralVisualCase): Promise<Locator> {
+  await seedDevice(page, item)
+  await gotoProductionB(page, item.locale)
+  const root = await openCity(page)
+  await expect(root).toHaveAttribute("data-layout-mode", item.expectedLayoutMode)
+  await expect(root).toHaveAttribute("data-requested-view", item.expectedRequestedView)
+  await expect(root).toHaveAttribute("data-effective-view", item.expectedEffectiveView)
+  if (item.expectedEffectiveView === "map") {
+    await waitForMap(page)
+  } else {
+    await expect(page.getByTestId("ondo-b-list-panel")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
+  }
+  const scope = page.locator(item.surfaceSelector)
+  await expect(scope).toBeVisible()
+  return scope
+}
+
 export async function stabilizeBProductionVisual(page: Page, item: BProductionVisualCase) {
   await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", item.locale)
   await page.evaluate(async () => {
@@ -358,7 +401,39 @@ export async function expectBProductionVisualGuards(page: Page, item: BProductio
   expect(visibleCopy, `${item.id} production-banned visible copy`).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|\bfixtures?\b|\bhypoth(?:esis|eses)\b|\btest[- ]?tokens?\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처/i)
 }
 
-export async function attachBProductionVisualMetadata(testInfo: TestInfo, item: BProductionVisualCase, viewport: ProductionVisualViewport) {
+export async function expectBProductionStructuralVisualGuards(page: Page, item: BProductionStructuralVisualCase) {
+  await expectBProductionVisualGuards(page, item)
+  const root = page.getByTestId("ondo-b-map-entry")
+  await expect(root).toHaveAttribute("data-layout-mode", item.expectedLayoutMode)
+  await expect(root).toHaveAttribute("data-requested-view", item.expectedRequestedView)
+  await expect(root).toHaveAttribute("data-effective-view", item.expectedEffectiveView)
+
+  if (item.expectedLayoutMode === "compact-map") {
+    await expect(page.getByTestId("maplibre-map")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-view-toggle")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-locate")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-result-bar")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-attribution")).toBeVisible()
+    const truth = page.getByTestId("ondo-b-location-message")
+    await expect(truth).toBeVisible()
+    await expect(truth).toHaveAttribute("data-message-kind", "disclosure")
+    await expect(truth).toContainText(item.locale === "ko" ? /위치/ : /location/i)
+  } else {
+    await expect(page.getByTestId("ondo-b-list-panel")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-effective-view-label")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-effective-view-label")).toContainText(item.locale === "ko" ? /목록/ : /list/i)
+    await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
+    await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]").first()).toContainText(/\S/)
+    await expect(page.getByTestId("maplibre-map")).toBeHidden()
+    await expect(page.getByTestId("ondo-b-view-toggle")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-location-message")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-map-key")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-attribution")).toHaveCount(0)
+  }
+}
+
+export async function attachBProductionVisualMetadata(testInfo: TestInfo, item: BProductionVisualCase, viewport: ProductionVisualViewportLike) {
   await testInfo.attach("production-visual-case.json", {
     body: JSON.stringify({
       caseId: item.id,
@@ -372,7 +447,7 @@ export async function attachBProductionVisualMetadata(testInfo: TestInfo, item: 
   })
 }
 
-export async function expectBProductionVisualSnapshot(page: Page, item: BProductionVisualCase, viewport: ProductionVisualViewport) {
+export async function expectBProductionVisualSnapshot(page: Page, item: BProductionVisualCase, viewport: ProductionVisualViewportLike) {
   if (process.env.PRODUCTION_VISUAL_PREFLIGHT === "1") return
   await expect(page).toHaveScreenshot(`${item.id}-${item.locale}-${viewport.id}.png`, {
     animations: "disabled",
