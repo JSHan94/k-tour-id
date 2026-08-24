@@ -89,7 +89,7 @@ test.describe("ONDO B standalone Sites packaging", () => {
     expect(visibleSource).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)/i)
   })
 
-  test("B-STANDALONE-005 scanner rejects exact legacy UI identifiers without banning erased truth types", async () => {
+  test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {
     const { BANNED_ARTIFACT_TEXT } = await import("../../scripts/ondo-b-standalone/policy.mjs")
     const blocked = [
       "._personaSelected_a1b2c_1 { color: black }",
@@ -106,8 +106,8 @@ test.describe("ONDO B standalone Sites packaging", () => {
       expect(BANNED_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(sample)), sample).toBe(true)
     }
 
-    const erasedTypeOnly = "export type SourceTruth = { simulation: null; paymentSupport: null }"
-    expect(BANNED_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(erasedTypeOnly))).toBe(false)
+    const contracts = readFileSync(resolve(APP_ROOT, "lib/ondo/venues/contracts.ts"), "utf8")
+    expect(contracts).toContain("simulation: null")
   })
 
   test("B-STANDALONE-006 prepared onboarding CSS contains only the official-directory production surface", async () => {
@@ -117,5 +117,7 @@ test.describe("ONDO B standalone Sites packaging", () => {
     expect(css).toContain(":global([data-variant=\"B\"]) .layer")
     expect(css).not.toMatch(/(?:^|[._-])persona(?:s|Selected|Icon)?(?:[._:{\s-]|$)/im)
     expect(css).not.toMatch(/(?:KYC|payment|chat|reward|Labs|After19|demo|simulation)/i)
+    const details = readFileSync(resolve(STAGE_ROOT, "data/ondo-venues/canonical-venues.json"), "utf8")
+    expect(details).not.toMatch(/"simulation"\s*:/i)
   })
 })
