@@ -21,8 +21,8 @@ test("B-PROD-LOCAL-001 B composes the complete B-native local-device product wit
 
 test("B-PROD-LOCAL-002 navigation keeps Tables, Traveler ID, and Settings as separate top-level destinations", () => {
   const app = appFile("features/ondo/app/ondo-app-b.tsx")
-  expect(app).toContain('en: { ondo: "Explore", my: "Saved", tables: "Tables", id: "Traveler ID", settings: "Settings" }')
-  expect(app).toContain('ko: { ondo: "탐색", my: "저장", tables: "테이블", id: "여행자 ID", settings: "설정" }')
+  expect(app).toContain('en: { ondo: "Explore", my: "My Korea", tables: "Tables", id: "Traveler ID", settings: "Settings" }')
+  expect(app).toContain('ko: { ondo: "탐색", my: "내 한국", tables: "테이블", id: "여행자 ID", settings: "설정" }')
   expect(app).toContain("B_NAV")
   const bNav = app.slice(app.indexOf("const B_NAV"), app.indexOf("const B_NAV_COPY"))
   expect(bNav).toContain('id: "tables"')
@@ -45,7 +45,7 @@ test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlis
 
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
+  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue", "recentVenueIds", "plannedTableRefs", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
     expect(deviceType).toContain(field)
   }
   for (const forbidden of ["account:", "person:", "age:", "paymentKyc:", "gate:", "tableMembershipById:", "reputation:", "stamps:", "profile:"]) {
@@ -71,7 +71,8 @@ test("B-PROD-LOCAL-005 private notes and reset retain their explicit device boun
   const settings = appFile("features/ondo/settings/settings-entry-b.tsx")
   const note = appFile("features/ondo/my/private-note.tsx")
   const productCopy = `${saved}\n${settings}\n${note}`
-  expect(productCopy).not.toMatch(/demo|simulation|simulated|fixture|preview|account|identity|KYC|Labs|stamp|trust/i)
+  expect(productCopy).not.toMatch(/demo|simulation|simulated|fixture|account|identity|KYC|Labs|stamp|trust/i)
+  expect(saved).toContain("Local preview · no reservation")
   expect(note).toContain("actions.setPrivateNote")
   expect(note).toContain("stays only in this browser")
   expect(settings).toContain("actions.clearBDeviceContent")

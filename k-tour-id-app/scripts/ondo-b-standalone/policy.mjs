@@ -36,6 +36,7 @@ export const SOURCE_FILES = Object.freeze([
   "features/ondo/map/map-b.module.css",
   "features/ondo/map/map-entry-b.tsx",
   "features/ondo/my/private-note.tsx",
+  "features/ondo/my/my-korea-model.ts",
   "features/ondo/my/saved-entry-b.tsx",
   "features/ondo/onboarding/official-directory-onboarding.tsx",
   "features/ondo/onboarding/official-directory-onboarding.module.css",

@@ -68,10 +68,12 @@ test("B-MY-003 activity is created only by explicit place-open and final join ac
 
 test("B-MY-004 Local Signal owns one merge contract without inventing contributions", () => {
   const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const localSignal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
   const my = source("features/ondo/my/saved-entry-b.tsx")
   const integration = source("docs/ONDO_B_MY_KOREA_INTEGRATION.md")
 
   expect(provider).toContain("markLocalSignalPosted(venueId: string): boolean")
+  expect(localSignal.match(/actions\.markLocalSignalPosted\(activeVenue\.id\)/g)).toHaveLength(1)
   expect(my).toContain("state.localSignalPostedVenueIds")
   expect(my).toContain("No Local Signals yet")
   expect(my).toContain("아직 로컬 시그널이 없어요")

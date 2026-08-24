@@ -126,7 +126,7 @@ const COPY = {
 } as const
 
 export function PulseTablesEntryB() {
-  const { state } = useOndoB()
+  const { state, actions } = useOndoB()
   const locale = state.locale
   const t = locale === "ko" ? COPY.ko : COPY.en
   const venue = canonicalMapVenueById(TABLE_VENUE_ID)
@@ -186,11 +186,15 @@ export function PulseTablesEntryB() {
   }
 
   function confirmJoin() {
+    const recorded = actions.recordPlannedTable(ACTIVE_TABLE_ID, TABLE_VENUE_ID)
+    if (!recorded) actions.notify(locale === "ko" ? "참여 상태는 열렸지만 이 기기의 식사 계획에는 저장하지 못했어요." : "The local join opened, but the meal plan could not be saved on this device.")
     setJoinStage("joined")
     focusFirstAvailableDestination(["[data-testid='table-open-chat']"])
   }
 
   function confirmLeave() {
+    const removed = actions.removePlannedTable(ACTIVE_TABLE_ID)
+    if (!removed) actions.notify(locale === "ko" ? "테이블에서는 나갔지만 이 기기의 식사 계획을 지우지 못했어요." : "You left the local Table, but its meal plan could not be removed from this device.")
     setJoinStage("idle")
     setReturnTo(null)
     setReportOpen(false)

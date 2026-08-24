@@ -8,6 +8,15 @@ import {
   sanitizeCanonicalVenueIds,
   sanitizeCanonicalVenueNotes,
 } from "@/lib/ondo/venues/canonical-allowlist"
+import type { OndoBPlannedTableRef } from "../../my/my-korea-model"
+import {
+  recordPlannedTable,
+  recordRecentVenue,
+  removePlannedTable,
+  sanitizeLocalSignalVenueIds,
+  sanitizePlannedTableRefs,
+  sanitizeRecentVenueIds,
+} from "../../my/my-korea-model"
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-preferences"
 
@@ -32,6 +41,8 @@ export type OndoBState = {
   savedVenueIds: string[]
   saveStatusByVenue: Record<string, OndoBSaveStatus>
   privateNotesByVenue: Record<string, string>
+  recentVenueIds: string[]
+  plannedTableRefs: OndoBPlannedTableRef[]
   localSignalPostedVenueIds: string[]
   localInteractionBoundarySeen: boolean
   localSignalDraft: OndoBLocalSignalDraft | null
@@ -55,6 +66,9 @@ export type OndoBActions = {
   openLocalSignal(venueId: string): void
   updateLocalSignalDraft(update: Pick<OndoBLocalSignalDraft, "tags" | "note">): void
   closeLocalSignal(): void
+  recordRecentVenue(venueId: string): boolean
+  recordPlannedTable(tableId: string, venueId: string): boolean
+  removePlannedTable(tableId: string): boolean
   markLocalSignalPosted(venueId: string): boolean
   acknowledgeLocalInteractionBoundary(): boolean
   clearBDeviceContent(): boolean
@@ -68,6 +82,8 @@ type OndoBDeviceState = {
   discoveryPreferences: OndoBDiscoveryPreference[]
   savedVenueIds: string[]
   privateNotesByVenue: Record<string, string>
+  recentVenueIds: string[]
+  plannedTableRefs: OndoBPlannedTableRef[]
   localSignalPostedVenueIds: string[]
   localInteractionBoundarySeen: boolean
 }
@@ -90,6 +106,8 @@ function initialState(): OndoBState {
     savedVenueIds: [],
     saveStatusByVenue: {},
     privateNotesByVenue: {},
+    recentVenueIds: [],
+    plannedTableRefs: [],
     localSignalPostedVenueIds: [],
     localInteractionBoundarySeen: false,
     localSignalDraft: null,
@@ -115,7 +133,9 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
       : [],
     savedVenueIds,
     privateNotesByVenue: sanitizeCanonicalVenueNotes(record.privateNotesByVenue, savedVenueIds),
-    localSignalPostedVenueIds: sanitizeCanonicalVenueIds(record.localSignalPostedVenueIds),
+    recentVenueIds: sanitizeRecentVenueIds(record.recentVenueIds),
+    plannedTableRefs: sanitizePlannedTableRefs(record.plannedTableRefs),
+    localSignalPostedVenueIds: sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds),
     localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
   }
 }
@@ -128,6 +148,8 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     discoveryPreferences: state.discoveryPreferences,
     savedVenueIds: state.savedVenueIds,
     privateNotesByVenue: state.privateNotesByVenue,
+    recentVenueIds: state.recentVenueIds,
+    plannedTableRefs: state.plannedTableRefs,
     localSignalPostedVenueIds: state.localSignalPostedVenueIds,
     localInteractionBoundarySeen: state.localInteractionBoundarySeen,
   })
@@ -307,13 +329,21 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       } : current)
     },
     closeLocalSignal: () => commitEphemeral((current) => ({ ...current, localSignalDraft: null })),
+    recordRecentVenue: (venueId) => {
+      if (!isCanonicalVenueId(venueId)) return false
+      return commit((current) => ({ ...current, recentVenueIds: recordRecentVenue(current.recentVenueIds, venueId) }))
+    },
+    recordPlannedTable: (tableId, venueId) => {
+      const nextRefs = recordPlannedTable(stateRef.current.plannedTableRefs, tableId, venueId)
+      if (!nextRefs.some((item) => item.tableId === tableId && item.venueId === venueId)) return false
+      return commit((current) => ({ ...current, plannedTableRefs: recordPlannedTable(current.plannedTableRefs, tableId, venueId) }))
+    },
+    removePlannedTable: (tableId) => commit((current) => ({ ...current, plannedTableRefs: removePlannedTable(current.plannedTableRefs, tableId) })),
     markLocalSignalPosted: (venueId) => {
       if (!isCanonicalVenueId(venueId)) return false
       return commit((current) => ({
         ...current,
-        localSignalPostedVenueIds: current.localSignalPostedVenueIds.includes(venueId)
-          ? current.localSignalPostedVenueIds
-          : [...current.localSignalPostedVenueIds, venueId],
+        localSignalPostedVenueIds: sanitizeLocalSignalVenueIds([venueId, ...current.localSignalPostedVenueIds.filter((id) => id !== venueId)]),
       }))
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
@@ -323,6 +353,8 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       savedVenueIds: [],
       saveStatusByVenue: {},
       privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
       localSignalPostedVenueIds: [],
       localInteractionBoundarySeen: false,
       localSignalDraft: null,

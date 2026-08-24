@@ -80,6 +80,7 @@ const COPY = {
     mapKey: "Grouped official records",
     mapKeyBody: "Outlined numbers show record groups. Small neutral dots show individual records.",
     filterLabel: "Official business category",
+    recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
   },
   ko: {
     tagline: "공식 일반음식점 디렉터리",
@@ -118,6 +119,7 @@ const COPY = {
     mapKey: "공식 기록 묶음",
     mapKeyBody: "테두리 숫자는 기록 묶음, 작은 중립색 점은 개별 기록을 뜻합니다.",
     filterLabel: "공식 업태 분류",
+    recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
@@ -552,6 +554,7 @@ export function MapEntryB() {
           const id = event.features?.[0]?.properties?.id
           if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
             openBDiscoveryVenue(id)
+            if (!actions.recordRecentVenue(id)) actions.notify(copy.recentSaveFailed)
             actions.setSurface({ kind: "venue", venueId: id })
           }
         })
@@ -603,6 +606,7 @@ export function MapEntryB() {
   function selectVenue(venue: CanonicalMapVenue) {
     replaceBDiscoveryCityContext({ city: venue.cityId, view, query, category, focus: { kind: "venue", venueId: venue.id } })
     openBDiscoveryVenue(venue.id)
+    if (!actions.recordRecentVenue(venue.id)) actions.notify(copy.recentSaveFailed)
     actions.setSurface({ kind: "venue", venueId: venue.id })
     mapRef.current?.easeTo({ center: [venue.longitude, venue.latitude], zoom: 15 })
   }

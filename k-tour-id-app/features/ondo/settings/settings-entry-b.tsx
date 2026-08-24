@@ -31,7 +31,7 @@ function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
     }}>
       <div className={styles.confirmCard}>
         <h2 id="b-clear-title">{locale === "ko" ? "이 브라우저의 저장 내용을 지울까요?" : "Clear saved content from this browser?"}</h2>
-        <p>{locale === "ko" ? "저장한 장소, 탐색 선택, 개인 메모와 로컬 시그널 게시 표시를 삭제합니다." : "This removes saved places, discovery choices, private notes, and posted Local Signal markers."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 본 장소, 참여한 테이블 미리보기, 로컬 시그널 기록, 탐색 선택과 개인 메모를 삭제합니다." : "This removes saved places, recent views, joined Table previews, Local Signal history, discovery choices, and private notes."}</p>
         <strong>{locale === "ko" ? "언어와 시작 설정은 유지됩니다." : "Language and initial setup stay unchanged."}</strong>
         <div>
           <button ref={cancelRef} type="button" onClick={onCancel}>{locale === "ko" ? "내용 유지" : "Keep content"}</button>
@@ -64,7 +64,7 @@ export function SettingsEntryB() {
       <header className={styles.header}>
         <p>{locale === "ko" ? "내 기기" : "ON THIS DEVICE"}</p>
         <h1>{locale === "ko" ? "설정" : "Settings"}</h1>
-        <span>{locale === "ko" ? "언어와 탐색 선택, 이 브라우저에 저장된 내용을 관리하세요." : "Manage language, discovery choices, and content stored in this browser."}</span>
+        <span>{locale === "ko" ? "언어와 탐색 선택, 내 한국에 이 브라우저가 저장한 내용을 관리하세요." : "Manage language, discovery choices, and My Korea content stored in this browser."}</span>
       </header>
 
       <section className={styles.settingsSection} aria-labelledby="b-language-heading">
@@ -86,7 +86,7 @@ export function SettingsEntryB() {
           ))}
         </div>
         <div className={styles.setupReset}>
-          <p>{locale === "ko" ? "이용 목적과 탐색 선택을 처음부터 다시 고를 수 있어요. 저장한 장소, 개인 메모와 로컬 시그널 표시는 유지됩니다." : "Choose your intent and discovery preferences again. Saved places, private notes, and Local Signal markers stay unchanged."}</p>
+          <p>{locale === "ko" ? "이용 목적과 탐색 선택을 처음부터 다시 고를 수 있어요. 저장한 장소, 최근 본 장소, 참여한 테이블 미리보기, 개인 메모와 로컬 시그널 표시는 유지됩니다." : "Choose your intent and discovery preferences again. Saved places, recent views, joined Table previews, private notes, and Local Signal markers stay unchanged."}</p>
           <button type="button" onClick={() => actions.resetOnboarding()} data-testid="ondo-b-onboarding-reset">
             <RotateCcw size={17} aria-hidden="true" />
             {locale === "ko" ? "ONDO 다시 설정하기" : "Set up ONDO again"}
@@ -96,7 +96,7 @@ export function SettingsEntryB() {
 
       <section className={styles.settingsSection} aria-labelledby="b-privacy-heading">
         <div className={styles.sectionHeading}><LockKeyhole size={18} aria-hidden="true" /><h2 id="b-privacy-heading">{locale === "ko" ? "이 브라우저의 데이터" : "Data in this browser"}</h2></div>
-        <p>{locale === "ko" ? "저장한 장소, 탐색 선택, 개인 메모, 게시된 로컬 시그널의 장소 표시와 최초 1회 로컬 경계 확인만 이 브라우저에 저장됩니다. 작성 내용·본인·19+ 결과·DID·프로필은 저장하거나 전송하지 않아요." : "Saved places, discovery choices, private notes, posted Local Signal venue markers, and the one-time local boundary choice stay only in this browser. Drafts, Person or 19+ results, DIDs, and profiles are not stored or sent."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블 미리보기, 탐색 선택, 개인 메모, 게시된 로컬 시그널의 장소 표시와 최초 1회 로컬 경계 확인만 이 브라우저에 저장됩니다. 초안·본인·19+ 결과·DID·프로필은 저장하거나 전송하지 않아요." : "Saved places, recent views, joined Table previews, discovery choices, private notes, posted Local Signal venue markers, and the one-time local boundary choice stay only in this browser. Drafts, Person or 19+ results, DIDs, and profiles are not stored or sent."}</p>
         <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
           <RotateCcw size={17} aria-hidden="true" />
           {locale === "ko" ? "저장한 내용 지우기" : "Clear saved content"}

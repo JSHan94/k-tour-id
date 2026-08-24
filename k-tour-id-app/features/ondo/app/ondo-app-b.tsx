@@ -24,8 +24,8 @@ const B_NAV: Array<{ id: OndoBTab; icon: typeof Compass }> = [
 ]
 
 const B_NAV_COPY = {
-  en: { ondo: "Explore", my: "Saved", tables: "Tables", id: "Traveler ID", settings: "Settings" },
-  ko: { ondo: "탐색", my: "저장", tables: "테이블", id: "여행자 ID", settings: "설정" },
+  en: { ondo: "Explore", my: "My Korea", tables: "Tables", id: "Traveler ID", settings: "Settings" },
+  ko: { ondo: "탐색", my: "내 한국", tables: "테이블", id: "여행자 ID", settings: "설정" },
 } as const
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {

@@ -9,6 +9,31 @@
 .header h1 { margin: 0; font-size: 29px; line-height: 1.18; letter-spacing: -.045em; }
 .header span { display: block; margin-top: 10px; color: #706d67; font-size: 14px; line-height: 1.6; }
 
+.activitySections { display: grid; gap: 28px; margin-top: 30px; }
+.activitySection { display: grid; min-width: 0; gap: 14px; border-top: 1px solid #dedbd5; padding-top: 18px; }
+.activityHeading { display: grid; grid-template-columns: 22px 1fr; align-items: start; gap: 9px; color: #403d38; }
+.activityHeading > span { display: grid; gap: 5px; }
+.activityHeading h2, .activityHeading p { margin: 0; }
+.activityHeading h2 { font-size: 18px; letter-spacing: -.025em; }
+.activityHeading p { color: #706d67; font-size: 12px; line-height: 1.55; }
+.compactEmpty { display: grid; justify-items: start; gap: 7px; border-radius: 13px; padding: 14px; background: #f2f0ec; color: #55524d; }
+.compactEmpty h3, .compactEmpty p { margin: 0; }
+.compactEmpty h3 { font-size: 14px; }
+.compactEmpty p { color: #706d67; font-size: 12px; line-height: 1.5; }
+.compactEmpty button { min-height: 44px; margin-top: 3px; border: 0; border-radius: 10px; padding: 0 13px; background: #20201e; color: #fff; font: inherit; font-size: 12px; font-weight: 720; }
+.referenceList { display: grid; gap: 9px; }
+.referenceCard { display: grid; width: 100%; min-height: 70px; grid-template-columns: 22px 1fr 20px; align-items: center; gap: 9px; border: 1px solid #dedbd5; border-radius: 13px; padding: 12px; background: #fff; color: #20201e; font: inherit; text-align: left; }
+.referenceCard > span { display: grid; min-width: 0; gap: 4px; }
+.referenceCard strong, .referenceCard small { overflow-wrap: anywhere; }
+.referenceCard strong { font-size: 14px; }
+.referenceCard small { color: #6b6761; font-size: 11px; line-height: 1.45; }
+.planReference { display: grid; gap: 8px; border: 1px solid #d8c8bd; border-radius: 14px; padding: 14px; background: #fffaf5; }
+.planReference h3, .planReference p { margin: 0; }
+.planReference h3 { font-size: 16px; letter-spacing: -.02em; }
+.planReference p { color: #6b625a; font-size: 12px; line-height: 1.5; }
+.planReference button { display: flex; min-height: 44px; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 10px; background: #20201e; color: #fff; font: inherit; font-size: 12px; font-weight: 720; }
+.localBadge { width: fit-content; border-radius: 999px; padding: 5px 8px; background: #efe5dc; color: #74463f; font-size: 10px; font-weight: 780; letter-spacing: .03em; }
+
 .empty {
   display: grid;
   justify-items: start;
@@ -86,4 +111,6 @@
 
 @media (min-width: 700px) {
   .screen { max-width: 700px; margin: 0 auto; }
+  .activitySections { grid-template-columns: 1fr 1fr; align-items: start; }
+  .activitySection:first-child { grid-column: 1 / -1; }
 }
