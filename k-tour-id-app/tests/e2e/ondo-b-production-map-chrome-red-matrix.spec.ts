@@ -689,33 +689,48 @@ async function settleLayout(root: Locator, layoutMode: LayoutMode, effectiveView
   }), { timeout: 1_500 }).toEqual({ layout: layoutMode, effective: effectiveView }).catch(() => undefined)
 }
 
+async function runBounded(tasks: Array<() => Promise<void>>, concurrency = 4) {
+  let nextIndex = 0
+  await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, async () => {
+    while (nextIndex < tasks.length) {
+      const taskIndex = nextIndex
+      nextIndex += 1
+      await tasks[taskIndex]()
+    }
+  }))
+}
+
 async function runStateMatrix(browser: Browser, violations: Violation[]) {
+  const tasks: Array<() => Promise<void>> = []
   for (const locale of ["en", "ko"] as const) {
     for (const viewport of VIEWPORTS) {
-      const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, colorScheme: "light", locale: "en-US", timezoneId: "Asia/Seoul" })
-      await seedContext(context, locale)
-      const page = await context.newPage()
-      try {
-        await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
-        const root = page.getByTestId("ondo-b-map-entry")
-        await root.waitFor({ state: "visible" })
-        const rootReceipt = await elementReceipt(root)
-        if (rootReceipt && expectedLayoutForRoot(rootReceipt) === "ultra-short") {
-          await auditUltraShortLayout(violations, page, locale, viewport)
-          continue
+      tasks.push(async () => {
+        const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height }, colorScheme: "light", locale: "en-US", timezoneId: "Asia/Seoul" })
+        await seedContext(context, locale)
+        const page = await context.newPage()
+        try {
+          await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+          const root = page.getByTestId("ondo-b-map-entry")
+          await root.waitFor({ state: "visible" })
+          const rootReceipt = await elementReceipt(root)
+          if (rootReceipt && expectedLayoutForRoot(rootReceipt) === "ultra-short") {
+            await auditUltraShortLayout(violations, page, locale, viewport)
+            return
+          }
+          await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+          for (const phase of ["idle", "ready", "offline", "denied"] as const) {
+            await enterPhase(page, context, phase)
+            await auditMapState(violations, page, locale, viewport, phase)
+          }
+        } catch (error) {
+          violations.push({ scenario: `${locale}/${viewport.width}x${viewport.height}/harness`, rule: "scenario-completed", subject: viewport.label, detail: error instanceof Error ? error.message : String(error) })
+        } finally {
+          await context.close()
         }
-        await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-        for (const phase of ["idle", "ready", "offline", "denied"] as const) {
-          await enterPhase(page, context, phase)
-          await auditMapState(violations, page, locale, viewport, phase)
-        }
-      } catch (error) {
-        violations.push({ scenario: `${locale}/${viewport.width}x${viewport.height}/harness`, rule: "scenario-completed", subject: viewport.label, detail: error instanceof Error ? error.message : String(error) })
-      } finally {
-        await context.close()
-      }
+      })
     }
   }
+  await runBounded(tasks)
 }
 
 async function auditUltraShortStateCarry(browser: Browser, violations: Violation[], locale: Locale, phase: Exclude<Phase, "idle">, target: Viewport) {
@@ -1162,6 +1177,7 @@ test.describe("ONDO B production map chrome RED matrix", () => {
     test.skip(testInfo.project.name !== "desktop-chromium", "The explicit viewport matrix has one Chromium owner.")
     const violations: Violation[] = []
     await runStateMatrix(browser, violations)
+    const transitionTasks: Array<() => Promise<void>> = []
     for (const locale of ["en", "ko"] as const) {
       for (const target of [
         { label: "fallback-320x320", width: 320, height: 320 },
@@ -1183,21 +1199,24 @@ test.describe("ONDO B production map chrome RED matrix", () => {
         { label: "short-844x501", width: 844, height: 501 },
         { label: "short-844x520", width: 844, height: 520 },
       ] as const) {
-        for (const phase of ["ready", "denied", "offline"] as const) await auditUltraShortStateCarry(browser, violations, locale, phase, target)
+        for (const phase of ["ready", "denied", "offline"] as const) transitionTasks.push(() => auditUltraShortStateCarry(browser, violations, locale, phase, target))
       }
-      await auditAutoListBoundary(browser, violations, locale, { label: "root-399", width: 600, height: 481 }, { label: "root-400", width: 600, height: 482 }, { width: 600, height: 399 }, { width: 600, height: 400 }, "compact-map")
-      await auditAutoListBoundary(browser, violations, locale, { label: "root-599", width: 599, height: 681 }, { label: "root-600", width: 599, height: 682 }, { width: 599, height: 599 }, { width: 599, height: 600 }, "spacious-map")
-      await auditAutoListBoundary(browser, violations, locale, { label: "inline-599", width: 599, height: 582 }, { label: "inline-600", width: 600, height: 582 }, { width: 599, height: 500 }, { width: 600, height: 500 }, "compact-map")
-      await auditRootBoundaryModes(browser, violations, locale)
-      await auditRequestedViewKeyboard(browser, violations, locale)
-      await auditCompactZoomFocusSeam(browser, violations, locale, { label: "width-431", width: 431, height: 720 }, { label: "width-430", width: 430, height: 720 })
-      await auditCompactZoomFocusSeam(browser, violations, locale, { label: "root-block-569", width: 768, height: 651 }, { label: "root-block-568", width: 768, height: 650 })
-      await auditKeyboardTabOrder(browser, violations, locale, { label: "tab-spacious", width: 900, height: 720 }, "spacious-map")
-      await auditKeyboardTabOrder(browser, violations, locale, { label: "tab-compact", width: 600, height: 501 }, "compact-map")
-      await auditKeyboardTabOrder(browser, violations, locale, { label: "tab-ultra", width: 667, height: 320 }, "ultra-short")
-      await auditZoomResize(browser, violations, locale)
-      await auditListFallback(browser, violations, locale)
+      transitionTasks.push(
+        () => auditAutoListBoundary(browser, violations, locale, { label: "root-399", width: 600, height: 481 }, { label: "root-400", width: 600, height: 482 }, { width: 600, height: 399 }, { width: 600, height: 400 }, "compact-map"),
+        () => auditAutoListBoundary(browser, violations, locale, { label: "root-599", width: 599, height: 681 }, { label: "root-600", width: 599, height: 682 }, { width: 599, height: 599 }, { width: 599, height: 600 }, "spacious-map"),
+        () => auditAutoListBoundary(browser, violations, locale, { label: "inline-599", width: 599, height: 582 }, { label: "inline-600", width: 600, height: 582 }, { width: 599, height: 500 }, { width: 600, height: 500 }, "compact-map"),
+        () => auditRootBoundaryModes(browser, violations, locale),
+        () => auditRequestedViewKeyboard(browser, violations, locale),
+        () => auditCompactZoomFocusSeam(browser, violations, locale, { label: "width-431", width: 431, height: 720 }, { label: "width-430", width: 430, height: 720 }),
+        () => auditCompactZoomFocusSeam(browser, violations, locale, { label: "root-block-569", width: 768, height: 651 }, { label: "root-block-568", width: 768, height: 650 }),
+        () => auditKeyboardTabOrder(browser, violations, locale, { label: "tab-spacious", width: 900, height: 720 }, "spacious-map"),
+        () => auditKeyboardTabOrder(browser, violations, locale, { label: "tab-compact", width: 600, height: 501 }, "compact-map"),
+        () => auditKeyboardTabOrder(browser, violations, locale, { label: "tab-ultra", width: 667, height: 320 }, "ultra-short"),
+        () => auditZoomResize(browser, violations, locale),
+        () => auditListFallback(browser, violations, locale),
+      )
     }
+    await runBounded(transitionTasks)
 
     violations.sort((left, right) => `${left.scenario}|${left.rule}|${left.subject}|${left.detail ?? ""}`.localeCompare(`${right.scenario}|${right.rule}|${right.subject}|${right.detail ?? ""}`))
     const exactReceipt = JSON.stringify(violations)
