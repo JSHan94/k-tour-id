@@ -65,10 +65,11 @@ const EXPECTED_KEY = {
 } as const
 
 function expectedLayoutForRoot(root: Rect): LayoutMode {
-  // Below 350px the fixed truthful lanes cannot coexist: the 168px header,
-  // 58px result count and 44px attribution already exhaust the root before
-  // key, message, locate and required gaps are considered.
-  if (root.height < 350) return "ultra-short"
+  // Chromium sizing of the worst EN/KO offline chrome establishes two honest
+  // map budgets: 380px for the two-row >=600px layout and 580px for the
+  // narrower stacked layout. Below either budget the requested map remains in
+  // state while the effective surface becomes the compact list.
+  if (root.height < 380 || (root.width < 600 && root.height < 580)) return "ultra-short"
   if (root.width <= 430 || (root.width > root.height && root.height <= 568)) return "compact-map"
   return "spacious-map"
 }

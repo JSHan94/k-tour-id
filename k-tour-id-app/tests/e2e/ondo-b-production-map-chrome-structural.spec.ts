@@ -23,7 +23,11 @@ const VIEWPORTS = [
   { width: 500, height: 432 },
   { width: 500, height: 532 },
   { width: 599, height: 631 },
+  { width: 599, height: 632 },
+  { width: 599, height: 661 },
+  { width: 599, height: 662 },
   { width: 600, height: 461 },
+  { width: 600, height: 462 },
   { width: 600, height: 501 },
   { width: 667, height: 320 },
   { width: 667, height: 501 },
@@ -40,6 +44,12 @@ const VIEWPORTS = [
 type Locale = "en" | "ko"
 type LocationCase = "idle" | "ready" | "denied" | "offline"
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
+
+function expectedLayout(width: number, height: number) {
+  if (height < 380 || (width < 600 && height < 580)) return "ultra-short"
+  if (width <= 430 || (width > height && height <= 568)) return "compact-map"
+  return "spacious-map"
+}
 
 function intersection(first: Box, second: Box) {
   const width = Math.max(0, Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x))
@@ -163,6 +173,8 @@ test.describe("ONDO B structural production map chrome", () => {
           const root = page.getByTestId("ondo-b-map-entry")
           await expect(root).toHaveAttribute("data-layout-mode", /^(ultra-short|compact-map|spacious-map)$/)
           const layout = await root.getAttribute("data-layout-mode")
+          const rootBox = await rect(root)
+          expect(layout, `${viewport.width}x${viewport.height} uses the measured actual-root budget`).toBe(expectedLayout(rootBox.width, rootBox.height))
 
           const header = page.getByTestId("ondo-b-city-header")
           const search = page.getByTestId("ondo-b-search-shell")
