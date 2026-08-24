@@ -9,17 +9,9 @@
 .nameProvenance span, .detailNameProvenance span { color: #777169; font-weight: 680; }
 .nameProvenance strong, .detailNameProvenance strong { color: #34312d; font-size: 12px; overflow-wrap: anywhere; }
 .nameProvenance small, .detailNameProvenance small { color: #716b64; font-size: 12px; overflow-wrap: anywhere; }
-.signal { display: grid; grid-template-columns: 46px 1fr; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #e0ddd7; border-bottom: 1px solid #e0ddd7; }
-.signal > b, .signalDetail > b { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid; border-radius: 50%; font-size: 13px; }
-.signal span { display: grid; gap: 2px; min-width: 0; }
-.signal strong { font-size: 13px; }
-.signal small { color: #77746e; font-size: 12px; line-height: 1.4; white-space: normal; }
-.peekBefore { display: grid; gap: 7px; padding-top: 9px; }
-.peekBefore > strong { color: #4f4b45; font-size: 12px; }
-.peekBefore dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
-.peekBefore dl > div { min-width: 0; padding-top: 6px; border-top: 1px solid #e7e4df; }
-.peekBefore dt { overflow: hidden; color: #716c65; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.peekBefore dd { margin: 2px 0 0; color: #34312d; font-size: 12px; font-weight: 720; }
+.recordSummary { padding: 10px 0; border-top: 1px solid #e0ddd7; border-bottom: 1px solid #e0ddd7; }
+.recordSummary strong { font-size: 13px; }
+.recordSummary p { margin: 3px 0 0; color: #6f6a63; font-size: 12px; line-height: 1.5; }
 .peekActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .peekActions a, .peekActions button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border-radius: 13px; font-size: 13px; font-weight: 750; text-decoration: none; }
 .peekActions button { border: 0; background: #22211f; color: white; }
@@ -40,54 +32,25 @@
 .decisionActions a, .decisionActions button { display: flex; min-height: 50px; align-items: center; justify-content: center; gap: 7px; border-radius: 12px; font-size: 13px; font-weight: 760; text-decoration: none; }
 .decisionActions a { border: 1px solid #20201e; background: #20201e; color: #fff; }
 .decisionActions button { border: 1px solid #dedbd5; background: transparent; color: #20201e; }
-.decisionActions button:disabled { color: #77746e; }
-.layer[data-save-state="SAV-FAILED"] .decisionActions a { border-color: #dedbd5; background: transparent; color: #20201e; }
-.signalDetail { display: grid; grid-template-columns: 58px 1fr; gap: 14px; align-items: start; padding: 20px 0; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; }
-.signalDetail > b { width: 56px; height: 56px; font-size: 16px; }
-.signalDetail small { color: #756f68; font-size: 12px; font-weight: 750; letter-spacing: .04em; }
-.signalDetail h3 { margin: 4px 0 3px; font-size: 17px; }
-.signalDetail p { margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.5; }
-.signalEvidence { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 13px 0 0; }
-.signalEvidence div { min-width: 0; padding-top: 8px; border-top: 1px solid #e4e1dc; }
-.signalEvidence dt { overflow: hidden; color: #6f6962; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
-.signalEvidence dd { margin: 3px 0 0; color: #2b2926; font-size: 12px; font-weight: 760; line-height: 1.35; }
-.contributionNote { margin-top: 10px !important; padding-left: 9px; border-left: 2px solid #77746e; }
-.after19Access { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: start; gap: 12px; padding: 20px 0; border-bottom: 1px solid #dedbd5; }
-.after19Icon { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #c9c0c5; border-radius: 50%; background: #f4f1f2; color: #30232a; }
-.after19Access small { color: #30232a; font-size: 12px; font-weight: 780; letter-spacing: .04em; }
-.after19Access h3 { margin: 4px 0 5px; font-size: 16px; }
-.after19Access p { grid-column: 2; margin: 0; color: #6f6a63; font-size: 12px; line-height: 1.55; }
-.after19Access > button, .after19Access > strong { grid-column: 2; }
-.after19Access > button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid #8c7281; border-radius: 12px; background: transparent; color: #30232a; font-size: 12px; font-weight: 760; text-align: left; }
-.after19Access > strong { color: #30232a; font-size: 12px; }
-.before, .source { padding: 22px 0; border-bottom: 1px solid #dedbd5; }
-.before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
+.decisionActions button:disabled { color: #77746e; cursor: not-allowed; }
+.sourceEvidence, .before, .source { padding: 20px 0; border-top: 1px solid #dedbd5; }
+.sourceEvidence h3, .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
+.sourceEvidence > p, .source p { margin: 0 0 12px; color: #6f6a63; font-size: 12px; line-height: 1.55; }
+.sourceEvidence dl, .source dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
+.sourceEvidence dl div, .source dl div { min-width: 0; padding-top: 8px; border-top: 1px solid #e7e4df; }
+.sourceEvidence dt, .source dt { color: #6f6962; font-size: 12px; line-height: 1.35; }
+.sourceEvidence dd, .source dd { margin: 3px 0 0; font-size: 12px; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
 .before > div { display: grid; min-height: 55px; grid-template-columns: 28px 1fr; align-items: center; border-top: 1px solid #ece9e4; }
 .before > div span { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .before strong { font-size: 12px; }
 .before small { color: #6f6962; font-size: 12px; text-align: right; }
-.source p { margin: 0 0 12px; color: #6f6a63; font-size: 12px; line-height: 1.55; }
-.source dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
-.source dl div { padding-top: 8px; border-top: 1px solid #e7e4df; }
-.source dt { color: #6f6962; font-size: 12px; }
-.source dd { margin: 3px 0 0; font-size: 12px; font-weight: 700; }
-.secondaryActions { display: grid; padding: 10px 0; border-bottom: 1px solid #dedbd5; }
-.secondaryActions button { display: grid; min-height: 54px; grid-template-columns: 24px 1fr 18px; align-items: center; gap: 8px; padding: 0; border: 0; border-bottom: 1px solid #e7e4df; background: transparent; color: #2b2926; font-size: 13px; font-weight: 680; text-align: left; }
 .saveError { margin: -6px 0 18px; padding: 12px 0 14px; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; background: transparent; }
 .saveError p { margin: 0 0 10px; color: #514d47; font-size: 12px; line-height: 1.5; }
-.saveError div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.saveError button { min-height: 44px; border: 1px solid #dedbd5; border-radius: 10px; background: transparent; color: #20201e; font-size: 12px; font-weight: 750; }
-.saveError button:first-child { border-color: #20201e; background: #20201e; color: #fff; }
+.saveError button { min-height: 44px; padding: 0 13px; border: 1px solid #20201e; border-radius: 10px; background: #20201e; color: #fff; font-size: 12px; font-weight: 750; }
 
 @media (max-width: 370px) {
   .peek { right: 8px; left: 8px; }
-  .peekBefore dl { gap: 5px; }
-  .signalDetail { grid-template-columns: 46px 1fr; gap: 10px; padding-block: 14px; }
-  .signalDetail > b { width: 44px; height: 44px; font-size: 14px; }
-  .signalEvidence { grid-template-columns: 1fr 1fr; gap: 8px; }
-  .signalEvidence div:last-child { grid-column: 1 / -1; }
-  .signalEvidence dt { overflow: visible; text-overflow: clip; white-space: normal; }
-  .after19Access { gap: 10px; padding-block: 14px; }
+  .sourceEvidence dl, .source dl { grid-template-columns: 1fr; gap: 8px; }
   .before > div span { display: grid; gap: 2px; }
   .before small { text-align: left; }
 }

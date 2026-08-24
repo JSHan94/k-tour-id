@@ -18,6 +18,7 @@ export type CanonicalVenueDetail = {
   }
   sourceCategory: FieldEvidence<string>
   licenseStatus: FieldEvidence<"ACTIVE_LICENSE_RECORD">
+  licenseOpenedAt: FieldEvidence<string>
   sourceModifiedAt: FieldEvidence<string>
   facts: {
     openingHours: FieldEvidence<unknown>

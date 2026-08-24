@@ -16,6 +16,7 @@ export function canonicalVenueDetailById(id: string): CanonicalVenueDetail | und
     address: venue.address,
     sourceCategory: venue.sourceCategory,
     licenseStatus: venue.licenseStatus,
+    licenseOpenedAt: venue.licenseOpenedAt,
     sourceModifiedAt: venue.sourceModifiedAt,
     facts: {
       openingHours: venue.facts.openingHours,

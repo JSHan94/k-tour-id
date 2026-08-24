@@ -1,6 +1,6 @@
 export type BDiscoveryCity = "seoul" | "busan"
 export type BDiscoveryView = "map" | "list"
-export type BDiscoveryHeat = "all" | "signal" | "pending"
+export type BDiscoveryCategory = "all" | "korean" | "casual" | "japanese" | "chinese" | "global" | "night" | "specialty"
 
 type BDiscoveryFocus =
   | { kind: "city"; city: BDiscoveryCity }
@@ -9,20 +9,23 @@ type BDiscoveryFocus =
   | { kind: "view-toggle" }
 
 export type BDiscoveryHistoryEntry = {
-  v: 1
+  v: 2
   documentId: string
   level: "nation" | "city" | "peek" | "detail"
   city?: BDiscoveryCity
   view: BDiscoveryView
   query: string
-  heat: BDiscoveryHeat
+  category: BDiscoveryCategory
   venueId?: string
   focus?: BDiscoveryFocus
 }
 
 const HISTORY_KEY = "__ondoBDiscovery"
 export const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
-const OWNED_URL_KEYS = ["city", "view", "venueId", "detail", "q", "heat", "hot", "calm", "open", "time", "neighborhood"] as const
+const OWNED_URL_KEYS = [
+  "city", "view", "venueId", "detail", "q", "category",
+  "heat", "hot", "calm", "open", "time", "neighborhood", "after19", "after19Return",
+] as const
 const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
@@ -51,8 +54,11 @@ function viewValue(value: unknown): BDiscoveryView {
   return value === "list" ? "list" : "map"
 }
 
-function heatValue(value: unknown): BDiscoveryHeat {
-  return value === "signal" || value === "pending" ? value : "all"
+function categoryValue(value: unknown): BDiscoveryCategory {
+  return value === "korean" || value === "casual" || value === "japanese" || value === "chinese"
+    || value === "global" || value === "night" || value === "specialty"
+    ? value
+    : "all"
 }
 
 function venueValue(value: unknown): string | undefined {
@@ -78,7 +84,7 @@ function focusValue(value: unknown): BDiscoveryFocus | undefined {
 }
 
 function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
-  if (!isRecord(value) || value.v !== 1) return null
+  if (!isRecord(value) || (value.v !== 1 && value.v !== 2)) return null
   const level = value.level
   if (level !== "nation" && level !== "city" && level !== "peek" && level !== "detail") return null
   const city = cityValue(value.city)
@@ -86,13 +92,13 @@ function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
   if (level !== "nation" && !city) return null
   if ((level === "peek" || level === "detail") && !venueId) return null
   return {
-    v: 1,
+    v: 2,
     documentId: typeof value.documentId === "string" ? value.documentId.slice(0, 64) : "legacy",
     level,
     city,
     view: viewValue(value.view),
     query: queryValue(value.query),
-    heat: heatValue(value.heat),
+    category: value.v === 2 ? categoryValue(value.category) : "all",
     venueId: level === "peek" || level === "detail" ? venueId : undefined,
     focus: focusValue(value.focus),
   }
@@ -168,7 +174,7 @@ export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preser
   const currentDocumentId = documentId()
   const current: BDiscoveryHistoryEntry = existing.documentId === currentDocumentId
     ? existing
-    : { ...existing, documentId: currentDocumentId, query: "", heat: "all" }
+    : { ...existing, documentId: currentDocumentId, query: "", category: "all" }
   replaceEntry(current, preservedState)
   return current
 }
@@ -177,27 +183,26 @@ export function normalizeBDiscoveryHistoryForActiveDocument() {
   const existing = readBDiscoveryHistory()
   if (!existing) return null
   const currentDocumentId = documentId()
-  if (existing.documentId === currentDocumentId) return existing
+  if (existing.documentId === currentDocumentId && existing.v === 2) return existing
   return replaceBDiscoveryHistoryForActiveDocument(existing)
 }
 
 export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDiscoveryCity | undefined) {
   const existing = normalizeBDiscoveryHistoryForActiveDocument()
-  if (existing) {
-    return existing
-  }
+  if (existing) return existing
 
   const url = new URL(window.location.href)
   const requestedVenueId = venueValue(url.searchParams.get("venueId"))
   const resolvedVenueCity = requestedVenueId ? venueCity(requestedVenueId) : undefined
   const requestedCity = resolvedVenueCity ?? cityValue(url.searchParams.get("city"))
   const requestedView = viewValue(url.searchParams.get("view"))
+  const requestedCategory = categoryValue(url.searchParams.get("category"))
   const wantsDetail = url.searchParams.get("detail") === "1"
-  const nation: BDiscoveryHistoryEntry = { v: 1, documentId: documentId(), level: "nation", view: "map", query: "", heat: "all" }
+  const nation: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "nation", view: "map", query: "", category: "all" }
   replaceEntry(nation)
   if (!requestedCity) return nation
 
-  const city: BDiscoveryHistoryEntry = { v: 1, documentId: documentId(), level: "city", city: requestedCity, view: requestedView, query: "", heat: "all", focus: { kind: "search" } }
+  const city: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city: requestedCity, view: requestedView, query: "", category: requestedCategory, focus: { kind: "search" } }
   pushEntry(city)
   if (!requestedVenueId || !resolvedVenueCity) return city
 
@@ -213,22 +218,22 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
 export function enterBDiscoveryCity(city: BDiscoveryCity) {
   const current = readBDiscoveryHistory()
   if (current?.level === "nation") replaceEntry({ ...current, focus: { kind: "city", city } })
-  const next: BDiscoveryHistoryEntry = { v: 1, documentId: documentId(), level: "city", city, view: "map", query: "", heat: "all", focus: { kind: "search" } }
+  const next: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", focus: { kind: "search" } }
   pushEntry(next)
   return next
 }
 
-export function replaceBDiscoveryCityContext(input: Pick<BDiscoveryHistoryEntry, "city" | "view" | "query" | "heat"> & { focus?: BDiscoveryFocus }) {
+export function replaceBDiscoveryCityContext(input: Pick<BDiscoveryHistoryEntry, "city" | "view" | "query" | "category"> & { focus?: BDiscoveryFocus }) {
   const current = readBDiscoveryHistory()
   if (current?.level !== "city" || !input.city) return current
   const next: BDiscoveryHistoryEntry = {
-    v: 1,
+    v: 2,
     documentId: documentId(),
     level: "city",
     city: input.city,
     view: viewValue(input.view),
     query: queryValue(input.query),
-    heat: heatValue(input.heat),
+    category: categoryValue(input.category),
     focus: input.focus ?? current.focus,
   }
   replaceEntry(next)
@@ -256,16 +261,7 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
 
   const city: BDiscoveryHistoryEntry = current?.level === "city" && current.city === safeVenueCity
     ? { ...current, focus: { kind: "venue", venueId: safeVenueId } }
-    : {
-        v: 1,
-        documentId: documentId(),
-        level: "city",
-        city: safeVenueCity,
-        view: "map",
-        query: "",
-        heat: "all",
-        focus: { kind: "venue", venueId: safeVenueId },
-      }
+    : { v: 2, documentId: documentId(), level: "city", city: safeVenueCity, view: "map", query: "", category: "all", focus: { kind: "venue", venueId: safeVenueId } }
 
   if (current?.level === "nation") {
     replaceEntry({ ...current, focus: { kind: "city", city: safeVenueCity } })
@@ -275,7 +271,7 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
   } else if (current) {
     pushEntry(city)
   } else {
-    replaceEntry({ v: 1, documentId: documentId(), level: "nation", view: "map", query: "", heat: "all", focus: { kind: "city", city: safeVenueCity } })
+    replaceEntry({ v: 2, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", focus: { kind: "city", city: safeVenueCity } })
     pushEntry(city)
   }
   pushEntry({ ...city, level: "peek", venueId: safeVenueId, focus: undefined })

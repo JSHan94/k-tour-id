@@ -25,7 +25,7 @@
 .cityNode strong { display: flex; align-items: baseline; gap: 7px; font-size: 14px; }
 .cityNode strong em { color: #6b665f; font-size: 12px; font-style: normal; font-weight: 650; }
 .cityNode small { color: #6f6a63; font-size: 12px; font-weight: 620; line-height: 1.35; }
-.cityNode .cityScoreTruth { color: #514d47; font-size: 12px; font-style: normal; font-weight: 720; line-height: 1.35; }
+.cityNode .cityRecordTruth { color: #514d47; font-size: 12px; font-style: normal; font-weight: 720; line-height: 1.35; }
 .cityTruthLegend { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 2px 0 10px; padding-top: 10px; border-top: 1px solid #dedbd5; }
 .cityTruthLegend > div { display: grid; gap: 3px; min-width: 0; }
 .cityTruthLegend strong { font-size: 12px; }
@@ -76,12 +76,8 @@
 .venueList .officialNameTruth { color: #777169; font-weight: 680; }
 .venueList .transliterationTruth { color: #5f5a54; overflow-wrap: anywhere; }
 .venueList .transliterationTruth span { color: #34312d; font-weight: 720; }
-.venueList .signalTruth { margin-top: 3px; color: #68635c; font-size: 12px; font-weight: 680; }
-.score { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 50%; background: #cfcac0; font-size: 12px; font-weight: 800; }
-.score[data-level="peak"] { background: #7a2048; color: white; }
-.score[data-level="hot"] { background: #c94832; color: white; }
-.score[data-level="rising"] { background: #e6843b; }
-.score[data-level="warming"] { background: #ebc463; }
+.venueList .categoryTruth { margin-top: 3px; color: #68635c; font-size: 12px; font-weight: 680; }
+.categoryBadge { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #c9c5be; border-radius: 50%; background: #f4f2ee; color: #3f3b36; font-size: 12px; font-weight: 800; }
 .empty { display: grid; justify-items: start; gap: 7px; padding: 28px 2px; color: #77746e; font-size: 13px; text-align: left; }
 .empty strong { color: #20201e; font-size: 16px; white-space: normal; }
 .empty span { max-width: 330px; line-height: 1.55; }
@@ -103,7 +99,6 @@
 .mapKeyCompact { display: none; }
 .mapKey i { display: grid; width: 30px; height: 24px; flex: 0 0 auto; place-items: center; border-radius: 12px; font-size: 12px; font-style: normal; font-weight: 800; }
 .clusterSwatch { border: 1px solid #6d6861; background: rgb(255 255 255 / 96%); color: #4c4842; }
-.scoreSwatch { background: #c94832; color: #fff; }
 .attribution { position: absolute; z-index: 5; bottom: calc(54px + env(safe-area-inset-bottom)); left: 16px; display: flex; min-height: 44px; align-items: center; color: #625e58; font-size: 12px; text-decoration: none; }
 
 @media (min-width: 801px) {
@@ -318,7 +313,7 @@
   .nationIntro p { display: none; }
   .dotMap { min-width: 0; height: 144px; }
   .cityNode small,
-  .cityNode .cityScoreTruth { display: none; }
+  .cityNode .cityRecordTruth { display: none; }
   .cityTruthLegend small { display: none; }
   .nation footer { font-size: 12px; }
   .cityNode[data-city="seoul"] {

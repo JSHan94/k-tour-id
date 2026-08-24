@@ -30,8 +30,6 @@ export const CANONICAL_MAP_VENUES_COMPACT: readonly CanonicalMapVenue[] = Object
   longitude: feature.geometry.coordinates[0],
   licenseStatus: "ACTIVE_LICENSE_RECORD" as const,
   openNow: null,
-  heat: null,
-  ondoScore: null,
   sourceRefId: feature.properties.sourceRefId,
 })))
 

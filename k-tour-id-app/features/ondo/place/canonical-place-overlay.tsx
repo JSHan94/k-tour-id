@@ -2,137 +2,109 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, CreditCard, LockKeyhole, MapPin, MessageCircle, Moon, Navigation, Users, X } from "lucide-react"
+import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, X } from "lucide-react"
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
-import { B_DEMO_SIGNAL_BY_VENUE_ID } from "@/lib/ondo/venues/demo-signals"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
-import { HEAT_COLORS } from "@/lib/ondo/map/heat"
-import { AFTER19_VENUE_RETURN_PARAM } from "../after19/after19-venue-return"
-import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryTraversal, readBDiscoveryHistory, replaceBDiscoveryUrl } from "../map/b-discovery-history"
+import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
 import { useOndo } from "../shared/state/ondo-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
 
 const COPY = {
   en: {
-    active: "Official place record",
-    signalPending: "ONDO signal pending",
-    signalPendingBody: "This is a sourced place record. No ONDO score has been calculated yet.",
-    simulated: "Preview signal · Simulated",
-    source: "Official place source",
-    sourceBody: "MOIS LOCALDATA · Active general restaurant licence record",
-    before: "Before you go",
-    unknown: "Not confirmed by this source",
-    unknownShort: "Unknown",
-    hours: "Opening hours",
-    card: "Foreign-issued cards",
-    menu: "English menu",
-    phone: "Korean phone requirement",
-    payment: "Payment",
-    access: "Access",
-    details: "Place details",
+    active: "Official LOCALDATA record",
+    source: "Official source record",
+    sourceBody: "Ministry of the Interior and Safety LOCALDATA · General food-service licence directory",
+    sourceBoundary: "The record confirms an active licence at the source date. It does not confirm that the business is open today.",
+    before: "Information not provided by this source",
+    unknown: "Not provided by this source",
+    unknownShort: "Not provided",
+    hours: "Current opening hours",
+    card: "Foreign-issued card support",
+    menu: "Menu and prices",
+    language: "English-language support",
+    category: "Official business type",
+    licence: "Licence status",
+    activeLicence: "Active at source date",
+    opened: "Licence start date",
+    modified: "Source record updated",
+    details: "Official record details",
     directions: "Directions",
-    save: "Save",
-    saved: "Saved",
-    signal: "Share a visit signal",
-    checkout: "Checkout simulation",
-    tables: "Open Pulse Tables preview",
+    save: "Save on this device",
+    saved: "Saved on this device",
+    unavailableSave: "Device save is being prepared",
     close: "Close place",
     back: "Back to place summary",
-    noEnglish: "Official English name unavailable · Korean source name shown",
-    contributed: "Your visit signal is recorded. More local signals are needed before an ONDO score is calculated.",
-    signalCount: "preview signals",
-    simulatedScore: "Score",
-    previewSnapshot: "Fixed simulated snapshot",
-    confidence: "Signal basis",
-    confidenceStrong: "Strong",
-    confidenceModerate: "Moderate",
-    confidenceLimited: "Limited",
-    freshness: "Freshness",
-    contributionIncluded: "Your session signal is recorded separately; the preview score is not recalculated.",
-    after19Eyebrow: "AFTER 19 · SIMULATED PREVIEW",
-    after19Title: "ONDO simulated night preview",
-    after19Locked: "ONDO locks this simulated night preview behind its own 19+ policy. This is not an official age restriction: the official source does not confirm opening hours, alcohol service, admission, or an age restriction. The official place record stays visible, and identity details never appear on the map.",
-    after19Unlocked: "ONDO’s simulated 19+ preview policy is on. This is not an official age restriction; the official source still does not confirm opening hours, alcohol service, admission, or an age restriction.",
-    after19Unlock: "Confirm 19+ for this preview",
-    after19Ready: "Simulated night preview on",
     saving: "Saving…",
-    saveFailed: "This place was not saved. Your venue context is unchanged.",
-    retrySave: "Retry save",
-    dismissSave: "Dismiss",
+    saveFailed: "This device could not save the place. The selected place remains open.",
+    retrySave: "Retry device save",
     detailLoading: "Loading official address evidence…",
     detailUnavailable: "Official address evidence is temporarily unavailable",
     sourceSnapshot: "Source snapshot",
-    sourceRecord: "Source record ID",
+    sourceRecord: "LOCALDATA management ID",
+    sourceReference: "Source reference",
   },
   ko: {
-    active: "공식 장소 기록",
-    signalPending: "ONDO 신호 수집 중",
-    signalPendingBody: "공식 장소 기록은 확인됐지만 ONDO 점수는 아직 산출하지 않았어요.",
-    simulated: "신호 프리뷰 · 시뮬레이션",
-    source: "공식 장소 출처",
-    sourceBody: "행정안전부 LOCALDATA · 영업 상태가 유효한 일반음식점 인허가 기록",
-    before: "가기 전 확인",
-    unknown: "이 출처로는 확인되지 않음",
-    unknownShort: "미확인",
-    hours: "영업시간",
-    card: "해외 발급 카드",
-    menu: "영문 메뉴",
-    phone: "한국 전화번호 필요 여부",
-    payment: "결제",
-    access: "이용 조건",
-    details: "장소 상세",
+    active: "공식 LOCALDATA 기록",
+    source: "공식 출처 기록",
+    sourceBody: "행정안전부 LOCALDATA · 일반음식점 인허가 디렉터리",
+    sourceBoundary: "출처 기준일의 유효 인허가 상태를 확인합니다. 현재 영업 중이라는 뜻은 아닙니다.",
+    before: "이 출처에서 제공하지 않는 정보",
+    unknown: "이 출처에서 제공하지 않음",
+    unknownShort: "미제공",
+    hours: "현재 영업시간",
+    card: "해외 발급 카드 지원",
+    menu: "메뉴와 가격",
+    language: "영어 지원",
+    category: "공식 업태구분명",
+    licence: "인허가 상태",
+    activeLicence: "출처 기준일 영업 상태",
+    opened: "인허가 시작일",
+    modified: "출처 기록 수정일",
+    details: "공식 기록 상세",
     directions: "길찾기",
-    save: "저장",
-    saved: "저장됨",
-    signal: "방문 신호 남기기",
-    checkout: "결제 시뮬레이션",
-    tables: "Pulse Tables 프리뷰 열기",
+    save: "이 기기에 저장",
+    saved: "이 기기에 저장됨",
+    unavailableSave: "기기 저장을 준비 중입니다",
     close: "장소 닫기",
     back: "장소 요약으로",
-    noEnglish: "공식 영문명 미제공 · 공식 한글명 표시",
-    contributed: "내 방문 신호가 기록됐어요. ONDO 점수를 산출하려면 로컬 신호가 더 필요해요.",
-    signalCount: "프리뷰 입력 수",
-    simulatedScore: "점수",
-    previewSnapshot: "고정 시뮬레이션 스냅샷",
-    confidence: "신호 기반",
-    confidenceStrong: "강함",
-    confidenceModerate: "보통",
-    confidenceLimited: "제한적",
-    freshness: "최신성",
-    contributionIncluded: "내 세션 신호는 별도로 기록되며 프리뷰 점수는 다시 계산하지 않아요.",
-    after19Eyebrow: "AFTER 19 · 시뮬레이션 프리뷰",
-    after19Title: "ONDO 시뮬레이션 야간 프리뷰",
-    after19Locked: "ONDO 자체 19+ 정책으로 이 시뮬레이션 야간 프리뷰를 잠가요. 공식 연령 제한이 아니며, 공식 출처는 영업시간·주류 제공·입장·연령 제한을 확인하지 않습니다. 공식 장소 정보는 계속 보이며 신원 상세는 지도에 표시하지 않아요.",
-    after19Unlocked: "ONDO의 시뮬레이션 19+ 프리뷰 정책이 켜졌어요. 공식 연령 제한이 아니며, 공식 출처는 여전히 영업시간·주류 제공·입장·연령 제한을 확인하지 않습니다.",
-    after19Unlock: "이 프리뷰를 위해 19+ 확인",
-    after19Ready: "시뮬레이션 야간 프리뷰 켜짐",
     saving: "저장 중…",
-    saveFailed: "장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지돼요.",
-    retrySave: "저장 다시 시도",
-    dismissSave: "나중에",
+    saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
+    retrySave: "기기 저장 다시 시도",
     detailLoading: "공식 주소 근거를 불러오는 중…",
     detailUnavailable: "공식 주소 근거를 잠시 불러올 수 없어요",
     sourceSnapshot: "출처 스냅샷",
-    sourceRecord: "출처 기록 ID",
+    sourceRecord: "LOCALDATA 관리번호",
+    sourceReference: "출처 참조",
   },
 } as const
 
 const CATEGORY = {
-  korean: { en: "Korean food", ko: "한식" },
-  casual: { en: "Casual meal", ko: "간편식" },
-  japanese: { en: "Japanese food", ko: "일식" },
-  chinese: { en: "Chinese food", ko: "중식" },
-  global: { en: "Global food", ko: "세계 음식" },
-  night: { en: "Food & drink", ko: "식음료" },
-  specialty: { en: "Specialty", ko: "전문점" },
+  korean: { en: "Korean", ko: "한식" },
+  casual: { en: "Quick service", ko: "분식·간편식" },
+  japanese: { en: "Japanese", ko: "일식" },
+  chinese: { en: "Chinese", ko: "중식" },
+  global: { en: "Western & international", ko: "경양식·외국음식" },
+  night: { en: "Pub & café licence types", ko: "주점·카페 업태" },
+  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점" },
 } as const
 
 const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
+function evidenceValue(value: unknown, fallback: string) {
+  return typeof value === "string" && value.trim() ? value : fallback
+}
+
+function sourceDate(value: string | null | undefined, fallback: string) {
+  if (!value) return fallback
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? fallback : parsed.toISOString().slice(0, 10)
+}
+
 export function CanonicalPlaceOverlay() {
   const { state, actions } = useOndo()
+  const deviceActions = actions as typeof actions & { saveVenue?(venueId: string): void }
   const [expanded, setExpanded] = useState(() => readBDiscoveryHistory()?.level === "detail")
   const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
@@ -142,47 +114,22 @@ export function CanonicalPlaceOverlay() {
   const peekRef = useRef<HTMLDivElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
-  const saveAttemptRef = useRef(0)
-  const saveTimerRef = useRef<number | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
   const venue = venueId ? canonicalMapVenueById(venueId) : undefined
-  const signal = venueId ? B_DEMO_SIGNAL_BY_VENUE_ID.get(venueId) : undefined
   const locale = state.locale
   const copy = COPY[locale]
-  const confidenceBand = signal && signal.confidence >= 0.8 ? copy.confidenceStrong : signal && signal.confidence >= 0.65 ? copy.confidenceModerate : copy.confidenceLimited
 
   useEffect(() => {
     setDetail(null)
     setDetailState("idle")
-    saveAttemptRef.current = 0
-    if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = null
     if (!venueId) {
       setExpanded(false)
       return
     }
-    const url = new URL(window.location.href)
-    const returnedFromAfter19 = url.searchParams.get(AFTER19_VENUE_RETURN_PARAM) === venueId
     const historyEntry = readBDiscoveryHistory()
-    const historyWantsDetail = historyEntry?.level === "detail" && historyEntry.venueId === venueId
-    if (!returnedFromAfter19 && !historyWantsDetail) {
-      setExpanded(false)
-      return
-    }
-
-    // Keep the one-shot URL intent through React's development-mode effect
-    // replay. Removing it synchronously let the replay collapse the exact
-    // venue detail that the 19+ gate was meant to restore.
-    setExpanded(true)
-    if (!returnedFromAfter19) return
-    const returnCleanupTimer = window.setTimeout(() => {
-      const currentUrl = new URL(window.location.href)
-      if (currentUrl.searchParams.get(AFTER19_VENUE_RETURN_PARAM) !== venueId) return
-      currentUrl.searchParams.delete(AFTER19_VENUE_RETURN_PARAM)
-      replaceBDiscoveryUrl(`${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`)
-    }, 0)
-    return () => window.clearTimeout(returnCleanupTimer)
+    setExpanded(historyEntry?.level === "detail" && historyEntry.venueId === venueId)
   }, [venueId])
+
   useEffect(() => {
     const syncHistory = (event: Event) => {
       const entry = readBDiscoveryTraversal(event)?.entry
@@ -192,18 +139,19 @@ export function CanonicalPlaceOverlay() {
     window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, syncHistory)
     return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, syncHistory)
   }, [venueId])
-  useEffect(() => () => { if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current) }, [])
+
   useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
+
   useEffect(() => {
     if (!venueId || expanded) return
     const active = document.activeElement
-    if (!returnFocusRef.current && active instanceof HTMLElement && active !== document.body && active.matches(`[data-venue-opener='${CSS.escape(venueId)}']`)) {
-      returnFocusRef.current = active
-    }
+    if (!returnFocusRef.current && active instanceof HTMLElement && active !== document.body && active.matches(`[data-venue-opener='${CSS.escape(venueId)}']`)) returnFocusRef.current = active
     const frame = window.requestAnimationFrame(() => openRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
   }, [expanded, venueId])
+
   useModalIsolation(expanded && state.tab === "ondo" && Boolean(venueId), layerRef)
+
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
     const controller = new AbortController()
@@ -233,19 +181,17 @@ export function CanonicalPlaceOverlay() {
   }, [detail?.id, expanded, venueId])
 
   if (!venue || state.tab !== "ondo") return null
-  const koreanName = venue.name.ko
-  const name = venueNamePresentation(koreanName, locale)
+  const name = venueNamePresentation(venue.name.ko, locale)
   const district = venueDistrictLabel(venue.cityId, venue.districtId, locale)
+  const category = CATEGORY[venue.primaryCategory][locale]
   const addressEvidence = detail?.address.road.value ? detail.address.road : detail?.address.lot.value ? detail.address.lot : null
   const address = addressEvidence?.value ?? (detailState === "error" ? copy.detailUnavailable : detailState === "ready" ? copy.unknown : copy.detailLoading)
-  const saved = state.savedVenueIds.includes(venue.id)
+  const saved = state.savedVenueIds.includes(venue.id) || state.saveStatusByVenue[venue.id] === "SAV-SAVED"
   const saveStatus = state.saveStatusByVenue[venue.id] ?? "SAV-IDLE"
   const saving = saveStatus === "SAV-SAVING"
-  const palette = HEAT_COLORS[signal?.level ?? "limited"]
-  const contributed = state.acceptedActivityEventKeys.some((key) => key.includes(`local-signal:${venue.id}:`))
-  const ageCurrent = state.age === "AGE-VERIFIED" && state.ageExpiresAt != null && new Date(state.ageExpiresAt).getTime() > Date.now()
-  const after19Unlocked = state.after19 === "A19-ON" && ageCurrent
+  const canSave = typeof deviceActions.saveVenue === "function"
   const currentVenueId = venue.id
+  const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
   function restorePeekOpener() {
     const opener = returnFocusRef.current
@@ -253,16 +199,19 @@ export function CanonicalPlaceOverlay() {
     const target = opener?.isConnected ? opener : fallback
     target?.focus({ preventScroll: true })
   }
+
   function close() {
     if (closeBDiscoveryPlace()) return
     actions.setSurface({ kind: "map" })
     window.requestAnimationFrame(restorePeekOpener)
   }
+
   function closeDetails() {
     if (goBackFromBDiscovery("detail")) return
     setExpanded(false)
     window.requestAnimationFrame(() => openRef.current?.focus())
   }
+
   function handleDetailKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
       event.preventDefault()
@@ -277,6 +226,7 @@ export function CanonicalPlaceOverlay() {
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
+
   function handlePeekKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "Escape") {
       event.preventDefault()
@@ -291,50 +241,22 @@ export function CanonicalPlaceOverlay() {
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
+
   function save() {
-    if (saved || saving) return
-    if (state.account !== "ACC-ACTIVE") {
-      actions.beginAction({ cta: "SAVE_VENUE", gates: ["account"], venueId: currentVenueId })
-      return
-    }
-    saveAttemptRef.current += 1
-    const attempt = saveAttemptRef.current
-    actions.setSaveStatus(currentVenueId, "SAV-SAVING")
-    saveTimerRef.current = window.setTimeout(() => {
-      saveTimerRef.current = null
-      const scenario = new URLSearchParams(window.location.search).get("scenario")
-      if (scenario === "save-failed" && attempt === 1) {
-        actions.setSaveStatus(currentVenueId, "SAV-FAILED")
-        return
-      }
-      actions.beginAction({ cta: "SAVE_VENUE", gates: ["account"], venueId: currentVenueId })
-    }, 360)
+    if (saved || saving || !deviceActions.saveVenue) return
+    deviceActions.saveVenue(currentVenueId)
   }
-  function openAfter19Venue() {
-    if (after19Unlocked) return
-    if (ageCurrent) {
-      actions.setAfter19("A19-ON")
-      return
-    }
-    actions.beginAction({ cta: "OPEN_AFTER19", gates: ["age"], venueId: currentVenueId })
-  }
-  const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
-  const signalCount = signal ? locale === "ko" ? `${signal.signalCount}개 프리뷰 입력` : `${signal.signalCount} preview inputs` : ""
 
   if (!expanded) return (
     <div ref={peekRef} className={styles.peek} role="dialog" aria-modal="false" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
-      <div className={styles.meta}><span>{district} · {CATEGORY[venue.primaryCategory][locale]}</span><i>{copy.active}</i></div>
+      <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>
       <h2>{name.officialName}</h2>
       <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
-      <div className={styles.signal} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
-        <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
-        <span><strong>{signal ? copy.previewSnapshot : copy.signalPending}</strong><small data-testid="canonical-place-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100 · ${signalCount}` : contributed ? copy.contributed : copy.signalPendingBody}</small></span>
-      </div>
-      <section className={styles.peekBefore} data-testid="canonical-place-before-summary" aria-label={copy.before}>
-        <strong>{copy.before}</strong>
-        <dl>{[[copy.hours, copy.unknownShort], [copy.payment, copy.unknownShort], [copy.access, copy.unknownShort]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      <section className={styles.recordSummary} data-testid="canonical-place-source-summary">
+        <strong>{copy.source}</strong>
+        <p>{copy.sourceBoundary}</p>
       </section>
       <div className={styles.peekActions}>
         <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
@@ -353,54 +275,48 @@ export function CanonicalPlaceOverlay() {
           <button type="button" onClick={close} aria-label={copy.close}><X size={19} /></button>
         </header>
         <div className={styles.body}>
-          <p className={styles.eyebrow}>{district} · {CATEGORY[venue.primaryCategory][locale]}</p>
+          <p className={styles.eyebrow}>{district} · {category}</p>
           <h2 id="canonical-place-title">{name.officialName}</h2>
           <div className={styles.detailNameProvenance} data-testid="canonical-detail-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
           <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
-            <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority={saveStatus === "SAV-FAILED" ? "secondary" : "primary"}><Navigation size={18} />{copy.directions}</a>
-            <button type="button" onClick={save} disabled={saved || saving} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}</button>
+            <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>
+            <button type="button" onClick={save} disabled={saved || saving || !canSave} title={!canSave ? copy.unavailableSave : undefined} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}</button>
           </div>
 
-          {saveStatus === "SAV-FAILED" ? (
-            <section className={styles.saveError} role="alert" data-testid="canonical-save-error">
-              <p>{copy.saveFailed}</p>
-              <div><button type="button" onClick={save} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button><button type="button" onClick={() => actions.setSaveStatus(venue.id, "SAV-IDLE")} data-testid="canonical-save-dismiss" data-visual-priority="secondary">{copy.dismissSave}</button></div>
-            </section>
-          ) : null}
+          {saveStatus === "SAV-FAILED" ? <section className={styles.saveError} role="alert" data-testid="canonical-save-error"><p>{copy.saveFailed}</p><button type="button" onClick={save} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button></section> : null}
 
-          <section className={styles.signalDetail} data-signal-truth={signal ? "SIMULATED" : "UNKNOWN"}>
-            <b style={{ background: palette.fill, color: palette.text, borderColor: palette.stroke }}>{signal?.score ?? "—"}</b>
-            <div><small data-testid="canonical-place-detail-score-truth">{signal ? `${copy.simulated} · ${copy.simulatedScore} ${signal.score}/100` : "ONDO"}</small><h3>{signal ? copy.previewSnapshot : copy.signalPending}</h3><p>{signal ? signal.reason[locale] : contributed ? copy.contributed : copy.signalPendingBody}</p>{signal ? <dl className={styles.signalEvidence}><div><dt>{copy.signalCount}</dt><dd>{locale === "ko" ? `${signal.signalCount}개` : signal.signalCount}</dd></div><div><dt>{copy.confidence}</dt><dd>{confidenceBand}</dd></div><div><dt>{copy.freshness}</dt><dd>{signal.freshness[locale]}</dd></div></dl> : null}{signal && contributed ? <p className={styles.contributionNote}>{copy.contributionIncluded}</p> : null}</div>
+          <section className={styles.sourceEvidence} data-testid="canonical-source-evidence">
+            <h3>{copy.source}</h3>
+            <p>{copy.sourceBoundary}</p>
+            <dl>
+              <div><dt>{copy.category}</dt><dd>{evidenceValue(detail?.sourceCategory.value, copy.unknown)}</dd></div>
+              <div><dt>{copy.licence}</dt><dd>{detail?.licenseStatus.value === "ACTIVE_LICENSE_RECORD" ? copy.activeLicence : copy.unknown}</dd></div>
+              <div><dt>{copy.opened}</dt><dd>{sourceDate(detail?.licenseOpenedAt.value, copy.unknown)}</dd></div>
+              <div><dt>{copy.modified}</dt><dd>{sourceDate(detail?.sourceModifiedAt.value, copy.unknown)}</dd></div>
+            </dl>
           </section>
-
-          {signal?.after19 ? (
-            <section className={styles.after19Access} data-testid="canonical-after19-access" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"}>
-              <span className={styles.after19Icon}>{after19Unlocked ? <Moon size={21} /> : <LockKeyhole size={21} />}</span>
-              <div><small>{copy.after19Eyebrow}</small><h3>{copy.after19Title}</h3></div>
-              {after19Unlocked ? <strong>{copy.after19Ready}</strong> : <button type="button" onClick={openAfter19Venue} data-testid="canonical-after19-unlock" data-visual-priority="secondary">{copy.after19Unlock}<ChevronRight size={17} /></button>}
-              <p>{after19Unlocked ? copy.after19Unlocked : copy.after19Locked}</p>
-            </section>
-          ) : null}
-
-          <nav className={styles.secondaryActions} aria-label={locale === "ko" ? "장소 추가 작업" : "More place actions"}>
-            <button type="button" onClick={() => actions.setSurface({ kind: "local_signal", venueId: venue.id })} data-testid="canonical-venue-signal"><MessageCircle size={18} />{copy.signal}<ChevronRight size={16} /></button>
-            <button type="button" onClick={() => actions.setTab("tables")} data-testid="canonical-venue-tables" data-origin-tab="ondo" data-return-tab="ondo" data-return-surface="venue" data-return-venue-id={venue.id}><Users size={18} />{copy.tables}<ChevronRight size={16} /></button>
-            <button type="button" onClick={() => actions.setSurface({ kind: "checkout", venueId: venue.id })} data-testid="canonical-venue-checkout"><CreditCard size={18} />{copy.checkout}<ChevronRight size={16} /></button>
-          </nav>
 
           <section className={styles.before}>
             <h3>{copy.before}</h3>
-            {[[copy.hours, copy.unknown], [copy.card, copy.unknown], [copy.menu, copy.unknown], [copy.phone, copy.unknown]].map(([label, value]) => <div key={label}><CircleHelp size={17} /><span><strong>{label}</strong><small>{value}</small></span></div>)}
+            {[
+              [copy.hours, evidenceValue(detail?.facts.openingHours.value, copy.unknown)],
+              [copy.card, evidenceValue(detail?.facts.foreignCardAccepted.value, copy.unknown)],
+              [copy.menu, evidenceValue(detail?.facts.menu.value, copy.unknown)],
+              [copy.language, evidenceValue(detail?.facts.englishSupport.value, copy.unknown)],
+            ].map(([label, value]) => <div key={label}><CircleHelp size={17} /><span><strong>{label}</strong><small>{value}</small></span></div>)}
           </section>
 
           <section className={styles.source} data-detail-source={detail?.address.road.sourceRefId ?? detail?.address.lot.sourceRefId ?? "NOT_LOADED"}>
             <h3>{copy.source}</h3>
             <p>{copy.sourceBody}</p>
-            <dl><div><dt>{copy.sourceSnapshot}</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div><div><dt>{copy.sourceRecord}</dt><dd>{venue.id.slice(5, 15)}</dd></div></dl>
+            <dl>
+              <div><dt>{copy.sourceSnapshot}</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div>
+              <div><dt>{copy.sourceRecord}</dt><dd>{detail?.sourceIds.moisManagementId ?? copy.unknownShort}</dd></div>
+              <div><dt>{copy.sourceReference}</dt><dd>MOIS LOCALDATA</dd></div>
+            </dl>
           </section>
-
         </div>
       </article>
     </div>

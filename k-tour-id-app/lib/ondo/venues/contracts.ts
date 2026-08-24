@@ -58,7 +58,5 @@ export type CanonicalMapVenue = {
   longitude: number
   licenseStatus: "ACTIVE_LICENSE_RECORD"
   openNow: null
-  heat: null
-  ondoScore: null
   sourceRefId: "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
 }
