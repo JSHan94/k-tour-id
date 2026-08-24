@@ -385,6 +385,7 @@ export function MapEntryB() {
   }, [city])
 
   useLayoutEffect(() => {
+    if (!state.hydrated) return
     let stabilizationFrame: number | null = null
     let stabilizationTimer: number | null = null
     const stabilizeHistoryEntry = (entry: BDiscoveryHistoryEntry, preservedState: unknown) => {
@@ -409,7 +410,7 @@ export function MapEntryB() {
       setView(entry.view)
       setQuery(entry.query)
       setCategory(entry.category)
-      if ((entry.level === "peek" || entry.level === "detail") && entry.venueId) actions.setSurface({ kind: "venue", venueId: entry.venueId })
+      if (state.onboarding === "ONB-COMPLETE" && (entry.level === "peek" || entry.level === "detail") && entry.venueId) actions.setSurface({ kind: "venue", venueId: entry.venueId })
       else actions.setSurface({ kind: "map" })
       if (restoreFocus && (entry.level === "nation" || entry.level === "city")) {
         const focusAfterCommit = (attempt = 0) => {
@@ -450,7 +451,7 @@ export function MapEntryB() {
       if (stabilizationFrame != null) window.cancelAnimationFrame(stabilizationFrame)
       if (stabilizationTimer != null) window.clearTimeout(stabilizationTimer)
     }
-  }, [actions])
+  }, [actions, state.hydrated, state.onboarding])
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine)
