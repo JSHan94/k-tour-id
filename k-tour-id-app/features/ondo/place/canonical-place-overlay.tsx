@@ -33,6 +33,7 @@ const COPY = {
     directions: "Directions",
     save: "Save on this device",
     saved: "Saved on this device",
+    removeSaved: "Remove from Saved",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -64,6 +65,7 @@ const COPY = {
     directions: "길찾기",
     save: "이 기기에 저장",
     saved: "이 기기에 저장됨",
+    removeSaved: "저장 취소",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -235,9 +237,9 @@ export function CanonicalPlaceOverlay() {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
 
-  function save() {
-    if (saved) return
-    actions.saveVenue(currentVenueId)
+  function toggleSave() {
+    if (saved) actions.toggleSavedVenue(currentVenueId)
+    else actions.saveVenue(currentVenueId)
   }
 
   if (!expanded) return (
@@ -275,10 +277,10 @@ export function CanonicalPlaceOverlay() {
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>
-            <button type="button" onClick={save} disabled={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.saved : copy.save}</button>
+            <button type="button" onClick={toggleSave} aria-pressed={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.removeSaved : copy.save}</button>
           </div>
 
-          {saveStatus === "SAV-FAILED" ? <section className={styles.saveError} role="alert" data-testid="canonical-save-error"><p>{copy.saveFailed}</p><button type="button" onClick={save} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button></section> : null}
+          {saveStatus === "SAV-FAILED" ? <section className={styles.saveError} role="alert" data-testid="canonical-save-error"><p>{copy.saveFailed}</p><button type="button" onClick={() => actions.saveVenue(currentVenueId)} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button></section> : null}
 
           <section className={styles.sourceEvidence} data-testid="canonical-source-evidence">
             <h3>{copy.source}</h3>

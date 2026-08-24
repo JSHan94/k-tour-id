@@ -48,7 +48,7 @@
 .search button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
 .search:focus-within { border-color: var(--ondo-focus); box-shadow: 0 0 0 2px #fbfaf7, 0 0 0 4px var(--ondo-focus); }
 .rail { display: flex; width: max-content; max-width: 100%; align-items: center; gap: 2px; overflow-x: auto; border: 1px solid #e1dfda; border-radius: 13px; padding: 2px; background: rgb(255 255 255 / 91%); scrollbar-width: none; }
-.rail button { min-height: 44px; flex: 0 0 auto; padding: 0 11px; border: 0; border-radius: 10px; background: transparent; color: #68635c; font-size: 12px; font-weight: 680; }
+.rail button { min-width: 44px; min-height: 44px; flex: 0 0 auto; padding: 0 11px; border: 0; border-radius: 10px; background: transparent; color: #68635c; font-size: 12px; font-weight: 680; }
 .rail button[aria-pressed="true"] { background: #2b2926; color: #fff; }
 .preferenceSummary { position: absolute; z-index: 6; top: calc(170px + env(safe-area-inset-top)); left: 14px; display: grid; max-width: 202px; min-height: 44px; grid-template-columns: 18px minmax(0, 1fr) 16px; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid #dedbd5; border-radius: 12px; background: rgb(255 255 255 / 94%); color: #514d47; font-size: 12px; font-weight: 700; line-height: 16px; text-align: left; }
 .preferenceSummary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -73,12 +73,13 @@
 .venueList button > span:nth-child(2) { display: grid; gap: 2px; min-width: 0; }
 .venueList small, .venueList em { min-width: 0; color: #68635c; font-size: 12px; font-style: normal; line-height: 1.4; }
 .venueList strong { min-width: 0; font: inherit; font-size: 16px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
-.venueList .officialNameTruth { color: #777169; font-weight: 680; }
+.venueList .officialNameTruth { color: #625d56; font-weight: 680; }
 .venueList .transliterationTruth { color: #5f5a54; overflow-wrap: anywhere; }
 .venueList .transliterationTruth span { color: #34312d; font-weight: 720; }
 .venueList .categoryTruth { margin-top: 3px; color: #68635c; font-size: 12px; font-weight: 680; }
 .categoryBadge { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #c9c5be; border-radius: 50%; background: #f4f2ee; color: #3f3b36; font-size: 12px; font-weight: 800; }
-.empty { display: grid; justify-items: start; gap: 7px; padding: 28px 2px; color: #77746e; font-size: 13px; text-align: left; }
+.empty { display: grid; justify-items: start; gap: 7px; padding: 28px 2px; color: #625e58; font-size: 13px; text-align: left; }
+.empty > div { display: grid; gap: 7px; }
 .empty strong { color: #20201e; font-size: 16px; white-space: normal; }
 .empty span { max-width: 330px; line-height: 1.55; }
 .venueList .empty button { display: inline-flex; width: auto; min-height: 44px; grid-template-columns: none; justify-content: center; margin-top: 5px; padding: 0 13px; border: 1px solid #dedbd5; border-radius: 11px; background: transparent; color: #20201e; font-size: 12px; font-weight: 750; }

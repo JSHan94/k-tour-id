@@ -298,7 +298,7 @@ function VenueList({ venues, locale, visibleCount, onClear, onMore, onSelect }: 
         )
       })}
       {visibleCount < venues.length ? <li className={styles.loadMore}><button type="button" onClick={onMore}>{copy.more}</button></li> : null}
-      {!venues.length ? <li className={styles.empty} data-testid="ondo-b-empty-results" role="status"><strong>{copy.noResultsTitle}</strong><span>{copy.noResultsBody}</span><button type="button" onClick={onClear}>{copy.clearResults}</button></li> : null}
+      {!venues.length ? <li className={styles.empty} data-testid="ondo-b-empty-results"><div role="status"><strong>{copy.noResultsTitle}</strong><span>{copy.noResultsBody}</span></div><button type="button" onClick={onClear}>{copy.clearResults}</button></li> : null}
     </ul>
   )
 }
@@ -615,7 +615,7 @@ export function MapEntryB() {
             <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
           </div>
           <div className={styles.search} role="search"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} onChange={(event) => { const nextQuery = event.target.value; setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
-          <div className={styles.rail} aria-label={copy.filterLabel}>
+          <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
             {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{CATEGORY[item][locale]}</button>)}
           </div>
         </header>
