@@ -16,7 +16,6 @@ export function PrivateNote({ venueId }: { venueId: string }) {
 
   useEffect(() => {
     setDraft(stored)
-    setReceipt("idle")
   }, [stored])
 
   function save() {
