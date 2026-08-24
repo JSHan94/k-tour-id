@@ -26,6 +26,7 @@ const OWNED_URL_KEYS = [
   "city", "view", "venueId", "detail", "q", "category",
   "heat", "hot", "calm", "open", "time", "neighborhood",
 ] as const
+const RETIRED_POLICY_URL_KEY = /^after\d+(?:Return)?$/
 const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
@@ -138,6 +139,9 @@ function mergedState(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
 function entryUrl(entry: BDiscoveryHistoryEntry) {
   const url = new URL(window.location.href)
   for (const key of OWNED_URL_KEYS) url.searchParams.delete(key)
+  for (const key of [...url.searchParams.keys()]) {
+    if (RETIRED_POLICY_URL_KEY.test(key)) url.searchParams.delete(key)
+  }
   if (entry.level !== "nation" && entry.city) {
     url.searchParams.set("city", entry.city)
     if (entry.view === "list") url.searchParams.set("view", "list")
