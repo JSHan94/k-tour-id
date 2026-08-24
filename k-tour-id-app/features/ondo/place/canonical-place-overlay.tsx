@@ -7,7 +7,7 @@ import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/o
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
-import { useOndo } from "../shared/state/ondo-provider"
+import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
 
@@ -33,7 +33,6 @@ const COPY = {
     directions: "Directions",
     save: "Save on this device",
     saved: "Saved on this device",
-    unavailableSave: "Device save is being prepared",
     close: "Close place",
     back: "Back to place summary",
     saving: "Saving…",
@@ -66,7 +65,6 @@ const COPY = {
     directions: "길찾기",
     save: "이 기기에 저장",
     saved: "이 기기에 저장됨",
-    unavailableSave: "기기 저장을 준비 중입니다",
     close: "장소 닫기",
     back: "장소 요약으로",
     saving: "저장 중…",
@@ -103,8 +101,7 @@ function sourceDate(value: string | null | undefined, fallback: string) {
 }
 
 export function CanonicalPlaceOverlay() {
-  const { state, actions } = useOndo()
-  const deviceActions = actions as typeof actions & { saveVenue?(venueId: string): void }
+  const { state, actions } = useOndoB()
   const [expanded, setExpanded] = useState(() => readBDiscoveryHistory()?.level === "detail")
   const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
@@ -189,7 +186,6 @@ export function CanonicalPlaceOverlay() {
   const saved = state.savedVenueIds.includes(venue.id) || state.saveStatusByVenue[venue.id] === "SAV-SAVED"
   const saveStatus = state.saveStatusByVenue[venue.id] ?? "SAV-IDLE"
   const saving = saveStatus === "SAV-SAVING"
-  const canSave = typeof deviceActions.saveVenue === "function"
   const currentVenueId = venue.id
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
@@ -243,8 +239,8 @@ export function CanonicalPlaceOverlay() {
   }
 
   function save() {
-    if (saved || saving || !deviceActions.saveVenue) return
-    deviceActions.saveVenue(currentVenueId)
+    if (saved || saving) return
+    actions.saveVenue(currentVenueId)
   }
 
   if (!expanded) return (
@@ -282,7 +278,7 @@ export function CanonicalPlaceOverlay() {
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>
-            <button type="button" onClick={save} disabled={saved || saving || !canSave} title={!canSave ? copy.unavailableSave : undefined} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}</button>
+            <button type="button" onClick={save} disabled={saved || saving} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.saved : saving ? copy.saving : copy.save}</button>
           </div>
 
           {saveStatus === "SAV-FAILED" ? <section className={styles.saveError} role="alert" data-testid="canonical-save-error"><p>{copy.saveFailed}</p><button type="button" onClick={save} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button></section> : null}

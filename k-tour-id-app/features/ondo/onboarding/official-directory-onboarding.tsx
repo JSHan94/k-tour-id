@@ -4,7 +4,7 @@ import type { KeyboardEvent } from "react"
 import { useEffect, useRef } from "react"
 import { ArrowRight, Database, Languages } from "lucide-react"
 import type { Locale } from "../contracts/domain"
-import { useOndo } from "../shared/state/ondo-provider"
+import { useOndoB } from "../shared/state/ondo-b-provider"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import styles from "./onboarding.module.css"
 
@@ -32,7 +32,7 @@ const COPY = {
 } satisfies Record<Locale, Record<string, string>>
 
 export function OfficialDirectoryOnboardingLayer() {
-  const { state, actions } = useOndo()
+  const { state, actions } = useOndoB()
   const dialogRef = useRef<HTMLElement>(null)
   const copy = COPY[state.locale]
 

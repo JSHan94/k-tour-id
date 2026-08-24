@@ -10,7 +10,7 @@ import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName, venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { mapFoodIntentAliases } from "@/lib/ondo/venues/map-discovery-aliases"
 import type { Locale } from "../contracts/domain"
-import { useOndo } from "../shared/state/ondo-provider"
+import { useOndoB } from "../shared/state/ondo-b-provider"
 import {
   B_DISCOVERY_TRAVERSAL_EVENT,
   enterBDiscoveryCity,
@@ -304,7 +304,7 @@ function VenueList({ venues, locale, visibleCount, onClear, onMore, onSelect }: 
 }
 
 export function MapEntryB() {
-  const { state, actions } = useOndo()
+  const { state, actions } = useOndoB()
   const locale = state.locale
   const copy = COPY[locale]
   const mapNode = useRef<HTMLDivElement | null>(null)
