@@ -847,6 +847,8 @@ async function auditZoomResize(browser: Browser, violations: Violation[], locale
 
     await page.setViewportSize({ width: 900, height: 720 })
     await settleLayout(root, "spacious-map", "map")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(zoom.getByRole("button")).toHaveCount(2, { timeout: 20_000 })
     const [returnLayout, returnRequested, returnEffective] = await Promise.all([
       root.getAttribute("data-layout-mode"),
       root.getAttribute("data-requested-view"),
@@ -929,6 +931,7 @@ async function auditListFallback(browser: Browser, violations: Violation[], loca
 
     await page.setViewportSize({ width: 900, height: 720 })
     await settleLayout(root, "spacious-map", "map")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     issue(violations, scenario, "fallback-map-restored", "effective-view", await root.getAttribute("data-layout-mode") === "spacious-map" && await root.getAttribute("data-requested-view") === "map" && await root.getAttribute("data-effective-view") === "map", `layout=${await root.getAttribute("data-layout-mode")} requested=${await root.getAttribute("data-requested-view")} effective=${await root.getAttribute("data-effective-view")}`)
     issue(violations, scenario, "fallback-query-preserved", "resized-search", await search.inputValue() === query && await root.getAttribute("data-result-count") === "5", `value=${await search.inputValue()} count=${await root.getAttribute("data-result-count")}`)
   } catch (error) {
