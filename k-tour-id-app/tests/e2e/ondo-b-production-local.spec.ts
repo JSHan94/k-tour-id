@@ -91,4 +91,120 @@ test.describe("ONDO B production local-device shell", () => {
     await expect(note.getByRole("alert")).toContainText("could not be saved")
     await expect(note.getByRole("textbox")).toHaveValue("Keep this draft")
   })
+
+  test("B-PROD-SEC-001 visiting B does not read-rewrite or delete A-owned storage", async ({ browser }) => {
+    const page = await browser.newPage()
+    const aState = JSON.stringify({ session: { onboarded: true }, ownerMarker: "A-OWNER-BYTE" })
+    const malformedALocation = "{A-OWNER-MALFORMED-BYTE"
+    await page.addInitScript(({ expectedAState, expectedALocation, deviceKey }) => {
+      localStorage.setItem("k-tour-id-state-v7", expectedAState)
+      sessionStorage.setItem("k-tour-id-location-v1", expectedALocation)
+      localStorage.setItem(deviceKey, JSON.stringify({
+        locale: "en",
+        onboarding: "ONB-COMPLETE",
+        discoveryPreferences: [],
+        savedVenueIds: [],
+        privateNotesByVenue: {},
+      }))
+      const originalGetItem = Storage.prototype.getItem
+      ;(window as typeof window & { __ondoBAStorageReads?: string[] }).__ondoBAStorageReads = []
+      Storage.prototype.getItem = function (key: string) {
+        if (key.startsWith("k-tour-id")) {
+          ;(window as typeof window & { __ondoBAStorageReads?: string[] }).__ondoBAStorageReads?.push(key)
+        }
+        return originalGetItem.call(this, key)
+      }
+    }, { expectedAState: aState, expectedALocation: malformedALocation, deviceKey: DEVICE_KEY })
+
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await expect(page.getByTestId("ondo-b-root")).toBeVisible()
+    await page.waitForTimeout(250)
+
+    expect(await page.evaluate(() => ({
+      aReads: [...((window as typeof window & { __ondoBAStorageReads?: string[] }).__ondoBAStorageReads ?? [])],
+      aState: localStorage.getItem("k-tour-id-state-v7"),
+      aLocation: sessionStorage.getItem("k-tour-id-location-v1"),
+    }))).toEqual({ aState, aLocation: malformedALocation, aReads: [] })
+    await page.close()
+  })
+})
+
+test.describe("ONDO B production security and resilience boundaries", () => {
+  test("B-PROD-SEC-002 social metadata rejects forwarded-host and scheme poisoning", async ({ request }) => {
+    const response = await request.get("/ondo-b", {
+      headers: {
+        "x-forwarded-host": "attacker.example",
+        "x-forwarded-proto": "javascript",
+      },
+    })
+    expect(response.ok()).toBeTruthy()
+    const html = await response.text()
+    expect(html).not.toContain("javascript://")
+    expect(html).not.toContain("attacker.example")
+  })
+
+  test("B-PROD-SEC-003 HTML responses apply baseline browser security policy", async ({ request }) => {
+    const response = await request.get("/ondo-b")
+    expect(response.ok()).toBeTruthy()
+    const headers = response.headers()
+    expect(headers["content-security-policy"]).toContain("default-src")
+    expect(headers["content-security-policy"]).toContain("object-src 'none'")
+    expect(headers["content-security-policy"]).toContain("frame-ancestors")
+    expect(headers["x-content-type-options"]).toBe("nosniff")
+    expect(headers["referrer-policy"]).toBeTruthy()
+    expect(headers["permissions-policy"]).toContain("geolocation=(self)")
+  })
+
+  test("B-PROD-SEC-004 official-detail failure is announced and directly retryable", async ({ page }) => {
+    await seedProductionB(page)
+    let failDetail = true
+    await page.route("**/api/ondo/venues/**", async (route) => {
+      if (failDetail) await route.fulfill({ status: 503, contentType: "application/json", body: '{"error":"temporarily unavailable"}' })
+      else await route.continue()
+    })
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.locator("[data-city='seoul']").click()
+    await page.getByRole("button", { name: "List", exact: true }).click()
+    await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
+    await page.getByTestId("canonical-place-details").click()
+
+    const detail = page.getByTestId("canonical-place-overlay")
+    await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "error")
+    await expect(detail.getByRole("alert")).toContainText("temporarily unavailable")
+    failDetail = false
+    await detail.getByRole("button", { name: "Retry official record" }).click()
+    await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
+  })
+
+  test("B-PROD-SEC-005 location control discloses external map processing before permission", async ({ page }) => {
+    await seedProductionB(page)
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.locator("[data-city='seoul']").click()
+    const locate = page.getByTestId("ondo-b-locate")
+    await expect(locate).toBeVisible()
+    const descriptionIds = (await locate.getAttribute("aria-describedby"))?.trim().split(/\s+/).filter(Boolean) ?? []
+    expect(descriptionIds.length).toBeGreaterThan(0)
+    const disclosure = await page.locator(descriptionIds.map((id) => `#${id}`).join(",")).allTextContents()
+    expect(disclosure.join(" ")).toMatch(/OpenFreeMap/i)
+    expect(disclosure.join(" ")).toMatch(/location|위치/i)
+  })
+
+  test("B-PROD-SEC-006 directory search bounds pasted input before filtering", async ({ page }) => {
+    await seedProductionB(page)
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.locator("[data-city='seoul']").click()
+    const search = page.getByTestId("ondo-b-search")
+    expect(await search.getAttribute("maxlength")).toBe("120")
+    await search.fill("x".repeat(10_000))
+    expect((await search.inputValue()).length).toBeLessThanOrEqual(120)
+  })
+
+  test("B-PROD-SEC-007 B metadata does not inherit the stale A canonical URL", async ({ request }) => {
+    const response = await request.get("/ondo-b")
+    expect(response.ok()).toBeTruthy()
+    const html = await response.text()
+    expect(html).not.toContain("https://k-tour-id.vercel.app")
+    const canonical = html.match(/<link rel="canonical" href="([^"]+)"/i)?.[1]
+    expect(canonical).toMatch(/\/ondo-b\/?$/)
+  })
 })
