@@ -366,6 +366,7 @@ export async function attachBProductionVisualMetadata(testInfo: TestInfo, item: 
 }
 
 export async function expectBProductionVisualSnapshot(page: Page, item: BProductionVisualCase, viewport: ProductionVisualViewport) {
+  if (process.env.PRODUCTION_VISUAL_PREFLIGHT === "1") return
   await expect(page).toHaveScreenshot(`${item.id}-${item.locale}-${viewport.id}.png`, {
     animations: "disabled",
     caret: "hide",
