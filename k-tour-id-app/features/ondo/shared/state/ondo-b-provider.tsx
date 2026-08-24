@@ -7,7 +7,7 @@ import {
   isCanonicalVenueId,
   sanitizeCanonicalVenueIds,
   sanitizeCanonicalVenueNotes,
-} from "@/lib/ondo/venues"
+} from "@/lib/ondo/venues/canonical-allowlist"
 import type { OndoBDiscoveryPreference, OndoBLocale } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "./ondo-b-preferences"
 

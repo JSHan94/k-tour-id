@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState } from "react"
 import { LockKeyhole } from "lucide-react"
-import { CANONICAL_PRIVATE_NOTE_MAX_LENGTH } from "@/lib/ondo/venues"
+import { CANONICAL_PRIVATE_NOTE_MAX_LENGTH } from "@/lib/ondo/venues/canonical-allowlist"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import styles from "../shared/ui/production-local.module.css"
 
