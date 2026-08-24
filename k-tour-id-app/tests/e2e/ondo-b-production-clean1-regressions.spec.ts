@@ -293,7 +293,8 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await page.goBack()
     await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("Roba")
-    await expect(page.getByRole("button", { name: "Night", exact: true })).toHaveAttribute("aria-pressed", "true")
+    const selectedCategory = page.getByTestId("ondo-b-category-rail").getByRole("button", { pressed: true })
+    await expect(selectedCategory).toHaveAccessibleName("Pub & café licence types")
     await context.close()
 
     const onboardingContext = await productionContext(browser, { width: 390, height: 844 }, "en", "ONB-NEW")
