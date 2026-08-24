@@ -30,6 +30,7 @@ import styles from "./map-b.module.css"
 
 type CityId = "seoul" | "busan"
 type ViewMode = "map" | "list"
+type MapLayoutMode = "measuring" | "ultra-short" | "compact-map" | "spacious-map"
 type LocationState = "idle" | "locating" | "ready" | "denied" | "unsupported"
 type UserLocation = { longitude: number; latitude: number }
 const SEARCH_MAX_LENGTH = 120
@@ -58,7 +59,7 @@ const COPY = {
     officialName: "Official Korean source name",
     categoryBasis: "Category normalized from the official business type",
     more: "Load 30 more",
-    mapA11y: "The map is visual. Open the List for keyboard-accessible directory results.",
+    mapA11y: "The map is visual. Use plus, minus and arrow keys to move it, or open the List for keyboard-accessible directory results.",
     mapUnavailable: "The map could not load. 200 official records remain available in the list.",
     retryMap: "Retry map",
     offlineTitle: "Offline",
@@ -96,7 +97,7 @@ const COPY = {
     officialName: "공식 출처 한글명",
     categoryBasis: "공식 업태구분명을 기준으로 정규화한 분류",
     more: "30개 더 보기",
-    mapA11y: "지도는 시각 정보입니다. 키보드로 탐색하려면 목록을 여세요.",
+    mapA11y: "지도는 시각 정보입니다. 더하기, 빼기와 방향키로 움직이거나 키보드로 탐색할 수 있는 목록을 여세요.",
     mapUnavailable: "지도를 불러오지 못했어요. 공식 기록 200개는 목록에서 계속 볼 수 있어요.",
     retryMap: "지도 다시 불러오기",
     offlineTitle: "오프라인",
@@ -310,6 +311,7 @@ export function MapEntryB() {
   const { state, actions } = useOndoB()
   const locale = state.locale
   const copy = COPY[locale]
+  const cityRootNode = useRef<HTMLElement | null>(null)
   const mapNode = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const filteredMapRef = useRef(false)
@@ -326,7 +328,47 @@ export function MapEntryB() {
   const [locationState, setLocationState] = useState<LocationState>("idle")
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [online, setOnline] = useState(true)
+  const [mapLayoutMode, setMapLayoutMode] = useState<MapLayoutMode>("measuring")
+  const [mapRootBlockSize, setMapRootBlockSize] = useState(0)
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
+  const effectiveView: ViewMode = mapLayoutMode === "ultra-short" || mapLayoutMode === "measuring" ? "list" : view
+
+  useLayoutEffect(() => {
+    if (!city || !cityRootNode.current) return
+    const root = cityRootNode.current
+    let previousMode: MapLayoutMode = "measuring"
+    const applyLayout = (width: number, height: number) => {
+      const usesUltraShortList = height < 380
+        || (width <= 430 && height < 600)
+        || (width < 600 && height < 550)
+        || (width < 780 && height < 400)
+      const nextMode: MapLayoutMode = usesUltraShortList
+        ? "ultra-short"
+        : width <= 430 || (width > height && height <= 568)
+          ? "compact-map"
+          : "spacious-map"
+      if (nextMode === previousMode) {
+        setMapRootBlockSize(height)
+        return
+      }
+      if (nextMode !== "spacious-map" && document.activeElement?.closest(".maplibregl-ctrl-group")) {
+        window.requestAnimationFrame(() => {
+          const target = nextMode === "ultra-short"
+            ? document.querySelector<HTMLInputElement>("[data-testid='ondo-b-search']")
+            : document.querySelector<HTMLButtonElement>("[data-testid='ondo-b-view-toggle']")
+          target?.focus({ preventScroll: true })
+        })
+      }
+      previousMode = nextMode
+      setMapRootBlockSize(height)
+      setMapLayoutMode(nextMode)
+    }
+    const observer = new ResizeObserver(([entry]) => applyLayout(entry.contentRect.width, entry.contentRect.height))
+    observer.observe(root)
+    const bounds = root.getBoundingClientRect()
+    applyLayout(bounds.width, bounds.height)
+    return () => observer.disconnect()
+  }, [city])
 
   useLayoutEffect(() => {
     let stabilizationFrame: number | null = null
@@ -433,7 +475,7 @@ export function MapEntryB() {
   }, [selectedVenueId])
 
   useEffect(() => {
-    if (!city || view !== "map" || !mapNode.current || mapRef.current) return
+    if (!city || effectiveView !== "map" || !mapNode.current || mapRef.current) return
     let disposed = false
     let failed = false
     let loadDeadline: number | undefined
@@ -519,7 +561,7 @@ export function MapEntryB() {
       mapRef.current?.remove()
       mapRef.current = null
     }
-  }, [actions, city, locale, retryToken, view])
+  }, [actions, city, effectiveView, locale, retryToken])
 
   useEffect(() => {
     const source = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined
@@ -569,7 +611,6 @@ export function MapEntryB() {
       userLocationRef.current = null
       setUserLocation(null)
       setLocationState("unsupported")
-      actions.notify(copy.locationUnavailable)
       return
     }
     setLocationState("locating")
@@ -583,7 +624,6 @@ export function MapEntryB() {
       userLocationRef.current = null
       setUserLocation(null)
       setLocationState("denied")
-      actions.notify(copy.locationUnavailable)
     }, { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 })
   }
 
@@ -602,7 +642,8 @@ export function MapEntryB() {
   return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
       <section
-        className={styles.root}
+        ref={cityRootNode}
+        className={`${styles.root} ${mapLayoutMode === "ultra-short" ? styles.ultraShort : ""}`}
         data-testid="ondo-b-map-entry"
         data-directory-source={SOURCE_ID}
         data-source-date={SOURCE_DATE}
@@ -614,41 +655,90 @@ export function MapEntryB() {
         data-location-state={locationState}
         data-user-location={userLocation ? "present" : "absent"}
         data-cluster-grammar="official-record-count"
+        data-layout-mode={mapLayoutMode}
+        data-requested-view={view}
+        data-effective-view={effectiveView}
+        data-map-root-block-size={mapRootBlockSize.toFixed(1)}
       >
         <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
-        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction" />
-        {view === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{copy.mapLoading}</p> : null}
-        <header className={styles.cityHeader}>
+        <header className={styles.cityHeader} data-testid="ondo-b-city-header">
           <div className={styles.topline}>
             <button type="button" className={styles.back} data-testid="ondo-b-city-back" onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
             <h1>{CITY[city].label[locale]}</h1>
-            <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
+            <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
           </div>
-          <div className={styles.search} role="search"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
+          <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
           <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
             {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{CATEGORY[item][locale]}</button>)}
           </div>
         </header>
 
-        <div className={styles.resultBar}>
-          <span><b>{resultCount(venues.length, locale)}</b><small>{copy.source} · {copy.categoryBasis}</small></span>
-          <button type="button" onClick={() => { const nextView = view === "map" ? "list" : "map"; setView(nextView); updateCityContext({ view: nextView }) }} data-testid="ondo-b-view-toggle">{view === "map" ? <List size={17} /> : <MapIcon size={17} />}{view === "map" ? copy.list : copy.map}</button>
+        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction" hidden={effectiveView !== "map"} aria-hidden={effectiveView !== "map" ? true : undefined} />
+        {effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{copy.mapLoading}</p> : null}
+
+        <div className={styles.mapChrome} data-testid="ondo-b-map-chrome">
+          <div className={styles.resultBar} data-testid="ondo-b-result-bar">
+            <span><b>{resultCount(venues.length, locale)}</b><small>{copy.source} · {copy.categoryBasis}</small></span>
+            {mapLayoutMode === "ultra-short" ? (
+              <span className={styles.forcedListLabel} data-testid="ondo-b-effective-view-label" aria-label={locale === "ko" ? "좁은 화면에서 목록 보기 사용 중" : "List view on a short screen"}><List size={17} />{copy.list}</span>
+            ) : (
+              <button
+                type="button"
+                aria-pressed={effectiveView === "list"}
+                onClick={() => {
+                  const nextView = view === "map" ? "list" : "map"
+                  setView(nextView)
+                  updateCityContext({ view: nextView })
+                }}
+                data-testid="ondo-b-view-toggle"
+              >
+                {effectiveView === "map" ? <List size={17} /> : <MapIcon size={17} />}
+                {effectiveView === "map" ? copy.list : copy.map}
+              </button>
+            )}
+          </div>
+
+          {effectiveView === "map" && mapState !== "error" ? (
+            <p
+              id="ondo-b-location-message"
+              className={styles.locationMessage}
+              role={!online || locationState !== "idle" ? "status" : undefined}
+              data-testid="ondo-b-location-message"
+              data-message-kind={!online ? "offline" : locationState === "idle" ? "disclosure" : "status"}
+            >
+              {!online
+                ? <><strong>{copy.offlineTitle}</strong> · {copy.offlineSource} {copy.locationDisclosure}</>
+                : locationState === "idle"
+                  ? copy.locationDisclosure
+                  : locationState === "locating"
+                    ? copy.locating
+                    : locationState === "ready" && nearestVenue
+                      ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}`
+                      : locationState === "ready"
+                        ? copy.locationReady
+                        : locationState === "denied"
+                          ? copy.locationDenied
+                          : copy.locationUnsupported}
+            </p>
+          ) : null}
+          {effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
+          {effectiveView === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}`}><div><span><i className={styles.clusterSwatch}>12</i>{copy.mapKey}</span></div><small>{copy.mapKeyBody}</small></div> : null}
+          {effectiveView === "map" && mapState !== "error" ? (
+            <footer className={styles.attribution} data-testid="ondo-b-attribution" aria-label={locale === "ko" ? "지도 출처" : "Map attribution"}>
+              <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap</a>
+              <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a>
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">Data from OpenStreetMap / ODbL</a>
+            </footer>
+          ) : null}
         </div>
 
-        {view === "list" || mapState === "error" ? (
+        {effectiveView === "list" || mapState === "error" ? (
           <div className={styles.listPanel} data-testid="ondo-b-list-panel">
             {mapState === "error" ? <div className={styles.mapError} role="status" data-testid="ondo-b-map-fallback-status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}
             <VenueList venues={venues} locale={locale} visibleCount={visibleCount} onClear={() => { setQuery(""); setCategory("all"); updateCityContext({ query: "", category: "all" }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} />
           </div>
         ) : null}
-
-        {view === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}`}><div><span><i className={styles.clusterSwatch}>12</i>{copy.mapKey}</span></div><small>{copy.mapKeyBody}</small></div> : null}
-        {!online && mapState !== "error" ? <p className={`${styles.locationFeedback} ${styles.offlineFeedback}`} role="status" data-testid="ondo-b-offline-status"><strong>{copy.offlineTitle}</strong> · {copy.offlineSource}</p> : null}
-        {online && view === "map" && mapState !== "error" && locationState !== "idle" ? <p id="ondo-b-location-status" className={styles.locationFeedback} role="status" data-testid="ondo-b-location-status">{locationState === "locating" ? copy.locating : locationState === "ready" && nearestVenue ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}` : locationState === "ready" ? copy.locationReady : locationState === "denied" ? copy.locationDenied : copy.locationUnsupported}</p> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
-        {view === "map" && mapState !== "error" && locationState === "idle" ? <p id="ondo-b-location-disclosure" className={styles.locationDisclosure} data-testid="ondo-b-location-disclosure">{copy.locationDisclosure}</p> : null}
-        {view === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby={locationState === "idle" ? "ondo-b-location-disclosure" : "ondo-b-location-status"} aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
-        {view === "map" && mapState !== "error" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}
       </section>
     </div>
   )
