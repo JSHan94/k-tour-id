@@ -12,6 +12,8 @@ export type BProductionVisualCase = {
   flowIds: readonly BProductionFlowId[]
   locale: "en" | "ko"
   state: string
+  setup: string
+  surfaceSelector: `[data-testid='${string}']${string}`
   description: string
 }
 
@@ -64,24 +66,24 @@ export const B_PRODUCTION_FLOWS: readonly BProductionFlow[] = [
  * this commit: each case must first be implemented and functionally accepted.
  */
 export const B_PRODUCTION_VISUAL_CASES: readonly BProductionVisualCase[] = [
-  { id: "PR-PX-FIRST-RUN-EN", flowIds: ["PR-FL-001"], locale: "en", state: "first-run", description: "English first-run directory value and language choice" },
-  { id: "PR-PX-FIRST-RUN-KO", flowIds: ["PR-FL-001"], locale: "ko", state: "first-run", description: "Korean first-run directory value and language choice" },
-  { id: "PR-PX-NATION-EN", flowIds: ["PR-FL-001", "PR-FL-002"], locale: "en", state: "nation", description: "Official directory overview before a city is selected" },
-  { id: "PR-PX-CITY-MAP-EN", flowIds: ["PR-FL-002"], locale: "en", state: "city-map", description: "English city map with canonical place markers" },
-  { id: "PR-PX-CITY-MAP-KO", flowIds: ["PR-FL-002"], locale: "ko", state: "city-map", description: "Korean city map with canonical place markers" },
-  { id: "PR-PX-CITY-LIST-EN", flowIds: ["PR-FL-002"], locale: "en", state: "city-list", description: "Sourced place list for the selected city" },
-  { id: "PR-PX-SEARCH-EN", flowIds: ["PR-FL-002"], locale: "en", state: "search-results", description: "Directory search with matching canonical records" },
-  { id: "PR-PX-SEARCH-EMPTY-KO", flowIds: ["PR-FL-002"], locale: "ko", state: "search-empty", description: "Korean no-results recovery without invented places" },
-  { id: "PR-PX-PLACE-PEEK-EN", flowIds: ["PR-FL-003"], locale: "en", state: "place-peek", description: "Selected canonical place summary" },
-  { id: "PR-PX-PLACE-DETAIL-KO", flowIds: ["PR-FL-003"], locale: "ko", state: "place-detail", description: "Korean sourced place facts and action boundary" },
-  { id: "PR-PX-HISTORY-RETURN-EN", flowIds: ["PR-FL-003"], locale: "en", state: "history-return", description: "Exact directory context restored after Back" },
-  { id: "PR-PX-DIRECTIONS-EN", flowIds: ["PR-FL-003"], locale: "en", state: "directions", description: "Directions handoff using canonical coordinates" },
-  { id: "PR-PX-LOCATION-READY-KO", flowIds: ["PR-FL-004"], locale: "ko", state: "location-ready", description: "Browser-granted location represented without tracking claims" },
-  { id: "PR-PX-LOCATION-DENIED-EN", flowIds: ["PR-FL-004"], locale: "en", state: "location-denied", description: "Real permission denial with continued directory access" },
-  { id: "PR-PX-OFFLINE-FALLBACK-KO", flowIds: ["PR-FL-004"], locale: "ko", state: "offline-fallback", description: "Complete sourced list when map delivery is unavailable" },
-  { id: "PR-PX-SAVED-EMPTY-EN", flowIds: ["PR-FL-005"], locale: "en", state: "saved-empty", description: "Device-local Saved empty state" },
-  { id: "PR-PX-SAVED-PLACE-KO", flowIds: ["PR-FL-005"], locale: "ko", state: "saved-place", description: "Korean device-local saved canonical place" },
-  { id: "PR-PX-PRIVATE-NOTE-EN", flowIds: ["PR-FL-005"], locale: "en", state: "private-note", description: "Optional private note with explicit device boundary" },
-  { id: "PR-PX-SETTINGS-EN", flowIds: ["PR-FL-006"], locale: "en", state: "settings", description: "Actual language and device-data settings" },
-  { id: "PR-PX-RESET-CONFIRM-KO", flowIds: ["PR-FL-006"], locale: "ko", state: "reset-confirm", description: "Korean destructive reset confirmation" },
+  { id: "PR-PX-FIRST-RUN-EN", flowIds: ["PR-FL-001"], locale: "en", state: "first-run", setup: "first-run", surfaceSelector: "[data-testid='ondo-onboarding']", description: "English first-run directory value and language choice" },
+  { id: "PR-PX-FIRST-RUN-KO", flowIds: ["PR-FL-001"], locale: "ko", state: "first-run", setup: "first-run", surfaceSelector: "[data-testid='ondo-onboarding']", description: "Korean first-run directory value and language choice" },
+  { id: "PR-PX-NATION-EN", flowIds: ["PR-FL-001", "PR-FL-002"], locale: "en", state: "nation", setup: "nation", surfaceSelector: "[data-testid='ondo-b-nation']", description: "Official directory overview before a city is selected" },
+  { id: "PR-PX-CITY-MAP-EN", flowIds: ["PR-FL-002"], locale: "en", state: "city-map", setup: "city-map", surfaceSelector: "[data-testid='ondo-b-map-entry']", description: "English city map with canonical place markers" },
+  { id: "PR-PX-CITY-MAP-KO", flowIds: ["PR-FL-002"], locale: "ko", state: "city-map", setup: "city-map", surfaceSelector: "[data-testid='ondo-b-map-entry']", description: "Korean city map with canonical place markers" },
+  { id: "PR-PX-CITY-LIST-EN", flowIds: ["PR-FL-002"], locale: "en", state: "city-list", setup: "city-list", surfaceSelector: "[data-testid='ondo-b-list-panel']", description: "Sourced place list for the selected city" },
+  { id: "PR-PX-SEARCH-EN", flowIds: ["PR-FL-002"], locale: "en", state: "search-results", setup: "search-results", surfaceSelector: "[data-testid='ondo-b-venue-list']", description: "Directory search with matching canonical records" },
+  { id: "PR-PX-SEARCH-EMPTY-KO", flowIds: ["PR-FL-002"], locale: "ko", state: "search-empty", setup: "search-empty", surfaceSelector: "[data-testid='ondo-b-empty-results']", description: "Korean no-results recovery without invented places" },
+  { id: "PR-PX-PLACE-PEEK-EN", flowIds: ["PR-FL-003"], locale: "en", state: "place-peek", setup: "place-peek", surfaceSelector: "[data-testid='canonical-place-peek']", description: "Selected canonical place summary" },
+  { id: "PR-PX-PLACE-DETAIL-KO", flowIds: ["PR-FL-003"], locale: "ko", state: "place-detail", setup: "place-detail", surfaceSelector: "[data-testid='canonical-place-overlay']", description: "Korean sourced place facts and action boundary" },
+  { id: "PR-PX-HISTORY-RETURN-EN", flowIds: ["PR-FL-003"], locale: "en", state: "history-return", setup: "history-return", surfaceSelector: "[data-testid='ondo-b-list-panel']", description: "Exact directory context restored after Back" },
+  { id: "PR-PX-DIRECTIONS-EN", flowIds: ["PR-FL-003"], locale: "en", state: "directions", setup: "directions", surfaceSelector: "[data-testid='canonical-place-peek']", description: "Directions handoff using canonical coordinates" },
+  { id: "PR-PX-LOCATION-READY-KO", flowIds: ["PR-FL-004"], locale: "ko", state: "location-ready", setup: "location-ready", surfaceSelector: "[data-testid='ondo-b-location-status']", description: "Browser-granted location represented without tracking claims" },
+  { id: "PR-PX-LOCATION-DENIED-EN", flowIds: ["PR-FL-004"], locale: "en", state: "location-denied", setup: "location-denied", surfaceSelector: "[data-testid='ondo-b-location-status']", description: "Real permission denial with continued directory access" },
+  { id: "PR-PX-OFFLINE-FALLBACK-KO", flowIds: ["PR-FL-004"], locale: "ko", state: "offline-fallback", setup: "offline-fallback", surfaceSelector: "[data-testid='ondo-b-map-fallback-status']", description: "Complete sourced list when map delivery is unavailable" },
+  { id: "PR-PX-SAVED-EMPTY-EN", flowIds: ["PR-FL-005"], locale: "en", state: "saved-empty", setup: "saved-empty", surfaceSelector: "[data-testid='ondo-b-saved-entry']", description: "Device-local Saved empty state" },
+  { id: "PR-PX-SAVED-PLACE-KO", flowIds: ["PR-FL-005"], locale: "ko", state: "saved-place", setup: "saved-place", surfaceSelector: "[data-testid='saved-card-mois-0021cd596bc5b2a922ad']", description: "Korean device-local saved canonical place" },
+  { id: "PR-PX-PRIVATE-NOTE-EN", flowIds: ["PR-FL-005"], locale: "en", state: "private-note", setup: "private-note", surfaceSelector: "[data-testid='private-note-mois-0021cd596bc5b2a922ad']", description: "Optional private note with explicit device boundary" },
+  { id: "PR-PX-SETTINGS-EN", flowIds: ["PR-FL-006"], locale: "en", state: "settings", setup: "settings", surfaceSelector: "[data-testid='ondo-b-settings-entry']", description: "Actual language and device-data settings" },
+  { id: "PR-PX-RESET-CONFIRM-KO", flowIds: ["PR-FL-006"], locale: "ko", state: "reset-confirm", setup: "reset-confirm", surfaceSelector: "[data-testid='ondo-b-clear-device-confirm']", description: "Korean destructive reset confirmation" },
 ] as const
