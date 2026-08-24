@@ -806,6 +806,142 @@ async function auditRequestedViewKeyboard(browser: Browser, violations: Violatio
   }
 }
 
+async function auditCompactZoomFocusSeam(
+  browser: Browser,
+  violations: Violation[],
+  locale: Locale,
+  start: Viewport,
+  compact: Viewport,
+) {
+  const context = await browser.newContext({ viewport: { width: start.width, height: start.height } })
+  await seedContext(context, locale)
+  const page = await context.newPage()
+  const scenario = `${locale}/compact-focus/${start.width}x${start.height}->${compact.width}x${compact.height}`
+  try {
+    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    const root = page.getByTestId("ondo-b-map-entry")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await root.getByTestId("ondo-b-search").fill("mapo")
+    await expect(root).toHaveAttribute("data-result-count", "5")
+    const startRoot = await elementReceipt(root)
+    issue(violations, scenario, "compact-focus-start-mode", "spacious-map", Boolean(startRoot && expectedLayoutForRoot(startRoot) === "spacious-map" && await root.getAttribute("data-layout-mode") === "spacious-map"), `root=${startRoot ? `${rounded(startRoot.width)}x${rounded(startRoot.height)}` : "missing"} mode=${await root.getAttribute("data-layout-mode")}`)
+    const zoom = root.locator(".maplibregl-ctrl-bottom-right .maplibregl-ctrl-group")
+    const zoomIn = zoom.getByRole("button").first()
+    await expect(zoom.getByRole("button")).toHaveCount(2, { timeout: 20_000 })
+    await zoomIn.focus()
+
+    await page.setViewportSize({ width: compact.width, height: compact.height })
+    await settleLayout(root, "compact-map", "map")
+    const compactRoot = await elementReceipt(root)
+    issue(violations, scenario, "compact-focus-end-mode", "compact-map", Boolean(compactRoot && expectedLayoutForRoot(compactRoot) === "compact-map" && await root.getAttribute("data-layout-mode") === "compact-map" && await root.getAttribute("data-effective-view") === "map"), `root=${compactRoot ? `${rounded(compactRoot.width)}x${rounded(compactRoot.height)}` : "missing"} mode=${await root.getAttribute("data-layout-mode")}`)
+    const active = await page.evaluate(() => {
+      const element = document.activeElement as HTMLElement | null
+      const rect = element?.getBoundingClientRect()
+      const style = element ? getComputedStyle(element) : null
+      return {
+        testid: element?.dataset.testid ?? null,
+        disabled: element instanceof HTMLButtonElement ? element.disabled : false,
+        visible: Boolean(rect && style && rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden"),
+      }
+    })
+    issue(violations, scenario, "compact-resize-focus-successor", "view-toggle", active.testid === "ondo-b-view-toggle" && active.visible && !active.disabled, JSON.stringify(active))
+    const focusableZoom = await zoom.getByRole("button").evaluateAll((buttons) => buttons.filter((button) => {
+      const element = button as HTMLElement
+      const rect = element.getBoundingClientRect()
+      const style = getComputedStyle(element)
+      return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden" && element.tabIndex >= 0
+    }).length)
+    issue(violations, scenario, "compact-zoom-hidden", "map-zoom", !(await elementReceipt(zoom))?.visible, "zoom group remains visible")
+    issue(violations, scenario, "compact-zoom-not-focusable", "map-zoom", focusableZoom === 0, `visible-focusable=${focusableZoom}`)
+    issue(violations, scenario, "resize-query-category-count", "compact-map", await root.getByTestId("ondo-b-search").inputValue() === "mapo" && await root.getAttribute("data-result-count") === "5", `query=${await root.getByTestId("ondo-b-search").inputValue()} count=${await root.getAttribute("data-result-count")}`)
+
+    await page.setViewportSize({ width: start.width, height: start.height })
+    await settleLayout(root, "spacious-map", "map")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(zoom.getByRole("button")).toHaveCount(2, { timeout: 20_000 })
+    issue(violations, scenario, "compact-focus-resize-back", "spacious-map", await root.getAttribute("data-layout-mode") === "spacious-map" && Boolean((await elementReceipt(zoom))?.visible), `mode=${await root.getAttribute("data-layout-mode")}`)
+  } catch (error) {
+    violations.push({ scenario, rule: "compact-focus-seam-completed", subject: `${start.label}->${compact.label}`, detail: error instanceof Error ? error.message : String(error) })
+  } finally {
+    await context.close()
+  }
+}
+
+async function auditKeyboardTabOrder(
+  browser: Browser,
+  violations: Violation[],
+  locale: Locale,
+  viewport: Viewport,
+  expectedMode: LayoutMode,
+) {
+  const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } })
+  await seedContext(context, locale)
+  const page = await context.newPage()
+  const scenario = `${locale}/${viewport.width}x${viewport.height}/${expectedMode}-tab-order`
+  try {
+    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    const root = page.getByTestId("ondo-b-map-entry")
+    await settleLayout(root, expectedMode, expectedMode === "ultra-short" ? "list" : "map")
+    if (expectedMode !== "ultra-short") await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await root.getByTestId("ondo-b-search").fill("mapo")
+    await expect(root).toHaveAttribute("data-result-count", "5")
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+
+    const sequence: string[] = []
+    for (let step = 0; step < 40; step += 1) {
+      await page.keyboard.press("Tab")
+      const descriptor = await page.evaluate(() => {
+        const element = document.activeElement as HTMLElement | null
+        if (!element || element === document.body) return "body"
+        if (element.closest("[data-testid='ondo-b-category-rail']")) {
+          const buttons = [...document.querySelectorAll("[data-testid='ondo-b-category-rail'] button")]
+          return `category-${buttons.indexOf(element) + 1}`
+        }
+        if (element.matches(".maplibregl-canvas")) return "maplibre-canvas"
+        if (element.closest(".maplibregl-ctrl-bottom-right")) return `zoom:${element.getAttribute("aria-label") ?? element.textContent?.trim() ?? "control"}`
+        if (element.matches("a[href*='openfreemap.org']")) return "attribution-openfreemap"
+        if (element.matches("a[href*='openmaptiles.org']")) return "attribution-openmaptiles"
+        if (element.matches("a[href*='openstreetmap.org/copyright']")) return "attribution-openstreetmap"
+        if (element === document.querySelector("[data-testid='ondo-b-list-panel'] li[data-venue-id] button")) return "list-first-row"
+        if (/^(KO|EN)$/.test(element.innerText.trim())) return "language"
+        return element.dataset.testid ?? element.getAttribute("aria-label") ?? element.tagName.toLowerCase()
+      })
+      sequence.push(descriptor)
+      if (descriptor === "nav-id" || (sequence.length > 2 && descriptor === sequence[0])) break
+    }
+
+    const position = (key: string) => sequence.indexOf(key)
+    const back = position("ondo-b-city-back")
+    const language = position("language")
+    const search = position("ondo-b-search")
+    const firstCategory = position("category-1")
+    const lastCategory = position("category-8")
+    issue(violations, scenario, "tab-order-header-first", "first-focus", sequence[0] === "ondo-b-city-back", JSON.stringify(sequence))
+    issue(violations, scenario, "tab-order-header-sequence", "header-controls", back >= 0 && language > back && search > language && firstCategory > search && lastCategory >= firstCategory, JSON.stringify(sequence))
+    const zoomPositions = sequence.map((entry, index) => entry.startsWith("zoom:") ? index : -1).filter((index) => index >= 0)
+    const mapCanvas = position("maplibre-canvas")
+    const view = position("ondo-b-view-toggle")
+    const locate = position("ondo-b-locate")
+    const navStart = position("nav-ondo")
+    if (expectedMode === "ultra-short") {
+      const row = position("list-first-row")
+      issue(violations, scenario, "tab-order-ultra-map-hidden", "map-controls", mapCanvas < 0 && zoomPositions.length === 0 && view < 0 && locate < 0 && !sequence.some((entry) => entry.startsWith("attribution-")), JSON.stringify(sequence))
+      issue(violations, scenario, "tab-order-ultra-list", "first-result-nav", row > lastCategory && navStart > row, JSON.stringify(sequence))
+    } else {
+      const attributionPositions = sequence.map((entry, index) => entry.startsWith("attribution-") ? index : -1).filter((index) => index >= 0)
+      issue(violations, scenario, "tab-order-map-after-header", "map-controls", view > lastCategory && locate > lastCategory && mapCanvas > lastCategory && zoomPositions.every((index) => index > lastCategory), JSON.stringify(sequence))
+      issue(violations, scenario, "tab-order-compact-zoom", "map-zoom", expectedMode === "compact-map" ? zoomPositions.length === 0 : zoomPositions.length === 2, JSON.stringify(sequence))
+      issue(violations, scenario, "tab-order-attribution-after-map", "attribution", attributionPositions.length === 3 && attributionPositions.every((index) => index > mapCanvas && index > locate), JSON.stringify(sequence))
+      const lastMapRelated = Math.max(view, locate, mapCanvas, ...zoomPositions, ...attributionPositions)
+      issue(violations, scenario, "tab-order-navigation-last", "main-navigation", navStart > lastMapRelated, JSON.stringify(sequence))
+    }
+  } catch (error) {
+    violations.push({ scenario, rule: "tab-order-flow-completed", subject: expectedMode, detail: error instanceof Error ? error.message : String(error) })
+  } finally {
+    await context.close()
+  }
+}
+
 async function auditZoomResize(browser: Browser, violations: Violation[], locale: Locale) {
   const context = await browser.newContext({ viewport: { width: 900, height: 720 } })
   await seedContext(context, locale)
@@ -955,6 +1091,11 @@ test.describe("ONDO B production map chrome RED matrix", () => {
       }
       await auditRootBoundaryModes(browser, violations, locale)
       await auditRequestedViewKeyboard(browser, violations, locale)
+      await auditCompactZoomFocusSeam(browser, violations, locale, { label: "width-431", width: 431, height: 720 }, { label: "width-430", width: 430, height: 720 })
+      await auditCompactZoomFocusSeam(browser, violations, locale, { label: "root-block-569", width: 768, height: 651 }, { label: "root-block-568", width: 768, height: 650 })
+      await auditKeyboardTabOrder(browser, violations, locale, { label: "tab-spacious", width: 900, height: 720 }, "spacious-map")
+      await auditKeyboardTabOrder(browser, violations, locale, { label: "tab-compact", width: 600, height: 501 }, "compact-map")
+      await auditKeyboardTabOrder(browser, violations, locale, { label: "tab-ultra", width: 667, height: 320 }, "ultra-short")
       await auditZoomResize(browser, violations, locale)
       await auditListFallback(browser, violations, locale)
     }
