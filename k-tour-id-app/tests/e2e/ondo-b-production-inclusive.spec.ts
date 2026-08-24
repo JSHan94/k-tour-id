@@ -26,6 +26,35 @@ async function seriousAxeViolations(page: Page, selector: string) {
 }
 
 test.describe("ONDO B production inclusive surfaces", () => {
+  test("B-PROD-INCLUSIVE-000 short-landscape onboarding starts at the source introduction", async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.addInitScript(() => {
+      localStorage.clear()
+      sessionStorage.clear()
+    })
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    const dialog = page.getByTestId("ondo-onboarding")
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toBeFocused()
+    const receipt = await dialog.evaluate((node) => {
+      const language = node.querySelector<HTMLButtonElement>("button[aria-label='한국어로 보기']")?.getBoundingClientRect()
+      const heading = node.querySelector("h1")?.getBoundingClientRect()
+      return {
+        scrollTop: node.scrollTop,
+        languageTop: language?.top,
+        languageBottom: language?.bottom,
+        headingTop: heading?.top,
+        headingBottom: heading?.bottom,
+        viewportHeight: window.innerHeight,
+      }
+    })
+    expect(receipt.scrollTop).toBeLessThanOrEqual(1)
+    expect(receipt.languageTop).toBeGreaterThanOrEqual(0)
+    expect(receipt.languageBottom).toBeLessThanOrEqual(receipt.viewportHeight)
+    expect(receipt.headingTop).toBeGreaterThanOrEqual(0)
+    expect(receipt.headingBottom).toBeLessThanOrEqual(receipt.viewportHeight)
+  })
+
   test("B-PROD-INCLUSIVE-001 category controls meet the 44px target in EN and KO", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 })
     for (const locale of ["en", "ko"] as const) {
@@ -64,5 +93,43 @@ test.describe("ONDO B production inclusive surfaces", () => {
       .filter((entry) => entry.size < 12))
     expect(undersized).toEqual([])
     expect(await seriousAxeViolations(page, `[data-testid='saved-card-${CANONICAL_VENUE_ID}']`)).toEqual([])
+  })
+
+  test("B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener", async ({ page }) => {
+    await seedProduction(page, "en", [CANONICAL_VENUE_ID])
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.getByTestId("nav-id").click()
+    const opener = page.getByTestId("ondo-b-clear-device-open")
+    await opener.click()
+    const dialog = page.getByTestId("ondo-b-clear-device-confirm")
+    const keep = dialog.getByRole("button", { name: "Keep content" })
+    const clear = dialog.getByRole("button", { name: "Clear saved content" })
+    await expect(keep).toBeFocused()
+    await page.keyboard.press("Shift+Tab")
+    await expect(clear).toBeFocused()
+    await page.keyboard.press("Tab")
+    await expect(keep).toBeFocused()
+    await page.keyboard.press("Escape")
+    await expect(dialog).toBeHidden()
+    await expect(opener).toBeFocused()
+  })
+
+  test("B-PROD-INCLUSIVE-005 place summary isolates the underlying directory", async ({ page }) => {
+    await seedProduction(page, "en")
+    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    const directory = page.getByTestId("ondo-b-map-entry")
+    await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
+    const peek = page.getByTestId("canonical-place-peek")
+    await expect(peek).toHaveAttribute("aria-modal", "true")
+    const isolated = await directory.evaluate((node) => {
+      let current: Element | null = node
+      while (current) {
+        if (current.hasAttribute("inert") && current.getAttribute("aria-hidden") === "true") return true
+        current = current.parentElement
+      }
+      return false
+    })
+    expect(isolated).toBe(true)
+    expect(await seriousAxeViolations(page, "[data-testid='canonical-place-peek']")).toEqual([])
   })
 })
