@@ -14,9 +14,8 @@ test("B-PROD-LOCAL-001 B composes only production local-device surfaces", () => 
 })
 
 test("B-PROD-LOCAL-002 B navigation is Explore, Saved, Settings without a hidden external branch", () => {
-  const app = appFile("features/ondo/app/ondo-app.tsx")
+  const app = appFile("features/ondo/app/ondo-app-b.tsx")
 
-  expect(app).toContain('variant === "B"')
   expect(app).toContain('en: { ondo: "Explore", my: "Saved", id: "Settings" }')
   expect(app).toContain('ko: { ondo: "탐색", my: "저장", id: "설정" }')
   expect(app).toContain("B_NAV")
@@ -25,12 +24,12 @@ test("B-PROD-LOCAL-002 B navigation is Explore, Saved, Settings without a hidden
 })
 
 test("B-PROD-LOCAL-003 B persistence is an explicit allowlist and never restores synthetic session state", () => {
-  const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
+  const provider = appFile("features/ondo/shared/state/ondo-b-provider.tsx")
 
   expect(provider).toContain('const B_DEVICE_KEY = "ondo-b.device.v1"')
   expect(provider).toContain("type OndoBDeviceState")
   expect(provider).toContain("privateNotesByVenue")
-  expect(provider).toContain('variant === "B"')
+  expect(provider).toContain("isProductionPath")
   expect(provider).toContain("restoreBDeviceState")
   expect(provider).toContain("persistBDeviceState")
   expect(provider).toContain("canonicalMapVenueById")
@@ -46,8 +45,8 @@ test("B-PROD-LOCAL-003 B persistence is an explicit allowlist and never restores
 })
 
 test("B-PROD-LOCAL-004 canonical local saves have no account gate, timer, or query-controlled outcome", () => {
-  const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
-  const actionsType = provider.slice(provider.indexOf("type OndoActions"), provider.indexOf("type OndoContextValue"))
+  const provider = appFile("features/ondo/shared/state/ondo-b-provider.tsx")
+  const actionsType = provider.slice(provider.indexOf("type OndoBActions"), provider.indexOf("type OndoBDeviceState"))
   const actionsBody = provider.slice(provider.indexOf("const actions ="), provider.indexOf("const value ="))
 
   expect(actionsType).toContain("saveVenue(venueId: string): void")
