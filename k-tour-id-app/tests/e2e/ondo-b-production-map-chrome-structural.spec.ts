@@ -160,6 +160,40 @@ async function expectTarget(locator: Locator, label: string) {
 test.describe("ONDO B structural production map chrome", () => {
   test.describe.configure({ timeout: 480_000 })
 
+  test("resize hands zoom focus to a visible successor without stealing unrelated focus", async ({ page }) => {
+    await seed(page, "en", "idle")
+    await page.setViewportSize({ width: 900, height: 720 })
+    await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
+    const root = page.getByTestId("ondo-b-map-entry")
+    const zoomIn = page.locator(".maplibregl-ctrl-group button").first()
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(zoomIn).toBeVisible()
+
+    await zoomIn.focus()
+    await page.setViewportSize({ width: 430, height: 720 })
+    await expect(root).toHaveAttribute("data-layout-mode", "compact-map")
+    await expect(page.getByTestId("ondo-b-view-toggle")).toBeFocused()
+
+    await page.setViewportSize({ width: 900, height: 720 })
+    await expect(root).toHaveAttribute("data-layout-mode", "spacious-map")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(zoomIn).toBeVisible()
+    const nav = page.getByTestId("ondo-main-nav").getByRole("button").first()
+    await zoomIn.focus()
+    await nav.focus()
+    await page.setViewportSize({ width: 430, height: 720 })
+    await expect(root).toHaveAttribute("data-layout-mode", "compact-map")
+    await expect(nav).toBeFocused()
+
+    await page.setViewportSize({ width: 900, height: 720 })
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(zoomIn).toBeVisible()
+    await zoomIn.focus()
+    await page.setViewportSize({ width: 667, height: 320 })
+    await expect(root).toHaveAttribute("data-layout-mode", "ultra-short")
+    await expect(page.getByTestId("ondo-b-search")).toBeFocused()
+  })
+
   for (const locale of ["en", "ko"] as const) {
     for (const locationCase of ["idle", "ready", "denied", "offline"] as const) {
       test(`${locale.toUpperCase()} ${locationCase} keeps every actual-root lane truthful across the exact matrix`, async ({ context, page }, testInfo) => {
