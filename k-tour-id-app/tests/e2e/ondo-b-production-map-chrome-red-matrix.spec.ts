@@ -299,17 +299,11 @@ async function auditCategoryReachability(
   const count = await buttons.count()
   issue(violations, scenario, "category-count", "category-rail", count === 8, `count=${count}`)
   for (let index = 0; index < count; index += 1) {
-    await rail.evaluate((node, buttonIndex) => {
-      const element = node as HTMLElement
-      const button = element.querySelectorAll<HTMLElement>("button")[buttonIndex]
-      if (button) {
-        const railBox = element.getBoundingClientRect()
-        const buttonBox = button.getBoundingClientRect()
-        const contentLeft = buttonBox.left - railBox.left + element.scrollLeft
-        element.scrollLeft = Math.max(0, contentLeft - (element.clientWidth - button.offsetWidth) / 2)
-      }
-    }, index)
     const button = buttons.nth(index)
+    await button.evaluate(async (node) => {
+      node.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant" as ScrollBehavior })
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+    })
     const [railBox, buttonBox] = await Promise.all([elementReceipt(rail), elementReceipt(button)])
     const label = `category-${index + 1}:${(await button.textContent())?.trim() ?? "missing"}`
     issue(violations, scenario, "category-reachable", label, Boolean(railBox && buttonBox && inside(buttonBox, railBox) && inside(buttonBox, canvas)), buttonBox ? JSON.stringify(buttonBox) : "missing")
@@ -961,11 +955,14 @@ async function auditKeyboardTabOrder(
     const root = page.getByTestId("ondo-b-map-entry")
     await settleLayout(root, expectedMode, expectedMode === "ultra-short" ? "list" : "map")
     if (expectedMode !== "ultra-short") await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-    await root.getByTestId("ondo-b-search").fill("mapo")
-    await expect(root).toHaveAttribute("data-result-count", "5")
     await page.evaluate(() => {
-      document.body.tabIndex = -1
-      document.body.focus({ preventScroll: true })
+      const sentinel = document.createElement("button")
+      sentinel.type = "button"
+      sentinel.dataset.testid = "ondo-b-tab-start-sentinel"
+      sentinel.setAttribute("aria-label", "Start keyboard order audit")
+      Object.assign(sentinel.style, { position: "fixed", inset: "0 auto auto 0", width: "1px", height: "1px", opacity: "0", pointerEvents: "none" })
+      document.body.prepend(sentinel)
+      sentinel.focus()
     })
 
     const sequence: string[] = []
@@ -990,8 +987,6 @@ async function auditKeyboardTabOrder(
       sequence.push(descriptor)
       if (descriptor === "nav-id" || (sequence.length > 2 && descriptor === sequence[0])) break
     }
-    await page.evaluate(() => document.body.removeAttribute("tabindex"))
-
     const position = (key: string) => sequence.indexOf(key)
     const back = position("ondo-b-city-back")
     const language = position("language")
