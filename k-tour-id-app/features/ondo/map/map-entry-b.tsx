@@ -9,7 +9,7 @@ import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues"
 import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName, venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { mapFoodIntentAliases } from "@/lib/ondo/venues/map-discovery-aliases"
-import type { Locale } from "../contracts/domain"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import {
   B_DISCOVERY_TRAVERSAL_EVENT,
@@ -115,7 +115,7 @@ const COPY = {
     mapKeyBody: "테두리 숫자는 기록 묶음, 작은 중립색 점은 개별 기록을 뜻합니다.",
     filterLabel: "공식 업태 분류",
   },
-} satisfies Record<Locale, Record<string, string>>
+} satisfies Record<OndoBLocale, Record<string, string>>
 
 const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; short: string }> = {
   all: { en: "All", ko: "전체", short: "ALL" },
@@ -163,7 +163,7 @@ const KOREA_DOTS = (() => {
   return result
 })()
 
-function resultCount(count: number, locale: Locale) {
+function resultCount(count: number, locale: OndoBLocale) {
   return locale === "ko" ? `공식 기록 ${count}개` : `${count} official ${count === 1 ? "record" : "records"}`
 }
 
@@ -177,13 +177,13 @@ function distanceInMeters(from: UserLocation, venue: Pick<CanonicalMapVenue, "lo
   return earthRadius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-function displayDistance(distance: number, locale: Locale) {
+function displayDistance(distance: number, locale: OndoBLocale) {
   if (distance < 1_000) return locale === "ko" ? `${Math.max(10, Math.round(distance / 10) * 10)}m 거리` : `${Math.max(10, Math.round(distance / 10) * 10)} m away`
   const kilometers = (distance / 1_000).toFixed(distance < 10_000 ? 1 : 0)
   return locale === "ko" ? `${kilometers}km 거리` : `${kilometers} km away`
 }
 
-function NationDirectory({ locale, onSelect }: { locale: Locale; onSelect(city: CityId): void }) {
+function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(city: CityId): void }) {
   const copy = COPY[locale]
   return (
     <section className={styles.nation} data-testid="ondo-b-nation" data-directory-source={SOURCE_ID}>
@@ -264,7 +264,7 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly CanonicalMapVenu
 
 function VenueList({ venues, locale, visibleCount, onClear, onMore, onSelect }: {
   venues: readonly CanonicalMapVenue[]
-  locale: Locale
+  locale: OndoBLocale
   visibleCount: number
   onClear(): void
   onMore(): void

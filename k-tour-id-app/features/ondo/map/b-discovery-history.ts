@@ -24,7 +24,7 @@ const HISTORY_KEY = "__ondoBDiscovery"
 export const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
 const OWNED_URL_KEYS = [
   "city", "view", "venueId", "detail", "q", "category",
-  "heat", "hot", "calm", "open", "time", "neighborhood", "after19", "after19Return",
+  "heat", "hot", "calm", "open", "time", "neighborhood",
 ] as const
 const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/

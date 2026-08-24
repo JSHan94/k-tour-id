@@ -3,7 +3,7 @@
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef } from "react"
 import { ArrowRight, Database, Languages } from "lucide-react"
-import type { Locale } from "../contracts/domain"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import styles from "./onboarding.module.css"
@@ -29,7 +29,7 @@ const COPY = {
     open: "디렉터리 둘러보기",
     dialog: "ONDO 공식 디렉터리 시작 안내",
   },
-} satisfies Record<Locale, Record<string, string>>
+} satisfies Record<OndoBLocale, Record<string, string>>
 
 export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
