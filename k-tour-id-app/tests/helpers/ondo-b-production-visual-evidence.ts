@@ -187,7 +187,6 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
     if (item.setup === "directions") {
       const directions = peek.getByTestId("canonical-venue-directions")
       await expect(directions).toHaveAttribute("href", /^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=-?\d+(?:\.\d+)?%2C-?\d+(?:\.\d+)?$/)
-      await directions.focus()
     }
   } else if (item.setup === "place-detail") {
     const peek = await openFirstPlace(page)
@@ -213,14 +212,11 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
     await page.getByTestId("ondo-b-locate").click()
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-location-state", item.setup === "location-ready" ? "ready" : "denied", { timeout: 15_000 })
   } else if (item.setup === "offline-fallback") {
+    await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("failed"))
     await openCity(page)
-    await waitForMap(page)
-    await page.getByTestId("ondo-b-city-back").click()
-    await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
-    await page.context().setOffline(true)
-    await openCity(page)
-    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-connectivity", "offline")
     await waitForMap(page, "error")
+    await page.context().setOffline(true)
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-connectivity", "offline")
     await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
   } else if (item.setup === "saved-empty" || item.setup === "saved-place" || item.setup === "private-note") {
     await page.getByTestId("nav-my").click()
@@ -255,6 +251,11 @@ export async function stabilizeBProductionVisual(page: Page, item: BProductionVi
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
   })
   await page.waitForTimeout(120)
+  if (item.setup === "directions") {
+    const directions = page.getByTestId("canonical-venue-directions")
+    await directions.focus()
+    await expect(directions).toBeFocused()
+  }
 }
 
 async function expectNoOverflowOrClipping(page: Page, root: Locator) {
