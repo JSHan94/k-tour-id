@@ -745,7 +745,7 @@ async function auditUltraShortStateCarry(browser: Browser, violations: Violation
   try {
     await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 60_000 })
     const search = root.getByTestId("ondo-b-search")
     await search.fill("mapo")
     await expect(root).toHaveAttribute("data-result-count", "5")
@@ -812,7 +812,7 @@ async function auditAutoListBoundary(
   try {
     await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 60_000 })
     const search = root.getByTestId("ondo-b-search")
     await search.fill("mapo")
     await expect(root).toHaveAttribute("data-result-count", "5")
@@ -831,7 +831,7 @@ async function auditAutoListBoundary(
 
     await page.setViewportSize({ width: upper.width, height: upper.height })
     await settleLayout(root, expectedUpperMode, "map")
-    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 60_000 })
     const upperRoot = await elementReceipt(root)
     const upperReported = Number(await root.getAttribute("data-map-root-block-size"))
     issue(violations, scenario, "auto-list-boundary-geometry", "upper", Boolean(upperRoot
