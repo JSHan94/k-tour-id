@@ -338,10 +338,12 @@ export function MapEntryB() {
     const root = cityRootNode.current
     if (!city || !root) return
     const rememberFocusOwner = (event: FocusEvent) => {
-      zoomFocusOwnedRef.current = event.target instanceof Element && Boolean(event.target.closest(".maplibregl-ctrl-group"))
+      zoomFocusOwnedRef.current = event.target instanceof Element
+        && root.contains(event.target)
+        && Boolean(event.target.closest(".maplibregl-ctrl-group"))
     }
-    root.addEventListener("focusin", rememberFocusOwner)
-    return () => root.removeEventListener("focusin", rememberFocusOwner)
+    document.addEventListener("focusin", rememberFocusOwner)
+    return () => document.removeEventListener("focusin", rememberFocusOwner)
   }, [city])
 
   useLayoutEffect(() => {
