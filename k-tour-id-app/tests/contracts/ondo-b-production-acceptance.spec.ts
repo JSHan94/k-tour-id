@@ -99,29 +99,36 @@ test("PROD-B-002 scenario, QA, and legacy storage injection cannot mutate produc
     /\.get\(\s*["'](?:scenario|qa|qaCase)["']\s*\)/.test(text)
     || /use-qa-controls|useQaControls|data-qa-controls/.test(text)
   )).map(({ file }) => file)
-  expect(queryHits, `query injection seams:\n${queryHits.join("\n")}`).toEqual([])
-
   const sessionHits = source.filter(({ source: text }) => /\bsessionStorage\b/.test(text)).map(({ file }) => file)
-  expect(sessionHits, `session-backed product state:\n${sessionHits.join("\n")}`).toEqual([])
-
   const legacyKeys = /ondo\.(?:preferences|session)\.v3|ondo\.(?:chat|table-outcomes|labs|accepted-visits)\.v2/
   const legacyHits = source.filter(({ source: text }) => legacyKeys.test(text)).map(({ file }) => file)
-  expect(legacyHits, `legacy injected storage keys:\n${legacyHits.join("\n")}`).toEqual([])
+  const storageKeys = [...new Set(source.flatMap(({ source: text }) => (
+    [...text.matchAll(/["'](ondo(?:-b)?\.[a-z0-9.-]+)["']/gi)].map((match) => match[1])
+  )))]
+  const nonProductionKeys = storageKeys.filter((key) => key !== "ondo-b.device.v1")
 
-  const localStorageFiles = source.filter(({ source: text }) => /\blocalStorage\b/.test(text))
-  for (const { file, source: text } of localStorageFiles) {
-    expect(text, `${file} must use only the production device boundary`).toContain("ondo-b.device.v1")
-  }
+  expect({
+    queryInjection: queryHits,
+    sessionStorage: sessionHits,
+    legacyStorage: legacyHits,
+    nonProductionStorageKeys: nonProductionKeys,
+  }).toEqual({
+    queryInjection: [],
+    sessionStorage: [],
+    legacyStorage: [],
+    nonProductionStorageKeys: [],
+  })
 })
 
 test("PROD-B-003 reachable user-facing literals contain no demo, simulation, hypothesis, or fake-success copy", () => {
   const source = graphSource(productionImportGraph()).filter(({ file }) => /\.[jt]sx?$/.test(file))
-  const hits = source.flatMap(({ file, source: text }) => {
+  const rawHits = source.flatMap(({ file, source: text }) => {
     const literals = [...text.matchAll(/(["'`])([^"'`\n]{1,500})\1/g)].map((match) => match[2])
     return literals.flatMap((literal) => BANNED_VISIBLE_COPY
       .filter((pattern) => pattern.test(literal))
       .map((pattern) => ({ file, literal: literal.slice(0, 180), pattern: String(pattern) })))
   })
+  const hits = [...new Map(rawHits.map((hit) => [`${hit.file}\u0000${hit.pattern}`, hit])).values()]
   expect(hits, JSON.stringify(hits, null, 2)).toEqual([])
 })
 
