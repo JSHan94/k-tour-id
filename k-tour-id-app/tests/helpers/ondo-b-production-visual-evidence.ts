@@ -211,6 +211,10 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
     await waitForMap(page)
     await page.getByTestId("ondo-b-locate").click()
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-location-state", item.setup === "location-ready" ? "ready" : "denied", { timeout: 15_000 })
+    if (item.setup === "location-ready") {
+      await expect(page.getByTestId("ondo-b-user-location-marker")).toBeAttached()
+      await page.waitForTimeout(1_000)
+    }
   } else if (item.setup === "offline-fallback") {
     await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("failed"))
     await openCity(page)
