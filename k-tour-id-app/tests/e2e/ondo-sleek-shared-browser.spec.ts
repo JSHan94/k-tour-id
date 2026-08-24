@@ -17,7 +17,7 @@ test.describe("ONDO B sleek shared shell", () => {
     await expectBRuntimeClean(page)
   })
 
-  test("the responsive canvas switches to the compact desktop frame at 801px", async ({ page }, testInfo) => {
+  test("the responsive canvas grows continuously into a useful desktop frame", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium")
     await seedB(page)
     const widths = [360, 430, 768, 800, 801, 1024, 1440]
@@ -31,21 +31,24 @@ test.describe("ONDO B sleek shared shell", () => {
       measured.push(Math.round(box!.width))
       await expect(canvas).toBeVisible()
     }
-    expect(measured).toEqual([360, 430, 768, 800, 430, 430, 430])
+    expect(measured).toEqual([360, 430, 768, 800, 769, 968, 1180])
+    expect(measured[4]).toBeGreaterThanOrEqual(measured[2])
+    expect(measured.at(-1)! / widths.at(-1)!).toBeGreaterThanOrEqual(.8)
   })
 
-  test("wide screens keep the compact bottom navigation and readable document measure", async ({ page }, testInfo) => {
+  test("wide screens keep the mobile-first bottom navigation at a readable measure", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium")
     await page.setViewportSize({ width: 1440, height: 1000 })
     await seedB(page)
     await gotoB(page)
     const canvas = page.getByTestId("ondo-canvas")
-    await expect(canvas).toHaveCSS("width", "430px")
     const [canvasBox, navBox] = await Promise.all([canvas.boundingBox(), page.getByTestId("ondo-main-nav").boundingBox()])
     expect(canvasBox).not.toBeNull()
     expect(navBox).not.toBeNull()
-    expect(navBox!.width).toBe(400)
+    expect(canvasBox!.width).toBe(1180)
+    expect(navBox!.width).toBe(700)
     expect(navBox!.height).toBe(66)
+    expect(Math.abs((navBox!.x + navBox!.width / 2) - (canvasBox!.x + canvasBox!.width / 2))).toBeLessThanOrEqual(1)
 
     await page.getByTestId("nav-id").click()
     const identityBox = await page.getByTestId("ondo-identity-entry").boundingBox()

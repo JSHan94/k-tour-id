@@ -114,17 +114,19 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
   })
 
   for (const locale of ["en", "ko"] as const) {
-    test(`${locale.toUpperCase()} uses a 430px desktop canvas and bottom navigation`, async ({ page }) => {
+    test(`${locale.toUpperCase()} uses the responsive desktop canvas and centered bottom navigation`, async ({ page }) => {
       await seedB(page, { locale, local: { autoNight: false } })
-      for (const viewport of [{ width: 801, height: 1000 }, { width: 1440, height: 1000 }]) {
+      for (const viewport of [{ width: 801, height: 1000, canvasWidth: 769 }, { width: 1440, height: 1000, canvasWidth: 1180 }]) {
         await page.setViewportSize(viewport)
         await gotoB(page, "?city=seoul&view=map")
         const canvasBox = await box(page.getByTestId("ondo-canvas"))
         const navBox = await box(page.getByTestId("ondo-main-nav"))
         const navButtons = await Promise.all(Array.from({ length: 4 }, (_, index) => box(page.getByTestId("ondo-main-nav").getByRole("button").nth(index))))
-        expect(canvasBox.width).toBeGreaterThanOrEqual(429)
-        expect(canvasBox.width).toBeLessThanOrEqual(431)
+        expect(Math.round(canvasBox.width)).toBe(viewport.canvasWidth)
+        expect(canvasBox.width / viewport.width).toBeGreaterThanOrEqual(.8)
         expect(navBox.width).toBeGreaterThan(navBox.height)
+        expect(navBox.width).toBeLessThanOrEqual(700.5)
+        expect(Math.abs((navBox.x + navBox.width / 2) - (canvasBox.x + canvasBox.width / 2))).toBeLessThanOrEqual(1)
         expect(Math.abs(canvasBox.y + canvasBox.height - navBox.y - navBox.height - 10)).toBeLessThanOrEqual(1)
         expect(new Set(navButtons.map(({ y }) => Math.round(y))).size).toBe(1)
         expect(navButtons.map(({ x }) => x)).toEqual([...navButtons.map(({ x }) => x)].sort((a, b) => a - b))
