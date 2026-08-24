@@ -4,7 +4,6 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import provenance from "../../data/ondo-venues/provenance-manifest.json" with { type: "json" }
 import { CANONICAL_MAP_VENUES, CANONICAL_VENUE_COUNTS, CANONICAL_VENUES, venueToMapRecord } from "../../lib/ondo/venues"
-import { B_DEMO_SIGNAL_BY_VENUE_ID } from "../../lib/ondo/venues/demo-signals"
 
 const geoJson = JSON.parse(readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../data/ondo-venues/canonical-venues.geojson"), "utf8")) as {
   type: string
@@ -48,9 +47,9 @@ test("VENUE-DATA-004 map seam preserves coordinate and truth boundaries", () => 
     latitude: venue.location.latitude,
     longitude: venue.location.longitude,
     openNow: null,
-    heat: null,
-    ondoScore: null,
   })
+  expect(venueToMapRecord(venue)).not.toHaveProperty("heat")
+  expect(venueToMapRecord(venue)).not.toHaveProperty("ondoScore")
 })
 
 test("VENUE-DATA-005 canonical JSON and GeoJSON have an exact id/coordinate set", () => {
@@ -80,22 +79,20 @@ test("VENUE-DATA-007 each city-district/category quota is exact", () => {
   }
 })
 
-test("VENUE-DATA-008 After19 eligibility is exactly the simulated night-category signal set", () => {
-  const eligibleByCity = { seoul: 0, busan: 0 }
+test("VENUE-DATA-008 published category is normalized only from the official business type", () => {
+  const rules = {
+    korean: ["한식"],
+    casual: ["분식", "김밥", "패스트푸드"],
+    japanese: ["일식"],
+    chinese: ["중국식"],
+    global: ["경양식", "외국음식전문점"],
+    night: ["호프/통닭", "정종/대포집/소주방", "감성주점", "까페"],
+    specialty: ["횟집", "식육(숯불구이)", "통닭(치킨)"],
+  } as const
 
-  for (const venue of CANONICAL_MAP_VENUES) {
-    const signal = B_DEMO_SIGNAL_BY_VENUE_ID.get(venue.id)
-    if (!signal) continue
-    expect(Boolean(signal.after19)).toBe(venue.primaryCategory === "night")
-    if (!signal.after19) continue
-
-    eligibleByCity[venue.cityId] += 1
-    expect(signal.truth).toBe("SIMULATED")
-    expect(signal.reason.en).toContain("ONDO includes this food-and-drink source category under its simulated night-preview policy")
-    expect(signal.reason.en).toContain("does not confirm opening hours, alcohol service, or an age restriction")
-    expect(signal.reason.ko).toContain("ONDO의 시뮬레이션 야간 프리뷰 정책")
-    expect(signal.reason.ko).toContain("영업시간·주류 제공·연령 제한을 확인하지 않습니다")
+  for (const venue of CANONICAL_VENUES) {
+    expect(venue.sourceCategory).toMatchObject({ truth: "OFFICIAL_SOURCE", sourceField: "업태구분명" })
+    const expected = Object.entries(rules).find(([, terms]) => terms.some((term) => venue.sourceCategory.value?.includes(term)))?.[0]
+    expect(venue.primaryCategory).toBe(expected)
   }
-
-  expect(eligibleByCity).toEqual({ seoul: 7, busan: 10 })
 })
