@@ -3,9 +3,16 @@ import type { CanonicalVenue } from "./contracts"
 import type { CanonicalVenueDetail } from "./detail-contract"
 
 const venues = canonicalVenueData.venues as unknown as readonly CanonicalVenue[]
+const venuesById = new Map(venues.map((venue) => [venue.id, venue] as const))
+
+export const CANONICAL_VENUE_DETAIL_SOURCE = Object.freeze({
+  id: "MOIS_LOCALDATA_GENERAL_RESTAURANTS" as const,
+  snapshotAt: canonicalVenueData.generatedAt,
+  truthNotice: canonicalVenueData.truthNotice,
+})
 
 export function canonicalVenueDetailById(id: string): CanonicalVenueDetail | undefined {
-  const venue = venues.find((candidate) => candidate.id === id)
+  const venue = venuesById.get(id as CanonicalVenue["id"])
   if (!venue) return undefined
   return {
     id: venue.id,

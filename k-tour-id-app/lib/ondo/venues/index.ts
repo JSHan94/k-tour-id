@@ -2,8 +2,16 @@ import canonicalVenueData from "../../../data/ondo-venues/canonical-venues.json"
 import type { CanonicalMapVenue, CanonicalVenue, VenueCityId } from "./contracts"
 
 export type { CanonicalMapVenue, CanonicalVenue, FieldEvidence, SourceTruth, VenueCityId, VenuePrimaryCategory } from "./contracts"
+export {
+  CANONICAL_PRIVATE_NOTE_MAX_LENGTH,
+  isCanonicalVenueId,
+  sanitizeCanonicalVenueIds,
+  sanitizeCanonicalVenueNotes,
+  type CanonicalVenueId,
+} from "./canonical-allowlist"
 
 export const CANONICAL_VENUES = Object.freeze(canonicalVenueData.venues) as unknown as readonly CanonicalVenue[]
+const CANONICAL_VENUES_BY_ID = new Map(CANONICAL_VENUES.map((venue) => [venue.id, venue] as const))
 
 export const CANONICAL_VENUE_COUNTS = Object.freeze({
   total: canonicalVenueData.counts.total,
@@ -18,7 +26,7 @@ export function venuesByCity(cityId: VenueCityId) {
 }
 
 export function canonicalVenueById(id: string) {
-  return CANONICAL_VENUES.find((venue) => venue.id === id)
+  return CANONICAL_VENUES_BY_ID.get(id as CanonicalVenue["id"])
 }
 
 export function venueToMapRecord(venue: CanonicalVenue): CanonicalMapVenue {

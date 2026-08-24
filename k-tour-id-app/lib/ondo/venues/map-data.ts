@@ -32,7 +32,8 @@ export const CANONICAL_MAP_VENUES_COMPACT: readonly CanonicalMapVenue[] = Object
   openNow: null,
   sourceRefId: feature.properties.sourceRefId,
 })))
+const CANONICAL_MAP_VENUES_BY_ID = new Map(CANONICAL_MAP_VENUES_COMPACT.map((venue) => [venue.id, venue] as const))
 
 export function canonicalMapVenueById(id: string) {
-  return CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === id)
+  return CANONICAL_MAP_VENUES_BY_ID.get(id)
 }

@@ -30,4 +30,9 @@ export type CanonicalVenueDetail = {
 
 export type CanonicalVenueDetailResponse = {
   venue: CanonicalVenueDetail
+  source: {
+    id: "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
+    snapshotAt: string
+    truthNotice: string
+  }
 }
