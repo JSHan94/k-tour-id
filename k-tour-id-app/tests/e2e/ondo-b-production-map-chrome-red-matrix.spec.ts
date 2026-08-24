@@ -693,7 +693,7 @@ async function settleLayout(root: Locator, layoutMode: LayoutMode, effectiveView
   }), { timeout: 1_500 }).toEqual({ layout: layoutMode, effective: effectiveView }).catch(() => undefined)
 }
 
-async function runBounded(tasks: Array<() => Promise<void>>, concurrency = 4) {
+async function runBounded(tasks: Array<() => Promise<void>>, concurrency = 2) {
   let nextIndex = 0
   await Promise.all(Array.from({ length: Math.min(concurrency, tasks.length) }, async () => {
     while (nextIndex < tasks.length) {
