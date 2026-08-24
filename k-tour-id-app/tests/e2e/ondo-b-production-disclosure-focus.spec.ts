@@ -26,16 +26,19 @@ async function seedProductionDirectory(page: Page, locale: "en" | "ko" = "en") {
 test.describe("ONDO B production disclosure and focus boundaries", () => {
   for (const viewport of COMPACT_VIEWPORTS) {
     for (const locale of ["en", "ko"] as const) {
-      test(`location disclosure does not cover the map key at ${viewport.width}x${viewport.height} ${locale}`, async ({ page }) => {
+      test(`location message does not cover the map key at ${viewport.width}x${viewport.height} ${locale}`, async ({ page }) => {
         await page.setViewportSize(viewport)
         await seedProductionDirectory(page, locale)
         await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
         await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
 
-        const disclosure = page.getByTestId("ondo-b-location-disclosure")
+        const disclosure = page.getByTestId("ondo-b-location-message")
         const mapKey = page.getByTestId("ondo-b-map-key")
+        const locate = page.getByTestId("ondo-b-locate")
+        await expect(disclosure).toHaveCount(1)
         await expect(disclosure).toBeVisible()
         await expect(mapKey).toBeVisible()
+        await expect(locate).toHaveAttribute("aria-describedby", "ondo-b-location-message")
         const area = await disclosure.evaluate((node, keyTestId) => {
           const key = document.querySelector<HTMLElement>(`[data-testid='${keyTestId}']`)
           if (!key) throw new Error("Map key is missing")

@@ -95,14 +95,18 @@ async function chromeReceipt(
 ) {
   const key = page.getByTestId("ondo-b-map-key")
   const locate = page.getByTestId("ondo-b-locate")
-  const message = state === "idle"
-    ? page.getByTestId("ondo-b-location-disclosure")
-    : page.getByTestId("ondo-b-location-status")
+  const message = page.getByTestId("ondo-b-location-message")
   const view = page.getByTestId("ondo-b-view-toggle")
   const nav = page.getByTestId("ondo-main-nav")
   const navButtons = nav.getByRole("button")
 
   await expect(navButtons).toHaveCount(3)
+  await expect(message).toHaveCount(1)
+  await expect(message).toHaveAttribute("data-message-kind", state === "idle" ? "disclosure" : "status")
+  await expect(message).toContainText(state === "idle"
+    ? "OpenFreeMap"
+    : locale === "en" ? "You’re here" : "현재 위치")
+  await expect(locate).toHaveAttribute("aria-describedby", "ondo-b-location-message")
   await expectVisibleText(key.locator("small"), `${state} map explanation`, viewport)
   await expectVisibleText(message, `${state} location message`, viewport)
   await expectVisibleText(view, `${state} view control`, viewport)
@@ -158,11 +162,23 @@ test.describe("ONDO B production map chrome geometry", () => {
       for (const viewport of VIEWPORTS) {
         await page.setViewportSize(viewport)
         await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
-        await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+        const root = page.getByTestId("ondo-b-map-entry")
+        await expect(root).toHaveAttribute("data-layout-mode", /^(ultra-short|compact-map|spacious-map)$/)
+        if (await root.getAttribute("data-layout-mode") === "ultra-short") {
+          await expect(root).toHaveAttribute("data-requested-view", "map")
+          await expect(root).toHaveAttribute("data-effective-view", "list")
+          await expect(page.getByTestId("ondo-b-list-panel")).toBeVisible()
+          await expect(page.getByTestId("ondo-b-location-message")).toHaveCount(0)
+          await expect(page.getByTestId("ondo-b-locate")).toHaveCount(0)
+          await expect(page.getByTestId("ondo-b-map-key")).toHaveCount(0)
+          await expect(page.getByTestId("ondo-b-attribution")).toHaveCount(0)
+          continue
+        }
+        await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
 
         receipts.push(await chromeReceipt(page, locale, viewport, "idle"))
         await page.getByTestId("ondo-b-locate").click()
-        await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-location-state", "ready")
+        await expect(root).toHaveAttribute("data-location-state", "ready")
         receipts.push(await chromeReceipt(page, locale, viewport, "ready"))
       }
 
