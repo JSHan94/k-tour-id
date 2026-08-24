@@ -213,7 +213,7 @@ async function assertProjectIsolation(projectId) {
   }
 }
 
-async function stripLegacyCssSelectors() {
+async function stripLegacyShellSelectors() {
   const shellPath = resolve(STAGE_ROOT, "features/ondo/app/ondo-shell.module.css")
   const shell = (await readFile(shellPath, "utf8"))
     .replaceAll('.content[data-active-tab="my"],\n.content[data-active-tab="tables"],\n.content[data-active-tab="id"]', '.content[data-active-tab="my"],\n.content[data-active-tab="id"]')
@@ -222,18 +222,42 @@ async function stripLegacyCssSelectors() {
     .replaceAll("grid-template-columns: repeat(4, 1fr);", "grid-template-columns: repeat(3, 1fr);")
     .replace(/\n\.stage\[data-variant="B"\] \[data-testid="ondo-after19-layer"\] > label \{\n  display: none;\n\}\n/, "\n")
   await writeFile(shellPath, shell)
+}
 
-  const onboardingPath = resolve(STAGE_ROOT, "features/ondo/onboarding/onboarding.module.css")
-  const onboarding = (await readFile(onboardingPath, "utf8"))
-    .replace(/\n@media \(min-width: 801px\) \{[\s\S]*?\n\}\n@media \(max-height: 760px\)/, "\n@media (max-height: 760px)")
-  await writeFile(onboardingPath, onboarding)
+async function writeProductionVenueDetails() {
+  const path = resolve(STAGE_ROOT, "data/ondo-venues/canonical-venues.json")
+  const source = JSON.parse(await readFile(path, "utf8"))
+  const venues = source.venues.map((venue) => ({
+    id: venue.id,
+    sourceIds: venue.sourceIds,
+    sourceSnapshotAt: venue.sourceSnapshotAt,
+    primaryCategory: venue.primaryCategory,
+    name: venue.name,
+    address: venue.address,
+    sourceCategory: venue.sourceCategory,
+    licenseStatus: venue.licenseStatus,
+    licenseOpenedAt: venue.licenseOpenedAt,
+    sourceModifiedAt: venue.sourceModifiedAt,
+    facts: {
+      openingHours: venue.facts.openingHours,
+      foreignCardAccepted: venue.facts.foreignCardAccepted,
+      menu: venue.facts.menu,
+      englishSupport: venue.facts.englishSupport,
+    },
+  }))
+  await writeFile(path, `${JSON.stringify({
+    generatedAt: source.generatedAt,
+    truthNotice: source.truthNotice,
+    venues,
+  })}\n`)
 }
 
 export async function prepareStandaloneSource({ projectId = process.env.ONDO_B_SITE_PROJECT_ID ?? LOCAL_ONLY_PROJECT_ID } = {}) {
   await assertProjectIsolation(projectId)
   await rm(STAGE_ROOT, { recursive: true, force: true })
   await Promise.all([...SOURCE_FILES, ...PUBLIC_FILES].map(copyFile))
-  await stripLegacyCssSelectors()
+  await stripLegacyShellSelectors()
+  await writeProductionVenueDetails()
 
   const generated = new Map([
     ["app/layout.tsx", ROOT_LAYOUT],

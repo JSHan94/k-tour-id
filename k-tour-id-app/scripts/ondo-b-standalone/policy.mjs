@@ -21,7 +21,7 @@ export const SOURCE_FILES = Object.freeze([
   "features/ondo/my/private-note.tsx",
   "features/ondo/my/saved-entry-b.tsx",
   "features/ondo/onboarding/official-directory-onboarding.tsx",
-  "features/ondo/onboarding/onboarding.module.css",
+  "features/ondo/onboarding/official-directory-onboarding.module.css",
   "features/ondo/place/canonical-place-mount.tsx",
   "features/ondo/place/canonical-place-overlay.tsx",
   "features/ondo/place/canonical-place.module.css",
@@ -85,10 +85,14 @@ export const BLOCKED_HTTP_PATHS = Object.freeze([
 export const BANNED_ARTIFACT_PATH = /(^|\/)(?:after19|commerce|connect|demo|fixtures?|identity|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
 
 export const BANNED_ARTIFACT_TEXT = Object.freeze([
+  /(?:^|[^A-Za-z0-9]|_)persona(?:s|Selected|Icon)?(?:[^A-Za-z0-9]|_)/,
+  /"simulation"\s*:\s*null/i,
+  /\b(?:demo|simulation|simulated|KYC|chat|reward|rewards|Labs|After19)\b/i,
   /demo-journey/i,
   /mock-data/i,
   /ondo-after19/i,
   /Checkout simulation/i,
+  /Payment KYC|paymentKyc|CheckoutOverlay|ChatOverlay|RewardsEntry/i,
   /결제 시뮬레이션/i,
   /Labs · (?:Local|로컬)/i,
   /TablesEntry|ConnectOverlays|GateOverlay|IdentityEntry|After19Layer|CheckoutOverlay|LabsEntry/,

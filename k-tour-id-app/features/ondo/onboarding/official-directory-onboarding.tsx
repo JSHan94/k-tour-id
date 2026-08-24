@@ -6,7 +6,7 @@ import { ArrowRight, Database, Languages } from "lucide-react"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
-import styles from "./onboarding.module.css"
+import styles from "./official-directory-onboarding.module.css"
 
 const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
