@@ -58,3 +58,8 @@ After the approved onboarding restoration is integrated, the checkpoint is inten
 
 - GREEN (6): preserved Guest Explore, ungated Explore, three-step onboarding, scoped legacy-policy loop, non-removable inventory, and provider/P2 scope.
 - RED (8): My Korea recent/planned semantics, Local Signal, Pulse Table/Connect, After 19, ID axes, the one-time walkthrough, exact `returnTo`, and inclusive coverage across the still-missing P0 journeys.
+
+After the Pulse Table/After19 P0 slice is integrated, the checkpoint remains intentionally RED without weakening any earlier requirement:
+
+- GREEN (9): preserved Guest Explore, ungated Explore, three-step onboarding, Pulse Table/Connect, After19, exact Table/place/draft `returnTo`, scoped legacy-policy loop, non-removable inventory, and provider/P2 scope.
+- RED (5): My Korea recent/planned semantics, Local Signal, independent ID axes, the one-time ID/consent walkthrough, and inclusive coverage across those still-missing P0 journeys.

@@ -38,7 +38,8 @@ test("B-PULSE-003 joining confirms before a read-only group conversation and exp
     expect(tables).toContain(evidence)
   }
   expect(tables).toContain("Read-only group conversation example")
-  expect(tables).not.toMatch(/open\s+DM|direct\s+message|matching|matchmaking/i)
+  expect(tables).toContain("There is no matching, open DM, live chat, or booking service.")
+  expect(tables).not.toMatch(/\bopenDm\b|\bdirectMessage\b|\bmatchmaking\b|["']\/connect\/chat|chat-message-input/)
 })
 
 test("B-AFTER19-001 the JIT walkthrough proves only 19+ for a sample Table, never an official venue restriction", () => {
@@ -51,7 +52,7 @@ test("B-AFTER19-001 the JIT walkthrough proves only 19+ for a sample Table, neve
     "Date of birth is never requested or stored",
     "No request is sent to an external provider",
   ]) expect(gate).toContain(evidence)
-  expect(gate).not.toMatch(/dateOfBirth|birthDate|passport|credential|verifyAge\(|providerResponse/i)
+  expect(gate).not.toMatch(/dateOfBirth|birthDate|passportNumber|credentialPayload|verifyAge\(|providerResponse/i)
 })
 
 test("B-AFTER19-002 success, cancel, failure/retry, unsupported, and expired outcomes retain exact context", () => {

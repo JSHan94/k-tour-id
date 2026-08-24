@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react"
 import { useEffect, useRef } from "react"
-import { Bookmark, Compass, Settings } from "lucide-react"
+import { Bookmark, Compass, Settings, UsersRound } from "lucide-react"
 import { OndoBProvider, useOndoB, type OndoBTab } from "../shared/state/ondo-b-provider"
 import styles from "./ondo-shell.module.css"
 
 export type OndoBAppSlots = {
   explore: ReactNode
   saved: ReactNode
+  tables: ReactNode
   settings: ReactNode
   overlays?: ReactNode
 }
@@ -16,12 +17,13 @@ export type OndoBAppSlots = {
 const B_NAV: Array<{ id: OndoBTab; icon: typeof Compass }> = [
   { id: "ondo", icon: Compass },
   { id: "my", icon: Bookmark },
+  { id: "tables", icon: UsersRound },
   { id: "id", icon: Settings },
 ]
 
 const B_NAV_COPY = {
-  en: { ondo: "Explore", my: "Saved", id: "Settings" },
-  ko: { ondo: "탐색", my: "저장", id: "설정" },
+  en: { ondo: "Explore", my: "Saved", tables: "Tables", id: "Settings" },
+  ko: { ondo: "탐색", my: "저장", tables: "테이블", id: "설정" },
 } as const
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
@@ -29,7 +31,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
   const previousSurface = useRef(state.surface)
   const previousDocumentLanguage = useRef<string | null>(null)
   const appliedDocumentLanguage = useRef(state.locale)
-  const active = state.tab === "my" ? slots.saved : state.tab === "id" ? slots.settings : slots.explore
+  const active = state.tab === "my" ? slots.saved : state.tab === "tables" ? slots.tables : state.tab === "id" ? slots.settings : slots.explore
   const onboardingActive = state.onboarding !== "ONB-COMPLETE"
 
   useEffect(() => {
@@ -67,7 +69,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
     <main className={styles.stage} data-ondo-locale={state.locale} data-testid="ondo-b-root" data-variant="B" data-locale={state.locale}>
       <section className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas">
         <div className={styles.content} data-active-tab={state.tab} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>{active}</div>
-        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="3" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="4" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
             <button key={id} type="button" className={state.tab === id ? styles.navActive : undefined} aria-current={state.tab === id ? "page" : undefined} data-testid={`nav-${id}`} onClick={() => actions.setTab(id)}>
               <span><Icon size={20} strokeWidth={state.tab === id ? 2.25 : 1.7} /></span>

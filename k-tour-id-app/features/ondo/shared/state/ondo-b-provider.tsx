@@ -11,7 +11,7 @@ import {
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-preferences"
 
-export type OndoBTab = "ondo" | "my" | "id"
+export type OndoBTab = "ondo" | "my" | "tables" | "id"
 export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
 export type OndoBSaveStatus = "SAV-IDLE" | "SAV-SAVED" | "SAV-FAILED"
 
