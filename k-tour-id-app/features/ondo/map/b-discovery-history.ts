@@ -22,11 +22,6 @@ export type BDiscoveryHistoryEntry = {
 
 const HISTORY_KEY = "__ondoBDiscovery"
 export const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
-const OWNED_URL_KEYS = [
-  "city", "view", "venueId", "detail", "q", "category",
-  "heat", "hot", "calm", "open", "time", "neighborhood",
-] as const
-const RETIRED_POLICY_URL_KEY = /^after\d+(?:Return)?$/
 const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
@@ -137,20 +132,18 @@ function mergedState(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
 }
 
 function entryUrl(entry: BDiscoveryHistoryEntry) {
-  const url = new URL(window.location.href)
-  for (const key of OWNED_URL_KEYS) url.searchParams.delete(key)
-  for (const key of [...url.searchParams.keys()]) {
-    if (RETIRED_POLICY_URL_KEY.test(key)) url.searchParams.delete(key)
-  }
+  const url = new URL("/ondo-b", window.location.origin)
   if (entry.level !== "nation" && entry.city) {
     url.searchParams.set("city", entry.city)
     if (entry.view === "list") url.searchParams.set("view", "list")
+    if (entry.query) url.searchParams.set("q", entry.query)
+    if (entry.category !== "all") url.searchParams.set("category", entry.category)
   }
   if ((entry.level === "peek" || entry.level === "detail") && entry.venueId) {
     url.searchParams.set("venueId", entry.venueId)
     if (entry.level === "detail") url.searchParams.set("detail", "1")
   }
-  return `${url.pathname}${url.search}${url.hash}`
+  return `${url.pathname}${url.search}`
 }
 
 function replaceEntry(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
@@ -162,7 +155,12 @@ function pushEntry(entry: BDiscoveryHistoryEntry) {
 }
 
 export function replaceBDiscoveryUrl(url: string) {
-  History.prototype.replaceState.call(window.history, window.history.state, "", url)
+  const requested = new URL(url, window.location.origin)
+  const current = readBDiscoveryHistory()
+  const nextUrl = requested.pathname === "/ondo-b" && current
+    ? entryUrl(current)
+    : `${requested.pathname}${requested.search}${requested.hash}`
+  History.prototype.replaceState.call(window.history, window.history.state, "", nextUrl)
 }
 
 export function readBDiscoveryHistory(state?: unknown): BDiscoveryHistoryEntry | null {
@@ -178,7 +176,7 @@ export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preser
   const currentDocumentId = documentId()
   const current: BDiscoveryHistoryEntry = existing.documentId === currentDocumentId
     ? existing
-    : { ...existing, documentId: currentDocumentId, query: "", category: "all" }
+    : { ...existing, documentId: currentDocumentId }
   replaceEntry(current, preservedState)
   return current
 }
@@ -187,7 +185,10 @@ export function normalizeBDiscoveryHistoryForActiveDocument() {
   const existing = readBDiscoveryHistory()
   if (!existing) return null
   const currentDocumentId = documentId()
-  if (existing.documentId === currentDocumentId && existing.v === 2) return existing
+  if (existing.documentId === currentDocumentId && existing.v === 2) {
+    replaceEntry(existing)
+    return existing
+  }
   return replaceBDiscoveryHistoryForActiveDocument(existing)
 }
 
@@ -201,12 +202,13 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
   const requestedCity = resolvedVenueCity ?? cityValue(url.searchParams.get("city"))
   const requestedView = viewValue(url.searchParams.get("view"))
   const requestedCategory = categoryValue(url.searchParams.get("category"))
+  const requestedQuery = queryValue(url.searchParams.get("q"))
   const wantsDetail = url.searchParams.get("detail") === "1"
   const nation: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "nation", view: "map", query: "", category: "all" }
   replaceEntry(nation)
   if (!requestedCity) return nation
 
-  const city: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city: requestedCity, view: requestedView, query: "", category: requestedCategory, focus: { kind: "search" } }
+  const city: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city: requestedCity, view: requestedView, query: requestedQuery, category: requestedCategory, focus: { kind: "search" } }
   pushEntry(city)
   if (!requestedVenueId || !resolvedVenueCity) return city
 
