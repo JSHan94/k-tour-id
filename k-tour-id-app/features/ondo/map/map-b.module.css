@@ -168,6 +168,14 @@
   .cityTruthLegend { gap: 8px; margin-bottom: 5px; padding-top: 8px; }
 }
 
+@media (min-height: 501px) {
+  /* On portrait/tall canvases the map key can use the full copy width. Keep
+     location chrome in a separate lane below the filters instead of laying
+     a control or status message over that truth-bearing explanation. */
+  .locate { top: calc(222px + env(safe-area-inset-top)); bottom: auto; }
+  .locationFeedback:not(.offlineFeedback) { top: calc(274px + env(safe-area-inset-top)); bottom: auto; }
+}
+
 @media (orientation: landscape) and (max-height: 500px) {
   .cityHeader { top: max(4px, env(safe-area-inset-top)); right: 10px; left: 10px; gap: 6px; }
   .search { min-height: 44px; max-width: calc(100% - 126px); }
