@@ -218,8 +218,8 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
     await page.getByTestId("ondo-b-city-back").click()
     await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
     await page.context().setOffline(true)
-    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-connectivity", "offline")
     await openCity(page)
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-connectivity", "offline")
     await waitForMap(page, "error")
     await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
   } else if (item.setup === "saved-empty" || item.setup === "saved-place" || item.setup === "private-note") {
@@ -314,7 +314,7 @@ async function expectMinimumTargetsAndType(root: Locator) {
 }
 
 async function expectModalAndFocus(page: Page, item: BProductionVisualCase) {
-  const modalSetups = new Set(["first-run", "place-detail", "reset-confirm"])
+  const modalSetups = new Set(["first-run", "place-peek", "directions", "place-detail", "reset-confirm"])
   const dialogs = page.locator("[data-testid='ondo-b-root'] [role='dialog'][aria-modal='true']:visible")
   await expect(dialogs).toHaveCount(modalSetups.has(item.setup) ? 1 : 0)
   if (modalSetups.has(item.setup)) {
