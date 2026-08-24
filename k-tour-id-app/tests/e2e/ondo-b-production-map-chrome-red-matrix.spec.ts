@@ -985,7 +985,7 @@ async function auditKeyboardTabOrder(
     })
 
     const sequence: string[] = []
-    for (let step = 0; step < 40; step += 1) {
+    for (let step = 0; step < 80; step += 1) {
       await page.keyboard.press("Tab")
       const descriptor = await page.evaluate(() => {
         const element = document.activeElement as HTMLElement | null
