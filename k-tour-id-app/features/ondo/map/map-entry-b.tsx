@@ -32,6 +32,7 @@ type CityId = "seoul" | "busan"
 type ViewMode = "map" | "list"
 type LocationState = "idle" | "locating" | "ready" | "denied" | "unsupported"
 type UserLocation = { longitude: number; latitude: number }
+const SEARCH_MAX_LENGTH = 120
 
 const SOURCE_ID = "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
 const SOURCE_DATE = CANONICAL_MAP_VENUES_COMPACT[0]?.sourceSnapshotAt.slice(0, 10) ?? "2026-08-19"
@@ -69,6 +70,7 @@ const COPY = {
     locationUnsupported: "This browser cannot share a location. Search and the full directory still work.",
     locate: "My location",
     retryLocation: "Try my location again",
+    locationDisclosure: "Your location stays in this tab. OpenFreeMap receives requests for the map area shown.",
     nearest: "nearest official record",
     mapLoading: "Loading the directory map…",
     noResultsTitle: "No records match",
@@ -106,6 +108,7 @@ const COPY = {
     locationUnsupported: "이 브라우저에서는 위치를 공유할 수 없어요. 검색과 전체 디렉터리는 그대로 쓸 수 있어요.",
     locate: "내 위치",
     retryLocation: "내 위치 다시 시도",
+    locationDisclosure: "위치는 이 탭에만 남습니다. OpenFreeMap은 화면에 표시할 지도 영역 요청을 받습니다.",
     nearest: "가장 가까운 공식 기록",
     mapLoading: "디렉터리 지도를 불러오는 중…",
     noResultsTitle: "일치하는 기록이 없어요",
@@ -614,7 +617,7 @@ export function MapEntryB() {
             <h1>{CITY[city].label[locale]}</h1>
             <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
           </div>
-          <div className={styles.search} role="search"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} onChange={(event) => { const nextQuery = event.target.value; setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
+          <div className={styles.search} role="search"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
           <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
             {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{CATEGORY[item][locale]}</button>)}
           </div>
@@ -636,7 +639,8 @@ export function MapEntryB() {
         {!online && mapState !== "error" ? <p className={`${styles.locationFeedback} ${styles.offlineFeedback}`} role="status" data-testid="ondo-b-offline-status"><strong>{copy.offlineTitle}</strong> · {copy.offlineSource}</p> : null}
         {online && view === "map" && mapState !== "error" && locationState !== "idle" ? <p id="ondo-b-location-status" className={styles.locationFeedback} role="status" data-testid="ondo-b-location-status">{locationState === "locating" ? copy.locating : locationState === "ready" && nearestVenue ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}` : locationState === "ready" ? copy.locationReady : locationState === "denied" ? copy.locationDenied : copy.locationUnsupported}</p> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
-        {view === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby={locationState === "idle" ? undefined : "ondo-b-location-status"} aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
+        {view === "map" && mapState !== "error" && locationState === "idle" ? <p id="ondo-b-location-disclosure" className={styles.locationDisclosure} data-testid="ondo-b-location-disclosure">{copy.locationDisclosure}</p> : null}
+        {view === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby={locationState === "idle" ? "ondo-b-location-disclosure" : "ondo-b-location-status"} aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
         {view === "map" && mapState !== "error" ? <a className={styles.attribution} href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap · © OpenStreetMap</a> : null}
       </section>
     </div>

@@ -2,9 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import "leaflet/dist/leaflet.css"
 import "./globals.css"
-import { AppProvider } from "@/lib/store/app-provider"
-import { LangProvider } from "@/lib/i18n/lang-provider"
-import { LocationProvider } from "@/lib/location/location-provider"
+import { AppProviders } from "./app-providers"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -52,11 +50,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans">
-        <LangProvider>
-          <LocationProvider>
-            <AppProvider>{children}</AppProvider>
-          </LocationProvider>
-        </LangProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   )

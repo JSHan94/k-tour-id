@@ -1,3 +1,26 @@
+const productionSecurityHeaders = [
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' data: https://fonts.gstatic.com https://tiles.openfreemap.org",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' https://tiles.openfreemap.org https://openfreemap.org",
+      "worker-src 'self' blob:",
+    ].join("; "),
+  },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "geolocation=(self), camera=(), microphone=(), payment=(), usb=()" },
+  { key: "X-Frame-Options", value: "DENY" },
+]
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
@@ -5,6 +28,12 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+  },
+  async headers() {
+    return [
+      { source: "/ondo-b", headers: productionSecurityHeaders },
+      { source: "/api/ondo/venues/:path*", headers: productionSecurityHeaders },
+    ]
   },
 }
 

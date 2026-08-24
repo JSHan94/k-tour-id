@@ -40,6 +40,7 @@ const COPY = {
     retrySave: "Retry device save",
     detailLoading: "Loading official address evidence…",
     detailUnavailable: "Official address evidence is temporarily unavailable",
+    retryDetail: "Retry official record",
     sourceSnapshot: "Source snapshot",
     sourceRecord: "LOCALDATA management ID",
     sourceReference: "Source reference",
@@ -72,6 +73,7 @@ const COPY = {
     retrySave: "기기 저장 다시 시도",
     detailLoading: "공식 주소 근거를 불러오는 중…",
     detailUnavailable: "공식 주소 근거를 잠시 불러올 수 없어요",
+    retryDetail: "공식 기록 다시 불러오기",
     sourceSnapshot: "출처 스냅샷",
     sourceRecord: "LOCALDATA 관리번호",
     sourceReference: "출처 참조",
@@ -105,6 +107,7 @@ export function CanonicalPlaceOverlay() {
   const [expanded, setExpanded] = useState(() => readBDiscoveryHistory()?.level === "detail")
   const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
+  const [detailAttempt, setDetailAttempt] = useState(0)
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
@@ -119,6 +122,7 @@ export function CanonicalPlaceOverlay() {
   useEffect(() => {
     setDetail(null)
     setDetailState("idle")
+    setDetailAttempt(0)
     if (!venueId) {
       setExpanded(false)
       return
@@ -175,7 +179,7 @@ export function CanonicalPlaceOverlay() {
       if (requestFrame != null) window.cancelAnimationFrame(requestFrame)
       controller.abort()
     }
-  }, [detail?.id, expanded, venueId])
+  }, [detail?.id, detailAttempt, expanded, venueId])
 
   if (!venue || state.tab !== "ondo") return null
   const name = venueNamePresentation(venue.name.ko, locale)
@@ -273,7 +277,14 @@ export function CanonicalPlaceOverlay() {
           <p className={styles.eyebrow}>{district} · {category}</p>
           <h2 id="canonical-place-title">{name.officialName}</h2>
           <div className={styles.detailNameProvenance} data-testid="canonical-detail-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
-          <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
+          {detailState === "error" ? (
+            <section className={styles.detailError} role="alert" data-detail-state="error" data-address-truth="ERROR">
+              <p><MapPin size={16} />{copy.detailUnavailable}</p>
+              <button type="button" onClick={() => { setDetail(null); setDetailState("loading"); setDetailAttempt((attempt) => attempt + 1) }}>{copy.retryDetail}</button>
+            </section>
+          ) : (
+            <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
+          )}
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>

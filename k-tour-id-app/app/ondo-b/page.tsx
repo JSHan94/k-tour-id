@@ -5,15 +5,36 @@ import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 const title = "ONDO — Licensed food-place records in Seoul and Busan"
 const description = "Browse 400 licensed food-service records from the Ministry of the Interior and Safety LOCALDATA snapshot, with source dates and clear coverage limits."
 
+function configuredOrigin() {
+  const configured = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN
+  if (!configured) return null
+  try {
+    const url = new URL(configured)
+    return url.protocol === "https:" ? url.origin : null
+  } catch {
+    return null
+  }
+}
+
+function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
+  const configured = configuredOrigin()
+  if (configured) return configured
+  const host = requestHeaders.get("host")?.toLowerCase() ?? ""
+  if (/^(?:localhost|127\.0\.0\.1)(?::\d{1,5})?$/.test(host)) return `http://${host}`
+  if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.phenixnet-jl\.chatgpt\.site$/.test(host)) return `https://${host}`
+  return "https://ondo-directory.invalid"
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers()
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? (host?.startsWith("localhost") || host?.startsWith("127.0.0.1") ? "http" : "https")
-  const imageUrl = host ? `${protocol}://${host}/og-ondo-directory.png` : "/og-ondo-directory.png"
+  const origin = requestOrigin(requestHeaders)
+  const imageUrl = new URL("/og-ondo-directory.png", origin).toString()
 
   return {
+    metadataBase: new URL(origin),
     title,
     description,
+    alternates: { canonical: "/ondo-b" },
     openGraph: {
       title,
       description,
