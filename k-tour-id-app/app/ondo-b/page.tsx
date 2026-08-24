@@ -2,11 +2,11 @@ import type { Metadata } from "next"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
 export const metadata: Metadata = {
-  title: "ONDO B — A quieter map of what locals eat",
-  description: "Baljajwi-inspired ONDO food discovery experiment for Seoul and Busan.",
+  title: "ONDO — Licensed food-place discovery in Seoul and Busan",
+  description: "Discover licensed food-place records for Seoul and Busan with clear source and preview labels.",
   openGraph: {
-    title: "ONDO — Where locals eat now",
-    description: "A quiet food-signal map built around 200 official place records in Seoul and 200 in Busan.",
+    title: "ONDO — Licensed food-place discovery in Seoul and Busan",
+    description: "Discover licensed food-place records for Seoul and Busan with clear source and preview labels.",
     images: [{
       url: "/og-ondo-baljajwi-v1.png",
       width: 1731,
@@ -16,8 +16,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ONDO — Where locals eat now",
-    description: "A quiet food-signal map for Seoul and Busan.",
+    title: "ONDO — Licensed food-place discovery in Seoul and Busan",
+    description: "Discover licensed food-place records for Seoul and Busan with clear source and preview labels.",
     images: ["/og-ondo-baljajwi-v1.png"],
   },
   robots: { index: false, follow: false },
