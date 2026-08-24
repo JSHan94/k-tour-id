@@ -1,0 +1,53 @@
+.backdrop { position: absolute; z-index: 124; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgb(21 20 18 / 48%); backdrop-filter: blur(3px); }
+.layer { box-sizing: border-box; display: flex; width: 100%; max-height: 94dvh; flex-direction: column; overflow: hidden; border: 1px solid rgb(34 33 31 / 14%); border-radius: 22px 22px 0 0; background: #fbfaf7; color: #20201e; box-shadow: 0 -15px 50px rgb(20 18 15 / 20%); }
+.layer > header { display: grid; min-height: 58px; flex: 0 0 58px; grid-template-columns: 48px 1fr 48px; align-items: center; padding: 0 9px; border-bottom: 1px solid #dedbd5; background: rgb(255 255 255 / 95%); }
+.layer > header button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 10px; background: transparent; color: #34312d; }
+.layer > header strong { justify-self: center; font-size: 13px; }
+.body { min-height: 0; overflow-y: auto; padding: 24px 20px calc(28px + env(safe-area-inset-bottom)); overscroll-behavior: contain; }
+.mark { display: grid; width: 50px; height: 50px; place-items: center; margin-bottom: 20px; border: 1px solid #d9d6d0; border-radius: 50%; background: #fff; }
+.eyebrow { margin: 0 0 8px; color: #6f6b64; font-size: 11px; font-weight: 760; letter-spacing: .1em; }
+.body > h2 { margin: 0; font-size: 28px; line-height: 1.2; letter-spacing: -.04em; }
+.place { display: grid; gap: 2px; margin: 12px 0 0; color: #35322e; font-size: 14px; font-weight: 740; overflow-wrap: anywhere; }
+.place span { color: #716d66; font-size: 12px; font-weight: 560; }
+.lead { margin: 14px 0 0; color: #69655f; font-size: 13px; line-height: 1.58; }
+.draft { margin-top: 22px; }
+.draft fieldset { min-width: 0; margin: 0; padding: 18px 0 0; border: 0; border-top: 1px solid #dedbd5; }
+.draft legend { padding: 0; font-size: 15px; font-weight: 750; }
+.draft fieldset > p { margin: 6px 0 0; color: #706c66; font-size: 12px; line-height: 1.5; }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 13px; }
+.tags button { min-height: 44px; padding: 0 13px; border: 1px solid #d4d1cb; border-radius: 11px; background: #fff; color: #5a5650; font: inherit; font-size: 12px; font-weight: 680; }
+.tags button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
+.note { display: grid; gap: 7px; margin-top: 20px; }
+.note > span { font-size: 13px; font-weight: 740; }
+.note textarea { box-sizing: border-box; min-height: 88px; resize: vertical; border: 1px solid #d4d1cb; border-radius: 11px; padding: 11px; background: #fff; color: #25221f; font: inherit; font-size: 13px; line-height: 1.5; }
+.note small { color: #747069; font-size: 11px; line-height: 1.5; }
+.truth { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; margin-top: 20px; padding: 15px 0; border-block: 1px solid #dedbd5; }
+.truth strong, .truth small { display: block; }
+.truth strong { font-size: 12px; }
+.truth small { margin-top: 4px; color: #6d6963; font-size: 11px; line-height: 1.5; }
+.already, .gateSuccess, .gateNotice, .error { margin: 13px 0 0; font-size: 12px; line-height: 1.5; }
+.already { color: #625e58; }
+.gateSuccess, .gateNotice { display: flex; align-items: flex-start; gap: 7px; }
+.gateSuccess { color: #3f624f; }
+.gateNotice { color: #765047; }
+.gateSuccess svg, .gateNotice svg { flex: 0 0 auto; margin-top: 1px; }
+.error { padding: 11px; border: 1px solid #c7a39b; border-radius: 10px; color: #773e35; }
+.actions { margin-top: 17px; }
+.primary { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: center; gap: 8px; border: 1px solid #20201e; border-radius: 12px; background: #20201e; color: #fff; font: inherit; font-size: 13px; font-weight: 740; }
+.primary:disabled { cursor: not-allowed; opacity: .42; }
+
+@media (min-width: 700px) {
+  .layer { max-width: 700px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .layer { max-height: 100dvh; border-radius: 0; }
+  .body { padding-top: 16px; }
+  .mark { display: none; }
+  .body > h2 { font-size: 24px; }
+  .draft { margin-top: 16px; }
+}
+
+@media (max-width: 359px) {
+  .body { padding-inline: 16px; }
+}

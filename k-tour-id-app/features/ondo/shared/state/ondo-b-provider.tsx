@@ -11,9 +11,15 @@ import {
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-preferences"
 
-export type OndoBTab = "ondo" | "my" | "tables" | "id"
+export type OndoBTab = "ondo" | "my" | "tables" | "id" | "settings"
 export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
 export type OndoBSaveStatus = "SAV-IDLE" | "SAV-SAVED" | "SAV-FAILED"
+export type OndoBLocalSignalTag = "calm_now" | "lively_now" | "quick_stop" | "welcoming"
+export type OndoBLocalSignalDraft = {
+  venueId: string
+  tags: OndoBLocalSignalTag[]
+  note: string
+}
 
 export type OndoBState = {
   hydrated: boolean
@@ -26,6 +32,9 @@ export type OndoBState = {
   savedVenueIds: string[]
   saveStatusByVenue: Record<string, OndoBSaveStatus>
   privateNotesByVenue: Record<string, string>
+  localSignalPostedVenueIds: string[]
+  localInteractionBoundarySeen: boolean
+  localSignalDraft: OndoBLocalSignalDraft | null
   toast: string | null
 }
 
@@ -43,6 +52,11 @@ export type OndoBActions = {
   saveVenue(venueId: string): void
   toggleSavedVenue(venueId: string): void
   setPrivateNote(venueId: string, note: string): boolean
+  openLocalSignal(venueId: string): void
+  updateLocalSignalDraft(update: Pick<OndoBLocalSignalDraft, "tags" | "note">): void
+  closeLocalSignal(): void
+  markLocalSignalPosted(venueId: string): boolean
+  acknowledgeLocalInteractionBoundary(): boolean
   clearBDeviceContent(): boolean
   notify(message: string): void
 }
@@ -54,11 +68,15 @@ type OndoBDeviceState = {
   discoveryPreferences: OndoBDiscoveryPreference[]
   savedVenueIds: string[]
   privateNotesByVenue: Record<string, string>
+  localSignalPostedVenueIds: string[]
+  localInteractionBoundarySeen: boolean
 }
 
 const B_DEVICE_KEY = "ondo-b.device.v1"
 const B_PREFERENCES = new Set(ONDO_B_DISCOVERY_PREFERENCES.map((preference) => preference.id))
 const ONDO_B_PERSONAS = new Set(ONDO_B_PERSONA_IDS)
+const B_LOCAL_SIGNAL_TAGS = new Set<OndoBLocalSignalTag>(["calm_now", "lively_now", "quick_stop", "welcoming"])
+const B_LOCAL_SIGNAL_NOTE_MAX_LENGTH = 240
 
 function initialState(): OndoBState {
   return {
@@ -72,6 +90,9 @@ function initialState(): OndoBState {
     savedVenueIds: [],
     saveStatusByVenue: {},
     privateNotesByVenue: {},
+    localSignalPostedVenueIds: [],
+    localInteractionBoundarySeen: false,
+    localSignalDraft: null,
     toast: null,
   }
 }
@@ -94,6 +115,8 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
       : [],
     savedVenueIds,
     privateNotesByVenue: sanitizeCanonicalVenueNotes(record.privateNotesByVenue, savedVenueIds),
+    localSignalPostedVenueIds: sanitizeCanonicalVenueIds(record.localSignalPostedVenueIds),
+    localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
   }
 }
 
@@ -105,6 +128,8 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     discoveryPreferences: state.discoveryPreferences,
     savedVenueIds: state.savedVenueIds,
     privateNotesByVenue: state.privateNotesByVenue,
+    localSignalPostedVenueIds: state.localSignalPostedVenueIds,
+    localInteractionBoundarySeen: state.localInteractionBoundarySeen,
   })
 }
 
@@ -163,6 +188,12 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     stateRef.current = next
     setState(next)
     return true
+  }, [])
+
+  const commitEphemeral = useCallback((update: (current: OndoBState) => OndoBState) => {
+    const next = update(stateRef.current)
+    stateRef.current = next
+    setState(next)
   }, [])
 
   const persistCanonicalSavedVenue = useCallback((venueId: string, toggle: boolean) => {
@@ -256,16 +287,49 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         return { ...current, privateNotesByVenue }
       })
     },
+    openLocalSignal: (venueId) => {
+      if (!isCanonicalVenueId(venueId)) return
+      commitEphemeral((current) => ({
+        ...current,
+        localSignalDraft: current.localSignalDraft?.venueId === venueId
+          ? current.localSignalDraft
+          : { venueId, tags: [], note: "" },
+      }))
+    },
+    updateLocalSignalDraft: ({ tags, note }) => {
+      commitEphemeral((current) => current.localSignalDraft ? {
+        ...current,
+        localSignalDraft: {
+          ...current.localSignalDraft,
+          tags: [...new Set(tags.filter((tag): tag is OndoBLocalSignalTag => B_LOCAL_SIGNAL_TAGS.has(tag)))],
+          note: note.slice(0, B_LOCAL_SIGNAL_NOTE_MAX_LENGTH),
+        },
+      } : current)
+    },
+    closeLocalSignal: () => commitEphemeral((current) => ({ ...current, localSignalDraft: null })),
+    markLocalSignalPosted: (venueId) => {
+      if (!isCanonicalVenueId(venueId)) return false
+      return commit((current) => ({
+        ...current,
+        localSignalPostedVenueIds: current.localSignalPostedVenueIds.includes(venueId)
+          ? current.localSignalPostedVenueIds
+          : [...current.localSignalPostedVenueIds, venueId],
+      }))
+    },
+    acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
     clearBDeviceContent: () => commit((current) => ({
       ...current,
       discoveryPreferences: [],
       savedVenueIds: [],
       saveStatusByVenue: {},
       privateNotesByVenue: {},
+      localSignalPostedVenueIds: [],
+      localInteractionBoundarySeen: false,
+      localSignalDraft: null,
       surface: { kind: "map" },
     })),
     notify,
-  }), [commit, notify, persistCanonicalSavedVenue])
+  }), [commit, commitEphemeral, notify, persistCanonicalSavedVenue])
 
   const value = useMemo(() => ({ state, actions }), [actions, state])
   return <OndoBContext.Provider value={value}>{children}</OndoBContext.Provider>

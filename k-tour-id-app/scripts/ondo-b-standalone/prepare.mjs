@@ -213,17 +213,6 @@ async function assertProjectIsolation(projectId) {
   }
 }
 
-async function stripLegacyShellSelectors() {
-  const shellPath = resolve(STAGE_ROOT, "features/ondo/app/ondo-shell.module.css")
-  const shell = (await readFile(shellPath, "utf8"))
-    .replaceAll('.content[data-active-tab="my"],\n.content[data-active-tab="tables"],\n.content[data-active-tab="id"]', '.content[data-active-tab="my"],\n.content[data-active-tab="id"]')
-    .replaceAll('.content[data-active-tab="my"] > *,\n  .content[data-active-tab="tables"] > *,\n  .content[data-active-tab="id"] > *', '.content[data-active-tab="my"] > *,\n  .content[data-active-tab="id"] > *')
-    .replaceAll('.stage[data-variant="B"] .content[data-active-tab="my"],\n  .stage[data-variant="B"] .content[data-active-tab="tables"],\n  .stage[data-variant="B"] .content[data-active-tab="id"]', '.stage[data-variant="B"] .content[data-active-tab="my"],\n  .stage[data-variant="B"] .content[data-active-tab="id"]')
-    .replaceAll("grid-template-columns: repeat(4, 1fr);", "grid-template-columns: repeat(3, 1fr);")
-    .replace(/\n\.stage\[data-variant="B"\] \[data-testid="ondo-after19-layer"\] > label \{\n  display: none;\n\}\n/, "\n")
-  await writeFile(shellPath, shell)
-}
-
 async function writeProductionVenueDetails() {
   const path = resolve(STAGE_ROOT, "data/ondo-venues/canonical-venues.json")
   const source = JSON.parse(await readFile(path, "utf8"))
@@ -256,7 +245,6 @@ export async function prepareStandaloneSource({ projectId = process.env.ONDO_B_S
   await assertProjectIsolation(projectId)
   await rm(STAGE_ROOT, { recursive: true, force: true })
   await Promise.all([...SOURCE_FILES, ...PUBLIC_FILES].map(copyFile))
-  await stripLegacyShellSelectors()
   await writeProductionVenueDetails()
 
   const generated = new Map([

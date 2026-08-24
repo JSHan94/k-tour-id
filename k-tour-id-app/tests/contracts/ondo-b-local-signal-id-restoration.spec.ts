@@ -68,6 +68,6 @@ test("B-P0-PACKAGE-001 standalone policy positively includes B-native signal/ID 
   expect(policy).toContain('"features/ondo/local-signal-b/local-signal-layer-b.tsx"')
   expect(policy).toContain("B_NATIVE_INTERACTIVE_FILES")
   expect(policy).toContain("LEGACY_ARTIFACT_PATH")
-  expect(policy).not.toMatch(/B_NATIVE_INTERACTIVE_FILES[\s\S]*features\\\/ondo\\\/(?:after19|connect)/)
+  expect(policy).not.toContain("BANNED_ARTIFACT_PATH")
   expect(policy).toMatch(/KYC|WalletProvider|blockchain|mock-data/)
 })

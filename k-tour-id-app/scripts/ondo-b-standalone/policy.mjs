@@ -5,6 +5,18 @@ export const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 export const STAGE_DIST = resolve(STAGE_ROOT, "dist")
 export const LOCAL_ONLY_PROJECT_ID = "appgprj_local_only_ondo_b_artifact"
 
+// These modules are intentionally B-native: they implement truthful,
+// synchronous device-local walkthroughs and do not import the legacy provider,
+// KYC, wallet, chain, or mock-product graph.
+export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
+  "features/ondo/identity-b/local-check-walkthrough-b.tsx",
+  "features/ondo/identity-b/local-check-walkthrough-b.module.css",
+  "features/ondo/identity-b/traveler-id-entry-b.tsx",
+  "features/ondo/identity-b/traveler-id-entry-b.module.css",
+  "features/ondo/local-signal-b/local-signal-layer-b.tsx",
+  "features/ondo/local-signal-b/local-signal-layer-b.module.css",
+])
+
 export const SOURCE_FILES = Object.freeze([
   "app/icon.svg",
   "app/ondo-b/page.tsx",
@@ -45,6 +57,7 @@ export const SOURCE_FILES = Object.freeze([
   "lib/ondo/venues/display.ts",
   "lib/ondo/venues/map-data.ts",
   "lib/ondo/venues/map-discovery-aliases.ts",
+  ...B_NATIVE_INTERACTIVE_FILES,
 ])
 
 export const PUBLIC_FILES = Object.freeze([
@@ -96,6 +109,8 @@ export const LEGACY_ARTIFACT_TEXT = Object.freeze([
   /\b(?:demo|simulation|simulated|KYC|reward|rewards|Labs)\b/i,
   /demo-journey/i,
   /mock-data/i,
+  /WalletProvider|chainProvider|blockchain/i,
+  /ondo-after19/i,
   /Checkout simulation/i,
   /Payment KYC|paymentKyc|CheckoutOverlay|ChatOverlay|RewardsEntry/i,
   /결제 시뮬레이션/i,

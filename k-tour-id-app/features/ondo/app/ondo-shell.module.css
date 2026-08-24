@@ -46,7 +46,8 @@
 
 .content[data-active-tab="my"],
 .content[data-active-tab="tables"],
-.content[data-active-tab="id"] {
+.content[data-active-tab="id"],
+.content[data-active-tab="settings"] {
   height: calc(100% - 86px - env(safe-area-inset-bottom));
   padding-bottom: 0;
 }
@@ -58,7 +59,7 @@
   bottom: calc(10px + env(safe-area-inset-bottom));
   left: 14px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   min-height: 66px;
   padding: 5px;
   border: 1px solid rgb(34 33 31 / 12%);
@@ -69,6 +70,7 @@
 }
 
 .nav[data-nav-count="3"] { grid-template-columns: repeat(3, 1fr); }
+.nav[data-nav-count="4"] { grid-template-columns: repeat(4, 1fr); }
 
 .nav button {
   position: relative;
@@ -120,10 +122,6 @@
   text-align: center;
 }
 
-.stage[data-variant="B"] [data-testid="ondo-after19-layer"] > label {
-  display: none;
-}
-
 @media (max-width: 800px) {
   .canvas { width: 100vw; border: 0; }
 }
@@ -148,7 +146,8 @@
   }
   .content[data-active-tab="my"] > *,
   .content[data-active-tab="tables"] > *,
-  .content[data-active-tab="id"] > * { width: min(100%, 700px); margin-inline: auto; }
+  .content[data-active-tab="id"] > *,
+  .content[data-active-tab="settings"] > * { width: min(100%, 700px); margin-inline: auto; }
   .nav {
     top: 18px;
     right: auto;
@@ -174,7 +173,8 @@
   }
   .stage[data-variant="B"] .content[data-active-tab="my"],
   .stage[data-variant="B"] .content[data-active-tab="tables"],
-  .stage[data-variant="B"] .content[data-active-tab="id"] {
+  .stage[data-variant="B"] .content[data-active-tab="id"],
+  .stage[data-variant="B"] .content[data-active-tab="settings"] {
     height: calc(100% - 86px - env(safe-area-inset-bottom)) !important;
     padding-bottom: 0;
   }
@@ -187,7 +187,7 @@
     min-height: 66px;
     max-height: none;
     grid-template-rows: none;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     max-width: 700px;
     margin-inline: auto;
     border-radius: 19px;
@@ -195,6 +195,7 @@
   .stage[data-variant="B"] .nav button { min-width: 54px; min-height: 54px; }
   .stage[data-variant="B"] .nav i { top: 6px; right: 13px; }
   .stage[data-variant="B"] .nav[data-nav-count="3"] { grid-template-columns: repeat(3, 1fr); }
+  .stage[data-variant="B"] .nav[data-nav-count="4"] { grid-template-columns: repeat(4, 1fr); }
   .stage[data-variant="B"] .toast {
     right: 20px;
     bottom: calc(94px + env(safe-area-inset-bottom));

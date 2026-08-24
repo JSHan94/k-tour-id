@@ -110,6 +110,10 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(css).not.toMatch(/(?:KYC|payment|chat|reward|Labs|After19|demo|simulation)/i)
     const details = readFileSync(resolve(STAGE_ROOT, "data/ondo-venues/canonical-venues.json"), "utf8")
     expect(details).not.toMatch(/"simulation"\s*:/i)
+    const shell = readFileSync(resolve(STAGE_ROOT, "features/ondo/app/ondo-shell.module.css"), "utf8")
+    expect(shell).toContain('.content[data-active-tab="tables"]')
+    expect(shell).toContain('.content[data-active-tab="settings"]')
+    expect(shell).toContain("grid-template-columns: repeat(5, 1fr)")
   })
 
   test("B-STANDALONE-007 policy preserves legacy rejection without denying P0 journey modules", async () => {

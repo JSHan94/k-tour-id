@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, X } from "lucide-react"
+import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, NotebookPen, X } from "lucide-react"
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
@@ -34,6 +34,9 @@ const COPY = {
     save: "Save on this device",
     saved: "Saved on this device",
     removeSaved: "Remove from Saved",
+    localSignal: "Add a Local Signal",
+    localSignalPosted: "Update Local Signal on this device",
+    localSignalBoundary: "Your draft stays in memory. Only a coarse posted marker can be saved on this device.",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -67,6 +70,9 @@ const COPY = {
     save: "이 기기에 저장",
     saved: "이 기기에 저장됨",
     removeSaved: "저장 취소",
+    localSignal: "로컬 시그널 남기기",
+    localSignalPosted: "이 기기의 로컬 시그널 업데이트",
+    localSignalBoundary: "작성 내용은 메모리에만 머물며, 간단한 게시 표시만 이 기기에 저장될 수 있어요.",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -189,6 +195,7 @@ export function CanonicalPlaceOverlay() {
   const address = addressEvidence?.value ?? (detailState === "error" ? copy.detailUnavailable : detailState === "ready" ? copy.unknown : copy.detailLoading)
   const saved = state.savedVenueIds.includes(venue.id) || state.saveStatusByVenue[venue.id] === "SAV-SAVED"
   const saveStatus = state.saveStatusByVenue[venue.id] ?? "SAV-IDLE"
+  const localSignalPosted = state.localSignalPostedVenueIds.includes(venue.id)
   const currentVenueId = venue.id
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
@@ -290,6 +297,14 @@ export function CanonicalPlaceOverlay() {
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>
             <button type="button" onClick={toggleSave} aria-pressed={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.removeSaved : copy.save}</button>
           </div>
+
+          <section className={styles.localSignalAction}>
+            <button type="button" onClick={() => actions.openLocalSignal(currentVenueId)} data-testid="canonical-local-signal-open">
+              <NotebookPen size={18} aria-hidden="true" />
+              <span><strong>{localSignalPosted ? copy.localSignalPosted : copy.localSignal}</strong><small>{copy.localSignalBoundary}</small></span>
+              <ChevronRight size={17} aria-hidden="true" />
+            </button>
+          </section>
 
           {saveStatus === "SAV-FAILED" ? <section className={styles.saveError} role="alert" data-testid="canonical-save-error"><p>{copy.saveFailed}</p><button type="button" onClick={() => actions.saveVenue(currentVenueId)} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button></section> : null}
 

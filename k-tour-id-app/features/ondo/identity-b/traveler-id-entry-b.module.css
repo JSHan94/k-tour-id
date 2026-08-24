@@ -1,0 +1,36 @@
+.root { min-height: 100%; }
+.screen { min-height: 100%; padding: max(34px, env(safe-area-inset-top)) 18px 112px; background: #fbfbfa; color: #20201e; }
+.header p { margin: 0 0 10px; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .1em; }
+.header h1 { margin: 0; font-size: 30px; line-height: 1.18; letter-spacing: -.045em; }
+.header span { display: block; margin-top: 10px; color: #706d67; font-size: 14px; line-height: 1.62; }
+.boundary, .separate { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; margin-top: 24px; padding: 16px 0; border-block: 1px solid #dedbd5; color: #4d4944; }
+.boundary svg, .separate svg { margin-top: 1px; }
+.boundary h2, .boundary p, .separate h2, .separate p { margin: 0; }
+.boundary h2, .separate h2 { font-size: 14px; }
+.boundary p, .separate p { margin-top: 5px; color: #706d67; font-size: 12px; line-height: 1.55; }
+.checks { display: grid; gap: 12px; margin-top: 24px; }
+.check { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 12px; padding: 16px; border: 1px solid #dedbd5; border-radius: 16px; background: #fff; }
+.checkIcon { display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #d9d6d0; border-radius: 50%; color: #45413c; }
+.checkCopy span { color: #67635d; font-size: 11px; font-weight: 760; letter-spacing: .03em; }
+.checkCopy span[data-outcome="success"] { color: #3f624f; }
+.checkCopy span[data-outcome="failure"], .checkCopy span[data-outcome="expired"] { color: #8b493f; }
+.checkCopy h2 { margin: 4px 0 0; font-size: 18px; }
+.checkCopy p { margin: 7px 0 0; color: #6c6862; font-size: 12px; line-height: 1.55; }
+.check > button { display: flex; min-height: 46px; grid-column: 1 / -1; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; padding: 0 13px; border: 1px solid #cac6bf; border-radius: 11px; background: #fff; color: #34312d; font: inherit; font-size: 13px; font-weight: 720; }
+.separate { margin-top: 22px; border-top: 0; }
+.settings { display: grid; gap: 14px; margin-top: 26px; padding-top: 20px; border-top: 1px solid #dedbd5; }
+.settings > div { display: flex; align-items: flex-start; gap: 10px; }
+.settings h2, .settings p { margin: 0; }
+.settings h2 { font-size: 15px; }
+.settings p { margin-top: 5px; color: #706d67; font-size: 12px; line-height: 1.55; }
+.settings button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 8px; border: 1px solid #20201e; border-radius: 11px; background: #20201e; color: #fff; font: inherit; font-size: 13px; font-weight: 720; }
+
+@media (min-width: 700px) {
+  .screen { max-width: 700px; margin: 0 auto; }
+  .checks { grid-template-columns: 1fr 1fr; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .screen { padding-top: 22px; }
+  .header span { max-width: 620px; }
+}
