@@ -5,7 +5,11 @@ const DEVICE_KEY = "ondo-b.device.v1"
 const PERSONAS = ["travelling", "preparing", "local_contributor"] as const
 
 async function openFresh(page: Page) {
-  await page.addInitScript((key) => localStorage.removeItem(key), DEVICE_KEY)
+  await page.addInitScript((key) => {
+    if (sessionStorage.getItem("ondo-b.onboarding-restoration-seeded") === "1") return
+    localStorage.removeItem(key)
+    sessionStorage.setItem("ondo-b.onboarding-restoration-seeded", "1")
+  }, DEVICE_KEY)
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await expect(page.getByTestId("onboarding-step-value")).toBeVisible()

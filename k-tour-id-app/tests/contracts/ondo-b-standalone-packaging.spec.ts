@@ -92,7 +92,6 @@ test.describe("ONDO B standalone Sites packaging", () => {
   test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {
     const { BANNED_ARTIFACT_TEXT } = await import("../../scripts/ondo-b-standalone/policy.mjs")
     const blocked = [
-      "._personaSelected_a1b2c_1 { color: black }",
       "{\"simulation\":null}",
       "CheckoutOverlay",
       "Payment KYC",
@@ -110,12 +109,13 @@ test.describe("ONDO B standalone Sites packaging", () => {
     expect(contracts).toContain("simulation: null")
   })
 
-  test("B-STANDALONE-006 prepared onboarding CSS contains only the official-directory production surface", async () => {
+  test("B-STANDALONE-006 prepared onboarding CSS contains the B-native guest setup and no external-product surface", async () => {
     await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_artifact" })
     const css = readFileSync(resolve(STAGE_ROOT, "features/ondo/onboarding/official-directory-onboarding.module.css"), "utf8")
     expect(css).toContain(".sourceIntro")
     expect(css).toContain(":global([data-variant=\"B\"]) .layer")
-    expect(css).not.toMatch(/(?:^|[._-])persona(?:s|Selected|Icon)?(?:[._:{\s-]|$)/im)
+    expect(css).toContain(".personaSelected")
+    expect(css).toContain(".preferenceGroups")
     expect(css).not.toMatch(/(?:KYC|payment|chat|reward|Labs|After19|demo|simulation)/i)
     const details = readFileSync(resolve(STAGE_ROOT, "data/ondo-venues/canonical-venues.json"), "utf8")
     expect(details).not.toMatch(/"simulation"\s*:/i)

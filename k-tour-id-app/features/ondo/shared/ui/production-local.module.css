@@ -69,6 +69,9 @@
 .preferenceChips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
 .preferenceChips button { min-height: 44px; padding: 0 13px; border: 1px solid #d5d2cc; border-radius: 11px; background: transparent; color: #5f5b55; font: inherit; font-size: 12px; font-weight: 680; }
 .preferenceChips button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
+.setupReset { display: grid; gap: 10px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #e5e2dc; }
+.setupReset p { margin: 0; color: #706d67; font-size: 12px; line-height: 1.6; }
+.setupReset button { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 8px; border: 1px solid #b9b5ae; border-radius: 11px; background: #fff; color: #3e3b36; font: inherit; font-size: 13px; font-weight: 720; }
 .clearButton { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; border: 1px solid #c9aaa3; border-radius: 11px; background: transparent; color: #74463f; font: inherit; font-size: 13px; font-weight: 720; }
 
 .confirmLayer { position: absolute; z-index: 120; inset: 0; display: grid; align-items: end; padding: 18px; background: rgb(22 20 17 / 46%); }

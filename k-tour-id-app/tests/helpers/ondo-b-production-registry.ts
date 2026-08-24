@@ -37,9 +37,9 @@ export type BProductionStructuralVisualCase = BProductionVisualCase & {
 export const B_PRODUCTION_FLOWS: readonly BProductionFlow[] = [
   {
     id: "PR-FL-001",
-    name: "First-run directory",
-    capability: "Choose a language and enter the official Seoul/Busan place directory as a guest.",
-    evidence: ["onboarding", "locale", "guest-directory-entry"],
+    name: "Guest setup",
+    capability: "Choose a language, trip intent, food and dietary preferences, or skip directly into the same official guest directory.",
+    evidence: ["language", "intent-persona", "food-preferences", "dietary-needs", "guest-directory-entry", "skip"],
   },
   {
     id: "PR-FL-002",
@@ -68,8 +68,8 @@ export const B_PRODUCTION_FLOWS: readonly BProductionFlow[] = [
   {
     id: "PR-FL-006",
     name: "Settings and reset",
-    capability: "Change actual device preferences and reset only ONDO B device data after confirmation.",
-    evidence: ["language-setting", "device-data-boundary", "reset-confirmation", "reset-result"],
+    capability: "Change actual device preferences, restart guest setup, and reset only saved ONDO B content after confirmation.",
+    evidence: ["language-setting", "onboarding-reset", "device-data-boundary", "reset-confirmation", "reset-result"],
   },
 ] as const
 

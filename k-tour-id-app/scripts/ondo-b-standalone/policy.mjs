@@ -85,7 +85,6 @@ export const BLOCKED_HTTP_PATHS = Object.freeze([
 export const BANNED_ARTIFACT_PATH = /(^|\/)(?:after19|commerce|connect|demo|fixtures?|identity|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
 
 export const BANNED_ARTIFACT_TEXT = Object.freeze([
-  /(?:^|[^A-Za-z0-9]|_)persona(?:s|Selected|Icon)?(?:[^A-Za-z0-9]|_)/,
   /"simulation"\s*:\s*null/i,
   /\b(?:demo|simulation|simulated|KYC|chat|reward|rewards|Labs|After19)\b/i,
   /demo-journey/i,

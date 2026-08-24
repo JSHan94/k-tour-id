@@ -1,5 +1,13 @@
 export type OndoBLocale = "en" | "ko"
 
+export type OndoBPersona = "travelling" | "preparing" | "local_contributor"
+
+export const ONDO_B_PERSONA_IDS: readonly OndoBPersona[] = [
+  "travelling",
+  "preparing",
+  "local_contributor",
+]
+
 export type OndoBDiscoveryPreference =
   | "classic"
   | "cafe"

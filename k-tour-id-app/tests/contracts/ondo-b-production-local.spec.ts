@@ -38,7 +38,7 @@ test("B-PROD-LOCAL-003 B persistence is an explicit allowlist and never restores
 
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  for (const field of ["locale", "onboarding", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue"]) {
+  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue"]) {
     expect(deviceType).toContain(field)
   }
   for (const forbidden of ["account:", "person:", "age:", "paymentKyc:", "gate:", "tableMembershipById:", "reputation:", "stamps:", "profile:"]) {

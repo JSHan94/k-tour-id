@@ -85,6 +85,13 @@ export function SettingsEntryB() {
             </button>
           ))}
         </div>
+        <div className={styles.setupReset}>
+          <p>{locale === "ko" ? "이용 목적과 탐색 선택을 처음부터 다시 고를 수 있어요. 저장한 장소와 개인 메모는 유지됩니다." : "Choose your intent and discovery preferences again. Saved places and private notes stay unchanged."}</p>
+          <button type="button" onClick={() => actions.resetOnboarding()} data-testid="ondo-b-onboarding-reset">
+            <RotateCcw size={17} aria-hidden="true" />
+            {locale === "ko" ? "ONDO 다시 설정하기" : "Set up ONDO again"}
+          </button>
+        </div>
       </section>
 
       <section className={styles.settingsSection} aria-labelledby="b-privacy-heading">

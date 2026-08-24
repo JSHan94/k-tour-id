@@ -8,8 +8,8 @@ import {
   sanitizeCanonicalVenueIds,
   sanitizeCanonicalVenueNotes,
 } from "@/lib/ondo/venues/canonical-allowlist"
-import type { OndoBDiscoveryPreference, OndoBLocale } from "./ondo-b-preferences"
-import { ONDO_B_DISCOVERY_PREFERENCES } from "./ondo-b-preferences"
+import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "./ondo-b-preferences"
+import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-preferences"
 
 export type OndoBTab = "ondo" | "my" | "id"
 export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
@@ -21,6 +21,7 @@ export type OndoBState = {
   tab: OndoBTab
   surface: OndoBSurface
   onboarding: "ONB-NEW" | "ONB-IN-PROGRESS" | "ONB-COMPLETE"
+  persona: OndoBPersona | null
   discoveryPreferences: OndoBDiscoveryPreference[]
   savedVenueIds: string[]
   saveStatusByVenue: Record<string, OndoBSaveStatus>
@@ -32,10 +33,13 @@ export type OndoBActions = {
   setLocale(locale: OndoBLocale): void
   setTab(tab: OndoBTab): void
   setSurface(surface: OndoBSurface): void
+  setPersona(persona: OndoBPersona): void
   setDiscoveryPreferences(preferences: OndoBDiscoveryPreference[]): void
   resetDiscoveryPreferences(): void
   beginOnboarding(): void
   completeOnboarding(): void
+  skipOnboarding(): void
+  resetOnboarding(): void
   saveVenue(venueId: string): void
   toggleSavedVenue(venueId: string): void
   setPrivateNote(venueId: string, note: string): boolean
@@ -46,6 +50,7 @@ export type OndoBActions = {
 type OndoBDeviceState = {
   locale: OndoBLocale
   onboarding: "ONB-NEW" | "ONB-COMPLETE"
+  persona: OndoBPersona | null
   discoveryPreferences: OndoBDiscoveryPreference[]
   savedVenueIds: string[]
   privateNotesByVenue: Record<string, string>
@@ -53,6 +58,7 @@ type OndoBDeviceState = {
 
 const B_DEVICE_KEY = "ondo-b.device.v1"
 const B_PREFERENCES = new Set(ONDO_B_DISCOVERY_PREFERENCES.map((preference) => preference.id))
+const ONDO_B_PERSONAS = new Set(ONDO_B_PERSONA_IDS)
 
 function initialState(): OndoBState {
   return {
@@ -61,6 +67,7 @@ function initialState(): OndoBState {
     tab: "ondo",
     surface: { kind: "map" },
     onboarding: "ONB-NEW",
+    persona: null,
     discoveryPreferences: [],
     savedVenueIds: [],
     saveStatusByVenue: {},
@@ -79,6 +86,9 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
   return {
     locale: record.locale === "ko" ? "ko" : "en",
     onboarding: record.onboarding === "ONB-COMPLETE" ? "ONB-COMPLETE" : "ONB-NEW",
+    persona: ONDO_B_PERSONAS.has(record.persona as OndoBPersona)
+      ? record.persona as OndoBPersona
+      : null,
     discoveryPreferences: Array.isArray(record.discoveryPreferences)
       ? [...new Set(record.discoveryPreferences.filter((item): item is OndoBDiscoveryPreference => B_PREFERENCES.has(item as OndoBDiscoveryPreference)))]
       : [],
@@ -91,6 +101,7 @@ function deviceState(state: OndoBState): OndoBDeviceState {
   return restoreBDeviceState({
     locale: state.locale,
     onboarding: state.onboarding,
+    persona: state.persona,
     discoveryPreferences: state.discoveryPreferences,
     savedVenueIds: state.savedVenueIds,
     privateNotesByVenue: state.privateNotesByVenue,
@@ -196,6 +207,9 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       ...current,
       surface: surface.kind === "map" || isCanonicalVenueId(surface.venueId) ? surface : { kind: "map" },
     })),
+    setPersona: (persona) => {
+      if (!commit((current) => ({ ...current, persona }))) notify(stateRef.current.locale === "ko" ? "이용 목적을 저장하지 못했어요." : "Intent could not be saved.")
+    },
     setDiscoveryPreferences: (discoveryPreferences) => {
       if (!commit((current) => ({ ...current, discoveryPreferences }))) notify(stateRef.current.locale === "ko" ? "선택을 저장하지 못했어요." : "Choices could not be saved.")
     },
@@ -205,6 +219,26 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     beginOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-IN-PROGRESS" })),
     completeOnboarding: () => {
       if (!commit((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } }))) notify(stateRef.current.locale === "ko" ? "시작 설정을 저장하지 못했어요." : "Setup could not be saved.")
+    },
+    skipOnboarding: () => {
+      if (!commit((current) => ({
+        ...current,
+        onboarding: "ONB-COMPLETE",
+        persona: null,
+        discoveryPreferences: [],
+        tab: "ondo",
+        surface: { kind: "map" },
+      }))) notify(stateRef.current.locale === "ko" ? "게스트 시작 설정을 저장하지 못했어요." : "Guest setup could not be saved.")
+    },
+    resetOnboarding: () => {
+      if (!commit((current) => ({
+        ...current,
+        onboarding: "ONB-NEW",
+        persona: null,
+        discoveryPreferences: [],
+        tab: "ondo",
+        surface: { kind: "map" },
+      }))) notify(stateRef.current.locale === "ko" ? "시작 설정을 초기화하지 못했어요." : "Setup could not be reset.")
     },
     saveVenue: (venueId) => {
       persistCanonicalSavedVenue(venueId, false)
