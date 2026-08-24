@@ -1,16 +1,18 @@
 # ONDO B · Real Journey QA Runbook
 
-상태: `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 ## 1. Fixed-tuple rule
 
 1. R5가 검토한 historical tuple은 evidence `39687c33…`, Product `9ec3d192…`, Harness `12354bcf…`, digest `4cfbed3b…`다. Verdict는 `5/5 COMPLETE · NOT CLEAN · objective S2 3`이다.
 2. R5-RETRY가 검토한 tuple은 Evidence `b0d25fe…`, Product `30dcb136…`, Harness `ee19adb…`, digest `f1ec9b0c…`이며 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다.
 3. `5b519e6… / b68fc18… / 1dcfacb7…`의 CLEAN1은 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`으로 끝났고 `0/2`에 기여하지 않는다.
-4. Current successor는 Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1`, Harness/frozen candidate `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c`, digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6`다. Static discovery는 B `690 tests / 40 files`, A regression `22 tests / 3 files`, contracts `27 tests / 4 files`; nonpixel과 visual gate는 모두 GREEN이다.
-5. 제품 fix commit 뒤의 QA evidence commit은 제품 source를 수정하지 않는다.
-6. `PLAYWRIGHT_BASE_URL`은 고정 product SHA를 serving하는 URL만 허용한다.
-7. product, harness, 승인 baseline 중 하나라도 바뀌면 진행 중 verdict와 clean streak를 `0/2`로 되돌린다.
+4. Evidence `fcd4447…`, Product `5c6383e…`, Harness `c05a2d0…`, digest `addf064…`의 다음 CLEAN1도 `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2`로 끝나 `0/2`에 기여하지 않는다.
+5. `be645fb… / 7c7b39d… / 86ac058…` automated candidate는 visual GREEN과 무관하게 first-only full B의 real `844×390` EN overlap 한 건으로 disqualified됐다. B `586 passed / 135 skipped / 1 failed`, A `22/22`; 이 결과는 PASS나 clean credit가 아니다.
+6. Current successor는 그 충돌을 고친 Product/Harness `cb4fcd3585cfb8a0693913d3e300881208f8ecad`, digest `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00`다. Static discovery는 B `726 tests / 42 files`, A regression `22 tests / 3 files`, contracts `38 tests / 5 files`; exact final gates는 SEALED GREEN이다.
+6. 제품 fix commit 뒤의 QA evidence commit은 제품 source를 수정하지 않는다.
+7. `PLAYWRIGHT_BASE_URL`은 고정 product SHA를 serving하는 URL만 허용한다.
+8. product, harness, 승인 baseline 중 하나라도 바뀌면 진행 중 verdict와 clean streak를 `0/2`로 되돌린다.
 
 ## 2. Gate 순서
 
@@ -73,7 +75,7 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:<PORT> pnpm test:visual:b
 - 모든 126 checkpoint는 `pixel` 또는 사유 있는 `functional_only` disposition을 가진다.
 - baseline 변경은 issue 단위로 승인하며 blanket `--update-snapshots`를 release evidence로 인정하지 않는다.
 - 300 PNG가 모두 git tracked이고 정확한 viewport dimension을 가질 때만 baseline을 freeze한다.
-- Current digest는 `addf064…`, `50×6` inventory다. 이전 b68 candidate 대비 여섯 고유 PNG 경로가 바뀌었다(D4 네 번 + D3 세 번의 refresh operation, `360×800 filtered` 한 경로 중복). Exact workers-1 nonpixel acceptance와 uninterrupted no-update visual acceptance는 모두 GREEN으로 봉인됐다.
+- Current digest는 `86ac058…`, `50×6` inventory다. c05 candidate 대비 `294` PNG는 byte-identical이고 여섯 `B-PX-FEEDBACK-KO`만 canonical KO timestamp correction으로 갱신됐다. Exact visual receipt는 `300/300 + 144/144 + 20/20`, reporter `464/464`, anomaly `0`으로 GREEN이다. Workers-1 nonpixel도 B `589 pass / 137 intentional skip / 0 fail`, A `22/22`, contracts `38/38`로 GREEN이다.
 
 ## 7. Five-role blind review
 
@@ -100,4 +102,4 @@ Clean round는 같은 product+harness+baseline tuple에서 다음을 모두 만�
 - reviewer coverage receipt `5/5 COMPLETE`
 - reviewer 원문, issue closure, 명령 log, checksum과 frozen tuple 기록
 
-동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. R5-RETRY reviewed tuple은 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이고 첫 strict CLEAN1도 실패했다. Current successor automated gate는 full PASS이고 blind clean round는 `READY`다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+동일 tuple에서 위 조건을 **두 번 연속** 만족해야 종료한다. R5-RETRY reviewed tuple은 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이고 b68 및 c05 strict CLEAN1도 실패했다. Current successor automated gates는 SEALED GREEN이고 fresh blind review는 `READY`다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.

@@ -1,6 +1,6 @@
 # ONDO B · 발자취형 Surface Matrix
 
-상태: `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 발자취의 고유 화면을 복제하지 않고 거의 흰 canvas, 큰 여백, hairline 구획, 절제된 점·기록 메타포, 한 개의 우세한 행동을 ONDO의 F&B heat/identity 흐름에 맞게 번역했다. Map, Place, App shell, Onboarding, Gate, Tables, Chat, Checkout, My, ID, Labs가 모두 같은 B 제품에 통합돼 있다.
 
@@ -39,7 +39,7 @@
 
 ## 현재 visual 검수 계약
 
-- `50` visual case / `48` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-RETRY reviewed baseline은 harness `ee19adb…`, digest `f1ec9b0c…`, 47/45/282였다. Current candidate는 Product `5c6383e…`, Harness/frozen candidate `c05a2d0…`, digest `addf064…`, `300 = 294 unchanged from b68 + 6 unique corrected paths`, 각 viewport `50`; exact first-only no-update `300/300`은 GREEN이다.
+- `50` visual case / `48` distinct state ID를 `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000`에서 캡처한다. R5-RETRY reviewed baseline은 harness `ee19adb…`, digest `f1ec9b0c…`, 47/45/282였다. Current candidate는 Product `cb4fcd3…`, Harness/frozen candidate `cb4fcd3…`, digest `86ac058…`, `300 = 294 byte-identical c05 carries + 6 localized B-PX-FEEDBACK-KO refreshes`, 각 viewport `50`; authoritative receipt는 `300/300 + 144/144 + 20/20`, reporter `464/464`, anomaly `0`으로 SEALED GREEN이다.
 - 126 flow checkpoint 각각은 machine registry에서 `pixel` 또는 사유 있는 `functional_only`로 연결한다.
 - visible metadata 12px 이상, control 44×44 이상, horizontal overflow·nav/CTA overlap 0.
 - serious/critical Axe issue 0; keyboard focus, Escape, focus return을 실제 surface에서 검사.
@@ -47,4 +47,4 @@
 - heat score는 solid color circle, neutral cluster count는 outline geometry로 구분한다.
 - near-white/hairline/negative-space 문법을 전체 surface에 적용하고 heat 이외 색은 status 의미에만 쓴다.
 
-R5-RETRY reviewed tuple은 Product `30dcb13…`, Harness `ee19adb…`, digest `f1ec9b0c…`이고 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 후속 b68 CLEAN1도 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`으로 실패했다. Current successor `5c6383e… / c05a2d0… / addf064…`에는 onboarding/gate/focus, short landscape와 360 pairwise control geometry, Labs token, singular filtered-map correction이 구현됐다. D4 네 번과 D3 세 번의 refresh operation은 `360×800 filtered` 중복 때문에 여섯 고유 PNG를 바꾼다. Exact nonpixel과 visual gate는 GREEN이고 fresh blind clean round는 `READY`; clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다.
+R5-RETRY reviewed tuple은 Product `30dcb13…`, Harness `ee19adb…`, digest `f1ec9b0c…`이고 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 후속 b68 CLEAN1은 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`, c05 CLEAN1은 Evidence `fcd4447…`에서 `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2`로 실패했다. 다음 `7c7b39d…` candidate는 canonical six-viewport pixels와 별개인 `844×390` EN rail collision 때문에 disqualified됐다. Current successor `cb4fcd3… / cb4fcd3… / 86ac058…`에는 c05 D3/D4 correction, complete return-gate safety guards, 그리고 이 short-landscape collision correction과 KO/EN matrix guard가 구현됐다. 여섯 exact width의 `B-PX-FEEDBACK-KO`만 `8:12 PM` → `오후 8:12` correction으로 바뀌며 `294`장은 c05와 byte-identical하고 cb4 correction은 PNG를 바꾸지 않는다. Exact gates는 SEALED GREEN이고 fresh blind review는 `READY`; clean streak `0/2`, 새 sleek B `NOT DEPLOYED`다.

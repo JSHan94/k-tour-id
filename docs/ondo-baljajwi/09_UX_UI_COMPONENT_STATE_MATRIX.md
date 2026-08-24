@@ -1,6 +1,6 @@
 # ONDO B · UX/UI Component & State Matrix
 
-상태: `EXECUTABLE REGISTRY · FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `EXECUTABLE REGISTRY · FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 ## 1. Exact current successor registry
 
@@ -8,8 +8,10 @@
 |---|---:|
 | R5-reviewed Evidence/Product/Harness/digest | `39687c33…` / `9ec3d192…` / `12354bcf…` / `4cfbed3b…` |
 | R5-RETRY reviewed Evidence/Product/Harness/digest | `b0d25fe…` / `30dcb136…` / `ee19adb…` / `f1ec9b0c…` |
-| Failed CLEAN1 Product · Harness · digest | `5b519e6…` / `b68fc18…` / `1dcfacb7…` · `INCOMPLETE / NOT CLEAN` |
-| Current successor Product · Harness/frozen candidate · digest | `5c6383e…` / `c05a2d0…` / `addf064…` |
+| Failed CLEAN1 b68 Product · Harness · digest | `5b519e6…` / `b68fc18…` / `1dcfacb7…` · `INCOMPLETE / NOT CLEAN` |
+| Failed CLEAN1 c05 Evidence · Product · Harness · digest | `fcd4447…` / `5c6383e…` / `c05a2d0…` / `addf064…` · `COMPLETE / NOT CLEAN` |
+| Disqualified automated predecessor | `be645fb…` / `7c7b39d…` / `86ac058…` · real `844×390` EN rail collision |
+| Current successor Product · Harness/frozen candidate · digest | `cb4fcd3…` / `cb4fcd3…` / `86ac058…` |
 | B route | `1` — `/ondo-b` |
 | Tab roots | `4` — ONDO, My Korea, Tables, ID |
 | Reducer surface kinds | `7` — map, venue, table, chat, local_signal, checkout, labs |
@@ -88,4 +90,4 @@ Setup fixture와 truth/geometry/a11y assertions는 case registry를 소비하는
 8. serious/critical Axe, contrast/name/label violation, product runtime failure `0`이어야 한다.
 9. baseline update는 issue-scoped candidate migration 후 수행하고 최종에는 no-update full 300 run을 통과해야 한다.
 
-R5-RETRY가 검토한 282 PNG set은 harness `ee19adb…`, digest `f1ec9b0c…`였고 reviewer verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. b68 CLEAN1도 raw `S1 1 + S2 5`로 실패했다. Current candidate는 digest `addf064…`, 이전 b68 candidate 대비 `294 unchanged + 6 unique corrected paths`, 각 viewport 50장이다. Exact nonpixel과 visual gate는 모두 GREEN이고 blind clean round는 `READY`다.
+R5-RETRY가 검토한 282 PNG set은 harness `ee19adb…`, digest `f1ec9b0c…`였고 reviewer verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. b68 CLEAN1은 raw `S1 1 + S2 5`, c05 CLEAN1은 raw `S2 3 + S3 2`로 실패했다. Current candidate는 digest `86ac058…`, c05 candidate 대비 `294` byte-identical carries와 여섯 localized `B-PX-FEEDBACK-KO` refreshes, 각 viewport 50장이다. Exact nonpixel과 authoritative visual gates는 SEALED GREEN이고 fresh blind review는 `READY`다.

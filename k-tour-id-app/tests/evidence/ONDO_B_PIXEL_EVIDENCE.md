@@ -1,6 +1,6 @@
 # ONDO B pixel evidence harness
 
-Status: `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+Status: `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 Source route: `/ondo-b`
 
@@ -10,14 +10,16 @@ Primary registry: `tests/helpers/ondo-b-visual-evidence.ts`
 
 | Field | Value |
 |---|---|
-| Product boundary | `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` |
-| Harness / frozen candidate | `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` |
-| Baseline digest | `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` |
+| Product boundary | `cb4fcd3585cfb8a0693913d3e300881208f8ecad` |
+| Harness / frozen candidate | `cb4fcd3585cfb8a0693913d3e300881208f8ecad` |
+| Baseline digest | `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00` |
 | Pixel inventory | `300 = 50 per viewport` |
 | Provenance | `294 unchanged from b68 candidate + 6 unique corrected paths`; D4 4 + D3 3 refresh operations overlap on 360 filtered map |
-| Lifecycle | `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY` |
+| Lifecycle | `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY` |
 
 The immutable R5-RETRY reviewer input remains historical evidence candidate `b0d25fe634d9d50a8668501f0fde5f641153168b`, Product `30dcb136c697e3f57d8e3beab6ee31ea37bd1acc`, Harness `ee19adb2a5fce5bea7e0aeb6a8caac80ca65bd2f`, digest `f1ec9b0c6a3f10f77495bda996a4eb09a30f30743eb037f4c65ad39c3c1dfe91`, verdict `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`. It is not current clean credit. R4/R5/R5-RETRY review/coverage originals remain byte-immutable.
+
+Predecessor `be645fb… / 7c7b39d… / 86ac058…` retained this pixel inventory and passed its visual gate, but its first-only full B run found a real `844×390` EN filter/preference overlap and disqualified the tuple. Current `cb4fcd3…` corrects that noncanonical short-landscape collision without changing any PNG and adds an explicit KO/EN four-short-landscape plus six-canonical-viewport rail-integrity test. Visual evidence must still rerun on the exact current boundary; the predecessor result is not current PASS credit.
 
 ## Exact registry
 
@@ -36,7 +38,7 @@ The flow suite uses composite journeys and grouped steps. This harness does not 
 
 ## Frozen capture inputs
 
-- frozen current candidate: Product `5c6383e…`, Harness/frozen candidate `c05a2d0…`, digest `addf064…`
+- frozen current candidate: Product `cb4fcd3…`, Harness/frozen candidate `cb4fcd3…`, digest `86ac058…`
 - viewport: the six exact sizes above
 - locale and local/session fixtures: declared per case
 - local application fonts: wait for `document.fonts.ready`
@@ -45,7 +47,7 @@ The flow suite uses composite journeys and grouped steps. This harness does not 
 
 The basemap replacement is not a blanket canvas mask. MapLibre still renders ONDO cluster circles, point markers, heat scores, contribution rings and labels. Every visible map-backed frame is sampled through the common paint guard; blank compositor frames are rejected before capture. Headers, lists, sheets, notices, navigation and truth copy are never masked.
 
-Current Harness retains the paint guard qualified by earlier rounds and extends the registry with expiry/session-reset/discovery-reset closure states. It additionally requires exact singular filtered-map truth, the locale-invariant Labs target token, and `maxDiffPixels=0` for the two semantic truth cases. Ordinary no-update runs still require every paint and state-neutral invariant. Exact full no-update acceptance is sealed GREEN at `300/300` for the current tuple.
+Current Harness retains the paint guard qualified by earlier rounds and extends the registry with expiry/session-reset/discovery-reset closure states. It additionally requires exact singular filtered-map truth, the locale-invariant Labs target token, and `maxDiffPixels=0` for the two semantic truth cases. Ordinary no-update runs still require every paint and state-neutral invariant. Exact full no-update acceptance for the current tuple is SEALED GREEN.
 
 ## Assertions attached to every screenshot
 
@@ -94,7 +96,7 @@ find tests/visual -path '*ondo-b-flow-pixels*spec.ts-snapshots/*.png' -type f -p
   | shasum -a 256
 ```
 
-Baseline changes are inventoried image-by-image and linked to the R5-RETRY issue/fix ledger. A blanket snapshot update is not accepted as release evidence. The exact full uninterrupted `300/300` no-update gate is sealed with high-risk repeat3 `144/144`, safeguards `20/20` (including landscape `2/2` and backdrop `9/9`), reporter anomalies `0`, and `254/254` health samples.
+Baseline changes are inventoried image-by-image and linked to the R5-RETRY issue/fix ledger. A blanket snapshot update is not accepted as release evidence. Exact visual acceptance is sealed at full uninterrupted `300/300`, high-risk `144/144`, safeguards `20/20`, reporter `464/464`, health `3510/3510`, anomalies `0`, and clean postflight.
 
 ## Baseline census and provenance
 
@@ -111,10 +113,10 @@ The registry and durable candidate [`SLEEK-R5-RETRY/baseline-files.tsv`](../../.
 - `141` existing paths changed (`135` product-fix provenance + `6` product/helper Place Peek provenance)
 - `18` paths are the three new closure states at six widths
 
-The new cases are `AFTER19-EXPIRED-REASON`, `SESSION-RESET-CONFIRM`, and `DISCOVERY-RESET-CONFIRM`. The short-height/reflow fixes remain covered by dedicated browser matrices and do not fabricate a seventh canonical pixel viewport. PNG refresh commits `c1180d6…` and `16a28a7…` create candidate bytes; approval still depends on exact no-update receipts and blind review.
+The new cases are `AFTER19-EXPIRED-REASON`, `SESSION-RESET-CONFIRM`, and `DISCOVERY-RESET-CONFIRM`. The short-height/reflow fixes remain covered by dedicated browser matrices and do not fabricate a seventh canonical pixel viewport. PNG refresh commits `c1180d6…` and `16a28a7…` create candidate bytes; exact no-update receipts are SEALED GREEN, while release approval still depends on two fresh consecutive blind clean rounds.
 
 ## Current acceptance state
 
-The R5-RETRY review found raw `S2 11 + S3 1` across width/pointer feedback, history, landmarks/reflow, reset/localization, offline/expiry/focus. The first b68 CLEAN1 then failed with raw `S1 1 + S2 5`. Exact current Product `5c6383e…` and Harness/frozen candidate `c05a2d0…` contain those corrections plus explicit onboarding Escape/hydration focus, Gate list semantics, canonical `2px + 2px` focus locking, `667/740/844/926` landscape and 360 control pairwise assertions, locale-invariant Labs truth, and singular filtered-map semantic guards. The visual registry remains `50/48/300` with digest `addf064…`.
+The R5-RETRY review found raw `S2 11 + S3 1` across width/pointer feedback, history, landmarks/reflow, reset/localization, offline/expiry/focus. The b68 CLEAN1 then failed with raw `S1 1 + S2 5`, and c05 CLEAN1 failed with raw `S2 3 + S3 2`. Exact current Product `cb4fcd3…` and Harness/frozen candidate `cb4fcd3…` contain those corrections plus the c05 short-landscape/Gate announcement/Labs focus/KO timestamp/v3 docs corrections and complete return-gate safety guards. The visual registry remains `50/48/300` with digest `86ac058…`; 294 PNGs carry byte-identically from c05 and the six `B-PX-FEEDBACK-KO` rows carry the approved canonical KO timestamp refresh.
 
-The current minimal pack is [`SLEEK-R5R-FINAL-c05a2d0`](../../../docs/ondo-baljajwi/evidence/SLEEK-R5R-FINAL-c05a2d0/frozen-receipt.md). Its nonpixel and visual receipts are both `GREEN`; the blind clean round is `READY`; clean streak remains `0/2`; deployment remains `NOT DEPLOYED`. The b68 pack and failed CLEAN1 artifacts remain immutable history.
+The current minimal pack is [`SLEEK-R5R-FINAL-cb4fcd3`](../../../docs/ondo-baljajwi/evidence/SLEEK-R5R-FINAL-cb4fcd3/frozen-receipt.md). Its exact visual receipt is `SEALED GREEN` (`300/300 + 144/144 + 20/20`, reporter `464/464`, anomaly `0`), and nonpixel is also `SEALED GREEN`; fresh blind review is `READY`, clean streak `0/2`, deployment `NOT DEPLOYED`. The b68/c05 packs and failed CLEAN1 artifacts remain immutable history.

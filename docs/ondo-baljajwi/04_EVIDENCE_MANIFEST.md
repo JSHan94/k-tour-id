@@ -1,6 +1,6 @@
 # ONDO B · Evidence Index
 
-상태: `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 ## Current lifecycle and frozen boundaries
 
@@ -10,19 +10,21 @@
 | R5-reviewed Harness / digest | `12354bcf71621c00a08433faf09cbb000683ae61` / `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b` |
 | R5-RETRY reviewed Evidence / Product / Harness | `b0d25fe…` / `30dcb136…` / `ee19adb…` |
 | R5-RETRY reviewed digest / verdict | `f1ec9b0c…` · `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1` |
-| Failed CLEAN1 Product / Harness / digest | `5b519e60eb7825e2573ca6692683315cbf508401` / `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032` / `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de` · `INCOMPLETE · NOT CLEAN · raw 0/1/5/0` |
-| Current Product / Harness / frozen candidate | `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` / `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` / `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` |
-| Current digest / provenance | `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` · `294 unchanged b68 paths + 6 unique corrected paths`; D4 4 + D3 3 refresh operations overlap at the 360 filtered map |
+| Failed CLEAN1 b68 Product / Harness / digest | `5b519e60eb7825e2573ca6692683315cbf508401` / `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032` / `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de` · `INCOMPLETE · NOT CLEAN · raw 0/1/5/0` |
+| Failed CLEAN1 c05 Evidence / Product / Harness / digest | `fcd4447d86ac01daf90ee763963e1ddfa7a7f811` / `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` / `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` / `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` · `5/5 COMPLETE · NOT CLEAN · raw 0/0/3/2` |
+| Disqualified automated predecessor | Product `be645fb070be8f4c514bd0a2dc96774d238ceffc` / Harness `7c7b39d0986a4a501a23f62a8f80fde16f35fc16` / digest `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00` · full B `586 pass / 135 skip / 1 fail`; failure manifest SHA `091e4e190c75b85109ba8c401f5bc1daaf4f72153c633afe089304f78cdf9348` |
+| Current Product / Harness / frozen candidate | `cb4fcd3585cfb8a0693913d3e300881208f8ecad` / `cb4fcd3585cfb8a0693913d3e300881208f8ecad` / `cb4fcd3585cfb8a0693913d3e300881208f8ecad` |
+| Current digest / provenance | `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00` · `294 byte-identical c05 carries + 6 localized B-PX-FEEDBACK-KO refreshes` |
 | Route | `/ondo-b` |
 | Flow registry | `18 flows · 126 checkpoints · 123 ACTUAL · 3 N/A · 0 GAP` |
 | Visual registry | `50 cases · 48 state IDs` |
 | Exact viewports | `360×800`, `390×844`, `430×932`, `768×1024`, `801×1000`, `1440×1000` |
 | Baseline target | `300 committed candidate PNGs` |
-| Current static discovery census | B `690 tests / 40 files`; A regression `22 tests / 3 files`; contracts `27 tests / 4 files`. This is a list census, not an execution PASS. |
-| Current exact nonpixel receipt | `GREEN`; install/typecheck/build `28/28`/contracts `27/27`; B `555 PASS + 135 intentional SKIP / 690`, A `22/22`, failure/flaky/retry `0`; routes `200`; clean postflight; evidence manifest `8fc4d212…` |
-| Current exact visual receipt | `GREEN`: first-only no-update `300/300`; high-risk `144/144`; safeguards `20/20`; seven-run aggregate `464/464`; reporter/runtime anomalies `0`; health `254/254`; clean postflight |
+| Current static discovery census | B `726 tests / 42 files`; A regression `22 tests / 3 files`; contracts `38 tests / 5 files`. This is a list census, not an execution PASS. |
+| Current exact nonpixel receipt | `SEALED GREEN`: B `589 pass / 137 intentional skip / 0 fail`, A `22/22`, contracts `38/38`, anomalies `0`; evidence SHA256SUMS file SHA `11933327bcc1047f67168b2c0f3c237b6d09d2b0606de2c0ad43436c979cebeb`; disclosed post-reporter zsh wrapper-only exit does not alter Playwright PASS |
+| Current exact visual receipt | `SEALED GREEN`: `300/300` no-update + `144/144` high-risk + `20/20` safeguards; reporter `464/464`, health `3510/3510`, anomalies `0`; manifest SHA `c9378cdfac905aecebbe9fb66b779be4a89dd5c0b9c015ee39cf2ae529087ef0` |
 | R4-reviewed automated run | discovery `348 tests / 25 files` · typecheck PASS · Webpack build `28/28` PASS · contracts `26/26` · B E2E `323 pass / 25 intentional viewport skips / 0 fail` · visual `276/276 PASS` · high-risk repeat `72/72 PASS` · unexpected/flaky/runtime/geometry/Axe/modal errors `0`; successor에 재사용하지 않음 |
-| Current lifecycle | failed CLEAN1 preserved; full automated gate `PASS`; blind clean round `READY`; clean streak `0/2`; `NOT DEPLOYED` |
+| Current lifecycle | b68 and c05 failed CLEAN1 preserved; final automated gates `SEALED GREEN`; blind review `READY`; clean streak `0/2`; `NOT DEPLOYED` |
 | Current deployment | `NOT DEPLOYED` |
 
 ## Historical private B — not current evidence
@@ -66,6 +68,9 @@ successor tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로
 | `B-SLK-R5R-b68-GATE` | historical exact `5b519e6… / b68fc18… / 1dcfacb7…` nonpixel + uninterrupted visual | all PASS before its blind review | historical `PASS`; later CLEAN1 failed and invalidated release use |
 | `B-SLK-R5R-b68-CLEAN1` | five blind roles on exact b68 tuple | record actual verdict | `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0 · CLEAN 0/2` |
 | `B-SLK-R5R-c05-GATE` | exact `5c6383e… / c05a2d0… / addf064…` nonpixel + uninterrupted visual | all PASS before blind review | full automated `PASS`; blind clean round `READY` |
+| `B-SLK-R5R-c05-CLEAN1` | five blind roles on exact Evidence `fcd4447…` c05 tuple | record actual verdict | `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2 · CLEAN 0/2` |
+| `B-SLK-R5R-7c7-GATE` | exact `be645fb… / 7c7b39d… / 86ac058…` | both nonpixel and visual GREEN required | `DISQUALIFIED`: visual GREEN, but full B `586 pass / 135 skip / 1 fail`; real `844×390` EN rail collision; no PASS credit |
+| `B-SLK-R5R-cb4-GATE` | exact `cb4fcd3… / cb4fcd3… / 86ac058…` nonpixel + uninterrupted visual | all PASS before blind review | `SEALED GREEN`; blind review READY; clean credit remains `0/2` |
 | `B-SLK-R6-CONFIRM` | same clean retry tuple five blind roles | second 5/5 clean | not started |
 
 ## Integrated implementation receipt — not a PASS ledger
@@ -76,7 +81,7 @@ successor tuple의 evidence는 다음을 모두 만족해야 manifest에 PASS로
 | Connect / Profile / Checkout | `f9dabea60948ca517518ee5c472c0405602c407a` | `17fa01ddbce3321b71ee22cc844cf3fe901932f7` | fixed · reviewer closure pending |
 | Map / Shell / Place | `9ec3d192d0ebdc9614d980bdb173633aee16fc17` | `6ca5c6bada0be665b9571c3b39cfeacf67045d3c` | fixed · reviewer closure pending |
 
-이 표는 R4 열두 finding의 역사 fix 연결이다. R5 세 finding은 [`evidence/SLEEK-R5/fixes.md`](./evidence/SLEEK-R5/fixes.md), R5-RETRY raw finding은 [`evidence/SLEEK-R5-RETRY/issues.md`](./evidence/SLEEK-R5-RETRY/issues.md)와 [`fixes.md`](./evidence/SLEEK-R5-RETRY/fixes.md)가 소유한다. Failed CLEAN1 원문과 receipt는 별도 immutable namespace가 소유한다. Current successor exact nonpixel과 visual receipt는 모두 GREEN이고 strict-blind clean round는 ready다.
+이 표는 R4 열두 finding의 역사 fix 연결이다. R5 세 finding은 [`evidence/SLEEK-R5/fixes.md`](./evidence/SLEEK-R5/fixes.md), R5-RETRY raw finding은 [`evidence/SLEEK-R5-RETRY/issues.md`](./evidence/SLEEK-R5-RETRY/issues.md)와 [`fixes.md`](./evidence/SLEEK-R5-RETRY/fixes.md)가 소유한다. Failed CLEAN1 원문과 receipt는 별도 immutable namespace가 소유한다. Current successor exact nonpixel과 visual receipts는 모두 GREEN이므로 fresh strict-blind review는 READY다.
 
 ## Pixel evidence contract
 
@@ -126,7 +131,9 @@ Exact census:
 - [`evidence/SLEEK-R5/manifest.md`](./evidence/SLEEK-R5/manifest.md), [`frozen-receipt.md`](./evidence/SLEEK-R5/frozen-receipt.md), [`baseline-files.tsv`](./evidence/SLEEK-R5/baseline-files.tsv), [`issues.md`](./evidence/SLEEK-R5/issues.md), [`fixes.md`](./evidence/SLEEK-R5/fixes.md), `reviews/`, `coverage/` — R5 `5/5 COMPLETE · NOT CLEAN` 원문과 세 fix의 retry candidate
 - [`evidence/SLEEK-R5-RETRY/manifest.md`](./evidence/SLEEK-R5-RETRY/manifest.md), [`frozen-receipt.md`](./evidence/SLEEK-R5-RETRY/frozen-receipt.md), [`baseline-files.tsv`](./evidence/SLEEK-R5-RETRY/baseline-files.tsv), [`issues.md`](./evidence/SLEEK-R5-RETRY/issues.md), [`fixes.md`](./evidence/SLEEK-R5-RETRY/fixes.md), `reviews/`, `coverage/` — immutable R5-RETRY `5/5 NOT CLEAN` originals and the separate current successor boundary/census
 - [`evidence/SLEEK-R5R-CLEAN1-b68fc18/`](./evidence/SLEEK-R5R-CLEAN1-b68fc18/) — immutable failed CLEAN1 originals, coverage, and `CLEAN 0/2` receipt
+- [`evidence/SLEEK-R5R-CLEAN1-c05a2d0/`](./evidence/SLEEK-R5R-CLEAN1-c05a2d0/) — immutable complete but NOT CLEAN originals, coverage, and `CLEAN 0/2` receipt
 - [`evidence/SLEEK-R5R-FINAL-b68fc18/frozen-receipt.md`](./evidence/SLEEK-R5R-FINAL-b68fc18/frozen-receipt.md) — immutable historical b68 strict-blind pack; not current evidence
-- [`evidence/SLEEK-R5R-FINAL-c05a2d0/frozen-receipt.md`](./evidence/SLEEK-R5R-FINAL-c05a2d0/frozen-receipt.md), [`automated-gates.md`](./evidence/SLEEK-R5R-FINAL-c05a2d0/automated-gates.md), [`baseline-files.tsv`](./evidence/SLEEK-R5R-FINAL-c05a2d0/baseline-files.tsv), [`SHA256SUMS`](./evidence/SLEEK-R5R-FINAL-c05a2d0/SHA256SUMS) — current candidate minimal pack; full automated gate PASS, blind clean round ready
+- [`evidence/SLEEK-R5R-FINAL-c05a2d0/frozen-receipt.md`](./evidence/SLEEK-R5R-FINAL-c05a2d0/frozen-receipt.md) — immutable historical c05 pack; its later CLEAN1 was NOT CLEAN
+- [`evidence/SLEEK-R5R-FINAL-cb4fcd3/frozen-receipt.md`](./evidence/SLEEK-R5R-FINAL-cb4fcd3/frozen-receipt.md), [`automated-gates.md`](./evidence/SLEEK-R5R-FINAL-cb4fcd3/automated-gates.md), [`baseline-files.tsv`](./evidence/SLEEK-R5R-FINAL-cb4fcd3/baseline-files.tsv), [`SHA256SUMS`](./evidence/SLEEK-R5R-FINAL-cb4fcd3/SHA256SUMS) — current candidate minimal pack; exact automated gates SEALED GREEN, blind review READY
 
-`RUN-*`, SLEEK-R1~R5-RETRY, failed CLEAN1 review/coverage 원본은 immutable history다. Current Product/Harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. Current successor automated gate는 full PASS이고 fresh blind clean round는 `READY`다. Clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.
+`RUN-*`, SLEEK-R1~R5-RETRY, failed CLEAN1 review/coverage 원본은 immutable history다. Current Product/Harness/baseline tuple과 다른 결과는 current PASS나 clean streak에 합산하지 않는다. Current successor automated gates는 SEALED GREEN이고 fresh blind review는 `READY`다. Clean streak는 `0/2`, deployment는 `NOT DEPLOYED`다.

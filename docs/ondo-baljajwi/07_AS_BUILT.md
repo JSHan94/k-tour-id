@@ -1,13 +1,15 @@
 # ONDO B · Current As-built
 
-상태: `PRODUCT IMPLEMENTED · FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `PRODUCT IMPLEMENTED · FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 | 항목 | 최종 값 |
 |---|---|
 | R5-reviewed Evidence/Product/Harness/digest | `39687c33…` / `9ec3d192…` / `12354bcf…` / `4cfbed3b…` |
 | R5-RETRY reviewed tuple | Evidence `b0d25fe…` · Product `30dcb136…` · Harness `ee19adb…` · digest `f1ec9b0c…` · `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1` |
-| Failed CLEAN1 | `5b519e6… / b68fc18… / 1dcfacb7…` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
-| Current successor | Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` · Harness/frozen candidate `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` · digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` |
+| Failed CLEAN1 b68 | `5b519e6… / b68fc18… / 1dcfacb7…` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
+| Failed CLEAN1 c05 | Evidence `fcd4447…` · Product `5c6383e…` · Harness `c05a2d0…` · digest `addf064…` · `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2` |
+| Disqualified automated predecessor | `be645fb… / 7c7b39d… / 86ac058…` · B `586 pass / 135 skip / 1 fail`; real `844×390` EN rail collision |
+| Current successor | Product `cb4fcd3585cfb8a0693913d3e300881208f8ecad` · Harness/frozen candidate `cb4fcd3585cfb8a0693913d3e300881208f8ecad` · digest `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00` |
 | Route | `/ondo-b` |
 | Current preview | `NOT DEPLOYED`; 기존 private B URL은 이전 tuple의 역사 preview |
 | 제품 형태 | responsive Next.js web app |
@@ -19,7 +21,7 @@
 | ONDO preview | `SIMULATED` signal `80` (`40 / 40`) |
 | After19 preview | `SIMULATED` night-category signal `17` (`서울 7 / 부산 10`) |
 
-이 문서가 B 제품 source의 실제 구현 상태 정본이다. Current successor에는 R5-RETRY 및 failed CLEAN1 correction이 구현됐고 full automated gates가 PASS했다. Reviewer clean credit는 별개이며 아직 `0/2`다. [`docs/ondo-execution/13_AS_BUILT.md`](../ondo-execution/13_AS_BUILT.md)는 `/ondo` A/v2 후보의 역사 기록이며 이 문서의 수치와 상태를 덮어쓰지 않는다.
+이 문서가 B 제품 source의 실제 구현 상태 정본이다. Current successor에는 R5-RETRY, b68/c05 CLEAN1, follow-up safety audit correction과 `7c7b39d…`에서 드러난 EN short-landscape rail collision correction이 구현됐다. Exact automated gates는 SEALED GREEN이고 fresh blind review는 READY이며 reviewer clean credit는 `0/2`다. [`docs/ondo-execution/13_AS_BUILT.md`](../ondo-execution/13_AS_BUILT.md)는 `/ondo` A/v2 후보의 역사 기록이며 이 문서의 수치와 상태를 덮어쓰지 않는다.
 
 ## 1. 실제 구현된 제품 구조
 
@@ -69,15 +71,16 @@
 |---|---|
 | R5-reviewed tuple | `39687c3… / 9ec3d19… / 12354bc… / 4cfbed3…`; historical `5/5 COMPLETE · NOT CLEAN` provenance |
 | R5-RETRY reviewed tuple | `b0d25fe… / 30dcb13… / ee19adb… / f1ec9b0c…`; `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1` |
-| Current successor | Product `5c6383e…` · Harness/frozen candidate `c05a2d0…` · digest `addf064…`; `50/48/300`; static B/A/contracts discovery `690/40`, `22/3`, `27/4` |
+| Current successor | Product `cb4fcd3…` · Harness/frozen candidate `cb4fcd3…` · digest `86ac058…`; `50/48/300`; static B/A/contracts discovery `726/42`, `22/3`, `38/5` |
 | Checkpoint registry | `18 flows · 126 checkpoints · 123 ACTUAL · 3 N/A · 0 GAP`; `pixel | functional_only` mapping present |
 | R4-reviewed automated receipt | historical `PASS` — discovery `348 tests / 25 files` · typecheck/build/contracts/E2E · visual `276/276` · errors `0`; successor에 재사용하지 않음 |
-| Current automated receipt | `FULL PASS`: nonpixel B `555+135/690`, A `22/22`, contracts `27/27`; visual no-update `300/300`, high-risk `144/144`, safeguards `20/20`, aggregate `464/464`; anomaly `0` |
+| Current automated receipt | `SEALED GREEN`: nonpixel B `589 pass / 137 intentional skip / 0 fail`, A `22/22`, contracts `38/38`; visual `300/300 + 144/144 + 20/20`; wrapper-only anomaly disclosed |
 | SLEEK R3 | historical `5/5 COMPLETE · NOT CLEAN · 11 actionable`; successor `11/11 FIXED · CLOSURE PENDING` |
 | SLEEK R4 | historical `5/5 COMPLETE · NOT CLEAN`; successor fixes and automated PASS are historical |
 | SLEEK R5 | historical `5/5 COMPLETE · NOT CLEAN`; objective S2 3; historical retry input contained those fixes |
 | SLEEK R5 RETRY | historical `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`; successor correction implemented |
 | SLEEK R5R CLEAN1 | historical b68 tuple `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`; current correction implemented, closure reset to `0/2` |
+| SLEEK R5R CLEAN1 c05 | historical Evidence `fcd4447…` tuple `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2`; current correction implemented, closure reset to `0/2` |
 | Clean streak | `0/2` |
 
 이전 `5ac6308… / 6e7254a… / 5ffbe67…` tuple의 자동 PASS와 R3/R4는 [`04_EVIDENCE_MANIFEST.md`](./04_EVIDENCE_MANIFEST.md)와 `evidence/RUN-20260819-*-FINAL/`에 역사적으로 보존한다. 제품 변경 뒤 현재 결과로 합산하지 않는다.
@@ -98,4 +101,4 @@
 
 제품 또는 harness가 바뀌면 clean streak를 0으로 되돌린다. 같은 tuple에서 다섯 독립 역할의 actionable `S0/S1/S2=0` round가 두 번 연속 끝나고 durable evidence가 연결된 뒤에만 B preview를 승격한다.
 
-이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 current successor와 다르다. 현재 sleek B는 R5-RETRY correction, 독립 audit correction, failed CLEAN1 correction을 포함하고 exact automated gate는 full PASS다. 하지만 두 차례 5/5 clean round와 별도 deployment smoke는 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo` deployment는 변경하지 않는다.
+이전 tuple은 당시 R3/R4에서 조건을 충족해 별도 private preview로 배포됐지만 current successor와 다르다. 현재 sleek B는 R5-RETRY correction, 독립 audit correction, b68/c05 CLEAN1 correction을 포함하고 exact automated gates를 통과했다. 두 차례 5/5 clean round와 별도 deployment smoke는 아직 통과하지 않았다. 따라서 기존 private URL을 현재 최종 버전으로 제공하지 않는다. 기존 A project와 `/ondo` deployment는 변경하지 않는다.

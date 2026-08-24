@@ -1,8 +1,8 @@
 # ONDO B Real Route QA Seam
 
-상태: `ACTIVE · FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `ACTIVE · FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
-R5-RETRY가 검토한 tuple은 evidence `b0d25fe…`, Product `30dcb136…`, Harness `ee19adb…`, digest `f1ec9b0c…`이며 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 후속 b68 CLEAN1도 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`으로 실패했다. Current successor는 Product `5c6383e…`, Harness/frozen candidate `c05a2d0…`, digest `addf064…`, `50/48/300`, `123 ACTUAL / 3 N/A / 0 GAP`다. Exact nonpixel과 visual gate는 모두 GREEN이고 blind clean round는 ready이며 clean streak는 `0/2`다.
+R5-RETRY가 검토한 tuple은 evidence `b0d25fe…`, Product `30dcb136…`, Harness `ee19adb…`, digest `f1ec9b0c…`이며 verdict는 `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1`이었다. 후속 b68 CLEAN1은 `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0`, c05 CLEAN1은 Evidence `fcd4447…`에서 `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2`로 실패했다. `7c7b39d…` automated candidate도 `844×390` EN rail collision으로 disqualified됐다. Current successor는 이를 고친 Product/Harness `cb4fcd3…`, digest `86ac058…`, `50/48/300`, `123 ACTUAL / 3 N/A / 0 GAP`다. Exact nonpixel과 visual gates는 SEALED GREEN, blind review는 READY, clean streak는 `0/2`다.
 
 ## 원칙
 

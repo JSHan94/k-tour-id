@@ -1,22 +1,24 @@
 # ONDO B · 원요구 최종 반영 감사
 
-상태: `PRODUCT IMPLEMENTATION AUDITED · FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `PRODUCT IMPLEMENTATION AUDITED · FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 | 항목 | 값 |
 |---|---|
 | R5-reviewed Evidence/Product/Harness | `39687c33…` / `9ec3d192…` / `12354bcf…` |
 | R5-reviewed baseline / verdict | `46 × 6 = 276`, digest `4cfbed3b…` · `5/5 COMPLETE · NOT CLEAN · objective S2 3` |
 | R5-RETRY reviewed tuple / verdict | Evidence `b0d25fe…` · Product `30dcb136…` · Harness `ee19adb…` · digest `f1ec9b0c…` · `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1` |
-| Failed CLEAN1 | `5b519e6… / b68fc18… / 1dcfacb7…` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
-| Current successor | Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` · Harness/frozen candidate `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` · digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` |
-| Current Automated QA | `FULL PASS`: nonpixel B `555 PASS + 135 intentional SKIP / 690`, A `22/22`, contracts `27/27`; visual no-update `300/300`, high-risk `144/144`, safeguards `20/20`, aggregate `464/464`; anomalies `0` |
+| Failed CLEAN1 b68 | `5b519e6… / b68fc18… / 1dcfacb7…` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
+| Failed CLEAN1 c05 | Evidence `fcd4447…` · Product `5c6383e…` · Harness `c05a2d0…` · digest `addf064…` · `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2` |
+| Disqualified automated predecessor | `be645fb… / 7c7b39d… / 86ac058…` · B `586 pass / 135 skip / 1 fail`; `844×390` EN filter/preference collision |
+| Current successor | Product `cb4fcd3585cfb8a0693913d3e300881208f8ecad` · Harness/frozen candidate `cb4fcd3585cfb8a0693913d3e300881208f8ecad` · digest `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00` |
+| Current Automated QA | `SEALED GREEN`: B `589 pass / 137 intentional skip / 0 fail`, A `22/22`, contracts `38/38`; visual `300/300 + 144/144 + 20/20`; fresh blind review READY |
 | Route | `/ondo-b` |
 | 범위 | 외국인 우선 F&B 웹앱 프론트엔드 데모 |
 | 실제 장소 | 서울 200 + 부산 200 = 400 |
 | ONDO preview signal | 도시별 40, 총 80 · `SIMULATED` |
 | After19 subset | night-category signal만 서울 7 + 부산 10 = 17 · `SIMULATED` |
 
-이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. R5-RETRY와 첫 strict CLEAN1은 모두 clean credit 없이 끝났다. Current successor에는 onboarding Escape/hydration, Gate semantics, canonical focus guard, short-landscape/control geometry, Labs target truth, singular filtered-map evidence correction이 구현됐다. Exact full automated receipt는 PASS로 봉인됐고 blind clean round가 ready다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
+이 문서는 사용자가 처음 제시한 다섯 가지 실행 질문과 열아홉 가지 제품·기술 아이디어가 현재 제품 source에 어떤 깊이로 반영됐는지 판정하는 source of truth다. 구현 존재와 release acceptance를 구분한다. R5-RETRY, b68 CLEAN1, c05 CLEAN1은 모두 clean credit 없이 끝났다. 후속 `7c7b39d…` automated candidate도 first-only B의 실제 short-landscape 충돌로 disqualified됐다. Current successor에는 c05 D3의 short-landscape/Gate announcement/Labs focus와 D4의 KO timestamp/v3 docs correction, follow-up audit의 complete return gate plan·registry/progress/mutation guard, 그리고 해당 EN rail overlap correction과 KO/EN multi-viewport regression guard가 구현됐다. Exact automated receipts는 SEALED GREEN이고 fresh blind review는 READY다. Clean streak는 `0/2`, 배포 상태는 `NOT DEPLOYED`다.
 
 ## 1. 다섯 가지 실행 질문에 대한 답
 
@@ -100,4 +102,4 @@
 - 50 visual cases/48 state IDs를 여섯 exact viewport에서 검증해 300/300 committed no-update baseline을 만들고 clipping, nav/CTA overlap, 12px 미만 metadata, 44px 미만 control, serious/critical Axe issue가 없어야 한다.
 - 126 checkpoint 모두 machine registry에서 `pixel | functional_only` disposition을 가져야 하며 grouped journey를 exact named step 126개로 과장하지 않는다.
 - 다섯 독립 역할이 같은 tuple에서 actionable S0/S1/S2를 0으로 판정한 clean round가 두 번 연속이어야 한다.
-- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`; R5-RETRY와 b68 CLEAN1은 historical NOT CLEAN이다. Current automated gate는 full PASS이고 blind clean round는 `READY`다.
+- 제품·harness/baseline이 바뀌면 clean streak는 0으로 돌아간다. 현재 streak는 `0/2`; R5-RETRY와 b68/c05 CLEAN1은 historical NOT CLEAN이다. Current automated gate는 SEALED GREEN이며 fresh blind clean round는 `READY`다.

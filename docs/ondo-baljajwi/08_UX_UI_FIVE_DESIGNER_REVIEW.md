@@ -1,6 +1,6 @@
 # ONDO B · Five-Designer Sleekness Review
 
-상태: `FULL AUTOMATED GATE PASS · BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED`
+상태: `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 이 문서는 기존 기능·진실·접근성 계약을 보존하면서 `/ondo-b`의 모든 Flow, surface, component, state를 더 sleek하고 일관된 제품 언어로 개선하는 실행 정본이다. 목표는 의견을 억지로 없애는 것이 아니라 **동일 제품 SHA에서 unresolved actionable UX/UI issue를 0으로 수렴**시키는 것이다.
 
@@ -13,18 +13,20 @@
 | R5-reviewed baseline | digest `4cfbed3b2f2fba3d7813e0c3ff6a160bfcec9605c947d84d1bc35f73e97c314b`; 46/44/276 |
 | R5-RETRY reviewed candidate | Evidence `b0d25fe634d9d50a8668501f0fde5f641153168b` · Product `30dcb136…` · Harness `ee19adb…` · digest `f1ec9b0c…` |
 | R5-RETRY verdict | `5/5 COMPLETE · 0/5 CLEAN · raw S2 11 + S3 1 · NOT CLEAN` |
-| Failed CLEAN1 candidate | Product `5b519e60eb7825e2573ca6692683315cbf508401` · Harness `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032` · digest `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
-| Current successor candidate | Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` · Harness/frozen candidate `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` · digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` |
+| Failed CLEAN1 b68 candidate | Product `5b519e60eb7825e2573ca6692683315cbf508401` · Harness `b68fc18fe0fffd50ddb9bf0d5ba97e5c72b1b032` · digest `1dcfacb73c4eeff6be3e3c3fca6aab2b3ae6c817366fbdac631cf877b40f21de` · `INCOMPLETE · NOT CLEAN · raw S0 0 / S1 1 / S2 5 / S3 0` |
+| Failed CLEAN1 c05 candidate | Evidence `fcd4447d86ac01daf90ee763963e1ddfa7a7f811` · Product `5c6383e38a150fc20bd6298ef0c2b7c619e671e1` · Harness `c05a2d0f08ef81a500b3ab44cfc94699a23c6f0c` · digest `addf064d8df5467bc06a14c239a9da24a35ed89ccf58944bb8c554e1c115bab6` · `5/5 COMPLETE · NOT CLEAN · raw S0 0 / S1 0 / S2 3 / S3 2` |
+| Disqualified automated predecessor | `be645fb… / 7c7b39d… / 86ac058…` · full B `586 pass / 135 skip / 1 fail`; no reviewer input |
+| Current successor candidate | Product `cb4fcd3585cfb8a0693913d3e300881208f8ecad` · Harness/frozen candidate `cb4fcd3585cfb8a0693913d3e300881208f8ecad` · digest `86ac0588985647163bf8028eee4804d3adbeda1f248206406bd765d5ca19ce00` |
 | Review route | `/ondo-b` |
 | Flow scope | `FL-001`~`FL-018` |
 | Current visual target | `50 cases · 48 state IDs · 6 viewports = 300 committed candidate screenshots` |
 | Checkpoint registry | `126 exact rows · pixel | functional_only` |
 | R5 reviewed result | `5/5 COMPLETE · NOT CLEAN`; D1/D3/D5 objective S2 3, D2/D4 CLEAN |
 | Current checkpoint disposition | `123 ACTUAL · 3 reasoned N/A · 0 GAP` |
-| Current automated gate | `FULL PASS`: nonpixel and visual both `GREEN` |
-| Current lifecycle | `BLIND CLEAN ROUND READY · CLEAN 0/2 · NOT DEPLOYED` |
+| Current automated gate | `SEALED GREEN`: exact-boundary nonpixel and authoritative visual receipts final |
+| Current lifecycle | `BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED` |
 
-제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 clean tuple은 역사 자료로만 보존한다. 첫 strict CLEAN1은 D3의 네 S2와 D4의 S1 하나/S2 하나로 실패했고 D4 coverage도 incomplete였다. Current successor에는 onboarding Escape/hydration focus, Gate progress list semantics, canonical `2px + 2px` focus guard, short-landscape and 360 control geometry, locale-invariant Labs token, singular filtered-map semantic/pixel guard가 구현됐다. Nonpixel과 visual receipt는 모두 GREEN이고 최소 팩 [`evidence/SLEEK-R5R-FINAL-c05a2d0/`](./evidence/SLEEK-R5R-FINAL-c05a2d0/)이 fresh blind clean round에 ready다.
+제품, harness 또는 승인 baseline이 바뀌면 진행 중 reviewer verdict와 clean streak는 무효화한다. 이전 캡처와 clean tuple은 역사 자료로만 보존한다. b68 CLEAN1은 `S1 1 + S2 5` 및 incomplete coverage로, c05 CLEAN1은 D3 `S2 3`과 D4 `S3 2`로 실패했다. 다음 `7c7b39d…` automated candidate는 blind input이 되기 전에 `844×390` EN rail collision으로 disqualified됐다. Current successor에는 c05의 short-landscape metadata, Gate failure announcement, Labs focus, KO timestamp, v3 persistence-doc correction, complete return gate plan safety guards, 그리고 padding/min-width correction과 KO/EN 10-viewport rail regression guard가 구현됐다. Nonpixel과 visual receipts는 SEALED GREEN이고 최소 팩 [`evidence/SLEEK-R5R-FINAL-cb4fcd3/`](./evidence/SLEEK-R5R-FINAL-cb4fcd3/)은 fresh blind reviewer 배포 READY다.
 
 ## 2. Sleekness의 조작적 정의
 
@@ -140,4 +142,4 @@ docs/ondo-baljajwi/evidence/SLEEK-RN/
 
 [`03_REVIEW_MANIFEST.md`](./03_REVIEW_MANIFEST.md)는 round verdict만 요약한다. 상세 원문과 checksum은 위 evidence directory가 소유한다.
 
-`evidence/SLEEK-R1/`~`SLEEK-R5/`, `SLEEK-R5-RETRY/reviews|coverage/`, `SLEEK-R5R-CLEAN1-b68fc18/`은 수정하지 않는 역사 원본이다. R4 checksum은 `10c68bebb3d90af971e5fc98f7e7d6884a47707266ac95e3a71c3a5067e453a0`, R5는 `5a5699b3c1dfb14f9ed7c11be37839d324801774a833dc6e3a529963758265e0`, R5-RETRY는 `7e6f990a00d08f84bca0aae8679c33568af3fd7d5a81621b5cb8f48ec04ae8c0`이다. Reviewer CLEAN 또는 release PASS는 미리 기록하지 않는다.
+`evidence/SLEEK-R1/`~`SLEEK-R5/`, `SLEEK-R5-RETRY/reviews|coverage/`, `SLEEK-R5R-CLEAN1-b68fc18/`, `SLEEK-R5R-CLEAN1-c05a2d0/`은 수정하지 않는 역사 원본이다. R4 checksum은 `10c68bebb3d90af971e5fc98f7e7d6884a47707266ac95e3a71c3a5067e453a0`, R5는 `5a5699b3c1dfb14f9ed7c11be37839d324801774a833dc6e3a529963758265e0`, R5-RETRY는 `7e6f990a00d08f84bca0aae8679c33568af3fd7d5a81621b5cb8f48ec04ae8c0`이다. Reviewer CLEAN 또는 release PASS는 미리 기록하지 않는다.
