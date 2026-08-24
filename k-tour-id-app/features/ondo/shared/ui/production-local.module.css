@@ -1,0 +1,86 @@
+.screen {
+  min-height: 100%;
+  padding: max(34px, env(safe-area-inset-top)) 18px 112px;
+  background: #fbfbfa;
+  color: #20201e;
+}
+
+.header p { margin: 0 0 10px; color: #6e6b65; font-size: 12px; font-weight: 720; letter-spacing: .1em; }
+.header h1 { margin: 0; font-size: 29px; line-height: 1.18; letter-spacing: -.045em; }
+.header span { display: block; margin-top: 10px; color: #706d67; font-size: 14px; line-height: 1.6; }
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  margin-top: 36px;
+  padding: 22px 0;
+  border-block: 1px solid #dedbd5;
+  color: #55524d;
+}
+.empty h2, .empty p { margin: 0; }
+.empty h2 { font-size: 17px; }
+.empty p { color: #706d67; font-size: 13px; line-height: 1.55; }
+.empty button { min-height: 44px; padding: 0 14px; border: 0; border-radius: 11px; background: #20201e; color: #fff; font: inherit; font-size: 13px; font-weight: 720; }
+
+.savedList { display: grid; gap: 16px; margin-top: 30px; }
+.savedCard { overflow: hidden; border: 1px solid #dedbd5; border-radius: 16px; background: #fff; }
+.savedOpen {
+  display: grid;
+  width: 100%;
+  min-height: 92px;
+  grid-template-columns: 22px 1fr 22px;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border: 0;
+  border-bottom: 1px solid #e7e4de;
+  background: transparent;
+  color: #20201e;
+  font: inherit;
+  text-align: left;
+}
+.savedOpen > span { display: grid; min-width: 0; gap: 3px; }
+.savedOpen strong, .savedOpen small { overflow-wrap: anywhere; }
+.savedOpen strong { font-size: 15px; }
+.savedOpen small { color: #706d67; font-size: 11px; line-height: 1.45; }
+.savedOpen small b { color: #403d38; font-weight: 720; }
+
+.note { display: grid; gap: 9px; padding: 14px; }
+.noteHeading { display: flex; align-items: center; gap: 7px; color: #403d38; }
+.noteHeading label { font-size: 13px; font-weight: 750; }
+.note p { margin: 0; color: #706d67; font-size: 11px; line-height: 1.5; }
+.note textarea { box-sizing: border-box; width: 100%; min-height: 82px; resize: vertical; border: 1px solid #d5d2cc; border-radius: 10px; padding: 10px; background: #fbfaf8; color: #20201e; font: inherit; font-size: 13px; line-height: 1.5; }
+.noteActions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.noteActions small { color: #817d76; font-size: 10px; }
+.noteActions button { min-height: 44px; padding: 0 13px; border: 0; border-radius: 10px; background: #20201e; color: #fff; font: inherit; font-size: 12px; font-weight: 720; }
+.noteReceipt, .noteError { font-size: 11px; line-height: 1.45; }
+.noteReceipt { color: #3f624f; }
+.noteError { color: #a43f32; }
+.remove { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border: 0; border-top: 1px solid #e7e4de; background: #faf9f7; color: #74463f; font: inherit; font-size: 12px; font-weight: 700; }
+
+.settingsSection { margin-top: 34px; padding-top: 18px; border-top: 1px solid #dedbd5; }
+.sectionHeading { display: flex; align-items: center; gap: 8px; }
+.sectionHeading h2 { margin: 0; font-size: 17px; }
+.settingsSection > p { margin: 10px 0 0; color: #706d67; font-size: 12px; line-height: 1.6; }
+.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 14px; }
+.segmented button { min-height: 46px; border: 1px solid #d5d2cc; border-radius: 11px; background: transparent; color: #55524d; font: inherit; font-size: 13px; font-weight: 700; }
+.segmented button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
+.preferenceChips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+.preferenceChips button { min-height: 44px; padding: 0 13px; border: 1px solid #d5d2cc; border-radius: 11px; background: transparent; color: #5f5b55; font: inherit; font-size: 12px; font-weight: 680; }
+.preferenceChips button[aria-pressed="true"] { border-color: #20201e; background: #20201e; color: #fff; }
+.clearButton { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 8px; margin-top: 15px; border: 1px solid #c9aaa3; border-radius: 11px; background: transparent; color: #74463f; font: inherit; font-size: 13px; font-weight: 720; }
+
+.confirmLayer { position: absolute; z-index: 120; inset: 0; display: grid; align-items: end; padding: 18px; background: rgb(22 20 17 / 46%); }
+.confirmCard { display: grid; gap: 12px; border-radius: 18px; padding: 20px; background: #fff; box-shadow: 0 18px 50px rgb(20 18 15 / 22%); }
+.confirmCard h2, .confirmCard p { margin: 0; }
+.confirmCard h2 { font-size: 19px; letter-spacing: -.025em; }
+.confirmCard p, .confirmCard strong { color: #68645e; font-size: 12px; line-height: 1.55; }
+.confirmCard strong { color: #403d38; }
+.confirmCard > div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.confirmCard button { min-height: 46px; border: 1px solid #d5d2cc; border-radius: 11px; background: transparent; color: #4f4b46; font: inherit; font-size: 13px; font-weight: 720; }
+.confirmCard button:last-child { border-color: #74463f; background: #74463f; color: #fff; }
+
+@media (min-width: 700px) {
+  .screen { max-width: 700px; margin: 0 auto; }
+}

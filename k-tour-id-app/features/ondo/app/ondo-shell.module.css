@@ -68,6 +68,8 @@
   backdrop-filter: blur(12px);
 }
 
+.nav[data-nav-count="3"] { grid-template-columns: repeat(3, 1fr); }
+
 .nav button {
   position: relative;
   display: grid;
@@ -192,6 +194,7 @@
   }
   .stage[data-variant="B"] .nav button { min-width: 54px; min-height: 54px; }
   .stage[data-variant="B"] .nav i { top: 6px; right: 13px; }
+  .stage[data-variant="B"] .nav[data-nav-count="3"] { grid-template-columns: repeat(3, 1fr); }
   .stage[data-variant="B"] .toast {
     right: 20px;
     bottom: calc(94px + env(safe-area-inset-bottom));

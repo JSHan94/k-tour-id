@@ -1,26 +1,19 @@
 "use client"
 
-import { After19Layer } from "../after19/after19-layer"
-import { After19VenueReturn } from "../after19/after19-venue-return"
-import { ConnectOverlays } from "../connect/connect-overlays"
-import { TablesEntry } from "../connect/tables-entry"
-import { GateOverlay } from "../identity/gate-overlay"
-import { IdentityEntry } from "../identity/identity-entry"
 import { MapEntryB } from "../map/map-entry-b"
-import { MyEntry } from "../my/my-entry"
+import { SavedEntryB } from "../my/saved-entry-b"
 import { OfficialDirectoryOnboardingLayer } from "../onboarding/official-directory-onboarding"
-import { PlaceOverlay } from "../place/place-overlay"
 import { CanonicalPlaceMount } from "../place/canonical-place-mount"
-import { OndoApp } from "./ondo-app"
+import { SettingsEntryB } from "../settings/settings-entry-b"
+import { OndoAppB } from "./ondo-app-b"
 
 export function OndoProductB() {
   return (
-    <OndoApp variant="B" slots={{
-      map: <MapEntryB />,
-      my: <MyEntry />,
-      tables: <TablesEntry />,
-      id: <IdentityEntry />,
-      overlays: <><After19VenueReturn /><CanonicalPlaceMount /><PlaceOverlay /><ConnectOverlays /><After19Layer variant="B" /><OfficialDirectoryOnboardingLayer /><GateOverlay /></>,
+    <OndoAppB slots={{
+      explore: <MapEntryB />,
+      saved: <SavedEntryB />,
+      settings: <SettingsEntryB />,
+      overlays: <><CanonicalPlaceMount /><OfficialDirectoryOnboardingLayer /></>,
     }} />
   )
 }
