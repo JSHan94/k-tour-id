@@ -2,6 +2,13 @@ import { createHash } from "node:crypto"
 import { expect, test, type Browser, type BrowserContext, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
+const EMPTY_TILEJSON = {
+  tilejson: "3.0.0",
+  tiles: ["https://tiles.openfreemap.org/ondo-red-matrix-empty/{z}/{x}/{y}.pbf"],
+  minzoom: 0,
+  maxzoom: 18,
+  bounds: [124, 33, 132, 39],
+} as const
 
 type Locale = "en" | "ko"
 type Phase = "idle" | "ready" | "offline" | "denied"
@@ -58,7 +65,10 @@ const EXPECTED_KEY = {
 } as const
 
 function expectedLayoutForRoot(root: Rect): LayoutMode {
-  if (root.height <= 238.75) return "ultra-short"
+  // Below 350px the fixed truthful lanes cannot coexist: the 168px header,
+  // 58px result count and 44px attribution already exhaust the root before
+  // key, message, locate and required gaps are considered.
+  if (root.height < 350) return "ultra-short"
   if (root.width <= 430 || (root.width > root.height && root.height <= 568)) return "compact-map"
   return "spacious-map"
 }
@@ -138,6 +148,8 @@ async function centerOwnership(locator: Locator) {
 }
 
 async function seedContext(context: BrowserContext, locale: Locale) {
+  await context.route("https://tiles.openfreemap.org/planet", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(EMPTY_TILEJSON) }))
+  await context.route("https://tiles.openfreemap.org/ondo-red-matrix-empty/**", (route) => route.fulfill({ status: 200, contentType: "application/x-protobuf", body: Buffer.alloc(0) }))
   await context.addInitScript(({ key, language }) => {
     localStorage.setItem(key, JSON.stringify({
       locale: language,
@@ -194,6 +206,37 @@ async function attributionLocator(root: Locator) {
   const explicit = root.locator("[data-testid='ondo-b-map-attribution'],[data-testid='ondo-b-attribution']")
   if (await explicit.count()) return explicit.first()
   return root.locator("a[href*='openfreemap.org']").first()
+}
+
+async function resultLocator(root: Locator) {
+  const explicit = root.locator("[data-testid='ondo-b-compact-count'],[data-testid='ondo-b-result-bar']")
+  if (await explicit.count()) return explicit.first()
+  const view = root.getByTestId("ondo-b-view-toggle")
+  if (await view.count()) return view.locator("..").first()
+  return root.locator("[data-missing-result-bar]")
+}
+
+async function auditUltraShortViewMode(
+  violations: Violation[],
+  scenario: string,
+  root: Locator,
+  result: Locator,
+) {
+  const view = root.getByTestId("ondo-b-view-toggle")
+  const viewReceipt = await elementReceipt(view)
+  const focusableVisible = await view.evaluateAll((nodes) => nodes.filter((node) => {
+    const element = node as HTMLElement
+    const rect = element.getBoundingClientRect()
+    const style = getComputedStyle(element)
+    return rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden" && element.tabIndex >= 0 && !element.hasAttribute("disabled")
+  }).length)
+  const indicator = root.getByTestId("ondo-b-view-mode-indicator")
+  const indicatorReceipt = await elementReceipt(indicator)
+  issue(violations, scenario, "ultra-short-view-noninteractive", "view-mode", !viewReceipt?.visible && focusableVisible === 0, `view=${viewReceipt ? JSON.stringify(viewReceipt) : "absent"} focusable=${focusableVisible}`)
+  const resultReceipt = await elementReceipt(result)
+  const resultCount = await root.getAttribute("data-result-count")
+  issue(violations, scenario, "ultra-short-compact-count", "result-count", Boolean(resultReceipt?.visible && resultCount && resultReceipt.text.includes(resultCount)), `count=${resultCount} result=${resultReceipt?.text ?? "missing"}`)
+  if (await indicator.count()) issue(violations, scenario, "ultra-short-mode-indicator", "list-mode", Boolean(indicatorReceipt?.visible), indicatorReceipt ? JSON.stringify(indicatorReceipt) : "hidden")
 }
 
 async function recordTarget(
@@ -404,7 +447,7 @@ async function auditMapState(
   const key = root.getByTestId("ondo-b-map-key")
   const locate = root.getByTestId("ondo-b-locate")
   const view = root.getByTestId("ondo-b-view-toggle")
-  const result = view.locator("..")
+  const result = await resultLocator(root)
   const nav = page.getByTestId("ondo-main-nav")
   const outerCanvasReceipt = await elementReceipt(page.getByTestId("ondo-canvas"))
   issue(violations, scenario, "outer-canvas-visible", "ondo-canvas", Boolean(outerCanvasReceipt?.visible), outerCanvasReceipt ? JSON.stringify(outerCanvasReceipt) : "missing")
@@ -565,8 +608,7 @@ async function auditUltraShortLayout(
   await auditCategoryReachability(violations, scenario, rail, canvas)
 
   const panel = root.getByTestId("ondo-b-list-panel")
-  const result = root.getByTestId("ondo-b-view-toggle").locator("..")
-  const view = root.getByTestId("ondo-b-view-toggle")
+  const result = await resultLocator(root)
   const nav = page.getByTestId("ondo-main-nav")
   const outerCanvas = await elementReceipt(page.getByTestId("ondo-canvas"))
   for (const [label, locator] of [["list-panel", panel], ["result", result]] as const) {
@@ -575,7 +617,7 @@ async function auditUltraShortLayout(
   }
   const navReceipt = await elementReceipt(nav)
   issue(violations, scenario, "ultra-short-list-visible", "navigation", Boolean(outerCanvas && navReceipt?.visible && inside(navReceipt, outerCanvas)), navReceipt ? JSON.stringify(navReceipt) : "missing")
-  await recordTarget(violations, scenario, "view", view, canvas)
+  await auditUltraShortViewMode(violations, scenario, root, result)
   if (outerCanvas) for (let index = 0; index < 3; index += 1) await recordTarget(violations, scenario, `nav-${index + 1}`, nav.getByRole("button").nth(index), outerCanvas)
   const firstRow = panel.locator("li[data-venue-id] button").first()
   const rowReceipt = await elementReceipt(firstRow)
@@ -664,11 +706,11 @@ async function runStateMatrix(browser: Browser, violations: Violation[]) {
   }
 }
 
-async function auditUltraShortStateCarry(browser: Browser, violations: Violation[], locale: Locale, phase: Exclude<Phase, "idle">) {
+async function auditUltraShortStateCarry(browser: Browser, violations: Violation[], locale: Locale, phase: Exclude<Phase, "idle">, target: Viewport) {
   const context = await browser.newContext({ viewport: { width: 900, height: 720 } })
   await seedContext(context, locale)
   const page = await context.newPage()
-  const scenario = `${locale}/667x320/${phase}-carry`
+  const scenario = `${locale}/${target.width}x${target.height}/${phase}-carry`
   try {
     await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
@@ -681,9 +723,9 @@ async function auditUltraShortStateCarry(browser: Browser, violations: Violation
       await root.getByTestId("ondo-b-locate").click()
       await expect(root).toHaveAttribute("data-location-state", phase)
     }
-    await page.setViewportSize({ width: 667, height: 320 })
+    await page.setViewportSize({ width: target.width, height: target.height })
     await settleLayout(root, "ultra-short", "list")
-    await auditUltraShortLayout(violations, page, locale, { label: "short-state-carry", width: 667, height: 320 }, phase)
+    await auditUltraShortLayout(violations, page, locale, target, phase)
   } catch (error) {
     violations.push({ scenario, rule: "ultra-short-state-carry-completed", subject: phase, detail: error instanceof Error ? error.message : String(error) })
   } finally {
@@ -795,10 +837,11 @@ async function auditZoomResize(browser: Browser, violations: Violation[], locale
         tag: element?.tagName ?? "none",
         testid: element?.dataset.testid ?? null,
         inZoom: Boolean(element?.closest(".maplibregl-ctrl-bottom-right")),
+        isFirstRow: element != null && element === document.querySelector("[data-testid='ondo-b-list-panel'] li[data-venue-id] button"),
         visible: Boolean(rect && style && rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden"),
       }
     })
-    issue(violations, scenario, "resize-focus-valid", "active-element", active.visible && !active.inZoom && active.testid === "ondo-b-view-toggle", JSON.stringify(active))
+    issue(violations, scenario, "resize-focus-valid", "active-element", active.visible && !active.inZoom && (active.testid === "ondo-b-search" || active.isFirstRow), JSON.stringify(active))
     issue(violations, scenario, "resize-list-visible", "list-panel", Boolean((await elementReceipt(root.getByTestId("ondo-b-list-panel")))?.visible), "effective list must be rendered")
     issue(violations, scenario, "resize-query-category-count", "compact-list", await root.getByTestId("ondo-b-search").inputValue() === "mapo" && await root.getAttribute("data-result-count") === "5" && (await root.getByTestId("ondo-b-category-rail").getByRole("button", { pressed: true }).textContent())?.trim() === (locale === "en" ? "Korean" : "한식"), `query=${await root.getByTestId("ondo-b-search").inputValue()} count=${await root.getAttribute("data-result-count")}`)
 
@@ -833,7 +876,6 @@ async function auditListFallback(browser: Browser, violations: Violation[], loca
     const search = root.getByTestId("ondo-b-search")
     await search.fill(query)
     await expect(root).toHaveAttribute("data-result-count", "5")
-    const view = root.getByTestId("ondo-b-view-toggle")
     const panel = root.getByTestId("ondo-b-list-panel")
     const canvas = await elementReceipt(root)
     const panelReceipt = await elementReceipt(panel)
@@ -877,12 +919,11 @@ async function auditListFallback(browser: Browser, violations: Violation[], loca
     issue(violations, scenario, "compact-zoom-not-focusable", "map-zoom", focusableZoom === 0, `visible-focusable=${focusableZoom}`)
     const nav = page.getByTestId("ondo-main-nav")
     const outerCanvas = await elementReceipt(page.getByTestId("ondo-canvas"))
-    const [resultReceipt, navReceipt] = await Promise.all([elementReceipt(view.locator("..")), elementReceipt(nav)])
+    const compactResult = await resultLocator(root)
+    await auditUltraShortViewMode(violations, scenario, root, compactResult)
+    const [resultReceipt, navReceipt] = await Promise.all([elementReceipt(compactResult), elementReceipt(nav)])
     if (panelReceipt && resultReceipt) issue(violations, scenario, "list-nav-clearance", "panel:result", intersectionArea(panelReceipt, resultReceipt) <= .5, `area=${intersectionArea(panelReceipt, resultReceipt)}`)
     if (panelReceipt && navReceipt) issue(violations, scenario, "list-nav-clearance", "panel:nav", intersectionArea(panelReceipt, navReceipt) <= .5, `area=${intersectionArea(panelReceipt, navReceipt)}`)
-    if (canvas) {
-      await recordTarget(violations, scenario, "view", view, canvas)
-    }
     if (outerCanvas) for (let index = 0; index < 3; index += 1) await recordTarget(violations, scenario, `nav-${index + 1}`, nav.getByRole("button").nth(index), outerCanvas)
     await auditOverflow(violations, scenario, page, root, "list")
 
@@ -905,7 +946,9 @@ test.describe("ONDO B production map chrome RED matrix", () => {
     const violations: Violation[] = []
     await runStateMatrix(browser, violations)
     for (const locale of ["en", "ko"] as const) {
-      for (const phase of ["ready", "denied", "offline"] as const) await auditUltraShortStateCarry(browser, violations, locale, phase)
+      for (const target of [{ label: "short-667x320", width: 667, height: 320 }, { label: "short-844x390", width: 844, height: 390 }] as const) {
+        for (const phase of ["ready", "denied", "offline"] as const) await auditUltraShortStateCarry(browser, violations, locale, phase, target)
+      }
       await auditRootBoundaryModes(browser, violations, locale)
       await auditRequestedViewKeyboard(browser, violations, locale)
       await auditZoomResize(browser, violations, locale)
