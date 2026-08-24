@@ -168,12 +168,20 @@
   .cityTruthLegend { gap: 8px; margin-bottom: 5px; padding-top: 8px; }
 }
 
-@media (min-height: 501px) {
+@media (orientation: portrait) and (min-height: 501px) {
   /* On portrait/tall canvases the map key can use the full copy width. Keep
      location chrome in a separate lane below the filters instead of laying
      a control or status message over that truth-bearing explanation. */
   .locate { top: calc(222px + env(safe-area-inset-top)); bottom: auto; }
   .locationFeedback:not(.offlineFeedback) { top: calc(274px + env(safe-area-inset-top)); bottom: auto; }
+}
+
+@media (orientation: landscape) and (min-height: 501px) {
+  /* Tall landscape keeps the wider map-key and result lanes. Anchor location
+     chrome above those lanes; the short-landscape composition below remains
+     responsible for canvases at 500px and under. */
+  .locate { top: auto; bottom: calc(176px + env(safe-area-inset-bottom)); }
+  .locationFeedback:not(.offlineFeedback) { top: auto; bottom: calc(233px + env(safe-area-inset-bottom)); }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
