@@ -32,7 +32,9 @@ test("B-PROD-LOCAL-003 B persistence is an explicit allowlist and never restores
   expect(provider).toContain("isProductionPath")
   expect(provider).toContain("restoreBDeviceState")
   expect(provider).toContain("persistBDeviceState")
-  expect(provider).toContain("canonicalMapVenueById")
+  expect(provider).toContain("isCanonicalVenueId")
+  expect(provider).toContain("sanitizeCanonicalVenueIds")
+  expect(provider).toContain("sanitizeCanonicalVenueNotes")
 
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
