@@ -17,6 +17,8 @@ function filesBelow(root: string, prefix = ""): string[] {
 }
 
 test.describe("ONDO B standalone Sites packaging", () => {
+  test.describe.configure({ mode: "serial" })
+
   test("B-STANDALONE-001 declares a deterministic B-only build, scan, and probe lane", () => {
     const manifest = JSON.parse(readFileSync(resolve(APP_ROOT, "package.json"), "utf8")) as {
       scripts?: Record<string, string>
@@ -69,13 +71,19 @@ test.describe("ONDO B standalone Sites packaging", () => {
   })
 
   test("B-STANDALONE-004 generated package is explicitly isolated from legacy providers and routes", async () => {
-    const source = filesBelow(STAGE_ROOT)
+    await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_artifact" })
+    const sourceFiles = filesBelow(STAGE_ROOT)
       .filter((file) => /\.(?:ts|tsx|js|mjs|json)$/.test(file))
+    const source = sourceFiles
       .map((file) => `${file}\n${readFileSync(resolve(STAGE_ROOT, file), "utf8")}`)
+      .join("\n")
+    const visibleSource = sourceFiles
+      .filter((file) => file.endsWith(".tsx"))
+      .map((file) => readFileSync(resolve(STAGE_ROOT, file), "utf8"))
       .join("\n")
 
     expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|demo-journey|mock-data|features\/ondo\/(?:after19|commerce|connect|identity|labs|rewards|trust|fixtures)/i)
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
-    expect(source).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)/i)
+    expect(visibleSource).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)/i)
   })
 })

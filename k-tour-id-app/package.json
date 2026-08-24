@@ -9,6 +9,10 @@
   "scripts": {
     "build": "next build",
     "build:sites": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
+    "prepare:sites:ondo-b": "node scripts/ondo-b-standalone/prepare.mjs",
+    "build:sites:ondo-b": "node scripts/ondo-b-standalone/build.mjs",
+    "scan:sites:ondo-b": "node scripts/ondo-b-standalone/scan-artifact.mjs",
+    "probe:sites:ondo-b": "node scripts/ondo-b-standalone/probe-http.mjs",
     "dev": "next dev",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",

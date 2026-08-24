@@ -31,3 +31,4 @@ next-env.d.ts
 /artifacts/qa/
 /playwright-report/
 /test-results/
+/.ondo-b-standalone/
