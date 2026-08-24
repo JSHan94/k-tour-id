@@ -5,18 +5,29 @@ import { resolve } from "node:path"
 const appRoot = resolve(process.cwd())
 const appFile = (path: string) => readFileSync(resolve(appRoot, path), "utf8")
 
-test("B-PROD-LOCAL-001 B preserves the sourced map, local save, settings, and canonical detail foundation", () => {
+test("B-PROD-LOCAL-001 B composes the complete B-native local-device product without retired providers", () => {
   const product = appFile("features/ondo/app/ondo-product-b.tsx")
-  for (const component of ["MapEntryB", "SavedEntryB", "SettingsEntryB", "CanonicalPlaceMount"]) expect(product).toContain(component)
+  for (const component of [
+    "MapEntryB",
+    "SavedEntryB",
+    "PulseTablesEntryB",
+    "TravelerIdEntryB",
+    "SettingsEntryB",
+    "CanonicalPlaceMount",
+    "LocalSignalLayerB",
+  ]) expect(product).toContain(component)
+  expect(product).not.toMatch(/ConnectOverlays|GateOverlay|IdentityEntry|Labs|PlaceOverlay|OndoProvider/)
 })
 
-test("B-PROD-LOCAL-002 navigation preserves Explore and device-local collections without fixing a maximum tab count", () => {
+test("B-PROD-LOCAL-002 navigation keeps Tables, Traveler ID, and Settings as separate top-level destinations", () => {
   const app = appFile("features/ondo/app/ondo-app-b.tsx")
-  expect(app).toContain('ondo: "Explore"')
-  expect(app).toContain('ondo: "탐색"')
-  expect(app).toContain('my: "Saved"')
-  expect(app).toContain('my: "저장"')
+  expect(app).toContain('en: { ondo: "Explore", my: "Saved", tables: "Tables", id: "Traveler ID", settings: "Settings" }')
+  expect(app).toContain('ko: { ondo: "탐색", my: "저장", tables: "테이블", id: "여행자 ID", settings: "설정" }')
   expect(app).toContain("B_NAV")
+  const bNav = app.slice(app.indexOf("const B_NAV"), app.indexOf("const B_NAV_COPY"))
+  expect(bNav).toContain('id: "tables"')
+  expect(bNav).toContain('id: "id"')
+  expect(bNav).toContain('id: "settings"')
 })
 
 test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlist", () => {
@@ -34,7 +45,7 @@ test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlis
 
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue"]) {
+  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
     expect(deviceType).toContain(field)
   }
   for (const forbidden of ["account:", "person:", "age:", "paymentKyc:", "gate:", "tableMembershipById:", "reputation:", "stamps:", "profile:"]) {

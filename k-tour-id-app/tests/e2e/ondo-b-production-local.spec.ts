@@ -40,16 +40,21 @@ test.describe("ONDO B production local-device shell", () => {
     const nav = page.getByTestId("ondo-main-nav")
     await expect(nav.getByTestId("nav-ondo")).toContainText("Explore")
     await expect(nav.getByTestId("nav-my")).toContainText("Saved")
-    await expect(nav.getByTestId("nav-id")).toContainText("Settings")
-    await expect(nav.getByTestId("nav-tables")).toHaveCount(0)
-    for (const testId of ["ondo-gate-overlay", "ondo-after19-layer", "tables-entry", "checkout-overlay", "labs-overlay", "ondo-identity-entry", "ondo-trust-panel"]) {
+    await expect(nav.getByTestId("nav-tables")).toContainText("Tables")
+    await expect(nav.getByTestId("nav-id")).toContainText("Traveler ID")
+    await expect(nav.getByTestId("nav-settings")).toContainText("Settings")
+    for (const testId of ["ondo-gate-overlay", "ondo-after19-layer", "checkout-overlay", "labs-overlay", "ondo-identity-entry", "ondo-trust-panel"]) {
       await expect(page.getByTestId(testId)).toHaveCount(0)
     }
 
     await nav.getByTestId("nav-my").click()
     await expect(page.getByTestId("ondo-b-saved-entry")).toBeVisible()
     await expect(page.getByText(/stamp|trust|identity|KYC|Labs/i)).toHaveCount(0)
+    await nav.getByTestId("nav-tables").click()
+    await expect(page.getByTestId("tables-entry")).toBeVisible()
     await nav.getByTestId("nav-id").click()
+    await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
+    await nav.getByTestId("nav-settings").click()
     await expect(page.getByTestId("ondo-b-settings-entry")).toBeVisible()
     await expect(page.getByText("Daniel Kim")).toHaveCount(0)
   })

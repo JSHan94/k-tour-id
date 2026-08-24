@@ -59,6 +59,9 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
       "public/og-ondo-directory.png",
     ])
+    expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
+    expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
+    expect(files).toContain("features/ondo/local-signal-b/local-signal-layer-b.tsx")
   })
 
   test("B-STANDALONE-004 generated package stays isolated from retired providers and routes", async () => {
@@ -73,7 +76,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       .map((file) => readFileSync(resolve(STAGE_ROOT, file), "utf8"))
       .join("\n")
 
-    expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|demo-journey|mock-data/i)
+    expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|demo-journey|mock-data|features\/ondo\/(?:commerce|identity\/|labs|rewards|trust|fixtures)/i)
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
     expect(visibleSource).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)/i)
   })
@@ -134,6 +137,18 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/after19/after19-jit-b.tsx",
       "features/ondo/after19/after19-jit-b.module.css",
       "features/ondo/contracts/return-to-b.ts",
+    ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+  })
+
+  test("B-STANDALONE-009 current closure also ships B-native Local Signal and Traveler ID modules", async () => {
+    const { SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    for (const path of [
+      "features/ondo/identity-b/local-check-walkthrough-b.tsx",
+      "features/ondo/identity-b/local-check-walkthrough-b.module.css",
+      "features/ondo/identity-b/traveler-id-entry-b.tsx",
+      "features/ondo/identity-b/traveler-id-entry-b.module.css",
+      "features/ondo/local-signal-b/local-signal-layer-b.tsx",
+      "features/ondo/local-signal-b/local-signal-layer-b.module.css",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })
 })

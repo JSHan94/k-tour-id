@@ -72,7 +72,7 @@ test("B onboarding is fully Korean and resettable from local-device Settings", a
   await page.getByRole("button", { name: "비건", exact: true }).click()
   await page.getByTestId("onboarding-finish").click()
 
-  await page.getByTestId("nav-id").click()
+  await page.getByTestId("nav-settings").click()
   await page.getByTestId("ondo-b-onboarding-reset").click()
   await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
   await expect(page.getByRole("button", { name: "시작하기", exact: true })).toBeFocused()
