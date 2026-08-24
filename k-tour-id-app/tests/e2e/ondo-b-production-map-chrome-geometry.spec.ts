@@ -9,6 +9,11 @@ const VIEWPORTS = [
   { label: "desktop-801", width: 801, height: 1000 },
   { label: "desktop-1440", width: 1440, height: 1000 },
   { label: "landscape-844", width: 844, height: 390 },
+  { label: "landscape-threshold-667", width: 667, height: 501 },
+  { label: "landscape-threshold-768", width: 768, height: 501 },
+  { label: "landscape-844x520", width: 844, height: 520 },
+  { label: "landscape-844x568", width: 844, height: 568 },
+  { label: "landscape-wide-1280", width: 1280, height: 720 },
 ] as const
 
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
