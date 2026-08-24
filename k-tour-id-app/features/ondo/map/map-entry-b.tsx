@@ -121,15 +121,15 @@ const COPY = {
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
-const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; short: string }> = {
-  all: { en: "All", ko: "전체", short: "ALL" },
-  korean: { en: "Korean", ko: "한식", short: "K" },
-  casual: { en: "Quick service", ko: "분식·간편식", short: "Q" },
-  japanese: { en: "Japanese", ko: "일식", short: "J" },
-  chinese: { en: "Chinese", ko: "중식", short: "C" },
-  global: { en: "Western & international", ko: "경양식·외국음식", short: "G" },
-  night: { en: "Pub & café licence types", ko: "주점·카페 업태", short: "P" },
-  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", short: "S" },
+const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; compact: Record<OndoBLocale, string>; short: string }> = {
+  all: { en: "All", ko: "전체", compact: { en: "All", ko: "전체" }, short: "ALL" },
+  korean: { en: "Korean", ko: "한식", compact: { en: "Korean", ko: "한식" }, short: "K" },
+  casual: { en: "Quick service", ko: "분식·간편식", compact: { en: "Quick", ko: "분식" }, short: "Q" },
+  japanese: { en: "Japanese", ko: "일식", compact: { en: "Japanese", ko: "일식" }, short: "J" },
+  chinese: { en: "Chinese", ko: "중식", compact: { en: "Chinese", ko: "중식" }, short: "C" },
+  global: { en: "Western & international", ko: "경양식·외국음식", compact: { en: "Western", ko: "외국음식" }, short: "G" },
+  night: { en: "Pub & café licence types", ko: "주점·카페 업태", compact: { en: "Pub & café", ko: "주점·카페" }, short: "P" },
+  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", compact: { en: "Grills", ko: "구이·횟집" }, short: "S" },
 }
 
 const MAP_VENUES = Object.freeze([...CANONICAL_MAP_VENUES_COMPACT].sort((left, right) => (
@@ -316,6 +316,7 @@ export function MapEntryB() {
   const mapRef = useRef<MapLibreMap | null>(null)
   const filteredMapRef = useRef(false)
   const userLocationRef = useRef<UserLocation | null>(null)
+  const zoomFocusOwnedRef = useRef(false)
   const traversalFocusVersion = useRef(0)
   const retryFocusPending = useRef(false)
   const [city, setCity] = useState<CityId | null>(null)
@@ -334,6 +335,16 @@ export function MapEntryB() {
   const effectiveView: ViewMode = mapLayoutMode === "ultra-short" || mapLayoutMode === "measuring" ? "list" : view
 
   useLayoutEffect(() => {
+    const root = cityRootNode.current
+    if (!city || !root) return
+    const rememberFocusOwner = (event: FocusEvent) => {
+      zoomFocusOwnedRef.current = event.target instanceof Element && Boolean(event.target.closest(".maplibregl-ctrl-group"))
+    }
+    root.addEventListener("focusin", rememberFocusOwner)
+    return () => root.removeEventListener("focusin", rememberFocusOwner)
+  }, [city])
+
+  useLayoutEffect(() => {
     if (!city || !cityRootNode.current) return
     const root = cityRootNode.current
     let previousMode: MapLayoutMode = "measuring"
@@ -349,13 +360,16 @@ export function MapEntryB() {
         setMapRootBlockSize(height)
         return
       }
-      if (nextMode !== "spacious-map" && document.activeElement?.closest(".maplibregl-ctrl-group")) {
-        window.requestAnimationFrame(() => {
+      if (nextMode !== "spacious-map" && (zoomFocusOwnedRef.current || document.activeElement?.closest(".maplibregl-ctrl-group"))) {
+        zoomFocusOwnedRef.current = false
+        const focusVisibleSuccessor = () => {
           const target = nextMode === "ultra-short"
             ? document.querySelector<HTMLInputElement>("[data-testid='ondo-b-search']")
             : document.querySelector<HTMLButtonElement>("[data-testid='ondo-b-view-toggle']")
           target?.focus({ preventScroll: true })
-        })
+        }
+        focusVisibleSuccessor()
+        window.requestAnimationFrame(focusVisibleSuccessor)
       }
       previousMode = nextMode
       setMapRootBlockSize(height)
@@ -667,7 +681,7 @@ export function MapEntryB() {
           </div>
           <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
           <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
-            {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{CATEGORY[item][locale]}</button>)}
+            {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-label={CATEGORY[item][locale]} aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : CATEGORY[item][locale]}</button>)}
           </div>
         </header>
 

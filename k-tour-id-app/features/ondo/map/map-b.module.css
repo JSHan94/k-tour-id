@@ -448,6 +448,8 @@
   align-self: start;
   justify-self: end;
 }
+.locate:hover,
+.locate:active { transform: none !important; }
 
 .mapKey {
   position: static;
@@ -460,7 +462,7 @@
   justify-self: start;
   overflow: visible;
 }
-.mapKey > div > span { min-width: 0; white-space: normal; }
+.mapKey > div > span { min-width: 0; font-size: 12px; white-space: normal; }
 .mapKey > small {
   min-width: 0;
   overflow: visible;
