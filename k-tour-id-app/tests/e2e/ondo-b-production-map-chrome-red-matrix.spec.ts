@@ -301,7 +301,7 @@ async function auditCategoryReachability(
   for (let index = 0; index < count; index += 1) {
     const button = buttons.nth(index)
     await button.evaluate(async (node) => {
-      node.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant" as ScrollBehavior })
+      node.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant", container: "nearest" } as ScrollIntoViewOptions)
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
     })
     const [railBox, buttonBox] = await Promise.all([elementReceipt(rail), elementReceipt(button)])
@@ -313,6 +313,10 @@ async function auditCategoryReachability(
       issue(violations, scenario, "target-center-owner", label, hit.owns, `hit=${hit.hit}`)
     }
   }
+  await rail.evaluate(async (node) => {
+    node.scrollLeft = 0
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  })
 }
 
 async function auditKey(
