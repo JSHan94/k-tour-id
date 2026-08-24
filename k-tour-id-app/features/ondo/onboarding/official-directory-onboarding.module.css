@@ -18,6 +18,10 @@
   color: #171716;
 }
 .layer :focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 2px; }
+:global([data-variant="B"]) .layer:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ondo-focus, #1d66d1);
+}
 
 .header { position: relative; z-index: 1; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; min-height: 44px; }
 .language { display: grid; min-width: 44px; height: 44px; place-items: center; border: 1px solid #e5e3de; border-radius: 50%; background: transparent; color: #292927; font-size: 12px; font-weight: 780; letter-spacing: .04em; }

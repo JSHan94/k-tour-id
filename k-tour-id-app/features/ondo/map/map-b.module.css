@@ -46,7 +46,8 @@
 .search input { min-width: 0; min-height: 44px; flex: 1; border: 0; outline: 0; background: transparent; color: inherit; font: inherit; font-size: 14px; }
 .search input::placeholder { color: #66615a; opacity: 1; }
 .search button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
-.search:focus-within { border-color: var(--ondo-focus); box-shadow: 0 0 0 2px #fbfaf7, 0 0 0 4px var(--ondo-focus); }
+.search:has(input:focus-visible) { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
+.search input:focus-visible { outline: none; }
 .rail { box-sizing: border-box; display: flex; width: 100%; min-width: 0; max-width: 100%; align-items: center; gap: 2px; overflow-x: auto; overflow-y: hidden; border: 1px solid #e1dfda; border-radius: 13px; padding: 2px; background: rgb(255 255 255 / 91%); overscroll-behavior-inline: contain; scrollbar-width: none; }
 .rail button { min-width: 44px; min-height: 44px; flex: 0 0 auto; padding: 0 11px; border: 0; border-radius: 10px; background: transparent; color: #68635c; font-size: 12px; font-weight: 680; }
 .rail button[aria-pressed="true"] { background: #2b2926; color: #fff; }
@@ -474,6 +475,7 @@
 .attribution {
   position: static;
   grid-area: attribution;
+  box-sizing: border-box;
   display: flex;
   width: fit-content;
   max-width: 100%;
@@ -483,6 +485,10 @@
   align-self: end;
   gap: 0 12px;
   justify-self: start;
+  padding: 0 8px;
+  border: 1px solid #dedbd5;
+  border-radius: 11px;
+  background: #fbfaf7;
   color: #625e58;
   font-size: 12px;
   line-height: 1.35;
@@ -552,6 +558,8 @@
 /* When the measured width/height budget cannot hold the truth lanes, preserve
    the requested map view in state while presenting a compact, keyboard-ready
    list with one complete result row. */
+.compatRoot:has(> .ultraShort),
+.ultraShort { min-height: calc(216px + env(safe-area-inset-top)); }
 .ultraShort .map { display: none; }
 .ultraShort .mapLoading { display: none; }
 .ultraShort .cityHeader {

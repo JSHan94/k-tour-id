@@ -42,7 +42,16 @@ export function OfficialDirectoryOnboardingLayer() {
       const dialog = dialogRef.current
       if (!dialog) return
       dialog.scrollTop = 0
-      dialog.focus({ preventScroll: true })
+      const preferred = dialog.querySelector<HTMLElement>("[data-onboarding-initial-focus]")
+      const dialogBounds = dialog.getBoundingClientRect()
+      const preferredBounds = preferred?.getBoundingClientRect()
+      const preferredIsFullyVisible = Boolean(preferredBounds
+        && preferredBounds.top >= dialogBounds.top
+        && preferredBounds.right <= dialogBounds.right
+        && preferredBounds.bottom <= dialogBounds.bottom
+        && preferredBounds.left >= dialogBounds.left)
+      const focusTarget = preferredIsFullyVisible ? preferred : dialog
+      focusTarget?.focus({ preventScroll: true })
     })
     return () => window.cancelAnimationFrame(frame)
   }, [state.hydrated, state.onboarding])
