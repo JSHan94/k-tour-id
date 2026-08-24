@@ -64,6 +64,8 @@ test.describe("ONDO B standalone Sites packaging", () => {
 
     const files = filesBelow(STAGE_ROOT)
     expect(files).toContain("public/og-ondo-directory.png")
+    expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
+    expect(files).not.toContain("features/ondo/onboarding/onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
       "public/og-ondo-directory.png",
     ])
@@ -85,5 +87,35 @@ test.describe("ONDO B standalone Sites packaging", () => {
     expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|demo-journey|mock-data|features\/ondo\/(?:after19|commerce|connect|identity|labs|rewards|trust|fixtures)/i)
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
     expect(visibleSource).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)/i)
+  })
+
+  test("B-STANDALONE-005 scanner rejects exact legacy UI identifiers without banning erased truth types", async () => {
+    const { BANNED_ARTIFACT_TEXT } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    const blocked = [
+      "._personaSelected_a1b2c_1 { color: black }",
+      "{\"simulation\":null}",
+      "CheckoutOverlay",
+      "Payment KYC",
+      "ChatOverlay",
+      "RewardsEntry",
+      "LabsEntry",
+      "After19Layer",
+      "demo-journey",
+    ]
+    for (const sample of blocked) {
+      expect(BANNED_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(sample)), sample).toBe(true)
+    }
+
+    const erasedTypeOnly = "export type SourceTruth = { simulation: null; paymentSupport: null }"
+    expect(BANNED_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(erasedTypeOnly))).toBe(false)
+  })
+
+  test("B-STANDALONE-006 prepared onboarding CSS contains only the official-directory production surface", async () => {
+    await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_artifact" })
+    const css = readFileSync(resolve(STAGE_ROOT, "features/ondo/onboarding/official-directory-onboarding.module.css"), "utf8")
+    expect(css).toContain(".sourceIntro")
+    expect(css).toContain(":global([data-variant=\"B\"]) .layer")
+    expect(css).not.toMatch(/(?:^|[._-])persona(?:s|Selected|Icon)?(?:[._:{\s-]|$)/im)
+    expect(css).not.toMatch(/(?:KYC|payment|chat|reward|Labs|After19|demo|simulation)/i)
   })
 })
