@@ -7,7 +7,7 @@ import { CANONICAL_MAP_VENUES_COMPACT } from "../../lib/ondo/venues/map-data"
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const productionSurfaceFiles = [
   "features/ondo/map/map-entry-b.tsx",
-  "features/ondo/onboarding/onboarding-layer.tsx",
+  "features/ondo/onboarding/official-directory-onboarding.tsx",
   "features/ondo/onboarding/discovery-options.ts",
   "features/ondo/place/canonical-place-overlay.tsx",
 ]

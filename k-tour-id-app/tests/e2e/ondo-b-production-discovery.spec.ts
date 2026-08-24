@@ -32,7 +32,7 @@ test.describe("production official-source discovery", () => {
     await expect(onboarding).toContainText("400 public food-service licence records")
     await expect(onboarding).toContainText("Seoul and Busan")
     await expect(onboarding).not.toContainText(/demo|simulat|score|persona/i)
-    await onboarding.getByRole("button", { name: "KO" }).click()
+    await onboarding.getByRole("button", { name: "한국어로 보기" }).click()
     await expect(onboarding).toContainText("공공 일반음식점 인허가 기록 400개")
     await expect(onboarding).toContainText("서울과 부산")
     await expectNoSeriousAxe(page, "[data-testid='ondo-onboarding']")
@@ -56,8 +56,9 @@ test.describe("production official-source discovery", () => {
     await koreanCategory.click()
     await expect(koreanCategory).toHaveAttribute("aria-pressed", "true")
     await expect(page.getByText("50 official records", { exact: true })).toBeVisible()
+    await page.getByRole("button", { name: "All", exact: true }).click()
     await page.getByLabel("Place, district or category").fill("로바")
-    await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(1)
+    await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(1)
     await expect(page.getByTestId("ondo-b-venue-list")).toContainText("Official Korean source name")
     await expectNoSeriousAxe(page, "[data-testid='ondo-b-map-entry']")
   })
@@ -73,7 +74,7 @@ test.describe("production official-source discovery", () => {
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 15_000 })
     await expect(page.getByTestId("ondo-b-map-fallback-status")).toContainText("200 official records remain available")
-    await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(30)
+    await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
     failTiles = false
     await page.getByRole("button", { name: "Retry map" }).click()
     await expect(root).toHaveAttribute("data-map-attempt", "2")
@@ -98,4 +99,3 @@ test.describe("production official-source discovery", () => {
     await expectNoSeriousAxe(page, "[data-testid='canonical-place-overlay']")
   })
 })
-
