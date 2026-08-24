@@ -147,7 +147,7 @@ export function CanonicalPlaceOverlay() {
     return () => window.cancelAnimationFrame(frame)
   }, [expanded, venueId])
 
-  useModalIsolation(expanded && state.tab === "ondo" && Boolean(venueId), layerRef)
+  useModalIsolation(state.tab === "ondo" && Boolean(venueId), expanded ? layerRef : peekRef)
 
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
@@ -243,7 +243,7 @@ export function CanonicalPlaceOverlay() {
   }
 
   if (!expanded) return (
-    <div ref={peekRef} className={styles.peek} role="dialog" aria-modal="false" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
+    <div ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>

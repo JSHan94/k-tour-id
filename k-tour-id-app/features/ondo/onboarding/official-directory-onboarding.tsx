@@ -38,7 +38,12 @@ export function OfficialDirectoryOnboardingLayer() {
 
   useEffect(() => {
     if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return
-    const frame = window.requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("[data-onboarding-initial-focus]")?.focus())
+    const frame = window.requestAnimationFrame(() => {
+      const dialog = dialogRef.current
+      if (!dialog) return
+      dialog.scrollTop = 0
+      dialog.focus({ preventScroll: true })
+    })
     return () => window.cancelAnimationFrame(frame)
   }, [state.hydrated, state.onboarding])
 
@@ -64,6 +69,7 @@ export function OfficialDirectoryOnboardingLayer() {
     const first = focusable[0]
     const last = focusable.at(-1)
     if (!first || !last) return
+    if (document.activeElement === dialogRef.current) { event.preventDefault(); (event.shiftKey ? last : first).focus(); return }
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
   }
