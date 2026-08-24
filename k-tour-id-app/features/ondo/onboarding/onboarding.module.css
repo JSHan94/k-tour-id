@@ -40,6 +40,10 @@
 .value h1, .heading h1 { margin: 0; font-family: inherit; font-weight: 720; letter-spacing: -.04em; word-break: keep-all; }
 .value h1 { max-width: 350px; font-size: clamp(30px, 8vw, 39px); line-height: 1.18; }
 .lead { max-width: 330px; margin: 20px 0 30px; color: #74716b; font-size: 14px; line-height: 1.68; }
+.sourceIntro { display: grid; gap: 0; margin-bottom: 30px; border-top: 1px solid #e5e3de; }
+.sourceIntro p { display: grid; gap: 5px; margin: 0; padding: 14px 0; border-bottom: 1px solid #e5e3de; }
+.sourceIntro strong { color: #34322f; font-size: 12px; }
+.sourceIntro span { color: #6f6c66; font-size: 12px; line-height: 1.58; }
 .signal { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 16px; margin-bottom: 36px; padding: 16px 0; border-top: 1px solid #e5e3de; border-bottom: 1px solid #e5e3de; }
 .signal span { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid #cecbc5; border-radius: 50%; background: #fff; color: #252523; font-size: 14px; font-weight: 760; }
 .signal p { margin: 0; color: #6f6c66; font-size: 12px; line-height: 1.6; }

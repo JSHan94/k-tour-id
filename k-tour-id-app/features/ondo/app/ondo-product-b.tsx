@@ -8,7 +8,7 @@ import { GateOverlay } from "../identity/gate-overlay"
 import { IdentityEntry } from "../identity/identity-entry"
 import { MapEntryB } from "../map/map-entry-b"
 import { MyEntry } from "../my/my-entry"
-import { OnboardingLayer } from "../onboarding/onboarding-layer"
+import { OfficialDirectoryOnboardingLayer } from "../onboarding/official-directory-onboarding"
 import { PlaceOverlay } from "../place/place-overlay"
 import { CanonicalPlaceMount } from "../place/canonical-place-mount"
 import { OndoApp } from "./ondo-app"
@@ -20,7 +20,7 @@ export function OndoProductB() {
       my: <MyEntry />,
       tables: <TablesEntry />,
       id: <IdentityEntry />,
-      overlays: <><After19VenueReturn /><CanonicalPlaceMount /><PlaceOverlay /><ConnectOverlays /><After19Layer variant="B" /><OnboardingLayer /><GateOverlay /></>,
+      overlays: <><After19VenueReturn /><CanonicalPlaceMount /><PlaceOverlay /><ConnectOverlays /><After19Layer variant="B" /><OfficialDirectoryOnboardingLayer /><GateOverlay /></>,
     }} />
   )
 }
