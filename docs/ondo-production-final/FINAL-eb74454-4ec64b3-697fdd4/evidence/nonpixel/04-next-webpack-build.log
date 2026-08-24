@@ -1,0 +1,56 @@
+START 2026-08-24T11:40:21Z
+▲ Next.js 16.2.6 (webpack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.1s
+  Running TypeScript ...
+  Finished TypeScript in 5.4s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/28) ...
+  Generating static pages using 7 workers (7/28) 
+  Generating static pages using 7 workers (14/28) 
+  Generating static pages using 7 workers (21/28) 
+✓ Generating static pages using 7 workers (28/28) in 226ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /ai
+├ ○ /alerts
+├ ƒ /api/ask
+├ ƒ /api/chat
+├ ƒ /api/ondo/venues/[venueId]
+├ ○ /architecture
+├ ○ /ask
+├ ○ /benefits
+├ ○ /connect
+├ ○ /connect/chat
+├ ○ /demo
+├ ○ /evidence
+├ ○ /explore
+├ ƒ /explore/[id]
+├ ○ /help
+├ ○ /icon.svg
+├ ○ /journey
+├ ○ /onboarding
+├ ○ /ondo
+├ ƒ /ondo-b
+├ ƒ /orders/[id]
+├ ○ /partner/settlements
+├ ○ /partner/verify
+├ ○ /pass
+├ ○ /present
+├ ○ /profile
+├ ƒ /services
+├ ƒ /services/[id]
+├ ƒ /services/orders/[orderId]
+└ ○ /wallet
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+END 2026-08-24T11:40:41Z
+EXIT 0

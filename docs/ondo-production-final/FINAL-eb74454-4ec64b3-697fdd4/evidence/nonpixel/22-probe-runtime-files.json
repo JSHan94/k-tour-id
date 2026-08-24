@@ -1,0 +1,12 @@
+{
+  "sealedBuildFiles": 29,
+  "currentFilesAfterProbe": 33,
+  "extraProbeRuntimeFiles": [
+    "server/.wrangler/cache/cf.json",
+    "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite",
+    "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-shm",
+    "server/.wrangler/state/v3/cache/miniflare-CacheObject/metadata.sqlite-wal"
+  ],
+  "missingSealedFiles": [],
+  "classification": "Wrangler dev probe runtime cache; not part of scanner sealed build census"
+}

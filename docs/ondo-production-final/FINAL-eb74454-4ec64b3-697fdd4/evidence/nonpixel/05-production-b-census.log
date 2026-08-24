@@ -1,0 +1,91 @@
+START 2026-08-24T11:41:00Z
+Listing tests:
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 en
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 ko
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 en
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 ko
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 en
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 ko
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:56:5 › ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 390x844
+  [mobile-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:56:5 › ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 844x390
+  [mobile-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:28:3 › production official-source discovery › first run is a short bilingual source introduction
+  [mobile-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:48:3 › production official-source discovery › city, official category, search, list and legacy URL cleanup remain usable
+  [mobile-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:71:3 › production official-source discovery › map failure keeps the same official directory and retry is real
+  [mobile-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:88:3 › production official-source discovery › place detail shows sourced facts, unknowns, directions and no unsupported actions
+  [mobile-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:29:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-000 short-landscape onboarding starts at the source introduction
+  [mobile-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:58:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-001 category controls meet the 44px target in EN and KO
+  [mobile-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:73:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-002 empty directory results preserve list semantics and contrast
+  [mobile-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:84:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-003 saved-place metadata stays at the 12px production floor
+  [mobile-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:98:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener
+  [mobile-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:117:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-005 place summary isolates the underlying directory
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:36:3 › ONDO B production local-device shell › B-PROD-E2E-001 synthetic session and QA query cannot expose external-product surfaces
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:57:3 › ONDO B production local-device shell › B-PROD-E2E-002 a private note persists locally and never creates activity state
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:77:3 › ONDO B production local-device shell › B-PROD-E2E-003 a real storage exception reports failure and keeps the draft
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:95:3 › ONDO B production local-device shell › B-PROD-SEC-001 visiting B does not read-rewrite or delete A-owned storage
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:133:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-002 social metadata rejects forwarded-host and scheme poisoning
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:146:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-002B invalid local ports fail closed without dropping metadata
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:158:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-003 HTML responses apply baseline browser security policy
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:170:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-004 official-detail failure is announced and directly retryable
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:191:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-005 location control discloses external map processing before permission
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:204:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-006 directory search bounds pasted input before filtering
+  [mobile-chromium] › tests/e2e/ondo-b-production-local.spec.ts:214:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-007 B metadata does not inherit the stale A canonical URL
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts:155:5 › ONDO B production map chrome geometry › EN keeps truthful map chrome independent across production viewports
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts:155:5 › ONDO B production map chrome geometry › KO keeps truthful map chrome independent across production viewports
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts:1180:3 › ONDO B production map chrome RED matrix › B-PROD-MAP-CHROME-RED-001 seals map chrome across locales, states and structural seams
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:163:3 › ONDO B structural production map chrome › resize hands zoom focus to a visible successor without stealing unrelated focus
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN idle keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN ready keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN denied keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN offline keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO idle keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO ready keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO denied keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO offline keeps every actual-root lane truthful across the exact matrix
+  [mobile-chromium] › tests/e2e/ondo-b-production-url-canonicalization.spec.ts:33:5 › ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving EN discovery history
+  [mobile-chromium] › tests/e2e/ondo-b-production-url-canonicalization.spec.ts:33:5 › ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving KO discovery history
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 en
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 ko
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 en
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 ko
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 en
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:29:7 › ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 ko
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:56:5 › ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 390x844
+  [desktop-chromium] › tests/e2e/ondo-b-production-disclosure-focus.spec.ts:56:5 › ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 844x390
+  [desktop-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:28:3 › production official-source discovery › first run is a short bilingual source introduction
+  [desktop-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:48:3 › production official-source discovery › city, official category, search, list and legacy URL cleanup remain usable
+  [desktop-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:71:3 › production official-source discovery › map failure keeps the same official directory and retry is real
+  [desktop-chromium] › tests/e2e/ondo-b-production-discovery.spec.ts:88:3 › production official-source discovery › place detail shows sourced facts, unknowns, directions and no unsupported actions
+  [desktop-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:29:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-000 short-landscape onboarding starts at the source introduction
+  [desktop-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:58:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-001 category controls meet the 44px target in EN and KO
+  [desktop-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:73:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-002 empty directory results preserve list semantics and contrast
+  [desktop-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:84:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-003 saved-place metadata stays at the 12px production floor
+  [desktop-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:98:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener
+  [desktop-chromium] › tests/e2e/ondo-b-production-inclusive.spec.ts:117:3 › ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-005 place summary isolates the underlying directory
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:36:3 › ONDO B production local-device shell › B-PROD-E2E-001 synthetic session and QA query cannot expose external-product surfaces
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:57:3 › ONDO B production local-device shell › B-PROD-E2E-002 a private note persists locally and never creates activity state
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:77:3 › ONDO B production local-device shell › B-PROD-E2E-003 a real storage exception reports failure and keeps the draft
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:95:3 › ONDO B production local-device shell › B-PROD-SEC-001 visiting B does not read-rewrite or delete A-owned storage
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:133:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-002 social metadata rejects forwarded-host and scheme poisoning
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:146:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-002B invalid local ports fail closed without dropping metadata
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:158:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-003 HTML responses apply baseline browser security policy
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:170:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-004 official-detail failure is announced and directly retryable
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:191:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-005 location control discloses external map processing before permission
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:204:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-006 directory search bounds pasted input before filtering
+  [desktop-chromium] › tests/e2e/ondo-b-production-local.spec.ts:214:3 › ONDO B production security and resilience boundaries › B-PROD-SEC-007 B metadata does not inherit the stale A canonical URL
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts:155:5 › ONDO B production map chrome geometry › EN keeps truthful map chrome independent across production viewports
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts:155:5 › ONDO B production map chrome geometry › KO keeps truthful map chrome independent across production viewports
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts:1180:3 › ONDO B production map chrome RED matrix › B-PROD-MAP-CHROME-RED-001 seals map chrome across locales, states and structural seams
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:163:3 › ONDO B structural production map chrome › resize hands zoom focus to a visible successor without stealing unrelated focus
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN idle keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN ready keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN denied keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › EN offline keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO idle keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO ready keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO denied keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-map-chrome-structural.spec.ts:199:7 › ONDO B structural production map chrome › KO offline keeps every actual-root lane truthful across the exact matrix
+  [desktop-chromium] › tests/e2e/ondo-b-production-url-canonicalization.spec.ts:33:5 › ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving EN discovery history
+  [desktop-chromium] › tests/e2e/ondo-b-production-url-canonicalization.spec.ts:33:5 › ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving KO discovery history
+Total: 86 tests in 8 files
+END 2026-08-24T11:41:01Z
+EXIT 0

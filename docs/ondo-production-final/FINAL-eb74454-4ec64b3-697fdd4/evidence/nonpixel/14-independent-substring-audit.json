@@ -1,0 +1,82 @@
+{
+  "root": ".ondo-b-standalone/dist",
+  "terms": [
+    "persona",
+    "KYC",
+    "chat",
+    "Labs",
+    "After19",
+    "demo",
+    "simulation",
+    "fixture"
+  ],
+  "textFiles": 26,
+  "totalTermOccurrences": 7,
+  "matchingFileTerms": 4,
+  "cssTermOccurrences": 0,
+  "matches": [
+    {
+      "file": "server/index.js",
+      "term": "persona",
+      "count": 2,
+      "occurrences": [
+        {
+          "matched": "persona",
+          "offset": 22983,
+          "context": ". An attacker could forge these to influence routing or\n* impersonate internal data fetches.\n*\n* Ported from Next.js `INTERNAL_"
+        },
+        {
+          "matched": "persona",
+          "offset": 67489,
+          "context": " forged by\n* an external attacker to influence routing or impersonate internal state.\n*\n* Must be called at every request entry"
+        }
+      ]
+    },
+    {
+      "file": "server/index.js",
+      "term": "chat",
+      "count": 1,
+      "occurrences": [
+        {
+          "matched": "chat",
+          "offset": 1826262,
+          "context": "\n\tif (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.phenixnet-jl\\.chatgpt\\.site$/.test(host)) return `https://${host}`;\n\treturn \"h"
+        }
+      ]
+    },
+    {
+      "file": "server/index.js",
+      "term": "demo",
+      "count": 2,
+      "occurrences": [
+        {
+          "matched": "deMo",
+          "offset": 1506,
+          "context": ".enumerable\n\t\t});\n\t}\n\treturn to;\n};\nvar __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf"
+        },
+        {
+          "matched": "deMo",
+          "offset": 1599,
+          "context": "!= null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, \"default\","
+        }
+      ]
+    },
+    {
+      "file": "server/ssr/index.js",
+      "term": "demo",
+      "count": 2,
+      "occurrences": [
+        {
+          "matched": "deMo",
+          "offset": 1328,
+          "context": ".enumerable\n\t\t});\n\t}\n\treturn to;\n};\nvar __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf"
+        },
+        {
+          "matched": "deMo",
+          "offset": 1421,
+          "context": "!= null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, \"default\","
+        }
+      ]
+    }
+  ]
+}

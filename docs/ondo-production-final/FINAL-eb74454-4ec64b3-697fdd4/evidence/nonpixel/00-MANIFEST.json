@@ -1,0 +1,164 @@
+{
+  "status": "PASS",
+  "sealedAt": "2026-08-24T11:56:22.633Z",
+  "identity": {
+    "commit": "4ec64b3de02fdd8f5298a38dde0c84f47eaa3dc6",
+    "tree": "0ccf400f61d264e5084862510cee140e3d9786d1",
+    "equivalentSourceCommit": "a6d92d93525dcb093c19876f3794686df48a9876",
+    "equivalentSourceTree": "0ccf400f61d264e5084862510cee140e3d9786d1",
+    "productBoundary": "1129f65964de08f86cb41e29c9821632ff05f6ff",
+    "detached": true
+  },
+  "environment": {
+    "node": "v25.9.0",
+    "pnpm": "10.8.0",
+    "next": "16.2.6",
+    "playwright": "1.62.1",
+    "chromium": "151.0.7922.34",
+    "lockfileSha256": "95059533d22a161798cef057460c49034aef0b54efdd6c292c9d25d67d5062bb",
+    "ciUnset": true
+  },
+  "gates": {
+    "frozenInstall": {
+      "attempts": 1,
+      "passed": true
+    },
+    "typecheck": {
+      "attempts": 1,
+      "passed": true
+    },
+    "optimizedWebpackBuild": {
+      "attempts": 1,
+      "passed": true,
+      "routes": 30
+    },
+    "contracts": {
+      "attempts": 1,
+      "selected": 65,
+      "passed": 65,
+      "skipped": 0,
+      "failed": 0
+    },
+    "productionB": {
+      "attempts": 1,
+      "selection": "tests/e2e/ondo-b-production-*.spec.ts; mobile-chromium + desktop-chromium",
+      "files": 8,
+      "selected": 86,
+      "passed": 75,
+      "skipped": 11,
+      "failed": 0,
+      "workers": 1,
+      "retries": 0,
+      "redMatrix": {
+        "violations": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "protectedA": {
+      "attempts": 1,
+      "selection": [
+        "ondo-commerce-browser.spec.ts",
+        "ondo-connect-browser.spec.ts",
+        "ondo-profile.spec.ts"
+      ],
+      "files": 3,
+      "selected": 22,
+      "passed": 22,
+      "skipped": 0,
+      "failed": 0,
+      "workers": 1,
+      "retries": 0
+    },
+    "browserSmoke": {
+      "browserPluginAvailable": false,
+      "fallback": "playwright",
+      "routes": {
+        "/": 200,
+        "/ondo": 200,
+        "/ondo-b": 200
+      },
+      "pageErrors": 0
+    },
+    "standalone": {
+      "build": true,
+      "scan": true,
+      "probe": {
+        "rootRedirect": 307,
+        "page": 200,
+        "blocked404": 26,
+        "assets200": 7
+      },
+      "routeFiles": 4,
+      "emittedRoutes": [
+        "/",
+        "/api/ondo/venues/:venueId",
+        "/ondo-b"
+      ],
+      "artifact": {
+        "files": 29,
+        "bytes": 7133962,
+        "javascriptFiles": 14,
+        "cssFiles": 4,
+        "imageFiles": 1
+      },
+      "exactProductTokenMatches": 0,
+      "cssTokenOrLegacySelectorMatches": 0,
+      "rawSubstringOccurrences": 7,
+      "rawSubstringClassification": {
+        "server/index.js persona": 2,
+        "server/index.js chat": 1,
+        "server/index.js deMo": 2,
+        "server/ssr/index.js deMo": 2
+      }
+    }
+  },
+  "health": {
+    "logicalSamples": 228,
+    "successful200": 225,
+    "startupConnectionFailures": 3,
+    "failuresAfterFirstSuccess": 0,
+    "firstSuccess": "2026-08-24T11:41:36Z",
+    "lastSuccess": "2026-08-24T11:53:57Z",
+    "byPath": {
+      "/": {
+        "count": 75,
+        "minSeconds": 0.000992,
+        "maxSeconds": 0.024261,
+        "averageSeconds": 0.002208
+      },
+      "/ondo": {
+        "count": 75,
+        "minSeconds": 0.000643,
+        "maxSeconds": 0.005787,
+        "averageSeconds": 0.001627
+      },
+      "/ondo-b": {
+        "count": 75,
+        "minSeconds": 0.003162,
+        "maxSeconds": 0.067503,
+        "averageSeconds": 0.00593
+      }
+    },
+    "classification": "three monitor-start race failures before Next ready; every post-ready sample returned 200"
+  },
+  "teardown": {
+    "ownProductionPort": 57819,
+    "ownProbePort": 62125,
+    "portsFree": true,
+    "ownProcessesStopped": true,
+    "worktreeClean": true
+  },
+  "classifiedAnomalies": [
+    "The health monitor started concurrently with Next and recorded three connection refusals at 11:41:26Z before readiness; all 225 post-ready samples were HTTP 200.",
+    "A raw substring audit found seven toolchain/infrastructure fragments only: persona inside impersonate (2), chat inside chatgpt.site (1), and deMo inside __toESM (4). Exact product-token and CSS scans were zero.",
+    "Wrangler probe runtime created four ignored cache files under dist/server/.wrangler after the sealed 29-file build census; the 29 original artifact files remain present and are separately hashed.",
+    "Vinext emitted a non-failing >500 kB chunk-size advisory."
+  ],
+  "actionsNotTaken": [
+    "deploy",
+    "create site",
+    "push",
+    "modify user root",
+    "rerun product tests"
+  ]
+}

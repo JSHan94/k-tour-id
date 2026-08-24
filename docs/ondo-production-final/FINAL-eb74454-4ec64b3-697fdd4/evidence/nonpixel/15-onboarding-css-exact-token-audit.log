@@ -1,0 +1,18 @@
+SOURCE/STAGED ONBOARDING HASHES
+perl: warning: Setting locale failed.
+perl: warning: Please check that your locale settings:
+	LC_ALL = "C.UTF-8",
+	LC_CTYPE = "C.UTF-8",
+	LANG = "C.UTF-8"
+    are supported and installed on your system.
+perl: warning: Falling back to the standard locale ("C").
+1c0c9e29d76cec1f4795e61bcb08231b7d2e0c79b94de6c8f8b832835ca9fb58  features/ondo/onboarding/official-directory-onboarding.tsx
+cadc368c429139bdb3c9e22a24c261845e9b6099b567b17b2bdecabc0ec08573  features/ondo/onboarding/official-directory-onboarding.module.css
+1c0c9e29d76cec1f4795e61bcb08231b7d2e0c79b94de6c8f8b832835ca9fb58  .ondo-b-standalone/features/ondo/onboarding/official-directory-onboarding.tsx
+cadc368c429139bdb3c9e22a24c261845e9b6099b567b17b2bdecabc0ec08573  .ondo-b-standalone/features/ondo/onboarding/official-directory-onboarding.module.css
+DEDICATED ONBOARDING FORBIDDEN TOKENS
+NO_MATCHES
+DIST CSS FORBIDDEN TOKENS/SELECTORS
+NO_MATCHES
+DIST EXACT PRODUCT TOKENS ALL TEXT
+NO_MATCHES

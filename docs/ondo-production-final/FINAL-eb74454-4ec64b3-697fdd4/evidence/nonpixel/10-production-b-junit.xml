@@ -1,0 +1,279 @@
+<testsuites id="" name="" tests="86" failures="0" skipped="11" errors="0" time="595.4565110000001">
+<testsuite name="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="8" failures="0" skipped="0" time="20.485" errors="0">
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 en" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="4.047">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 ko" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.796">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 en" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="3.108">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 ko" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.768">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 en" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="3.145">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 ko" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.961">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 390x844" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="0.891">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 844x390" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="0.769">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-discovery.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="4" failures="0" skipped="0" time="4.772" errors="0">
+<testcase name="production official-source discovery › first run is a short bilingual source introduction" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.024">
+</testcase>
+<testcase name="production official-source discovery › city, official category, search, list and legacy URL cleanup remain usable" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.015">
+</testcase>
+<testcase name="production official-source discovery › map failure keeps the same official directory and retry is real" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.363">
+</testcase>
+<testcase name="production official-source discovery › place detail shows sourced facts, unknowns, directions and no unsupported actions" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.37">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-inclusive.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="6" failures="0" skipped="0" time="4.924" errors="0">
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-000 short-landscape onboarding starts at the source introduction" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.661">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-001 category controls meet the 44px target in EN and KO" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.743">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-002 empty directory results preserve list semantics and contrast" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.884">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-003 saved-place metadata stays at the 12px production floor" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.922">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.747">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-005 place summary isolates the underlying directory" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.967">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-local.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="11" failures="0" skipped="0" time="6.91" errors="0">
+<testcase name="ONDO B production local-device shell › B-PROD-E2E-001 synthetic session and QA query cannot expose external-product surfaces" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.685">
+</testcase>
+<testcase name="ONDO B production local-device shell › B-PROD-E2E-002 a private note persists locally and never creates activity state" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.785">
+</testcase>
+<testcase name="ONDO B production local-device shell › B-PROD-E2E-003 a real storage exception reports failure and keeps the draft" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.71">
+</testcase>
+<testcase name="ONDO B production local-device shell › B-PROD-SEC-001 visiting B does not read-rewrite or delete A-owned storage" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.067">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-002 social metadata rejects forwarded-host and scheme poisoning" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.016">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-002B invalid local ports fail closed without dropping metadata" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.016">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-003 HTML responses apply baseline browser security policy" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.008">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-004 official-detail failure is announced and directly retryable" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.243">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-005 location control discloses external map processing before permission" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.24">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-006 directory search bounds pasted input before filtering" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.133">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-007 B metadata does not inherit the stale A canonical URL" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.007">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="2" failures="0" skipped="2" time="0.194" errors="0">
+<testcase name="ONDO B production map chrome geometry › EN keeps truthful map chrome independent across production viewports" classname="tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts">
+<properties>
+<property name="skip" value="The explicit viewport matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B production map chrome geometry › KO keeps truthful map chrome independent across production viewports" classname="tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts">
+<properties>
+<property name="skip" value="The explicit viewport matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="1" failures="0" skipped="1" time="0" errors="0">
+<testcase name="ONDO B production map chrome RED matrix › B-PROD-MAP-CHROME-RED-001 seals map chrome across locales, states and structural seams" classname="tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts">
+<properties>
+<property name="skip" value="The explicit viewport matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="9" failures="0" skipped="8" time="2.327" errors="0">
+<testcase name="ONDO B structural production map chrome › resize hands zoom focus to a visible successor without stealing unrelated focus" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="1.494">
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN idle keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN ready keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN denied keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN offline keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO idle keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO ready keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO denied keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO offline keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts">
+<properties>
+<property name="skip" value="The explicit matrix has one Chromium owner.">
+</property>
+</properties>
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-url-canonicalization.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="mobile-chromium" tests="2" failures="0" skipped="0" time="1.676" errors="0">
+<testcase name="ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving EN discovery history" classname="tests/e2e/ondo-b-production-url-canonicalization.spec.ts" time="0.793">
+</testcase>
+<testcase name="ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving KO discovery history" classname="tests/e2e/ondo-b-production-url-canonicalization.spec.ts" time="0.883">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="8" failures="0" skipped="0" time="17.039" errors="0">
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 en" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.754">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 360x800 ko" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.691">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 en" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.582">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 390x844 ko" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.297">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 en" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.67">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › location message does not cover the map key at 430x932 ko" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="2.57">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 390x844" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="0.791">
+</testcase>
+<testcase name="ONDO B production disclosure and focus boundaries › closing a place restores its exact list opener at 844x390" classname="tests/e2e/ondo-b-production-disclosure-focus.spec.ts" time="0.684">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-discovery.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="4" failures="0" skipped="0" time="4.612" errors="0">
+<testcase name="production official-source discovery › first run is a short bilingual source introduction" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.003">
+</testcase>
+<testcase name="production official-source discovery › city, official category, search, list and legacy URL cleanup remain usable" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.091">
+</testcase>
+<testcase name="production official-source discovery › map failure keeps the same official directory and retry is real" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.138">
+</testcase>
+<testcase name="production official-source discovery › place detail shows sourced facts, unknowns, directions and no unsupported actions" classname="tests/e2e/ondo-b-production-discovery.spec.ts" time="1.38">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-inclusive.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="6" failures="0" skipped="0" time="4.84" errors="0">
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-000 short-landscape onboarding starts at the source introduction" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.609">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-001 category controls meet the 44px target in EN and KO" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.643">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-002 empty directory results preserve list semantics and contrast" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.891">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-003 saved-place metadata stays at the 12px production floor" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.937">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.765">
+</testcase>
+<testcase name="ONDO B production inclusive surfaces › B-PROD-INCLUSIVE-005 place summary isolates the underlying directory" classname="tests/e2e/ondo-b-production-inclusive.spec.ts" time="0.995">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-local.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="11" failures="0" skipped="0" time="6.808" errors="0">
+<testcase name="ONDO B production local-device shell › B-PROD-E2E-001 synthetic session and QA query cannot expose external-product surfaces" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.762">
+</testcase>
+<testcase name="ONDO B production local-device shell › B-PROD-E2E-002 a private note persists locally and never creates activity state" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.733">
+</testcase>
+<testcase name="ONDO B production local-device shell › B-PROD-E2E-003 a real storage exception reports failure and keeps the draft" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.784">
+</testcase>
+<testcase name="ONDO B production local-device shell › B-PROD-SEC-001 visiting B does not read-rewrite or delete A-owned storage" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.008">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-002 social metadata rejects forwarded-host and scheme poisoning" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.012">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-002B invalid local ports fail closed without dropping metadata" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.016">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-003 HTML responses apply baseline browser security policy" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.006">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-004 official-detail failure is announced and directly retryable" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.241">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-005 location control discloses external map processing before permission" classname="tests/e2e/ondo-b-production-local.spec.ts" time="1.348">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-006 directory search bounds pasted input before filtering" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.888">
+</testcase>
+<testcase name="ONDO B production security and resilience boundaries › B-PROD-SEC-007 B metadata does not inherit the stale A canonical URL" classname="tests/e2e/ondo-b-production-local.spec.ts" time="0.01">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="2" failures="0" skipped="0" time="33.117" errors="0">
+<testcase name="ONDO B production map chrome geometry › EN keeps truthful map chrome independent across production viewports" classname="tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts" time="16.543">
+</testcase>
+<testcase name="ONDO B production map chrome geometry › KO keeps truthful map chrome independent across production viewports" classname="tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts" time="16.574">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="1" failures="0" skipped="0" time="313.046" errors="0">
+<testcase name="ONDO B production map chrome RED matrix › B-PROD-MAP-CHROME-RED-001 seals map chrome across locales, states and structural seams" classname="tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts" time="313.046">
+<system-out>
+<![CDATA[MAP_CHROME_RED_HASH 4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945
+MAP_CHROME_RED_COUNT 0
+MAP_CHROME_RED_RULE_COUNTS {}
+MAP_CHROME_RED_EXACT []
+]]>
+</system-out>
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="9" failures="0" skipped="0" time="170.863" errors="0">
+<testcase name="ONDO B structural production map chrome › resize hands zoom focus to a visible successor without stealing unrelated focus" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="0.98">
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN idle keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="20.426">
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN ready keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="23.068">
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN denied keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="20.926">
+</testcase>
+<testcase name="ONDO B structural production map chrome › EN offline keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="20.606">
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO idle keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="20.14">
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO ready keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="23.557">
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO denied keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="20.667">
+</testcase>
+<testcase name="ONDO B structural production map chrome › KO offline keeps every actual-root lane truthful across the exact matrix" classname="tests/e2e/ondo-b-production-map-chrome-structural.spec.ts" time="20.493">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-b-production-url-canonicalization.spec.ts" timestamp="2026-08-24T11:41:54.042Z" hostname="desktop-chromium" tests="2" failures="0" skipped="0" time="1.481" errors="0">
+<testcase name="ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving EN discovery history" classname="tests/e2e/ondo-b-production-url-canonicalization.spec.ts" time="0.763">
+</testcase>
+<testcase name="ONDO B production discovery URL canonicalization › strips every non-discovery key and hash while preserving KO discovery history" classname="tests/e2e/ondo-b-production-url-canonicalization.spec.ts" time="0.718">
+</testcase>
+</testsuite>
+</testsuites>

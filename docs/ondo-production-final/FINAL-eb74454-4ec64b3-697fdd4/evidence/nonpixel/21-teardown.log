@@ -1,0 +1,6 @@
+commit=4ec64b3de02fdd8f5298a38dde0c84f47eaa3dc6
+tree=0ccf400f61d264e5084862510cee140e3d9786d1
+worktree_clean=true
+git_diff_exit=0
+production_port_free=true
+probe_port_free=true

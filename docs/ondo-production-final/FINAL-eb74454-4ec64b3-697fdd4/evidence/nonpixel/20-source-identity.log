@@ -1,0 +1,20 @@
+commit=4ec64b3de02fdd8f5298a38dde0c84f47eaa3dc6
+tree=0ccf400f61d264e5084862510cee140e3d9786d1
+parents=0f5e10d5e290d94acd558752848c7d18de5c22d4
+decorations=HEAD
+subject=fix(ondo-b): strip legacy UI from standalone
+equivalent_source=a6d92d93525dcb093c19876f3794686df48a9876
+equivalent_source_tree=0ccf400f61d264e5084862510cee140e3d9786d1
+byte_equivalence_exit=0
+product_boundary_ancestor_exit=0
+changes_since_product_boundary
+M	k-tour-id-app/features/ondo/map/b-discovery-history.ts
+A	k-tour-id-app/features/ondo/onboarding/official-directory-onboarding.module.css
+M	k-tour-id-app/features/ondo/onboarding/official-directory-onboarding.tsx
+M	k-tour-id-app/scripts/ondo-b-standalone/policy.mjs
+M	k-tour-id-app/scripts/ondo-b-standalone/prepare.mjs
+M	k-tour-id-app/tests/contracts/ondo-b-standalone-packaging.spec.ts
+M	k-tour-id-app/tests/e2e/ondo-b-production-disclosure-focus.spec.ts
+M	k-tour-id-app/tests/e2e/ondo-b-production-map-chrome-geometry.spec.ts
+M	k-tour-id-app/tests/e2e/ondo-b-production-map-chrome-red-matrix.spec.ts
+A	k-tour-id-app/tests/e2e/ondo-b-production-url-canonicalization.spec.ts

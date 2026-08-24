@@ -1,0 +1,61 @@
+{
+  "provenance": {
+    "captureBaseSha": "5eedc48fad010f935dc0c439d8168bb2781c32fb",
+    "captureHarnessSha": "975444adae5abfbccacd4d105bc246bc1fa733a6",
+    "captureEvidenceSha": "c486967aab85c1a4b2c4ffcd0ec46281307e449e",
+    "successorEvidenceSha": "1ea13ec97c21f8b900b7a36a89c478a733e1cf25",
+    "finalBaseSha": "4ec64b3de02fdd8f5298a38dde0c84f47eaa3dc6",
+    "finalBaseTree": "0ccf400f61d264e5084862510cee140e3d9786d1",
+    "finalHarnessSha": "697fdd4dc4af13e35b68c78bbcbd127b306a4291",
+    "finalHarnessTree": "7b9944afe0e0608e766bb5ce5162bfab9e6ddb0e",
+    "finalEvidenceSha": "eb74454b527445f52322eff0af48e6b703681e16",
+    "finalEvidenceTree": "47f1a618fa725aad20d84b52b0e8786e2c273989",
+    "pngTreeListingSha256": "64cf6dc604c0bd79d38d1957ae23808870d174b305f32e40368d213fee0fa21e"
+  },
+  "captureCommand": "pnpm exec playwright test --config=playwright.production-visual.config.ts --update-snapshots=all --workers=1 --retries=0",
+  "finalVerificationCommand": "pnpm exec playwright test --config=playwright.production-visual.config.ts --workers=1 --retries=0",
+  "namespace": "tests/visual/ondo-b-production-snapshots",
+  "total": 124,
+  "core": 120,
+  "structural": 4,
+  "totalBytes": 10955911,
+  "minBytes": 23366,
+  "maxBytes": 336367,
+  "byLocale": {
+    "en": 74,
+    "ko": 50
+  },
+  "byViewport": {
+    "1440x1000": 20,
+    "360x800": 20,
+    "390x844": 20,
+    "430x720": 2,
+    "430x932": 20,
+    "667x320": 2,
+    "768x1024": 20,
+    "801x1000": 20
+  },
+  "byProject": {
+    "production-desktop-chromium": 104,
+    "production-mobile-chromium": 20
+  },
+  "byCensus": {
+    "core": 120,
+    "structural": 4
+  },
+  "uniqueCaseIds": 24,
+  "manifestDigest": "20f67da63ec79f6030197271b9b41e5a5b57f082b4bb08076225f53ec9764924",
+  "inspection": "six canonical contact sheets and four structural originals passed",
+  "receipts": {
+    "initialCapture": "124 passed (3.9m)",
+    "candidateNoUpdate1": "124 passed (3.8m), workers=1, retries=0",
+    "candidateNoUpdate2": "124 passed (3.7m), workers=1, retries=0",
+    "highRiskRepeat3": "138 passed (4.8m), workers=1, retries=0",
+    "successorNoUpdate": "124 passed (4.5m), workers=1, retries=0",
+    "finalTypecheck": "pass",
+    "finalStaticContract": "5 passed",
+    "finalList": "124 tests in 4 files",
+    "finalNoUpdate": "124 passed (4.2m), workers=1, retries=0",
+    "pngDiff": "0 changed paths"
+  }
+}

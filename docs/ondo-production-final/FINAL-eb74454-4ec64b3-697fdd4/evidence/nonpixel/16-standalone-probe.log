@@ -1,0 +1,14 @@
+START 2026-08-24T11:53:48Z
+
+> k-tour-id@0.1.0 probe:sites:ondo-b /private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app
+> node scripts/ondo-b-standalone/probe-http.mjs
+
+{
+  "baseUrl": "http://127.0.0.1:62125",
+  "redirect": 307,
+  "page": 200,
+  "blocked": 26,
+  "assets": 7
+}
+END 2026-08-24T11:53:51Z
+EXIT 0

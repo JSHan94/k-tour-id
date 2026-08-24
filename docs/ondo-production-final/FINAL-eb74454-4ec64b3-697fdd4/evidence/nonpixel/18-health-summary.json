@@ -1,0 +1,29 @@
+{
+  "logicalSamples": 228,
+  "successful200": 225,
+  "startupConnectionFailures": 3,
+  "failuresAfterFirstSuccess": 0,
+  "firstSuccess": "2026-08-24T11:41:36Z",
+  "lastSuccess": "2026-08-24T11:53:57Z",
+  "byPath": {
+    "/": {
+      "count": 75,
+      "minSeconds": 0.000992,
+      "maxSeconds": 0.024261,
+      "averageSeconds": 0.002208
+    },
+    "/ondo": {
+      "count": 75,
+      "minSeconds": 0.000643,
+      "maxSeconds": 0.005787,
+      "averageSeconds": 0.001627
+    },
+    "/ondo-b": {
+      "count": 75,
+      "minSeconds": 0.003162,
+      "maxSeconds": 0.067503,
+      "averageSeconds": 0.00593
+    }
+  },
+  "classification": "three monitor-start race failures before Next ready; every post-ready sample returned 200"
+}

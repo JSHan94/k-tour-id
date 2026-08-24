@@ -1,0 +1,27 @@
+START 2026-08-24T11:41:00Z
+Listing tests:
+  [mobile-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:41:1 › @core FL-004 checkout success does not create a stamp; a separate unique visit creates the tenth
+  [mobile-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:53:1 › FL-004 checkout cancel and decline keep receipts and stamps unchanged
+  [mobile-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:73:1 › FL-004 an existing tenth stamp is not attributed to the current checkout
+  [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:47:1 › @core FL-003 Table request visibly resolves, image chat works, and private feedback stays separate
+  [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:83:1 › FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled
+  [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:113:1 › FL-003 join failure is visible and retryable without unlocking chat
+  [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:122:1 › FL-003 an interrupted sending message recovers as retryable after reload
+  [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:138:1 › @core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure
+  [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:152:1 › FL-012 Local Signal failure keeps the draft and exposes retry
+  [mobile-chromium] › tests/e2e/ondo-profile.spec.ts:3:1 › Guest browser-local profile preview is private and does not claim KYC nationality
+  [mobile-chromium] › tests/e2e/ondo-profile.spec.ts:16:1 › Account chooses consent per self-declared field
+  [desktop-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:41:1 › @core FL-004 checkout success does not create a stamp; a separate unique visit creates the tenth
+  [desktop-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:53:1 › FL-004 checkout cancel and decline keep receipts and stamps unchanged
+  [desktop-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:73:1 › FL-004 an existing tenth stamp is not attributed to the current checkout
+  [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:47:1 › @core FL-003 Table request visibly resolves, image chat works, and private feedback stays separate
+  [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:83:1 › FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled
+  [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:113:1 › FL-003 join failure is visible and retryable without unlocking chat
+  [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:122:1 › FL-003 an interrupted sending message recovers as retryable after reload
+  [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:138:1 › @core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure
+  [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:152:1 › FL-012 Local Signal failure keeps the draft and exposes retry
+  [desktop-chromium] › tests/e2e/ondo-profile.spec.ts:3:1 › Guest browser-local profile preview is private and does not claim KYC nationality
+  [desktop-chromium] › tests/e2e/ondo-profile.spec.ts:16:1 › Account chooses consent per self-declared field
+Total: 22 tests in 3 files
+END 2026-08-24T11:41:01Z
+EXIT 0

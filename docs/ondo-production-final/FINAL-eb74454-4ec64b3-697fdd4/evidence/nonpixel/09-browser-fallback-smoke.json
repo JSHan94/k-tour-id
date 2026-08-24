@@ -1,0 +1,28 @@
+{
+  "backend": "playwright-fallback",
+  "browserPluginAvailability": "none (previous discovery [])",
+  "chromium": "151.0.7922.34",
+  "receipts": [
+    {
+      "route": "/",
+      "status": 200,
+      "title": "K-Tour Map — 여행할수록 채워지는 대한민국 지도",
+      "bodyChars": 327,
+      "pageErrors": []
+    },
+    {
+      "route": "/ondo",
+      "status": 200,
+      "title": "ONDO — Where locals eat now",
+      "bodyChars": 802,
+      "pageErrors": []
+    },
+    {
+      "route": "/ondo-b",
+      "status": 200,
+      "title": "ONDO — Licensed food-place records in Seoul and Busan",
+      "bodyChars": 1181,
+      "pageErrors": []
+    }
+  ]
+}

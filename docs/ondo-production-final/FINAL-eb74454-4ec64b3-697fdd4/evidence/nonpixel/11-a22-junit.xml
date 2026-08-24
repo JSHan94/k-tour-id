@@ -1,0 +1,58 @@
+<testsuites id="" name="" tests="22" failures="0" skipped="0" errors="0" time="58.184063">
+<testsuite name="tests/e2e/ondo-commerce-browser.spec.ts" timestamp="2026-08-24T11:51:58.916Z" hostname="mobile-chromium" tests="3" failures="0" skipped="0" time="9.019" errors="0">
+<testcase name="@core FL-004 checkout success does not create a stamp; a separate unique visit creates the tenth" classname="tests/e2e/ondo-commerce-browser.spec.ts" time="3.488">
+</testcase>
+<testcase name="FL-004 checkout cancel and decline keep receipts and stamps unchanged" classname="tests/e2e/ondo-commerce-browser.spec.ts" time="3.073">
+</testcase>
+<testcase name="FL-004 an existing tenth stamp is not attributed to the current checkout" classname="tests/e2e/ondo-commerce-browser.spec.ts" time="2.458">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-connect-browser.spec.ts" timestamp="2026-08-24T11:51:58.916Z" hostname="mobile-chromium" tests="6" failures="0" skipped="0" time="17.665" errors="0">
+<testcase name="@core FL-003 Table request visibly resolves, image chat works, and private feedback stays separate" classname="tests/e2e/ondo-connect-browser.spec.ts" time="5.025">
+</testcase>
+<testcase name="FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.531">
+</testcase>
+<testcase name="FL-003 join failure is visible and retryable without unlocking chat" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.834">
+</testcase>
+<testcase name="FL-003 an interrupted sending message recovers as retryable after reload" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.618">
+</testcase>
+<testcase name="@core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.337">
+</testcase>
+<testcase name="FL-012 Local Signal failure keeps the draft and exposes retry" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.32">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-profile.spec.ts" timestamp="2026-08-24T11:51:58.916Z" hostname="mobile-chromium" tests="2" failures="0" skipped="0" time="1.948" errors="0">
+<testcase name="Guest browser-local profile preview is private and does not claim KYC nationality" classname="tests/e2e/ondo-profile.spec.ts" time="0.935">
+</testcase>
+<testcase name="Account chooses consent per self-declared field" classname="tests/e2e/ondo-profile.spec.ts" time="1.013">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-commerce-browser.spec.ts" timestamp="2026-08-24T11:51:58.916Z" hostname="desktop-chromium" tests="3" failures="0" skipped="0" time="9.048" errors="0">
+<testcase name="@core FL-004 checkout success does not create a stamp; a separate unique visit creates the tenth" classname="tests/e2e/ondo-commerce-browser.spec.ts" time="3.399">
+</testcase>
+<testcase name="FL-004 checkout cancel and decline keep receipts and stamps unchanged" classname="tests/e2e/ondo-commerce-browser.spec.ts" time="3.209">
+</testcase>
+<testcase name="FL-004 an existing tenth stamp is not attributed to the current checkout" classname="tests/e2e/ondo-commerce-browser.spec.ts" time="2.44">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-connect-browser.spec.ts" timestamp="2026-08-24T11:51:58.916Z" hostname="desktop-chromium" tests="6" failures="0" skipped="0" time="17.406" errors="0">
+<testcase name="@core FL-003 Table request visibly resolves, image chat works, and private feedback stays separate" classname="tests/e2e/ondo-connect-browser.spec.ts" time="5.582">
+</testcase>
+<testcase name="FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.419">
+</testcase>
+<testcase name="FL-003 join failure is visible and retryable without unlocking chat" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.514">
+</testcase>
+<testcase name="FL-003 an interrupted sending message recovers as retryable after reload" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.554">
+</testcase>
+<testcase name="@core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.2">
+</testcase>
+<testcase name="FL-012 Local Signal failure keeps the draft and exposes retry" classname="tests/e2e/ondo-connect-browser.spec.ts" time="2.137">
+</testcase>
+</testsuite>
+<testsuite name="tests/e2e/ondo-profile.spec.ts" timestamp="2026-08-24T11:51:58.916Z" hostname="desktop-chromium" tests="2" failures="0" skipped="0" time="2.148" errors="0">
+<testcase name="Guest browser-local profile preview is private and does not claim KYC nationality" classname="tests/e2e/ondo-profile.spec.ts" time="1.018">
+</testcase>
+<testcase name="Account chooses consent per self-declared field" classname="tests/e2e/ondo-profile.spec.ts" time="1.13">
+</testcase>
+</testsuite>
+</testsuites>

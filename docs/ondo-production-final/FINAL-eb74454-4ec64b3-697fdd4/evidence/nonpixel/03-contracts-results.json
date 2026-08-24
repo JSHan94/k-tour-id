@@ -1,0 +1,2393 @@
+{
+  "config": {
+    "argv": [
+      "/opt/homebrew/Cellar/node/25.9.0_3/bin/node",
+      "/private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app/node_modules/@playwright/test/cli.js",
+      "test",
+      "--config=playwright.contracts.config.ts",
+      "--workers=1",
+      "--retries=0"
+    ],
+    "configFile": "/private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app/playwright.contracts.config.ts",
+    "rootDir": "/private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app/tests/contracts",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app/artifacts/qa/contracts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "contracts",
+        "name": "contracts",
+        "testDir": "/private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app/tests/contracts",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "artifacts/qa/contracts/contract-data.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "artifacts/qa/contracts/junit.xml"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "ondo-b-client-data-boundary.spec.ts",
+      "file": "ondo-b-client-data-boundary.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "PROD-B-DATA-001 initial B client graph uses only compact venue data and the canonical allowlist",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.013Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f46f926b19ae18cfc818-a2f8d3c59ecf7cfe7e31",
+          "file": "ondo-b-client-data-boundary.spec.ts",
+          "line": 51,
+          "column": 1
+        },
+        {
+          "title": "PROD-B-DATA-002 venue detail API retains the full canonical server dataset",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.040Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f46f926b19ae18cfc818-1d1a6b76addbe14111e6",
+          "file": "ondo-b-client-data-boundary.spec.ts",
+          "line": 64,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-b-production-acceptance.spec.ts",
+      "file": "ondo-b-production-acceptance.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "PROD-B-001 active /ondo-b import graph excludes unconfigured product clusters and synthetic data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.059Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f846f82b54a99a566360-a909b1dc96baf6f66fe0",
+          "file": "ondo-b-production-acceptance.spec.ts",
+          "line": 85,
+          "column": 1
+        },
+        {
+          "title": "PROD-B-002 scenario, QA, and legacy storage injection cannot mutate production UI or state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.073Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f846f82b54a99a566360-eea31a4994f7d23787bd",
+          "file": "ondo-b-production-acceptance.spec.ts",
+          "line": 96,
+          "column": 1
+        },
+        {
+          "title": "PROD-B-003 reachable user-facing literals contain no demo, simulation, hypothesis, or fake-success copy",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.086Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f846f82b54a99a566360-699f9599ca410fe7cfd5",
+          "file": "ondo-b-production-acceptance.spec.ts",
+          "line": 123,
+          "column": 1
+        },
+        {
+          "title": "PROD-B-004 active production registry contains only six real flows and twenty pre-baseline cases",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.098Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f846f82b54a99a566360-771b0567b51ca07ecb47",
+          "file": "ondo-b-production-acceptance.spec.ts",
+          "line": 135,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-b-production-discovery.spec.ts",
+      "file": "ondo-b-production-discovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "PROD-DISCOVERY-001 publishes exactly the official Seoul and Busan directory",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.107Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fc45cffdbf57e4ee2efd-a8d3a0646904da116854",
+          "file": "ondo-b-production-discovery.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "PROD-DISCOVERY-002 map records expose source facts, never a product score layer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 247,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.114Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fc45cffdbf57e4ee2efd-073dbd7cc871e926e84c",
+          "file": "ondo-b-production-discovery.spec.ts",
+          "line": 23,
+          "column": 1
+        },
+        {
+          "title": "PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview data dependency",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.365Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fc45cffdbf57e4ee2efd-d04c0fc11dfaf39038f5",
+          "file": "ondo-b-production-discovery.spec.ts",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "PROD-DISCOVERY-004 place surface contains only directory decisions",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.372Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fc45cffdbf57e4ee2efd-a2c7dbe795bf1dd01e9c",
+          "file": "ondo-b-production-discovery.spec.ts",
+          "line": 45,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-b-production-local.spec.ts",
+      "file": "ondo-b-production-local.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "B-PROD-LOCAL-001 B composes only production local-device surfaces",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.380Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c99bd8d336f663ad1ef3-db6e2275a6ed586c0dfd",
+          "file": "ondo-b-production-local.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "B-PROD-LOCAL-002 B navigation is Explore, Saved, Settings without a hidden external branch",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.384Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c99bd8d336f663ad1ef3-8603340bea74894200b6",
+          "file": "ondo-b-production-local.spec.ts",
+          "line": 16,
+          "column": 1
+        },
+        {
+          "title": "B-PROD-LOCAL-003 B persistence is an explicit allowlist and never restores synthetic session state",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.388Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c99bd8d336f663ad1ef3-35bbfd646c3b6c948496",
+          "file": "ondo-b-production-local.spec.ts",
+          "line": 26,
+          "column": 1
+        },
+        {
+          "title": "B-PROD-LOCAL-004 canonical local saves have no account gate, timer, or query-controlled outcome",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.395Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c99bd8d336f663ad1ef3-96195a889f6467cbdd79",
+          "file": "ondo-b-production-local.spec.ts",
+          "line": 49,
+          "column": 1
+        },
+        {
+          "title": "B-PROD-LOCAL-005 Saved, Settings, and private notes expose only real device behavior",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.399Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c99bd8d336f663ad1ef3-8e517d2ad3197afdd745",
+          "file": "ondo-b-production-local.spec.ts",
+          "line": 63,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-b-saved-return-history.spec.ts",
+      "file": "ondo-b-saved-return-history.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "saved return from detail requests native Back without a mounted traversal guard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.406Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "5473eae827f9a4bfaf21-aabfe6e01a19dfd5f7ab",
+          "file": "ondo-b-saved-return-history.spec.ts",
+          "line": 6,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-b-standalone-packaging.spec.ts",
+      "file": "ondo-b-standalone-packaging.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "ONDO B standalone Sites packaging",
+          "file": "ondo-b-standalone-packaging.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "B-STANDALONE-001 declares a deterministic B-only build, scan, and probe lane",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "contracts",
+                  "projectName": "contracts",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T11:40:06.413Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3efbd17937a81b44556c-d25148aea595a60945ab",
+              "file": "ondo-b-standalone-packaging.spec.ts",
+              "line": 22,
+              "column": 3
+            },
+            {
+              "title": "B-STANDALONE-002 keeps the checked-in A hosting identity byte-for-byte protected",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "contracts",
+                  "projectName": "contracts",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T11:40:06.417Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3efbd17937a81b44556c-3876757d4c895b311f22",
+              "file": "ondo-b-standalone-packaging.spec.ts",
+              "line": 37,
+              "column": 3
+            },
+            {
+              "title": "B-STANDALONE-003 prepared source contains only the production route and canonical venue API",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "contracts",
+                  "projectName": "contracts",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 113,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T11:40:06.423Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3efbd17937a81b44556c-8b19e8cec4037acf73a3",
+              "file": "ondo-b-standalone-packaging.spec.ts",
+              "line": 52,
+              "column": 3
+            },
+            {
+              "title": "B-STANDALONE-004 generated package is explicitly isolated from legacy providers and routes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "contracts",
+                  "projectName": "contracts",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 27,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T11:40:06.541Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3efbd17937a81b44556c-034873b7af7324a32086",
+              "file": "ondo-b-standalone-packaging.spec.ts",
+              "line": 75,
+              "column": 3
+            },
+            {
+              "title": "B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "contracts",
+                  "projectName": "contracts",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T11:40:06.572Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3efbd17937a81b44556c-ee863897059bddc0930a",
+              "file": "ondo-b-standalone-packaging.spec.ts",
+              "line": 92,
+              "column": 3
+            },
+            {
+              "title": "B-STANDALONE-006 prepared onboarding CSS contains only the official-directory production surface",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "contracts",
+                  "projectName": "contracts",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 30,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-08-24T11:40:06.578Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3efbd17937a81b44556c-022aa35628b90614b73f",
+              "file": "ondo-b-standalone-packaging.spec.ts",
+              "line": 113,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ondo-contracts.spec.ts",
+      "file": "ondo-contracts.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "CONTRACT-DATA-001 coordinates remain canonical",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.619Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-4287d16c1c51b2ac43db",
+          "file": "ondo-contracts.spec.ts",
+          "line": 18,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-002 limited signals never invent a score",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.623Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-2cae5c328b584b556335",
+          "file": "ondo-contracts.spec.ts",
+          "line": 24,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-003 returnTo preserves a nested gate queue",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.626Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-9e414646be9c91183861",
+          "file": "ondo-contracts.spec.ts",
+          "line": 29,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-004 age and payment gates stay independent",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.630Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-15a9b61a4bc486eea6a0",
+          "file": "ondo-contracts.spec.ts",
+          "line": 36,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-005 evidence adapters expose their source standard",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.645Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-beafbfd59b9106ef73b6",
+          "file": "ondo-contracts.spec.ts",
+          "line": 53,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-006 expired evidence is rejected",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.649Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-34da66bf3a466a39034f",
+          "file": "ondo-contracts.spec.ts",
+          "line": 62,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-007 chat access requires confirmed membership",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.652Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-da937fbc44e5734b8549",
+          "file": "ondo-contracts.spec.ts",
+          "line": 70,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-008 chat images and local signals use different upload contexts",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.656Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-cc80a0e0e2a9e29997d5",
+          "file": "ondo-contracts.spec.ts",
+          "line": 76,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-009 first mission changes visit and contribution only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.662Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-b0cb43ddf450a0684851",
+          "file": "ondo-contracts.spec.ts",
+          "line": 81,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-010 checkout cannot increment a stamp",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.666Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-2cf896b5e0318a499816",
+          "file": "ondo-contracts.spec.ts",
+          "line": 93,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-011 bridge phase progression is ordered",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.670Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-304a6c69885f337087e9",
+          "file": "ondo-contracts.spec.ts",
+          "line": 98,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-012 merchant receipt does not claim general safety",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.676Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-7dae6ee246bcac8b8330",
+          "file": "ondo-contracts.spec.ts",
+          "line": 103,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-013 asset representations remain separate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.680Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-e2cbc8b8b03255e88a86",
+          "file": "ondo-contracts.spec.ts",
+          "line": 108,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-014 zkLogin fixture is a testnet signer only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.684Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-16207450b77ff0090e4a",
+          "file": "ondo-contracts.spec.ts",
+          "line": 117,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-015 truth and isSimulation remain aligned",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.688Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-d74664f5a51f4a508248",
+          "file": "ondo-contracts.spec.ts",
+          "line": 122,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-016 onboarding fixtures contain no verification mutation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.693Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2dac24fdc693f1a12c20-e9de428091aca5be7b06",
+          "file": "ondo-contracts.spec.ts",
+          "line": 127,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-persistence-docs.spec.ts",
+      "file": "ondo-persistence-docs.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "CONTRACT-DATA-017 v3 persistence keys and stored field allowlists stay canonical",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.701Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-a1a9166ef6e7483ca364",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 29,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-018 return envelope identifiers and shape stay aligned with canonical docs",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 10,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.710Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-061987decace0dd43234",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 52,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-019 canonical persistence boundary never permits sensitive browser storage",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.725Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-9ded9164d17b2d2339c5",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 84,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-020 restored gates reject non-allowlisted data and strip unknown fields",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.731Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-17e59115d87c3c9fd6ab",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 94,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-021 each return CTA accepts only its real gate sequence and context",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.737Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-57a832dbdafbc19faa01",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 107,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-022 malformed context, gate sequences, and token epochs never restore",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.743Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-1117eeabf97b039712a0",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 127,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-023 canonical docs own the CTA gate/context matrix and Labs has no default fallthrough",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.752Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-bebb4d5d61086420ce11",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 157,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-024 hydration validates return contexts against canonical entity registries",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.758Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-90274fa71a3de60baf3b",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 179,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-025 canonical docs type and describe registry-safe return restoration exactly",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.764Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-6acb470aae34b2c7903e",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 192,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-026 return queues equal the unsatisfied gates from the resolved full plan",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.770Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-afdcfff2217dedc2f83f",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 211,
+          "column": 1
+        },
+        {
+          "title": "CONTRACT-DATA-027 provider and canonical docs enforce progress coherence through mutation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.778Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "119da30a9915354cc9d5-c70c481012cf1a28ec6a",
+          "file": "ondo-persistence-docs.spec.ts",
+          "line": 233,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-production-venue-integrity.spec.ts",
+      "file": "ondo-production-venue-integrity.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "VENUE-PROD-001 four canonical artifacts describe the same exact 400-record directory",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.797Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "461b415717a7f54a6611-68c7b41689d94572aa15",
+          "file": "ondo-production-venue-integrity.spec.ts",
+          "line": 98,
+          "column": 1
+        },
+        {
+          "title": "VENUE-PROD-002 every record has a derived canonical id, complete source evidence, and bounded coordinates",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1264,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:06.807Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "461b415717a7f54a6611-3fd748114a9c6b56a434",
+          "file": "ondo-production-venue-integrity.spec.ts",
+          "line": 117,
+          "column": 1
+        },
+        {
+          "title": "VENUE-PROD-003 provenance and per-field digests preserve the LOCALDATA snapshot boundary",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2483,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:08.075Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "461b415717a7f54a6611-b5c3061531b381e7027c",
+          "file": "ondo-production-venue-integrity.spec.ts",
+          "line": 165,
+          "column": 1
+        },
+        {
+          "title": "VENUE-PROD-004 detail API is canonical-only and carries an explicit snapshot limitation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.563Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "461b415717a7f54a6611-e3db6444e6aadd6986c8",
+          "file": "ondo-production-venue-integrity.spec.ts",
+          "line": 199,
+          "column": 1
+        },
+        {
+          "title": "VENUE-PROD-005 persistence sanitizers accept canonical ids and notes only",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.572Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "461b415717a7f54a6611-c1098192a41128968983",
+          "file": "ondo-production-venue-integrity.spec.ts",
+          "line": 235,
+          "column": 1
+        },
+        {
+          "title": "VENUE-PROD-006 /ondo-b production graph contains no fictional legacy venue ids",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.578Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "461b415717a7f54a6611-3bf549e15aba1ac11130",
+          "file": "ondo-production-venue-integrity.spec.ts",
+          "line": 264,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-venue-detail-server.spec.ts",
+      "file": "ondo-venue-detail-server.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "VENUE-DETAIL-001 resolves one stable venue without weakening field provenance",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.587Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b91b33f5e297231ce9e9-a0cdfc0f6f662f362ff0",
+          "file": "ondo-venue-detail-server.spec.ts",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DETAIL-002 unknown ids do not fall back to a different record",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.592Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b91b33f5e297231ce9e9-100abff367ca62e56258",
+          "file": "ondo-venue-detail-server.spec.ts",
+          "line": 33,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "ondo-venues-data.spec.ts",
+      "file": "ondo-venues-data.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "VENUE-DATA-001 publishes exact Seoul 200 and Busan 200 quotas",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.600Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-96e2edd281ae3e06d8d3",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 15,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-002 ids and official source records are unique",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.604Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-4957a5bf42f67679427d",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 21,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-003 source evidence does not become open-now or heat truth",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 443,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:10.608Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-b2c227b0ba26edd57048",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 27,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-004 map seam preserves coordinate and truth boundaries",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 0,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:11.054Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-e06cfe6e8714560028c5",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 39,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-005 canonical JSON and GeoJSON have an exact id/coordinate set",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 58,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:11.059Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-48ba59a47a46f6f86ff0",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 55,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-006 provenance fixes official source, license and source hashes",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:11.121Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-824aa0b72a626c127a34",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 62,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-007 each city-district/category quota is exact",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 22,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:11.125Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-a0bbc2f9a6bc2fb6599e",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 70,
+          "column": 1
+        },
+        {
+          "title": "VENUE-DATA-008 published category is normalized only from the official business type",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "contracts",
+              "projectName": "contracts",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 112,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-08-24T11:40:11.152Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4b5012ddb91f221cdea1-4e988bfd4ffc878b907c",
+          "file": "ondo-venues-data.spec.ts",
+          "line": 82,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-08-24T11:40:05.510Z",
+    "duration": 5767.382,
+    "expected": 65,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

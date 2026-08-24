@@ -1,0 +1,154 @@
+<testsuites id="" name="" tests="65" failures="0" skipped="0" errors="0" time="5.767382">
+<testsuite name="ondo-b-client-data-boundary.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="2" failures="0" skipped="0" time="0.019" errors="0">
+<testcase name="PROD-B-DATA-001 initial B client graph uses only compact venue data and the canonical allowlist" classname="ondo-b-client-data-boundary.spec.ts" time="0.009">
+</testcase>
+<testcase name="PROD-B-DATA-002 venue detail API retains the full canonical server dataset" classname="ondo-b-client-data-boundary.spec.ts" time="0.01">
+</testcase>
+</testsuite>
+<testsuite name="ondo-b-production-acceptance.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="4" failures="0" skipped="0" time="0.021" errors="0">
+<testcase name="PROD-B-001 active /ondo-b import graph excludes unconfigured product clusters and synthetic data" classname="ondo-b-production-acceptance.spec.ts" time="0.009">
+</testcase>
+<testcase name="PROD-B-002 scenario, QA, and legacy storage injection cannot mutate production UI or state" classname="ondo-b-production-acceptance.spec.ts" time="0.006">
+</testcase>
+<testcase name="PROD-B-003 reachable user-facing literals contain no demo, simulation, hypothesis, or fake-success copy" classname="ondo-b-production-acceptance.spec.ts" time="0.005">
+</testcase>
+<testcase name="PROD-B-004 active production registry contains only six real flows and twenty pre-baseline cases" classname="ondo-b-production-acceptance.spec.ts" time="0.001">
+</testcase>
+</testsuite>
+<testsuite name="ondo-b-production-discovery.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="4" failures="0" skipped="0" time="0.252" errors="0">
+<testcase name="PROD-DISCOVERY-001 publishes exactly the official Seoul and Busan directory" classname="ondo-b-production-discovery.spec.ts" time="0.001">
+</testcase>
+<testcase name="PROD-DISCOVERY-002 map records expose source facts, never a product score layer" classname="ondo-b-production-discovery.spec.ts" time="0.247">
+</testcase>
+<testcase name="PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview data dependency" classname="ondo-b-production-discovery.spec.ts" time="0.002">
+</testcase>
+<testcase name="PROD-DISCOVERY-004 place surface contains only directory decisions" classname="ondo-b-production-discovery.spec.ts" time="0.002">
+</testcase>
+</testsuite>
+<testsuite name="ondo-b-production-local.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="5" failures="0" skipped="0" time="0.004" errors="0">
+<testcase name="B-PROD-LOCAL-001 B composes only production local-device surfaces" classname="ondo-b-production-local.spec.ts" time="0">
+</testcase>
+<testcase name="B-PROD-LOCAL-002 B navigation is Explore, Saved, Settings without a hidden external branch" classname="ondo-b-production-local.spec.ts" time="0">
+</testcase>
+<testcase name="B-PROD-LOCAL-003 B persistence is an explicit allowlist and never restores synthetic session state" classname="ondo-b-production-local.spec.ts" time="0.003">
+</testcase>
+<testcase name="B-PROD-LOCAL-004 canonical local saves have no account gate, timer, or query-controlled outcome" classname="ondo-b-production-local.spec.ts" time="0.001">
+</testcase>
+<testcase name="B-PROD-LOCAL-005 Saved, Settings, and private notes expose only real device behavior" classname="ondo-b-production-local.spec.ts" time="0">
+</testcase>
+</testsuite>
+<testsuite name="ondo-b-saved-return-history.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="1" failures="0" skipped="0" time="0.001" errors="0">
+<testcase name="saved return from detail requests native Back without a mounted traversal guard" classname="ondo-b-saved-return-history.spec.ts" time="0.001">
+</testcase>
+</testsuite>
+<testsuite name="ondo-b-standalone-packaging.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="6" failures="0" skipped="0" time="0.174" errors="0">
+<testcase name="ONDO B standalone Sites packaging › B-STANDALONE-001 declares a deterministic B-only build, scan, and probe lane" classname="ondo-b-standalone-packaging.spec.ts" time="0.001">
+</testcase>
+<testcase name="ONDO B standalone Sites packaging › B-STANDALONE-002 keeps the checked-in A hosting identity byte-for-byte protected" classname="ondo-b-standalone-packaging.spec.ts" time="0.001">
+</testcase>
+<testcase name="ONDO B standalone Sites packaging › B-STANDALONE-003 prepared source contains only the production route and canonical venue API" classname="ondo-b-standalone-packaging.spec.ts" time="0.113">
+</testcase>
+<testcase name="ONDO B standalone Sites packaging › B-STANDALONE-004 generated package is explicitly isolated from legacy providers and routes" classname="ondo-b-standalone-packaging.spec.ts" time="0.027">
+</testcase>
+<testcase name="ONDO B standalone Sites packaging › B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed" classname="ondo-b-standalone-packaging.spec.ts" time="0.002">
+</testcase>
+<testcase name="ONDO B standalone Sites packaging › B-STANDALONE-006 prepared onboarding CSS contains only the official-directory production surface" classname="ondo-b-standalone-packaging.spec.ts" time="0.03">
+</testcase>
+</testsuite>
+<testsuite name="ondo-contracts.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="16" failures="0" skipped="0" time="0.011" errors="0">
+<testcase name="CONTRACT-DATA-001 coordinates remain canonical" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-002 limited signals never invent a score" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-003 returnTo preserves a nested gate queue" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-004 age and payment gates stay independent" classname="ondo-contracts.spec.ts" time="0.01">
+</testcase>
+<testcase name="CONTRACT-DATA-005 evidence adapters expose their source standard" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-006 expired evidence is rejected" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-007 chat access requires confirmed membership" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-008 chat images and local signals use different upload contexts" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-009 first mission changes visit and contribution only" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-010 checkout cannot increment a stamp" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-011 bridge phase progression is ordered" classname="ondo-contracts.spec.ts" time="0.001">
+</testcase>
+<testcase name="CONTRACT-DATA-012 merchant receipt does not claim general safety" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-013 asset representations remain separate" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-014 zkLogin fixture is a testnet signer only" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-015 truth and isSimulation remain aligned" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+<testcase name="CONTRACT-DATA-016 onboarding fixtures contain no verification mutation" classname="ondo-contracts.spec.ts" time="0">
+</testcase>
+</testsuite>
+<testsuite name="ondo-persistence-docs.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="11" failures="0" skipped="0" time="0.033" errors="0">
+<testcase name="CONTRACT-DATA-017 v3 persistence keys and stored field allowlists stay canonical" classname="ondo-persistence-docs.spec.ts" time="0.005">
+</testcase>
+<testcase name="CONTRACT-DATA-018 return envelope identifiers and shape stay aligned with canonical docs" classname="ondo-persistence-docs.spec.ts" time="0.01">
+</testcase>
+<testcase name="CONTRACT-DATA-019 canonical persistence boundary never permits sensitive browser storage" classname="ondo-persistence-docs.spec.ts" time="0.002">
+</testcase>
+<testcase name="CONTRACT-DATA-020 restored gates reject non-allowlisted data and strip unknown fields" classname="ondo-persistence-docs.spec.ts" time="0.002">
+</testcase>
+<testcase name="CONTRACT-DATA-021 each return CTA accepts only its real gate sequence and context" classname="ondo-persistence-docs.spec.ts" time="0.002">
+</testcase>
+<testcase name="CONTRACT-DATA-022 malformed context, gate sequences, and token epochs never restore" classname="ondo-persistence-docs.spec.ts" time="0.004">
+</testcase>
+<testcase name="CONTRACT-DATA-023 canonical docs own the CTA gate/context matrix and Labs has no default fallthrough" classname="ondo-persistence-docs.spec.ts" time="0.002">
+</testcase>
+<testcase name="CONTRACT-DATA-024 hydration validates return contexts against canonical entity registries" classname="ondo-persistence-docs.spec.ts" time="0.001">
+</testcase>
+<testcase name="CONTRACT-DATA-025 canonical docs type and describe registry-safe return restoration exactly" classname="ondo-persistence-docs.spec.ts" time="0.002">
+</testcase>
+<testcase name="CONTRACT-DATA-026 return queues equal the unsatisfied gates from the resolved full plan" classname="ondo-persistence-docs.spec.ts" time="0.001">
+</testcase>
+<testcase name="CONTRACT-DATA-027 provider and canonical docs enforce progress coherence through mutation" classname="ondo-persistence-docs.spec.ts" time="0.002">
+</testcase>
+</testsuite>
+<testsuite name="ondo-production-venue-integrity.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="6" failures="0" skipped="0" time="3.762" errors="0">
+<testcase name="VENUE-PROD-001 four canonical artifacts describe the same exact 400-record directory" classname="ondo-production-venue-integrity.spec.ts" time="0.004">
+</testcase>
+<testcase name="VENUE-PROD-002 every record has a derived canonical id, complete source evidence, and bounded coordinates" classname="ondo-production-venue-integrity.spec.ts" time="1.264">
+</testcase>
+<testcase name="VENUE-PROD-003 provenance and per-field digests preserve the LOCALDATA snapshot boundary" classname="ondo-production-venue-integrity.spec.ts" time="2.483">
+</testcase>
+<testcase name="VENUE-PROD-004 detail API is canonical-only and carries an explicit snapshot limitation" classname="ondo-production-venue-integrity.spec.ts" time="0.006">
+</testcase>
+<testcase name="VENUE-PROD-005 persistence sanitizers accept canonical ids and notes only" classname="ondo-production-venue-integrity.spec.ts" time="0.001">
+</testcase>
+<testcase name="VENUE-PROD-006 /ondo-b production graph contains no fictional legacy venue ids" classname="ondo-production-venue-integrity.spec.ts" time="0.004">
+</testcase>
+</testsuite>
+<testsuite name="ondo-venue-detail-server.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="2" failures="0" skipped="0" time="0" errors="0">
+<testcase name="VENUE-DETAIL-001 resolves one stable venue without weakening field provenance" classname="ondo-venue-detail-server.spec.ts" time="0">
+</testcase>
+<testcase name="VENUE-DETAIL-002 unknown ids do not fall back to a different record" classname="ondo-venue-detail-server.spec.ts" time="0">
+</testcase>
+</testsuite>
+<testsuite name="ondo-venues-data.spec.ts" timestamp="2026-08-24T11:40:05.718Z" hostname="contracts" tests="8" failures="0" skipped="0" time="0.636" errors="0">
+<testcase name="VENUE-DATA-001 publishes exact Seoul 200 and Busan 200 quotas" classname="ondo-venues-data.spec.ts" time="0">
+</testcase>
+<testcase name="VENUE-DATA-002 ids and official source records are unique" classname="ondo-venues-data.spec.ts" time="0">
+</testcase>
+<testcase name="VENUE-DATA-003 source evidence does not become open-now or heat truth" classname="ondo-venues-data.spec.ts" time="0.443">
+</testcase>
+<testcase name="VENUE-DATA-004 map seam preserves coordinate and truth boundaries" classname="ondo-venues-data.spec.ts" time="0">
+</testcase>
+<testcase name="VENUE-DATA-005 canonical JSON and GeoJSON have an exact id/coordinate set" classname="ondo-venues-data.spec.ts" time="0.058">
+</testcase>
+<testcase name="VENUE-DATA-006 provenance fixes official source, license and source hashes" classname="ondo-venues-data.spec.ts" time="0.001">
+</testcase>
+<testcase name="VENUE-DATA-007 each city-district/category quota is exact" classname="ondo-venues-data.spec.ts" time="0.022">
+</testcase>
+<testcase name="VENUE-DATA-008 published category is normalized only from the official business type" classname="ondo-venues-data.spec.ts" time="0.112">
+</testcase>
+</testsuite>
+</testsuites>

@@ -1,0 +1,140 @@
+{
+  "generatedAt": "2026-08-24T11:53:39.894Z",
+  "projectId": "appgprj_local_only_ondo_b_artifact",
+  "routeFiles": [
+    "api/ondo/venues/[venueId]/route.ts",
+    "layout.tsx",
+    "ondo-b/page.tsx",
+    "page.tsx"
+  ],
+  "emittedRoutes": [
+    "/",
+    "/api/ondo/venues/:venueId",
+    "/ondo-b"
+  ],
+  "artifact": {
+    "files": 29,
+    "bytes": 7133962,
+    "javascriptFiles": 14,
+    "cssFiles": 4,
+    "imageFiles": 1
+  },
+  "files": [
+    {
+      "file": ".openai/hosting.json",
+      "bytes": 85
+    },
+    {
+      "file": "client/.assetsignore",
+      "bytes": 24
+    },
+    {
+      "file": "client/.vite/manifest.json",
+      "bytes": 2459
+    },
+    {
+      "file": "client/_headers",
+      "bytes": 125
+    },
+    {
+      "file": "client/assets/framework-CXnKph_e.js",
+      "bytes": 189805
+    },
+    {
+      "file": "client/assets/index-BJoa6p0e.js",
+      "bytes": 80833
+    },
+    {
+      "file": "client/assets/index-WTPoKe1R.css",
+      "bytes": 70209
+    },
+    {
+      "file": "client/assets/layout-segment-context-BPdPvnR9.js",
+      "bytes": 283
+    },
+    {
+      "file": "client/assets/maplibre-gl-BrtvFIRS.js",
+      "bytes": 1027584
+    },
+    {
+      "file": "client/assets/ondo-product-b-Fy6tkc7K.js",
+      "bytes": 269975
+    },
+    {
+      "file": "client/assets/ondo-product-b-uVtk_IYC.css",
+      "bytes": 43576
+    },
+    {
+      "file": "client/assets/rolldown-runtime-S-ySWqyJ.js",
+      "bytes": 694
+    },
+    {
+      "file": "client/og-ondo-directory.png",
+      "bytes": 1017773
+    },
+    {
+      "file": "server/.vite/manifest.json",
+      "bytes": 282
+    },
+    {
+      "file": "server/__vite_rsc_assets_manifest.js",
+      "bytes": 1176
+    },
+    {
+      "file": "server/assets/index-WTPoKe1R.css",
+      "bytes": 70209
+    },
+    {
+      "file": "server/image-config.json",
+      "bytes": 2
+    },
+    {
+      "file": "server/index.js",
+      "bytes": 1916187
+    },
+    {
+      "file": "server/ssr/__vite_rsc_assets_manifest.js",
+      "bytes": 1176
+    },
+    {
+      "file": "server/ssr/assets/error-boundary-Dufhk07Q.js",
+      "bytes": 8704
+    },
+    {
+      "file": "server/ssr/assets/layout-segment-context-DBNPybJV.js",
+      "bytes": 1884
+    },
+    {
+      "file": "server/ssr/assets/maplibre-gl-DGCRxP3W.js",
+      "bytes": 1396010
+    },
+    {
+      "file": "server/ssr/assets/ondo-product-b-CCKI97l9.js",
+      "bytes": 400928
+    },
+    {
+      "file": "server/ssr/assets/ondo-product-b-uVtk_IYC.css",
+      "bytes": 43576
+    },
+    {
+      "file": "server/ssr/index.js",
+      "bytes": 589048
+    },
+    {
+      "file": "server/ssr/vinext-server.json",
+      "bytes": 86
+    },
+    {
+      "file": "server/vinext-externals.json",
+      "bytes": 3
+    },
+    {
+      "file": "server/vinext-server.json",
+      "bytes": 86
+    },
+    {
+      "file": "server/wrangler.json",
+      "bytes": 1180
+    }
+  ]
+}

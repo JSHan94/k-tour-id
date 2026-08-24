@@ -1,0 +1,34 @@
+START 2026-08-24T11:51:58Z
+
+Running 22 tests using 1 worker
+
+(node:92461) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [mobile-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:41:1 › @core FL-004 checkout success does not create a stamp; a separate unique visit creates the tenth (3.5s)
+  ✓   2 [mobile-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:53:1 › FL-004 checkout cancel and decline keep receipts and stamps unchanged (3.1s)
+  ✓   3 [mobile-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:73:1 › FL-004 an existing tenth stamp is not attributed to the current checkout (2.5s)
+  ✓   4 [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:47:1 › @core FL-003 Table request visibly resolves, image chat works, and private feedback stays separate (5.0s)
+  ✓   5 [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:83:1 › FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled (2.5s)
+  ✓   6 [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:113:1 › FL-003 join failure is visible and retryable without unlocking chat (2.8s)
+  ✓   7 [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:122:1 › FL-003 an interrupted sending message recovers as retryable after reload (2.6s)
+  ✓   8 [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:138:1 › @core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure (2.3s)
+  ✓   9 [mobile-chromium] › tests/e2e/ondo-connect-browser.spec.ts:152:1 › FL-012 Local Signal failure keeps the draft and exposes retry (2.3s)
+  ✓  10 [mobile-chromium] › tests/e2e/ondo-profile.spec.ts:3:1 › Guest browser-local profile preview is private and does not claim KYC nationality (935ms)
+  ✓  11 [mobile-chromium] › tests/e2e/ondo-profile.spec.ts:16:1 › Account chooses consent per self-declared field (1.0s)
+(node:93097) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  12 [desktop-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:41:1 › @core FL-004 checkout success does not create a stamp; a separate unique visit creates the tenth (3.4s)
+  ✓  13 [desktop-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:53:1 › FL-004 checkout cancel and decline keep receipts and stamps unchanged (3.2s)
+  ✓  14 [desktop-chromium] › tests/e2e/ondo-commerce-browser.spec.ts:73:1 › FL-004 an existing tenth stamp is not attributed to the current checkout (2.4s)
+  ✓  15 [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:47:1 › @core FL-003 Table request visibly resolves, image chat works, and private feedback stays separate (5.6s)
+  ✓  16 [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:83:1 › FL-003 report requires a reason, supports blocking, returns a receipt, and leave can be cancelled (2.4s)
+  ✓  17 [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:113:1 › FL-003 join failure is visible and retryable without unlocking chat (2.5s)
+  ✓  18 [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:122:1 › FL-003 an interrupted sending message recovers as retryable after reload (2.6s)
+  ✓  19 [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:138:1 › @core FL-012 Local Signal accepts only Visit and Contribution, with retry on failure (2.2s)
+  ✓  20 [desktop-chromium] › tests/e2e/ondo-connect-browser.spec.ts:152:1 › FL-012 Local Signal failure keeps the draft and exposes retry (2.1s)
+  ✓  21 [desktop-chromium] › tests/e2e/ondo-profile.spec.ts:3:1 › Guest browser-local profile preview is private and does not claim KYC nationality (1.0s)
+  ✓  22 [desktop-chromium] › tests/e2e/ondo-profile.spec.ts:16:1 › Account chooses consent per self-declared field (1.1s)
+
+  22 passed (58.2s)
+END 2026-08-24T11:52:57Z
+EXIT 0

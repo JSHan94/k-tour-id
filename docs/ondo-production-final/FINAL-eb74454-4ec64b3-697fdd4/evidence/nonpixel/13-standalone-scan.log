@@ -1,0 +1,29 @@
+START 2026-08-24T11:53:39Z
+
+> k-tour-id@0.1.0 scan:sites:ondo-b /private/tmp/ondo-final-nonpixel-4ec64b3.tVFpXK/repo/k-tour-id-app
+> node scripts/ondo-b-standalone/scan-artifact.mjs
+
+{
+  "generatedAt": "2026-08-24T11:53:39.894Z",
+  "projectId": "appgprj_local_only_ondo_b_artifact",
+  "routeFiles": [
+    "api/ondo/venues/[venueId]/route.ts",
+    "layout.tsx",
+    "ondo-b/page.tsx",
+    "page.tsx"
+  ],
+  "emittedRoutes": [
+    "/",
+    "/api/ondo/venues/:venueId",
+    "/ondo-b"
+  ],
+  "artifact": {
+    "files": 29,
+    "bytes": 7133962,
+    "javascriptFiles": 14,
+    "cssFiles": 4,
+    "imageFiles": 1
+  }
+}
+END 2026-08-24T11:53:39Z
+EXIT 0
