@@ -196,6 +196,20 @@ test.describe("ONDO B structural production map chrome", () => {
           expect(railReceipt.overflow, "rail is an internal horizontal scroller").toBe("auto")
           if (railReceipt.scrollWidth > railReceipt.clientWidth + 1) expect(railReceipt.scrollLeft, "rail reaches its final category internally").toBeGreaterThan(0)
           expect(railReceipt.lastRight ?? 0, "last rail item is reachable").toBeLessThanOrEqual((railReceipt.ownerRight ?? 0) + 1)
+          const categories = rail.getByRole("button")
+          for (let index = 0; index < await categories.count(); index += 1) {
+            await rail.evaluate((node, buttonIndex) => {
+              const element = node as HTMLElement
+              const button = element.querySelectorAll<HTMLElement>("button")[buttonIndex]
+              if (!button) return
+              const railBox = element.getBoundingClientRect()
+              const buttonBox = button.getBoundingClientRect()
+              const contentLeft = buttonBox.left - railBox.left + element.scrollLeft
+              element.scrollLeft = Math.max(0, contentLeft - (element.clientWidth - button.offsetWidth) / 2)
+            }, index)
+            await expectContained(categories.nth(index), rail, `${viewport.width}x${viewport.height} category ${index + 1}`)
+            await expectCenterHit(categories.nth(index), `${viewport.width}x${viewport.height} category ${index + 1}`)
+          }
 
           await activateState(context, page, locationCase)
           const nav = page.getByTestId("ondo-main-nav")
@@ -221,6 +235,7 @@ test.describe("ONDO B structural production map chrome", () => {
           const result = page.getByTestId("ondo-b-result-bar")
           const attribution = page.getByTestId("ondo-b-attribution")
           await expectUnclippedTruth(key.locator("small"), `${viewport.width}x${viewport.height} map key`)
+          await expectUnclippedTruth(key.locator("div > span"), `${viewport.width}x${viewport.height} map key label`)
           await expectUnclippedTruth(message, `${viewport.width}x${viewport.height} location truth`)
           await expectContained(key, chrome, "key lane")
           await expectContained(message, chrome, "message lane")
@@ -236,6 +251,9 @@ test.describe("ONDO B structural production map chrome", () => {
               expect(intersection(laneBoxes[left], laneBoxes[right]), `lanes ${left}/${right} do not overlap`).toBeLessThanOrEqual(.5)
             }
           }
+          const [headerBox, railBox, locateBox] = await Promise.all([rect(header), rect(rail), rect(locate)])
+          expect(intersection(headerBox, locateBox), "location lane clears the complete header").toBeLessThanOrEqual(.5)
+          expect(intersection(railBox, locateBox), "location lane clears the category rail").toBeLessThanOrEqual(.5)
           const zoomButtons = page.locator(".maplibregl-ctrl-group button:visible")
           for (let index = 0; index < await zoomButtons.count(); index += 1) await expectTarget(zoomButtons.nth(index), `zoom ${index + 1}`)
         }

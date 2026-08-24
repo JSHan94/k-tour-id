@@ -302,7 +302,12 @@ async function auditCategoryReachability(
     await rail.evaluate((node, buttonIndex) => {
       const element = node as HTMLElement
       const button = element.querySelectorAll<HTMLElement>("button")[buttonIndex]
-      if (button) element.scrollLeft = Math.max(0, button.offsetLeft - (element.clientWidth - button.offsetWidth) / 2)
+      if (button) {
+        const railBox = element.getBoundingClientRect()
+        const buttonBox = button.getBoundingClientRect()
+        const contentLeft = buttonBox.left - railBox.left + element.scrollLeft
+        element.scrollLeft = Math.max(0, contentLeft - (element.clientWidth - button.offsetWidth) / 2)
+      }
     }, index)
     const button = buttons.nth(index)
     const [railBox, buttonBox] = await Promise.all([elementReceipt(rail), elementReceipt(button)])
@@ -958,7 +963,10 @@ async function auditKeyboardTabOrder(
     if (expectedMode !== "ultra-short") await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     await root.getByTestId("ondo-b-search").fill("mapo")
     await expect(root).toHaveAttribute("data-result-count", "5")
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
+    await page.evaluate(() => {
+      document.body.tabIndex = -1
+      document.body.focus({ preventScroll: true })
+    })
 
     const sequence: string[] = []
     for (let step = 0; step < 40; step += 1) {
@@ -982,6 +990,7 @@ async function auditKeyboardTabOrder(
       sequence.push(descriptor)
       if (descriptor === "nav-id" || (sequence.length > 2 && descriptor === sequence[0])) break
     }
+    await page.evaluate(() => document.body.removeAttribute("tabindex"))
 
     const position = (key: string) => sequence.indexOf(key)
     const back = position("ondo-b-city-back")
