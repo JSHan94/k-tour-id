@@ -65,11 +65,11 @@ const EXPECTED_KEY = {
 } as const
 
 function expectedLayoutForRoot(root: Rect): LayoutMode {
-  // Chromium sizing of the worst EN/KO offline chrome establishes two honest
-  // map budgets: 380px for the two-row >=600px layout and 580px for the
-  // narrower stacked layout. Below either budget the requested map remains in
-  // state while the effective surface becomes the compact list.
-  if (root.height < 380 || (root.width < 600 && root.height < 580)) return "ultra-short"
+  // Cross-platform sizing of the worst EN/KO offline chrome establishes two
+  // honest map budgets with wrap variance included: 400px for the two-row
+  // >=600px layout and 600px for the narrower stacked layout. Below either
+  // budget the requested map remains while the effective surface is the list.
+  if (root.height < 400 || (root.width < 600 && root.height < 600)) return "ultra-short"
   if (root.width <= 430 || (root.width > root.height && root.height <= 568)) return "compact-map"
   return "spacious-map"
 }

@@ -26,8 +26,12 @@ const VIEWPORTS = [
   { width: 599, height: 632 },
   { width: 599, height: 661 },
   { width: 599, height: 662 },
+  { width: 599, height: 681 },
+  { width: 599, height: 682 },
   { width: 600, height: 461 },
   { width: 600, height: 462 },
+  { width: 600, height: 481 },
+  { width: 600, height: 482 },
   { width: 600, height: 501 },
   { width: 667, height: 320 },
   { width: 667, height: 501 },
@@ -46,7 +50,7 @@ type LocationCase = "idle" | "ready" | "denied" | "offline"
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
 
 function expectedLayout(width: number, height: number) {
-  if (height < 380 || (width < 600 && height < 580)) return "ultra-short"
+  if (height < 400 || (width < 600 && height < 600)) return "ultra-short"
   if (width <= 430 || (width > height && height <= 568)) return "compact-map"
   return "spacious-map"
 }
