@@ -17,6 +17,18 @@ export type BProductionVisualCase = {
   description: string
 }
 
+export type BProductionStructuralVisualCase = BProductionVisualCase & {
+  viewport: {
+    id: "430x720" | "667x320"
+    width: 430 | 667
+    height: 720 | 320
+    owner: "structural"
+  }
+  expectedLayoutMode: "compact-map" | "ultra-short"
+  expectedRequestedView: "map"
+  expectedEffectiveView: "map" | "list"
+}
+
 /**
  * Release-facing ONDO B flows. This registry intentionally excludes every
  * externally unconfigured identity, social, commerce, reputation, and Labs
@@ -87,3 +99,10 @@ export const B_PRODUCTION_VISUAL_CASES: readonly BProductionVisualCase[] = [
   { id: "PR-PX-SETTINGS-EN", flowIds: ["PR-FL-006"], locale: "en", state: "settings", setup: "settings", surfaceSelector: "[data-testid='ondo-b-settings-entry']", description: "Actual language and device-data settings" },
   { id: "PR-PX-RESET-CONFIRM-KO", flowIds: ["PR-FL-006"], locale: "ko", state: "reset-confirm", setup: "reset-confirm", surfaceSelector: "[data-testid='ondo-b-clear-device-confirm']", description: "Korean destructive reset confirmation" },
 ] as const
+
+/**
+ * Sparse structural supplements are intentionally separate from the canonical
+ * twenty-case cross-product. Their exact four rows are implemented only after
+ * the structural visual contract has first demonstrated RED.
+ */
+export const B_PRODUCTION_STRUCTURAL_VISUAL_CASES: readonly BProductionStructuralVisualCase[] = []
