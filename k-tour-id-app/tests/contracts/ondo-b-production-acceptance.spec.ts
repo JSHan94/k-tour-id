@@ -4,38 +4,32 @@ import { expect, test } from "@playwright/test"
 import { B_PRODUCTION_FLOWS, B_PRODUCTION_VISUAL_CASES } from "../helpers/ondo-b-production-registry"
 
 const APP_ROOT = process.cwd()
-const B_ENTRY = resolve(APP_ROOT, "features/ondo/app/ondo-product-b.tsx")
-const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx"] as const
+const B_ENTRY = resolve(APP_ROOT, "app/ondo-b/page.tsx")
+const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".json"] as const
 
 function localImportTargets(source: string) {
-  const targets: string[] = []
   const pattern = /(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g
-  for (const match of source.matchAll(pattern)) targets.push(match[1])
-  return targets.filter((target) => target.startsWith(".") || target.startsWith("@/"))
+  return [...source.matchAll(pattern)]
+    .map((match) => match[1])
+    .filter((target) => target.startsWith(".") || target.startsWith("@/"))
 }
 
 function resolveSource(importer: string, target: string) {
-  const base = target.startsWith("@/")
-    ? resolve(APP_ROOT, target.slice(2))
-    : resolve(dirname(importer), target)
+  const base = target.startsWith("@/") ? resolve(APP_ROOT, target.slice(2)) : resolve(dirname(importer), target)
   const candidates = extname(base)
     ? [base]
-    : [
-        ...SOURCE_EXTENSIONS.map((extension) => `${base}${extension}`),
-        ...SOURCE_EXTENSIONS.map((extension) => resolve(base, `index${extension}`)),
-      ]
+    : [...SOURCE_EXTENSIONS.map((extension) => `${base}${extension}`), ...SOURCE_EXTENSIONS.map((extension) => resolve(base, `index${extension}`))]
   return candidates.find((candidate) => existsSync(candidate)) ?? null
 }
 
-function productionImportGraph(entry = B_ENTRY) {
-  const pending = [entry]
+function productionImportGraph() {
+  const pending = [B_ENTRY]
   const visited = new Set<string>()
   while (pending.length > 0) {
     const file = pending.pop()
     if (!file || visited.has(file)) continue
     visited.add(file)
-    const source = readFileSync(file, "utf8")
-    for (const target of localImportTargets(source)) {
+    for (const target of localImportTargets(readFileSync(file, "utf8"))) {
       const dependency = resolveSource(file, target)
       if (dependency && !visited.has(dependency)) pending.push(dependency)
     }
@@ -50,19 +44,7 @@ function graphSource(files: readonly string[]) {
   }))
 }
 
-const BANNED_RUNTIME_PATHS = [
-  /(^|\/)after19(\/|$)/i,
-  /(^|\/)commerce(\/|$)/i,
-  /(^|\/)connect(\/|$)/i,
-  /(^|\/)identity(\/|$)/i,
-  /(^|\/)labs(\/|$)/i,
-  /(^|\/)rewards(\/|$)/i,
-  /(^|\/)trust(\/|$)/i,
-  /demo-signals/i,
-  /(^|\/)fixtures?(\.|\/|$)/i,
-] as const
-
-const BANNED_VISIBLE_COPY = [
+const FALSE_OR_TEST_COPY = [
   /\bdemo(?:nstration)?\b/i,
   /\bsimulat(?:e|ed|es|ing|ion|ions)\b/i,
   /\b(?:legacy\s+)?fixtures?\b/i,
@@ -73,27 +55,29 @@ const BANNED_VISIBLE_COPY = [
   /\bOOKRW\b/i,
   /\b(?:payment\s+)?KYC\b/i,
   /\bcheckout\b/i,
-  /\bafter\s*19\b/i,
-  /\b(?:join|open)\s+(?:a\s+)?table\b/i,
-  /\btable\s+chat\b/i,
   /\btrust\s+(?:score|axis|axes)\b/i,
   /\bvisit\s+stamps?\b/i,
   /\b(?:wallet|bridge)\s+(?:success|complete|confirmed)\b/i,
   /데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처|샘플\s*(?:데이터|신호)/i,
 ] as const
 
-test("PROD-B-001 active /ondo-b import graph excludes unconfigured product clusters and synthetic data", () => {
+test("PROD-B-001 active /ondo-b keeps the official guest discovery foundation reachable", () => {
   const paths = productionImportGraph().map((file) => relative(APP_ROOT, file))
-  const banned = paths.filter((path) => BANNED_RUNTIME_PATHS.some((pattern) => pattern.test(path)))
-  expect(banned, `banned runtime modules:\n${banned.join("\n")}`).toEqual([])
-
-  const source = graphSource(productionImportGraph())
-  const clusterTokens = /\b(?:TablesEntry|ConnectOverlays|GateOverlay|IdentityEntry|After19Layer|After19VenueReturn|CheckoutOverlay|LabsEntry|stamps?)\b/
-  const tokenHits = source.filter(({ source: text }) => clusterTokens.test(text)).map(({ file }) => file)
-  expect(tokenHits, `retired cluster symbols in runtime graph:\n${tokenHits.join("\n")}`).toEqual([])
+  expect(paths).toContain("features/ondo/map/map-entry-b.tsx")
+  expect(paths).toContain("features/ondo/place/canonical-place-overlay.tsx")
+  expect(paths).toContain("lib/ondo/venues/map-data.ts")
+  expect(paths).toContain("data/ondo-venues/canonical-venues-map.json")
 })
 
-test("PROD-B-002 scenario, QA, and legacy storage injection cannot mutate production UI or state", () => {
+test("PROD-B-002 official-source discovery truth remains a positive boundary", () => {
+  const graph = productionImportGraph().map((file) => readFileSync(file, "utf8")).join("\n")
+  expect(graph).toContain("MOIS_LOCALDATA_GENERAL_RESTAURANTS")
+  expect(graph).toContain("OFFICIAL_SOURCE")
+  expect(graph).toContain("UNKNOWN")
+  expect(graph).toContain("canonical-venue-directions")
+})
+
+test("PROD-B-003 scenario, QA, and legacy storage injection cannot mutate production UI or state", () => {
   const source = graphSource(productionImportGraph())
   const queryHits = source.filter(({ source: text }) => (
     /\.get\(\s*["'](?:scenario|qa|qaCase)["']\s*\)/.test(text)
@@ -120,11 +104,11 @@ test("PROD-B-002 scenario, QA, and legacy storage injection cannot mutate produc
   })
 })
 
-test("PROD-B-003 reachable user-facing literals contain no demo, simulation, hypothesis, or fake-success copy", () => {
+test("PROD-B-004 reachable user-facing literals contain no test or false-success copy", () => {
   const source = graphSource(productionImportGraph()).filter(({ file }) => /\.[jt]sx?$/.test(file))
   const rawHits = source.flatMap(({ file, source: text }) => {
     const literals = [...text.matchAll(/(["'`])([^"'`\n]{1,500})\1/g)].map((match) => match[2])
-    return literals.flatMap((literal) => BANNED_VISIBLE_COPY
+    return literals.flatMap((literal) => FALSE_OR_TEST_COPY
       .filter((pattern) => pattern.test(literal))
       .map((pattern) => ({ file, literal: literal.slice(0, 180), pattern: String(pattern) })))
   })
@@ -132,7 +116,7 @@ test("PROD-B-003 reachable user-facing literals contain no demo, simulation, hyp
   expect(hits, JSON.stringify(hits, null, 2)).toEqual([])
 })
 
-test("PROD-B-004 active production registry contains only six real flows and twenty pre-baseline cases", () => {
+test("PROD-B-005 six production flows remain the guest foundation, not the whole PRD gate", () => {
   expect(B_PRODUCTION_FLOWS.map((flow) => flow.id)).toEqual([
     "PR-FL-001",
     "PR-FL-002",
@@ -143,9 +127,5 @@ test("PROD-B-004 active production registry contains only six real flows and twe
   ])
   expect(B_PRODUCTION_VISUAL_CASES).toHaveLength(20)
   expect(new Set(B_PRODUCTION_VISUAL_CASES.map((item) => item.id)).size).toBe(20)
-  const represented = new Set(B_PRODUCTION_VISUAL_CASES.flatMap((item) => item.flowIds))
-  expect(represented).toEqual(new Set(B_PRODUCTION_FLOWS.map((flow) => flow.id)))
-
-  const registryText = JSON.stringify({ flows: B_PRODUCTION_FLOWS, cases: B_PRODUCTION_VISUAL_CASES })
-  expect(registryText).not.toMatch(/identity|account|kyc|payment|commerce|checkout|tables?|chat|report|labs|after\s*19|trust|stamps?|signal|score|fixture|simulat|demo/i)
+  expect(new Set(B_PRODUCTION_VISUAL_CASES.flatMap((item) => item.flowIds))).toEqual(new Set(B_PRODUCTION_FLOWS.map((flow) => flow.id)))
 })

@@ -42,10 +42,11 @@ test("PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview
   expect(existsSync(path.join(appRoot, "lib/ondo/venues/demo-signals.ts"))).toBe(false)
 })
 
-test("PROD-DISCOVERY-004 place surface contains only directory decisions", () => {
+test("PROD-DISCOVERY-004 place surface preserves sourced facts and canonical decisions when journeys are added", () => {
   const source = readFileSync(path.join(appRoot, "features/ondo/place/canonical-place-overlay.tsx"), "utf8")
   expect(source).toContain("canonical-venue-directions")
   expect(source).toContain("canonical-venue-save")
-  expect(source).not.toMatch(/canonical-venue-(signal|checkout|tables)|canonical-after19/i)
-  expect(source).not.toMatch(/OPEN_AFTER19|local_signal|checkout/)
+  expect(source).toContain("Official LOCALDATA record")
+  expect(source).toContain("data-address-truth")
+  expect(source).toContain("UNKNOWN")
 })

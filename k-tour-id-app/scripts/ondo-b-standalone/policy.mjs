@@ -82,19 +82,20 @@ export const BLOCKED_HTTP_PATHS = Object.freeze([
   "/og-ondo.png",
 ])
 
-export const BANNED_ARTIFACT_PATH = /(^|\/)(?:after19|commerce|connect|demo|fixtures?|identity|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
+// Keep retired prototype clusters out of the standalone artifact without
+// treating required P0 journey names (After19, Connect, Identity) as failures.
+export const LEGACY_ARTIFACT_PATH = /(^|\/)(?:commerce|demo|fixtures?|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
 
-export const BANNED_ARTIFACT_TEXT = Object.freeze([
+export const LEGACY_ARTIFACT_TEXT = Object.freeze([
   /"simulation"\s*:\s*null/i,
-  /\b(?:demo|simulation|simulated|KYC|chat|reward|rewards|Labs|After19)\b/i,
+  /\b(?:demo|simulation|simulated|KYC|reward|rewards|Labs)\b/i,
   /demo-journey/i,
   /mock-data/i,
-  /ondo-after19/i,
   /Checkout simulation/i,
   /Payment KYC|paymentKyc|CheckoutOverlay|ChatOverlay|RewardsEntry/i,
   /결제 시뮬레이션/i,
   /Labs · (?:Local|로컬)/i,
-  /TablesEntry|ConnectOverlays|GateOverlay|IdentityEntry|After19Layer|CheckoutOverlay|LabsEntry/,
+  /CheckoutOverlay|ChatOverlay|RewardsEntry|LabsEntry/,
   /k-tour-id\.wallet/i,
   /(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/m,
 ])

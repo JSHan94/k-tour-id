@@ -3,8 +3,8 @@ import { extname, relative, resolve } from "node:path"
 import { createHash } from "node:crypto"
 import {
   APP_ROOT,
-  BANNED_ARTIFACT_PATH,
-  BANNED_ARTIFACT_TEXT,
+  LEGACY_ARTIFACT_PATH,
+  LEGACY_ARTIFACT_TEXT,
   EXPECTED_ROUTE_FILES,
   PUBLIC_FILES,
   STAGE_DIST,
@@ -44,13 +44,13 @@ export async function scanStandaloneArtifact() {
   }
 
   const artifactFiles = await filesBelow(STAGE_DIST)
-  const bannedPaths = artifactFiles.filter((file) => BANNED_ARTIFACT_PATH.test(file))
-  if (bannedPaths.length) fail("Legacy-named files were emitted", bannedPaths)
+  const legacyPaths = artifactFiles.filter((file) => LEGACY_ARTIFACT_PATH.test(file))
+  if (legacyPaths.length) fail("Legacy-named files were emitted", legacyPaths)
 
   const textHits = []
   for (const file of artifactFiles.filter((item) => TEXT_EXTENSIONS.has(extname(item)))) {
     const text = await readFile(resolve(STAGE_DIST, file), "utf8")
-    for (const pattern of BANNED_ARTIFACT_TEXT) {
+    for (const pattern of LEGACY_ARTIFACT_TEXT) {
       if (pattern.test(text)) textHits.push(`${file}: ${pattern}`)
     }
   }

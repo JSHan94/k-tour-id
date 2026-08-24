@@ -4,8 +4,8 @@ import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import {
   APP_ROOT,
-  BANNED_ARTIFACT_TEXT,
   BLOCKED_HTTP_PATHS,
+  LEGACY_ARTIFACT_TEXT,
   STAGE_ROOT,
 } from "./policy.mjs"
 
@@ -49,7 +49,7 @@ async function request(baseUrl, path, expectedStatus) {
 }
 
 function assertNoLegacyText(text, label) {
-  for (const pattern of BANNED_ARTIFACT_TEXT) {
+  for (const pattern of LEGACY_ARTIFACT_TEXT) {
     assert(!pattern.test(text), `${label}: emitted blocked text ${pattern}`)
   }
 }

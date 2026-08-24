@@ -30,9 +30,9 @@ export type BProductionStructuralVisualCase = BProductionVisualCase & {
 }
 
 /**
- * Release-facing ONDO B flows. This registry intentionally excludes every
- * externally unconfigured identity, social, commerce, reputation, and Labs
- * concept that appeared in the historical prototype evidence.
+ * Preserved official-source guest-discovery foundation. These six flows stay
+ * release obligations, but they are a subset of the P0 fidelity inventory in
+ * tests/helpers/ondo-prd-fidelity.ts, not a maximum product scope.
  */
 export const B_PRODUCTION_FLOWS: readonly BProductionFlow[] = [
   {
