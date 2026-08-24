@@ -32,10 +32,24 @@ type Violation = { scenario: string; rule: string; subject: string; detail?: str
 // the 320px and 801/900px seams that the former geometry test did not exercise.
 const VIEWPORTS: readonly Viewport[] = [
   { label: "narrow-portrait", width: 320, height: 720 },
+  { label: "narrow-short-portrait", width: 320, height: 568 },
+  { label: "narrow-360x568", width: 360, height: 568 },
+  { label: "phone-390x500", width: 390, height: 500 },
+  { label: "phone-390x568", width: 390, height: 568 },
   { label: "phone-390x800", width: 390, height: 800 },
   { label: "phone-390x844", width: 390, height: 844 },
+  { label: "phone-430x500", width: 430, height: 500 },
   { label: "phone-430x501-seam", width: 430, height: 501 },
   { label: "phone-430x932", width: 430, height: 932 },
+  { label: "medium-500x432", width: 500, height: 432 },
+  { label: "medium-500x532", width: 500, height: 532 },
+  { label: "inline-lower-599x501", width: 599, height: 501 },
+  { label: "inline-boundary-lower-599x582", width: 599, height: 582 },
+  { label: "inline-boundary-upper-600x582", width: 600, height: 582 },
+  { label: "medium-block-lower-599x681", width: 599, height: 681 },
+  { label: "medium-block-upper-599x682", width: 599, height: 682 },
+  { label: "wide-block-lower-600x481", width: 600, height: 481 },
+  { label: "wide-block-upper-600x482", width: 600, height: 482 },
   { label: "compact-600x501", width: 600, height: 501 },
   { label: "short-667x320", width: 667, height: 320 },
   { label: "landscape-667x501", width: 667, height: 501 },
@@ -65,10 +79,8 @@ const EXPECTED_KEY = {
 } as const
 
 function expectedLayoutForRoot(root: Rect): LayoutMode {
-  // Cross-platform sizing of the worst EN/KO offline chrome establishes two
-  // honest map budgets with wrap variance included: 400px for the two-row
-  // >=600px layout and 600px for the narrower stacked layout. Below either
-  // budget the requested map remains while the effective surface is the list.
+  // Measured in Chromium against the worst EN/KO offline copy and rounded up
+  // for font/platform safety. Equality is intentionally a Map boundary.
   if (root.height < 400 || (root.width < 600 && root.height < 600)) return "ultra-short"
   if (root.width <= 430 || (root.width > root.height && root.height <= 568)) return "compact-map"
   return "spacious-map"
@@ -713,9 +725,12 @@ async function auditUltraShortStateCarry(browser: Browser, violations: Violation
   const page = await context.newPage()
   const scenario = `${locale}/${target.width}x${target.height}/${phase}-carry`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
+    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    const search = root.getByTestId("ondo-b-search")
+    await search.fill("mapo")
+    await expect(root).toHaveAttribute("data-result-count", "5")
     if (phase === "offline") {
       await context.setOffline(true)
       await expect(root).toHaveAttribute("data-connectivity", "offline")
@@ -726,6 +741,7 @@ async function auditUltraShortStateCarry(browser: Browser, violations: Violation
     }
     await page.setViewportSize({ width: target.width, height: target.height })
     await settleLayout(root, "ultra-short", "list")
+    issue(violations, scenario, "ultra-short-state-preserved", "query-category-count", await search.inputValue() === "mapo" && await root.getAttribute("data-result-count") === "5" && (await root.getByTestId("ondo-b-category-rail").getByRole("button", { pressed: true }).textContent())?.trim() === (locale === "en" ? "Korean" : "한식"), `query=${await search.inputValue()} count=${await root.getAttribute("data-result-count")}`)
     await auditUltraShortLayout(violations, page, locale, target, phase)
   } catch (error) {
     violations.push({ scenario, rule: "ultra-short-state-carry-completed", subject: phase, detail: error instanceof Error ? error.message : String(error) })
@@ -756,6 +772,63 @@ async function auditRootBoundaryModes(browser: Browser, violations: Violation[],
     }
   } catch (error) {
     violations.push({ scenario, rule: "root-boundary-completed", subject: "899-900", detail: error instanceof Error ? error.message : String(error) })
+  } finally {
+    await context.close()
+  }
+}
+
+async function auditAutoListBoundary(
+  browser: Browser,
+  violations: Violation[],
+  locale: Locale,
+  lower: Viewport,
+  upper: Viewport,
+  expectedLowerRoot: { width: number; height: number },
+  expectedUpperRoot: { width: number; height: number },
+  expectedUpperMode: Exclude<LayoutMode, "ultra-short">,
+) {
+  const context = await browser.newContext({ viewport: { width: 900, height: 720 } })
+  await seedContext(context, locale)
+  const page = await context.newPage()
+  const scenario = `${locale}/auto-list-boundary/${lower.width}x${lower.height}->${upper.width}x${upper.height}`
+  try {
+    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    const root = page.getByTestId("ondo-b-map-entry")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    const search = root.getByTestId("ondo-b-search")
+    await search.fill("mapo")
+    await expect(root).toHaveAttribute("data-result-count", "5")
+
+    await page.setViewportSize({ width: lower.width, height: lower.height })
+    await settleLayout(root, "ultra-short", "list")
+    const lowerRoot = await elementReceipt(root)
+    const lowerReported = Number(await root.getAttribute("data-map-root-block-size"))
+    issue(violations, scenario, "auto-list-boundary-geometry", "lower", Boolean(lowerRoot
+      && Math.abs(lowerRoot.width - expectedLowerRoot.width) <= 1
+      && Math.abs(lowerRoot.height - expectedLowerRoot.height) <= 1
+      && expectedLayoutForRoot(lowerRoot) === "ultra-short"), lowerRoot ? JSON.stringify(lowerRoot) : "missing")
+    issue(violations, scenario, "auto-list-boundary-mode", "lower", await root.getAttribute("data-layout-mode") === "ultra-short" && await root.getAttribute("data-requested-view") === "map" && await root.getAttribute("data-effective-view") === "list", `layout=${await root.getAttribute("data-layout-mode")} requested=${await root.getAttribute("data-requested-view")} effective=${await root.getAttribute("data-effective-view")}`)
+    issue(violations, scenario, "root-block-size-receipt", "lower", Boolean(lowerRoot && Number.isFinite(lowerReported) && Math.abs(lowerReported - lowerRoot.height) <= 1), `reported=${lowerReported} actual=${lowerRoot?.height}`)
+    await search.focus()
+
+    await page.setViewportSize({ width: upper.width, height: upper.height })
+    await settleLayout(root, expectedUpperMode, "map")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    const upperRoot = await elementReceipt(root)
+    const upperReported = Number(await root.getAttribute("data-map-root-block-size"))
+    issue(violations, scenario, "auto-list-boundary-geometry", "upper", Boolean(upperRoot
+      && Math.abs(upperRoot.width - expectedUpperRoot.width) <= 1
+      && Math.abs(upperRoot.height - expectedUpperRoot.height) <= 1
+      && expectedLayoutForRoot(upperRoot) === expectedUpperMode), upperRoot ? JSON.stringify(upperRoot) : "missing")
+    issue(violations, scenario, "auto-list-boundary-mode", "upper", await root.getAttribute("data-layout-mode") === expectedUpperMode && await root.getAttribute("data-requested-view") === "map" && await root.getAttribute("data-effective-view") === "map", `layout=${await root.getAttribute("data-layout-mode")} requested=${await root.getAttribute("data-requested-view")} effective=${await root.getAttribute("data-effective-view")}`)
+    issue(violations, scenario, "root-block-size-receipt", "upper", Boolean(upperRoot && Number.isFinite(upperReported) && Math.abs(upperReported - upperRoot.height) <= 1), `reported=${upperReported} actual=${upperRoot?.height}`)
+    issue(violations, scenario, "auto-list-boundary-state-focus", "upper", await search.inputValue() === "mapo" && await root.getAttribute("data-result-count") === "5" && await search.evaluate((node) => document.activeElement === node), `query=${await search.inputValue()} count=${await root.getAttribute("data-result-count")}`)
+
+    await page.setViewportSize({ width: lower.width, height: lower.height })
+    await settleLayout(root, "ultra-short", "list")
+    issue(violations, scenario, "auto-list-boundary-state-focus", "lower-return", await root.getAttribute("data-requested-view") === "map" && await root.getAttribute("data-effective-view") === "list" && await search.inputValue() === "mapo" && await root.getAttribute("data-result-count") === "5" && await search.evaluate((node) => document.activeElement === node), `requested=${await root.getAttribute("data-requested-view")} effective=${await root.getAttribute("data-effective-view")} query=${await search.inputValue()} count=${await root.getAttribute("data-result-count")}`)
+  } catch (error) {
+    violations.push({ scenario, rule: "auto-list-boundary-completed", subject: `${lower.label}->${upper.label}`, detail: error instanceof Error ? error.message : String(error) })
   } finally {
     await context.close()
   }
@@ -1086,9 +1159,31 @@ test.describe("ONDO B production map chrome RED matrix", () => {
     const violations: Violation[] = []
     await runStateMatrix(browser, violations)
     for (const locale of ["en", "ko"] as const) {
-      for (const target of [{ label: "short-667x320", width: 667, height: 320 }, { label: "short-844x390", width: 844, height: 390 }] as const) {
+      for (const target of [
+        { label: "fallback-320x320", width: 320, height: 320 },
+        { label: "narrow-320x568", width: 320, height: 568 },
+        { label: "narrow-360x568", width: 360, height: 568 },
+        { label: "narrow-390x500", width: 390, height: 500 },
+        { label: "narrow-390x568", width: 390, height: 568 },
+        { label: "narrow-430x500", width: 430, height: 500 },
+        { label: "narrow-430x501", width: 430, height: 501 },
+        { label: "medium-500x432", width: 500, height: 432 },
+        { label: "medium-500x532", width: 500, height: 532 },
+        { label: "inline-599x501", width: 599, height: 501 },
+        { label: "inline-boundary-599x582", width: 599, height: 582 },
+        { label: "medium-block-599x681", width: 599, height: 681 },
+        { label: "wide-block-600x481", width: 600, height: 481 },
+        { label: "short-667x320", width: 667, height: 320 },
+        { label: "shell-801x501", width: 801, height: 501 },
+        { label: "short-844x390", width: 844, height: 390 },
+        { label: "short-844x501", width: 844, height: 501 },
+        { label: "short-844x520", width: 844, height: 520 },
+      ] as const) {
         for (const phase of ["ready", "denied", "offline"] as const) await auditUltraShortStateCarry(browser, violations, locale, phase, target)
       }
+      await auditAutoListBoundary(browser, violations, locale, { label: "root-399", width: 600, height: 481 }, { label: "root-400", width: 600, height: 482 }, { width: 600, height: 399 }, { width: 600, height: 400 }, "compact-map")
+      await auditAutoListBoundary(browser, violations, locale, { label: "root-599", width: 599, height: 681 }, { label: "root-600", width: 599, height: 682 }, { width: 599, height: 599 }, { width: 599, height: 600 }, "spacious-map")
+      await auditAutoListBoundary(browser, violations, locale, { label: "inline-599", width: 599, height: 582 }, { label: "inline-600", width: 600, height: 582 }, { width: 599, height: 500 }, { width: 600, height: 500 }, "compact-map")
       await auditRootBoundaryModes(browser, violations, locale)
       await auditRequestedViewKeyboard(browser, violations, locale)
       await auditCompactZoomFocusSeam(browser, violations, locale, { label: "width-431", width: 431, height: 720 }, { label: "width-430", width: 430, height: 720 })
