@@ -359,8 +359,15 @@ export function MapEntryB() {
         const focusAfterCommit = (attempt = 0) => {
           if (traversalFocusVersion.current !== focusVersion) return
           const target = focusBDiscoveryTarget(entry)
-          if (target) target.focus({ preventScroll: true })
-          else if (attempt < 3) window.requestAnimationFrame(() => focusAfterCommit(attempt + 1))
+          if (target) {
+            target.focus({ preventScroll: true })
+            if (document.activeElement === target) return
+          }
+          // React may have committed the city entry while modal isolation is
+          // still releasing `inert`. Retry until the original opener can
+          // actually receive focus instead of treating mere DOM presence as
+          // a successful restoration.
+          if (attempt < 7) window.requestAnimationFrame(() => focusAfterCommit(attempt + 1))
         }
         window.requestAnimationFrame(() => focusAfterCommit())
       }
