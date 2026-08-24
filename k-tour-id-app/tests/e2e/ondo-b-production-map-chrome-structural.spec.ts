@@ -11,10 +11,20 @@ const TILEJSON = {
 
 const VIEWPORTS = [
   { width: 320, height: 720 },
+  { width: 320, height: 568 },
   { width: 360, height: 800 },
+  { width: 360, height: 568 },
   { width: 390, height: 800 },
   { width: 390, height: 844 },
+  { width: 390, height: 500 },
+  { width: 390, height: 568 },
   { width: 430, height: 932 },
+  { width: 430, height: 500 },
+  { width: 500, height: 432 },
+  { width: 500, height: 532 },
+  { width: 599, height: 631 },
+  { width: 600, height: 461 },
+  { width: 600, height: 501 },
   { width: 667, height: 320 },
   { width: 667, height: 501 },
   { width: 768, height: 501 },
@@ -151,8 +161,8 @@ test.describe("ONDO B structural production map chrome", () => {
           await page.setViewportSize(viewport)
           await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
           const root = page.getByTestId("ondo-b-map-entry")
-          await expect(root).toHaveAttribute("data-map-layout", /^(tall|compact|list)$/)
-          const layout = await root.getAttribute("data-map-layout")
+          await expect(root).toHaveAttribute("data-layout-mode", /^(ultra-short|compact-map|spacious-map)$/)
+          const layout = await root.getAttribute("data-layout-mode")
 
           const header = page.getByTestId("ondo-b-city-header")
           const search = page.getByTestId("ondo-b-search-shell")
@@ -172,20 +182,21 @@ test.describe("ONDO B structural production map chrome", () => {
           expect(railReceipt.lastRight ?? 0, "last rail item is reachable").toBeLessThanOrEqual((railReceipt.ownerRight ?? 0) + 1)
 
           await activateState(context, page, locationCase)
-          const view = page.getByTestId("ondo-b-view-toggle")
           const nav = page.getByTestId("ondo-main-nav")
-          await expectTarget(view, `${viewport.width}x${viewport.height} view`)
           for (let index = 0; index < 3; index += 1) await expectTarget(nav.getByRole("button").nth(index), `nav ${index + 1}`)
 
-          if (layout === "list") {
+          if (layout === "ultra-short") {
             await expect(page.getByTestId("ondo-b-list-panel")).toBeVisible()
-            await expect(view).toHaveAttribute("aria-pressed", "true")
+            await expect(page.getByTestId("ondo-b-effective-view-label")).toBeVisible()
+            await expect(page.getByTestId("ondo-b-view-toggle")).toHaveCount(0)
             await expect(page.getByTestId("ondo-b-map-key")).toHaveCount(0)
             await expect(page.getByTestId("ondo-b-location-message")).toHaveCount(0)
             await expect(page.locator(".maplibregl-ctrl-group button:visible")).toHaveCount(0)
             continue
           }
 
+          const view = page.getByTestId("ondo-b-view-toggle")
+          await expectTarget(view, `${viewport.width}x${viewport.height} view`)
           await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
           const chrome = page.getByTestId("ondo-b-map-chrome")
           const key = page.getByTestId("ondo-b-map-key")
