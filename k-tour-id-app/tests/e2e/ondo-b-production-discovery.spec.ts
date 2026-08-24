@@ -5,8 +5,13 @@ const SOURCE_ID = "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
 
 async function seedDirectory(page: Page, locale: "en" | "ko" = "en") {
   await page.addInitScript((nextLocale) => {
-    localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: nextLocale, guideSeen: true, savedVenueIds: [], discoveryPreferences: [] }))
-    sessionStorage.setItem("ondo.session.v3", JSON.stringify({ onboarding: "ONB-COMPLETE" }))
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: nextLocale,
+      onboarding: "ONB-COMPLETE",
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+    }))
   }, locale)
 }
 
