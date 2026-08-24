@@ -125,4 +125,15 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern) => pattern.test(symbol)), symbol).toBe(false)
     }
   })
+
+  test("B-STANDALONE-008 current closure ships B-native Pulse Table, After19, and exact return modules", async () => {
+    const { SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    for (const path of [
+      "features/ondo/connect/tables-entry-b.tsx",
+      "features/ondo/connect/pulse-table-b.module.css",
+      "features/ondo/after19/after19-jit-b.tsx",
+      "features/ondo/after19/after19-jit-b.module.css",
+      "features/ondo/contracts/return-to-b.ts",
+    ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+  })
 })

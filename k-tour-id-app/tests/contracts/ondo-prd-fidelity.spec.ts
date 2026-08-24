@@ -90,16 +90,15 @@ test("FID-P0-005 a Local Signal draft can contribute and return to the exact pla
 })
 
 test("FID-P0-006 one Pulse Table / Connect journey reaches join, recovery, and participant chat", () => {
-  expectReachable("features/ondo/connect/tables-entry.tsx")
-  expectReachable("features/ondo/connect/connect-overlays.tsx")
-  expectLiveEvidence(["tables-entry", "table-join", "table-join-retry", "table-view-alternative", "table-open-chat", "table-chat"])
+  expectReachable("features/ondo/connect/tables-entry-b.tsx")
+  expectReachable("features/ondo/after19/after19-jit-b.tsx")
+  expectLiveEvidence(["tables-entry", "table-join", "table-join-confirm", "table-view-alternative", "table-open-chat", "table-chat", "table-report", "table-block", "table-leave", "TABLE-FULL", "TABLE-CANCELLED", "TABLE-ENDED"])
 })
 
 test("FID-P0-007 After 19 keeps success, cancel, failure, unavailable, expiry, and exact-return outcomes", () => {
-  expectReachable("features/ondo/after19/after19-layer.tsx")
-  expectReachable("features/ondo/after19/after19-venue-return.tsx")
-  expectReachable("features/ondo/identity/gate-overlay.tsx")
-  expectLiveEvidence(["A19-ON", "A19-MANUAL-OFF", "gate-failure", "gate-unsupported", "after19-expiry-notice", "OPEN_AFTER19", "canonical-after19-access"])
+  expectReachable("features/ondo/after19/after19-jit-b.tsx")
+  expectReachable("features/ondo/contracts/return-to-b.ts")
+  expectLiveEvidence(["after19-walkthrough", "gate-success", "gate-cancel", "gate-failure", "gate-unsupported", "after19-expiry-notice", "after19-return", "JOIN_TABLE"])
 })
 
 test("FID-P0-008 ID exposes independent Person, 19+, and consent states", () => {
@@ -113,17 +112,18 @@ test("FID-P0-009 ID has a truthful one-time interactive walkthrough boundary", (
 })
 
 test("FID-P0-010 every JIT result preserves and consumes an exact returnTo once", () => {
-  expectReachable("features/ondo/contracts/return-to.ts")
-  expectReachable("features/ondo/shared/state/ondo-provider.tsx")
-  expectLiveEvidence(["ReturnToEnvelope", "tokenId", "gateQueue", "activeGate", "expiresAt", "consumedAt", "SAVE_VENUE", "JOIN_TABLE", "SUBMIT_LOCAL_SIGNAL", "OPEN_AFTER19"])
+  expectReachable("features/ondo/contracts/return-to-b.ts")
+  expectReachable("features/ondo/connect/tables-entry-b.tsx")
+  expectReachable("features/ondo/after19/after19-jit-b.tsx")
+  expectLiveEvidence(["BReturnToEnvelope", "tokenId", "activeGate", "expiresAt", "consumedAt", "JOIN_TABLE", "returnTo.tableId", "returnTo.venueId", "returnTo.draft"])
 })
 
 test("FID-P0-011 all must-live surfaces retain EN/KO, responsive, and keyboard/focus evidence", () => {
   for (const path of [
     "features/ondo/onboarding/official-directory-onboarding.tsx",
     "features/ondo/my/my-entry.tsx",
-    "features/ondo/connect/connect-overlays.tsx",
-    "features/ondo/after19/after19-layer.tsx",
+    "features/ondo/connect/tables-entry-b.tsx",
+    "features/ondo/after19/after19-jit-b.tsx",
     "features/ondo/identity/identity-entry.tsx",
   ]) expectReachable(path)
   expectLiveEvidence(["locale === \"ko\"", "onKeyDown", "useModalIsolation", "focusFirstAvailableDestination"])
