@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react"
 import { LockKeyhole } from "lucide-react"
+import { CANONICAL_PRIVATE_NOTE_MAX_LENGTH } from "@/lib/ondo/venues"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import styles from "../shared/ui/production-local.module.css"
 
@@ -32,13 +33,13 @@ export function PrivateNote({ venueId }: { venueId: string }) {
       <textarea
         id={`${noteId}-field`}
         value={draft}
-        maxLength={2_000}
+        maxLength={CANONICAL_PRIVATE_NOTE_MAX_LENGTH}
         rows={3}
         onChange={(event) => { setDraft(event.target.value); setReceipt("idle") }}
         placeholder={locale === "ko" ? "주문 방법이나 다시 찾을 이유를 적어 두세요." : "Keep an ordering tip or a reason to return."}
       />
       <div className={styles.noteActions}>
-        <small>{draft.length}/2000</small>
+        <small>{draft.length}/{CANONICAL_PRIVATE_NOTE_MAX_LENGTH}</small>
         <button type="button" onClick={save}>{locale === "ko" ? "개인 메모 저장" : "Save private note"}</button>
       </div>
       {receipt === "saved" ? <span className={styles.noteReceipt} role="status">{locale === "ko" ? "이 기기에 저장했어요." : "Saved on this device."}</span> : null}

@@ -2,7 +2,12 @@
 
 import type { ReactNode } from "react"
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
-import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
+import {
+  CANONICAL_PRIVATE_NOTE_MAX_LENGTH,
+  isCanonicalVenueId,
+  sanitizeCanonicalVenueIds,
+  sanitizeCanonicalVenueNotes,
+} from "@/lib/ondo/venues"
 import type { OndoBDiscoveryPreference, OndoBLocale } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "./ondo-b-preferences"
 
@@ -68,18 +73,9 @@ function isProductionPath() {
   return typeof window !== "undefined" && window.location.pathname.replace(/\/$/, "") === "/ondo-b"
 }
 
-function canonicalSavedVenueIds(value: unknown) {
-  if (!Array.isArray(value)) return []
-  return [...new Set(value.filter((id): id is string => typeof id === "string" && canonicalMapVenueById(id) !== undefined))]
-}
-
 function restoreBDeviceState(value: unknown): OndoBDeviceState {
   const record = value && typeof value === "object" ? value as Record<string, unknown> : {}
-  const savedVenueIds = canonicalSavedVenueIds(record.savedVenueIds)
-  const saved = new Set(savedVenueIds)
-  const notes = record.privateNotesByVenue && typeof record.privateNotesByVenue === "object"
-    ? record.privateNotesByVenue as Record<string, unknown>
-    : {}
+  const savedVenueIds = sanitizeCanonicalVenueIds(record.savedVenueIds)
   return {
     locale: record.locale === "ko" ? "ko" : "en",
     onboarding: record.onboarding === "ONB-COMPLETE" ? "ONB-COMPLETE" : "ONB-NEW",
@@ -87,9 +83,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
       ? [...new Set(record.discoveryPreferences.filter((item): item is OndoBDiscoveryPreference => B_PREFERENCES.has(item as OndoBDiscoveryPreference)))]
       : [],
     savedVenueIds,
-    privateNotesByVenue: Object.fromEntries(Object.entries(notes)
-      .filter(([venueId, note]) => saved.has(venueId) && typeof note === "string" && note.trim().length > 0)
-      .map(([venueId, note]) => [venueId, (note as string).slice(0, 2_000)])),
+    privateNotesByVenue: sanitizeCanonicalVenueNotes(record.privateNotesByVenue, savedVenueIds),
   }
 }
 
@@ -161,7 +155,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const persistCanonicalSavedVenue = useCallback((venueId: string, toggle: boolean) => {
-    if (!canonicalMapVenueById(venueId) || !isProductionPath()) {
+    if (!isCanonicalVenueId(venueId) || !isProductionPath()) {
       setState((current) => ({ ...current, saveStatusByVenue: { ...current.saveStatusByVenue, [venueId]: "SAV-FAILED" } }))
       return false
     }
@@ -200,7 +194,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     })),
     setSurface: (surface) => setState((current) => ({
       ...current,
-      surface: surface.kind === "map" || canonicalMapVenueById(surface.venueId) ? surface : { kind: "map" },
+      surface: surface.kind === "map" || isCanonicalVenueId(surface.venueId) ? surface : { kind: "map" },
     })),
     setDiscoveryPreferences: (discoveryPreferences) => {
       if (!commit((current) => ({ ...current, discoveryPreferences }))) notify(stateRef.current.locale === "ko" ? "선택을 저장하지 못했어요." : "Choices could not be saved.")
@@ -219,8 +213,8 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       persistCanonicalSavedVenue(venueId, true)
     },
     setPrivateNote: (venueId, note) => {
-      if (!canonicalMapVenueById(venueId) || !stateRef.current.savedVenueIds.includes(venueId)) return false
-      const normalized = note.trim().slice(0, 2_000)
+      if (!isCanonicalVenueId(venueId) || !stateRef.current.savedVenueIds.includes(venueId)) return false
+      const normalized = note.trim().slice(0, CANONICAL_PRIVATE_NOTE_MAX_LENGTH)
       return commit((current) => {
         const privateNotesByVenue = { ...current.privateNotesByVenue }
         if (normalized) privateNotesByVenue[venueId] = normalized
