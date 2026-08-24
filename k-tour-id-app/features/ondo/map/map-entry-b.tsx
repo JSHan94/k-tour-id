@@ -338,10 +338,8 @@ export function MapEntryB() {
     const root = cityRootNode.current
     let previousMode: MapLayoutMode = "measuring"
     const applyLayout = (width: number, height: number) => {
-      const usesUltraShortList = height < 380
-        || (width <= 430 && height < 600)
-        || (width < 600 && height < 550)
-        || (width < 780 && height < 400)
+      const usesUltraShortList = height < 400
+        || (width < 600 && height < 600)
       const nextMode: MapLayoutMode = usesUltraShortList
         ? "ultra-short"
         : width <= 430 || (width > height && height <= 568)
