@@ -357,6 +357,11 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
     rootRef.current?.scrollTo({ top: 0, behavior: "auto" })
   }, [view])
   useEffect(() => {
+    if (!consent) return
+    const frame = window.requestAnimationFrame(() => rootRef.current?.scrollTo({ top: 0, behavior: "auto" }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [consent])
+  useEffect(() => {
     setBenefitQa((window as QaWindow).__ONDO_B_QA__?.benefit)
   }, [])
 

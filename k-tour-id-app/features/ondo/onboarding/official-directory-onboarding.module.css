@@ -936,6 +936,7 @@
 }
 
 @media (max-width: 340px) and (min-height: 600px) {
+  .eyebrow { letter-spacing: .08em; white-space: nowrap; }
   .value h1 { font-size: 27px; }
   .lead { font-size: 12px; }
   .actions { margin-top: 14px; }

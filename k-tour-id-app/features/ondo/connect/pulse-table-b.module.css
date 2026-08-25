@@ -387,6 +387,7 @@
 }
 
 @media (min-width: 900px) and (min-height: 501px) {
+  .entry { display: grid; grid-template-rows: auto auto; align-content: center; }
   .detail { width: min(100%, 920px); }
   .detailBody {
     grid-template-columns: minmax(0, .88fr) minmax(360px, 1.12fr);

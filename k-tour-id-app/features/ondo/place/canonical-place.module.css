@@ -630,7 +630,7 @@
   .pulsePeek strong { font-size: 14px; }
   .pulsePeek small,
   .pulsePeek p,
-  .pulsePeek em { font-size: 12px; line-height: 1.35; -webkit-line-clamp: 1; }
+  .pulsePeek em { font-size: 12px; line-height: 1.35; -webkit-line-clamp: 2; }
   .peekActions { gap: 8px; margin-top: 8px; }
   .peekActions a,
   .peekActions button { min-height: 48px; border-radius: 15px; }
