@@ -7,6 +7,8 @@ const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf
 test.describe("ONDO B map Pulse visual contract", () => {
   test("curated Pulse stays visible above neutral official groups from the city zoom", () => {
     const map = source("features/ondo/map/map-entry-b.tsx")
+    const css = source("features/ondo/map/map-b.module.css")
+    const model = source("features/ondo/pulse-b/pulse-model-b.ts")
 
     for (const token of [
       "pulseRank",
@@ -24,11 +26,28 @@ test.describe("ONDO B map Pulse visual contract", () => {
 
     expect(map).toContain("const duration = 220")
     expect(map).toContain('"text-size": ["interpolate", ["linear"], ["zoom"], 9, 12')
+    expect(map).toContain('"text-size": 12')
+    expect(map).toContain('id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse"')
+    expect(map).toContain('["zoom"], 9, 22')
     expect(map).not.toContain("clusterProperties:")
 
-    for (const level of ["peak", "hot", "rising", "warming", "low", "limited"]) {
-      expect(map).toContain(`\"${level}\"`)
+    const palette = {
+      peak: "#7A2048",
+      hot: "#C94832",
+      rising: "#E6843B",
+      warming: "#EBC463",
+      low: "#EFE1B7",
+      limited: "#CFCAC0",
     }
+    for (const [level, color] of Object.entries(palette)) {
+      expect(map).toContain(`\"${level}\"`)
+      expect(map.toUpperCase()).toContain(color)
+      expect(css.toUpperCase()).toContain(color)
+      expect(model.toUpperCase()).toContain(color)
+    }
+    expect(css).toContain('.pulseLegend span[data-level="limited"] i')
+    expect(css).toContain("border-style: dashed")
+    expect(css).not.toContain(".mapKey > div > span { font-size: 0; }")
   })
 
   test("the map keeps a restrained motion and progressive-disclosure grammar", () => {

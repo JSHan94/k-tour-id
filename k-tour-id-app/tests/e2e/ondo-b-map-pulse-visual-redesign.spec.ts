@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const PORTRAITS = [
+  { width: 320, height: 720 },
   { width: 360, height: 800 },
   { width: 390, height: 844 },
   { width: 430, height: 932 },
@@ -79,23 +80,29 @@ test.describe("ONDO B polished Pulse map", () => {
     }
   }
 
-  test("the 844x390 compact composition and mobile List both remain scrollable", async ({ page }) => {
-    await page.setViewportSize({ width: 844, height: 390 })
-    await seedDirectory(page, "en")
-    await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
-    const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-effective-view", "list")
-    const landscapePanel = page.getByTestId("ondo-b-list-panel")
-    await expect(landscapePanel).toBeVisible()
-    await landscapePanel.evaluate((node) => { node.scrollTop = 120 })
-    expect(await landscapePanel.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+  for (const locale of ["en", "ko"] as const) {
+    test(`${locale} 844x390 compact composition and mobile List remain scrollable`, async ({ page }) => {
+      await page.setViewportSize({ width: 844, height: 390 })
+      await seedDirectory(page, locale)
+      await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+      const root = page.getByTestId("ondo-b-map-entry")
+      await expect(root).toHaveAttribute("data-effective-view", "list")
+      const landscapePanel = page.getByTestId("ondo-b-list-panel")
+      await expect(landscapePanel).toBeVisible()
+      await landscapePanel.evaluate((node) => { node.scrollTop = 120 })
+      expect(await landscapePanel.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
 
-    await page.setViewportSize({ width: 390, height: 844 })
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
-    const mobilePanel = page.getByTestId("ondo-b-list-panel")
-    await expect(mobilePanel).toBeVisible()
-    expect(await mobilePanel.evaluate((node) => node.scrollHeight > node.clientHeight)).toBe(true)
-    await mobilePanel.evaluate((node) => { node.scrollTop = 240 })
-    expect(await mobilePanel.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
-  })
+      await page.setViewportSize({ width: 390, height: 844 })
+      await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+      const mobilePanel = page.getByTestId("ondo-b-list-panel")
+      await expect(mobilePanel).toBeVisible()
+      expect(await mobilePanel.evaluate((node) => node.scrollHeight > node.clientHeight)).toBe(true)
+      const hottest = page.getByTestId("ondo-b-venue-list").locator("li[data-pulse-priority]").first()
+      await expect(hottest).toHaveAttribute("data-pulse-priority", "peak")
+      const hottestButton = hottest.getByRole("button")
+      await hottestButton.focus()
+      await page.keyboard.press("Enter")
+      await expect(page.getByTestId("canonical-place-dialog")).toBeVisible()
+    })
+  }
 })
