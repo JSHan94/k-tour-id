@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
   createStableCommerceBState,
   stableCommerceBalanceB,
+  stableCommerceBreakdownB,
   stableCommerceBReducer,
   stableCommerceDebitB,
   stableCommerceSettlementB,
@@ -26,7 +27,8 @@ test("B-COMMERCE-MODEL-001 voucher-adjusted success debits once and creates one 
     { side: "holder", amount: -19, kind: "PAYMENT", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" },
     { side: "merchant", amount: 19, kind: "PAYMENT", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" },
   ])
-  expect(stableCommerceSettlementB(state)).toEqual({ gross: 22, benefit: 3, net: 19 })
+  expect(stableCommerceSettlementB(state)).toBe(19)
+  expect(stableCommerceBreakdownB(state)).toEqual({ gross: 22, benefit: 3, net: 19 })
 })
 
 test("B-COMMERCE-MODEL-002 refund reverses the ledger and restores the one-use voucher", () => {
@@ -46,7 +48,7 @@ test("B-COMMERCE-MODEL-002 refund reverses the ledger and restores the one-use v
     { side: "holder", amount: 19, kind: "REFUND", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-REFUND-20260825-001" },
     { side: "merchant", amount: -19, kind: "REFUND", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-REFUND-20260825-001" },
   ])
-  expect(stableCommerceSettlementB(state).net).toBe(0)
+  expect(stableCommerceSettlementB(state)).toBe(0)
 })
 
 test("B-COMMERCE-MODEL-003 failure and insufficient returns never mutate the ledger", () => {
