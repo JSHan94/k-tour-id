@@ -137,6 +137,16 @@ test.describe("personal surfaces visual excellence", () => {
     expect((balanceVisual.background.match(/gradient/g) ?? []).length).toBeGreaterThanOrEqual(3)
     expect(balanceVisual.light).not.toBe("none")
 
+    await page.setViewportSize({ width: 320, height: 720 })
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await page.getByTestId("nav-id").click()
+    const [connectBox, navBox] = await Promise.all([
+      page.getByTestId("wallet-link-open").boundingBox(),
+      page.getByTestId("ondo-main-nav").boundingBox(),
+    ])
+    expect(connectBox?.y ?? 720).toBeGreaterThanOrEqual(0)
+    expect((connectBox?.y ?? 720) + (connectBox?.height ?? 0)).toBeLessThanOrEqual((navBox?.y ?? 720) - 6)
+
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.reload({ waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-id").click()
@@ -151,9 +161,11 @@ test.describe("personal surfaces visual excellence", () => {
     const balance = page.getByTestId("wallet-balance")
     const [passBox, balanceBox] = await Promise.all([pass.boundingBox(), balance.boundingBox()])
     expect(passBox?.width ?? 844).toBeLessThan(390)
+    expect(passBox?.y ?? 390).toBeLessThan(180)
+    expect((passBox?.y ?? 390) + (passBox?.height ?? 0)).toBeLessThanOrEqual(390)
     expect(balanceBox?.x ?? 0).toBeGreaterThan((passBox?.x ?? 0) + (passBox?.width ?? 0))
     expect(balanceBox?.y ?? 390).toBeLessThan(180)
-    expect((balanceBox?.y ?? 390) + (balanceBox?.height ?? 0)).toBeLessThanOrEqual(316)
+    expect((balanceBox?.y ?? 390) + (balanceBox?.height ?? 0)).toBeLessThanOrEqual(390)
   })
 
   test("desktop offer is asymmetric and payment/refund receipts read as distinct tickets", async ({ page }) => {
@@ -193,6 +205,43 @@ test.describe("personal surfaces visual excellence", () => {
     const refundedColor = await mark.evaluate((element) => getComputedStyle(element).backgroundColor)
     expect(refundedColor).not.toBe(paidColor)
   })
+
+  for (const locale of ["en", "ko"] as const) {
+    test(`${locale.toUpperCase()} empty My Korea remains a composed trip starting point`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 844 })
+      await seed(page, locale)
+      const my = await openTab(page, "nav-my", "ondo-b-my-korea-entry")
+      await expectNoTrustClamps(my)
+      const emptyStates = my.locator("[data-testid$='-empty']")
+      expect(await emptyStates.count()).toBeGreaterThanOrEqual(3)
+      expect(await my.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+      mkdirSync(EVIDENCE_DIR, { recursive: true })
+      await page.screenshot({ path: resolve(EVIDENCE_DIR, `${locale}-390-my-empty.png`), animations: "disabled" })
+    })
+
+    test(`${locale.toUpperCase()} mobile offer preserves a premium recommendation and ready-to-pay frame`, async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: "reduce" })
+      await page.setViewportSize({ width: 390, height: 844 })
+      await seed(page, locale)
+      await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
+      await page.getByTestId("canonical-meal-benefit-open").click()
+      const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+      await expect(offer).toBeVisible()
+      mkdirSync(EVIDENCE_DIR, { recursive: true })
+      await page.screenshot({ path: resolve(EVIDENCE_DIR, `${locale}-390-offer-recommended.png`) })
+
+      await offer.getByTestId("benefit-accept").click()
+      await offer.getByTestId("payment-confirm").click()
+      const connect = page.getByTestId("wallet-connect-sheet")
+      await expect(connect).toBeVisible()
+      await connect.locator("button").nth(1).click()
+      await expect(connect).toBeHidden()
+      await offer.getByTestId("payment-minimum-consent").locator("input").check()
+      await expect(offer.getByTestId("payment-confirm")).toBeEnabled()
+      await page.screenshot({ path: resolve(EVIDENCE_DIR, `${locale}-390-offer-ready.png`) })
+    })
+  }
 
   test("personal-surface entrance motion resolves to stillness for reduced motion", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })

@@ -210,9 +210,19 @@ for (const locale of ["en", "ko"] as const) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
       const entry = await openTables(page, locale)
       await noHorizontalOverflow(entry)
+      if (["320x720", "390x844", "844x390"].includes(viewport.label)) {
+        const openBox = await page.getByTestId(`table-open-${TABLE_ID}`).boundingBox()
+        expect(openBox?.y ?? viewport.height).toBeGreaterThanOrEqual(0)
+        expect((openBox?.y ?? viewport.height) + (openBox?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
+      }
       await quietScreenshot(page, `${locale}-${viewport.label}-tables`)
 
       const detail = await openTableDetail(page)
+      if (viewport.label === "844x390") {
+        const joinBox = await detail.getByTestId("table-join").boundingBox()
+        expect(joinBox?.y ?? viewport.height).toBeGreaterThanOrEqual(0)
+        expect((joinBox?.y ?? viewport.height) + (joinBox?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
+      }
       await quietScreenshot(page, `${locale}-${viewport.label}-table-detail`)
 
       const gate = await openReview(page)

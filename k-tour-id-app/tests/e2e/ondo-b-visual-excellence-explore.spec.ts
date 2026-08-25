@@ -39,6 +39,27 @@ async function seedCompletedBDevice(page: Page, locale: (typeof LOCALES)[number]
   }, { deviceLocale: locale })
 }
 
+async function seedFreshBOnboardingDevice(page: Page, locale: (typeof LOCALES)[number]) {
+  await seedFreshOnboarding(page, locale)
+  await page.addInitScript(({ deviceLocale }) => {
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: deviceLocale,
+      onboarding: "ONB-NEW",
+      persona: null,
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+  }, { deviceLocale: locale })
+}
+
 async function expectNoClip(scope: Locator) {
   const clipped = await scope.evaluateAll((nodes) => nodes.map((node) => ({
     horizontal: node.scrollWidth > node.clientWidth + 1,
@@ -68,7 +89,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
 
   for (const locale of LOCALES) {
     test(`${locale.toUpperCase()} onboarding is a branded Pulse journey without clipped truth or phone-width desktop framing`, async ({ page }) => {
-      await seedFreshOnboarding(page, locale)
+      await seedFreshBOnboardingDevice(page, locale)
 
       for (const viewport of VIEWPORTS) {
         await test.step(viewport.id, async () => {
@@ -106,6 +127,45 @@ test.describe("ONDO Explore visual-excellence contract", () => {
       }
     })
 
+    test(`${locale.toUpperCase()} onboarding intent and preferences retain the same premium journey`, async ({ browser }) => {
+      for (const viewport of [
+        { id: "390x844", width: 390, height: 844 },
+        { id: "844x390", width: 844, height: 390 },
+      ] as const) {
+        const context = await browser.newContext({ viewport, reducedMotion: "reduce" })
+        const page = await context.newPage()
+        await prepareBPage(page)
+        await seedFreshBOnboardingDevice(page, locale)
+        await gotoB(page)
+
+        await page.getByTestId("onboarding-step-value").getByRole("button").first().click()
+        const intent = page.getByTestId("onboarding-step-intent")
+        await expect(intent).toBeVisible()
+        await expectNoPageOverflow(page)
+        if (viewport.height <= 390) {
+          for (const button of await intent.getByRole("button").all()) {
+            const box = await button.boundingBox()
+            expect(box?.y ?? viewport.height).toBeGreaterThanOrEqual(0)
+            expect((box?.y ?? viewport.height) + (box?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
+          }
+        }
+        await screenshot(page, `explore-onboarding-intent-${locale}-${viewport.id}`)
+
+        await intent.getByTestId("persona-travelling").click()
+        await intent.getByRole("button").nth(3).click()
+        const preferences = page.getByTestId("onboarding-step-preferences")
+        await expect(preferences).toBeVisible()
+        await expectNoPageOverflow(page)
+        if (viewport.height <= 390) {
+          const finish = await preferences.getByTestId("onboarding-finish").boundingBox()
+          expect(finish?.y ?? viewport.height).toBeGreaterThanOrEqual(0)
+          expect((finish?.y ?? viewport.height) + (finish?.height ?? 0)).toBeLessThanOrEqual(viewport.height)
+        }
+        await screenshot(page, `explore-onboarding-preferences-${locale}-${viewport.id}`)
+        await context.close()
+      }
+    })
+
     test(`${locale.toUpperCase()} Nation and Seoul list share the same elevated Pulse material grammar`, async ({ page }) => {
       await seedB(page, { locale })
       await seedCompletedBDevice(page, locale)
@@ -127,6 +187,16 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(cityMaterial.background).not.toBe("none")
           expect(cityMaterial.shadow).not.toBe("none")
           expect(atlasScene).not.toBe("none")
+          if (viewport.width >= 1200) {
+            const atlasBox = await atlas.boundingBox()
+            const seoulBox = await nation.locator("[data-city='seoul']").boundingBox()
+            const busanBox = await nation.locator("[data-city='busan']").boundingBox()
+            expect(atlasBox).not.toBeNull()
+            expect(seoulBox).not.toBeNull()
+            expect(busanBox).not.toBeNull()
+            expect((seoulBox?.x ?? 0) - (atlasBox?.x ?? 0)).toBeGreaterThanOrEqual(24)
+            expect((atlasBox?.x ?? 0) + (atlasBox?.width ?? 0) - ((busanBox?.x ?? 0) + (busanBox?.width ?? 0))).toBeGreaterThanOrEqual(24)
+          }
           await expectNoPageOverflow(page)
           await screenshot(page, `explore-nation-${locale}-${viewport.id}`)
 
@@ -174,6 +244,9 @@ test.describe("ONDO Explore visual-excellence contract", () => {
         await test.step(viewport.id, async () => {
           await page.setViewportSize(viewport)
           await openCanonicalVenue(page, { expanded: false })
+          if (viewport.height > 390) {
+            await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+          }
           const peek = page.getByTestId("canonical-place-peek")
           const peekMaterial = await peek.evaluate((element) => {
             const style = getComputedStyle(element)

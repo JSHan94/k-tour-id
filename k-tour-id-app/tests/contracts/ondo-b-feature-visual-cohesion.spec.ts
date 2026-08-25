@@ -27,12 +27,19 @@ test("B-VISUAL-FEATURE-002 feature cards share premium border, radius, and eleva
   const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
   const local = source("features/ondo/shared/ui/production-local.module.css")
 
-  for (const css of [tables, commerce, local]) {
+  for (const css of [tables, commerce]) {
     expect(css).toContain("--feature-card: rgb(255 253 249 / 92%)")
     expect(css).toContain("--feature-border: rgb(65 52 42 / 12%)")
     expect(css).toContain("--feature-shadow: 0 18px 48px rgb(52 38 27 / 9%)")
     expect(css).toContain("border-radius: 22px")
   }
+  // My Korea and Settings retain the same warm material semantics while using
+  // their slightly quieter journey surface; freeze that intentional variant
+  // instead of forcing a stale byte-for-byte token copy.
+  expect(local).toContain("--feature-card: rgb(255 253 249 / 88%)")
+  expect(local).toContain("--feature-border: rgb(69 51 41 / 12%)")
+  expect(local).toContain("--feature-shadow: 0 20px 52px rgb(53 36 26 / 9%)")
+  expect(local).toContain("border-radius: 22px")
 })
 
 test("B-VISUAL-FEATURE-003 sheets are scrollable, safe-area aware, and consistent on phones and short landscape", () => {
@@ -71,7 +78,7 @@ test("B-VISUAL-FEATURE-005 feature roots leave navigation reservation to the sha
   ].join("\n")
 
   expect(roots).not.toMatch(/padding(?:-bottom)?:[^;]*(?:96|100|104|108|112|116|120|124|128)px/)
-  expect(source("features/ondo/identity-b/traveler-id-entry-b.module.css")).toContain("calc(36px + env(safe-area-inset-bottom))")
+  expect(source("features/ondo/identity-b/traveler-id-entry-b.module.css")).toContain("calc(44px + env(safe-area-inset-bottom))")
 })
 
 test("B-VISUAL-FEATURE-006 owned feature CSS never renders visible product copy below 12px", () => {

@@ -18,7 +18,10 @@ async function expectFullyActionable(control: Locator) {
   await expect(control).toBeVisible()
   await expect.poll(() => control.evaluate((element) => {
     const rect = element.getBoundingClientRect()
-    const canvas = element.closest("section[aria-label='ONDO travel food app']")?.getBoundingClientRect()
+    const canvasElement = element.closest<HTMLElement>("[data-testid='ondo-onboarding']")
+      ?? element.closest("section[aria-label='ONDO travel food app']")
+      ?? document.querySelector<HTMLElement>("[data-testid='ondo-canvas']")
+    const canvas = canvasElement?.getBoundingClientRect()
     const center = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
     return {
       fullyInCanvas: Boolean(canvas)
@@ -56,12 +59,12 @@ test.describe("ONDO B onboarding exit geometry", () => {
     await expect(personas).toHaveCount(3)
     for (let index = 0; index < 3; index += 1) await expectFullyActionable(personas.nth(index))
 
-    await page.getByTestId("persona-short_term").click()
-    await expectFullyActionable(page.getByRole("button", { name: "Choose meal preferences", exact: true }))
+    await page.getByTestId("persona-travelling").click()
+    await expectFullyActionable(page.getByRole("button", { name: "Choose food preferences", exact: true }))
     await expectFullyActionable(page.getByRole("button", { name: "Skip and explore" }))
 
-    await page.getByRole("button", { name: "Choose meal preferences", exact: true }).click()
-    await expectFullyActionable(page.getByRole("button", { name: "Open the ONDO map", exact: true }))
+    await page.getByRole("button", { name: "Choose food preferences", exact: true }).click()
+    await expectFullyActionable(page.getByRole("button", { name: "Open guest Explore", exact: true }))
     await expectFullyActionable(page.getByRole("button", { name: "Skip and explore" }))
   })
 
