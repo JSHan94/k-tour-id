@@ -32,20 +32,40 @@ async function openMealOffer(page: Page) {
   return { entry, offer }
 }
 
-test("FID-LIVE-001 Pulse exposes evidence, freshness, confidence, Limited/Hot/Too Hot in EN and KO", async ({ page }) => {
+test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and peak-only Too Hot in EN and KO", async ({ page, browser }) => {
   await seedGoldenCandidate(page, "en")
-  await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
-  const pulse = page.getByTestId("ondo-b-pulse-evidence")
-  await expect(pulse).toBeVisible()
-  await expect(pulse).toHaveAttribute("data-pulse-level", /limited|hot|peak/)
-  await expect(pulse).toHaveAttribute("data-confidence", /limited|medium|high/)
-  await expect(pulse).toHaveAttribute("data-freshness", /curated-snapshot|limited/)
-  await expect(pulse).toContainText(/evidence|signals|fresh|confidence|Limited|Hot|Too Hot/i)
+  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.locator("[data-city='seoul']").click()
+  await page.getByTestId("ondo-b-view-toggle").click()
 
-  await page.getByTestId("nav-settings").click()
-  await page.getByRole("button", { name: "한국어", exact: true }).click()
-  await page.getByTestId("nav-ondo").click()
-  await expect(pulse).toContainText(/근거|신호|최신|신뢰|제한|핫|너무 뜨거움/)
+  const curatedRow = page.locator(`[data-venue-id='${VENUE_ID}']`)
+  const listPulse = curatedRow.getByTestId("ondo-b-list-pulse")
+  await expect(listPulse).toHaveAttribute("data-pulse-level", "peak")
+  await expect(listPulse).toContainText("Pulse 91° · PEAK")
+  await curatedRow.locator("button").click()
+  await page.getByTestId("canonical-place-details").click()
+
+  const pulse = page.getByTestId("canonical-place-pulse")
+  await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
+  await expect(pulse).toHaveAttribute("data-pulse-numeric", "shown")
+  await expect(pulse.getByTestId("pulse-score")).toContainText("91°")
+  await expect(pulse.getByTestId("pulse-confidence")).toContainText(/Confidence.*High/i)
+  await expect(pulse.getByTestId("pulse-evidence").locator("[data-origin='curated-walkthrough']")).toHaveCount(1)
+  await expect(pulse).toContainText("Fixed walkthrough snapshot")
+  await expect(page.getByTestId("pulse-too-hot")).toContainText("Too hot?")
+
+  const koContext = await browser.newContext()
+  const koPage = await koContext.newPage()
+  try {
+    await seedGoldenCandidate(koPage, "ko")
+    await koPage.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await koPage.locator("[data-city='seoul']").click()
+    await koPage.getByTestId("ondo-b-view-toggle").click()
+    const koCuratedRow = koPage.locator(`[data-venue-id='${VENUE_ID}']`)
+    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toContainText("Pulse 91° · 피크")
+  } finally {
+    await koContext.close()
+  }
 })
 
 test("FID-LIVE-002 ID · Wallet meal offer executes truthful deterministic outcomes and one debit on double click", async ({ page }) => {

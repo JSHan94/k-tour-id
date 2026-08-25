@@ -72,6 +72,7 @@ test("a limited place returns from Local Signal with device evidence and no inve
   await expect(pulse.getByTestId("pulse-signal-count")).toHaveCount(0)
 
   await activate(page.getByTestId("canonical-local-signal-open"))
+  await expect(page.getByTestId("ondo-b-local-signal")).toBeFocused()
   await activate(page.getByRole("button", { name: "Lively right now" }))
   await page.getByRole("textbox", { name: "Optional local note" }).fill("A short device-only note")
   await activate(page.getByTestId("local-signal-person-check"))

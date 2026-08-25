@@ -65,6 +65,8 @@ test("My Korea starts honestly empty, records an explicit official place open, r
   await activate(page, "nav-settings")
   await page.getByTestId("ondo-b-clear-device-open").click()
   await page.getByRole("button", { name: "Clear saved content" }).click()
+  await expect(page.getByTestId("ondo-b-clear-device-confirm")).toBeHidden()
+  await expect(page.getByTestId("ondo-b-clear-device-open")).toBeFocused()
   my = await openMy(page)
   await expect(my.getByTestId("my-korea-recent-empty")).toBeVisible()
 })
@@ -83,6 +85,8 @@ test("planned meals appear only after the explicit local join confirmation and s
   await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").plannedTableRefs ?? [], DEVICE_KEY)).toEqual([{ tableId: TABLE_ID, venueId: VENUE_ID }])
 
   await page.getByTestId("table-detail").locator("header").getByRole("button", { name: "Close Table" }).first().click()
+  await expect(page.getByTestId("table-detail")).toBeHidden()
+  await expect(page.getByTestId(`table-open-${TABLE_ID}`)).toBeFocused()
   let my = await openMy(page)
   await expect(my.getByTestId(`planned-table-${TABLE_ID}`)).toContainText("On-device reference · no reservation")
   await expectNoSeriousAxe(page)
@@ -99,6 +103,8 @@ test("cancel creates no plan while the Local Signal merge contract can render ho
   await page.getByTestId("table-join").click()
   await page.getByTestId("gate-cancel").click()
   await page.getByTestId("table-detail").locator("header").getByRole("button", { name: "테이블 닫기" }).first().click()
+  await expect(page.getByTestId("table-detail")).toBeHidden()
+  await expect(page.getByTestId(`table-open-${TABLE_ID}`)).toBeFocused()
 
   const my = await openMy(page)
   await expect(my.getByTestId("my-korea-planned-empty")).toBeVisible()
