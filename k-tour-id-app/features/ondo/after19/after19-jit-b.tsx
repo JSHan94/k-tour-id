@@ -9,7 +9,14 @@ import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./after19-jit-b.module.css"
 
-type GateView = "intro" | "choices" | "failure" | "unsupported" | "expired"
+declare global {
+  interface Window {
+    __ONDO_B_QA__?: { after19?: "failure" | "unavailable" | "expired"; tableMessage?: "failure"; localSignalPhoto?: "failure" }
+    __ONDO_B_TABLE_INTENT__?: { tableId: string; venueId: string; mode: "view" }
+  }
+}
+
+type GateView = "intro" | "review" | "failure" | "unsupported" | "expired"
 
 type After19JitBProps = {
   open: boolean
@@ -25,50 +32,48 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:
 
 const COPY = {
   en: {
-    title: "Confirm 19+ for this sample Table",
-    reason: "Organizer marked this sample Table 19+. This is not an official venue restriction; the LOCALDATA venue record does not provide age-access rules.",
-    boundary: "Local interactive example · No request is sent to an external provider. No real credential or verification is created.",
-    predicate: "Only the 19+ predicate is returned to this Table example.",
+    title: "Before you join",
+    reason: "This Table is for guests aged 19 and over. The age check belongs to the Table, not the venue record.",
+    boundary: "Prototype truth",
+    predicate: "No provider is connected and no credential is created. Only an eligible 19+ result returns to this Table.",
     privacy: "Date of birth is never requested or stored.",
-    context: "Your exact return context",
-    start: "Review local outcome choices",
-    cancel: "Cancel and return to the same Table",
-    choices: "Choose an example outcome",
-    success: "Continue with eligible 19+ example",
-    failChoice: "Show failure example",
-    unsupportedChoice: "Show provider-unavailable example",
-    expiredChoice: "Show expired-proof example",
-    failedTitle: "The 19+ example did not complete",
+    context: "You will return here",
+    start: "Review and continue",
+    cancel: "Not now",
+    choices: "Ready to continue?",
+    success: "Verify and continue",
+    failedTitle: "The 19+ check did not complete",
     failedBody: "Your Table, official place, and join note are unchanged.",
-    unsupportedTitle: "An external provider is unavailable",
-    unsupportedBody: "There is no provider connected here. Return without changing the Table or try another local outcome.",
-    expiredTitle: "The local 19+ example has expired",
-    expiredBody: "Restart the choice without losing the Table, place, or note.",
+    unsupportedTitle: "Age check unavailable",
+    unsupportedBody: "Return without changing your Table, or try the check again.",
+    expiredTitle: "Your age check expired",
+    expiredBody: "Restart without losing the Table, place, or note.",
     retry: "Try again",
     return: "Return to the same Table",
+    header: "19+ check",
+    trust: "Private by default",
   },
   ko: {
-    title: "이 샘플 테이블의 19+ 확인",
-    reason: "주최자가 이 샘플 테이블을 19+로 표시했습니다. 공식 장소의 출입 제한이 아니며 LOCALDATA 장소 기록은 연령 출입 규칙을 제공하지 않습니다.",
-    boundary: "로컬 인터랙티브 예시 · 외부 제공기관으로 요청을 보내지 않습니다. 실제 자격증명이나 인증 결과를 만들지 않습니다.",
-    predicate: "이 테이블 예시에는 19+ 충족 여부만 전달됩니다.",
+    title: "참여 전 확인",
+    reason: "이 테이블은 만 19세 이상 게스트를 위한 모임이에요. 연령 확인은 장소 기록이 아닌 테이블에만 적용됩니다.",
+    boundary: "프로토타입 안내",
+    predicate: "연결된 제공기관이나 생성되는 자격증명은 없어요. 이 테이블에는 19+ 충족 결과만 돌아갑니다.",
     privacy: "생년월일을 요청하거나 저장하지 않습니다.",
-    context: "정확한 복귀 문맥",
-    start: "로컬 결과 선택 보기",
-    cancel: "취소하고 같은 테이블로 돌아가기",
-    choices: "예시 결과 선택",
-    success: "19+ 충족 예시로 계속",
-    failChoice: "실패 예시 보기",
-    unsupportedChoice: "제공기관 미연결 예시 보기",
-    expiredChoice: "증명 만료 예시 보기",
-    failedTitle: "19+ 예시를 완료하지 못했습니다",
+    context: "이곳으로 돌아와요",
+    start: "확인하고 계속",
+    cancel: "나중에",
+    choices: "계속할까요?",
+    success: "확인 후 계속",
+    failedTitle: "19+ 확인을 완료하지 못했어요",
     failedBody: "테이블·공식 장소·참여 메모가 그대로 유지됩니다.",
     unsupportedTitle: "외부 제공기관을 사용할 수 없습니다",
-    unsupportedBody: "연결된 제공기관이 없습니다. 테이블을 변경하지 않고 돌아가거나 다른 로컬 결과를 선택할 수 있습니다.",
-    expiredTitle: "로컬 19+ 예시가 만료되었습니다",
+    unsupportedBody: "테이블을 변경하지 않고 돌아가거나 다시 시도할 수 있어요.",
+    expiredTitle: "19+ 확인이 만료되었어요",
     expiredBody: "테이블·장소·메모를 잃지 않고 다시 선택할 수 있습니다.",
     retry: "다시 시도",
     return: "같은 테이블로 돌아가기",
+    header: "19+ 확인",
+    trust: "기본 비공개",
   },
 } as const
 
@@ -78,6 +83,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
   const dialogRef = useRef<HTMLElement | null>(null)
   const startRef = useRef<HTMLButtonElement | null>(null)
   const t = locale === "ko" ? COPY.ko : COPY.en
+  const qaOutcome = window.__ONDO_B_QA__?.after19 ?? null
 
   useModalIsolation(open, layerRef)
 
@@ -106,6 +112,13 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
     focusFirstAvailableDestination(["[data-testid='table-join-confirm']"])
   }
 
+  function startReview() {
+    if (qaOutcome === "failure") setView("failure")
+    else if (qaOutcome === "unavailable") setView("unsupported")
+    else if (qaOutcome === "expired") setView("expired")
+    else setView("review")
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
     if (event.key === "Escape") {
       event.preventDefault()
@@ -132,8 +145,8 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
       <div className={styles.backdrop} aria-hidden="true" />
       <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="after19-b-title" data-testid="after19-walkthrough" onKeyDown={handleKeyDown}>
         <header className={styles.header}>
-          <span><ShieldCheck size={18} aria-hidden="true" />After19</span>
-          <strong>{view === "intro" ? "01" : "02"}</strong>
+          <span><ShieldCheck size={18} aria-hidden="true" />{t.header}</span>
+          <strong>{t.trust}</strong>
         </header>
 
         {view === "intro" ? (
@@ -148,28 +161,27 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
               {returnTo.draft ? <blockquote>{returnTo.draft}</blockquote> : null}
             </section>
             <div className={styles.actions}>
-              <button ref={startRef} type="button" className={styles.primary} data-testid="after19-start" onClick={() => setView("choices")}>{t.start}</button>
+              <button ref={startRef} type="button" className={styles.primary} data-testid="after19-start" onClick={startReview}>{t.start}</button>
               <button type="button" className={styles.secondary} data-testid="gate-cancel" onClick={cancel}>{t.cancel}</button>
             </div>
           </div>
         ) : null}
 
-        {view === "choices" ? (
+        {view === "review" ? (
           <div className={styles.body}>
+            <BadgeCheck className={styles.heroIcon} size={34} aria-hidden="true" />
             <h2 id="after19-b-title">{t.choices}</h2>
-            <div className={styles.choiceGrid}>
-              <button type="button" data-testid="gate-success" onClick={complete}><BadgeCheck size={19} aria-hidden="true" />{t.success}</button>
-              <button type="button" data-testid="gate-failure-choice" onClick={() => setView("failure")}><AlertTriangle size={19} aria-hidden="true" />{t.failChoice}</button>
-              <button type="button" data-testid="gate-unsupported-choice" onClick={() => setView("unsupported")}><ShieldCheck size={19} aria-hidden="true" />{t.unsupportedChoice}</button>
-              <button type="button" data-testid="gate-expired-choice" onClick={() => setView("expired")}><RotateCcw size={19} aria-hidden="true" />{t.expiredChoice}</button>
+            <p className={styles.reason}>{t.predicate} {t.privacy}</p>
+            <div className={styles.actions}>
+              <button type="button" className={styles.primary} data-testid="gate-success" onClick={complete}><BadgeCheck size={19} aria-hidden="true" />{t.success}</button>
+              <button type="button" className={styles.secondary} data-testid="gate-cancel" onClick={cancel}>{t.cancel}</button>
             </div>
-            <button type="button" className={styles.secondary} data-testid="gate-cancel" onClick={cancel}>{t.cancel}</button>
           </div>
         ) : null}
 
-        {view === "failure" ? <Outcome testId="gate-failure" title={t.failedTitle} body={t.failedBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("choices")} onReturn={cancel} /> : null}
-        {view === "unsupported" ? <Outcome testId="gate-unsupported" title={t.unsupportedTitle} body={t.unsupportedBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("choices")} onReturn={cancel} /> : null}
-        {view === "expired" ? <Outcome testId="after19-expiry-notice" title={t.expiredTitle} body={t.expiredBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("choices")} onReturn={cancel} /> : null}
+        {view === "failure" ? <Outcome testId="gate-failure" title={t.failedTitle} body={t.failedBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("review")} onReturn={cancel} /> : null}
+        {view === "unsupported" ? <Outcome testId="gate-unsupported" title={t.unsupportedTitle} body={t.unsupportedBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("review")} onReturn={cancel} /> : null}
+        {view === "expired" ? <Outcome testId="after19-expiry-notice" title={t.expiredTitle} body={t.expiredBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("review")} onReturn={cancel} /> : null}
       </section>
     </div>
   )

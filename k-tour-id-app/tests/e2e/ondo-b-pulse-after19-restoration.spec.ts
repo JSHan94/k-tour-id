@@ -30,19 +30,18 @@ async function openActiveTable(page: Page) {
   return detail
 }
 
-test("Pulse Table shows canonical place provenance, organizer sample fields, and recovery states", async ({ page }) => {
+test("Pulse Table shows canonical place provenance and host-provided gathering fields", async ({ page }) => {
   await openTables(page)
   const active = page.getByTestId(`table-card-${TABLE_ID}`)
-  await expect(active).toContainText("Official LOCALDATA venue")
-  await expect(active).toContainText("Organizer sample · not official venue data")
+  await expect(active).toContainText("Place record")
+  await expect(active).toContainText("The host provides the gathering details")
   for (const id of ["table-sample-time", "table-sample-menu", "table-sample-language", "table-sample-cost", "table-sample-participants"]) {
     await expect(active.getByTestId(id)).toBeVisible()
   }
-  for (const state of ["TABLE-FULL", "TABLE-CANCELLED", "TABLE-ENDED"]) await expect(page.locator(`[data-table-state='${state}']`)).toBeVisible()
-  await expect(page.getByTestId("table-view-alternative").first()).toBeVisible()
+  await expect(page.getByTestId("table-qa-fixtures")).toHaveCount(0)
 })
 
-test("After19 success returns to the exact Table/draft, then confirms join and opens a safe group preview", async ({ page }) => {
+test("After19 success returns to the exact Table/draft, then confirms join and opens Table chat", async ({ page }) => {
   await openTables(page)
   const detail = await openActiveTable(page)
   const draft = "Window seat if available; I speak English and Korean."
@@ -50,8 +49,8 @@ test("After19 success returns to the exact Table/draft, then confirms join and o
   await detail.getByTestId("table-join").click()
 
   const gate = page.getByTestId("after19-walkthrough")
-  await expect(gate).toContainText("Local interactive example")
-  await expect(gate).toContainText("No request is sent to an external provider")
+  await expect(gate).toContainText("Prototype truth")
+  await expect(gate).toContainText("No provider is connected")
   await gate.getByTestId("after19-start").click()
   const cancelBox = await gate.getByTestId("gate-cancel").boundingBox()
   expect(cancelBox?.height ?? 0).toBeGreaterThanOrEqual(44)
@@ -65,12 +64,12 @@ test("After19 success returns to the exact Table/draft, then confirms join and o
   await detail.getByTestId("table-open-chat").click()
 
   const conversation = detail.getByTestId("table-chat")
-  await expect(conversation).toContainText("Read-only group conversation example")
+  await expect(conversation).toContainText("Messages and photos remain in this tab")
   await conversation.getByTestId("table-report").click()
   await conversation.getByTestId("table-report-confirm").click()
-  await expect(conversation.getByRole("status")).toContainText("Report saved only in this example")
+  await expect(conversation.getByRole("status")).toContainText("Report recorded in this tab")
   await conversation.getByTestId("table-block").click()
-  await expect(conversation).toContainText("Participant hidden in this example")
+  await expect(conversation).toContainText("Participant hidden in this tab")
   await conversation.getByTestId("table-leave").click()
   await conversation.getByTestId("table-leave-confirm").click()
   await expect(detail.getByTestId("table-join")).toBeFocused()
@@ -88,25 +87,17 @@ test("After19 cancel preserves exact Table/place/draft and returns focus", async
   await expect(detail.getByTestId("table-join")).toBeFocused()
 })
 
-test("After19 failure retries while unsupported and expired outcomes return without context loss", async ({ page }) => {
+test("After19 fixture-driven failure retries without exposing outcome authoring controls", async ({ page }) => {
+  await page.addInitScript(() => { window.__ONDO_B_QA__ = { after19: "failure" } })
   await openTables(page)
   const detail = await openActiveTable(page)
   await detail.getByTestId("table-join-draft").fill("Context stays here.")
   await detail.getByTestId("table-join").click()
   await page.getByTestId("after19-start").click()
-  await page.getByTestId("gate-failure-choice").click()
   await expect(page.getByTestId("gate-failure")).toBeVisible()
   await page.getByTestId("gate-retry").click()
-  await page.getByTestId("gate-unsupported-choice").click()
-  await expect(page.getByTestId("gate-unsupported")).toBeVisible()
-  await page.getByTestId("after19-return").click()
-  await expect(detail.getByTestId("table-join-draft")).toHaveValue("Context stays here.")
-
-  await detail.getByTestId("table-join").click()
-  await page.getByTestId("after19-start").click()
-  await page.getByTestId("gate-expired-choice").click()
-  await expect(page.getByTestId("after19-expiry-notice")).toBeVisible()
-  await page.getByTestId("gate-retry").click()
+  await expect(page.getByTestId("gate-success")).toBeVisible()
+  await expect(page.getByTestId("gate-failure-choice")).toHaveCount(0)
   await page.getByTestId("gate-cancel").click()
   await expect(detail.getByTestId("table-join-draft")).toHaveValue("Context stays here.")
 })
@@ -118,7 +109,7 @@ test("Korean short-landscape Table and After19 remain keyboard-contained and acc
   const detail = await openActiveTable(page)
   await detail.getByTestId("table-join").click()
   const gate = page.getByTestId("after19-walkthrough")
-  await expect(gate).toContainText("외부 제공기관으로 요청을 보내지 않습니다")
+  await expect(gate).toContainText("연결된 제공기관이나 생성되는 자격증명은 없어요")
   await expect(gate.getByTestId("after19-start")).toBeFocused()
   await gate.getByTestId("gate-cancel").focus()
   await page.keyboard.press("Tab")

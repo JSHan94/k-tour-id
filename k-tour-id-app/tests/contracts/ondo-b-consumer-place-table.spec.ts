@@ -9,10 +9,10 @@ test("consumer Place exposes the contextual Table, 19+, Local Signal, and benefi
   const place = source("features/ondo/place/canonical-place-overlay.tsx")
 
   for (const testId of [
-    "canonical-table-open",
-    "canonical-after19-open",
+    "canonical-place-table",
+    "canonical-after19-required",
     "canonical-local-signal-open",
-    "canonical-demo-meal-offer-open",
+    "canonical-meal-benefit-open",
   ]) expect(place).toContain(`data-testid=\"${testId}\"`)
   expect(place).toContain("ONDO_OPEN_TABLE_EVENT")
 })
@@ -20,11 +20,13 @@ test("consumer Place exposes the contextual Table, 19+, Local Signal, and benefi
 test("normal After19 is a single eligibility path and outcome authoring is QA-only", () => {
   const after19 = source("features/ondo/after19/after19-jit-b.tsx")
 
-  expect(after19).toContain("useQaControls")
-  expect(after19).toContain("qaControls ?")
+  expect(after19).toContain("window.__ONDO_B_QA__?.after19")
   expect(after19).toContain("Verify and continue")
   expect(after19).toContain("Not now")
   expect(after19).not.toContain('choices: "Choose an example outcome"')
+  expect(after19).not.toContain('data-testid="gate-failure-choice"')
+  expect(after19).not.toContain('data-testid="gate-unsupported-choice"')
+  expect(after19).not.toContain('data-testid="gate-expired-choice"')
 })
 
 test("Tables and Local Signal own photo, retry, chat, check-in, and feedback states", () => {
@@ -33,7 +35,7 @@ test("Tables and Local Signal own photo, retry, chat, check-in, and feedback sta
 
   for (const testId of [
     "table-chat-compose",
-    "table-chat-photo",
+    "table-chat-image",
     "table-message-retry",
     "table-check-in",
     "table-feedback-submit",
@@ -41,7 +43,7 @@ test("Tables and Local Signal own photo, retry, chat, check-in, and feedback sta
   ]) expect(tables).toContain(`data-testid=\"${testId}\"`)
 
   for (const testId of [
-    "local-signal-photo",
+    "local-signal-photo-input",
     "local-signal-photo-replace",
     "local-signal-photo-remove",
     "local-signal-photo-retry",

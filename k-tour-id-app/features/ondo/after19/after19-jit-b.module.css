@@ -42,7 +42,7 @@
 
 .header { display: flex; align-items: center; justify-content: space-between; padding: 19px 22px 0; color: #686058; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
 .header span { display: flex; align-items: center; gap: 8px; font-weight: 820; }
-.header strong { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid rgb(178 78 59 / 18%); border-radius: 50%; background: rgb(255 244 238 / 82%); color: #963f32; }
+.header strong { display: grid; min-height: 32px; place-items: center; border: 1px solid rgb(178 78 59 / 18%); border-radius: 999px; padding: 0 10px; background: rgb(255 244 238 / 82%); color: #963f32; font-size: 12px; letter-spacing: .02em; text-transform: none; }
 .body { display: grid; gap: 16px; padding: 18px 22px calc(24px + env(safe-area-inset-bottom)); }
 .heroIcon { display: grid; box-sizing: content-box; border-radius: 17px; padding: 10px; background: #fae9e2; color: var(--feature-accent); }
 .body h2 { margin: 0; max-width: 350px; font-size: clamp(25px, 7vw, 32px); font-weight: 750; line-height: 1.08; letter-spacing: -.045em; }
@@ -66,6 +66,9 @@
 .secondary { background: rgb(255 253 249 / 76%); color: #3f3934; }
 .choiceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .choiceGrid button { display: grid; min-height: 92px; align-content: center; justify-items: start; gap: 10px; background: var(--feature-card); color: #332e2a; text-align: left; box-shadow: 0 8px 22px rgb(52 38 27 / 5%); }
+.qaPanel { display: grid; gap: 10px; margin-top: 10px; border: 1px dashed rgb(91 84 76 / 34%); border-radius: 16px; padding: 13px; background: rgb(245 241 234 / 78%); }
+.qaPanel > strong { color: #746d65; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; }
+.qaPanel .choiceGrid button { min-height: 64px; font-size: 12px; }
 @media (hover: hover) { .primary:hover, .choiceGrid button:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgb(70 45 30 / 13%); } }
 
 @media (max-width: 520px) {

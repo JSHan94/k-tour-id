@@ -2,15 +2,18 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, NotebookPen, WalletCards, X } from "lucide-react"
+import { ArrowLeft, BadgeCheck, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, NotebookPen, UsersRound, WalletCards, X } from "lucide-react"
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, openBDiscoveryVenue, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
-import { PULSE_DISCLOSURE, pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
+import { pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
+
+const TABLE_VENUE_ID = "mois-0021cd596bc5b2a922ad"
+export const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
 
 const COPY = {
   en: {
@@ -37,9 +40,9 @@ const COPY = {
     removeSaved: "Remove from Saved",
     localSignal: "Add a Local Signal",
     localSignalPosted: "Update Local Signal on this device",
-    localSignalBoundary: "The note is discarded; selected tag IDs, post time, and place marker stay on this device as your Pulse evidence.",
-    demoOffer: "Try ONDO demo meal offer",
-    demoOfferBody: "Separate ONDO walkthrough · not an official place fact and not evidence that this LOCALDATA business accepts payment or OOKRW.",
+    localSignalBoundary: "Share a quick tag and optional photo for other travelers.",
+    demoOffer: "See ONDO dining benefit",
+    demoOfferBody: "Review the offer and stable-payment flow. This venue is not presented as an accepting merchant.",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -50,7 +53,7 @@ const COPY = {
     sourceSnapshot: "Source snapshot",
     sourceRecord: "LOCALDATA management ID",
     sourceReference: "Source reference",
-    pulseSignals: "walkthrough signals",
+    pulseSignals: "recent signals",
     pulseLimited: "Explore · limited signals",
     pulseConfidence: "Confidence",
     pulseFreshness: "Freshness",
@@ -59,12 +62,17 @@ const COPY = {
     pulseMedium: "Medium",
     pulseLow: "Low",
     pulseLimitedConfidence: "Limited",
-    pulseFixedSnapshot: "Fixed walkthrough snapshot",
-    pulseGrowingSnapshot: "Growing fixed walkthrough snapshot",
+    pulseFixedSnapshot: "Curated snapshot",
+    pulseGrowingSnapshot: "Recently updated",
     pulseTooHot: "Too hot?",
-    pulseTooHotBody: "Try a calmer place from the same curated walkthrough set.",
+    pulseTooHotBody: "Compare a calmer place from the same curated area.",
     pulseAlternative: "Open calmer place",
     pulseLocalEvidence: "On this device",
+    table: "View Table",
+    tableBody: "Friday at 20:30 · Korean + English · 1 seat left",
+    after19: "19+ required",
+    after19Body: "You’ll verify after choosing Join.",
+    pulseBoundary: "Curated visit signals · not live crowding or official venue facts.",
   },
   ko: {
     active: "공식 LOCALDATA 기록",
@@ -90,9 +98,9 @@ const COPY = {
     removeSaved: "저장 취소",
     localSignal: "로컬 시그널 남기기",
     localSignalPosted: "이 기기의 로컬 시그널 업데이트",
-    localSignalBoundary: "메모는 폐기하고 선택한 태그 ID·게시 시각·장소 표시만 이 기기의 Pulse 근거로 남겨요.",
-    demoOffer: "ONDO 데모 식사 혜택 체험",
-    demoOfferBody: "별도 ONDO 둘러보기 · 공식 장소 정보가 아니며 이 LOCALDATA 업소가 결제나 OOKRW를 지원한다는 근거가 아닙니다.",
+    localSignalBoundary: "다른 여행자를 위해 짧은 태그와 선택 사진을 남겨보세요.",
+    demoOffer: "ONDO 다이닝 혜택 보기",
+    demoOfferBody: "혜택과 스테이블 결제 흐름을 확인해 보세요. 이 장소를 가맹점으로 표시하지 않습니다.",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -103,7 +111,7 @@ const COPY = {
     sourceSnapshot: "출처 스냅샷",
     sourceRecord: "LOCALDATA 관리번호",
     sourceReference: "출처 참조",
-    pulseSignals: "둘러보기 신호",
+    pulseSignals: "최근 시그널",
     pulseLimited: "탐색 · 신호 부족",
     pulseConfidence: "신뢰도",
     pulseFreshness: "최신성",
@@ -112,12 +120,17 @@ const COPY = {
     pulseMedium: "보통",
     pulseLow: "낮음",
     pulseLimitedConfidence: "신호 부족",
-    pulseFixedSnapshot: "고정 둘러보기 스냅샷",
-    pulseGrowingSnapshot: "성장 중인 고정 둘러보기 스냅샷",
+    pulseFixedSnapshot: "선별 스냅샷",
+    pulseGrowingSnapshot: "최근 업데이트",
     pulseTooHot: "너무 핫한가요?",
     pulseTooHotBody: "같은 선별 둘러보기 세트에서 더 여유로운 장소를 살펴보세요.",
     pulseAlternative: "더 여유로운 장소 열기",
     pulseLocalEvidence: "이 기기에서",
+    table: "테이블 보기",
+    tableBody: "금요일 20:30 · 한국어 + 영어 · 1자리 남음",
+    after19: "19+ 필수",
+    after19Body: "참여를 누른 뒤 확인해요.",
+    pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
   },
 } as const
 
@@ -245,7 +258,7 @@ export function CanonicalPlaceOverlay() {
   const pulseAlternatives = pulseAlternativesForVenue(venue.id)
   const pulseTitle = pulse.score == null
     ? `Pulse · ${pulseLevelLabel(pulse.level, locale)}`
-    : `Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)}`
+    : `Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)}`
   const confidence = ({ high: copy.pulseHigh, medium: copy.pulseMedium, low: copy.pulseLow, limited: copy.pulseLimitedConfidence } as const)[pulse.confidence]
   const fixedSnapshot = pulse.updatedAt
     ? `${pulse.freshness === "growing" ? copy.pulseGrowingSnapshot : copy.pulseFixedSnapshot} · ${pulse.updatedAt.slice(0, 16).replace("T", " ")} UTC`
@@ -314,6 +327,14 @@ export function CanonicalPlaceOverlay() {
     setExpanded(false)
   }
 
+  function openTableFromPlace() {
+    window.__ONDO_B_TABLE_INTENT__ = { tableId: "table-seoul-night-bites", venueId: currentVenueId, mode: "view" }
+    actions.setTab("tables")
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent(ONDO_OPEN_TABLE_EVENT, {
+      detail: { tableId: "table-seoul-night-bites", venueId: currentVenueId, mode: "view" },
+    })), 0)
+  }
+
   if (!expanded) return (
     <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
@@ -324,7 +345,7 @@ export function CanonicalPlaceOverlay() {
       <section className={styles.pulsePeek} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
         <strong>{pulseTitle}</strong>
         <small>{pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot}</small>
-        <p>{PULSE_DISCLOSURE[locale]}</p>
+        <p>{copy.pulseBoundary}</p>
         {pulse.localEvidence ? <em data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</em> : null}
       </section>
       <section className={styles.recordSummary} data-testid="canonical-place-source-summary">
@@ -360,21 +381,22 @@ export function CanonicalPlaceOverlay() {
             <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
           )}
 
-          <section className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
-            <header>
+          <details className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
+            <summary>
               <div><span>ONDO PULSE</span><h3>{pulseTitle}</h3></div>
               <i data-level={pulse.level}>{pulseLevelLabel(pulse.level, locale)}</i>
-            </header>
-            <p className={styles.pulseBoundary}>{PULSE_DISCLOSURE[locale]}</p>
+            </summary>
+            <div className={styles.pulsePanelBody}>
+            <p className={styles.pulseBoundary}>{copy.pulseBoundary}</p>
             <dl>
-              {pulse.score == null ? null : <div data-testid="pulse-score"><dt>Pulse</dt><dd>{pulse.score}°</dd></div>}
+              {pulse.score == null ? null : <div data-testid="pulse-score"><dt>Pulse</dt><dd>{pulse.score}</dd></div>}
               {pulse.signalCount == null ? null : <div data-testid="pulse-signal-count"><dt>{copy.pulseSignals}</dt><dd>{pulse.signalCount}</dd></div>}
               <div data-testid="pulse-confidence"><dt>{copy.pulseConfidence}</dt><dd>{confidence}</dd></div>
               <div><dt>{copy.pulseFreshness}</dt><dd>{fixedSnapshot}</dd></div>
             </dl>
             <div className={styles.pulseEvidence} data-testid="pulse-evidence">
               <strong>{copy.pulseEvidence}</strong>
-              <ul>{pulse.evidence.map((item, index) => <li key={`${item.origin}-${index}`} data-origin={item.origin}>{item.label[locale]}</li>)}</ul>
+              <ul>{pulse.evidence.map((item, index) => <li key={`${item.origin}-${index}`} data-origin={item.origin}>{item.label[locale].replace(/walkthrough/gi, "curated visit").replace(/둘러보기/g, "방문")}</li>)}</ul>
               {pulse.localEvidence ? <p data-testid="pulse-local-device-evidence"><b>{copy.pulseLocalEvidence}</b> · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")} · {pulse.localEvidence.postedAt.slice(0, 16).replace("T", " ")} UTC</p> : null}
             </div>
             {pulseAlternatives.length ? (
@@ -385,16 +407,31 @@ export function CanonicalPlaceOverlay() {
                   const alternativeVenue = canonicalMapVenueById(alternative.venueId)
                   if (!alternativeVenue) return null
                   const alternativeName = venueNamePresentation(alternativeVenue.name.ko, locale).officialName
-                  return <button key={alternative.venueId} type="button" data-testid="pulse-alternative" data-venue-id={alternative.venueId} aria-label={`${copy.pulseAlternative}: ${alternativeName}, Pulse ${alternative.score}°, ${pulseLevelLabel(alternative.level, locale)}`} onClick={() => openPulseAlternative(alternative.venueId)}><span><strong>{alternativeName}</strong><small>Pulse {alternative.score}° · {pulseLevelLabel(alternative.level, locale)}</small></span><ChevronRight size={17} aria-hidden="true" /></button>
+                  return <button key={alternative.venueId} type="button" data-testid="pulse-alternative" data-venue-id={alternative.venueId} aria-label={`${copy.pulseAlternative}: ${alternativeName}, Pulse ${alternative.score}, ${pulseLevelLabel(alternative.level, locale)}`} onClick={() => openPulseAlternative(alternative.venueId)}><span><strong>{alternativeName}</strong><small>Pulse {alternative.score} · {pulseLevelLabel(alternative.level, locale)}</small></span><ChevronRight size={17} aria-hidden="true" /></button>
                 })}</div>
               </section>
             ) : null}
-          </section>
+            </div>
+          </details>
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>
             <button type="button" onClick={toggleSave} aria-pressed={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.removeSaved : copy.save}</button>
           </div>
+
+          {currentVenueId === TABLE_VENUE_ID ? (
+            <section className={styles.tableActions} aria-label={locale === "ko" ? "이 장소의 테이블" : "Table at this place"}>
+              <button type="button" className={styles.tablePrimary} onClick={openTableFromPlace} data-testid="canonical-place-table">
+                <UsersRound size={18} aria-hidden="true" />
+                <span><strong>{copy.table}</strong><small>{copy.tableBody}</small></span>
+                <ChevronRight size={17} aria-hidden="true" />
+              </button>
+              <aside className={styles.eligibilityChip} data-testid="canonical-after19-required">
+                <BadgeCheck size={18} aria-hidden="true" />
+                <span><strong>{copy.after19}</strong><small>{copy.after19Body}</small></span>
+              </aside>
+            </section>
+          ) : null}
 
           <section className={styles.localSignalAction}>
             <button type="button" onClick={() => actions.openLocalSignal(currentVenueId)} data-testid="canonical-local-signal-open">
@@ -405,7 +442,7 @@ export function CanonicalPlaceOverlay() {
           </section>
 
           <section className={styles.demoOfferAction} aria-label={copy.demoOffer}>
-            <button type="button" onClick={() => actions.openDemoMealOfferFromPlace(currentVenueId)} data-testid="canonical-demo-meal-offer-open">
+            <button type="button" onClick={() => actions.openDemoMealOfferFromPlace(currentVenueId)} data-testid="canonical-meal-benefit-open">
               <WalletCards size={18} aria-hidden="true" />
               <span><strong>{copy.demoOffer}</strong><small>{copy.demoOfferBody}</small></span>
               <ChevronRight size={17} aria-hidden="true" />
