@@ -1,6 +1,6 @@
 "use client"
 
-import { Bookmark, CalendarDays, ChevronRight, History, MapPin, MessageSquareText, Trash2 } from "lucide-react"
+import { Bookmark, CalendarDays, ChevronRight, History, MapPin, MessageSquareText, ReceiptText, Trash2 } from "lucide-react"
 import { venueNamePresentation, venueDistrictLabel } from "@/lib/ondo/venues/display"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
@@ -8,6 +8,7 @@ import { useOndoB } from "../shared/state/ondo-b-provider"
 import styles from "../shared/ui/production-local.module.css"
 import { MY_KOREA_TABLE_CATALOG } from "./my-korea-model"
 import { PrivateNote } from "./private-note"
+import { STABLE_B_RECEIPT_ID, STABLE_B_REFUND_RECEIPT_ID } from "../commerce-b/stable-commerce-model-b"
 
 const COPY = {
   en: {
@@ -37,6 +38,11 @@ const COPY = {
     contributionsEmptyBody: "This stays empty until you explicitly add a Local Signal on this device.",
     contributed: "Local Signal added on this device",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
+    receiptsTitle: "Wallet activity",
+    receiptsBody: "Payments and refunds completed on this device.",
+    paid: "Paid 19 OOKRW Test",
+    refunded: "Refunded",
+    openWallet: "Open wallet",
   },
   ko: {
     eyebrow: "이 기기",
@@ -65,6 +71,11 @@ const COPY = {
     contributionsEmptyBody: "이 기기에서 로컬 시그널을 직접 남기기 전까지 비어 있습니다.",
     contributed: "이 기기에서 남긴 로컬 시그널",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
+    receiptsTitle: "지갑 활동",
+    receiptsBody: "이 기기에서 완료한 결제와 환불입니다.",
+    paid: "19 OOKRW Test 결제",
+    refunded: "환불됨",
+    openWallet: "지갑 열기",
   },
 } as const
 
@@ -89,6 +100,7 @@ export function SavedEntryB() {
     const venue = canonicalMapVenueById(venueId)
     return venue ? [venue] : []
   })
+  const receiptVenue = state.commerceReceiptVenueId ? canonicalMapVenueById(state.commerceReceiptVenueId) : undefined
 
   function openVenue(venueId: string, cityId: "seoul" | "busan") {
     if (!openSavedBDiscoveryVenue(venueId, cityId)) return
@@ -162,6 +174,20 @@ export function SavedEntryB() {
             </div>
           )}
         </section>
+
+        {state.commerceSession.status === "paid" || state.commerceSession.status === "refunded" ? (
+          <section className={styles.activitySection} data-testid="my-korea-receipts" aria-labelledby="my-korea-receipts-heading">
+            <div className={styles.activityHeading}><ReceiptText size={19} aria-hidden="true" /><span><h2 id="my-korea-receipts-heading">{copy.receiptsTitle}</h2><p>{copy.receiptsBody}</p></span></div>
+            <div className={styles.referenceList}>
+              <article className={styles.planReference}>
+                <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? copy.refunded : copy.paid}</span>
+                <h3>{receiptVenue ? venueNamePresentation(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
+                <p>{state.commerceSession.status === "refunded" ? STABLE_B_REFUND_RECEIPT_ID : STABLE_B_RECEIPT_ID}</p>
+                <button type="button" onClick={() => actions.setTab("id")}>{copy.openWallet}<ChevronRight size={16} aria-hidden="true" /></button>
+              </article>
+            </div>
+          </section>
+        ) : null}
 
         <section className={styles.activitySection} data-testid="my-korea-contributions" aria-labelledby="my-korea-contributions-heading">
           <div className={styles.activityHeading}><MessageSquareText size={19} aria-hidden="true" /><span><h2 id="my-korea-contributions-heading">{copy.contributionsTitle}</h2><p>{copy.contributionsBody}</p></span></div>

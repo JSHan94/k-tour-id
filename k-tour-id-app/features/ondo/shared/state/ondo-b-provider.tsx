@@ -20,6 +20,15 @@ import {
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-preferences"
 import type { PulseLocalEvidenceB, PulseLocalSignalTagB } from "../../pulse-b/pulse-model-b"
+import {
+  createStableCommerceBState,
+  STABLE_B_RECEIPT_ID,
+  STABLE_B_REFUND_RECEIPT_ID,
+  STABLE_B_VOUCHER_VALUE,
+  stableCommerceBReducer,
+  type StableCommerceBAction,
+  type StableCommerceBState,
+} from "../../commerce-b/stable-commerce-model-b"
 
 export type OndoBTab = "ondo" | "my" | "tables" | "id" | "settings"
 export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
@@ -31,6 +40,17 @@ export type OndoBLocalSignalDraft = {
   note: string
 }
 export type OndoBCommerceOrigin = { kind: "canonical_place"; venueId: string }
+export type OndoBCommerceWalletStatus = "disconnected" | "failed" | "ready"
+export type OndoBCommerceReceipt = {
+  receiptId: string
+  refundReceiptId: string | null
+  offerId: "meal-offer-gukbap"
+  venueId: string
+  status: "paid" | "refunded"
+  paidOOKRW: number
+  benefitOOKRW: number
+  balanceOOKRW: number
+}
 
 export type OndoBState = {
   hydrated: boolean
@@ -50,6 +70,10 @@ export type OndoBState = {
   localInteractionBoundarySeen: boolean
   commerceLocalBoundarySeen: boolean
   commerceOrigin: OndoBCommerceOrigin | null
+  commerceWalletStatus: OndoBCommerceWalletStatus
+  commerceSession: StableCommerceBState
+  commerceReceiptVenueId: string | null
+  commerceReceipts: OndoBCommerceReceipt[]
   localSignalDraft: OndoBLocalSignalDraft | null
   toast: string | null
 }
@@ -77,6 +101,9 @@ export type OndoBActions = {
   markLocalSignalPosted(venueId: string): boolean
   acknowledgeLocalInteractionBoundary(): boolean
   acknowledgeCommerceLocalBoundary(): boolean
+  setCommerceWalletStatus(status: OndoBCommerceWalletStatus): void
+  dispatchCommerce(action: StableCommerceBAction): void
+  recordCommerceReceipt(receipt: OndoBCommerceReceipt): boolean
   openMealBenefitFromPlace(venueId: string): boolean
   returnFromCommerceOrigin(): boolean
   clearBDeviceContent(): boolean
@@ -96,6 +123,7 @@ type OndoBDeviceState = {
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
   commerceLocalBoundarySeen: boolean
+  commerceReceipts: OndoBCommerceReceipt[]
 }
 
 const B_DEVICE_KEY = "ondo-b.device.v1"
@@ -103,6 +131,55 @@ const B_PREFERENCES = new Set(ONDO_B_DISCOVERY_PREFERENCES.map((preference) => p
 const ONDO_B_PERSONAS = new Set(ONDO_B_PERSONA_IDS)
 const B_LOCAL_SIGNAL_TAGS = new Set<OndoBLocalSignalTag>(["calm_now", "lively_now", "quick_stop", "welcoming"])
 const B_LOCAL_SIGNAL_NOTE_MAX_LENGTH = 240
+const B_COMMERCE_RECEIPT_LIMIT = 8
+
+export function sanitizeCommerceReceipts(value: unknown): OndoBCommerceReceipt[] {
+  if (!Array.isArray(value)) return []
+  const receipts = value.flatMap((item): OndoBCommerceReceipt[] => {
+    if (!item || typeof item !== "object") return []
+    const receipt = item as Record<string, unknown>
+    if (receipt.receiptId !== STABLE_B_RECEIPT_ID || receipt.offerId !== "meal-offer-gukbap" || !isCanonicalVenueId(receipt.venueId)) return []
+    if (receipt.status !== "paid" && receipt.status !== "refunded") return []
+    const paidOOKRW = receipt.paidOOKRW === 19 ? 19 : null
+    const benefitOOKRW = receipt.benefitOOKRW === STABLE_B_VOUCHER_VALUE ? STABLE_B_VOUCHER_VALUE : null
+    const balanceOOKRW = receipt.status === "paid" && receipt.balanceOOKRW === 41
+      ? 41
+      : receipt.status === "refunded" && receipt.balanceOOKRW === 60 ? 60 : null
+    if (paidOOKRW === null || benefitOOKRW === null || balanceOOKRW === null) return []
+    return [{
+      receiptId: STABLE_B_RECEIPT_ID,
+      refundReceiptId: receipt.status === "refunded" ? STABLE_B_REFUND_RECEIPT_ID : null,
+      offerId: "meal-offer-gukbap",
+      venueId: receipt.venueId,
+      status: receipt.status,
+      paidOOKRW,
+      benefitOOKRW,
+      balanceOOKRW,
+    }]
+  })
+  return receipts
+    .filter((receipt, index, all) => all.findIndex((candidate) => candidate.receiptId === receipt.receiptId) === index)
+    .slice(0, B_COMMERCE_RECEIPT_LIMIT)
+}
+
+function commerceSessionFromReceipts(receipts: readonly OndoBCommerceReceipt[]): StableCommerceBState {
+  const receipt = receipts[0]
+  const initial = createStableCommerceBState()
+  if (!receipt) return initial
+  return {
+    ...initial,
+    status: receipt.status,
+    voucher: receipt.status === "paid" ? "consumed" : "available",
+    benefitRecommendation: "accepted",
+    receiptCount: 1,
+    refundCount: receipt.status === "refunded" ? 1 : 0,
+    chargedDebit: receipt.paidOOKRW,
+    voucherApplied: true,
+    redemptionCount: receipt.status === "paid" ? 1 : 0,
+    receiptId: receipt.receiptId,
+    lastOutcome: "success",
+  }
+}
 
 function initialState(): OndoBState {
   return {
@@ -123,6 +200,10 @@ function initialState(): OndoBState {
     localInteractionBoundarySeen: false,
     commerceLocalBoundarySeen: false,
     commerceOrigin: null,
+    commerceWalletStatus: "disconnected",
+    commerceSession: createStableCommerceBState(),
+    commerceReceiptVenueId: null,
+    commerceReceipts: [],
     localSignalDraft: null,
     toast: null,
   }
@@ -147,6 +228,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     const postedAt = typeof evidence.postedAt === "string" && !Number.isNaN(Date.parse(evidence.postedAt)) ? evidence.postedAt : null
     return tags.length && postedAt ? [[venueId, { tags, postedAt } satisfies PulseLocalEvidenceB]] : []
   }))
+  const commerceReceipts = sanitizeCommerceReceipts(record.commerceReceipts)
   return {
     locale: record.locale === "ko" ? "ko" : "en",
     onboarding: record.onboarding === "ONB-COMPLETE" ? "ONB-COMPLETE" : "ONB-NEW",
@@ -164,6 +246,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     localPulseEvidenceByVenue,
     localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
     commerceLocalBoundarySeen: record.commerceLocalBoundarySeen === true,
+    commerceReceipts,
   }
 }
 
@@ -181,6 +264,7 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     localPulseEvidenceByVenue: state.localPulseEvidenceByVenue,
     localInteractionBoundarySeen: state.localInteractionBoundarySeen,
     commerceLocalBoundarySeen: state.commerceLocalBoundarySeen,
+    commerceReceipts: state.commerceReceipts,
   })
 }
 
@@ -212,12 +296,15 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     try {
       const stored = window.localStorage.getItem(B_DEVICE_KEY)
       const restored = stored === null ? restoreBDeviceState({}) : restoreBDeviceState(JSON.parse(stored))
-      const next: OndoBState = {
+        const next: OndoBState = {
         ...blank,
         ...restored,
         saveStatusByVenue: Object.fromEntries(restored.savedVenueIds.map((venueId) => [venueId, "SAV-SAVED" as const])),
-        commerceOrigin: null,
-        hydrated: true,
+          commerceOrigin: null,
+          commerceWalletStatus: "disconnected",
+          commerceSession: commerceSessionFromReceipts(restored.commerceReceipts),
+          commerceReceiptVenueId: restored.commerceReceipts[0]?.venueId ?? null,
+          hydrated: true,
       }
       stateRef.current = next
       setState(next)
@@ -388,6 +475,36 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
     acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
+    setCommerceWalletStatus: (commerceWalletStatus) => commitEphemeral((current) => ({ ...current, commerceWalletStatus })),
+    dispatchCommerce: (action) => commitEphemeral((current) => {
+      const commerceSession = stableCommerceBReducer(current.commerceSession, action)
+      const paidNow = action.type === "PAYMENT_RETURN" && action.outcome === "success" && commerceSession.status === "paid"
+      const refundedNow = action.type === "REFUND" && commerceSession.status === "refunded"
+      const venueId = paidNow && current.commerceOrigin?.kind === "canonical_place"
+        ? current.commerceOrigin.venueId
+        : current.commerceReceiptVenueId
+      const commerceReceipts = venueId && (paidNow || refundedNow)
+        ? sanitizeCommerceReceipts([{
+            receiptId: STABLE_B_RECEIPT_ID,
+            refundReceiptId: refundedNow ? STABLE_B_REFUND_RECEIPT_ID : null,
+            offerId: "meal-offer-gukbap",
+            venueId,
+            status: refundedNow ? "refunded" : "paid",
+            paidOOKRW: 19,
+            benefitOOKRW: STABLE_B_VOUCHER_VALUE,
+            balanceOOKRW: refundedNow ? 60 : 41,
+          }, ...current.commerceReceipts])
+        : current.commerceReceipts
+      const next = {
+        ...current,
+        commerceSession,
+        commerceReceiptVenueId: venueId,
+        commerceReceipts,
+      }
+      if (paidNow || refundedNow) persistBDeviceState(next)
+      return next
+    }),
+    recordCommerceReceipt: (receipt) => commit((current) => ({ ...current, commerceReceipts: sanitizeCommerceReceipts([receipt, ...current.commerceReceipts]) })),
     openMealBenefitFromPlace: (venueId) => {
       if (!isCanonicalVenueId(venueId)) return false
       commitEphemeral((current) => ({
@@ -395,6 +512,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         tab: "id",
         surface: { kind: "map" },
         commerceOrigin: { kind: "canonical_place", venueId },
+        commerceSession: current.commerceSession,
       }))
       return true
     },
@@ -427,6 +545,10 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       localInteractionBoundarySeen: false,
       commerceLocalBoundarySeen: false,
       commerceOrigin: null,
+      commerceWalletStatus: "disconnected",
+      commerceSession: createStableCommerceBState(),
+      commerceReceiptVenueId: null,
+      commerceReceipts: [],
       localSignalDraft: null,
       surface: { kind: "map" },
     })),

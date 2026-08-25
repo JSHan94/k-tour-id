@@ -43,13 +43,23 @@
 .emptyActivity > svg { box-sizing: content-box; border-radius: 13px; padding: 8px; background: #f1ece7; }
 .emptyActivity h3 { color: #4d4643; font-size: 14px; }
 .emptyActivity p { margin-top: 4px; color: #837a75; font-size: 12px; line-height: 1.45; }
+.activityReceipt { margin-top: 15px; border: 1px solid rgb(67 48 53 / 11%); border-radius: 16px; background: #fffdfa; overflow: hidden; }
+.activityReceipt summary { display: grid; min-height: 58px; cursor: pointer; grid-template-columns: 30px minmax(0, 1fr) 18px; align-items: center; gap: 9px; padding: 8px 11px; list-style: none; }
+.activityReceipt summary::-webkit-details-marker { display: none; }
+.activityReceipt summary > span { display: grid; min-width: 0; gap: 2px; }
+.activityReceipt summary strong { color: #3f3936; font-size: 13px; }
+.activityReceipt summary small { overflow: hidden; color: #7d746f; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.activityReceipt[open] summary > svg:last-child { transform: rotate(90deg); }
+.activityReceipt > div { display: grid; min-height: 44px; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px; border-top: 1px solid rgb(67 48 53 / 8%); padding: 8px 11px; color: #756c67; font-size: 12px; }
+.activityReceipt code { overflow: hidden; color: #443c3e; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.activityReceipt button { display: flex; width: calc(100% - 20px); min-height: 44px; align-items: center; justify-content: center; gap: 7px; margin: 0 10px 10px; border: 1px solid rgb(88 56 69 / 15%); border-radius: 13px; background: #f8f2ee; color: #624052; font: inherit; font-size: 12px; font-weight: 800; }
 .privacy { margin-top: 12px; border: 1px solid var(--feature-border); border-radius: 18px; padding: 0 15px; background: rgb(255 253 250 / 64%); color: #685f5a; }
 .privacy summary { display: flex; min-height: 48px; cursor: pointer; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; }
 .privacy p { display: flex; gap: 8px; margin: 0; padding: 0 0 14px; font-size: 12px; line-height: 1.55; }
 .privacy p + p { border-top: 1px solid var(--feature-border); padding-top: 12px; }
 .privacy p svg { flex: 0 0 auto; margin-top: 2px; }
 
-.sheetBackdrop { position: fixed; z-index: 300; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgb(29 22 25 / 58%); backdrop-filter: blur(13px); animation: veilIn .2s ease both; }
+.sheetBackdrop { position: fixed; z-index: 380; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgb(29 22 25 / 58%); backdrop-filter: blur(13px); animation: veilIn .2s ease both; }
 .sheet { display: flex; width: 100%; max-height: 92dvh; flex-direction: column; overflow: hidden; border: 1px solid rgb(255 255 255 / 28%); border-radius: 28px 28px 0 0; background: #fbf8f3; color: #241f20; box-shadow: 0 -28px 80px rgb(42 27 34 / 30%); animation: sheetIn .32s cubic-bezier(.2,.85,.2,1) both; }
 .grabber { width: 42px; height: 5px; flex: 0 0 auto; align-self: center; margin-top: 10px; border-radius: 999px; background: #d8d0cb; }
 .sheet > header { display: flex; min-height: 55px; align-items: center; justify-content: space-between; padding: 0 12px 0 21px; }
@@ -73,7 +83,7 @@
 .sheetStatus .primary { margin-top: 24px; }
 .spinner { animation: spin 1s linear infinite; }
 
-.offerOverlay { position: absolute; z-index: 138; inset: 0; overflow-y: auto; overscroll-behavior: contain; background: linear-gradient(180deg, #faf6f1, #f2ebe5); color: #231e20; -webkit-overflow-scrolling: touch; }
+.offerOverlay { position: fixed; z-index: 340; inset: 0; overflow-y: auto; overscroll-behavior: contain; background: linear-gradient(180deg, #faf6f1, #f2ebe5); color: #231e20; -webkit-overflow-scrolling: touch; }
 .offerHeader { position: sticky; z-index: 5; top: 0; display: grid; min-height: calc(62px + env(safe-area-inset-top)); grid-template-columns: 48px 1fr 48px; align-items: end; padding: env(safe-area-inset-top) 10px 4px; border-bottom: 1px solid rgb(68 48 54 / 10%); background: rgb(250 246 241 / 88%); backdrop-filter: blur(20px); }
 .offerHeader button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #30292c; }
 .offerHeader span { align-self: center; justify-self: center; color: #7d6f70; font-size: 12px; font-weight: 840; letter-spacing: .08em; }
@@ -90,7 +100,7 @@
 .quote .quoteTotal { min-height: 64px; margin-top: 8px; border-top: 1px solid rgb(67 48 53 / 10%); padding-top: 10px; color: #40383a; font-weight: 800; }
 .quote .quoteTotal strong { font-size: 31px; letter-spacing: -.04em; }
 .quoteTotal small { color: #7b6f6b; font-size: 12px; letter-spacing: .03em; }
-.offerBenefit { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 11px; margin-top: 12px; border: 1px solid rgb(131 83 47 / 14%); border-radius: 21px; padding: 15px; background: linear-gradient(145deg, #fff8e9, #fff1d7); }
+.offerBenefit { display: grid; grid-template-columns: 46px minmax(0, 1fr); align-items: center; gap: 11px; margin-top: 12px; border: 1px solid rgb(131 83 47 / 14%); border-radius: 21px; padding: 15px; background: linear-gradient(145deg, #fff8e9, #fff1d7); }
 .benefitIcon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 14px; background: rgb(132 84 47 / 10%); color: #7b5135; }
 .offerBenefit h3,
 .offerBenefit p { margin: 0; }
@@ -98,6 +108,8 @@
 .offerBenefit p { margin-top: 4px; color: #806f62; font-size: 12px; line-height: 1.4; }
 .offerBenefit button { min-height: 44px; border: 0; border-radius: 13px; padding: 0 11px; background: #68452f; color: #fff; font: inherit; font-size: 12px; font-weight: 800; }
 .offerBenefit button[aria-pressed="true"] { background: #ede2d4; color: #6b4a37; }
+.benefitActions { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.benefitActions button:last-child:not([aria-pressed="true"]) { border: 1px solid rgb(104 69 47 / 15%); background: rgb(255 253 250 / 76%); color: #6b4a37; }
 .consentCard { margin-top: 12px; border: 1px solid rgb(67 48 53 / 12%); border-radius: 22px; padding: 17px; background: rgb(255 253 250 / 82%); }
 .consentCard > div { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 9px; }
 .consentCard h3,
@@ -145,7 +157,11 @@
 @media (max-width: 350px) {
   .offerBody { padding-inline: 12px; }
   .offerBenefit { grid-template-columns: 42px minmax(0, 1fr); }
-  .offerBenefit button { grid-column: 1 / -1; width: 100%; }
+  .benefitActions { grid-template-columns: 1fr; }
+  .offerBenefit button { width: 100%; }
+}
+@media (max-width: 430px) {
+  .offerOverlay[data-locale="ko"] .offerHero h2 { font-size: clamp(31px, 8.4vw, 38px); line-height: 1.05; text-wrap: balance; word-break: keep-all; }
 }
 @media (orientation: landscape) and (max-height: 500px) {
   .sheet { max-width: 760px; max-height: 100dvh; border-radius: 0; }

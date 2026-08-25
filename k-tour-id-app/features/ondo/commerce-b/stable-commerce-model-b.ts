@@ -9,6 +9,8 @@ export const STABLE_B_REFUND_RECEIPT_ID = "ONDO-LOCAL-REFUND-20260825-001"
 
 export type StableCommerceBStatus = "idle" | "paid" | "refunded"
 export type StableCommerceBVoucher = "available" | "selected" | "consumed"
+export type StableCommerceBBenefitRecommendation = "recommended" | "accepted" | "declined"
+export type StableCommerceBBenefitPolicyStatus = "recommended" | "ineligible" | "below_minimum" | "expired"
 export type StableCommerceBOutcome = "success" | "failure" | "insufficient"
 export type StableCommerceBLedgerEntry = {
   operationId: string
@@ -21,6 +23,7 @@ export type StableCommerceBLedgerEntry = {
 export type StableCommerceBState = {
   status: StableCommerceBStatus
   voucher: StableCommerceBVoucher
+  benefitRecommendation: StableCommerceBBenefitRecommendation
   confirmationPending: boolean
   confirmationCount: number
   receiptCount: number
@@ -36,6 +39,8 @@ export type StableCommerceBState = {
 export type StableCommerceBAction =
   | { type: "RESET" }
   | { type: "SET_VOUCHER"; selected: boolean }
+  | { type: "ACCEPT_BENEFIT" }
+  | { type: "DECLINE_BENEFIT" }
   | { type: "CONFIRM" }
   | { type: "PAYMENT_RETURN"; outcome: StableCommerceBOutcome }
   | { type: "REFUND" }
@@ -44,6 +49,7 @@ export function createStableCommerceBState(): StableCommerceBState {
   return {
     status: "idle",
     voucher: "available",
+    benefitRecommendation: "recommended",
     confirmationPending: false,
     confirmationCount: 0,
     receiptCount: 0,
@@ -55,6 +61,23 @@ export function createStableCommerceBState(): StableCommerceBState {
     lastOutcome: null,
     ledger: [],
   }
+}
+
+export function stableCommerceBenefitPolicyB(input: {
+  venueEligible: boolean
+  mealOOKRW: number
+  minimumOOKRW: number
+  nowMs: number
+  expiresAtMs: number
+}): { status: StableCommerceBBenefitPolicyStatus; minimumOOKRW: number } {
+  const status: StableCommerceBBenefitPolicyStatus = !input.venueEligible
+    ? "ineligible"
+    : input.nowMs > input.expiresAtMs
+      ? "expired"
+      : input.mealOOKRW < input.minimumOOKRW
+        ? "below_minimum"
+        : "recommended"
+  return { status, minimumOOKRW: input.minimumOOKRW }
 }
 
 export function stableCommerceQuoteDebitB(state: StableCommerceBState) {
@@ -92,7 +115,17 @@ export function stableCommerceBReducer(state: StableCommerceBState, action: Stab
       return createStableCommerceBState()
     case "SET_VOUCHER":
       if (state.status !== "idle" || state.confirmationPending || state.voucher === "consumed") return state
-      return { ...state, voucher: action.selected ? "selected" : "available" }
+      return {
+        ...state,
+        voucher: action.selected ? "selected" : "available",
+        benefitRecommendation: action.selected ? "accepted" : "declined",
+      }
+    case "ACCEPT_BENEFIT":
+      if (state.status !== "idle" || state.confirmationPending || state.voucher === "consumed") return state
+      return { ...state, voucher: "selected", benefitRecommendation: "accepted" }
+    case "DECLINE_BENEFIT":
+      if (state.status !== "idle" || state.confirmationPending || state.voucher === "consumed") return state
+      return { ...state, voucher: "available", benefitRecommendation: "declined" }
     case "CONFIRM":
       if (state.status !== "idle" || state.confirmationPending) return state
       return { ...state, confirmationPending: true, confirmationCount: state.confirmationCount + 1, lastOutcome: null }

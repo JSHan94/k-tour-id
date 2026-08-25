@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { LocalCheckWalkthroughB, type LocalCheckKind, type LocalCheckOutcome } from "./local-check-walkthrough-b"
-import { IdWalletCommerceB, type WalletStatus } from "../commerce-b/id-wallet-commerce-b"
+import { IdWalletCommerceB } from "../commerce-b/id-wallet-commerce-b"
 import styles from "./traveler-id-entry-b.module.css"
 
 const COPY = {
@@ -94,12 +94,12 @@ export function TravelerIdEntryB() {
   const { state, actions } = useOndoB()
   const [personOutcome, setPersonOutcome] = useState<LocalCheckOutcome | null>(null)
   const [ageOutcome, setAgeOutcome] = useState<LocalCheckOutcome | null>(null)
-  const [walletStatus, setWalletStatus] = useState<WalletStatus>("disconnected")
   const [activeCheck, setActiveCheck] = useState<LocalCheckKind | null>(null)
   const personRef = useRef<HTMLButtonElement>(null)
   const ageRef = useRef<HTMLButtonElement>(null)
   const locale = state.locale
   const copy = COPY[locale]
+  const walletStatus = state.commerceWalletStatus
 
   function returnFromCheck(outcome: LocalCheckOutcome) {
     const returningCheck = activeCheck
@@ -163,7 +163,7 @@ export function TravelerIdEntryB() {
           </div>
         </section>
 
-        <IdWalletCommerceB walletStatus={walletStatus} onWalletStatusChange={setWalletStatus} />
+        <IdWalletCommerceB />
 
         <footer className={styles.footer}>
           <details>

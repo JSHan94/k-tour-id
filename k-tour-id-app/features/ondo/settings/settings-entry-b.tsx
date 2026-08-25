@@ -96,7 +96,7 @@ export function SettingsEntryB() {
 
       <section className={styles.settingsSection} aria-labelledby="b-privacy-heading">
         <div className={styles.sectionHeading}><LockKeyhole size={18} aria-hidden="true" /><h2 id="b-privacy-heading">{locale === "ko" ? "이 브라우저의 데이터" : "Data in this browser"}</h2></div>
-        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블, 탐색 선택, 개인 메모와 게시한 로컬 시그널만 이 브라우저에 남습니다. 신원 확인 결과와 지갑·결제·영수증 정보는 화면을 벗어나거나 새로고침하면 초기화되며 외부로 전송되지 않습니다." : "Saved places, recent views, joined Tables, discovery choices, private notes, and posted Local Signals stay in this browser. Identity results, wallet state, payments, and receipts reset when you leave or reload and are not sent outside the app."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블, 탐색 선택, 개인 메모, 게시한 로컬 시그널과 OOKRW Test 영수증은 이 브라우저에 남습니다. 신원 확인 결과와 지갑 연결 상태는 새로고침하면 초기화되며 외부로 전송되지 않습니다." : "Saved places, recent views, joined Tables, discovery choices, private notes, posted Local Signals, and OOKRW Test receipts stay in this browser. Identity results and wallet connection readiness reset on reload and are not sent outside the app."}</p>
         <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
           <RotateCcw size={17} aria-hidden="true" />
           {locale === "ko" ? "저장한 내용 지우기" : "Clear saved content"}
