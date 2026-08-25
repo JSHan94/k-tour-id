@@ -66,7 +66,7 @@ test.describe("ONDO B polished Pulse map", () => {
         const persistentChromeArea = (await Promise.all(chrome.map(area))).reduce((sum, value) => sum + value, 0)
         expect(persistentChromeArea / (rootBox!.width * rootBox!.height)).toBeLessThanOrEqual(.30)
 
-        const locationDetails = page.getByTestId("ondo-b-location-details")
+        const locationDetails = page.getByTestId("ondo-b-location-message")
         const keyDetails = page.getByTestId("ondo-b-map-key-details")
         const creditDetails = page.getByTestId("ondo-b-map-credit-details")
         await expect(locationDetails).not.toHaveAttribute("open", "")
@@ -110,4 +110,19 @@ test.describe("ONDO B polished Pulse map", () => {
       await expect(page.getByRole("dialog")).toBeVisible()
     })
   }
+
+  test("the progressive Pulse sheet opens the hottest place by keyboard", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seedDirectory(page, "en")
+    await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await page.getByTestId("ondo-b-map-key-details").locator("summary").click()
+    const pulsePlaces = page.getByTestId("ondo-b-map-pulse-places")
+    await expect(pulsePlaces.getByRole("button")).toHaveCount(6)
+    const hottest = pulsePlaces.getByRole("button").first()
+    await expect(hottest).toHaveAttribute("data-pulse-place-priority", "peak")
+    await hottest.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByRole("dialog")).toBeVisible()
+  })
 })

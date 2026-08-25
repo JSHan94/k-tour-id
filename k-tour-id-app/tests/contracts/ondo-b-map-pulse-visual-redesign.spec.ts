@@ -20,6 +20,8 @@ test.describe("ONDO B map Pulse visual contract", () => {
       "ondo-pulse-labels",
       "pulseMarkerLabel",
       "ondo-b-pulse-marker-accessible-detail",
+      "ondo-b-map-pulse-places",
+      "data-pulse-place-priority",
       "ondo-b-location-details",
       "ondo-points",
       "prefers-reduced-motion: reduce",
@@ -48,6 +50,7 @@ test.describe("ONDO B map Pulse visual contract", () => {
     }
     expect(css).toContain('.pulseLegend span[data-level="limited"] i')
     expect(css).toContain("border-style: dashed")
+    expect(css).toContain(".pulsePlaces button")
     expect(css).not.toContain(".mapKey > div > span { font-size: 0; }")
   })
 
