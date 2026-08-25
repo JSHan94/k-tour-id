@@ -118,7 +118,7 @@ export function pulseForVenue(venueId: string, localEvidence: PulseLocalEvidence
 
 export function pulseAlternativesForVenue(venueId: string): readonly PulseSnapshotB[] {
   const source = CURATED_BY_VENUE.get(venueId)
-  if (!source || (source.level !== "peak" && source.level !== "hot")) return []
+  if (!source || source.level !== "peak") return []
   return CURATED_PULSE_SNAPSHOTS
     .filter((snapshot) => snapshot.cityId === source.cityId && ["rising", "warming", "low"].includes(snapshot.level))
     .sort((left, right) => (left.score ?? 0) - (right.score ?? 0))
