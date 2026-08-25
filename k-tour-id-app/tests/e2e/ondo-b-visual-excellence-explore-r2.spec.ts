@@ -18,6 +18,46 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
 }
 
+async function seedCompletedBDevice(page: Page, locale: "en" | "ko") {
+  await page.addInitScript(({ deviceLocale }) => {
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: deviceLocale,
+      onboarding: "ONB-COMPLETE",
+      persona: "short_term",
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+  }, { deviceLocale: locale })
+}
+
+async function seedFreshBDevice(page: Page, locale: "en" | "ko") {
+  await page.addInitScript(({ deviceLocale }) => {
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: deviceLocale,
+      onboarding: "ONB-NEW",
+      persona: null,
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+  }, { deviceLocale: locale })
+}
+
 test.describe("ONDO Explore visual-excellence R2 composition", () => {
   test.describe.configure({ timeout: 180_000 })
 
@@ -29,13 +69,15 @@ test.describe("ONDO Explore visual-excellence R2 composition", () => {
     test(`${locale.toUpperCase()} 390 onboarding makes the decision in the first frame and lets full truth continue below`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })
       await seedFreshOnboarding(page, locale)
+      await seedFreshBDevice(page, locale)
       await gotoB(page)
 
       const value = page.getByTestId("onboarding-step-value")
-      const actions = value.locator("div").filter({ has: value.getByRole("button", { name: locale === "ko" ? "시작하기" : "Get started", exact: true }) }).last()
+      const primary = value.getByRole("button", { name: locale === "ko" ? "시작하기" : "Get started", exact: true })
+      const secondary = value.getByRole("button", { name: locale === "ko" ? "게스트로 탐색" : "Explore as a guest", exact: true })
       const source = value.locator("section")
       const metrics = await value.evaluate((element) => {
-        const actionGroup = [...element.querySelectorAll("div")].find((node) => node.querySelector("button"))!
+        const actionGroup = element.querySelector("button[data-onboarding-initial-focus]")!.parentElement!
         const truth = element.querySelector("section")!
         const title = element.querySelector("h1")!
         const actionRect = actionGroup.getBoundingClientRect()
@@ -50,9 +92,8 @@ test.describe("ONDO Explore visual-excellence R2 composition", () => {
         }
       })
 
-      await expect(actions.getByRole("button")).toHaveCount(2)
-      await expect(value.getByRole("button", { name: locale === "ko" ? "시작하기" : "Get started", exact: true })).toBeInViewport()
-      await expect(value.getByRole("button", { name: locale === "ko" ? "게스트로 둘러보기" : "Explore as a guest", exact: true })).toBeInViewport()
+      await expect(primary).toBeInViewport()
+      await expect(secondary).toBeInViewport()
       expect(metrics.actionBottom).toBeLessThan(metrics.viewport * .76)
       expect(metrics.truthTop).toBeGreaterThan(metrics.actionBottom)
       expect(metrics.titleHeight).toBeLessThanOrEqual(124)
@@ -63,6 +104,7 @@ test.describe("ONDO Explore visual-excellence R2 composition", () => {
     test(`${locale.toUpperCase()} desktop Nation owns the full canvas with a Seoul-to-Busan atlas`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 1000 })
       await seedB(page, { locale })
+      await seedCompletedBDevice(page, locale)
       await gotoB(page)
 
       const nation = page.getByTestId("ondo-b-nation")
@@ -94,6 +136,7 @@ test.describe("ONDO Explore visual-excellence R2 composition", () => {
     test(`${locale.toUpperCase()} mobile peek keeps a luxury action frame without a sticky dialog-root focus perimeter`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })
       await seedB(page, { locale })
+      await seedCompletedBDevice(page, locale)
       await openCanonicalVenue(page, { expanded: false })
 
       const peek = page.getByTestId("canonical-place-peek")
@@ -121,6 +164,7 @@ test.describe("ONDO Explore visual-excellence R2 composition", () => {
     test(`${locale.toUpperCase()} desktop place detail uses named two-column workspace areas with continuous lower content`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 1000 })
       await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+      await seedCompletedBDevice(page, locale)
       await openCanonicalVenue(page)
 
       const overlay = page.getByTestId("canonical-place-overlay")
