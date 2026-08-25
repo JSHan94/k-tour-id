@@ -25,6 +25,28 @@ async function expectNoHorizontalOverflow(locator: Locator) {
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1)
 }
 
+async function expectVisibleDirectTextAtLeast12(locator: Locator) {
+  const undersized = await locator.evaluate((root) => {
+    const elements = [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))] as HTMLElement[]
+    return elements.flatMap((element) => {
+      if (element.closest("[aria-hidden='true']")) return []
+      if (element.matches(".sr-only,[class*='srOnly'],[class*='visuallyHidden']")) return []
+      const style = getComputedStyle(element)
+      if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return []
+      if (element.getClientRects().length === 0) return []
+      const directText = Array.from(element.childNodes)
+        .filter((node) => node.nodeType === Node.TEXT_NODE)
+        .map((node) => node.textContent?.replace(/\s+/g, " ").trim() ?? "")
+        .filter(Boolean)
+        .join(" ")
+      if (!directText) return []
+      const fontSize = Number.parseFloat(style.fontSize)
+      return fontSize < 12 ? [{ tag: element.tagName.toLowerCase(), text: directText.slice(0, 80), fontSize }] : []
+    })
+  })
+  expect(undersized).toEqual([])
+}
+
 test("Tables stays polished and closable at 360, 390, and 430 CSS pixels", async ({ page }) => {
   await seed(page)
   for (const width of [360, 390, 430]) {
@@ -72,5 +94,44 @@ test("My Korea, ID · Wallet, and Settings share natural scrolling and premium t
   for (const button of await checks.getByRole("button").all()) {
     const box = await button.boundingBox()
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.9)
+  }
+})
+
+test("visible direct feature text stays at least 12px in EN and KO across phone and short landscape", async ({ page }) => {
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
+  for (const locale of ["en", "ko"] as const) {
+    for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }, { width: 430, height: 800 }, { width: 844, height: 390 }]) {
+      await page.setViewportSize(viewport)
+      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await page.evaluate(({ key, nextLocale }) => {
+        localStorage.setItem(key, JSON.stringify({
+          locale: nextLocale,
+          onboarding: "ONB-COMPLETE",
+          persona: null,
+          discoveryPreferences: [],
+          savedVenueIds: [],
+          privateNotesByVenue: {},
+        }))
+      }, { key: DEVICE_KEY, nextLocale: locale })
+      await page.reload({ waitUntil: "domcontentloaded" })
+
+      await page.getByTestId("nav-tables").click()
+      await expectVisibleDirectTextAtLeast12(page.getByTestId("tables-entry"))
+      await page.getByTestId(`table-open-${TABLE_ID}`).click()
+      await expectVisibleDirectTextAtLeast12(page.getByTestId("table-detail"))
+      await page.getByTestId("table-join").click()
+      await expectVisibleDirectTextAtLeast12(page.getByTestId("after19-walkthrough"))
+      await page.getByTestId("gate-cancel").click()
+      await page.keyboard.press("Escape")
+
+      for (const [nav, root] of [
+        ["nav-my", "ondo-b-my-korea-entry"],
+        ["nav-id", "ondo-b-traveler-id"],
+        ["nav-settings", "ondo-b-settings-entry"],
+      ] as const) {
+        await page.getByTestId(nav).click()
+        await expectVisibleDirectTextAtLeast12(page.getByTestId(root))
+      }
+    }
   }
 })

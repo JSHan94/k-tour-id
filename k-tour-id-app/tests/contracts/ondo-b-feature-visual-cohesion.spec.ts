@@ -67,3 +67,16 @@ test("B-VISUAL-FEATURE-005 feature roots leave navigation reservation to the sha
   expect(roots).not.toMatch(/padding(?:-bottom)?:[^;]*(?:96|100|104|108|112|116|120|124|128)px/)
   expect(source("features/ondo/identity-b/traveler-id-entry-b.module.css")).toContain("calc(36px + env(safe-area-inset-bottom))")
 })
+
+test("B-VISUAL-FEATURE-006 owned feature CSS never renders visible product copy below 12px", () => {
+  const ownedCss = [
+    "features/ondo/connect/pulse-table-b.module.css",
+    "features/ondo/after19/after19-jit-b.module.css",
+    "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+    "features/ondo/identity-b/local-check-walkthrough-b.module.css",
+    "features/ondo/identity-b/traveler-id-entry-b.module.css",
+    "features/ondo/shared/ui/production-local.module.css",
+  ].map(source).join("\n")
+
+  expect(ownedCss).not.toMatch(/font-size:\s*(?:[0-9](?:\.[0-9]+)?|1[01](?:\.[0-9]+)?)px/)
+})
