@@ -124,7 +124,7 @@ test("FID-P0-010 every JIT result preserves and consumes an exact returnTo once"
 test("FID-P0-011 all must-live surfaces retain EN/KO, responsive, and keyboard/focus evidence", () => {
   for (const path of [
     "features/ondo/onboarding/official-directory-onboarding.tsx",
-    "features/ondo/my/my-entry.tsx",
+    "features/ondo/my/saved-entry-b.tsx",
     "features/ondo/connect/tables-entry-b.tsx",
     "features/ondo/after19/after19-jit-b.tsx",
     "features/ondo/identity-b/traveler-id-entry-b.tsx",
