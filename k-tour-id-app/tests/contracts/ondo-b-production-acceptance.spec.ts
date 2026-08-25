@@ -114,7 +114,7 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
         const commerceFile = file === "features/ondo/commerce-b/id-wallet-commerce-b.tsx"
         const placeFile = file === "features/ondo/place/canonical-place-overlay.tsx"
         if (String(pattern) === String(/\bOOKRW\b/i) && commerceFile) return false
-        if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /does not claim|근거가 아닙니다/.test(literal)) return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /does not claim|not evidence|근거가 아닙니다/.test(literal)) return false
         if (String(pattern) === String(/\bcheckout\b/i) && commerceFile && literal === "ondo-b-stable-checkout") return false
         if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && commerceFile && (literal.includes("ONDO demo") || literal === "OOKRW read-only local demo balance")) return false
         if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && placeFile && (literal === "canonical-demo-meal-offer-open" || literal.includes("ONDO demo"))) return false
