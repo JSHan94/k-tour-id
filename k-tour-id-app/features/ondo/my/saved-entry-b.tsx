@@ -42,6 +42,8 @@ const COPY = {
     receiptsBody: "Payments and refunds completed on this device.",
     paid: "Paid 19 OOKRW Test",
     refunded: "Refunded",
+    originalPayment: "Original payment",
+    refundReference: "Refund reference",
     openWallet: "Open wallet",
   },
   ko: {
@@ -75,6 +77,8 @@ const COPY = {
     receiptsBody: "이 기기에서 완료한 결제와 환불입니다.",
     paid: "19 OOKRW Test 결제",
     refunded: "환불됨",
+    originalPayment: "원 결제",
+    refundReference: "환불 참조",
     openWallet: "지갑 열기",
   },
 } as const
@@ -182,7 +186,8 @@ export function SavedEntryB() {
               <article className={styles.planReference}>
                 <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? copy.refunded : copy.paid}</span>
                 <h3>{receiptVenue ? venueNamePresentation(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
-                <p>{state.commerceSession.status === "refunded" ? STABLE_B_REFUND_RECEIPT_ID : STABLE_B_RECEIPT_ID}</p>
+                <p>{state.commerceSession.status === "refunded" ? `${copy.originalPayment}: ${STABLE_B_RECEIPT_ID}` : STABLE_B_RECEIPT_ID}</p>
+                {state.commerceSession.status === "refunded" ? <p>{copy.refundReference}: {STABLE_B_REFUND_RECEIPT_ID}</p> : null}
                 <button type="button" onClick={() => actions.setTab("id")}>{copy.openWallet}<ChevronRight size={16} aria-hidden="true" /></button>
               </article>
             </div>

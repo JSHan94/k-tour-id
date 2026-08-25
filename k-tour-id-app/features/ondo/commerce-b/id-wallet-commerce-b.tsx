@@ -67,11 +67,13 @@ const COPY = {
     explore: "Find eligible places",
     activity: "Recent activity",
     noActivity: "No receipts yet",
-    noActivityBody: "Payments and refunds made in this session will appear here.",
+    noActivityBody: "Payments and refunds completed on this device appear here.",
     paidActivity: "Paid 19 OOKRW Test",
     refundedActivity: "Refunded",
     activityVenue: "Meal benefit at",
     activityReceipt: "Receipt",
+    originalPayment: "Original payment",
+    refundReference: "Refund reference",
     privacy: "Payment privacy",
     privacyBody: "Only wallet readiness and your benefit choice are used for an offer. Your name, age, identity and address are not shared.",
     testTruth: "OOKRW Test is a non-live product balance. It does not move money and is not a stablecoin or on-chain asset.",
@@ -103,11 +105,13 @@ const COPY = {
     explore: "대상 장소 찾기",
     activity: "최근 활동",
     noActivity: "아직 영수증이 없어요",
-    noActivityBody: "이 세션의 결제와 환불이 여기에 표시됩니다.",
+    noActivityBody: "이 기기에서 완료한 결제와 환불이 여기에 표시됩니다.",
     paidActivity: "19 OOKRW Test 결제",
     refundedActivity: "환불됨",
     activityVenue: "식사 혜택 장소",
     activityReceipt: "영수증",
+    originalPayment: "원 결제",
+    refundReference: "환불 참조",
     privacy: "결제 개인정보",
     privacyBody: "오퍼에는 지갑 준비 상태와 혜택 선택만 사용합니다. 이름·나이·신원·주소는 공유하지 않아요.",
     testTruth: "OOKRW Test는 실제로 작동하지 않는 제품용 잔액입니다. 돈을 이동하지 않으며 스테이블코인이나 온체인 자산이 아닙니다.",
@@ -134,7 +138,7 @@ const OFFER_COPY = {
     total: "You pay",
     asset: "OOKRW Test",
     voucher: "Your meal benefit",
-    voucherBody: "Eligible today · ₩22,000 minimum met",
+    voucherBody: "Eligible for this test offer · ₩22,000 minimum met",
     recommendation: "Recommended for this meal",
     applied: "Applied",
     apply: "Apply benefit",
@@ -159,6 +163,8 @@ const OFFER_COPY = {
     paid: "Paid",
     remaining: "Balance left",
     receiptId: "Receipt",
+    originalPayment: "Original payment",
+    refundReference: "Refund reference",
     refund: "Request refund",
     support: "Refund & support",
     supportBody: "Refunds here are immediate and restore the one-use benefit.",
@@ -178,7 +184,7 @@ const OFFER_COPY = {
     total: "결제 금액",
     asset: "OOKRW Test",
     voucher: "나의 식사 혜택",
-    voucherBody: "오늘 사용 가능 · ₩22,000 최소 금액 충족",
+    voucherBody: "이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족",
     recommendation: "이번 식사 추천 혜택",
     applied: "적용됨",
     apply: "혜택 적용",
@@ -203,6 +209,8 @@ const OFFER_COPY = {
     paid: "결제",
     remaining: "남은 잔액",
     receiptId: "영수증",
+    originalPayment: "원 결제",
+    refundReference: "환불 참조",
     refund: "환불 요청",
     support: "환불과 지원",
     supportBody: "여기서 요청한 환불은 즉시 처리되며 1회 혜택도 복원됩니다.",
@@ -431,7 +439,8 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
             <div><span>{copy.paid}</span><strong>{view === "refunded" ? 0 : breakdown.net} {copy.asset}</strong></div>
             <div><span>{copy.benefit}</span><strong>{STABLE_B_VOUCHER_VALUE} {copy.asset}</strong></div>
             <div><span>{copy.remaining}</span><strong>{balance} {copy.asset}</strong></div>
-            <div><span>{copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
+            <div><span>{view === "refunded" ? copy.originalPayment : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
+            {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
           </section>
           {view === "receipt" ? (
             <details className={styles.refundDetails}><summary>{copy.support}</summary><p>{copy.supportBody}</p><button type="button" data-testid="payment-refund" onClick={refund}><RotateCcw size={17} aria-hidden="true" />{copy.refund}</button></details>
@@ -500,7 +509,8 @@ export function IdWalletCommerceB() {
           {commerce.status === "paid" || commerce.status === "refunded" ? (
             <details className={styles.activityReceipt} data-testid="wallet-activity-receipt">
               <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? copy.refundedActivity : copy.paidActivity}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
-              <div><span>{copy.activityReceipt}</span><code>{commerce.status === "refunded" ? STABLE_B_REFUND_RECEIPT_ID : STABLE_B_RECEIPT_ID}</code></div>
+              <div><span>{commerce.status === "refunded" ? copy.originalPayment : copy.activityReceipt}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
+              {commerce.status === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
               {commerce.status === "paid" ? <button type="button" data-testid="wallet-activity-refund" onClick={() => actions.dispatchCommerce({ type: "REFUND" })}><RotateCcw size={16} aria-hidden="true" />{OFFER_COPY[locale].refund}</button> : null}
             </details>
           ) : <div className={styles.emptyActivity}><ReceiptText size={25} aria-hidden="true" /><div><h3>{copy.noActivity}</h3><p>{copy.noActivityBody}</p></div></div>}
