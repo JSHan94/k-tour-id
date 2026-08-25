@@ -111,7 +111,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
           window.cancelAnimationFrame(restoreFrame)
           restoreFrame = null
         }
-        restoreAt = region.scrollTop
+        restoreAt = Math.max(region.scrollTop, scrollPositions.current[state.tab] ?? 0)
         region.scrollTop = 0
       } else if (!hasModal && restoreAt !== null) {
         const requestedTop = restoreAt
