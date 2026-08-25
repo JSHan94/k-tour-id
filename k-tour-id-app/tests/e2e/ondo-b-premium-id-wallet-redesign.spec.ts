@@ -25,7 +25,7 @@ async function seed(page: Page, locale: "en" | "ko" = "en", qa?: { wallet?: "fai
 
 async function openTravelPass(page: Page) {
   await page.goto("/ondo-b", { waitUntil: "networkidle" })
-  await page.getByTestId("ondo-main-nav").getByTestId("nav-id").dispatchEvent("click")
+  await page.getByTestId("ondo-main-nav").getByTestId("nav-id").click()
   await expect(page.getByTestId("travel-pass-status")).toBeVisible()
 }
 
@@ -74,7 +74,11 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   await seed(page)
   const { offer, place } = await openContextualOffer(page)
   await expect(offer).toContainText("OOKRW Test")
+  await expect(offer).toContainText("Test quote")
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
+  await expect(offer.getByTestId("payment-confirm")).toContainText("Connect test wallet to pay")
+  await offer.getByTestId("payment-confirm").click()
+  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").dblclick()
 
@@ -82,18 +86,28 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   await expect(receipt).toContainText("ONDO-LOCAL-20260825-001")
   await expect(receipt).toContainText("19 OOKRW Test")
   await expect(offer.locator("[data-operation-kind]")).toHaveCount(0)
-  await receipt.getByText("Refund & support").click()
-  await receipt.getByTestId("payment-refund").click()
-  await expect(receipt).toHaveAttribute("data-refunded", "true")
-  await expect(receipt).toContainText("60 OOKRW Test")
   await receipt.getByTestId("payment-receipt-return").click()
   await expect(place).toBeVisible()
   await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
+
+  await page.getByTestId("nav-id").click()
+  await expect(page.getByTestId("wallet-balance")).toContainText("41")
+  const activity = page.getByTestId("wallet-activity-receipt")
+  await expect(activity).toContainText("Paid 19 OOKRW Test")
+  await expect(activity).toContainText("ONDO-LOCAL-20260825-001")
+  await activity.getByTestId("wallet-activity-refund").click()
+  await expect(page.getByTestId("wallet-balance")).toContainText("60")
+  await expect(activity).toContainText("Refunded")
+
+  await page.getByTestId("nav-my").click()
+  await expect(page.getByTestId("my-korea-receipts")).toContainText("Refunded")
 })
 
 test("QA injection creates recovery without exposing outcome controls", async ({ page }) => {
   await seed(page, "en", { payment: "failure" })
   const { offer } = await openContextualOffer(page)
+  await offer.getByTestId("payment-confirm").click()
+  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").click()
   await expect(offer.getByTestId("payment-recovery")).toContainText("Payment didn’t complete")

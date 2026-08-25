@@ -80,3 +80,22 @@ test("B-PREMIUM-PAY-001 contextual payment keeps model outcomes but hides them f
   expect(model).toContain('case "PAYMENT_RETURN"')
   expect(model).toContain('case "REFUND"')
 })
+
+test("B-PREMIUM-PAY-002 wallet readiness, balance, receipts, and refunds share one session state", () => {
+  const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
+  const myKorea = source("features/ondo/my/saved-entry-b.tsx")
+
+  for (const stateField of ["commerceWalletStatus", "commerceSession"]) {
+    expect(provider, `missing shared session field ${stateField}`).toContain(stateField)
+  }
+  for (const action of ["setCommerceWalletStatus", "dispatchCommerce"]) {
+    expect(provider, `missing shared session action ${action}`).toContain(action)
+  }
+  expect(commerce).not.toContain("useReducer")
+  expect(commerce).toContain("Connect test wallet to pay")
+  expect(commerce).toContain("Test quote")
+  expect(commerce).toContain('data-testid="wallet-activity-receipt"')
+  expect(commerce).toContain('data-testid="wallet-activity-refund"')
+  expect(myKorea).toContain('data-testid="my-korea-receipts"')
+})
