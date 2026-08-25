@@ -65,12 +65,14 @@ test("B-PULSE-HOT-003 a local-device post becomes evidence without inflating the
   expect(pulse.evidence.some((item) => item.origin === "local-device")).toBe(true)
 })
 
-test("B-PULSE-HOT-004 peak and hot places offer calmer evidence-backed alternatives", () => {
+test("B-PULSE-HOT-004 only a peak place offers calmer evidence-backed Too Hot alternatives", () => {
   const crowded = CURATED_PULSE_SNAPSHOTS.find((snapshot) => snapshot.level === "peak")!
+  const hot = CURATED_PULSE_SNAPSHOTS.find((snapshot) => snapshot.level === "hot")!
   const alternatives = pulseAlternativesForVenue(crowded.venueId)
   expect(alternatives.length).toBeGreaterThanOrEqual(2)
   expect(alternatives.every((item) => item.venueId !== crowded.venueId)).toBe(true)
   expect(alternatives.every((item) => ["rising", "warming", "low"].includes(item.level))).toBe(true)
+  expect(pulseAlternativesForVenue(hot.venueId)).toEqual([])
 })
 
 test("B-PULSE-HOT-005 map, list, place, local signal, EN/KO, and standalone packaging stay connected", () => {
