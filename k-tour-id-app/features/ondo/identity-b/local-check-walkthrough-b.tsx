@@ -43,7 +43,7 @@ const COPY = {
     age: "19+",
     personMinimum: "Person walkthrough completed — not a legal identity or age result",
     ageMinimum: "19+ walkthrough completed — separate from Person and not a legal age result",
-    retentionBody: "No result, claim, DID, profile, credential, or note is saved. The one-time boundary choice plus posted Local Signal tag IDs, time, and venue marker can stay on this device.",
+    retentionBody: "No result, claim, DID, profile, or credential is saved. The note is discarded. The one-time boundary choice plus posted Local Signal tag IDs, time, and venue marker can stay on this device.",
     signalRequester: "ONDO Local Signals",
     idRequester: "ONDO Traveler ID",
     signalPurpose: "Return to your exact draft for this place and allow one local-device post.",
