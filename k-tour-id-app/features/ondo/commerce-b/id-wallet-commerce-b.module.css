@@ -166,6 +166,16 @@
   .offerBenefit { grid-template-columns: 42px minmax(0, 1fr); }
   .benefitActions { grid-template-columns: 1fr; }
   .offerBenefit button { width: 100%; }
+  .offerOverlay[data-locale="ko"] .receiptWrap[data-refunded="true"] .receiptCard > div > span {
+    flex: 0 0 auto;
+    overflow-wrap: normal;
+    white-space: nowrap;
+    word-break: keep-all;
+  }
+  .offerOverlay[data-locale="ko"] .receiptWrap[data-refunded="true"] .receiptCard > div > code {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
 }
 @media (max-width: 430px) {
   .offerOverlay[data-locale="ko"] .offerHero h2 { font-size: clamp(31px, 8.4vw, 38px); line-height: 1.05; text-wrap: balance; word-break: keep-all; }
