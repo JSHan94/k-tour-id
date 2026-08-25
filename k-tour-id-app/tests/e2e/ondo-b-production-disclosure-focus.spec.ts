@@ -68,7 +68,7 @@ test.describe("ONDO B production disclosure and focus boundaries", () => {
 
       await page.keyboard.press("Escape")
       await expect(detail).toBeHidden()
-      await expect(peek.getByTestId("canonical-place-details")).toBeFocused()
+      await expect(peek).toBeFocused()
       await page.keyboard.press("Escape")
       await expect(peek).toBeHidden()
       await expect.poll(() => page.evaluate(() => {
