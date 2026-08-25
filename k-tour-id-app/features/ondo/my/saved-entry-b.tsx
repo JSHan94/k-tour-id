@@ -184,7 +184,7 @@ export function SavedEntryB() {
             <div className={styles.activityHeading}><ReceiptText size={19} aria-hidden="true" /><span><h2 id="my-korea-receipts-heading">{copy.receiptsTitle}</h2><p>{copy.receiptsBody}</p></span></div>
             <div className={styles.referenceList}>
               <article className={styles.planReference}>
-                <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? copy.refunded : `${copy.paid} ${state.commerceSession.chargedDebit} OOKRW Test`}</span>
+                <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? `${copy.refunded} ${state.commerceSession.chargedDebit} OOKRW Test` : `${copy.paid} ${state.commerceSession.chargedDebit} OOKRW Test`}</span>
                 <h3>{receiptVenue ? venueNamePresentation(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
                 <p>{state.commerceSession.status === "refunded" ? `${copy.originalPayment}: ${STABLE_B_RECEIPT_ID}` : STABLE_B_RECEIPT_ID}</p>
                 {state.commerceSession.status === "refunded" ? <p>{copy.refundReference}: {STABLE_B_REFUND_RECEIPT_ID}</p> : null}

@@ -76,6 +76,7 @@ const COPY = {
     activityReceipt: "Receipt",
     originalPayment: "Original payment",
     refundReference: "Refund reference",
+    refundedAmount: "Refunded",
     privacy: "Payment privacy",
     privacyBody: "Only wallet readiness and your benefit choice are used for an offer. Your name, age, identity and address are not shared.",
     testTruth: "OOKRW Test is a non-live product balance. It does not move money and is not a stablecoin or on-chain asset.",
@@ -114,6 +115,7 @@ const COPY = {
     activityReceipt: "영수증",
     originalPayment: "원 결제",
     refundReference: "환불 참조",
+    refundedAmount: "환불 금액",
     privacy: "결제 개인정보",
     privacyBody: "오퍼에는 지갑 준비 상태와 혜택 선택만 사용합니다. 이름·나이·신원·주소는 공유하지 않아요.",
     testTruth: "OOKRW Test는 실제로 작동하지 않는 제품용 잔액입니다. 돈을 이동하지 않으며 스테이블코인이나 온체인 자산이 아닙니다.",
@@ -171,6 +173,7 @@ const OFFER_COPY = {
     receiptId: "Receipt",
     originalPayment: "Original payment",
     refundReference: "Refund reference",
+    refundedAmount: "Refunded",
     refund: "Request refund",
     support: "Refund & support",
     supportBody: "Refunds here are immediate and restore the one-use benefit.",
@@ -221,6 +224,7 @@ const OFFER_COPY = {
     receiptId: "영수증",
     originalPayment: "원 결제",
     refundReference: "환불 참조",
+    refundedAmount: "환불 금액",
     refund: "환불 요청",
     support: "환불과 지원",
     supportBody: "여기서 요청한 환불은 즉시 처리되며 1회 혜택도 복원됩니다.",
@@ -468,7 +472,8 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
           <h2>{view === "refunded" ? copy.refunded : copy.receipt}</h2>
           <p className={styles.receiptLead}>{view === "refunded" ? copy.refundedBody : copy.receiptBody}</p>
           <section className={styles.receiptCard}>
-            <div><span>{copy.paid}</span><strong>{view === "refunded" ? 0 : breakdown.net} {copy.asset}</strong></div>
+            <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div>
+            {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div> : null}
             <div><span>{copy.benefit}</span><strong>{breakdown.benefit} {copy.asset}</strong></div>
             <div><span>{copy.remaining}</span><strong>{balance} {copy.asset}</strong></div>
             <div><span>{view === "refunded" ? copy.originalPayment : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
@@ -531,7 +536,7 @@ export function IdWalletCommerceB() {
 
       <div className={styles.dashboardGrid}>
         <section className={styles.benefitCard} data-testid="wallet-benefit">
-          <div className={styles.cardHeading}><Gift size={20} aria-hidden="true" /><span>{copy.benefits}</span><small>{commerce.status === "paid" ? (locale === "ko" ? "사용됨" : "Used") : copy.benefitState}</small></div>
+          <div className={styles.cardHeading}><Gift size={20} aria-hidden="true" /><span>{copy.benefits}</span><small>{commerce.status === "paid" && commerce.voucherApplied ? (locale === "ko" ? "사용됨" : "Used") : copy.benefitState}</small></div>
           <h3>{copy.benefitTitle}</h3><p>{copy.benefitBody}</p>
           <button type="button" onClick={() => actions.setTab("ondo")}><MapPin size={16} aria-hidden="true" />{copy.explore}<ChevronRight size={16} aria-hidden="true" /></button>
         </section>
@@ -540,7 +545,7 @@ export function IdWalletCommerceB() {
           <div className={styles.cardHeading}><Clock3 size={20} aria-hidden="true" /><span>{copy.activity}</span></div>
           {commerce.status === "paid" || commerce.status === "refunded" ? (
             <details className={styles.activityReceipt} data-testid="wallet-activity-receipt">
-              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? copy.refundedActivity : `${copy.paidActivity} ${commerce.chargedDebit} ${copy.testAsset}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
+              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? `${copy.refundedActivity} ${commerce.chargedDebit} ${copy.testAsset}` : `${copy.paidActivity} ${commerce.chargedDebit} ${copy.testAsset}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
               <div><span>{commerce.status === "refunded" ? copy.originalPayment : copy.activityReceipt}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
               {commerce.status === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
               {commerce.status === "paid" ? <button type="button" data-testid="wallet-activity-refund" onClick={() => actions.dispatchCommerce({ type: "REFUND" })}><RotateCcw size={16} aria-hidden="true" />{OFFER_COPY[locale].refund}</button> : null}
