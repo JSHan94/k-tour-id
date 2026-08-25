@@ -12,7 +12,8 @@ test("B-VISUAL-FEATURE-001 Tables uses the same warm-paper sans display system a
   expect(tables).toContain("--feature-ink: #24211e")
   expect(tables).toContain("--feature-accent: #b24e3b")
   expect(tables).toContain("padding: max(32px, env(safe-area-inset-top)) 18px")
-  expect(tables).toContain("padding-bottom: calc(124px + env(safe-area-inset-bottom))")
+  expect(tables).toContain("padding-bottom: calc(36px + env(safe-area-inset-bottom))")
+  expect(tables).not.toMatch(/padding-bottom:\s*calc\((?:9[0-9]|1[0-9]{2})px/)
 })
 
 test("B-VISUAL-FEATURE-002 feature cards share premium border, radius, and elevation semantics", () => {
@@ -56,3 +57,13 @@ test("B-VISUAL-FEATURE-004 controls retain accessible touch and focus states wit
   expect(css).toContain("-webkit-tap-highlight-color: transparent")
 })
 
+test("B-VISUAL-FEATURE-005 feature roots leave navigation reservation to the shared canvas scroll owner", () => {
+  const roots = [
+    source("features/ondo/connect/pulse-table-b.module.css"),
+    source("features/ondo/identity-b/traveler-id-entry-b.module.css"),
+    source("features/ondo/shared/ui/production-local.module.css"),
+  ].join("\n")
+
+  expect(roots).not.toMatch(/padding(?:-bottom)?:[^;]*(?:96|100|104|108|112|116|120|124|128)px/)
+  expect(source("features/ondo/identity-b/traveler-id-entry-b.module.css")).toContain("calc(36px + env(safe-area-inset-bottom))")
+})
