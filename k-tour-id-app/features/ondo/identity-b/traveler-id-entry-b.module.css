@@ -18,7 +18,7 @@
 }
 .screen button:focus-visible { outline: 3px solid rgb(178 78 59 / 38%); outline-offset: 3px; }
 .header { display: grid; max-width: 620px; gap: 9px; }
-.header p { margin: 0; color: var(--feature-accent); font-size: 11px; font-weight: 820; letter-spacing: .13em; text-transform: uppercase; }
+.header p { margin: 0; color: var(--feature-accent); font-size: 12px; font-weight: 820; letter-spacing: .13em; text-transform: uppercase; }
 .header h1 { margin: 0; font-size: clamp(34px, 9vw, 46px); font-weight: 760; line-height: 1.02; letter-spacing: -.055em; }
 .header span { display: block; max-width: 570px; margin-top: 2px; color: #6d655d; font-size: 14px; line-height: 1.62; }
 .boundary,
@@ -37,7 +37,7 @@
 .check { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; border: 1px solid var(--feature-border); border-radius: 22px; padding: 18px; background: var(--feature-card); box-shadow: var(--feature-shadow); backdrop-filter: blur(18px); animation: cardEnter .4s cubic-bezier(.2,.8,.2,1) both; }
 .check:nth-child(2) { animation-delay: 55ms; }
 .checkIcon { display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid rgb(65 52 42 / 9%); border-radius: 15px; background: #f0ece6; color: #45413c; }
-.checkCopy span { color: #67635d; font-size: 10px; font-weight: 790; letter-spacing: .05em; text-transform: uppercase; }
+.checkCopy span { color: #67635d; font-size: 12px; font-weight: 790; letter-spacing: .05em; text-transform: uppercase; }
 .checkCopy span[data-outcome="success"] { color: #3f624f; }
 .checkCopy span[data-outcome="failure"],
 .checkCopy span[data-outcome="expired"] { color: #8b493f; }

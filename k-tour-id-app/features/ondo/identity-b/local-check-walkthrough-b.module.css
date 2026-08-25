@@ -24,7 +24,7 @@
 .layer > header strong { justify-self: center; font-size: 13px; font-weight: 780; }
 .body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 25px 20px calc(28px + env(safe-area-inset-bottom)); -webkit-overflow-scrolling: touch; }
 .mark { display: grid; box-sizing: content-box; width: 28px; height: 28px; place-items: center; margin-bottom: 21px; border: 1px solid var(--feature-border); border-radius: 17px; padding: 10px; background: var(--feature-card); color: #443e38; box-shadow: 0 8px 22px rgb(52 38 27 / 7%); }
-.eyebrow { margin: 0 0 10px; color: var(--feature-accent); font-size: 10px; font-weight: 820; letter-spacing: .11em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 10px; color: var(--feature-accent); font-size: 12px; font-weight: 820; letter-spacing: .11em; text-transform: uppercase; }
 .body h2 { max-width: 380px; margin: 0; font-size: clamp(24px, 7vw, 30px); font-weight: 750; line-height: 1.14; letter-spacing: -.045em; word-break: keep-all; }
 .lead,
 .quiet { color: #68645e; font-size: 13px; line-height: 1.64; }
@@ -34,7 +34,7 @@
 .consent { display: grid; margin: 22px 0 0; border-block: 1px solid var(--feature-border); }
 .consent div { display: grid; gap: 5px; border-bottom: 1px solid rgb(65 52 42 / 9%); padding: 13px 0; }
 .consent div:last-child { border-bottom: 0; }
-.consent dt { color: #716d66; font-size: 10px; font-weight: 790; letter-spacing: .06em; text-transform: uppercase; }
+.consent dt { color: #716d66; font-size: 12px; font-weight: 790; letter-spacing: .06em; text-transform: uppercase; }
 .consent dd { margin: 0; color: #37342f; font-size: 13px; font-weight: 650; line-height: 1.55; }
 .actions,
 .outcomes { display: grid; gap: 9px; margin-top: 23px; }
