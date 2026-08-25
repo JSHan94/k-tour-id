@@ -2,7 +2,7 @@
 
 import type { CircleLayerSpecification, ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, SymbolLayerSpecification } from "maplibre-gl"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
+import { ArrowLeft, ChevronRight, Info, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues/contracts"
@@ -170,6 +170,30 @@ const PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
   "#CFCAC0",
 ]
 
+const SELECTED_CAPSULE_IMAGE_ID = "ondo-selected-pulse-capsule"
+
+function selectedCapsuleImage() {
+  const width = 64
+  const height = 48
+  const radius = 20
+  const data = new Uint8Array(width * height * 4)
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const nearestX = Math.max(radius, Math.min(width - radius - 1, x))
+      const nearestY = Math.max(radius, Math.min(height - radius - 1, y))
+      const distance = Math.hypot(x - nearestX, y - nearestY)
+      if (distance > radius) continue
+      const offset = (y * width + x) * 4
+      const edge = distance > radius - 2 || x < 2 || x >= width - 2 || y < 2 || y >= height - 2
+      data[offset] = edge ? 214 : 255
+      data[offset + 1] = edge ? 202 : 252
+      data[offset + 2] = edge ? 194 : 247
+      data[offset + 3] = edge ? 230 : 248
+    }
+  }
+  return { width, height, data }
+}
+
 const DOT_BOUNDS = { minLon: 125.72, maxLon: 130.95, minLat: 33.02, maxLat: 38.67 }
 
 function pointInRing(lon: number, lat: number, ring: readonly (readonly [number, number])[]) {
@@ -302,7 +326,7 @@ function toPulseFeatureCollection(
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
   locale: OndoBLocale,
   selectedVenueId: string | null = null,
-): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; pulseMarkerLabel: string; selected: boolean }> {
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; pulseMarkerLabel: string; selectedMarkerLabel: string; selected: boolean }> {
   return {
     type: "FeatureCollection",
     features: venues.flatMap((venue) => {
@@ -319,7 +343,10 @@ function toPulseFeatureCollection(
           pulseScore: pulse.score ?? -1,
           pulseMarkerLabel: pulse.score == null
             ? pulseLevelLabel(pulse.level, locale).toUpperCase()
-            : `${pulse.score}°`,
+            : `${pulse.score} · ${pulseLevelLabel(pulse.level, locale).toUpperCase()}`,
+          selectedMarkerLabel: pulse.score == null
+            ? venueDisplayName(venue.name.ko, locale)
+            : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale).toUpperCase()}`,
           selected: venue.id === selectedVenueId,
         },
       }]
@@ -376,7 +403,7 @@ function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId,
         const category = CATEGORY[venue.primaryCategory]
         const pulseSummary = pulse.score == null
           ? `Pulse · ${pulseLevelLabel(pulse.level, locale)}`
-          : `Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)}`
+          : `Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)}`
         const pulseDetail = pulse.signalCount == null
           ? PULSE_DISCLOSURE[locale]
           : `${pulse.signalCount} ${copy.pulseSignals} · ${PULSE_DISCLOSURE[locale]}`
@@ -680,9 +707,15 @@ export function MapEntryB() {
             data: toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId),
           })
           instance.addSource("ondo-user-location", { type: "geojson", data: toUserLocationFeatureCollection(userLocationRef.current) })
-          instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,255,255,0.93)", "circle-radius": ["step", ["get", "point_count"], 16, 15, 19, 50, 23], "circle-stroke-color": "#625f59", "circle-stroke-width": 1.5, "circle-opacity": 0.97 } })
-          instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 12 }, paint: { "text-color": "#35322f", "text-halo-color": "rgba(255,255,255,.72)", "text-halo-width": 0.7 } })
-          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "curatedSignal"], false]], paint: { "circle-color": "#77746f", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 15, 5.5], "circle-opacity": 0.7, "circle-stroke-color": "rgba(255,255,255,.9)", "circle-stroke-width": 1.25 } })
+          instance.addImage(SELECTED_CAPSULE_IMAGE_ID, selectedCapsuleImage(), {
+            pixelRatio: 2,
+            stretchX: [[20, 44]],
+            stretchY: [[20, 28]],
+            content: [16, 12, 48, 36],
+          })
+          instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,253,249,0.9)", "circle-radius": ["step", ["get", "point_count"], 15, 15, 18, 50, 21], "circle-stroke-color": "rgba(66,62,57,.34)", "circle-stroke-width": 1, "circle-opacity": 0.94, "circle-blur": 0.02 } })
+          instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 11.5 }, paint: { "text-color": "#4a4641", "text-halo-color": "rgba(255,253,249,.78)", "text-halo-width": 0.8 } })
+          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "curatedSignal"], false]], paint: { "circle-color": "#716d67", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.6, 15, 4.2], "circle-opacity": 0.66, "circle-stroke-width": 0 } })
           const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "pulseRank"], 3], ["!=", ["get", "pulseRank"], 2]]
           const risingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 3]
           const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 2]
@@ -694,10 +727,10 @@ export function MapEntryB() {
             if (rank === 2) return { x: -8 * scale, y: -10 * scale }
             return { x: 0, y: 0 }
           }
-          const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 18, 15, 21], "circle-opacity": 0.98, "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 2.5, "circle-blur": 0.02 }
-          const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 9, 12, 15, 12.5], "text-letter-spacing": 0, "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
-          const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 3], "#ffffff", "#242320"], "text-halo-color": "rgba(32,24,18,.18)", "text-halo-width": 0.45 }
-          const pulseHaloPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 23, 15, 28], "circle-blur": 0.42, "circle-opacity": 0.16 }
+          const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": 0.98, "circle-stroke-width": 0, "circle-blur": 0.08 }
+          const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 9, 10.5, 15, 11.5], "text-letter-spacing": 0.025, "text-offset": [0, -1.2], "text-anchor": "bottom", "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
+          const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 4], "#5d1732", [">=", ["get", "pulseRank"], 2], "#773421", "#403b35"], "text-halo-color": "rgba(255,253,249,.94)", "text-halo-width": 2.2, "text-halo-blur": 0.5 }
+          const pulseHaloPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 42], "circle-blur": 0.82, "circle-opacity": 0.2, "circle-stroke-width": 0 }
           instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
           instance.addLayer({ id: "ondo-pulse-halo-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-halo-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
@@ -713,14 +746,33 @@ export function MapEntryB() {
           const selectedUnshiftedPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], unshiftedPulseFilter]
           const selectedRisingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], risingPulseFilter]
           const selectedWarmingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], warmingPulseFilter]
-          const selectedPulseOuterPaint: CircleLayerSpecification["paint"] = { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 25, 15, 29], "circle-stroke-color": "rgba(255,255,255,.98)", "circle-stroke-width": 5, "circle-stroke-opacity": 0.98 }
-          const selectedPulsePaint: CircleLayerSpecification["paint"] = { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 25, 15, 29], "circle-stroke-color": "#171715", "circle-stroke-width": 2.25, "circle-stroke-opacity": 0.96 }
+          const selectedPulseOuterPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 34, 15, 50], "circle-blur": 0.88, "circle-opacity": 0.18, "circle-stroke-width": 0 }
+          const selectedPulsePaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 7, 15, 9], "circle-opacity": 1, "circle-blur": 0.06, "circle-stroke-width": 0 }
           instance.addLayer({ id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse", filter: selectedUnshiftedPulseFilter, paint: selectedPulseOuterPaint })
           instance.addLayer({ id: "ondo-selected-pulse", type: "circle", source: "ondo-pulse", filter: selectedUnshiftedPulseFilter, paint: selectedPulsePaint })
           instance.addLayer({ id: "ondo-selected-pulse-outer-rising", type: "circle", source: "ondo-pulse", filter: selectedRisingPulseFilter, paint: { ...selectedPulseOuterPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-selected-pulse-rising", type: "circle", source: "ondo-pulse", filter: selectedRisingPulseFilter, paint: { ...selectedPulsePaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-selected-pulse-outer-warming", type: "circle", source: "ondo-pulse", filter: selectedWarmingPulseFilter, paint: { ...selectedPulseOuterPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-selected-pulse-warming", type: "circle", source: "ondo-pulse", filter: selectedWarmingPulseFilter, paint: { ...selectedPulsePaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          const selectedCapsuleLayout: SymbolLayerSpecification["layout"] = {
+            "icon-image": SELECTED_CAPSULE_IMAGE_ID,
+            "icon-text-fit": "both",
+            "icon-text-fit-padding": [7, 12, 7, 12],
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
+            "text-field": ["get", "selectedMarkerLabel"],
+            "text-font": ["Noto Sans Bold"],
+            "text-size": 11.5,
+            "text-max-width": 24,
+            "text-letter-spacing": 0.01,
+            "text-offset": [0, 2.8],
+            "text-allow-overlap": true,
+            "text-ignore-placement": true,
+          }
+          const selectedCapsulePaint: SymbolLayerSpecification["paint"] = { "text-color": "#29231f", "text-halo-color": "rgba(255,253,249,.4)", "text-halo-width": 0.5 }
+          instance.addLayer({ id: "ondo-selected-pulse-capsule", type: "symbol", source: "ondo-pulse", filter: selectedUnshiftedPulseFilter, layout: selectedCapsuleLayout, paint: selectedCapsulePaint })
+          instance.addLayer({ id: "ondo-selected-pulse-capsule-rising", type: "symbol", source: "ondo-pulse", filter: selectedRisingPulseFilter, layout: selectedCapsuleLayout, paint: { ...selectedCapsulePaint, "text-translate": risingTranslate, "icon-translate": risingTranslate, "text-translate-anchor": "viewport", "icon-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-selected-pulse-capsule-warming", type: "symbol", source: "ondo-pulse", filter: selectedWarmingPulseFilter, layout: selectedCapsuleLayout, paint: { ...selectedCapsulePaint, "text-translate": warmingTranslate, "icon-translate": warmingTranslate, "text-translate-anchor": "viewport", "icon-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
 
@@ -747,17 +799,18 @@ export function MapEntryB() {
           }
 
           const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          const duration = 220
+          if (cityRootNode.current) cityRootNode.current.dataset.pulseMotionApplied = reducedMotion ? "static" : "one-shot"
+          const duration = 520
           const pulseHaloLayers = ["ondo-pulse-halo", "ondo-pulse-halo-rising", "ondo-pulse-halo-warming"] as const
-          if (reducedMotion) pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.16))
+          if (reducedMotion) pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.2))
           else {
             const startedAt = performance.now()
-            pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.36))
+            pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.46))
             const animatePulse = (timestamp: number) => {
               if (disposed) return
               const progress = Math.min(1, (timestamp - startedAt) / duration)
               const eased = 1 - (1 - progress) ** 3
-              pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.36 - eased * 0.2))
+              pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.46 - eased * 0.26))
               if (progress < 1) pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
             }
             pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
@@ -786,7 +839,7 @@ export function MapEntryB() {
                 && point.y + offset.y <= readableBottom
             })
             const zoom = instance.getZoom()
-            const pulseRadius = 18 + Math.max(0, Math.min(1, (zoom - 9) / 6)) * 3 + 2.5
+            const pulseRadius = 18 + Math.max(0, Math.min(1, (zoom - 9) / 6)) * 2
             const clusterFeatures = instance.queryRenderedFeatures({ layers: ["ondo-clusters"] })
               .filter((feature) => feature.geometry.type === "Point")
             const clustersReadable = clusterFeatures.length > 0 && pulseFeatures.every((feature) => {
@@ -960,6 +1013,9 @@ export function MapEntryB() {
         data-user-location={userLocation ? "present" : "absent"}
         data-cluster-grammar="official-record-count"
         data-pulse-map-grammar="curated-level-score-over-official-groups"
+        data-pulse-visual-grammar="borderless-aura-core-label"
+        data-pulse-motion="one-shot-bloom-reduced-safe"
+        data-selected-pulse-grammar="one-shot-halo-place-capsule"
         data-curated-pulse-count={curatedPulseVenues.length}
         data-layout-mode={mapLayoutMode}
         data-requested-view={view}
@@ -985,8 +1041,8 @@ export function MapEntryB() {
           {curatedPulseVenues.map(({ venue, pulse }) => (
             <li key={venue.id}>
               {locale === "ko"
-                ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
-                : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
+                ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
+                : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
             </li>
           ))}
         </ul>
@@ -1028,13 +1084,18 @@ export function MapEntryB() {
           {effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
           {effectiveView === "map" && mapState !== "error" ? (
             <aside className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
-              <div className={styles.mapKeyLead}><span><i className={styles.clusterSwatch}>12</i>{copy.mapKey}</span></div>
-              <div className={styles.pulseLegend} data-testid="ondo-b-pulse-legend" aria-label={locale === "ko" ? "Pulse 단계 범례" : "Pulse level legend"}>
-                {(["peak", "hot", "rising", "warming", "low", "limited"] as const).map((level) => <span key={level} data-level={level}><i />{pulseLevelLabel(level, locale)}</span>)}
+              <div className={styles.mapKeyLead}>
+                <span><i className={styles.clusterSwatch}>12</i><small>{locale === "ko" ? "공식 묶음" : "Official groups"}</small></span>
+              </div>
+              <div className={styles.pulseScale} data-testid="ondo-b-pulse-scale" aria-hidden="true">
+                <b>Pulse</b><i /><small>{locale === "ko" ? "여유 → 피크" : "Low → Peak"}</small>
               </div>
               <details className={styles.mapKeyDetails} data-testid="ondo-b-map-key-details" name="ondo-map-disclosure">
                 <summary aria-label={copy.mapKeyDetails}><span>{copy.mapKeyDetails}</span><ChevronRight size={16} /></summary>
                 <div className={styles.mapKeyDetailsBody}>
+                  <div className={styles.pulseLegend} data-testid="ondo-b-pulse-legend" aria-label={locale === "ko" ? "Pulse 단계 범례" : "Pulse level legend"}>
+                    {(["peak", "hot", "rising", "warming", "low", "limited"] as const).map((level) => <span key={level} data-level={level}><i />{pulseLevelLabel(level, locale)}</span>)}
+                  </div>
                   <small>{copy.mapKeyBody}</small>
                   <small>{PULSE_DISCLOSURE[locale]}</small>
                   <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={locale === "ko" ? "Pulse 장소" : "Pulse places"}>
@@ -1045,12 +1106,12 @@ export function MapEntryB() {
                           data-level={pulse.level}
                           data-pulse-place-priority={pulse.level}
                           aria-label={locale === "ko"
-                            ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
-                            : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
+                            ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
+                            : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
                           onClick={() => selectVenue(venue)}
                         >
                           <span>{venueDisplayName(venue.name.ko, locale)}</span>
-                          <b>{pulse.score}° · {pulseLevelLabel(pulse.level, locale)}</b>
+                          <b>{pulse.score} · {pulseLevelLabel(pulse.level, locale)}</b>
                         </button>
                       </li>
                     ))}
@@ -1062,7 +1123,7 @@ export function MapEntryB() {
           {effectiveView === "map" && mapState !== "error" ? (
             <footer className={styles.attribution} data-testid="ondo-b-attribution" aria-label={locale === "ko" ? "지도 출처" : "Map attribution"}>
               <details className={styles.creditDetails} data-testid="ondo-b-map-credit-details" name="ondo-map-disclosure">
-                <summary><span>{copy.mapCredits}</span><ChevronRight size={16} /></summary>
+                <summary aria-label={copy.mapCredits}><span>{copy.mapCredits}</span><Info size={17} /></summary>
                 <div className={styles.creditDetailsBody}>
                   <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap</a>
                   <a href="https://openmaptiles.org/" target="_blank" rel="noreferrer">© OpenMapTiles</a>
@@ -1080,7 +1141,7 @@ export function MapEntryB() {
             <VenueList venues={venues} locale={locale} localPulseEvidenceByVenue={state.localPulseEvidenceByVenue} selectedVenueId={selectedVenueId} visibleCount={visibleCount} onClear={() => { setQuery(""); setCategory("all"); updateCityContext({ query: "", category: "all" }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} />
           </div>
         ) : null}
-        {selectedVenue && selectedPulse ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-marker-status">{venueDisplayName(selectedVenue.name.ko, locale)} · {selectedPulse.score == null ? `Pulse · ${pulseLevelLabel(selectedPulse.level, locale)}` : `Pulse ${selectedPulse.score}° · ${pulseLevelLabel(selectedPulse.level, locale)}`}</span> : null}
+        {selectedVenue && selectedPulse ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-marker-status">{venueDisplayName(selectedVenue.name.ko, locale)} · {selectedPulse.score == null ? `Pulse · ${pulseLevelLabel(selectedPulse.level, locale)}` : `Pulse ${selectedPulse.score} · ${pulseLevelLabel(selectedPulse.level, locale)}`}</span> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
       </section>
     </div>

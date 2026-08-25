@@ -144,4 +144,38 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     expect(await list.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
   })
+
+  test("desktop selection preserves the place flow and exposes the selected capsule grammar", async ({ page }) => {
+    const root = await openSeoul(page, "en", { width: 1440, height: 1000 })
+    await expect(root).toHaveAttribute("data-selected-pulse-grammar", "one-shot-halo-place-capsule")
+    await page.getByTestId("ondo-b-map-key-details").locator("summary").click()
+    const hottest = page.getByTestId("ondo-b-map-pulse-places").getByRole("button").first()
+    await expect(hottest).toContainText("91 · PEAK")
+    await hottest.click()
+    await expect(root).toHaveAttribute("data-selected-venue-id", "mois-0021cd596bc5b2a922ad")
+    await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("Pulse 91 · PEAK")
+    await expect(page.getByTestId("ondo-b-selected-marker-status")).not.toContainText("°")
+    await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+  })
+
+  test("reduced motion keeps Pulse static while preserving all six signals", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    const root = await openSeoul(page, "ko", { width: 390, height: 844 })
+    await expect(root).toHaveAttribute("data-pulse-motion-applied", "static")
+    await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(6)
+    await page.getByTestId("ondo-b-map-key-details").locator("summary").click()
+    const peakSwatch = page.getByTestId("ondo-b-pulse-legend").locator("[data-level='peak'] i")
+    expect(await peakSwatch.evaluate((node) => getComputedStyle(node).animationName)).toBe("none")
+  })
+
+  test("production map has no runtime error overlay or console/page error", async ({ page }) => {
+    test.skip(process.env.ONDO_PRODUCTION_ACCEPTANCE !== "1", "Run against an optimized production server")
+    const errors: string[] = []
+    page.on("console", (message) => { if (message.type() === "error") errors.push(`console: ${message.text()}`) })
+    page.on("pageerror", (error) => errors.push(`page: ${error.message}`))
+    await openSeoul(page, "en", { width: 390, height: 844 })
+    await page.waitForTimeout(750)
+    expect(errors).toEqual([])
+    await expect(page.locator("nextjs-portal")).toHaveCount(0)
+  })
 })

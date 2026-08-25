@@ -143,7 +143,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
 
   return (
     <main className={styles.stage} data-ondo-locale={state.locale} data-testid="ondo-b-root" data-variant="B" data-locale={state.locale}>
-      <section ref={canvasRef} className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas">
+      <section ref={canvasRef} className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas" data-responsive-shell="mobile-dock-desktop-rail">
         <div
           ref={contentRef}
           className={styles.content}
@@ -160,7 +160,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
         >
           {active}
         </div>
-        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
             <button
               key={id}

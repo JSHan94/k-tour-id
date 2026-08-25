@@ -41,7 +41,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   const curatedRow = page.locator(`[data-venue-id='${VENUE_ID}']`)
   const listPulse = curatedRow.getByTestId("ondo-b-list-pulse")
   await expect(listPulse).toHaveAttribute("data-pulse-level", "peak")
-  await expect(listPulse).toContainText("Pulse 91° · PEAK")
+  await expect(listPulse).toContainText("Pulse 91 · PEAK")
   await curatedRow.locator("button").click()
   await page.getByTestId("canonical-place-details").click()
 
@@ -62,7 +62,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
     await koPage.locator("[data-city='seoul']").click()
     await koPage.getByTestId("ondo-b-view-toggle").click()
     const koCuratedRow = koPage.locator(`[data-venue-id='${VENUE_ID}']`)
-    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toContainText("Pulse 91° · 피크")
+    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toContainText("Pulse 91 · 피크")
   } finally {
     await koContext.close()
   }
