@@ -24,7 +24,9 @@ async function seedB(page: Page, locale: "en" | "ko" = "en") {
 async function openWallet(page: Page, locale: "en" | "ko" = "en") {
   await seedB(page, locale)
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
-  await page.getByTestId("nav-id").click()
+  const nav = page.getByTestId("ondo-main-nav")
+  await expect(nav).not.toHaveAttribute("inert", "")
+  await nav.getByTestId("nav-id").click()
   return page.getByTestId("ondo-b-id-wallet-commerce")
 }
 
