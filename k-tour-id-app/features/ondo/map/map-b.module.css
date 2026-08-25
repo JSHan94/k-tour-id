@@ -687,10 +687,10 @@
 .locationMessage {
   width: 100%;
   min-height: 46px;
-  max-height: 58px;
+  max-height: none;
   padding: 7px 11px;
   border-radius: 14px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 670;
   line-height: 1.35;
 }
@@ -917,7 +917,7 @@
   .search { min-height: 48px; border-radius: 16px; }
   .rail { border-radius: 15px; }
   .mapChrome { top: calc(164px + env(safe-area-inset-top)); }
-  .locationMessage { font-size: 10.5px; }
+  .locationMessage { font-size: 12px; }
   .mapKeyLead > span { font-size: 10.5px; }
   .pulseLegend { gap-inline: 5px; }
   .resultBar small { display: none; }
