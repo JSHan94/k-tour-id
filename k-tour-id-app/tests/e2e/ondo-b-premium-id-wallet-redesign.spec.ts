@@ -138,6 +138,8 @@ test("declining the benefit preserves the 22 OOKRW quote and receipt across relo
   await offer.getByTestId("payment-confirm").click()
 
   const receipt = offer.getByTestId("payment-receipt")
+  await expect(receipt).toContainText("Payment completed without the ONDO benefit.")
+  await expect(receipt).not.toContainText("Your meal benefit was applied.")
   await expect(receipt).toContainText("22 OOKRW Test")
   await expect(receipt).toContainText("0 OOKRW Test")
   await expect(receipt).toContainText("38 OOKRW Test")
