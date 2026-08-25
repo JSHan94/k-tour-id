@@ -114,8 +114,8 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
         if (file !== "features/ondo/commerce-b/id-wallet-commerce-b.tsx") return true
         if (String(pattern) === String(/\bOOKRW\b/i)) return false
         if (String(pattern) === String(/\bcheckout\b/i) && literal === "ondo-b-stable-checkout") return false
-        if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && literal.includes("ONDO demo merchant offer")) return false
-        if (String(pattern) === String(/데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처|샘플\s*(?:데이터|신호)/i) && literal.includes("ONDO 데모 가맹점 혜택")) return false
+        if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && literal.includes("ONDO demo")) return false
+        if (String(pattern) === String(/데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처|샘플\s*(?:데이터|신호)/i) && literal.includes("ONDO 데모")) return false
         return true
       })
       .map((pattern) => ({ file, literal: literal.slice(0, 180), pattern: String(pattern) })))

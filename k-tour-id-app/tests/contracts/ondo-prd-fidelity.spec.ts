@@ -258,6 +258,8 @@ test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native jou
     "payment-refund",
     "holder-settlement-mirror",
     "merchant-settlement-mirror",
+    "canonical-demo-meal-offer-open",
+    "commerce-origin-return",
   ])
 })
 

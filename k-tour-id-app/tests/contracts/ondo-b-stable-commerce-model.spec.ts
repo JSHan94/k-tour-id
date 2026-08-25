@@ -21,10 +21,15 @@ test("B-COMMERCE-MODEL-001 voucher-adjusted success debits once and creates one 
   expect(state.receiptCount).toBe(1)
   expect(state.receiptId).toBe("ONDO-LOCAL-20260825-001")
   expect(state.voucher).toBe("consumed")
+  expect(state.redemptionCount).toBe(1)
+  expect(state.ledger).toEqual([
+    expect.objectContaining({ account: "holder", amount: -19, kind: "payment", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
+    expect.objectContaining({ account: "merchant", amount: 19, kind: "payment", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
+  ])
   expect(stableCommerceSettlementB(state)).toEqual({ gross: 22, benefit: 3, net: 19 })
 })
 
-test("B-COMMERCE-MODEL-002 refund restores 60 OOKRW but does not reissue the consumed voucher", () => {
+test("B-COMMERCE-MODEL-002 refund reverses the ledger and restores the one-use voucher", () => {
   let state = createStableCommerceBState()
   state = stableCommerceBReducer(state, { type: "SET_VOUCHER", selected: true })
   state = stableCommerceBReducer(state, { type: "CONFIRM" })
@@ -35,7 +40,12 @@ test("B-COMMERCE-MODEL-002 refund restores 60 OOKRW but does not reissue the con
   expect(stableCommerceBalanceB(state)).toBe(60)
   expect(state.status).toBe("refunded")
   expect(state.refundCount).toBe(1)
-  expect(state.voucher).toBe("consumed")
+  expect(state.voucher).toBe("available")
+  expect(state.redemptionCount).toBe(0)
+  expect(state.ledger.slice(2)).toEqual([
+    expect.objectContaining({ account: "holder", amount: 19, kind: "refund", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
+    expect.objectContaining({ account: "merchant", amount: -19, kind: "refund", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
+  ])
   expect(stableCommerceSettlementB(state).net).toBe(0)
 })
 
@@ -46,6 +56,7 @@ test("B-COMMERCE-MODEL-003 failure and insufficient returns never mutate the led
     state = stableCommerceBReducer(state, { type: "PAYMENT_RETURN", outcome })
     expect(stableCommerceBalanceB(state)).toBe(60)
     expect(state.receiptCount).toBe(0)
+    expect(state.ledger).toEqual([])
     expect(state.status).toBe("idle")
     expect(state.lastOutcome).toBe(outcome)
   }
