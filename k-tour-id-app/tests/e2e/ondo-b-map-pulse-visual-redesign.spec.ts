@@ -40,6 +40,7 @@ test.describe("ONDO B polished Pulse map", () => {
         await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
         await expect(root).toHaveAttribute("data-pulse-map-grammar", "curated-level-score-over-official-groups")
         await expect(root).toHaveAttribute("data-curated-pulse-count", "6")
+        await expect(root).toHaveAttribute("data-pulse-official-clusters-readable", "true")
         const accessiblePulse = page.getByTestId("ondo-b-pulse-marker-accessible-detail")
         await expect(accessiblePulse.locator("li")).toHaveCount(6)
         await expect(accessiblePulse).toContainText(locale === "ko" ? "신뢰도" : "confidence")
