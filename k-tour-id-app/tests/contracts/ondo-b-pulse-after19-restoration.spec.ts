@@ -73,7 +73,7 @@ test("B-PULSE-004 the slice keeps concise prototype truth plus EN/KO, modal, key
   const gate = source("features/ondo/after19/after19-jit-b.tsx")
   const css = `${source("features/ondo/connect/pulse-table-b.module.css")}\n${source("features/ondo/after19/after19-jit-b.module.css")}`
   const productSource = `${tables}\n${gate}`
-  expect(productSource).toContain("Prototype truth")
+  expect(productSource).toContain("How this check works")
   expect(productSource).toContain("locale === \"ko\"")
   expect(productSource).toContain("useModalIsolation")
   expect(productSource).toContain("onKeyDown")

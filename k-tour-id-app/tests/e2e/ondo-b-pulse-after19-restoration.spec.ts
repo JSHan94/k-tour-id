@@ -49,7 +49,7 @@ test("After19 success returns to the exact Table/draft, then confirms join and o
   await detail.getByTestId("table-join").click()
 
   const gate = page.getByTestId("after19-walkthrough")
-  await expect(gate).toContainText("Prototype truth")
+  await expect(gate).toContainText("How this check works")
   await expect(gate).toContainText("No provider is connected")
   await gate.getByTestId("after19-start").click()
   const cancelBox = await gate.getByTestId("gate-cancel").boundingBox()

@@ -34,7 +34,7 @@ const COPY = {
   en: {
     title: "Before you join",
     reason: "We’ll only share that you’re over 19 for this Table. Your date of birth stays private.",
-    boundary: "Prototype truth",
+    boundary: "How this check works",
     predicate: "No provider is connected and no credential is created. The age check belongs to the Table, not the venue record. Only an eligible 19+ result returns to this Table. Date of birth is never requested or stored.",
     context: "You will return here",
     start: "Review and continue",
@@ -55,7 +55,7 @@ const COPY = {
   ko: {
     title: "참여 전 확인",
     reason: "이 테이블에는 만 19세 이상이라는 사실만 공유해요. 생년월일은 비공개로 유지됩니다.",
-    boundary: "프로토타입 안내",
+    boundary: "확인 방식 안내",
     predicate: "연결된 제공기관이나 생성되는 자격증명은 없어요. 연령 확인은 장소 기록이 아닌 테이블에만 적용되며, 이 테이블에는 19+ 충족 결과만 돌아갑니다. 생년월일을 요청하거나 저장하지 않습니다.",
     context: "이곳으로 돌아와요",
     start: "확인하고 계속",

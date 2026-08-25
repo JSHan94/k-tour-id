@@ -49,8 +49,8 @@ test("B-PULSE-HOT-002 limited samples never invent a score, count, recency, or c
     freshness: "limited",
     confidence: "limited",
   })
-  expect(PULSE_DISCLOSURE.en).toBe("Curated local walkthrough signals, not live crowding or official LOCALDATA facts.")
-  expect(PULSE_DISCLOSURE.ko).toBe("선별된 로컬 둘러보기 신호이며, 실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다.")
+  expect(PULSE_DISCLOSURE.en).toBe("Curated visit signals, not live crowding or official LOCALDATA facts.")
+  expect(PULSE_DISCLOSURE.ko).toBe("선별된 방문 신호이며, 실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다.")
 })
 
 test("B-PULSE-HOT-003 a local-device post becomes evidence without inflating the shared score", () => {

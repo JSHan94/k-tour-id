@@ -123,7 +123,7 @@ const COPY = {
     pulseFixedSnapshot: "선별 스냅샷",
     pulseGrowingSnapshot: "최근 업데이트",
     pulseTooHot: "너무 핫한가요?",
-    pulseTooHotBody: "같은 선별 둘러보기 세트에서 더 여유로운 장소를 살펴보세요.",
+    pulseTooHotBody: "같은 선별 지역에서 더 여유로운 장소를 살펴보세요.",
     pulseAlternative: "더 여유로운 장소 열기",
     pulseLocalEvidence: "이 기기에서",
     table: "테이블 보기",

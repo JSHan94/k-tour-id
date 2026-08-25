@@ -137,7 +137,7 @@ const COPY = {
     pulseActive: "선별 Pulse 운영 중",
     pulseGrowing: "Pulse 커버리지 성장 중",
     pulseExplore: "탐색 · 신호 부족",
-    pulseSignals: "둘러보기 신호",
+    pulseSignals: "선별 신호",
     pulseLocal: "이 기기의 로컬 시그널이 포함됨",
     filterLabel: "공식 업태 분류",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",

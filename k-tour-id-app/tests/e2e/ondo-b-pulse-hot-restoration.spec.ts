@@ -47,7 +47,7 @@ test("Pulse is reachable from city list to selected confidence and Too Hot alter
   await expect(page.getByTestId("canonical-place-pulse")).toContainText(/Pulse \d+°/)
   await activate(page.getByTestId("canonical-place-details"))
   await expect(page.getByTestId("pulse-confidence")).toBeVisible()
-  await expect(page.getByTestId("canonical-place-pulse")).toContainText("Curated local walkthrough signals")
+  await expect(page.getByTestId("canonical-place-pulse")).toContainText("Curated visit signals")
   await expect(page.getByTestId("pulse-too-hot")).toBeVisible()
   const accessibility = await new AxeBuilder({ page })
     .include("[data-testid='canonical-place-overlay']")

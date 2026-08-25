@@ -29,8 +29,8 @@ export type PulseSnapshotB = {
 }
 
 export const PULSE_DISCLOSURE = Object.freeze({
-  en: "Curated local walkthrough signals, not live crowding or official LOCALDATA facts.",
-  ko: "선별된 로컬 둘러보기 신호이며, 실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다.",
+  en: "Curated visit signals, not live crowding or official LOCALDATA facts.",
+  ko: "선별된 방문 신호이며, 실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다.",
 })
 
 export const PULSE_CITY_STATUS = Object.freeze({ seoul: "active", busan: "growing" } as const)
@@ -43,42 +43,42 @@ export const CURATED_PULSE_SNAPSHOTS: readonly PulseSnapshotB[] = Object.freeze(
   {
     venueId: "mois-0021cd596bc5b2a922ad", cityId: "seoul", level: "peak", score: 91, signalCount: 24,
     updatedAt: "2026-08-25T02:20:00.000Z", freshness: "curated-snapshot", confidence: "high",
-    evidence: curatedEvidence("Walkthrough set: lively tables and a longer stay", "둘러보기 세트: 활기찬 테이블과 긴 체류"), localEvidence: null,
+    evidence: curatedEvidence("Curated pattern: lively tables and a longer stay", "선별 패턴: 활기찬 테이블과 긴 체류"), localEvidence: null,
   },
   {
     venueId: "mois-0348cfe16225dbbcec8a", cityId: "seoul", level: "hot", score: 84, signalCount: 19,
     updatedAt: "2026-08-25T02:05:00.000Z", freshness: "curated-snapshot", confidence: "high",
-    evidence: curatedEvidence("Walkthrough set: lively tables and quick turnover", "둘러보기 세트: 활기찬 테이블과 빠른 회전"), localEvidence: null,
+    evidence: curatedEvidence("Curated pattern: lively tables and quick turnover", "선별 패턴: 활기찬 테이블과 빠른 회전"), localEvidence: null,
   },
   {
     venueId: "mois-02c79775c050624e474d", cityId: "seoul", level: "rising", score: 73, signalCount: 15,
     updatedAt: "2026-08-25T01:55:00.000Z", freshness: "curated-snapshot", confidence: "medium",
-    evidence: curatedEvidence("Walkthrough set: arrivals building across the sample", "둘러보기 세트: 표본에서 방문 흐름 증가"), localEvidence: null,
+    evidence: curatedEvidence("Curated pattern: arrivals building across the set", "선별 패턴: 방문 흐름 증가"), localEvidence: null,
   },
   {
     venueId: "mois-0907f914f70fc6e4b7ed", cityId: "seoul", level: "warming", score: 62, signalCount: 12,
     updatedAt: "2026-08-25T01:40:00.000Z", freshness: "curated-snapshot", confidence: "medium",
-    evidence: curatedEvidence("Walkthrough set: steady arrivals with room to settle", "둘러보기 세트: 여유가 남은 꾸준한 방문 흐름"), localEvidence: null,
+    evidence: curatedEvidence("Curated pattern: steady arrivals with room to settle", "선별 패턴: 여유가 남은 꾸준한 방문 흐름"), localEvidence: null,
   },
   {
     venueId: "mois-110f0d9867977ae410e8", cityId: "seoul", level: "low", score: 39, signalCount: 9,
     updatedAt: "2026-08-25T01:25:00.000Z", freshness: "curated-snapshot", confidence: "medium",
-    evidence: curatedEvidence("Walkthrough set: calmer pace across the sample", "둘러보기 세트: 표본에서 비교적 차분한 흐름"), localEvidence: null,
+    evidence: curatedEvidence("Curated pattern: a calmer pace across the set", "선별 패턴: 비교적 차분한 흐름"), localEvidence: null,
   },
   {
     venueId: "mois-18939eecb43c15ab4305", cityId: "seoul", level: "hot", score: 80, signalCount: 16,
     updatedAt: "2026-08-25T01:10:00.000Z", freshness: "curated-snapshot", confidence: "medium",
-    evidence: curatedEvidence("Walkthrough set: lively evening pattern", "둘러보기 세트: 활기찬 저녁 흐름"), localEvidence: null,
+    evidence: curatedEvidence("Curated pattern: a lively evening", "선별 패턴: 활기찬 저녁 흐름"), localEvidence: null,
   },
   {
     venueId: "mois-03041681b54ea5399763", cityId: "busan", level: "warming", score: 56, signalCount: 7,
     updatedAt: "2026-08-25T01:00:00.000Z", freshness: "growing", confidence: "low",
-    evidence: curatedEvidence("Growing walkthrough set: early local pattern", "성장 중인 둘러보기 세트: 초기 로컬 흐름"), localEvidence: null,
+    evidence: curatedEvidence("Growing curated set: early local pattern", "확장 중인 선별 세트: 초기 로컬 흐름"), localEvidence: null,
   },
   {
     venueId: "mois-0977b107c7db944e75cf", cityId: "busan", level: "low", score: 43, signalCount: 5,
     updatedAt: "2026-08-25T00:45:00.000Z", freshness: "growing", confidence: "low",
-    evidence: curatedEvidence("Growing walkthrough set: early calmer pattern", "성장 중인 둘러보기 세트: 초기의 차분한 흐름"), localEvidence: null,
+    evidence: curatedEvidence("Growing curated set: an early calmer pattern", "확장 중인 선별 세트: 초기의 차분한 흐름"), localEvidence: null,
   },
 ])
 
