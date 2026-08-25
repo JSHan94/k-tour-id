@@ -20,6 +20,7 @@ test.describe("ONDO B map Pulse visual contract", () => {
       "ondo-pulse-labels",
       "pulseMarkerLabel",
       "ondo-b-pulse-marker-accessible-detail",
+      "ondo-b-location-details",
       "ondo-points",
       "prefers-reduced-motion: reduce",
     ]) expect(map).toContain(token)
@@ -57,6 +58,7 @@ test.describe("ONDO B map Pulse visual contract", () => {
     expect(map).toContain("data-pulse-map-grammar=\"curated-level-score-over-official-groups\"")
     expect(map).toContain("data-testid=\"ondo-b-map-key-details\"")
     expect(map).toContain("data-testid=\"ondo-b-map-credit-details\"")
+    expect(map).toContain("data-testid=\"ondo-b-location-details\"")
     expect(css).toContain("@keyframes pulseLegendGlow")
     expect(css).toContain("@media (prefers-reduced-motion: reduce)")
   })
