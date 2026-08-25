@@ -73,6 +73,51 @@ test("Tables stays polished and closable at 360, 390, and 430 CSS pixels", async
   }
 })
 
+test("short-landscape Table modal reclaims the hidden navigation lane in EN and KO", async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 })
+
+  for (const locale of ["en", "ko"] as const) {
+    await seed(page, locale)
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    const nav = page.getByTestId("ondo-main-nav")
+    await page.getByTestId("nav-tables").click()
+    await page.getByTestId(`table-open-${TABLE_ID}`).click()
+
+    const layer = page.getByTestId("table-detail")
+    const article = layer.locator("article")
+    await expect(layer).toBeVisible()
+    await expect(nav).toHaveAttribute("aria-hidden", "true")
+    await expect(nav).toHaveAttribute("inert", "")
+
+    const geometry = await layer.evaluate((element) => {
+      const rect = element.getBoundingClientRect()
+      const hit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight - 30)
+      return {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height,
+        bottom: rect.bottom,
+        hitInside: Boolean(hit?.closest("[data-testid='table-detail']")),
+      }
+    })
+    expect(geometry.x).toBeCloseTo(0, 0)
+    expect(geometry.y).toBeCloseTo(0, 0)
+    expect(geometry.width).toBeCloseTo(844, 0)
+    expect(geometry.height).toBeCloseTo(390, 0)
+    expect(geometry.bottom).toBeCloseTo(390, 0)
+    expect(geometry.hitInside).toBe(true)
+
+    await article.evaluate((element) => { element.scrollTop = element.scrollHeight })
+    await expect(article.getByTestId("table-join")).toBeVisible()
+    await article.locator("header").getByRole("button", { name: locale === "ko" ? "테이블 닫기" : "Close Table" }).first().click()
+    await expect(layer).toBeHidden()
+    await expect(nav).toBeVisible()
+    await expect(nav).not.toHaveAttribute("inert", "")
+    await expect(page.getByTestId("nav-tables")).toBeVisible()
+  }
+})
+
 test("My Korea, ID · Wallet, and Settings share natural scrolling and premium touch targets", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 })
   await seed(page, "ko")
