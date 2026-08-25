@@ -103,6 +103,7 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   const activity = page.getByTestId("wallet-activity-receipt")
   await expect(activity).toContainText("Paid 19 OOKRW Test")
   await expect(activity).toContainText("ONDO-LOCAL-20260825-001")
+  await expect(page.getByTestId("wallet-benefit")).toContainText("Used")
 
   await page.reload({ waitUntil: "networkidle" })
   await page.getByTestId("nav-id").click()
@@ -113,9 +114,10 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   await restoredActivity.locator("summary").click()
   await restoredActivity.getByTestId("wallet-activity-refund").click()
   await expect(page.getByTestId("wallet-balance")).toContainText("60")
-  await expect(restoredActivity).toContainText("Refunded")
+  await expect(restoredActivity).toContainText("Refunded 19 OOKRW Test")
   await expect(restoredActivity).toContainText("ONDO-LOCAL-20260825-001")
   await expect(restoredActivity).toContainText("ONDO-LOCAL-REFUND-20260825-001")
+  await expect(page.getByTestId("wallet-benefit")).toContainText("1 available")
 
   await page.getByTestId("nav-my").click()
   const myReceipts = page.getByTestId("my-korea-receipts")
@@ -144,15 +146,19 @@ test("declining the benefit preserves the 22 OOKRW quote and receipt across relo
   await page.getByTestId("nav-id").click()
   await expect(page.getByTestId("wallet-balance")).toContainText("38")
   await expect(page.getByTestId("wallet-activity-receipt")).toContainText("Paid 22 OOKRW Test")
+  await expect(page.getByTestId("wallet-benefit")).toContainText("1 available")
 
   await page.reload({ waitUntil: "networkidle" })
   await page.getByTestId("nav-id").click()
   const restored = page.getByTestId("wallet-activity-receipt")
   await expect(page.getByTestId("wallet-balance")).toContainText("38")
   await expect(restored).toContainText("Paid 22 OOKRW Test")
+  await expect(page.getByTestId("wallet-benefit")).toContainText("1 available")
   await restored.locator("summary").click()
   await restored.getByTestId("wallet-activity-refund").click()
   await expect(page.getByTestId("wallet-balance")).toContainText("60")
+  await expect(restored).toContainText("Refunded 22 OOKRW Test")
+  await expect(page.getByTestId("wallet-benefit")).toContainText("1 available")
 })
 
 test("QA-only benefit policy recovery blocks pay without exposing outcome controls", async ({ browser }) => {

@@ -88,6 +88,9 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
   await receipt.getByText("Refund & support").click()
   await receipt.getByTestId("payment-refund").click()
   await expect(receipt).toHaveAttribute("data-refunded", "true")
+  await expect(receipt).toContainText("Original payment")
+  await expect(receipt).toContainText("Refunded 19 OOKRW Test")
+  await expect(receipt).toContainText("ONDO benefit3 OOKRW Test")
   await expect(receipt).toContainText("60 OOKRW Test")
 })
 
