@@ -211,7 +211,7 @@ export function CanonicalPlaceOverlay() {
     if (!venueId || expanded) return
     const active = document.activeElement
     if (!returnFocusRef.current && active instanceof HTMLElement && active !== document.body && active.matches(`[data-venue-opener='${CSS.escape(venueId)}']`)) returnFocusRef.current = active
-    const frame = window.requestAnimationFrame(() => openRef.current?.focus({ preventScroll: true }))
+    const frame = window.requestAnimationFrame(() => peekRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
   }, [expanded, venueId])
 
@@ -336,7 +336,7 @@ export function CanonicalPlaceOverlay() {
   }
 
   if (!expanded) return (
-    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
+    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} tabIndex={-1} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>

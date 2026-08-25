@@ -83,6 +83,7 @@
 .localSignalAction button:focus-visible,
 .demoOfferAction button:focus-visible,
 .saveError button:focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 2px; }
+.peek:focus { outline: none; }
 
 @media (max-width: 370px) {
   .peek { right: 8px; left: 8px; }
