@@ -235,3 +235,38 @@ test("FID-PACK-002 prepared standalone source positively contains the reachable 
     "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
   ]) expect(files, `${path} must be present in prepared source, not merely named in a test`).toContain(path)
 })
+
+test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native journeys", () => {
+  expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
+  expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
+  expectLiveEvidence([
+    "ondo-b-id-wallet-commerce",
+    "wallet-link-ready",
+    "wallet-link-failure",
+    "wallet-link-retry",
+    "ONDO demo merchant offer",
+    "KRW display price",
+    "OOKRW read-only local demo balance",
+    "payment-minimum-consent",
+    "payment-confirm",
+    "payment-cancel",
+    "payment-outcome-failure",
+    "payment-outcome-insufficient",
+    "payment-retry",
+    "payment-receipt",
+    "payment-refund",
+    "holder-settlement-mirror",
+    "merchant-settlement-mirror",
+  ])
+})
+
+test("FID-P0-013 commerce boundary and persistence rules cannot be weakened", () => {
+  const commerce = appSource("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
+  const provider = appSource("features/ondo/shared/state/ondo-b-provider.tsx")
+  const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
+  const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
+  expect(commerce).toContain("No provider, chain, merchant, or asset transfer is connected")
+  expect(commerce).toContain("실제 공급자·체인·가맹점·자산 전송은 연결되지 않았습니다")
+  expect(commerce).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|sessionStorage|localStorage|URLSearchParams/)
+  expect(deviceType).not.toMatch(/wallet|balance|payment|voucher|receipt|settlement|claim|consent|origin/i)
+})

@@ -62,14 +62,17 @@ test("B-P0-DATA-001 only coarse posted-signal/device fields cross the device per
   expect(provider).not.toMatch(/sessionStorage|URLSearchParams/)
 })
 
-test("B-P0-PACKAGE-001 standalone policy positively includes B-native signal/ID and still bans legacy providers", () => {
+test("B-P0-PACKAGE-001 standalone policy positively includes required B-native journeys and still bans legacy providers", () => {
   const policy = source("scripts/ondo-b-standalone/policy.mjs")
 
   expect(policy).toContain('"features/ondo/identity-b/local-check-walkthrough-b.tsx"')
   expect(policy).toContain('"features/ondo/identity-b/traveler-id-entry-b.tsx"')
   expect(policy).toContain('"features/ondo/local-signal-b/local-signal-layer-b.tsx"')
+  expect(policy).toContain('"features/ondo/commerce-b/id-wallet-commerce-b.tsx"')
+  expect(policy).toContain('"features/ondo/commerce-b/id-wallet-commerce-b.module.css"')
   expect(policy).toContain("B_NATIVE_INTERACTIVE_FILES")
   expect(policy).toContain("LEGACY_ARTIFACT_PATH")
   expect(policy).not.toContain("BANNED_ARTIFACT_PATH")
   expect(policy).toMatch(/KYC|WalletProvider|blockchain|mock-data/)
+  expect(policy).toContain("REQUIRED_B_NATIVE_COMMERCE_FILES")
 })
