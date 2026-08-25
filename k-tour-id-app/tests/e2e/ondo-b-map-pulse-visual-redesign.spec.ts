@@ -50,10 +50,8 @@ test.describe("ONDO B polished Pulse map", () => {
         const colors = await swatches.evaluateAll((items) => items.map((item) => getComputedStyle(item).backgroundColor))
         expect(new Set(colors).size).toBe(6)
         expect(colors.every((color) => color !== "rgba(0, 0, 0, 0)")).toBe(true)
-        if (viewport.width >= 390 || viewport.width === 320) {
-          const legendWidth = await legend.evaluate((node) => ({ client: node.clientWidth, scroll: node.scrollWidth }))
-          expect(legendWidth.scroll).toBeLessThanOrEqual(legendWidth.client)
-        }
+        const legendWidth = await legend.evaluate((node) => ({ client: node.clientWidth, scroll: node.scrollWidth }))
+        expect(legendWidth.scroll).toBeLessThanOrEqual(legendWidth.client)
 
         const chrome = [
           page.getByTestId("ondo-b-location-message"),
@@ -124,8 +122,18 @@ test.describe("ONDO B polished Pulse map", () => {
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     await page.getByTestId("ondo-b-map-key-details").locator("summary").click()
     const pulsePlaces = page.getByTestId("ondo-b-map-pulse-places")
-    await expect(pulsePlaces.getByRole("button")).toHaveCount(6)
-    const hottest = pulsePlaces.getByRole("button").first()
+    const pulseButtons = pulsePlaces.getByRole("button")
+    await expect(pulseButtons).toHaveCount(6)
+    expect(Math.min(...await pulseButtons.evaluateAll((buttons) => buttons.map((button) => button.getBoundingClientRect().height)))).toBeGreaterThanOrEqual(44)
+    const lastPulsePlace = pulseButtons.last()
+    await lastPulsePlace.scrollIntoViewIfNeeded()
+    const sheetBodyBox = await pulsePlaces.locator("..").boundingBox()
+    const lastPulsePlaceBox = await lastPulsePlace.boundingBox()
+    expect(sheetBodyBox).not.toBeNull()
+    expect(lastPulsePlaceBox).not.toBeNull()
+    expect(lastPulsePlaceBox!.y).toBeGreaterThanOrEqual(sheetBodyBox!.y)
+    expect(lastPulsePlaceBox!.y + lastPulsePlaceBox!.height).toBeLessThanOrEqual(sheetBodyBox!.y + sheetBodyBox!.height)
+    const hottest = pulseButtons.first()
     await expect(hottest).toHaveAttribute("data-pulse-place-priority", "peak")
     await hottest.focus()
     await page.keyboard.press("Enter")
