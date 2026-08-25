@@ -73,7 +73,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
     previousSurface.current = state.surface
     if (before.kind === "venue" || state.surface.kind !== "venue") return
     const timer = window.setTimeout(() => {
-      document.querySelector<HTMLElement>("[data-testid='canonical-place-details']")?.focus({ preventScroll: true })
+      document.querySelector<HTMLElement>("[data-testid='canonical-place-peek']")?.focus({ preventScroll: true })
     }, 100)
     return () => window.clearTimeout(timer)
   }, [state.surface])
