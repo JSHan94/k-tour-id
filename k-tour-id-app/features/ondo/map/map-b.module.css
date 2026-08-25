@@ -1500,3 +1500,134 @@
   .cityNode,
   .venueList li[data-venue-id] { animation: none !important; transition: none !important; }
 }
+
+/* R2 desktop atlas: Seoul and Busan occupy a deliberate north-to-south field
+   instead of sharing one shallow card row. The source ledger closes the same
+   vertical composition at the bottom edge. */
+@media (min-width: 801px) and (min-height: 501px) {
+  .compatRoot:has(.nation),
+  .root:has(.nation) {
+    height: 100%;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  .nation {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 1220px;
+    min-height: 100%;
+    height: 100%;
+    grid-template-columns: minmax(330px, .82fr) minmax(520px, 1.18fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    column-gap: clamp(48px, 6vw, 92px);
+    row-gap: 20px;
+    padding: 80px clamp(40px, 5vw, 74px) 36px;
+  }
+
+  .nationIntro {
+    grid-area: 1 / 1;
+    align-self: center;
+    padding-bottom: 38px;
+  }
+
+  .nationIntro h1 {
+    max-width: 570px;
+    font-size: clamp(43px, 4.3vw, 62px);
+    line-height: 1.01;
+  }
+
+  .dotMap {
+    grid-area: 1 / 2 / span 2 / 3;
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: none;
+    min-height: min(690px, calc(100dvh - 170px));
+    height: 100%;
+    align-self: stretch;
+    overflow: hidden;
+    border-radius: 42% 48% 40% 52%;
+  }
+
+  .dotMap::before {
+    inset: 1%;
+    border: 1px solid rgb(96 60 45 / 8%);
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 31% 24%, rgb(112 31 67 / 19%) 0 3px, transparent 4px 42px, rgb(112 31 67 / 7%) 43px 44px, transparent 45px),
+      radial-gradient(circle at 70% 76%, rgb(212 91 52 / 19%) 0 3px, transparent 4px 48px, rgb(212 91 52 / 7%) 49px 50px, transparent 51px),
+      linear-gradient(151deg, transparent 49%, rgb(142 83 61 / 12%) 49.25% 49.75%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgb(255 252 247 / 96%), rgb(246 232 220 / 60%) 58%, rgb(238 218 202 / 30%) 72%, transparent 73%),
+      repeating-radial-gradient(circle at 50% 50%, transparent 0 58px, rgb(78 57 45 / 5%) 59px 60px);
+    box-shadow: 0 40px 100px rgb(67 42 29 / 10%), inset 0 1px 0 rgb(255 255 255 / 94%);
+    opacity: 1;
+    transform: rotate(-4deg);
+  }
+
+  .dotMap::after {
+    position: absolute;
+    z-index: 2;
+    top: 49%;
+    left: 50%;
+    padding: 8px 12px;
+    border: 1px solid rgb(94 60 46 / 12%);
+    border-radius: 999px;
+    background: rgb(255 253 249 / 76%);
+    color: #81685b;
+    box-shadow: 0 12px 30px rgb(57 37 27 / 7%);
+    content: "SEOUL  ·  PULSE  ·  BUSAN";
+    font-size: 10px;
+    font-weight: 820;
+    letter-spacing: .13em;
+    pointer-events: none;
+    transform: translate(-50%, -50%) rotate(-4deg);
+    white-space: nowrap;
+  }
+
+  .dotMap svg {
+    top: 50%;
+    right: auto;
+    left: 50%;
+    width: 66%;
+    height: 82%;
+    opacity: .16;
+    transform: translate(-50%, -50%);
+  }
+
+  .cityNode,
+  .cityNode[data-city="seoul"],
+  .cityNode[data-city="busan"] {
+    position: absolute;
+    width: min(350px, 64%);
+    min-height: 108px;
+    grid-template-columns: 64px minmax(0, 1fr) 20px;
+    padding: 14px 16px 14px 14px;
+    border-radius: 26px;
+  }
+
+  .cityNode[data-city="seoul"] { top: 12%; right: auto; bottom: auto; left: 2%; }
+  .cityNode[data-city="busan"] { top: auto; right: 2%; bottom: 12%; left: auto; }
+  .cityNode i { width: 62px; height: 62px; }
+  .cityNode strong { font-size: 20px; }
+
+  .cityTruthLegend {
+    grid-area: 2 / 1;
+    align-self: end;
+    margin: 0;
+    padding-top: 13px;
+  }
+
+  .nation footer {
+    z-index: 3;
+    grid-area: 2 / 2;
+    align-self: end;
+    margin: 0 22px 2px;
+    padding: 14px 16px;
+    border: 1px solid rgb(78 55 43 / 9%);
+    border-radius: 18px;
+    background: rgb(255 253 249 / 76%);
+    box-shadow: 0 16px 36px rgb(55 36 26 / 6%);
+    backdrop-filter: blur(14px);
+  }
+}

@@ -741,3 +741,91 @@
   .chip,
   .chipSelected { animation: none !important; transition: none !important; }
 }
+
+/* R2 mobile story: the decision belongs to the first frame. Full source truth
+   follows immediately after the actions as one calm disclosure-like ledger;
+   nothing is clamped, removed or rewritten. */
+@media (max-width: 430px) and (min-height: 600px) {
+  .value {
+    min-height: calc(100dvh - 80px);
+    padding-top: 10px;
+  }
+
+  .seal {
+    width: 46px;
+    height: 46px;
+    margin-bottom: 13px;
+  }
+
+  .seal svg { width: 21px; height: 21px; }
+  .seal span { font-size: 9px; }
+  .eyebrow { margin-bottom: 8px; font-size: 11px; }
+
+  .value h1 {
+    max-width: 335px;
+    font-size: clamp(28px, 7.6vw, 31px);
+    line-height: 1.06;
+  }
+
+  .lead {
+    max-width: 342px;
+    margin: 10px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .actions {
+    order: 1;
+    margin-top: 17px;
+    padding-top: 0;
+  }
+
+  .primary,
+  .secondary { min-height: 46px; }
+
+  .sourceIntro {
+    order: 2;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 18px;
+    overflow: hidden;
+    border: 1px solid rgb(68 50 40 / 11%);
+    border-radius: 19px;
+    background: rgb(255 254 251 / 68%);
+    box-shadow: 0 16px 38px rgb(58 40 29 / 5%), inset 0 1px 0 rgb(255 255 255 / 90%);
+  }
+
+  .sourceIntro p {
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .sourceIntro p + p { border-top: 1px solid rgb(68 50 40 / 10%); }
+  .sourceIntro strong { font-size: 11px; }
+  .sourceIntro span { font-size: 11px; line-height: 1.42; }
+
+  .value::before { inset: 5% -32% 35% 44%; opacity: .52; }
+  .value::after {
+    top: 64px;
+    right: -58px;
+    bottom: auto;
+    width: 184px;
+    height: 176px;
+    border-color: rgb(77 55 43 / 7%);
+    opacity: .24;
+    transform: rotate(-8deg);
+  }
+}
+
+@media (max-width: 340px) and (min-height: 600px) {
+  .value h1 { font-size: 27px; }
+  .lead { font-size: 12px; }
+  .actions { margin-top: 14px; }
+  .sourceIntro { margin-top: 15px; }
+  .sourceIntro p { padding: 10px 12px; }
+}
