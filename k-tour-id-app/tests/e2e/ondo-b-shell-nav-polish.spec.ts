@@ -5,7 +5,6 @@ import {
   gotoB,
   installBRuntimeGuard,
   prepareBPage,
-  seedB,
   type BLocale,
 } from "../helpers/ondo-b-qa"
 
@@ -21,6 +20,25 @@ function intersectionArea(first: Box, second: Box) {
   const width = Math.max(0, Math.min(first.x + first.width, second.x + second.width) - Math.max(first.x, second.x))
   const height = Math.max(0, Math.min(first.y + first.height, second.y + second.height) - Math.max(first.y, second.y))
   return width * height
+}
+
+async function seedPolishB(page: Page, locale: BLocale) {
+  await page.addInitScript((nextLocale) => {
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: nextLocale,
+      onboarding: "ONB-COMPLETE",
+      persona: "short_term",
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: true,
+      commerceLocalBoundarySeen: true,
+    }))
+  }, locale)
 }
 
 async function expectPolishedFiveTabDock(page: Page) {
@@ -80,7 +98,7 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
 
   for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
     test(`${locale.toUpperCase()} keeps five explicit destinations polished from 320px through 430px`, async ({ page }) => {
-      await seedB(page, { locale, local: { autoNight: false } })
+      await seedPolishB(page, locale)
       for (const viewport of [
         { width: 320, height: 700 },
         { width: 360, height: 780 },
@@ -96,7 +114,7 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
 
   test("tabs own independent scroll positions and never share a stale simulated-mobile offset", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 700 })
-    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await seedPolishB(page, "en")
     await gotoB(page)
 
     const scroll = page.getByTestId("ondo-scroll-region")
@@ -119,7 +137,7 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
 
   test("keyboard, wheel, touch scroll ownership and the last content edge stay clear of the dock", async ({ page }) => {
     await page.setViewportSize({ width: 740, height: 360 })
-    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await seedPolishB(page, "en")
     await gotoB(page)
     await page.getByTestId("nav-settings").click()
 
