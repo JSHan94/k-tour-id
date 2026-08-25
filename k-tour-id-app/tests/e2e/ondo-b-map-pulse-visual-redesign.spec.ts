@@ -49,6 +49,10 @@ test.describe("ONDO B polished Pulse map", () => {
         const colors = await swatches.evaluateAll((items) => items.map((item) => getComputedStyle(item).backgroundColor))
         expect(new Set(colors).size).toBe(6)
         expect(colors.every((color) => color !== "rgba(0, 0, 0, 0)")).toBe(true)
+        if (viewport.width >= 390) {
+          const legendWidth = await legend.evaluate((node) => ({ client: node.clientWidth, scroll: node.scrollWidth }))
+          expect(legendWidth.scroll).toBeLessThanOrEqual(legendWidth.client)
+        }
 
         const chrome = [
           page.getByTestId("ondo-b-location-message"),
