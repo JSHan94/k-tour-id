@@ -124,6 +124,13 @@
 .payButton { margin-top: 14px; }
 .payButton:disabled { border-color: #bdb2ae; background: #c7beba; color: #f5f1ef; box-shadow: none; }
 .offerBody > .quietButton { margin-top: 2px; }
+.benefitRecovery { display: grid; justify-items: start; gap: 11px; margin-top: 28px; border: 1px solid rgb(129 77 62 / 14%); border-radius: 22px; padding: 20px; background: rgb(255 253 250 / 88%); box-shadow: 0 16px 40px rgb(52 35 41 / 7%); }
+.benefitRecovery > svg { color: #8a4b43; }
+.benefitRecovery h3,
+.benefitRecovery p { margin: 0; }
+.benefitRecovery h3 { font-size: 18px; line-height: 1.25; }
+.benefitRecovery p { color: #746b66; font-size: 13px; line-height: 1.55; }
+.benefitRecovery .primary { margin-top: 6px; }
 .paymentStatus,
 .receiptWrap { box-sizing: border-box; display: grid; min-height: calc(100dvh - 68px); max-width: 610px; align-content: center; justify-items: center; margin: 0 auto; padding: 36px 20px calc(45px + env(safe-area-inset-bottom)); text-align: center; }
 .paymentStatus h2,

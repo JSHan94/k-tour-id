@@ -22,9 +22,12 @@ import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-prefe
 import type { PulseLocalEvidenceB, PulseLocalSignalTagB } from "../../pulse-b/pulse-model-b"
 import {
   createStableCommerceBState,
+  STABLE_B_OPENING_BALANCE,
+  STABLE_B_OOKRW_PRICE,
   STABLE_B_RECEIPT_ID,
   STABLE_B_REFUND_RECEIPT_ID,
   STABLE_B_VOUCHER_VALUE,
+  stableCommerceBalanceB,
   stableCommerceBReducer,
   type StableCommerceBAction,
   type StableCommerceBState,
@@ -140,11 +143,16 @@ export function sanitizeCommerceReceipts(value: unknown): OndoBCommerceReceipt[]
     const receipt = item as Record<string, unknown>
     if (receipt.receiptId !== STABLE_B_RECEIPT_ID || receipt.offerId !== "meal-offer-gukbap" || !isCanonicalVenueId(receipt.venueId)) return []
     if (receipt.status !== "paid" && receipt.status !== "refunded") return []
-    const paidOOKRW = receipt.paidOOKRW === 19 ? 19 : null
-    const benefitOOKRW = receipt.benefitOOKRW === STABLE_B_VOUCHER_VALUE ? STABLE_B_VOUCHER_VALUE : null
-    const balanceOOKRW = receipt.status === "paid" && receipt.balanceOOKRW === 41
-      ? 41
-      : receipt.status === "refunded" && receipt.balanceOOKRW === 60 ? 60 : null
+    const benefitOOKRW = receipt.benefitOOKRW === STABLE_B_VOUCHER_VALUE
+      ? STABLE_B_VOUCHER_VALUE
+      : receipt.benefitOOKRW === 0 ? 0 : null
+    const paidOOKRW = benefitOOKRW == null || receipt.paidOOKRW !== STABLE_B_OOKRW_PRICE - benefitOOKRW
+      ? null
+      : receipt.paidOOKRW
+    const expectedBalance = paidOOKRW == null
+      ? null
+      : receipt.status === "paid" ? STABLE_B_OPENING_BALANCE - paidOOKRW : STABLE_B_OPENING_BALANCE
+    const balanceOOKRW = receipt.balanceOOKRW === expectedBalance ? expectedBalance : null
     if (paidOOKRW === null || benefitOOKRW === null || balanceOOKRW === null) return []
     return [{
       receiptId: STABLE_B_RECEIPT_ID,
@@ -169,13 +177,13 @@ function commerceSessionFromReceipts(receipts: readonly OndoBCommerceReceipt[]):
   return {
     ...initial,
     status: receipt.status,
-    voucher: receipt.status === "paid" ? "consumed" : "available",
-    benefitRecommendation: "accepted",
+    voucher: receipt.status === "paid" && receipt.benefitOOKRW > 0 ? "consumed" : "available",
+    benefitRecommendation: receipt.benefitOOKRW > 0 ? "accepted" : "declined",
     receiptCount: 1,
     refundCount: receipt.status === "refunded" ? 1 : 0,
     chargedDebit: receipt.paidOOKRW,
-    voucherApplied: true,
-    redemptionCount: receipt.status === "paid" ? 1 : 0,
+    voucherApplied: receipt.benefitOOKRW > 0,
+    redemptionCount: receipt.status === "paid" && receipt.benefitOOKRW > 0 ? 1 : 0,
     receiptId: receipt.receiptId,
     lastOutcome: "success",
   }
@@ -490,9 +498,9 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
             offerId: "meal-offer-gukbap",
             venueId,
             status: refundedNow ? "refunded" : "paid",
-            paidOOKRW: 19,
-            benefitOOKRW: STABLE_B_VOUCHER_VALUE,
-            balanceOOKRW: refundedNow ? 60 : 41,
+            paidOOKRW: commerceSession.chargedDebit,
+            benefitOOKRW: commerceSession.voucherApplied ? STABLE_B_VOUCHER_VALUE : 0,
+            balanceOOKRW: stableCommerceBalanceB(commerceSession),
           }, ...current.commerceReceipts])
         : current.commerceReceipts
       const next = {

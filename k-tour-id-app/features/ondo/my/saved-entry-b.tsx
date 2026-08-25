@@ -40,7 +40,7 @@ const COPY = {
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
     receiptsTitle: "Wallet activity",
     receiptsBody: "Payments and refunds completed on this device.",
-    paid: "Paid 19 OOKRW Test",
+    paid: "Paid",
     refunded: "Refunded",
     originalPayment: "Original payment",
     refundReference: "Refund reference",
@@ -75,7 +75,7 @@ const COPY = {
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
     receiptsTitle: "지갑 활동",
     receiptsBody: "이 기기에서 완료한 결제와 환불입니다.",
-    paid: "19 OOKRW Test 결제",
+    paid: "결제",
     refunded: "환불됨",
     originalPayment: "원 결제",
     refundReference: "환불 참조",
@@ -184,7 +184,7 @@ export function SavedEntryB() {
             <div className={styles.activityHeading}><ReceiptText size={19} aria-hidden="true" /><span><h2 id="my-korea-receipts-heading">{copy.receiptsTitle}</h2><p>{copy.receiptsBody}</p></span></div>
             <div className={styles.referenceList}>
               <article className={styles.planReference}>
-                <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? copy.refunded : copy.paid}</span>
+                <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? copy.refunded : `${copy.paid} ${state.commerceSession.chargedDebit} OOKRW Test`}</span>
                 <h3>{receiptVenue ? venueNamePresentation(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
                 <p>{state.commerceSession.status === "refunded" ? `${copy.originalPayment}: ${STABLE_B_RECEIPT_ID}` : STABLE_B_RECEIPT_ID}</p>
                 {state.commerceSession.status === "refunded" ? <p>{copy.refundReference}: {STABLE_B_REFUND_RECEIPT_ID}</p> : null}

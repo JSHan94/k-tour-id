@@ -35,6 +35,7 @@ import {
   STABLE_B_REFUND_RECEIPT_ID,
   STABLE_B_VOUCHER_VALUE,
   stableCommerceBalanceB,
+  stableCommerceBenefitPolicyB,
   stableCommerceBreakdownB,
   stableCommerceQuoteDebitB,
 } from "./stable-commerce-model-b"
@@ -44,7 +45,8 @@ type Locale = "en" | "ko"
 type WalletReturn = "ready" | "failed"
 type PaymentView = "review" | "processing" | "receipt" | "failure" | "insufficient" | "refunded"
 type QaPayment = "failure" | "insufficient"
-type QaWindow = Window & { __ONDO_B_QA__?: { wallet?: "failure"; payment?: QaPayment } }
+type QaBenefit = "ineligible" | "below_minimum" | "expired"
+type QaWindow = Window & { __ONDO_B_QA__?: { wallet?: "failure"; payment?: QaPayment; benefit?: QaBenefit } }
 
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),[href],summary,[tabindex]:not([tabindex='-1'])"
 
@@ -68,7 +70,7 @@ const COPY = {
     activity: "Recent activity",
     noActivity: "No receipts yet",
     noActivityBody: "Payments and refunds completed on this device appear here.",
-    paidActivity: "Paid 19 OOKRW Test",
+    paidActivity: "Paid",
     refundedActivity: "Refunded",
     activityVenue: "Meal benefit at",
     activityReceipt: "Receipt",
@@ -106,7 +108,7 @@ const COPY = {
     activity: "최근 활동",
     noActivity: "아직 영수증이 없어요",
     noActivityBody: "이 기기에서 완료한 결제와 환불이 여기에 표시됩니다.",
-    paidActivity: "19 OOKRW Test 결제",
+    paidActivity: "결제",
     refundedActivity: "환불됨",
     activityVenue: "식사 혜택 장소",
     activityReceipt: "영수증",
@@ -138,12 +140,16 @@ const OFFER_COPY = {
     total: "You pay",
     asset: "OOKRW Test",
     voucher: "Your meal benefit",
-    voucherBody: "Eligible for this test offer · ₩22,000 minimum met",
+    voucherBody: "Eligible for this test offer · ₩22,000 minimum met · valid through Aug 28",
     recommendation: "Recommended for this meal",
     applied: "Applied",
     apply: "Apply benefit",
     remove: "Not now",
     available: "Available",
+    policyIneligible: "Benefit unavailable for this place",
+    policyBelowMinimum: "Meal minimum not met",
+    policyExpired: "This benefit has expired",
+    policyBody: "Nothing changed. Return to the place and choose another option.",
     consentTitle: "Pay privately",
     consentBody: "Share only wallet-ready and benefit-selected for this offer. No name, identity, age, address or raw claim.",
     consent: "I agree to use this test balance for this offer",
@@ -184,12 +190,16 @@ const OFFER_COPY = {
     total: "결제 금액",
     asset: "OOKRW Test",
     voucher: "나의 식사 혜택",
-    voucherBody: "이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족",
+    voucherBody: "이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족 · 8월 28일까지",
     recommendation: "이번 식사 추천 혜택",
     applied: "적용됨",
     apply: "혜택 적용",
     remove: "나중에",
     available: "사용 가능",
+    policyIneligible: "이 장소에서는 혜택을 사용할 수 없어요",
+    policyBelowMinimum: "식사 최소 금액을 충족하지 못했어요",
+    policyExpired: "이 혜택은 만료됐어요",
+    policyBody: "변경된 내용은 없습니다. 장소로 돌아가 다른 방법을 선택해 주세요.",
     consentTitle: "개인정보를 지키는 결제",
     consentBody: "이 오퍼에는 지갑 준비·혜택 선택 여부만 공유합니다. 이름·신원·나이·주소·원본 정보는 공유하지 않아요.",
     consent: "이 오퍼에 테스트 잔액을 사용하는 데 동의합니다",
@@ -312,11 +322,20 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   const commerce = state.commerceSession
   const [view, setView] = useState<PaymentView>(() => commerce.status === "paid" ? "receipt" : commerce.status === "refunded" ? "refunded" : "review")
   const [consent, setConsent] = useState(false)
+  const [benefitQa, setBenefitQa] = useState<QaBenefit | undefined>()
   const returnTo = JSON.stringify({ cta: "START_MEAL_PAYMENT", venueId, offerId: "meal-offer-gukbap" })
   const balance = stableCommerceBalanceB(commerce)
   const breakdown = stableCommerceBreakdownB(commerce)
   const debit = stableCommerceQuoteDebitB(commerce)
   const benefitSelected = commerce.voucher === "selected" || commerce.voucher === "consumed"
+  const benefitExpiresAtMs = Date.parse("2026-08-28T23:59:59+09:00")
+  const benefitPolicy = stableCommerceBenefitPolicyB({
+    venueEligible: benefitQa !== "ineligible",
+    mealOOKRW: benefitQa === "below_minimum" ? 21 : STABLE_B_OOKRW_PRICE,
+    minimumOOKRW: STABLE_B_OOKRW_PRICE,
+    nowMs: benefitQa === "expired" ? benefitExpiresAtMs + 1 : Date.parse("2026-08-25T12:00:00+09:00"),
+    expiresAtMs: benefitExpiresAtMs,
+  })
   useModalIsolation(true, rootRef)
 
   useEffect(() => {
@@ -327,6 +346,9 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   useEffect(() => {
     rootRef.current?.scrollTo({ top: 0, behavior: "auto" })
   }, [view])
+  useEffect(() => {
+    setBenefitQa((window as QaWindow).__ONDO_B_QA__?.benefit)
+  }, [])
 
   useEffect(() => {
     if (view !== "processing") return
@@ -368,6 +390,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
       data-return-to={returnTo}
       data-payment-state={view}
       data-wallet-status={walletStatus}
+      data-benefit-policy={benefitPolicy.status}
       data-locale={locale}
       onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}
     >
@@ -386,6 +409,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
             <span><MapPin size={15} aria-hidden="true" />{copy.from} {venueName}</span>
           </section>
 
+          {benefitPolicy.status === "recommended" ? <>
           <section className={styles.quote} aria-label={copy.total}>
             <div><span>{copy.price}</span><strong>{STABLE_B_KRW_PRICE.toLocaleString("en-US")} KRW</strong></div>
             <div><span>{copy.testQuote}</span><strong>{STABLE_B_OOKRW_PRICE} {copy.asset}</strong></div>
@@ -412,6 +436,14 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
           <details className={styles.testDetails}><summary>{copy.testMode}</summary><p>{copy.testTruth}</p></details>
           <button type="button" className={styles.payButton} data-testid="payment-confirm" disabled={walletStatus === "ready" && !consent} onClick={walletStatus === "ready" ? pay : onConnect}><CircleDollarSign size={19} aria-hidden="true" />{walletStatus === "ready" ? copy.pay : copy.connectToPay}</button>
           <button type="button" className={styles.quietButton} data-testid="payment-cancel" onClick={onClose}>{copy.back}</button>
+          </> : (
+            <section className={styles.benefitRecovery} data-testid="commerce-benefit-recovery" role="status">
+              <Info size={24} aria-hidden="true" />
+              <h3>{benefitPolicy.status === "ineligible" ? copy.policyIneligible : benefitPolicy.status === "below_minimum" ? copy.policyBelowMinimum : copy.policyExpired}</h3>
+              <p>{copy.policyBody}</p>
+              <button type="button" className={styles.primary} onClick={onClose}>{copy.back}</button>
+            </section>
+          )}
         </div>
       ) : null}
 
@@ -437,7 +469,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
           <p className={styles.receiptLead}>{view === "refunded" ? copy.refundedBody : copy.receiptBody}</p>
           <section className={styles.receiptCard}>
             <div><span>{copy.paid}</span><strong>{view === "refunded" ? 0 : breakdown.net} {copy.asset}</strong></div>
-            <div><span>{copy.benefit}</span><strong>{STABLE_B_VOUCHER_VALUE} {copy.asset}</strong></div>
+            <div><span>{copy.benefit}</span><strong>{breakdown.benefit} {copy.asset}</strong></div>
             <div><span>{copy.remaining}</span><strong>{balance} {copy.asset}</strong></div>
             <div><span>{view === "refunded" ? copy.originalPayment : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
             {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
@@ -508,7 +540,7 @@ export function IdWalletCommerceB() {
           <div className={styles.cardHeading}><Clock3 size={20} aria-hidden="true" /><span>{copy.activity}</span></div>
           {commerce.status === "paid" || commerce.status === "refunded" ? (
             <details className={styles.activityReceipt} data-testid="wallet-activity-receipt">
-              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? copy.refundedActivity : copy.paidActivity}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
+              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? copy.refundedActivity : `${copy.paidActivity} ${commerce.chargedDebit} ${copy.testAsset}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
               <div><span>{commerce.status === "refunded" ? copy.originalPayment : copy.activityReceipt}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
               {commerce.status === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
               {commerce.status === "paid" ? <button type="button" data-testid="wallet-activity-refund" onClick={() => actions.dispatchCommerce({ type: "REFUND" })}><RotateCcw size={16} aria-hidden="true" />{OFFER_COPY[locale].refund}</button> : null}

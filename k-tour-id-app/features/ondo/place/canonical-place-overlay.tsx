@@ -17,7 +17,7 @@ export const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
 
 const COPY = {
   en: {
-    active: "Official LOCALDATA record",
+    active: "Official Korean restaurant licence record",
     source: "Official source record",
     sourceBody: "Ministry of the Interior and Safety LOCALDATA · General food-service licence directory",
     sourceBoundary: "The record confirms an active licence at the source date. It does not confirm that the business is open today.",
@@ -69,13 +69,13 @@ const COPY = {
     pulseAlternative: "Open calmer place",
     pulseLocalEvidence: "On this device",
     table: "View Table",
-    tableBody: "Friday at 20:30 · Korean + English · 1 seat left",
+    tableBody: "Fri, Aug 28 · 20:30 KST · Korean + English · 1 seat left",
     after19: "19+ required",
     after19Body: "You’ll verify after choosing Join.",
     pulseBoundary: "Curated visit signals · not live crowding or official venue facts.",
   },
   ko: {
-    active: "공식 LOCALDATA 기록",
+    active: "한국 공식 음식점 인허가 기록",
     source: "공식 출처 기록",
     sourceBody: "행정안전부 LOCALDATA · 일반음식점 인허가 디렉터리",
     sourceBoundary: "출처 기준일의 유효 인허가 상태를 확인합니다. 현재 영업 중이라는 뜻은 아닙니다.",
@@ -127,7 +127,7 @@ const COPY = {
     pulseAlternative: "더 여유로운 장소 열기",
     pulseLocalEvidence: "이 기기에서",
     table: "테이블 보기",
-    tableBody: "금요일 20:30 · 한국어 + 영어 · 1자리 남음",
+    tableBody: "8월 28일 금요일 · 20:30 KST · 한국어 + 영어 · 1자리 남음",
     after19: "19+ 필수",
     after19Body: "참여를 누른 뒤 확인해요.",
     pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
