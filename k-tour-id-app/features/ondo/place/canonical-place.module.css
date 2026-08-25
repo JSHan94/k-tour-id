@@ -17,6 +17,7 @@
 .peekActions button { border: 0; background: #22211f; color: white; }
 .peekActions a { border: 1px solid #dadad6; background: #fff; color: #22211f; }
 .layer { position: absolute; z-index: 92; inset: 0; display: flex; align-items: flex-end; }
+.layer:focus { outline: none; }
 .backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgb(22 21 19 / 32%); backdrop-filter: blur(2px); }
 .detail { position: relative; display: flex; width: 100%; max-height: 92dvh; flex-direction: column; overflow: hidden; border: 1px solid rgb(34 33 31 / 12%); border-radius: 20px 20px 0 0; background: #fff; color: #22211f; box-shadow: 0 -8px 30px rgb(34 33 31 / 10%); }
 .detail > header { position: relative; z-index: 2; display: grid; height: 58px; flex: 0 0 58px; grid-template-columns: 48px 1fr 48px; align-items: center; padding: 0 10px; border-bottom: 1px solid #e2e2df; background: rgb(255 255 255 / 96%); }

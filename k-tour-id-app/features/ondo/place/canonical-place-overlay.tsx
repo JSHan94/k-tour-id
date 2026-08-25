@@ -205,7 +205,7 @@ export function CanonicalPlaceOverlay() {
     return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, syncHistory)
   }, [venueId])
 
-  useEffect(() => { if (expanded) closeRef.current?.focus() }, [expanded])
+  useEffect(() => { if (expanded) layerRef.current?.focus({ preventScroll: true }) }, [expanded])
 
   useEffect(() => {
     if (!venueId || expanded) return
@@ -360,7 +360,7 @@ export function CanonicalPlaceOverlay() {
   )
 
   return (
-    <div id="canonical-place-dialog" ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus}>
+    <div id="canonical-place-dialog" ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" tabIndex={-1} data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus}>
       <button type="button" className={styles.backdrop} onClick={closeDetails} aria-label={copy.back} tabIndex={-1} />
       <article ref={detailRef} className={styles.detail} onKeyDown={handleDetailKeyDown}>
         <header>
