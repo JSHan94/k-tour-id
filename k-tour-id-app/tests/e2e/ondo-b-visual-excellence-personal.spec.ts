@@ -207,6 +207,41 @@ test.describe("personal surfaces visual excellence", () => {
     expect(refundedColor).not.toBe(paidColor)
   })
 
+  test("KO 320 refund keeps receipt labels as deliberate whole phrases", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.setViewportSize({ width: 320, height: 720 })
+    await seed(page, "ko", { active: true })
+    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
+    await page.getByTestId("canonical-meal-benefit-open").click()
+
+    const receipt = page.getByTestId("payment-receipt")
+    await expect(receipt).toHaveAttribute("data-refunded", "true")
+    for (const label of ["결제 영수증", "환불 참조"]) {
+      const node = receipt.getByText(label, { exact: true })
+      const metrics = await node.evaluate((element) => {
+        const style = getComputedStyle(element)
+        return {
+          height: element.getBoundingClientRect().height,
+          lineHeight: parseFloat(style.lineHeight),
+          whiteSpace: style.whiteSpace,
+          wordBreak: style.wordBreak,
+        }
+      })
+      expect(metrics.height).toBeLessThanOrEqual(metrics.lineHeight + 1)
+      expect(metrics.whiteSpace).toBe("nowrap")
+      expect(metrics.wordBreak).toBe("keep-all")
+    }
+    await expect(receipt.getByText("ONDO-LOCAL-20260825-001", { exact: true })).toBeVisible()
+    await expect(receipt.getByText("ONDO-LOCAL-REFUND-20260825-001", { exact: true })).toBeVisible()
+    expect(await receipt.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+    expect(await page.locator("html").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+    const returnAction = await receipt.getByTestId("payment-receipt-return").boundingBox()
+    expect((returnAction?.y ?? 720) + (returnAction?.height ?? 0)).toBeLessThanOrEqual(720)
+    mkdirSync(EVIDENCE_DIR, { recursive: true })
+    await page.screenshot({ path: resolve(EVIDENCE_DIR, "ko-320-refund.png"), animations: "disabled" })
+  })
+
   for (const locale of ["en", "ko"] as const) {
     test(`${locale.toUpperCase()} empty My Korea remains a composed trip starting point`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })
