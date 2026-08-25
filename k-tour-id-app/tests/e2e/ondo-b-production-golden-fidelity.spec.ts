@@ -68,62 +68,57 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   }
 })
 
-test("FID-LIVE-002 ID · Wallet meal offer executes truthful deterministic outcomes and one debit on double click", async ({ page }) => {
+test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and a reversible refund", async ({ page }) => {
   await seedGoldenCandidate(page, "en")
   const { offer } = await openMealOffer(page)
-  await expect(offer.getByRole("heading", { name: "ONDO demo meal offer" })).toBeVisible()
-  await expect(offer.getByTestId("commerce-truth-boundary")).toContainText(/device-local|no AI call|no payment provider|no chain|no backend|not official LOCALDATA merchant payment support/i)
-  await expect(offer.getByTestId("commerce-provider-state")).toHaveAttribute("data-provider-state", "NOT_CONNECTED")
-  await expect(offer.getByTestId("commerce-ookrw-balance")).toHaveAttribute("data-balance", "60")
+  await expect(offer.getByRole("heading", { name: "A better meal, one tap away" })).toBeVisible()
+  await expect(offer).toContainText("OOKRW Test")
+  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
+  await offer.getByTestId("payment-minimum-consent").locator("input").check()
+  await offer.getByTestId("payment-confirm").dblclick()
 
-  await offer.getByTestId("commerce-ai-preview").click()
-  await expect(offer.getByTestId("commerce-ai-recommendation")).toHaveAttribute("data-ai-state", "RECOMMENDED")
-  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "AVAILABLE")
-  await expect(offer.getByTestId("commerce-ookrw-balance")).toHaveAttribute("data-balance", "60")
-  await offer.getByTestId("commerce-ai-accept").click()
-
-  await offer.getByTestId("commerce-outcome-success").click()
-  await offer.getByTestId("commerce-pay").dblclick()
-  await expect(offer).toHaveAttribute("data-payment-state", "SUCCESS")
-  await expect(offer.getByTestId("commerce-ookrw-balance")).toHaveAttribute("data-balance", "41")
-  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "REDEEMED")
-  await expect(offer.getByTestId("commerce-holder-ledger").locator("[data-operation-kind='PAYMENT']")).toHaveCount(1)
-  await expect(offer.getByTestId("commerce-merchant-ledger").locator("[data-operation-kind='PAYMENT']")).toHaveCount(1)
-  await expect(offer.getByTestId("commerce-receipt")).toHaveCount(1)
-  await expect(offer.getByTestId("commerce-receipt")).toContainText("ONDO-LOCAL-20260825-001")
-
-  await offer.getByTestId("commerce-refund").click()
-  await expect(offer).toHaveAttribute("data-payment-state", "REFUNDED")
-  await expect(offer.getByTestId("commerce-ookrw-balance")).toHaveAttribute("data-balance", "60")
-  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "AVAILABLE")
-  await expect(offer.getByTestId("commerce-settlement-mirror")).toHaveAttribute("data-reconciled", "true")
+  const receipt = offer.getByTestId("payment-receipt")
+  await expect(receipt).toContainText("ONDO-LOCAL-20260825-001")
+  await expect(receipt).toContainText("19 OOKRW Test")
+  await expect(offer.locator("[data-operation-kind]")).toHaveCount(0)
+  await receipt.getByText("Refund & support").click()
+  await receipt.getByTestId("payment-refund").click()
+  await expect(receipt).toHaveAttribute("data-refunded", "true")
+  await expect(receipt).toContainText("60 OOKRW Test")
 })
 
-test("FID-LIVE-003 cancel, fail/retry, and insufficient balance preserve the exact meal-offer return", async ({ page }) => {
-  await seedGoldenCandidate(page, "en")
-  const { entry, offer } = await openMealOffer(page)
+test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-offer return", async ({ browser }) => {
   const expectedReturn = JSON.stringify({ cta: "START_MEAL_PAYMENT", venueId: VENUE_ID, offerId: "meal-offer-gukbap" })
+
+  const cancelContext = await browser.newContext()
+  const cancelPage = await cancelContext.newPage()
+  await seedGoldenCandidate(cancelPage, "en")
+  const { entry, offer } = await openMealOffer(cancelPage)
   await expect(offer).toHaveAttribute("data-return-to", expectedReturn)
-
-  for (const scenario of ["cancelled", "failed", "insufficient"] as const) {
-    await offer.getByTestId(`commerce-outcome-${scenario}`).click()
-    await offer.getByTestId("commerce-pay").click()
-    await expect(offer).toHaveAttribute("data-payment-state", scenario.toUpperCase())
-    await expect(offer).toHaveAttribute("data-return-to", expectedReturn)
-    await expect(offer.getByTestId("commerce-holder-ledger").locator("[data-operation-kind='PAYMENT']")).toHaveCount(0)
-    if (scenario === "failed") {
-      await offer.getByTestId("commerce-retry").click()
-      await expect(offer).toHaveAttribute("data-payment-state", "SUCCESS")
-      await offer.getByTestId("commerce-reset").click()
-    } else {
-      await offer.getByTestId("commerce-reset").click()
-    }
-  }
-
-  await offer.getByTestId("commerce-close").click()
-  await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+  await cancelPage.keyboard.press("Escape")
+  await expect(cancelPage.getByTestId("canonical-place-overlay")).toBeVisible()
   await expect(entry).toBeFocused()
-  await expect(page).toHaveURL(new RegExp(`venueId=${VENUE_ID}`))
+  await cancelContext.close()
+
+  for (const outcome of ["failure", "insufficient"] as const) {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await seedGoldenCandidate(page, "en")
+    await page.addInitScript((payment) => {
+      (window as Window & { __ONDO_B_QA__?: { payment: typeof payment } }).__ONDO_B_QA__ = { payment }
+    }, outcome)
+    const opened = await openMealOffer(page)
+    await expect(opened.offer).toHaveAttribute("data-return-to", expectedReturn)
+    await opened.offer.getByTestId("payment-minimum-consent").locator("input").check()
+    await opened.offer.getByTestId("payment-confirm").click()
+    await expect(opened.offer.getByTestId("payment-recovery")).toHaveAttribute("data-recovery", outcome)
+    await expect(opened.offer.locator("[data-operation-kind]")).toHaveCount(0)
+    await page.evaluate(() => { delete (window as Window & { __ONDO_B_QA__?: unknown }).__ONDO_B_QA__ })
+    await opened.offer.getByTestId("payment-retry").click()
+    await opened.offer.getByTestId("payment-confirm").click()
+    await expect(opened.offer.getByTestId("payment-receipt")).toBeVisible()
+    await context.close()
+  }
 })
 
 for (const locale of ["en", "ko"] as const) {

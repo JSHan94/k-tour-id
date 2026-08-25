@@ -57,6 +57,14 @@ test("B-PREMIUM-WALLET-001 wallet is a consumer dashboard, not a merchant scenar
   expect(commerce).not.toContain('data-testid="commerce-outcomes"')
   expect(commerce).not.toContain('data-testid="commerce-ledgers"')
   expect(commerce).not.toContain('data-testid="commerce-reconciliation"')
+  for (const retiredEvidence of [
+    "wallet-link-ready",
+    "wallet-link-failure",
+    "payment-outcome-failure",
+    "payment-outcome-insufficient",
+    "holder-settlement-mirror",
+    "merchant-settlement-mirror",
+  ]) expect(commerce).not.toContain(`\"${retiredEvidence}\"`)
 })
 
 test("B-PREMIUM-PAY-001 contextual payment keeps model outcomes but hides them from normal UI", () => {
