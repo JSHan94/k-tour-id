@@ -41,7 +41,7 @@ test.describe("production official-source discovery", () => {
     await expect(onboarding).toContainText("일반음식점 인허가 기록 400개")
     await expect(onboarding).toContainText("서울과 부산")
     await expectNoSeriousAxe(page, "[data-testid='ondo-onboarding']")
-    await onboarding.getByTestId("onboarding-finish").click()
+    await onboarding.getByRole("button", { name: "게스트로 탐색", exact: true }).click()
     await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   })
 
