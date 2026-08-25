@@ -16,6 +16,26 @@ const VIEWPORTS = [
 
 const LOCALES = ["en", "ko"] as const
 
+async function seedCompletedBDevice(page: Page, locale: (typeof LOCALES)[number]) {
+  await page.addInitScript(({ deviceLocale }) => {
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: deviceLocale,
+      onboarding: "ONB-COMPLETE",
+      persona: "short_term",
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+  }, { deviceLocale: locale })
+}
+
 async function expectNoClip(scope: Locator) {
   const clipped = await scope.evaluateAll((nodes) => nodes.map((node) => ({
     horizontal: node.scrollWidth > node.clientWidth + 1,
@@ -74,6 +94,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
 
     test(`${locale.toUpperCase()} Nation and Seoul list share the same elevated Pulse material grammar`, async ({ page }, testInfo) => {
       await seedB(page, { locale })
+      await seedCompletedBDevice(page, locale)
 
       for (const viewport of VIEWPORTS) {
         await test.step(viewport.id, async () => {
@@ -123,6 +144,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
 
     test(`${locale.toUpperCase()} place summary and detail create a tactile decision hierarchy`, async ({ page }, testInfo) => {
       await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+      await seedCompletedBDevice(page, locale)
 
       for (const viewport of VIEWPORTS) {
         await test.step(viewport.id, async () => {
