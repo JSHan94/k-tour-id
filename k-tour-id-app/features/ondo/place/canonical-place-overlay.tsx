@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, NotebookPen, X } from "lucide-react"
+import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, NotebookPen, WalletCards, X } from "lucide-react"
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
@@ -38,6 +38,8 @@ const COPY = {
     localSignal: "Add a Local Signal",
     localSignalPosted: "Update Local Signal on this device",
     localSignalBoundary: "The note is discarded; selected tag IDs, post time, and place marker stay on this device as your Pulse evidence.",
+    demoOffer: "Try ONDO demo meal offer",
+    demoOfferBody: "Separate ONDO walkthrough · not an official place fact and not evidence that this LOCALDATA business accepts payment or OOKRW.",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -89,6 +91,8 @@ const COPY = {
     localSignal: "로컬 시그널 남기기",
     localSignalPosted: "이 기기의 로컬 시그널 업데이트",
     localSignalBoundary: "메모는 폐기하고 선택한 태그 ID·게시 시각·장소 표시만 이 기기의 Pulse 근거로 남겨요.",
+    demoOffer: "ONDO 데모 식사 혜택 체험",
+    demoOfferBody: "별도 ONDO 둘러보기 · 공식 장소 정보가 아니며 이 LOCALDATA 업소가 결제나 OOKRW를 지원한다는 근거가 아닙니다.",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -396,6 +400,14 @@ export function CanonicalPlaceOverlay() {
             <button type="button" onClick={() => actions.openLocalSignal(currentVenueId)} data-testid="canonical-local-signal-open">
               <NotebookPen size={18} aria-hidden="true" />
               <span><strong>{localSignalPosted ? copy.localSignalPosted : copy.localSignal}</strong><small>{copy.localSignalBoundary}</small></span>
+              <ChevronRight size={17} aria-hidden="true" />
+            </button>
+          </section>
+
+          <section className={styles.demoOfferAction} aria-label={copy.demoOffer}>
+            <button type="button" onClick={() => actions.openDemoMealOfferFromPlace(currentVenueId)} data-testid="canonical-demo-meal-offer-open">
+              <WalletCards size={18} aria-hidden="true" />
+              <span><strong>{copy.demoOffer}</strong><small>{copy.demoOfferBody}</small></span>
               <ChevronRight size={17} aria-hidden="true" />
             </button>
           </section>

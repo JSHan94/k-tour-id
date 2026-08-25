@@ -42,6 +42,11 @@
 .localSignalAction button > span { display: grid; min-width: 0; gap: 3px; }
 .localSignalAction strong { font-size: 13px; }
 .localSignalAction small { color: #6e6962; font-size: 11px; font-weight: 540; line-height: 1.45; }
+.demoOfferAction { margin: 0 0 20px; padding: 14px 0; border-block: 1px solid #dedbd5; }
+.demoOfferAction button { display: grid; width: 100%; min-height: 68px; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 9px; padding: 11px 12px; border: 1px solid #d8c7b8; border-radius: 12px; background: #fffaf5; color: #302a25; font: inherit; text-align: left; }
+.demoOfferAction button > span { display: grid; min-width: 0; gap: 3px; }
+.demoOfferAction strong { font-size: 13px; }
+.demoOfferAction small { color: #715f50; font-size: 11px; font-weight: 540; line-height: 1.45; }
 .sourceEvidence, .before, .source { padding: 20px 0; border-top: 1px solid #dedbd5; }
 .sourceEvidence h3, .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
 .sourceEvidence > p, .source p { margin: 0 0 12px; color: #6f6a63; font-size: 12px; line-height: 1.55; }

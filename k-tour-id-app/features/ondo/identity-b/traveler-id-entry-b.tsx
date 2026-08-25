@@ -4,12 +4,13 @@ import { useRef, useState } from "react"
 import { BadgeCheck, CalendarClock, ChevronRight, Fingerprint, Settings, Shield, UserRoundCheck } from "lucide-react"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { LocalCheckWalkthroughB, type LocalCheckKind, type LocalCheckOutcome } from "./local-check-walkthrough-b"
+import { IdWalletCommerceB } from "../commerce-b/id-wallet-commerce-b"
 import styles from "./traveler-id-entry-b.module.css"
 
 const COPY = {
   en: {
     eyebrow: "ON THIS DEVICE",
-    title: "Traveler ID",
+    title: "ID · Wallet",
     body: "Review minimum identity requests before they appear in a task. These local walkthroughs create no account, identity, age proof, DID, or credential.",
     local: "Local interactive boundary",
     localBody: "No scan or provider is connected. You choose each return and results last only while this screen is mounted.",
@@ -33,7 +34,7 @@ const COPY = {
   },
   ko: {
     eyebrow: "이 기기",
-    title: "여행자 ID",
+    title: "ID · 지갑",
     body: "작업 중 최소 신원 요청이 나타나기 전에 내용을 살펴보세요. 로컬 둘러보기는 계정·신원·나이 증명·DID·자격증명을 만들지 않습니다.",
     local: "로컬 대화형 경계",
     localBody: "연결된 스캔이나 공급자는 없습니다. 각 반환을 직접 선택하며 결과는 이 화면이 유지되는 동안에만 남아요.",
@@ -94,6 +95,8 @@ export function TravelerIdEntryB() {
           <Shield size={20} aria-hidden="true" />
           <div><h2 id="traveler-local-boundary">{copy.local}</h2><p>{copy.localBody}</p></div>
         </section>
+
+        <IdWalletCommerceB />
 
         <div className={styles.checks}>
           <section className={styles.check} data-testid="traveler-id-person" aria-labelledby="traveler-person-title">

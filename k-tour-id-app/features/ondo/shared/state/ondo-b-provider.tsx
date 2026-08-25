@@ -30,6 +30,7 @@ export type OndoBLocalSignalDraft = {
   tags: OndoBLocalSignalTag[]
   note: string
 }
+export type OndoBCommerceOrigin = { kind: "canonical_place"; venueId: string }
 
 export type OndoBState = {
   hydrated: boolean
@@ -47,6 +48,8 @@ export type OndoBState = {
   localSignalPostedVenueIds: string[]
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
+  commerceLocalBoundarySeen: boolean
+  commerceOrigin: OndoBCommerceOrigin | null
   localSignalDraft: OndoBLocalSignalDraft | null
   toast: string | null
 }
@@ -73,6 +76,9 @@ export type OndoBActions = {
   removePlannedTable(tableId: string): boolean
   markLocalSignalPosted(venueId: string): boolean
   acknowledgeLocalInteractionBoundary(): boolean
+  acknowledgeCommerceLocalBoundary(): boolean
+  openDemoMealOfferFromPlace(venueId: string): boolean
+  returnFromCommerceOrigin(): boolean
   clearBDeviceContent(): boolean
   notify(message: string): void
 }
@@ -89,6 +95,7 @@ type OndoBDeviceState = {
   localSignalPostedVenueIds: string[]
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
+  commerceLocalBoundarySeen: boolean
 }
 
 const B_DEVICE_KEY = "ondo-b.device.v1"
@@ -114,6 +121,8 @@ function initialState(): OndoBState {
     localSignalPostedVenueIds: [],
     localPulseEvidenceByVenue: {},
     localInteractionBoundarySeen: false,
+    commerceLocalBoundarySeen: false,
+    commerceOrigin: null,
     localSignalDraft: null,
     toast: null,
   }
@@ -154,6 +163,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     localSignalPostedVenueIds: sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds),
     localPulseEvidenceByVenue,
     localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
+    commerceLocalBoundarySeen: record.commerceLocalBoundarySeen === true,
   }
 }
 
@@ -170,6 +180,7 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     localSignalPostedVenueIds: state.localSignalPostedVenueIds,
     localPulseEvidenceByVenue: state.localPulseEvidenceByVenue,
     localInteractionBoundarySeen: state.localInteractionBoundarySeen,
+    commerceLocalBoundarySeen: state.commerceLocalBoundarySeen,
   })
 }
 
@@ -205,6 +216,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         ...blank,
         ...restored,
         saveStatusByVenue: Object.fromEntries(restored.savedVenueIds.map((venueId) => [venueId, "SAV-SAVED" as const])),
+        commerceOrigin: null,
         hydrated: true,
       }
       stateRef.current = next
@@ -273,6 +285,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       ...current,
       tab,
       surface: tab === "ondo" ? current.surface : { kind: "map" },
+      commerceOrigin: tab === "id" ? current.commerceOrigin : null,
     })),
     setSurface: (surface) => setState((current) => ({
       ...current,
@@ -374,6 +387,33 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       }))
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
+    acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
+    openDemoMealOfferFromPlace: (venueId) => {
+      if (!isCanonicalVenueId(venueId)) return false
+      commitEphemeral((current) => ({
+        ...current,
+        tab: "id",
+        surface: { kind: "map" },
+        commerceOrigin: { kind: "canonical_place", venueId },
+      }))
+      return true
+    },
+    returnFromCommerceOrigin: () => {
+      const origin = stateRef.current.commerceOrigin
+      if (!origin || !isCanonicalVenueId(origin.venueId)) return false
+      commitEphemeral((current) => ({
+        ...current,
+        tab: "ondo",
+        surface: { kind: "venue", venueId: origin.venueId },
+        commerceOrigin: null,
+      }))
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          document.querySelector<HTMLElement>("[data-testid='canonical-demo-meal-offer-open']")?.focus({ preventScroll: true })
+        })
+      })
+      return true
+    },
     clearBDeviceContent: () => commit((current) => ({
       ...current,
       discoveryPreferences: [],
@@ -385,6 +425,8 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       localSignalPostedVenueIds: [],
       localPulseEvidenceByVenue: {},
       localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceOrigin: null,
       localSignalDraft: null,
       surface: { kind: "map" },
     })),

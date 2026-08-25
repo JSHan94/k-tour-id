@@ -17,6 +17,15 @@ export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
   "features/ondo/local-signal-b/local-signal-layer-b.module.css",
 ])
 
+// Product-owned commerce walkthroughs are positively required. They are kept
+// separate from the retired provider/checkout graph and cannot be omitted by a
+// broad legacy scanner rule.
+export const REQUIRED_B_NATIVE_COMMERCE_FILES = Object.freeze([
+  "features/ondo/commerce-b/stable-commerce-model-b.ts",
+  "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+  "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+])
+
 export const SOURCE_FILES = Object.freeze([
   "app/icon.svg",
   "app/ondo-b/page.tsx",
@@ -60,6 +69,7 @@ export const SOURCE_FILES = Object.freeze([
   "lib/ondo/venues/map-data.ts",
   "lib/ondo/venues/map-discovery-aliases.ts",
   ...B_NATIVE_INTERACTIVE_FILES,
+  ...REQUIRED_B_NATIVE_COMMERCE_FILES,
 ])
 
 export const PUBLIC_FILES = Object.freeze([
@@ -104,11 +114,11 @@ export const BLOCKED_HTTP_PATHS = Object.freeze([
 
 // Keep retired prototype clusters out of the standalone artifact without
 // treating required P0 journey names (After19, Connect, Identity) as failures.
-export const LEGACY_ARTIFACT_PATH = /(^|\/)(?:commerce|demo|fixtures?|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
+export const LEGACY_ARTIFACT_PATH = /(^|\/)(?:demo|fixtures?|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
 
 export const LEGACY_ARTIFACT_TEXT = Object.freeze([
   /"simulation"\s*:\s*null/i,
-  /\b(?:demo|simulation|simulated|KYC|reward|rewards|Labs)\b/i,
+  /\b(?:simulation|simulated|KYC|reward|rewards|Labs)\b/i,
   /demo-journey/i,
   /mock-data/i,
   /WalletProvider|chainProvider|blockchain/i,
