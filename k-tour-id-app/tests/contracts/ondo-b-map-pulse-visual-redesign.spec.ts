@@ -39,6 +39,11 @@ test.describe("ONDO B map Pulse visual contract", () => {
     expect(map).toContain('"circle-radius": 22')
     expect(map).toContain('"circle-translate": risingTranslate')
     expect(map).toContain('"circle-translate": warmingTranslate')
+    expect(map).toContain('const centralPeakFilter: ExpressionSpecification = ["==", ["get", "pulseScore"], 91]')
+    expect(map).toContain('const centralHotFilter: ExpressionSpecification = ["==", ["get", "pulseScore"], 80]')
+    expect(map).toContain('id: "ondo-pulse-labels-central-peak"')
+    expect(map).toContain('id: "ondo-pulse-labels-central-hot"')
+    expect(map).toContain('"text-anchor": "top"')
     expect(map).not.toContain("clusterProperties:")
 
     const palette = {
