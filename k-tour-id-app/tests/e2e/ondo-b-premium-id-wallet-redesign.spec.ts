@@ -6,18 +6,21 @@ const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 
 async function seed(page: Page, locale: "en" | "ko" = "en", qa?: { wallet?: "failure"; payment?: "failure" | "insufficient" }) {
   await page.addInitScript(({ key, language, injected }) => {
-    localStorage.setItem(key, JSON.stringify({
-      locale: language,
-      onboarding: "ONB-COMPLETE",
-      persona: null,
-      discoveryPreferences: [],
-      savedVenueIds: [],
-      privateNotesByVenue: {},
-      recentVenueIds: [],
-      plannedTableRefs: [],
-      localSignalPostedVenueIds: [],
-      localInteractionBoundarySeen: false,
-    }))
+    if (!sessionStorage.getItem("ondo-b-premium-seeded")) {
+      localStorage.setItem(key, JSON.stringify({
+        locale: language,
+        onboarding: "ONB-COMPLETE",
+        persona: null,
+        discoveryPreferences: [],
+        savedVenueIds: [],
+        privateNotesByVenue: {},
+        recentVenueIds: [],
+        plannedTableRefs: [],
+        localSignalPostedVenueIds: [],
+        localInteractionBoundarySeen: false,
+      }))
+      sessionStorage.setItem("ondo-b-premium-seeded", "1")
+    }
     if (injected) (window as Window & { __ONDO_B_QA__?: typeof injected }).__ONDO_B_QA__ = injected
   }, { key: DEVICE_KEY, language: locale, injected: qa })
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
@@ -107,6 +110,7 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   const restoredActivity = page.getByTestId("wallet-activity-receipt")
   await expect(restoredActivity).toContainText("Paid 19 OOKRW Test")
   await expect(restoredActivity).toContainText("ONDO-LOCAL-20260825-001")
+  await restoredActivity.locator("summary").click()
   await restoredActivity.getByTestId("wallet-activity-refund").click()
   await expect(page.getByTestId("wallet-balance")).toContainText("60")
   await expect(restoredActivity).toContainText("Refunded")

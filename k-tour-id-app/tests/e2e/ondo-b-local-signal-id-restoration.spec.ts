@@ -39,11 +39,14 @@ async function openCanonicalSignal(page: Page) {
   return { place, venueId: venueId! }
 }
 
-async function acknowledgeAndApprove(page: Page, check: "Person" | "19+") {
+async function runEligibility(page: Page, outcome: "success" | "failure" | "unavailable" | "expired" = "success") {
+  await page.evaluate((eligibility) => {
+    (window as Window & { __ONDO_B_QA__?: { eligibility?: typeof eligibility } }).__ONDO_B_QA__ = { eligibility }
+  }, outcome)
   const walkthrough = page.getByTestId("ondo-b-local-check-walkthrough")
-  const boundary = walkthrough.getByTestId("local-check-boundary-continue")
-  if (await boundary.count()) await boundary.click()
-  await walkthrough.getByRole("button", { name: `Approve ${check} walkthrough`, exact: true }).click()
+  await walkthrough.getByTestId("local-check-boundary-continue").click()
+  if (outcome === "success") await expect(walkthrough).toBeHidden()
+  else await expect(walkthrough.getByTestId("local-check-result")).toHaveAttribute("data-result", outcome)
   return walkthrough
 }
 
@@ -72,14 +75,12 @@ test("B P0 returns once to the exact Local Signal draft/place and persists only 
   await draft.getByTestId("local-signal-person-check").click()
 
   const walkthrough = page.getByTestId("ondo-b-local-check-walkthrough")
-  await expect(walkthrough).toContainText("No camera scan, data transmission, provider call, DID, or real verifiable credential occurs")
-  await walkthrough.getByTestId("local-check-boundary-continue").click()
-  await expect(walkthrough.getByTestId("consent-requester")).toContainText("ONDO Local Signals")
-  await expect(walkthrough.getByTestId("consent-purpose")).toContainText("exact draft")
-  await expect(walkthrough.getByTestId("consent-minimum")).toContainText("Person walkthrough completed")
-  await expect(walkthrough.getByTestId("consent-retention")).toContainText("No result, claim, DID, profile, or credential is saved")
-  await walkthrough.getByRole("button", { name: "Approve Person walkthrough", exact: true }).click()
-  await walkthrough.getByRole("button", { name: "Return completed", exact: true }).click()
+  await expect(walkthrough).toContainText("No identity provider is connected and no credential is created")
+  await expect(walkthrough.getByTestId("consent-requester")).toContainText("ONDO Travel Pass")
+  await expect(walkthrough.getByTestId("consent-purpose")).toContainText("return to the note")
+  await expect(walkthrough.getByTestId("consent-minimum")).toContainText("Person — separate from age")
+  await expect(walkthrough.getByTestId("consent-retention")).toContainText("No name, document, birth date, profile, or credential is saved")
+  await runEligibility(page)
 
   await expect(draft).toHaveAttribute("data-gate-return", "success")
   await expect(draft.getByRole("textbox", { name: "Optional local note" })).toHaveValue("Window seats are quiet before lunch.")
@@ -105,18 +106,17 @@ test("B P0 preserves the draft through cancel, failure, unavailable, expired, an
 
   await draft.getByTestId("local-signal-person-check").click()
   let walkthrough = page.getByTestId("ondo-b-local-check-walkthrough")
-  await walkthrough.getByTestId("local-check-boundary-continue").click()
-  await walkthrough.getByRole("button", { name: "Decline and return to draft", exact: true }).click()
+  await walkthrough.getByRole("button", { name: "Not now — return to note", exact: true }).click()
   await expect(draft).toHaveAttribute("data-gate-return", "cancel")
   await expect(note).toHaveValue("Keep this exact draft")
 
   for (const outcome of ["failure", "unavailable", "expired"] as const) {
-    await draft.getByRole("button", { name: "Retry Person walkthrough", exact: true }).click()
-    walkthrough = await acknowledgeAndApprove(page, "Person")
-    await walkthrough.getByTestId(`local-check-return-${outcome}`).click()
+    await draft.getByTestId("local-signal-person-check").click()
+    walkthrough = await runEligibility(page, outcome)
+    await walkthrough.getByRole("button", { name: "Return without checking", exact: true }).click()
     await expect(draft).toHaveAttribute("data-gate-return", outcome)
     await expect(note).toHaveValue("Keep this exact draft")
-    await expect(draft.getByRole("button", { name: "Retry Person walkthrough", exact: true })).toBeFocused()
+    await expect(draft.getByTestId("local-signal-person-check")).toBeFocused()
   }
 })
 
@@ -125,17 +125,16 @@ test("B P0 keeps Person and 19+ outcomes independent and out of storage", async 
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-id").click()
   const identity = page.getByTestId("ondo-b-traveler-id")
-  await identity.getByTestId("traveler-id-person").getByRole("button", { name: "Open Person walkthrough" }).click()
-  let walkthrough = await acknowledgeAndApprove(page, "Person")
-  await walkthrough.getByRole("button", { name: "Return completed", exact: true }).click()
-  await expect(identity.getByTestId("traveler-id-person")).toContainText("Completed in this session")
+  await identity.getByTestId("traveler-id-person").getByRole("button", { name: "Check Person" }).click()
+  await runEligibility(page)
+  await expect(identity.getByTestId("traveler-id-person")).toContainText("Ready this session")
   await expect(identity.getByTestId("traveler-id-age")).toContainText("Not checked")
 
-  await identity.getByTestId("traveler-id-age").getByRole("button", { name: "Open 19+ walkthrough" }).click()
-  walkthrough = await acknowledgeAndApprove(page, "19+")
-  await walkthrough.getByTestId("local-check-return-expired").click()
-  await expect(identity.getByTestId("traveler-id-age")).toContainText("Expired walkthrough return")
-  await expect(identity.getByTestId("traveler-id-person")).toContainText("Completed in this session")
+  await identity.getByTestId("traveler-id-age").getByRole("button", { name: "Check 19+" }).click()
+  const walkthrough = await runEligibility(page, "expired")
+  await walkthrough.getByRole("button", { name: "Return without checking", exact: true }).click()
+  await expect(identity.getByTestId("traveler-id-age")).toContainText("Expired")
+  await expect(identity.getByTestId("traveler-id-person")).toContainText("Ready this session")
 
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}") as Record<string, unknown>, DEVICE_KEY)
   expect(JSON.stringify(stored)).not.toMatch(/personCheck|ageCheck|claim|credential|did|profile|outcome/i)
