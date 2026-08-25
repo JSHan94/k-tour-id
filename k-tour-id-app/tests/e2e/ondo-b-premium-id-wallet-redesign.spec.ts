@@ -75,6 +75,10 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   const { offer, place } = await openContextualOffer(page)
   await expect(offer).toContainText("OOKRW Test")
   await expect(offer).toContainText("Test quote")
+  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-benefit-recommendation", "recommended")
+  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "available")
+  await expect(offer.getByTestId("commerce-benefit-eligibility")).toContainText("₩22,000 minimum met")
+  await offer.getByTestId("benefit-accept").click()
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
   await expect(offer.getByTestId("payment-confirm")).toContainText("Connect test wallet to pay")
   await offer.getByTestId("payment-confirm").click()
@@ -114,6 +118,7 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
 test("QA injection creates recovery without exposing outcome controls", async ({ page }) => {
   await seed(page, "en", { payment: "failure" })
   const { offer } = await openContextualOffer(page)
+  await offer.getByTestId("benefit-accept").click()
   await offer.getByTestId("payment-confirm").click()
   await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()

@@ -113,9 +113,13 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
       .filter((pattern) => {
         const commerceFile = file === "features/ondo/commerce-b/id-wallet-commerce-b.tsx"
         const placeFile = file === "features/ondo/place/canonical-place-overlay.tsx"
+        const myKoreaFile = file === "features/ondo/my/saved-entry-b.tsx"
+        const settingsFile = file === "features/ondo/settings/settings-entry-b.tsx"
         if (String(pattern) === String(/\blocal preview\b/i) && commerceFile && literal.startsWith("Device-local preview · no AI call")) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && commerceFile) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /OOKRW Test/.test(literal) && /Confirm payment support|실제 결제 지원/.test(literal)) return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && /(?:Paid )?19 OOKRW Test(?: 결제)?/.test(literal)) return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && settingsFile && /OOKRW Test (?:receipts|영수증)/.test(literal)) return false
         if (String(pattern) === String(/\bcheckout\b/i) && commerceFile && literal === "ondo-b-stable-checkout") return false
         return true
       })

@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
 import {
   createStableCommerceBState,
   stableCommerceBenefitPolicyB,
@@ -36,3 +38,12 @@ test("B-BENEFIT-002 accept or decline never mutates money, receipts, or ledgers 
   expect(stableCommerceQuoteDebitB(declined)).toBe(22)
 })
 
+test("B-BENEFIT-003 consumer offer exposes recommendation decisions without outcome controls", () => {
+  const commerce = readFileSync(resolve(process.cwd(), "features/ondo/commerce-b/id-wallet-commerce-b.tsx"), "utf8")
+  for (const testId of ["commerce-benefit-eligibility", "benefit-accept", "benefit-decline"]) {
+    expect(commerce).toContain(`data-testid=\"${testId}\"`)
+  }
+  expect(commerce).toContain("Recommended for this meal")
+  expect(commerce).toContain("no AI or provider call")
+  expect(commerce).not.toContain('data-testid="benefit-outcomes"')
+})
