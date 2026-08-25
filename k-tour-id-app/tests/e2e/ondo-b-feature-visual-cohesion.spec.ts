@@ -56,8 +56,9 @@ test("Tables stays polished and closable at 360, 390, and 430 CSS pixels", async
     const entry = page.getByTestId("tables-entry")
     await expect(entry.getByRole("heading", { name: "Pulse Tables" })).toBeVisible()
     await expectNoHorizontalOverflow(entry)
-    await page.locator("[data-table-state='TABLE-ENDED']").scrollIntoViewIfNeeded()
-    await expect(page.locator("[data-table-state='TABLE-ENDED']")).toBeVisible()
+    const activeCard = page.getByTestId(`table-card-${TABLE_ID}`)
+    await activeCard.scrollIntoViewIfNeeded()
+    await expect(activeCard).toBeVisible()
 
     await page.getByTestId(`table-open-${TABLE_ID}`).click()
     const detail = page.getByTestId("table-detail")
