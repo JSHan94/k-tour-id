@@ -128,6 +128,8 @@ export function TravelerIdEntryB() {
           <p>{copy.passBody}</p>
         </section>
 
+        <IdWalletCommerceB />
+
         <section className={styles.readiness} data-testid="travel-pass-status" aria-labelledby="travel-readiness-title">
           <div className={styles.sectionHeading}>
             <div><h2 id="travel-readiness-title">{copy.readiness}</h2><p>{copy.readinessBody}</p></div>
@@ -162,8 +164,6 @@ export function TravelerIdEntryB() {
             </article>
           </div>
         </section>
-
-        <IdWalletCommerceB />
 
         <footer className={styles.footer}>
           <details>

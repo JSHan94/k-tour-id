@@ -353,8 +353,8 @@ export function CanonicalPlaceOverlay() {
         <p>{copy.sourceBoundary}</p>
       </section>
       <div className={styles.peekActions}>
-        <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
-        <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>
+        <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="primary"><Navigation size={17} />{copy.directions}</a>
+        <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="secondary">{copy.details}<ChevronRight size={17} /></button>
       </div>
     </div>
   )
@@ -433,18 +433,18 @@ export function CanonicalPlaceOverlay() {
             </section>
           ) : null}
 
-          <section className={styles.localSignalAction}>
-            <button type="button" onClick={() => actions.openLocalSignal(currentVenueId)} data-testid="canonical-local-signal-open">
-              <NotebookPen size={18} aria-hidden="true" />
-              <span><strong>{localSignalPosted ? copy.localSignalPosted : copy.localSignal}</strong><small>{copy.localSignalBoundary}</small></span>
-              <ChevronRight size={17} aria-hidden="true" />
-            </button>
-          </section>
-
           <section className={styles.demoOfferAction} aria-label={copy.demoOffer}>
             <button type="button" onClick={() => actions.openMealBenefitFromPlace(currentVenueId)} data-testid="canonical-meal-benefit-open">
               <WalletCards size={18} aria-hidden="true" />
               <span><strong>{copy.demoOffer}</strong><small>{copy.demoOfferBody}</small></span>
+              <ChevronRight size={17} aria-hidden="true" />
+            </button>
+          </section>
+
+          <section className={styles.localSignalAction}>
+            <button type="button" onClick={() => actions.openLocalSignal(currentVenueId)} data-testid="canonical-local-signal-open">
+              <NotebookPen size={18} aria-hidden="true" />
+              <span><strong>{localSignalPosted ? copy.localSignalPosted : copy.localSignal}</strong><small>{copy.localSignalBoundary}</small></span>
               <ChevronRight size={17} aria-hidden="true" />
             </button>
           </section>

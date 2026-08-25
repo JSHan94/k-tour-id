@@ -395,3 +395,19 @@
   .persona,
   .personaSelected { transition: none; }
 }
+
+/* Mobile-first value step: product promise and both exits remain above the
+   fold while the same source truth stays visible in a quieter compact grid. */
+@media (max-width: 430px) {
+  .layer { padding: calc(12px + env(safe-area-inset-top)) 18px calc(16px + env(safe-area-inset-bottom)); }
+  .value { min-height: calc(100dvh - 88px); justify-content: flex-start; padding: 18px 0 0; }
+  .seal { width: 52px; height: 52px; margin-bottom: 16px; }
+  .value h1 { max-width: 340px; font-size: clamp(27px, 8.2vw, 34px); line-height: 1.1; }
+  .lead { margin: 12px 0 14px; font-size: 13px; line-height: 1.5; }
+  .sourceIntro { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; border: 0; }
+  .sourceIntro p { gap: 3px; padding: 9px; border: 1px solid #e3ded7; border-radius: 13px; background: rgb(255 255 255 / 66%); }
+  .sourceIntro strong { font-size: 12px; }
+  .sourceIntro span { display: -webkit-box; overflow: hidden; font-size: 12px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+  .actions { gap: 4px; padding-top: 13px; }
+  .primary, .secondary { min-height: 48px; }
+}

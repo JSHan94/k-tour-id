@@ -185,3 +185,31 @@
   .sheet,
   .spinner { animation: none; backdrop-filter: none; }
 }
+
+/* Payment keeps the existing consent and state machine, but the current
+   action stays reachable like a real checkout rather than living below a
+   technical document. */
+@media (max-width: 699px) {
+  .root { margin-top: 16px; }
+  .heading h2 { font-size: 28px; }
+  .heading > span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .balanceCard { min-height: 148px; margin-top: 10px; padding: 14px; }
+  .balanceCard > strong { margin-top: 12px; font-size: 38px; }
+  .balanceAction { margin-top: 4px; }
+  .offerBody { padding: 22px 14px calc(94px + env(safe-area-inset-bottom)); }
+  .offerHero h2 { font-size: clamp(29px, 8.8vw, 37px); }
+  .quote { margin-top: 18px; }
+  .offerBenefit { margin-top: 9px; padding: 12px; }
+  .consentCard { margin-top: 9px; padding: 12px; }
+  .testDetails { margin-top: 8px; }
+  .payButton {
+    position: fixed;
+    z-index: 350;
+    right: 14px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 14px;
+    width: auto;
+    min-height: 56px;
+    box-shadow: 0 16px 40px rgb(50 29 44 / 28%), 0 0 0 8px rgb(248 243 238 / 90%);
+  }
+}

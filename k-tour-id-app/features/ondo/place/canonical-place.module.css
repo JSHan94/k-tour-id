@@ -139,3 +139,92 @@
   .pulsePanel { padding: 13px; }
   .pulsePanelBody > dl { grid-template-columns: 1fr; }
 }
+
+/* Visual-only product polish: the peek is a decision summary, not a second
+   detail page. Existing truth and actions stay mounted; dense explanations
+   remain fully available from Official details. */
+.peek {
+  box-sizing: border-box;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  max-height: 46%;
+  padding: 8px 14px 12px;
+  overflow-y: auto;
+  border-color: rgb(50 39 32 / 14%);
+  border-radius: 24px;
+  background: rgb(255 254 251 / 98%);
+  box-shadow: 0 0 0 100vmax rgb(35 29 25 / 7%), 0 22px 62px rgb(35 29 25 / 18%), inset 0 1px 0 rgb(255 255 255 / 90%);
+  clip-path: inset(-100vmax -100vmax 0 -100vmax);
+  animation: peekEnter 200ms cubic-bezier(.2, .72, .24, 1) both;
+}
+@keyframes peekEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.grabber { margin-bottom: 6px; background: #cec7bf; }
+.close { top: -2px; background: rgb(255 254 251 / 92%); border-radius: 14px; }
+.meta { min-width: 0; min-height: 18px; gap: 7px; margin-right: 46px; overflow: hidden; white-space: nowrap; }
+.meta span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta i { flex: 0 0 auto; white-space: nowrap; }
+.peek h2 {
+  display: -webkit-box;
+  margin: 5px 44px 0 0;
+  overflow: hidden;
+  font-size: 22px;
+  line-height: 1.18;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+.nameProvenance { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 7px; margin: 2px 44px 7px 0; }
+.nameProvenance span { display: none; }
+.nameProvenance strong,
+.nameProvenance small { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulsePeek { gap: 1px; margin: 0 0 6px; padding: 7px 0 7px 10px; }
+.pulsePeek strong { font-size: 13px; }
+.pulsePeek small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pulsePeek p,
+.pulsePeek em {
+  display: block;
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: #706961;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recordSummary { display: none; }
+.recordSummary strong { white-space: nowrap; }
+.recordSummary p { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.peekActions { margin-top: 8px; }
+.peekActions a,
+.peekActions button { min-height: 48px; border-radius: 15px; }
+.peekActions a { border-color: #20201e; background: #20201e; color: #fff; box-shadow: 0 10px 22px rgb(34 33 31 / 14%); }
+.peekActions button { border: 1px solid #dad7d1; background: #fff; color: #22211f; }
+
+@media (max-width: 340px) {
+  .peek { right: 8px; bottom: 8px; left: 8px; max-height: 46%; padding-inline: 12px; border-radius: 21px; }
+  .peek h2 { font-size: 20px; }
+  .nameProvenance { margin-bottom: 5px; }
+  .pulsePeek { padding-block: 5px; }
+  .peekActions { gap: 6px; margin-top: 6px; }
+  .peekActions a,
+  .peekActions button { font-size: 12px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .peek { top: 8px; right: 8px; bottom: 8px; left: auto; width: min(408px, calc(100% - 16px)); max-height: none; transform: none; }
+  @keyframes peekEnter {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+}
+
+@media (min-width: 700px) and (min-height: 501px) {
+  .peek { right: 16px; bottom: 16px; left: auto; width: min(460px, calc(100% - 32px)); max-height: min(520px, calc(100% - 32px)); transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek { animation: none; }
+}

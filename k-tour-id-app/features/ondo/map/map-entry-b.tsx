@@ -898,14 +898,15 @@ export function MapEntryB() {
         instance.on("mouseleave", "ondo-points", () => { instance.getCanvas().style.cursor = "" })
         pulseInteractiveLayers.forEach((layerId) => instance.on("mouseleave", layerId, () => { instance.getCanvas().style.cursor = "" }))
         if (filteredMapRef.current) focusFilteredVenues(instance, venues)
-        if (loadDeadline != null) window.clearTimeout(loadDeadline)
-        if (!failed) {
+        instance.once("idle", () => {
+          if (disposed || failed) return
+          if (loadDeadline != null) window.clearTimeout(loadDeadline)
           setMapState("ready")
           if (retryFocusPending.current) {
             retryFocusPending.current = false
             window.setTimeout(() => document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")?.focus({ preventScroll: true }), 0)
           }
-        }
+        })
       })
     }).catch(failMap)
     return () => {

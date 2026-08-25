@@ -184,3 +184,32 @@
   .detail { scroll-behavior: auto; }
   .openButton, .primary { transition: none; }
 }
+
+/* Mobile detail is a decision sheet. Keep all six plan facts, but compact
+   them into a scannable grid and pin the existing Join action to the sheet. */
+@media (max-width: 759px) {
+  .detailBody { gap: 11px; padding: 15px 15px calc(96px + env(safe-area-inset-bottom)); }
+  .detailBody > h2 { font-size: clamp(25px, 7.5vw, 32px); }
+  .official { gap: 3px; padding: 10px 12px; }
+  .official span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+  .plan { gap: 8px; padding: 12px; }
+  .plan dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 10px; }
+  .plan dl > div { display: grid; grid-template-columns: 1fr; gap: 2px; }
+  .plan dt { font-size: 12px; }
+  .plan dd { font-size: 12px; line-height: 1.35; }
+  .ageNotice { gap: 7px; padding: 9px 10px; font-size: 12px; line-height: 1.4; }
+  .joinPanel > .primary {
+    position: fixed;
+    z-index: 114;
+    right: 15px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    left: 15px;
+    width: auto;
+    min-height: 54px;
+    box-shadow: 0 14px 36px rgb(86 42 32 / 28%), 0 0 0 8px rgb(252 250 246 / 92%);
+  }
+}
+
+@media (min-width: 760px) {
+  .joinPanel > .primary { position: sticky; bottom: 12px; }
+}
