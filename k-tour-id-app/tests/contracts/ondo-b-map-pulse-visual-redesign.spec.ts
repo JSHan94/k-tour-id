@@ -28,9 +28,10 @@ test.describe("ONDO B map Pulse visual contract", () => {
       "prefers-reduced-motion: reduce",
     ]) expect(map).toContain(token)
 
-    expect(map).toContain("const duration = 220")
-    expect(map).toContain('"text-size": ["interpolate", ["linear"], ["zoom"], 9, 12')
+    expect(map).toContain("const duration = 240")
     expect(map).toContain('"text-size": 12')
+    expect(map).toContain('data-pulse-visual-grammar="borderless-aura-core-label"')
+    expect(map).toContain('data-selected-pulse-grammar="one-shot-halo-place-capsule"')
     expect(map).toContain('id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse"')
     expect(map).toContain('id: "ondo-selected-pulse-rising", type: "circle", source: "ondo-pulse"')
     expect(map).toContain('id: "ondo-selected-pulse-warming", type: "circle", source: "ondo-pulse"')

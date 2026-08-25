@@ -29,8 +29,9 @@ test("B-P0-SIGNAL-002 the local walkthrough is truthful, consentful, synchronous
   for (const outcome of ['"success"', '"cancel"', '"failure"', '"unavailable"', '"expired"']) {
     expect(walkthrough).toContain(outcome)
   }
-  expect(walkthrough).toContain("No camera scan, data transmission, provider call, DID, or real verifiable credential occurs")
-  expect(walkthrough).toContain("카메라 스캔·데이터 전송·공급자 호출·DID·실제 검증가능자격증명은 일어나지 않습니다")
+  expect(walkthrough).toContain("No identity provider is connected and no credential is created")
+  expect(walkthrough).toContain("연결된 신원 공급자나 생성되는 자격증명은 없습니다")
+  expect(walkthrough).toContain("No name, document, birth date, profile, or credential is saved")
   expect(walkthrough).toContain("useModalIsolation")
   expect(walkthrough).not.toMatch(/setTimeout|fetch\(|XMLHttpRequest|WebSocket|URLSearchParams|crypto\.|Math\.random|Date\.now/)
   expect(walkthrough).not.toMatch(/from\s+["'][^"']*(?:identity\/identity-entry|identity\/gate-overlay|ondo-provider|services\/mock|mock-data)/)

@@ -84,9 +84,9 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
 
     expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|demo-journey|mock-data|features\/ondo\/(?:commerce\/|identity\/|labs\/|rewards\/|trust\/|fixtures\/)/i)
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
-    expect(visibleSource).toMatch(/ONDO demo meal offer|ONDO 데모 식사 오퍼/)
-    expect(visibleSource).toMatch(/no (?:AI|payment provider|chain|backend).*(?:call|request)|AI·결제 공급자·체인·백엔드.*(?:호출|요청)/i)
-    expect(visibleSource).toMatch(/not official LOCALDATA merchant payment support|LOCALDATA 공식 가맹점 결제 지원.*아님/i)
+    expect(visibleSource).toContain("OOKRW Test is a non-live product balance")
+    expect(visibleSource).toContain("This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money")
+    expect(visibleSource).toContain("Confirm payment support with the venue")
   })
 
   test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {

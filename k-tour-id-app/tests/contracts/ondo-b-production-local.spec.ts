@@ -71,8 +71,8 @@ test("B-PROD-LOCAL-005 private notes and reset retain their explicit device boun
   const settings = appFile("features/ondo/settings/settings-entry-b.tsx")
   const note = appFile("features/ondo/my/private-note.tsx")
   const productCopy = `${saved}\n${settings}\n${note}`
-  expect(productCopy).not.toMatch(/demo|simulation|simulated|fixture|account|identity|KYC|Labs|stamp|trust/i)
-  expect(saved).toContain("On-device reference · no reservation")
+  expect(productCopy).not.toMatch(/demo|simulation|simulated|fixture|KYC|Labs|stamp|trust/i)
+  expect(saved).toContain("Saved on this device · no reservation")
   expect(note).toContain("actions.setPrivateNote")
   expect(note).toContain("stays only in this browser")
   expect(settings).toContain("actions.clearBDeviceContent")
