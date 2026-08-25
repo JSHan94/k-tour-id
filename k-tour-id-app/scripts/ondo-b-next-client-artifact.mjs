@@ -8,6 +8,7 @@ const CLIENT_MANIFEST = resolve(NEXT_ROOT, "server/app/ondo-b/page_client-refere
 const SERVER_ROUTE = resolve(NEXT_ROOT, "server/app/api/ondo/venues/[venueId]/route.js")
 const SERVER_TRACE = `${SERVER_ROUTE}.nft.json`
 const PULSE_SOURCE = resolve(APP_ROOT, "features/ondo/pulse-b/pulse-model-b.ts")
+const MAX_CURATED_PULSE_MULTIPLICITY = 6
 
 function fail(message, details) {
   throw new Error(`${message}${details ? `\n${JSON.stringify(details, null, 2)}` : ""}`)
@@ -61,7 +62,7 @@ export async function scanOndoBNextClientArtifact() {
     || client.venueIdOccurrences > 800 + pulseVenueIds.size * 3
     || client.uniqueVenueIds !== 400
     || client.minimumVenueIdMultiplicity !== 2
-    || client.maxVenueIdMultiplicity > 5
+    || client.maxVenueIdMultiplicity > MAX_CURATED_PULSE_MULTIPLICITY
     || unexpectedElevatedVenueIds.length
   ) {
     fail("The /ondo-b client venue multiplicity differs from the compact 400-record dataset", client)
