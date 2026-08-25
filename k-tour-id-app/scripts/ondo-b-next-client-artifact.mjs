@@ -7,13 +7,17 @@ const NEXT_ROOT = resolve(APP_ROOT, ".next")
 const CLIENT_MANIFEST = resolve(NEXT_ROOT, "server/app/ondo-b/page_client-reference-manifest.js")
 const SERVER_ROUTE = resolve(NEXT_ROOT, "server/app/api/ondo/venues/[venueId]/route.js")
 const SERVER_TRACE = `${SERVER_ROUTE}.nft.json`
+const PULSE_SOURCE = resolve(APP_ROOT, "features/ondo/pulse-b/pulse-model-b.ts")
 
 function fail(message, details) {
   throw new Error(`${message}${details ? `\n${JSON.stringify(details, null, 2)}` : ""}`)
 }
 
 export async function scanOndoBNextClientArtifact() {
-  const manifestSource = await readFile(CLIENT_MANIFEST, "utf8")
+  const [manifestSource, pulseSource] = await Promise.all([
+    readFile(CLIENT_MANIFEST, "utf8"),
+    readFile(PULSE_SOURCE, "utf8"),
+  ])
   const context = { globalThis: {} }
   runInNewContext(manifestSource, context)
   const manifest = context.globalThis.__RSC_MANIFEST?.["/ondo-b/page"]
@@ -31,13 +35,20 @@ export async function scanOndoBNextClientArtifact() {
   const venueIds = [...clientSource.matchAll(/mois-[0-9a-f]+/g)].map((match) => match[0])
   const venueIdCounts = new Map()
   for (const venueId of venueIds) venueIdCounts.set(venueId, (venueIdCounts.get(venueId) ?? 0) + 1)
+  const pulseVenueIds = new Set([...pulseSource.matchAll(/mois-[0-9a-f]+/g)].map((match) => match[0]))
+  const unexpectedElevatedVenueIds = [...venueIdCounts]
+    .filter(([venueId, count]) => count > 2 && !pulseVenueIds.has(venueId))
+    .map(([venueId]) => venueId)
 
   const client = {
     files: chunks.length,
     decodedBytes: chunks.reduce((sum, chunk) => sum + chunk.bytes, 0),
     venueIdOccurrences: venueIds.length,
     uniqueVenueIds: venueIdCounts.size,
+    minimumVenueIdMultiplicity: Math.min(...venueIdCounts.values()),
     maxVenueIdMultiplicity: Math.max(0, ...venueIdCounts.values()),
+    curatedPulseVenueIds: pulseVenueIds.size,
+    unexpectedElevatedVenueIds,
   }
   if (clientSource.includes("sourceRecordDigest") || clientSource.includes('"sourceIds"')) {
     fail("Full canonical venue details leaked into the /ondo-b client chunks", client)
@@ -45,7 +56,14 @@ export async function scanOndoBNextClientArtifact() {
   if (!clientSource.includes("UNKNOWN_FALLBACK_TO_KO") || !clientSource.includes("MOIS_LOCALDATA_GENERAL_RESTAURANTS")) {
     fail("Compact canonical venue data is absent from the /ondo-b client chunks", client)
   }
-  if (client.venueIdOccurrences !== 800 || client.uniqueVenueIds !== 400 || client.maxVenueIdMultiplicity !== 2) {
+  if (
+    client.venueIdOccurrences < 800
+    || client.venueIdOccurrences > 800 + pulseVenueIds.size * 3
+    || client.uniqueVenueIds !== 400
+    || client.minimumVenueIdMultiplicity !== 2
+    || client.maxVenueIdMultiplicity > 5
+    || unexpectedElevatedVenueIds.length
+  ) {
     fail("The /ondo-b client venue multiplicity differs from the compact 400-record dataset", client)
   }
 

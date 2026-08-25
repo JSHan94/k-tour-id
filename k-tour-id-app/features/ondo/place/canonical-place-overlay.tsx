@@ -6,7 +6,8 @@ import { ArrowLeft, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, Note
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
-import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
+import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, openBDiscoveryVenue, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
+import { PULSE_DISCLOSURE, pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
@@ -36,7 +37,7 @@ const COPY = {
     removeSaved: "Remove from Saved",
     localSignal: "Add a Local Signal",
     localSignalPosted: "Update Local Signal on this device",
-    localSignalBoundary: "Your draft stays in memory. Only a coarse posted marker can be saved on this device.",
+    localSignalBoundary: "The note is discarded; selected tag IDs, post time, and place marker stay on this device as your Pulse evidence.",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -47,6 +48,21 @@ const COPY = {
     sourceSnapshot: "Source snapshot",
     sourceRecord: "LOCALDATA management ID",
     sourceReference: "Source reference",
+    pulseSignals: "walkthrough signals",
+    pulseLimited: "Explore · limited signals",
+    pulseConfidence: "Confidence",
+    pulseFreshness: "Freshness",
+    pulseEvidence: "Why this Pulse",
+    pulseHigh: "High",
+    pulseMedium: "Medium",
+    pulseLow: "Low",
+    pulseLimitedConfidence: "Limited",
+    pulseFixedSnapshot: "Fixed walkthrough snapshot",
+    pulseGrowingSnapshot: "Growing fixed walkthrough snapshot",
+    pulseTooHot: "Too hot?",
+    pulseTooHotBody: "Try a calmer place from the same curated walkthrough set.",
+    pulseAlternative: "Open calmer place",
+    pulseLocalEvidence: "On this device",
   },
   ko: {
     active: "공식 LOCALDATA 기록",
@@ -72,7 +88,7 @@ const COPY = {
     removeSaved: "저장 취소",
     localSignal: "로컬 시그널 남기기",
     localSignalPosted: "이 기기의 로컬 시그널 업데이트",
-    localSignalBoundary: "작성 내용은 메모리에만 머물며, 간단한 게시 표시만 이 기기에 저장될 수 있어요.",
+    localSignalBoundary: "메모는 폐기하고 선택한 태그 ID·게시 시각·장소 표시만 이 기기의 Pulse 근거로 남겨요.",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -83,6 +99,21 @@ const COPY = {
     sourceSnapshot: "출처 스냅샷",
     sourceRecord: "LOCALDATA 관리번호",
     sourceReference: "출처 참조",
+    pulseSignals: "둘러보기 신호",
+    pulseLimited: "탐색 · 신호 부족",
+    pulseConfidence: "신뢰도",
+    pulseFreshness: "최신성",
+    pulseEvidence: "이 Pulse의 근거",
+    pulseHigh: "높음",
+    pulseMedium: "보통",
+    pulseLow: "낮음",
+    pulseLimitedConfidence: "신호 부족",
+    pulseFixedSnapshot: "고정 둘러보기 스냅샷",
+    pulseGrowingSnapshot: "성장 중인 고정 둘러보기 스냅샷",
+    pulseTooHot: "너무 핫한가요?",
+    pulseTooHotBody: "같은 선별 둘러보기 세트에서 더 여유로운 장소를 살펴보세요.",
+    pulseAlternative: "더 여유로운 장소 열기",
+    pulseLocalEvidence: "이 기기에서",
   },
 } as const
 
@@ -106,6 +137,16 @@ function sourceDate(value: string | null | undefined, fallback: string) {
   if (!value) return fallback
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? fallback : parsed.toISOString().slice(0, 10)
+}
+
+function localTagLabel(tag: PulseLocalSignalTagB, locale: "en" | "ko") {
+  const labels = {
+    calm_now: { en: "Calm right now", ko: "지금은 여유로움" },
+    lively_now: { en: "Lively right now", ko: "지금은 활기참" },
+    quick_stop: { en: "Good for a quick stop", ko: "빠르게 들르기 좋음" },
+    welcoming: { en: "Welcoming service", ko: "친절한 응대" },
+  } as const
+  return labels[tag][locale]
 }
 
 export function CanonicalPlaceOverlay() {
@@ -196,6 +237,15 @@ export function CanonicalPlaceOverlay() {
   const saved = state.savedVenueIds.includes(venue.id) || state.saveStatusByVenue[venue.id] === "SAV-SAVED"
   const saveStatus = state.saveStatusByVenue[venue.id] ?? "SAV-IDLE"
   const localSignalPosted = state.localSignalPostedVenueIds.includes(venue.id)
+  const pulse = pulseForVenue(venue.id, state.localPulseEvidenceByVenue[venue.id] ?? null)
+  const pulseAlternatives = pulseAlternativesForVenue(venue.id)
+  const pulseTitle = pulse.score == null
+    ? `Pulse · ${pulseLevelLabel(pulse.level, locale)}`
+    : `Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)}`
+  const confidence = ({ high: copy.pulseHigh, medium: copy.pulseMedium, low: copy.pulseLow, limited: copy.pulseLimitedConfidence } as const)[pulse.confidence]
+  const fixedSnapshot = pulse.updatedAt
+    ? `${pulse.freshness === "growing" ? copy.pulseGrowingSnapshot : copy.pulseFixedSnapshot} · ${pulse.updatedAt.slice(0, 16).replace("T", " ")} UTC`
+    : copy.pulseLimited
   const currentVenueId = venue.id
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
@@ -253,13 +303,26 @@ export function CanonicalPlaceOverlay() {
     else actions.saveVenue(currentVenueId)
   }
 
+  function openPulseAlternative(alternativeVenueId: string) {
+    openBDiscoveryVenue(alternativeVenueId)
+    actions.recordRecentVenue(alternativeVenueId)
+    actions.setSurface({ kind: "venue", venueId: alternativeVenueId })
+    setExpanded(false)
+  }
+
   if (!expanded) return (
-    <div ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
+    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>
       <h2>{name.officialName}</h2>
       <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
+      <section className={styles.pulsePeek} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
+        <strong>{pulseTitle}</strong>
+        <small>{pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot}</small>
+        <p>{PULSE_DISCLOSURE[locale]}</p>
+        {pulse.localEvidence ? <em data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</em> : null}
+      </section>
       <section className={styles.recordSummary} data-testid="canonical-place-source-summary">
         <strong>{copy.source}</strong>
         <p>{copy.sourceBoundary}</p>
@@ -272,7 +335,7 @@ export function CanonicalPlaceOverlay() {
   )
 
   return (
-    <div ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus}>
+    <div id="canonical-place-dialog" ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus}>
       <button type="button" className={styles.backdrop} onClick={closeDetails} aria-label={copy.back} tabIndex={-1} />
       <article ref={detailRef} className={styles.detail} onKeyDown={handleDetailKeyDown}>
         <header>
@@ -292,6 +355,37 @@ export function CanonicalPlaceOverlay() {
           ) : (
             <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
           )}
+
+          <section className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
+            <header>
+              <div><span>ONDO PULSE</span><h3>{pulseTitle}</h3></div>
+              <i data-level={pulse.level}>{pulseLevelLabel(pulse.level, locale)}</i>
+            </header>
+            <p className={styles.pulseBoundary}>{PULSE_DISCLOSURE[locale]}</p>
+            <dl>
+              {pulse.score == null ? null : <div data-testid="pulse-score"><dt>Pulse</dt><dd>{pulse.score}°</dd></div>}
+              {pulse.signalCount == null ? null : <div data-testid="pulse-signal-count"><dt>{copy.pulseSignals}</dt><dd>{pulse.signalCount}</dd></div>}
+              <div data-testid="pulse-confidence"><dt>{copy.pulseConfidence}</dt><dd>{confidence}</dd></div>
+              <div><dt>{copy.pulseFreshness}</dt><dd>{fixedSnapshot}</dd></div>
+            </dl>
+            <div className={styles.pulseEvidence} data-testid="pulse-evidence">
+              <strong>{copy.pulseEvidence}</strong>
+              <ul>{pulse.evidence.map((item, index) => <li key={`${item.origin}-${index}`} data-origin={item.origin}>{item.label[locale]}</li>)}</ul>
+              {pulse.localEvidence ? <p data-testid="pulse-local-device-evidence"><b>{copy.pulseLocalEvidence}</b> · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")} · {pulse.localEvidence.postedAt.slice(0, 16).replace("T", " ")} UTC</p> : null}
+            </div>
+            {pulseAlternatives.length ? (
+              <section className={styles.pulseAlternatives} data-testid="pulse-too-hot">
+                <h4>{copy.pulseTooHot}</h4>
+                <p>{copy.pulseTooHotBody}</p>
+                <div>{pulseAlternatives.map((alternative) => {
+                  const alternativeVenue = canonicalMapVenueById(alternative.venueId)
+                  if (!alternativeVenue) return null
+                  const alternativeName = venueNamePresentation(alternativeVenue.name.ko, locale).officialName
+                  return <button key={alternative.venueId} type="button" data-testid="pulse-alternative" data-venue-id={alternative.venueId} aria-label={`${copy.pulseAlternative}: ${alternativeName}, Pulse ${alternative.score}°, ${pulseLevelLabel(alternative.level, locale)}`} onClick={() => openPulseAlternative(alternative.venueId)}><span><strong>{alternativeName}</strong><small>Pulse {alternative.score}° · {pulseLevelLabel(alternative.level, locale)}</small></span><ChevronRight size={17} aria-hidden="true" /></button>
+                })}</div>
+              </section>
+            ) : null}
+          </section>
 
           <div className={styles.decisionActions} data-testid="canonical-place-decisions">
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>

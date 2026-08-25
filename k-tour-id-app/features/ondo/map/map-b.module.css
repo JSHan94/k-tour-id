@@ -616,3 +616,37 @@
 @media (prefers-reduced-motion: reduce) {
   .root *, .root *::before, .root *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
 }
+
+/* Pulse is a product evidence layer over the official directory. Text labels
+   remain present beside every color so the scale never depends on hue alone. */
+.cityTitle { display: grid; justify-items: center; gap: 1px; }
+.cityTitle h1 { margin: 0; }
+.cityTitle small { color: #6b655e; font-size: 10px; font-weight: 720; line-height: 1.2; white-space: nowrap; }
+.listPulse { display: grid; gap: 2px; margin: 3px 0 1px; font-style: normal; }
+.listPulse b { color: #a23e30; font-size: 12px; font-weight: 820; letter-spacing: .01em; }
+.listPulse > span { color: #655f58; font-size: 11px; font-weight: 560; line-height: 1.35; }
+.listPulse .localPulse { color: #355f50; font-weight: 720; }
+.pulseDisclosure { margin: 0; padding: 10px 4px; border-bottom: 1px solid #e3e0da; color: #625d56; font-size: 11px; line-height: 1.45; }
+.pulseLegend { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 2px; }
+.pulseLegend span { display: inline-flex; align-items: center; gap: 4px; color: #514d47; font-size: 10px; font-weight: 760; white-space: nowrap; }
+.mapKey .pulseLegend i { width: 8px; height: 8px; border: 1px solid rgb(32 32 30 / 18%); border-radius: 50%; }
+.pulseLegend span[data-level="peak"] i { background: #b52e2e; }
+.pulseLegend span[data-level="hot"] i { background: #d9523d; }
+.pulseLegend span[data-level="rising"] i { background: #e98542; }
+.pulseLegend span[data-level="warming"] i { background: #eab45c; }
+.pulseLegend span[data-level="low"] i { background: #6f9c86; }
+.pulseLegend span[data-level="limited"] i { background: #8d8982; }
+.venueList button:focus-visible,
+.pulseDisclosure:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .venueList button > span:nth-child(2) > .listPulse { display: block; }
+  .listPulse > span { display: none; }
+  .venueList strong { -webkit-line-clamp: 1; }
+  .pulseDisclosure { display: none; }
+}
+
+.ultraShort .venueList button > span:nth-child(2) > .listPulse { display: block; }
+.ultraShort .listPulse > span,
+.ultraShort .pulseDisclosure { display: none; }
+.ultraShort .venueList strong { -webkit-line-clamp: 1; }

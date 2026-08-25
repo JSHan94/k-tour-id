@@ -96,7 +96,7 @@ export function SettingsEntryB() {
 
       <section className={styles.settingsSection} aria-labelledby="b-privacy-heading">
         <div className={styles.sectionHeading}><LockKeyhole size={18} aria-hidden="true" /><h2 id="b-privacy-heading">{locale === "ko" ? "이 브라우저의 데이터" : "Data in this browser"}</h2></div>
-        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블 미리보기, 탐색 선택, 개인 메모, 게시된 로컬 시그널의 장소 표시와 최초 1회 로컬 경계 확인만 이 브라우저에 저장됩니다. 초안·본인·19+ 결과·DID·프로필은 저장하거나 전송하지 않아요." : "Saved places, recent views, joined Table previews, discovery choices, private notes, posted Local Signal venue markers, and the one-time local boundary choice stay only in this browser. Drafts, Person or 19+ results, DIDs, and profiles are not stored or sent."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블 미리보기, 탐색 선택, 개인 메모, 게시한 로컬 시그널의 태그 ID·시각·장소 표시와 최초 1회 로컬 경계 확인만 이 브라우저에 저장됩니다. 초안 메모·본인·19+ 결과·DID·프로필은 저장하거나 전송하지 않아요." : "Saved places, recent views, joined Table previews, discovery choices, private notes, posted Local Signal tag IDs, time and venue markers, and the one-time local boundary choice stay only in this browser. Draft notes, Person or 19+ results, DIDs, and profiles are not stored or sent."}</p>
         <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
           <RotateCcw size={17} aria-hidden="true" />
           {locale === "ko" ? "저장한 내용 지우기" : "Clear saved content"}

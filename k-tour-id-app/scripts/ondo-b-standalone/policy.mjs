@@ -43,6 +43,7 @@ export const SOURCE_FILES = Object.freeze([
   "features/ondo/place/canonical-place-mount.tsx",
   "features/ondo/place/canonical-place-overlay.tsx",
   "features/ondo/place/canonical-place.module.css",
+  "features/ondo/pulse-b/pulse-model-b.ts",
   "features/ondo/settings/settings-entry-b.tsx",
   "features/ondo/shared/state/ondo-b-preferences.ts",
   "features/ondo/shared/state/ondo-b-provider.tsx",

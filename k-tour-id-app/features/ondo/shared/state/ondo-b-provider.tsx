@@ -19,11 +19,12 @@ import {
 } from "../../my/my-korea-model"
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "./ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES, ONDO_B_PERSONA_IDS } from "./ondo-b-preferences"
+import type { PulseLocalEvidenceB, PulseLocalSignalTagB } from "../../pulse-b/pulse-model-b"
 
 export type OndoBTab = "ondo" | "my" | "tables" | "id" | "settings"
 export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
 export type OndoBSaveStatus = "SAV-IDLE" | "SAV-SAVED" | "SAV-FAILED"
-export type OndoBLocalSignalTag = "calm_now" | "lively_now" | "quick_stop" | "welcoming"
+export type OndoBLocalSignalTag = PulseLocalSignalTagB
 export type OndoBLocalSignalDraft = {
   venueId: string
   tags: OndoBLocalSignalTag[]
@@ -44,6 +45,7 @@ export type OndoBState = {
   recentVenueIds: string[]
   plannedTableRefs: OndoBPlannedTableRef[]
   localSignalPostedVenueIds: string[]
+  localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
   localSignalDraft: OndoBLocalSignalDraft | null
   toast: string | null
@@ -85,6 +87,7 @@ type OndoBDeviceState = {
   recentVenueIds: string[]
   plannedTableRefs: OndoBPlannedTableRef[]
   localSignalPostedVenueIds: string[]
+  localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
 }
 
@@ -109,6 +112,7 @@ function initialState(): OndoBState {
     recentVenueIds: [],
     plannedTableRefs: [],
     localSignalPostedVenueIds: [],
+    localPulseEvidenceByVenue: {},
     localInteractionBoundarySeen: false,
     localSignalDraft: null,
     toast: null,
@@ -122,6 +126,18 @@ function isProductionPath() {
 function restoreBDeviceState(value: unknown): OndoBDeviceState {
   const record = value && typeof value === "object" ? value as Record<string, unknown> : {}
   const savedVenueIds = sanitizeCanonicalVenueIds(record.savedVenueIds)
+  const localPulseRecord = record.localPulseEvidenceByVenue && typeof record.localPulseEvidenceByVenue === "object"
+    ? record.localPulseEvidenceByVenue as Record<string, unknown>
+    : {}
+  const localPulseEvidenceByVenue = Object.fromEntries(Object.entries(localPulseRecord).flatMap(([venueId, value]) => {
+    if (!isCanonicalVenueId(venueId) || !value || typeof value !== "object") return []
+    const evidence = value as Record<string, unknown>
+    const tags = Array.isArray(evidence.tags)
+      ? [...new Set(evidence.tags.filter((tag): tag is OndoBLocalSignalTag => B_LOCAL_SIGNAL_TAGS.has(tag as OndoBLocalSignalTag)))]
+      : []
+    const postedAt = typeof evidence.postedAt === "string" && !Number.isNaN(Date.parse(evidence.postedAt)) ? evidence.postedAt : null
+    return tags.length && postedAt ? [[venueId, { tags, postedAt } satisfies PulseLocalEvidenceB]] : []
+  }))
   return {
     locale: record.locale === "ko" ? "ko" : "en",
     onboarding: record.onboarding === "ONB-COMPLETE" ? "ONB-COMPLETE" : "ONB-NEW",
@@ -136,6 +152,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     recentVenueIds: sanitizeRecentVenueIds(record.recentVenueIds),
     plannedTableRefs: sanitizePlannedTableRefs(record.plannedTableRefs),
     localSignalPostedVenueIds: sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds),
+    localPulseEvidenceByVenue,
     localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
   }
 }
@@ -151,6 +168,7 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     recentVenueIds: state.recentVenueIds,
     plannedTableRefs: state.plannedTableRefs,
     localSignalPostedVenueIds: state.localSignalPostedVenueIds,
+    localPulseEvidenceByVenue: state.localPulseEvidenceByVenue,
     localInteractionBoundarySeen: state.localInteractionBoundarySeen,
   })
 }
@@ -341,9 +359,18 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     removePlannedTable: (tableId) => commit((current) => ({ ...current, plannedTableRefs: removePlannedTable(current.plannedTableRefs, tableId) })),
     markLocalSignalPosted: (venueId) => {
       if (!isCanonicalVenueId(venueId)) return false
+      const draft = stateRef.current.localSignalDraft
+      if (!draft || draft.venueId !== venueId) return false
+      const safeTags = [...new Set(draft.tags.filter((tag): tag is OndoBLocalSignalTag => B_LOCAL_SIGNAL_TAGS.has(tag)))]
+      if (!safeTags.length) return false
+      const postedAt = new Date().toISOString()
       return commit((current) => ({
         ...current,
         localSignalPostedVenueIds: sanitizeLocalSignalVenueIds([venueId, ...current.localSignalPostedVenueIds.filter((id) => id !== venueId)]),
+        localPulseEvidenceByVenue: {
+          ...current.localPulseEvidenceByVenue,
+          [venueId]: { tags: safeTags, postedAt },
+        },
       }))
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
@@ -356,6 +383,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       recentVenueIds: [],
       plannedTableRefs: [],
       localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
       localInteractionBoundarySeen: false,
       localSignalDraft: null,
       surface: { kind: "map" },

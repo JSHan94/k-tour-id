@@ -9,6 +9,13 @@ import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues/
 import { CANONICAL_MAP_VENUES_COMPACT } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName, venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import { mapFoodIntentAliases } from "@/lib/ondo/venues/map-discovery-aliases"
+import {
+  PULSE_CITY_STATUS,
+  PULSE_DISCLOSURE,
+  pulseForVenue,
+  pulseLevelLabel,
+  type PulseLocalEvidenceB,
+} from "../pulse-b/pulse-model-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import {
@@ -79,6 +86,11 @@ const COPY = {
     clearResults: "Clear search and category",
     mapKey: "Grouped official records",
     mapKeyBody: "Outlined numbers show record groups. Small neutral dots show individual records.",
+    pulseActive: "Curated Pulse active",
+    pulseGrowing: "Pulse coverage growing",
+    pulseExplore: "Explore · limited signals",
+    pulseSignals: "walkthrough signals",
+    pulseLocal: "Your Local Signal is included on this device",
     filterLabel: "Official business category",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
   },
@@ -118,6 +130,11 @@ const COPY = {
     clearResults: "검색어와 업태 초기화",
     mapKey: "공식 기록 묶음",
     mapKeyBody: "테두리 숫자는 기록 묶음, 작은 중립색 점은 개별 기록을 뜻합니다.",
+    pulseActive: "선별 Pulse 운영 중",
+    pulseGrowing: "Pulse 커버리지 성장 중",
+    pulseExplore: "탐색 · 신호 부족",
+    pulseSignals: "둘러보기 신호",
+    pulseLocal: "이 기기의 로컬 시그널이 포함됨",
     filterLabel: "공식 업태 분류",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
   },
@@ -173,6 +190,10 @@ function resultCount(count: number, locale: OndoBLocale) {
   return locale === "ko" ? `공식 기록 ${count}개` : `${count} official ${count === 1 ? "record" : "records"}`
 }
 
+function cityPulseStatus(cityId: CityId, locale: OndoBLocale) {
+  return PULSE_CITY_STATUS[cityId] === "active" ? COPY[locale].pulseActive : COPY[locale].pulseGrowing
+}
+
 function distanceInMeters(from: UserLocation, venue: Pick<CanonicalMapVenue, "longitude" | "latitude">) {
   const radians = (degrees: number) => degrees * Math.PI / 180
   const earthRadius = 6_371_000
@@ -216,6 +237,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
             <span>
               <strong>{CITY[cityId].label[locale]}</strong>
               <small>{copy.openMap}</small>
+              <small data-pulse-city-status={PULSE_CITY_STATUS[cityId]}>{cityPulseStatus(cityId, locale)}</small>
               <em className={styles.cityRecordTruth}>{resultCount(200, locale)}</em>
             </span>
           </button>
@@ -235,14 +257,25 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
   )
 }
 
-function toFeatureCollection(venues: readonly CanonicalMapVenue[]): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: VenuePrimaryCategory }> {
+function toFeatureCollection(
+  venues: readonly CanonicalMapVenue[],
+  localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
+  selectedVenueId: string | null = null,
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: VenuePrimaryCategory; pulseLevel: string; localPulse: boolean; selected: boolean }> {
   return {
     type: "FeatureCollection",
     features: venues.map((venue) => ({
       type: "Feature",
       id: venue.id,
       geometry: { type: "Point", coordinates: [venue.longitude, venue.latitude] },
-      properties: { id: venue.id, name: venue.name.ko, category: venue.primaryCategory },
+      properties: {
+        id: venue.id,
+        name: venue.name.ko,
+        category: venue.primaryCategory,
+        pulseLevel: pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null).level,
+        localPulse: Boolean(localPulseEvidenceByVenue[venue.id]),
+        selected: venue.id === selectedVenueId,
+      },
     })),
   }
 }
@@ -268,9 +301,11 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly CanonicalMapVenu
   ], { duration: 0, maxZoom: 14.5, padding: { top: 220, right: 72, bottom: 160, left: 72 } })
 }
 
-function VenueList({ venues, locale, visibleCount, onClear, onMore, onSelect }: {
+function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId, visibleCount, onClear, onMore, onSelect }: {
   venues: readonly CanonicalMapVenue[]
   locale: OndoBLocale
+  localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
+  selectedVenueId: string | null
   visibleCount: number
   onClear(): void
   onMore(): void
@@ -282,18 +317,33 @@ function VenueList({ venues, locale, visibleCount, onClear, onMore, onSelect }: 
       {venues.slice(0, visibleCount).map((venue) => {
         const presentation = venueNamePresentation(venue.name.ko, locale)
         const category = CATEGORY[venue.primaryCategory]
+        const pulse = pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null)
+        const pulseSummary = pulse.score == null
+          ? `Pulse · ${pulseLevelLabel(pulse.level, locale)}`
+          : `Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)}`
+        const pulseDetail = pulse.signalCount == null
+          ? PULSE_DISCLOSURE[locale]
+          : `${pulse.signalCount} ${copy.pulseSignals} · ${PULSE_DISCLOSURE[locale]}`
         return (
           <li key={venue.id} data-venue-id={venue.id}>
             <button
               type="button"
               onClick={() => onSelect(venue)}
               data-venue-opener={venue.id}
-              aria-label={`${presentation.officialName} · ${presentation.officialNameLabel} · ${presentation.transliteration} · ${presentation.transliterationLabel} · ${venueDistrictLabel(venue.cityId, venue.districtId, locale)} · ${category[locale]} · ${copy.categoryBasis}`}
+              aria-haspopup="dialog"
+              aria-expanded={selectedVenueId === venue.id}
+              aria-controls={selectedVenueId === venue.id ? "canonical-place-dialog" : undefined}
+              aria-label={`${presentation.officialName} · ${presentation.officialNameLabel} · ${presentation.transliteration} · ${presentation.transliterationLabel} · ${venueDistrictLabel(venue.cityId, venue.districtId, locale)} · ${category[locale]} · ${pulseSummary} · ${copy.categoryBasis}`}
             >
               <span className={styles.categoryBadge}>{category.short}</span>
               <span>
                 <small>{venueDistrictLabel(venue.cityId, venue.districtId, locale)} · {category[locale]}</small>
                 <strong data-testid="official-source-name">{presentation.officialName}</strong>
+                <em className={styles.listPulse} data-testid="ondo-b-list-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
+                  <b>{pulseSummary}</b>
+                  <span>{pulseDetail}</span>
+                  {pulse.localEvidence ? <span className={styles.localPulse}>{copy.pulseLocal}</span> : null}
+                </em>
                 <em className={styles.officialNameTruth}>{copy.officialName}</em>
                 <small className={styles.transliterationTruth}><span>{presentation.transliteration}</span> · {presentation.transliterationLabel}</small>
                 <small className={styles.categoryTruth}>{copy.categoryBasis}</small>
@@ -334,6 +384,8 @@ export function MapEntryB() {
   const [mapLayoutMode, setMapLayoutMode] = useState<MapLayoutMode>("measuring")
   const [mapRootBlockSize, setMapRootBlockSize] = useState(0)
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
+  const selectedVenue = selectedVenueId ? CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === selectedVenueId) ?? null : null
+  const selectedPulse = selectedVenue ? pulseForVenue(selectedVenue.id, state.localPulseEvidenceByVenue[selectedVenue.id] ?? null) : null
   const effectiveView: ViewMode = mapLayoutMode === "ultra-short" || mapLayoutMode === "measuring" ? "list" : view
 
   useLayoutEffect(() => {
@@ -531,11 +583,13 @@ export function MapEntryB() {
       instance.on("load", () => {
         if (disposed || failed) return
         try {
-          instance.addSource("ondo-directory", { type: "geojson", data: toFeatureCollection(venues), cluster: true, clusterRadius: 48, clusterMaxZoom: 13 })
+          instance.addSource("ondo-directory", { type: "geojson", data: toFeatureCollection(venues, state.localPulseEvidenceByVenue, selectedVenueId), cluster: true, clusterRadius: 48, clusterMaxZoom: 13 })
           instance.addSource("ondo-user-location", { type: "geojson", data: toUserLocationFeatureCollection(userLocationRef.current) })
           instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,255,255,0.94)", "circle-radius": ["step", ["get", "point_count"], 15, 15, 18, 50, 22], "circle-stroke-color": "#514d47", "circle-stroke-width": 1.5, "circle-opacity": 0.98 } })
           instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 11 }, paint: { "text-color": "#3f3b36" } })
-          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["!", ["has", "point_count"]], paint: { "circle-color": "#605c55", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 4, 15, 7], "circle-opacity": 0.82, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } })
+          instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["!=", ["get", "pulseLevel"], "limited"]], paint: { "circle-color": ["match", ["get", "pulseLevel"], "peak", "#b52e2e", "hot", "#d9523d", "rising", "#e98542", "warming", "#eab45c", "low", "#6f9c86", "#8d8982"], "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 8, 15, 14], "circle-opacity": 0.2 } })
+          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["!", ["has", "point_count"]], paint: { "circle-color": ["match", ["get", "pulseLevel"], "peak", "#b52e2e", "hot", "#d9523d", "rising", "#e98542", "warming", "#eab45c", "low", "#6f9c86", "#605c55"], "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 4, 15, 7], "circle-opacity": 0.88, "circle-stroke-color": "#ffffff", "circle-stroke-width": 1.5 } })
+          instance.addLayer({ id: "ondo-selected-pulse", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "selected"], true]], paint: { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 9, 15, 14], "circle-stroke-color": "#20201e", "circle-stroke-width": 3 } })
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
         } catch {
@@ -584,10 +638,10 @@ export function MapEntryB() {
   useEffect(() => {
     const source = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined
     if (source) {
-      void source.setData(toFeatureCollection(venues))
+      void source.setData(toFeatureCollection(venues, state.localPulseEvidenceByVenue, selectedVenueId))
       if (filteredMap) focusFilteredVenues(mapRef.current!, venues)
     }
-  }, [filteredMap, venues])
+  }, [filteredMap, selectedVenueId, state.localPulseEvidenceByVenue, venues])
 
   useEffect(() => {
     userLocationRef.current = userLocation
@@ -678,12 +732,13 @@ export function MapEntryB() {
         data-requested-view={view}
         data-effective-view={effectiveView}
         data-map-root-block-size={mapRootBlockSize.toFixed(1)}
+        data-selected-venue-id={selectedVenueId ?? "none"}
       >
         <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
         <header className={styles.cityHeader} data-testid="ondo-b-city-header">
           <div className={styles.topline}>
             <button type="button" className={styles.back} data-testid="ondo-b-city-back" onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
-            <h1>{CITY[city].label[locale]}</h1>
+            <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small data-testid="ondo-b-pulse-city-status" data-pulse-city-status={PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
             <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
           </div>
           <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
@@ -741,7 +796,16 @@ export function MapEntryB() {
             </p>
           ) : null}
           {effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
-          {effectiveView === "map" && mapState !== "error" ? <div className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}`}><div><span><i className={styles.clusterSwatch}>12</i>{copy.mapKey}</span></div><small>{copy.mapKeyBody}</small></div> : null}
+          {effectiveView === "map" && mapState !== "error" ? (
+            <aside className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
+              <div><span><i className={styles.clusterSwatch}>12</i>{copy.mapKey}</span></div>
+              <div className={styles.pulseLegend} data-testid="ondo-b-pulse-legend" aria-label={locale === "ko" ? "Pulse 단계 범례" : "Pulse level legend"}>
+                {(["peak", "hot", "rising", "warming", "low", "limited"] as const).map((level) => <span key={level} data-level={level}><i />{pulseLevelLabel(level, locale)}</span>)}
+              </div>
+              <small>{copy.mapKeyBody}</small>
+              <small>{PULSE_DISCLOSURE[locale]}</small>
+            </aside>
+          ) : null}
           {effectiveView === "map" && mapState !== "error" ? (
             <footer className={styles.attribution} data-testid="ondo-b-attribution" aria-label={locale === "ko" ? "지도 출처" : "Map attribution"}>
               <a href="https://openfreemap.org/" target="_blank" rel="noreferrer">OpenFreeMap</a>
@@ -754,9 +818,11 @@ export function MapEntryB() {
         {effectiveView === "list" || mapState === "error" ? (
           <div className={styles.listPanel} data-testid="ondo-b-list-panel">
             {mapState === "error" ? <div className={styles.mapError} role="status" data-testid="ondo-b-map-fallback-status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}
-            <VenueList venues={venues} locale={locale} visibleCount={visibleCount} onClear={() => { setQuery(""); setCategory("all"); updateCityContext({ query: "", category: "all" }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} />
+            <p className={styles.pulseDisclosure} data-testid="ondo-b-pulse-disclosure">{PULSE_DISCLOSURE[locale]}</p>
+            <VenueList venues={venues} locale={locale} localPulseEvidenceByVenue={state.localPulseEvidenceByVenue} selectedVenueId={selectedVenueId} visibleCount={visibleCount} onClear={() => { setQuery(""); setCategory("all"); updateCityContext({ query: "", category: "all" }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} />
           </div>
         ) : null}
+        {selectedVenue && selectedPulse ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-marker-status">{venueDisplayName(selectedVenue.name.ko, locale)} · {selectedPulse.score == null ? `Pulse · ${pulseLevelLabel(selectedPulse.level, locale)}` : `Pulse ${selectedPulse.score}° · ${pulseLevelLabel(selectedPulse.level, locale)}`}</span> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
       </section>
     </div>
