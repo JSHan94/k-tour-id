@@ -1,6 +1,6 @@
 "use client"
 
-import type { ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent } from "maplibre-gl"
+import type { CircleLayerSpecification, ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, SymbolLayerSpecification } from "maplibre-gl"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { ArrowLeft, ChevronRight, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
@@ -319,7 +319,7 @@ function toPulseFeatureCollection(
           pulseScore: pulse.score ?? -1,
           pulseMarkerLabel: pulse.score == null
             ? pulseLevelLabel(pulse.level, locale).toUpperCase()
-            : `${pulse.score}°\n${pulseLevelLabel(pulse.level, locale).toUpperCase()}`,
+            : `${pulse.score}°`,
           selected: venue.id === selectedVenueId,
         },
       }]
@@ -683,29 +683,111 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,255,255,0.93)", "circle-radius": ["step", ["get", "point_count"], 16, 15, 19, 50, 23], "circle-stroke-color": "#625f59", "circle-stroke-width": 1.5, "circle-opacity": 0.97 } })
           instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 12 }, paint: { "text-color": "#35322f", "text-halo-color": "rgba(255,255,255,.72)", "text-halo-width": 0.7 } })
           instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "curatedSignal"], false]], paint: { "circle-color": "#77746f", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 15, 5.5], "circle-opacity": 0.7, "circle-stroke-color": "rgba(255,255,255,.9)", "circle-stroke-width": 1.25 } })
-          instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 25, 15, 31], "circle-blur": 0.42, "circle-opacity": 0.16 } })
-          instance.addLayer({ id: "ondo-pulse-points", type: "circle", source: "ondo-pulse", layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 22, 15, 24], "circle-opacity": 0.98, "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 2.5, "circle-blur": 0.02 } })
-          instance.addLayer({ id: "ondo-pulse-labels", type: "symbol", source: "ondo-pulse", layout: { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 9, 12, 15, 12.5], "text-line-height": 0.82, "text-letter-spacing": 0, "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }, paint: { "text-color": ["case", [">=", ["get", "pulseRank"], 3], "#ffffff", "#242320"], "text-halo-color": "rgba(32,24,18,.18)", "text-halo-width": 0.45 } })
-          instance.addLayer({ id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 31], "circle-stroke-color": "rgba(255,255,255,.98)", "circle-stroke-width": 5, "circle-stroke-opacity": 0.98 } })
-          instance.addLayer({ id: "ondo-selected-pulse", type: "circle", source: "ondo-pulse", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 31], "circle-stroke-color": "#171715", "circle-stroke-width": 2.25, "circle-stroke-opacity": 0.96 } })
+          const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "pulseRank"], 3], ["!=", ["get", "pulseRank"], 2]]
+          const risingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 3]
+          const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 2]
+          const risingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [8, 10]], 12, ["literal", [8, 10]], 13, ["literal", [0, 0]]]
+          const warmingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-8, -10]], 12, ["literal", [-8, -10]], 13, ["literal", [0, 0]]]
+          const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 18, 15, 21], "circle-opacity": 0.98, "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 2.5, "circle-blur": 0.02 }
+          const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 9, 12, 15, 12.5], "text-letter-spacing": 0, "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
+          const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 3], "#ffffff", "#242320"], "text-halo-color": "rgba(32,24,18,.18)", "text-halo-width": 0.45 }
+          const pulseHaloPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 23, 15, 28], "circle-blur": 0.42, "circle-opacity": 0.16 }
+          instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
+          instance.addLayer({ id: "ondo-pulse-halo-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-halo-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-points", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: pulsePointPaint })
+          instance.addLayer({ id: "ondo-pulse-points-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { ...pulsePointPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-points-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { ...pulsePointPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0 } })
+          instance.addLayer({ id: "ondo-pulse-hit-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-hit-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-labels", type: "symbol", source: "ondo-pulse", filter: unshiftedPulseFilter, layout: pulseLabelLayout, paint: pulseLabelPaint })
+          instance.addLayer({ id: "ondo-pulse-labels-rising", type: "symbol", source: "ondo-pulse", filter: risingPulseFilter, layout: pulseLabelLayout, paint: { ...pulseLabelPaint, "text-translate": risingTranslate, "text-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-labels-warming", type: "symbol", source: "ondo-pulse", filter: warmingPulseFilter, layout: pulseLabelLayout, paint: { ...pulseLabelPaint, "text-translate": warmingTranslate, "text-translate-anchor": "viewport" } })
+          const selectedUnshiftedPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], unshiftedPulseFilter]
+          const selectedRisingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], risingPulseFilter]
+          const selectedWarmingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], warmingPulseFilter]
+          const selectedPulseOuterPaint: CircleLayerSpecification["paint"] = { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 25, 15, 29], "circle-stroke-color": "rgba(255,255,255,.98)", "circle-stroke-width": 5, "circle-stroke-opacity": 0.98 }
+          const selectedPulsePaint: CircleLayerSpecification["paint"] = { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 25, 15, 29], "circle-stroke-color": "#171715", "circle-stroke-width": 2.25, "circle-stroke-opacity": 0.96 }
+          instance.addLayer({ id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse", filter: selectedUnshiftedPulseFilter, paint: selectedPulseOuterPaint })
+          instance.addLayer({ id: "ondo-selected-pulse", type: "circle", source: "ondo-pulse", filter: selectedUnshiftedPulseFilter, paint: selectedPulsePaint })
+          instance.addLayer({ id: "ondo-selected-pulse-outer-rising", type: "circle", source: "ondo-pulse", filter: selectedRisingPulseFilter, paint: { ...selectedPulseOuterPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-selected-pulse-rising", type: "circle", source: "ondo-pulse", filter: selectedRisingPulseFilter, paint: { ...selectedPulsePaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-selected-pulse-outer-warming", type: "circle", source: "ondo-pulse", filter: selectedWarmingPulseFilter, paint: { ...selectedPulseOuterPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-selected-pulse-warming", type: "circle", source: "ondo-pulse", filter: selectedWarmingPulseFilter, paint: { ...selectedPulsePaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
 
+          if (!initialFilteredVenue && !filteredMapRef.current && cityRootNode.current) {
+            const rootBox = cityRootNode.current.getBoundingClientRect()
+            const headerBox = cityRootNode.current.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
+            const locationBox = cityRootNode.current.querySelector<HTMLElement>("[data-testid='ondo-b-location-message']")?.getBoundingClientRect()
+            const keyBox = cityRootNode.current.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")?.getBoundingClientRect()
+            const longitude = venues.map((venue) => venue.longitude)
+            const latitude = venues.map((venue) => venue.latitude)
+            instance.fitBounds([
+              [Math.min(...longitude), Math.min(...latitude)],
+              [Math.max(...longitude), Math.max(...latitude)],
+            ], {
+              padding: {
+                top: Math.ceil(Math.max(headerBox?.bottom ?? rootBox.top, locationBox?.bottom ?? rootBox.top) - rootBox.top + 26),
+                right: 28,
+                bottom: Math.ceil(rootBox.bottom - (keyBox?.top ?? rootBox.bottom) + 26),
+                left: 28,
+              },
+              maxZoom: CITY[city].zoom,
+              duration: 0,
+            })
+          }
+
           const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
           const duration = 220
-          if (reducedMotion) instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.16)
+          const pulseHaloLayers = ["ondo-pulse-halo", "ondo-pulse-halo-rising", "ondo-pulse-halo-warming"] as const
+          if (reducedMotion) pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.16))
           else {
             const startedAt = performance.now()
-            instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.36)
+            pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.36))
             const animatePulse = (timestamp: number) => {
               if (disposed) return
               const progress = Math.min(1, (timestamp - startedAt) / duration)
               const eased = 1 - (1 - progress) ** 3
-              instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.36 - eased * 0.2)
+              pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.36 - eased * 0.2))
               if (progress < 1) pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
             }
             pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
           }
+
+          const updatePulseMarkerFit = () => {
+            if (disposed || !cityRootNode.current) return
+            const root = cityRootNode.current
+            const rootBox = root.getBoundingClientRect()
+            const headerBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
+            const locationBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-location-message']")?.getBoundingClientRect()
+            const keyBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")?.getBoundingClientRect()
+            const readableTop = Math.max(headerBox?.bottom ?? rootBox.top, locationBox?.bottom ?? rootBox.top) - rootBox.top + 24
+            const readableBottom = (keyBox?.top ?? rootBox.bottom) - rootBox.top - 24
+            const readableLeft = 24
+            const readableRight = rootBox.width - 24
+            const pulseFeatures = toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId).features
+              .filter((feature) => feature.properties.pulseScore >= 0)
+            const allInside = pulseFeatures.length > 0 && pulseFeatures.every((feature) => {
+              const point = instance.project(feature.geometry.coordinates as [number, number])
+              const zoom = instance.getZoom()
+              const offsetScale = zoom <= 12 ? 1 : Math.max(0, 13 - zoom)
+              const offset = feature.properties.pulseRank === 3
+                ? { x: 8 * offsetScale, y: 10 * offsetScale }
+                : feature.properties.pulseRank === 2
+                  ? { x: -8 * offsetScale, y: -10 * offsetScale }
+                  : { x: 0, y: 0 }
+              return point.x + offset.x >= readableLeft
+                && point.x + offset.x <= readableRight
+                && point.y + offset.y >= readableTop
+                && point.y + offset.y <= readableBottom
+            })
+            root.dataset.pulseMarkersReadable = String(allInside)
+          }
+          instance.once("idle", updatePulseMarkerFit)
+          window.setTimeout(updatePulseMarkerFit, 240)
         } catch {
           failMap()
           return
@@ -726,20 +808,23 @@ export function MapEntryB() {
             actions.setSurface({ kind: "venue", venueId: id })
           }
         })
-        instance.on("click", "ondo-pulse-points", (event: MapLayerMouseEvent) => {
-          const id = event.features?.[0]?.properties?.id
-          if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
-            openBDiscoveryVenue(id)
-            if (!actions.recordRecentVenue(id)) actions.notify(copy.recentSaveFailed)
-            actions.setSurface({ kind: "venue", venueId: id })
-          }
+        const pulseInteractiveLayers = ["ondo-pulse-hit", "ondo-pulse-hit-rising", "ondo-pulse-hit-warming"] as const
+        pulseInteractiveLayers.forEach((layerId) => {
+          instance.on("click", layerId, (event: MapLayerMouseEvent) => {
+            const id = event.features?.[0]?.properties?.id
+            if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
+              openBDiscoveryVenue(id)
+              if (!actions.recordRecentVenue(id)) actions.notify(copy.recentSaveFailed)
+              actions.setSurface({ kind: "venue", venueId: id })
+            }
+          })
         })
         instance.on("mouseenter", "ondo-clusters", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseenter", "ondo-points", () => { instance.getCanvas().style.cursor = "pointer" })
-        instance.on("mouseenter", "ondo-pulse-points", () => { instance.getCanvas().style.cursor = "pointer" })
+        pulseInteractiveLayers.forEach((layerId) => instance.on("mouseenter", layerId, () => { instance.getCanvas().style.cursor = "pointer" }))
         instance.on("mouseleave", "ondo-clusters", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-points", () => { instance.getCanvas().style.cursor = "" })
-        instance.on("mouseleave", "ondo-pulse-points", () => { instance.getCanvas().style.cursor = "" })
+        pulseInteractiveLayers.forEach((layerId) => instance.on("mouseleave", layerId, () => { instance.getCanvas().style.cursor = "" }))
         if (filteredMapRef.current) focusFilteredVenues(instance, venues)
         if (loadDeadline != null) window.clearTimeout(loadDeadline)
         if (!failed) {
