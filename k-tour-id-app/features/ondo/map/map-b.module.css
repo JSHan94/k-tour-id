@@ -1282,3 +1282,221 @@
   .cityTruthLegend { grid-area: 2 / 1; }
   .nation footer { grid-area: 2 / 2; padding-top: 14px; border-top: 1px solid rgb(54 43 36 / 13%); }
 }
+
+/* Explore visual-excellence layer: Nation, map and list are one Pulse product.
+   The real map paint and every truth label stay untouched; CSS supplies the
+   atmospheric atlas, card material and list rhythm around those contracts. */
+.dotMap::before {
+  position: absolute;
+  z-index: 0;
+  inset: -12%;
+  border-radius: 42% 58% 48% 52%;
+  background:
+    radial-gradient(circle at 24% 28%, rgb(112 31 67 / 20%) 0 2px, transparent 3px 26px, rgb(112 31 67 / 8%) 27px 28px, transparent 29px),
+    radial-gradient(circle at 76% 72%, rgb(212 91 52 / 20%) 0 3px, transparent 4px 31px, rgb(212 91 52 / 8%) 32px 33px, transparent 34px),
+    radial-gradient(circle at 49% 50%, rgb(255 252 246 / 86%), rgb(245 231 218 / 48%) 53%, transparent 74%),
+    repeating-radial-gradient(circle at 48% 50%, transparent 0 42px, rgb(77 55 43 / 5%) 43px 44px);
+  opacity: .92;
+  pointer-events: none;
+  transform: rotate(-5deg);
+}
+
+.dotMap svg { z-index: 1; }
+
+.cityNode,
+.cityNode[data-city="seoul"],
+.cityNode[data-city="busan"] {
+  z-index: 2;
+  overflow: hidden;
+  border-color: rgb(87 54 42 / 15%);
+  background:
+    radial-gradient(circle at 9% 50%, rgb(171 72 52 / 8%), transparent 27%),
+    linear-gradient(145deg, rgb(255 255 253 / 98%), rgb(250 242 234 / 96%));
+  box-shadow: 0 18px 48px rgb(60 39 27 / 10%), inset 0 1px 0 rgb(255 255 255 / 96%);
+  animation: cityNodeArrive 320ms cubic-bezier(.2, .72, .24, 1) both;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.cityNode[data-city="busan"] {
+  background:
+    radial-gradient(circle at 9% 50%, rgb(225 154 65 / 11%), transparent 28%),
+    linear-gradient(145deg, rgb(255 255 253 / 98%), rgb(251 242 230 / 96%));
+  animation-delay: 60ms;
+}
+
+@keyframes cityNodeArrive {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.cityNode[data-city="seoul"] i {
+  border-color: rgb(111 33 69 / 25%);
+  background:
+    radial-gradient(circle at 32% 28%, rgb(255 255 255 / 78%), transparent 24%),
+    linear-gradient(145deg, #f6e8ec, #f9f2ed);
+  color: #6f2145;
+  box-shadow: 0 0 0 7px rgb(111 33 69 / 5%), 0 10px 26px rgb(111 33 69 / 11%);
+}
+
+.cityNode[data-city="busan"] i {
+  border-color: rgb(193 109 49 / 25%);
+  background:
+    radial-gradient(circle at 32% 28%, rgb(255 255 255 / 82%), transparent 24%),
+    linear-gradient(145deg, #f9ecd6, #fff8eb);
+  color: #9c5429;
+  box-shadow: 0 0 0 7px rgb(211 125 54 / 5%), 0 10px 26px rgb(177 94 39 / 10%);
+}
+
+.cityNode strong::after {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  border-radius: 50%;
+  background: #a6473a;
+  box-shadow: 0 0 0 5px rgb(166 71 58 / 9%);
+  content: "";
+  vertical-align: 2px;
+}
+
+.cityNode[data-city="busan"] strong::after {
+  background: #d48e3f;
+  box-shadow: 0 0 0 5px rgb(212 142 63 / 10%);
+}
+
+.cityTruthLegend {
+  border-top-color: rgb(97 62 47 / 15%);
+}
+
+.nation footer strong { color: #51443d; }
+
+.listPanel {
+  background:
+    radial-gradient(circle at 0 0, rgb(111 33 69 / 4%), transparent 28%),
+    linear-gradient(180deg, #fbfaf7, #f8f4ef);
+}
+
+.venueList {
+  gap: 10px;
+  padding-block: 10px 18px;
+}
+
+.venueList li[data-venue-id] {
+  --list-pulse: #aaa49b;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(71 53 42 / 10%);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 2% 50%, color-mix(in srgb, var(--list-pulse) 10%, transparent), transparent 31%),
+    linear-gradient(145deg, rgb(255 255 253 / 98%), rgb(250 247 242 / 96%));
+  box-shadow: 0 12px 32px rgb(55 38 28 / 6%), inset 0 1px 0 rgb(255 255 255 / 96%);
+  animation: venueRowArrive 240ms cubic-bezier(.2, .72, .24, 1) both;
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.venueList li[data-pulse-priority="peak"] { --list-pulse: #7a2048; }
+.venueList li[data-pulse-priority="hot"] { --list-pulse: #c94832; }
+.venueList li[data-pulse-priority="rising"] { --list-pulse: #e6843b; }
+.venueList li[data-pulse-priority="warming"] { --list-pulse: #ebc463; }
+.venueList li[data-pulse-priority="low"] { --list-pulse: #b9a56b; }
+
+.venueList li[data-venue-id]::before {
+  position: absolute;
+  z-index: 2;
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  width: 4px;
+  border-radius: 0 999px 999px 0;
+  background-color: var(--list-pulse);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--list-pulse) 42%, transparent);
+  content: "";
+  pointer-events: none;
+}
+
+@keyframes venueRowArrive {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.venueList li[data-venue-id]:nth-child(2) { animation-delay: 35ms; }
+.venueList li[data-venue-id]:nth-child(3) { animation-delay: 70ms; }
+.venueList li[data-venue-id]:nth-child(4) { animation-delay: 105ms; }
+
+.venueList li[data-venue-id] > button {
+  min-height: 106px;
+  padding: 14px 13px 14px 14px;
+  border-radius: inherit;
+  background: transparent;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.venueList li[data-venue-id]:has(button[aria-expanded="true"]) {
+  border-color: color-mix(in srgb, var(--list-pulse) 48%, #6a5549);
+  box-shadow: 0 18px 42px rgb(60 38 27 / 13%), inset 0 1px 0 rgb(255 255 255 / 96%);
+}
+
+.venueList li[data-venue-id]:has(button[aria-expanded="true"]) > button {
+  background: color-mix(in srgb, var(--list-pulse) 5%, transparent);
+}
+
+.categoryBadge {
+  border-color: color-mix(in srgb, var(--list-pulse, #aaa49b) 30%, #c8c0b7);
+  border-radius: 15px;
+  background:
+    radial-gradient(circle at 30% 24%, rgb(255 255 255 / 92%), transparent 28%),
+    linear-gradient(145deg, #f7eee7, #fffdf9);
+  color: #5d4035;
+  box-shadow: 0 8px 20px rgb(71 45 32 / 7%);
+}
+
+.venueList strong {
+  color: #28231f;
+  font-size: 17px;
+  letter-spacing: -.025em;
+}
+
+.venueList .listPulse b { color: var(--list-pulse, #8d483a); }
+
+.venueList .loadMore { margin-top: 2px; border: 0; }
+
+.venueList .loadMore button {
+  border: 1px solid rgb(65 48 38 / 12%);
+  border-radius: 16px;
+  background: rgb(255 254 251 / 76%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cityNode:hover { transform: translateY(-3px); border-color: rgb(138 70 51 / 27%); box-shadow: 0 24px 60px rgb(60 39 27 / 15%), inset 0 1px 0 #fff; }
+  .venueList li[data-venue-id]:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--list-pulse) 32%, #c6b8ac); box-shadow: 0 18px 40px rgb(55 38 28 / 10%), inset 0 1px 0 #fff; }
+  .venueList button:hover { background: transparent; }
+}
+
+@container ondo-map-root (max-width: 430px) {
+  .venueList { gap: 8px; padding-top: 8px; }
+  .venueList li[data-venue-id] { border-radius: 18px; }
+  .venueList li[data-venue-id] > button {
+    min-height: 88px;
+    grid-template-columns: 46px minmax(0, 1fr) 17px;
+    gap: 11px;
+    padding: 10px 11px 10px 12px;
+  }
+  .venueList strong { font-size: 15px; }
+  .categoryBadge { width: 42px; height: 42px; border-radius: 14px; }
+}
+
+@media (min-width: 1000px) and (min-height: 600px) {
+  .venueList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 14px clamp(10px, 2vw, 26px) 28px;
+  }
+  .venueList .loadMore,
+  .venueList .empty { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cityNode,
+  .venueList li[data-venue-id] { animation: none !important; transition: none !important; }
+}
