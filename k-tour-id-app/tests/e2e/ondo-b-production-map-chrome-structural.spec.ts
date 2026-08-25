@@ -247,7 +247,7 @@ test.describe("ONDO B structural production map chrome", () => {
 
           await activateState(context, page, locationCase)
           const nav = page.getByTestId("ondo-main-nav")
-          for (let index = 0; index < 3; index += 1) await expectTarget(nav.getByRole("button").nth(index), `nav ${index + 1}`)
+          for (let index = 0; index < 5; index += 1) await expectTarget(nav.getByRole("button").nth(index), `nav ${index + 1}`)
 
           if (layout === "ultra-short") {
             await expect(page.getByTestId("ondo-b-list-panel")).toBeVisible()
@@ -268,17 +268,25 @@ test.describe("ONDO B structural production map chrome", () => {
           const locate = page.getByTestId("ondo-b-locate")
           const result = page.getByTestId("ondo-b-result-bar")
           const attribution = page.getByTestId("ondo-b-attribution")
-          await expectUnclippedTruth(key.locator("small"), `${viewport.width}x${viewport.height} map key`)
-          await expectUnclippedTruth(key.locator("div > span"), `${viewport.width}x${viewport.height} map key label`)
+          const keyDetails = key.getByTestId("ondo-b-map-key-details")
+          await keyDetails.locator("summary").click()
+          const keyTruth = key.locator("small")
+          await expect(keyTruth).toHaveCount(2)
+          for (let index = 0; index < 2; index += 1) await expectUnclippedTruth(keyTruth.nth(index), `${viewport.width}x${viewport.height} map key ${index + 1}`)
+          await keyDetails.locator("summary").click()
+          await expectUnclippedTruth(key.locator(":scope > div").first().locator(":scope > span"), `${viewport.width}x${viewport.height} map key label`)
           await expectUnclippedTruth(message, `${viewport.width}x${viewport.height} location truth`)
           await expectContained(key, chrome, "key lane")
           await expectContained(message, chrome, "message lane")
           await expectContained(result, chrome, "result lane")
           await expectContained(attribution, chrome, "attribution lane")
           await expectTarget(locate, "location")
+          const creditDetails = attribution.getByTestId("ondo-b-map-credit-details")
+          await creditDetails.locator("summary").click()
           await expect(attribution.getByRole("link", { name: "OpenFreeMap", exact: true })).toHaveAttribute("href", "https://openfreemap.org/")
           await expect(attribution.getByRole("link", { name: "© OpenMapTiles", exact: true })).toHaveAttribute("href", "https://openmaptiles.org/")
           await expect(attribution.getByRole("link", { name: /OpenStreetMap \/ ODbL/ })).toHaveAttribute("href", "https://www.openstreetmap.org/copyright")
+          await creditDetails.locator("summary").click()
           const laneBoxes = await Promise.all([key, message, locate, result, attribution].map(rect))
           for (let left = 0; left < laneBoxes.length; left += 1) {
             for (let right = left + 1; right < laneBoxes.length; right += 1) {

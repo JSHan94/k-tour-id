@@ -100,17 +100,22 @@ async function chromeReceipt(
   const nav = page.getByTestId("ondo-main-nav")
   const navButtons = nav.getByRole("button")
 
-  await expect(navButtons).toHaveCount(3)
+  await expect(navButtons).toHaveCount(5)
   await expect(message).toHaveCount(1)
   await expect(message).toHaveAttribute("data-message-kind", state === "idle" ? "disclosure" : "status")
   await expect(message).toContainText(state === "idle"
     ? "OpenFreeMap"
     : locale === "en" ? "You’re here" : "현재 위치")
   await expect(locate).toHaveAttribute("aria-describedby", "ondo-b-location-message")
-  await expectVisibleText(key.locator("small"), `${state} map explanation`, viewport)
+  const keyDetails = key.getByTestId("ondo-b-map-key-details")
+  await keyDetails.locator("summary").click()
+  const keyTruth = key.locator("small")
+  await expect(keyTruth).toHaveCount(2)
+  for (let index = 0; index < 2; index += 1) await expectVisibleText(keyTruth.nth(index), `${state} map explanation ${index + 1}`, viewport)
+  await keyDetails.locator("summary").click()
   await expectVisibleText(message, `${state} location message`, viewport)
   await expectVisibleText(view, `${state} view control`, viewport)
-  for (let index = 0; index < 3; index += 1) {
+  for (let index = 0; index < 5; index += 1) {
     await expectVisibleText(navButtons.nth(index), `${state} navigation item ${index + 1}`, viewport)
   }
 
@@ -127,6 +132,8 @@ async function chromeReceipt(
     ["nav-1", navButtons.nth(0)],
     ["nav-2", navButtons.nth(1)],
     ["nav-3", navButtons.nth(2)],
+    ["nav-4", navButtons.nth(3)],
+    ["nav-5", navButtons.nth(4)],
   ] as const) {
     const controlBox = await box(control)
     expect(controlBox.width, `${name} must keep a 44px hit target`).toBeGreaterThanOrEqual(44)
