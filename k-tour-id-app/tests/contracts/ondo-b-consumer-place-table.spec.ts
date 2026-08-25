@@ -48,6 +48,22 @@ test("Tables and Local Signal own photo, retry, chat, check-in, and feedback sta
     "local-signal-photo-remove",
     "local-signal-photo-retry",
   ]) expect(signal).toContain(`data-testid=\"${testId}\"`)
+
+  expect(tables).toContain("MAX_TABLE_CHAT_IMAGE_BYTES")
+  expect(tables).toContain("image/jpeg")
+  expect(tables).toContain("URL.revokeObjectURL")
+  expect(tables).toContain('data-testid="table-chat-image-error"')
+})
+
+test("destructive copy and contextual benefit copy state their exact device and venue boundaries", () => {
+  const settings = source("features/ondo/settings/settings-entry-b.tsx")
+  const place = source("features/ondo/place/canonical-place-overlay.tsx")
+
+  expect(settings).toContain("OOKRW Test receipts")
+  expect(settings).toContain("OOKRW Test 영수증")
+  expect(place).toContain("This offer comes from ONDO, not the official place record or venue.")
+  expect(place).toContain("이 혜택은 공식 장소 기록이나 매장이 아닌 ONDO에서 제공합니다.")
+  expect(place).not.toContain("Confirm payment support with the venue")
 })
 
 test("consumer copy removes internal scenario-runner vocabulary", () => {

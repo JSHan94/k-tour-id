@@ -92,7 +92,10 @@ test("planned meals appear only after the explicit local join confirmation and s
   await expectNoSeriousAxe(page)
   await page.reload({ waitUntil: "domcontentloaded" })
   my = await openMy(page)
-  await expect(my.getByTestId(`planned-table-${TABLE_ID}`)).toBeVisible()
+  const planned = my.getByTestId(`planned-table-${TABLE_ID}`)
+  await expect(planned).toBeVisible()
+  await planned.getByRole("button", { name: "Open Tables" }).click()
+  await expect(page.getByTestId("table-detail")).toBeVisible()
 })
 
 test("cancel creates no plan while the Local Signal merge contract can render honest device history in Korean", async ({ page }) => {
