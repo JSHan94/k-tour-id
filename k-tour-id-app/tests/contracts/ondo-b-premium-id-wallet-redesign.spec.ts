@@ -100,3 +100,21 @@ test("B-PREMIUM-PAY-002 wallet readiness, balance, receipts, and refunds share o
   expect(myKorea).toContain('data-testid="my-korea-receipts"')
   expect(provider).toContain("sanitizeCommerceReceipts")
 })
+
+test("B-PREMIUM-POLISH-001 consumer copy matches device persistence and the fixed non-live offer", () => {
+  const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
+  const tables = source("features/ondo/connect/tables-entry-b.tsx")
+
+  expect(commerce).toContain("Eligible for this test offer · ₩22,000 minimum met")
+  expect(commerce).toContain("이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족")
+  expect(commerce).toContain("Payments and refunds completed on this device appear here.")
+  expect(commerce).toContain("이 기기에서 완료한 결제와 환불이 여기에 표시됩니다.")
+  expect(commerce).toContain("Original payment")
+  expect(commerce).toContain("Refund reference")
+  expect(commerce).not.toContain("Eligible today")
+  expect(commerce).not.toContain("이 세션의 결제와 환불")
+
+  expect(tables).toContain("Fri, Aug 28 · 20:30 KST")
+  expect(tables).toContain("8월 28일 금요일 · 20:30 KST")
+  expect(tables).not.toContain('eyebrow: "Tonight in Seoul"')
+})

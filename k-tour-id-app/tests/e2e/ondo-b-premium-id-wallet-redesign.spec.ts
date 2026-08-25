@@ -114,9 +114,14 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   await restoredActivity.getByTestId("wallet-activity-refund").click()
   await expect(page.getByTestId("wallet-balance")).toContainText("60")
   await expect(restoredActivity).toContainText("Refunded")
+  await expect(restoredActivity).toContainText("ONDO-LOCAL-20260825-001")
+  await expect(restoredActivity).toContainText("ONDO-LOCAL-REFUND-20260825-001")
 
   await page.getByTestId("nav-my").click()
-  await expect(page.getByTestId("my-korea-receipts")).toContainText("Refunded")
+  const myReceipts = page.getByTestId("my-korea-receipts")
+  await expect(myReceipts).toContainText("Refunded")
+  await expect(myReceipts).toContainText("ONDO-LOCAL-20260825-001")
+  await expect(myReceipts).toContainText("ONDO-LOCAL-REFUND-20260825-001")
 })
 
 test("QA injection creates recovery without exposing outcome controls", async ({ page }) => {

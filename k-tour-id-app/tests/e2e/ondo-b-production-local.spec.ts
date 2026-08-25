@@ -3,6 +3,14 @@ import { CANONICAL_VENUE_ID, expectBRuntimeClean, installBRuntimeGuard } from ".
 
 const DEVICE_KEY = "ondo-b.device.v1"
 
+async function waitForBHydration(page: import("@playwright/test").Page) {
+  const root = page.getByTestId("ondo-b-root")
+  await expect(root).toHaveAttribute("data-variant", "B")
+  await expect.poll(() => page.getByTestId("ondo-canvas").evaluate((canvas) => getComputedStyle(canvas).display), {
+    message: "ONDO B canvas should own its hydrated grid before pointer input",
+  }).toBe("grid")
+}
+
 async function seedProductionB(page: import("@playwright/test").Page, savedVenueIds: string[] = []) {
   await page.addInitScript(({ key, venueIds }) => {
     if (!localStorage.getItem(key)) {
@@ -180,6 +188,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
       else await route.continue()
     })
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await waitForBHydration(page)
     await page.locator("[data-city='seoul']").click()
     await page.getByRole("button", { name: "List", exact: true }).click()
     await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
