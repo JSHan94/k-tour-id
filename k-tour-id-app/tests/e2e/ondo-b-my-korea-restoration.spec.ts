@@ -84,7 +84,7 @@ test("planned meals appear only after the explicit local join confirmation and s
 
   await page.getByTestId("table-detail").locator("header").getByRole("button", { name: "Close Table" }).first().click()
   let my = await openMy(page)
-  await expect(my.getByTestId(`planned-table-${TABLE_ID}`)).toContainText("Local preview · no reservation")
+  await expect(my.getByTestId(`planned-table-${TABLE_ID}`)).toContainText("On-device reference · no reservation")
   await expectNoSeriousAxe(page)
   await page.reload({ waitUntil: "domcontentloaded" })
   my = await openMy(page)

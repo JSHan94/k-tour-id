@@ -50,13 +50,15 @@ test("B-P0-ID-001 Traveler ID presents Person and 19+ as independent local walkt
 
 test("B-P0-DATA-001 only coarse posted-signal/device fields cross the device persistence boundary", () => {
   const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const myKoreaModel = source("features/ondo/my/my-korea-model.ts")
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
 
   expect(deviceType).toContain("localSignalPostedVenueIds: string[]")
   expect(deviceType).toContain("localInteractionBoundarySeen: boolean")
   expect(deviceType).not.toMatch(/localSignalDraft|personCheck|ageCheck|claim|credential|did|profile|raw|outcome/i)
-  expect(provider).toContain("sanitizeCanonicalVenueIds(record.localSignalPostedVenueIds)")
+  expect(provider).toContain("sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds)")
+  expect(myKoreaModel).toContain("return sanitizeCanonicalVenueIds(value).slice(0, MY_KOREA_HISTORY_LIMIT)")
   expect(provider).not.toMatch(/sessionStorage|URLSearchParams/)
 })
 
