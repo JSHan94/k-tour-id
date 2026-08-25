@@ -103,16 +103,25 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
     const region = contentRef.current
     if (!canvas || !region) return
     let restoreAt: number | null = null
+    let restoreFrame: number | null = null
     const syncModalScroll = () => {
       const hasModal = canvas.querySelector("[aria-modal='true']:not([aria-hidden='true']):not([inert])") !== null
       if (hasModal && restoreAt === null) {
+        if (restoreFrame !== null) {
+          window.cancelAnimationFrame(restoreFrame)
+          restoreFrame = null
+        }
         restoreAt = region.scrollTop
         region.scrollTop = 0
       } else if (!hasModal && restoreAt !== null) {
-        const nextTop = Math.min(restoreAt, Math.max(0, region.scrollHeight - region.clientHeight))
+        const requestedTop = restoreAt
         restoreAt = null
-        region.scrollTop = nextTop
-        scrollPositions.current[state.tab] = nextTop
+        restoreFrame = window.requestAnimationFrame(() => {
+          restoreFrame = null
+          const nextTop = Math.min(requestedTop, Math.max(0, region.scrollHeight - region.clientHeight))
+          region.scrollTop = nextTop
+          scrollPositions.current[state.tab] = nextTop
+        })
       }
     }
     const observer = new MutationObserver(syncModalScroll)
@@ -123,7 +132,10 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
       subtree: true,
     })
     syncModalScroll()
-    return () => observer.disconnect()
+    return () => {
+      observer.disconnect()
+      if (restoreFrame !== null) window.cancelAnimationFrame(restoreFrame)
+    }
   }, [state.tab])
 
   const selectTab = (tab: OndoBTab) => {
