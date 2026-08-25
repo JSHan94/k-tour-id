@@ -417,3 +417,82 @@
 @media (prefers-reduced-motion: reduce) {
   .reputationReceipt { animation: none; }
 }
+
+/* Keep the existing event facts while putting the decision before the long
+   itinerary on phones. Short landscape becomes a true two-pane event/chat. */
+@media (max-width: 759px) {
+  .cardActive {
+    grid-template-areas:
+      "status"
+      "title"
+      "intro"
+      "place"
+      "cta"
+      "itinerary";
+  }
+  .cardActive > .cardTop { grid-area: status; }
+  .cardActive > h2 { grid-area: title; }
+  .cardActive > p { grid-area: intro; }
+  .cardActive > .official { grid-area: place; }
+  .cardActive > .openButton { grid-area: cta; }
+  .cardActive > .plan { grid-area: itinerary; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 760px) {
+  .entry { padding: 14px 34px 72px; }
+  .entryHeader {
+    grid-template-columns: minmax(250px, .72fr) minmax(390px, 1.28fr);
+    gap: 4px 24px;
+    max-width: none;
+    padding: 0 2px 10px;
+  }
+  .entryHeader p,
+  .entryHeader h1 { grid-column: 1; }
+  .entryHeader h1 { font-size: 34px; }
+  .entryHeader > span,
+  .prototypeTruth { grid-column: 2; }
+  .entryHeader > span { grid-row: 1 / span 2; align-self: end; line-height: 1.42; }
+  .prototypeTruth { grid-row: 3; align-self: start; line-height: 1.35; }
+  .cardActive {
+    grid-template-columns: minmax(0, .9fr) minmax(350px, 1.1fr);
+    grid-template-rows: auto auto auto 44px auto;
+    grid-template-areas:
+      "status itinerary"
+      "title itinerary"
+      "intro itinerary"
+      "cta itinerary"
+      "place itinerary";
+    gap: 6px 16px;
+    padding: 14px 16px;
+  }
+  .cardActive > .official { padding: 8px 10px; }
+  .cardActive > .official span { display: -webkit-box; overflow: hidden; line-height: 1.3; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .cardActive > .plan { gap: 5px; padding: 9px 11px; }
+  .cardActive > .plan dl { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px 11px; }
+  .cardActive > .plan dl > div {
+    grid-template-columns: 78px minmax(0, 1fr);
+    align-items: start;
+    gap: 5px;
+  }
+  .cardActive > .openButton { min-height: 44px; align-self: stretch; padding-block: 8px; }
+
+  .detailBody > .ageNotice { grid-column: 2; grid-row: 1; }
+  .detailBody > .joinPanel,
+  .detailBody > .confirmation,
+  .detailBody > .joined,
+  .detailBody > .chat { grid-column: 2; grid-row: 2 / span 4; }
+  .detailBody > .joinPanel { gap: 9px; padding: 13px; }
+  .detailBody > .joinPanel textarea { min-height: 82px; }
+  .detailBody:has(> .chat) > .plan {
+    position: sticky;
+    top: 76px;
+    grid-column: 1;
+    grid-row: 1 / span 5;
+    align-self: start;
+  }
+  .detail:has(.chat) { scroll-padding-top: 76px; }
+  .detailBody:has(> .chat) > .chat {
+    align-self: start;
+    scroll-margin-top: 76px;
+  }
+}

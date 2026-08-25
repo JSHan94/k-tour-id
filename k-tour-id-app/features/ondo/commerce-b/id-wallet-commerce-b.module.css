@@ -186,6 +186,13 @@
   .spinner { animation: none; backdrop-filter: none; }
 }
 
+@media (max-width: 350px) {
+  .balanceCard { min-height: 138px; padding: 13px 14px; }
+  .balanceTop small { max-width: 142px; }
+  .balanceCard > strong { margin-top: 7px; font-size: 34px; }
+  .balanceAction { min-height: 44px; margin-top: 0; }
+}
+
 /* Payment keeps the existing consent and state machine, but the current
    action stays reachable like a real checkout rather than living below a
    technical document. */
@@ -343,4 +350,19 @@
   .balanceCard::before,
   .benefitCard,
   .activityCard { animation: none; }
+}
+
+/* On the narrowest supported phone the Wallet action is part of the first
+   decision frame, not content hidden underneath the dock.  The same copy and
+   state remain visible; this only tightens the vertical rhythm. */
+@media (max-width: 350px) {
+  .root { margin-top: 8px; }
+  .heading { gap: 3px; }
+  .heading h2 { font-size: 25px; }
+  .heading > span { font-size: 12px; line-height: 1.35; }
+  .balanceCard { min-height: 132px; margin-top: 6px; padding: 11px 13px; border-radius: 22px; }
+  .balanceTop { gap: 9px; }
+  .balanceTop small { max-width: 132px; line-height: 1.25; }
+  .balanceCard > strong { margin-top: 2px; font-size: 33px; }
+  .balanceAction { min-height: 44px; margin-top: -3px; }
 }

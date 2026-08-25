@@ -133,7 +133,7 @@
 .pulseAlternatives button { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid #ddd5cd; border-radius: 10px; background: #fff; color: #292521; font: inherit; text-align: left; }
 .pulseAlternatives button > span { display: grid; min-width: 0; gap: 2px; }
 .pulseAlternatives button strong { font-size: 12px; overflow-wrap: anywhere; }
-.pulseAlternatives button small { color: #655f58; font-size: 12px; }
+.pulseAlternatives button small { color: #514a44; font-size: 12px; }
 .pulseAlternatives button:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
 
 @media (max-width: 370px) {
@@ -585,8 +585,8 @@
     grid-template-columns: auto minmax(0, 1fr);
     gap: 7px;
     margin-right: 42px;
-    font-size: 10px;
-    line-height: 1.25;
+    font-size: 12px;
+    line-height: 1.3;
   }
 
   .meta span {
@@ -595,14 +595,7 @@
     text-overflow: initial;
   }
 
-  .meta i {
-    min-width: 0;
-    overflow: hidden;
-    padding-left: 7px;
-    color: #a14d3e;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  .meta i { display: none; }
 
   .peek h2 {
     margin-top: 5px;
@@ -617,14 +610,9 @@
     margin: 3px 42px 7px 0;
   }
 
-  .nameProvenance strong { font-size: 11px; white-space: nowrap; }
+  .nameProvenance strong { font-size: 12px; white-space: nowrap; }
   .nameProvenance small {
-    display: block;
-    overflow: hidden;
-    font-size: 10px;
-    line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   .pulsePeek {
@@ -642,7 +630,7 @@
   .pulsePeek strong { font-size: 14px; }
   .pulsePeek small,
   .pulsePeek p,
-  .pulsePeek em { font-size: 10px; line-height: 1.35; -webkit-line-clamp: 1; }
+  .pulsePeek em { font-size: 12px; line-height: 1.35; -webkit-line-clamp: 1; }
   .peekActions { gap: 8px; margin-top: 8px; }
   .peekActions a,
   .peekActions button { min-height: 48px; border-radius: 15px; }

@@ -120,7 +120,7 @@ export function OfficialDirectoryOnboardingLayer() {
         && preferredBounds.right <= dialogBounds.right
         && preferredBounds.bottom <= dialogBounds.bottom
         && preferredBounds.left >= dialogBounds.left)
-      ;(preferredIsFullyVisible ? preferred : dialog)?.focus({ preventScroll: true })
+      ;(step === "value" ? dialog : preferredIsFullyVisible ? preferred : dialog)?.focus({ preventScroll: true })
     })
     return () => window.cancelAnimationFrame(frame)
   }, [state.hydrated, state.onboarding, step])

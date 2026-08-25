@@ -1494,6 +1494,10 @@
   }
   .venueList .loadMore,
   .venueList .empty { grid-column: 1 / -1; }
+  .venueList li[data-venue-id] > button { min-height: 128px; }
+  .venueList .officialNameTruth,
+  .venueList .transliterationTruth,
+  .venueList .categoryTruth { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1577,7 +1581,7 @@
     color: #81685b;
     box-shadow: 0 12px 30px rgb(57 37 27 / 7%);
     content: "SEOUL  ·  PULSE  ·  BUSAN";
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 820;
     letter-spacing: .13em;
     pointer-events: none;
@@ -1606,8 +1610,8 @@
     border-radius: 26px;
   }
 
-  .cityNode[data-city="seoul"] { top: 12%; right: auto; bottom: auto; left: 2%; }
-  .cityNode[data-city="busan"] { top: auto; right: 2%; bottom: 12%; left: auto; }
+  .cityNode[data-city="seoul"] { top: 12%; right: auto; bottom: auto; left: 8%; }
+  .cityNode[data-city="busan"] { top: auto; right: 12%; bottom: 17%; left: auto; }
   .cityNode i { width: 62px; height: 62px; }
   .cityNode strong { font-size: 20px; }
 
