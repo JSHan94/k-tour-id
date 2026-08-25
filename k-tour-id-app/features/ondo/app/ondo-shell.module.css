@@ -64,7 +64,7 @@
 .content[data-active-tab="tables"],
 .content[data-active-tab="id"],
 .content[data-active-tab="settings"] { scroll-behavior: auto; }
-.content:has([aria-modal="true"]) { overflow-y: hidden; }
+.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) .content { overflow-y: hidden; }
 
 .nav {
   position: relative;
@@ -138,13 +138,13 @@
   display: grid;
   width: 100%;
   max-width: 100%;
-  min-height: 13px;
+  min-height: 14px;
   place-items: center;
   padding-inline: 1px;
-  font-size: clamp(10px, 2.9vw, 11.5px);
+  font-size: 12px;
   font-weight: 690;
   letter-spacing: -.035em;
-  line-height: 1.06;
+  line-height: 1.08;
   overflow-wrap: normal;
   text-align: center;
   text-wrap: balance;
@@ -152,13 +152,13 @@
 }
 
 .navActive {
-  border-color: rgb(165 76 59 / 16%) !important;
-  background: linear-gradient(180deg, #fff6f1, #faeae2) !important;
-  color: #883d31 !important;
-  box-shadow: 0 5px 14px rgb(133 57 45 / 10%), inset 0 1px 0 rgb(255 255 255 / 80%);
+  border-color: rgb(45 42 38 / 13%) !important;
+  background: linear-gradient(180deg, #f7f5f1, #ece9e3) !important;
+  color: #2c2a27 !important;
+  box-shadow: 0 5px 14px rgb(47 43 38 / 8%), inset 0 1px 0 rgb(255 255 255 / 82%);
 }
-.navActive::after { width: 22px !important; background: #a34a3b !important; }
-.navActive .navIcon { background: #a34a3b; color: #fff; transform: translateY(-1px); }
+.navActive::after { width: 22px !important; background: #514d47 !important; }
+.navActive .navIcon { background: #e6e2dc; color: #292724; transform: translateY(-1px); }
 .nav button:focus-visible {
   z-index: 2;
   outline: 2px solid var(--ondo-focus);
@@ -259,12 +259,12 @@
   }
   .stage[data-variant="B"] .nav button { min-height: 56px; }
   .stage[data-variant="B"] .navIcon { width: 25px; height: 25px; }
-  .stage[data-variant="B"] .navLabel { font-size: 10.5px; }
+  .stage[data-variant="B"] .navLabel { font-size: 12px; }
 }
 
 @media (max-width: 340px) {
   .nav { width: calc(100% - 16px); gap: 2px; padding-inline: 4px; }
-  .navLabel { font-size: 10px; letter-spacing: -.055em; }
+  .navLabel { font-size: 12px; letter-spacing: -.045em; }
 }
 
 @media (max-width: 759px) {
@@ -277,7 +277,7 @@
 
 @media (max-width: 280px) {
   .nav {
-    grid-template-columns: repeat(5, 44px);
+    grid-template-columns: repeat(5, 52px);
     justify-content: start;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
@@ -285,14 +285,6 @@
     touch-action: pan-x;
   }
   .nav::-webkit-scrollbar { display: none; }
-  .navLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
 }
 
 @media (hover: hover) and (pointer: fine) {

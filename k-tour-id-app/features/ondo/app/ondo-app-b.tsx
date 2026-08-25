@@ -30,6 +30,7 @@ const B_NAV_COPY = {
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
   const { state, actions } = useOndoB()
+  const canvasRef = useRef<HTMLElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollPositions = useRef<Partial<Record<OndoBTab, number>>>({})
   const previousSurface = useRef(state.surface)
@@ -98,11 +99,12 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
   }, [])
 
   useEffect(() => {
+    const canvas = canvasRef.current
     const region = contentRef.current
-    if (!region) return
+    if (!canvas || !region) return
     let restoreAt: number | null = null
     const syncModalScroll = () => {
-      const hasModal = region.querySelector("[aria-modal='true']") !== null
+      const hasModal = canvas.querySelector("[aria-modal='true']:not([aria-hidden='true']):not([inert])") !== null
       if (hasModal && restoreAt === null) {
         restoreAt = region.scrollTop
         region.scrollTop = 0
@@ -114,7 +116,12 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
       }
     }
     const observer = new MutationObserver(syncModalScroll)
-    observer.observe(region, { childList: true, subtree: true })
+    observer.observe(canvas, {
+      attributes: true,
+      attributeFilter: ["aria-hidden", "aria-modal", "inert"],
+      childList: true,
+      subtree: true,
+    })
     syncModalScroll()
     return () => observer.disconnect()
   }, [state.tab])
@@ -136,7 +143,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
 
   return (
     <main className={styles.stage} data-ondo-locale={state.locale} data-testid="ondo-b-root" data-variant="B" data-locale={state.locale}>
-      <section className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas">
+      <section ref={canvasRef} className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas">
         <div
           ref={contentRef}
           className={styles.content}
@@ -164,6 +171,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
               aria-label={B_NAV_COPY[state.locale][id]}
               data-state={state.tab === id ? "selected" : "idle"}
               data-testid={`nav-${id}`}
+              onFocus={(event) => event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" })}
               onClick={() => selectTab(id)}
             >
               <span className={styles.navIcon} aria-hidden="true"><Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} /></span>
