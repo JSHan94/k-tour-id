@@ -33,10 +33,9 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:
 const COPY = {
   en: {
     title: "Before you join",
-    reason: "This Table is for guests aged 19 and over. The age check belongs to the Table, not the venue record.",
+    reason: "We’ll only share that you’re over 19 for this Table. Your date of birth stays private.",
     boundary: "Prototype truth",
-    predicate: "No provider is connected and no credential is created. Only an eligible 19+ result returns to this Table.",
-    privacy: "Date of birth is never requested or stored.",
+    predicate: "No provider is connected and no credential is created. The age check belongs to the Table, not the venue record. Only an eligible 19+ result returns to this Table. Date of birth is never requested or stored.",
     context: "You will return here",
     start: "Review and continue",
     cancel: "Not now",
@@ -55,10 +54,9 @@ const COPY = {
   },
   ko: {
     title: "참여 전 확인",
-    reason: "이 테이블은 만 19세 이상 게스트를 위한 모임이에요. 연령 확인은 장소 기록이 아닌 테이블에만 적용됩니다.",
+    reason: "이 테이블에는 만 19세 이상이라는 사실만 공유해요. 생년월일은 비공개로 유지됩니다.",
     boundary: "프로토타입 안내",
-    predicate: "연결된 제공기관이나 생성되는 자격증명은 없어요. 이 테이블에는 19+ 충족 결과만 돌아갑니다.",
-    privacy: "생년월일을 요청하거나 저장하지 않습니다.",
+    predicate: "연결된 제공기관이나 생성되는 자격증명은 없어요. 연령 확인은 장소 기록이 아닌 테이블에만 적용되며, 이 테이블에는 19+ 충족 결과만 돌아갑니다. 생년월일을 요청하거나 저장하지 않습니다.",
     context: "이곳으로 돌아와요",
     start: "확인하고 계속",
     cancel: "나중에",
@@ -154,7 +152,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
             <BadgeCheck className={styles.heroIcon} size={34} aria-hidden="true" />
             <h2 id="after19-b-title">{t.title}</h2>
             <p className={styles.reason}>{t.reason}</p>
-            <aside className={styles.boundary} data-testid="local-interactive-boundary"><strong>{t.boundary}</strong><span>{t.predicate}</span><span>{t.privacy}</span></aside>
+            <details className={styles.boundary} data-testid="local-interactive-boundary"><summary>{t.boundary}</summary><p>{t.predicate}</p></details>
             <section className={styles.returnContext} data-testid="after19-return-context" data-return-table={returnTo.tableId} data-return-venue={returnTo.venueId}>
               <h3>{t.context}</h3>
               <p><strong>{tableTitle}</strong><span>{venueLabel}</span></p>
@@ -171,7 +169,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
           <div className={styles.body}>
             <BadgeCheck className={styles.heroIcon} size={34} aria-hidden="true" />
             <h2 id="after19-b-title">{t.choices}</h2>
-            <p className={styles.reason}>{t.predicate} {t.privacy}</p>
+            <p className={styles.reason}>{t.reason}</p>
             <div className={styles.actions}>
               <button type="button" className={styles.primary} data-testid="gate-success" onClick={complete}><BadgeCheck size={19} aria-hidden="true" />{t.success}</button>
               <button type="button" className={styles.secondary} data-testid="gate-cancel" onClick={cancel}>{t.cancel}</button>
