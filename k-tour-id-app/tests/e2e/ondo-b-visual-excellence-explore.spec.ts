@@ -1,4 +1,6 @@
-import { expect, test, type Locator, type Page, type TestInfo } from "@playwright/test"
+import { mkdirSync } from "node:fs"
+import { resolve } from "node:path"
+import { expect, test, type Locator, type Page } from "@playwright/test"
 import {
   gotoB,
   openCanonicalVenue,
@@ -15,6 +17,7 @@ const VIEWPORTS = [
 ] as const
 
 const LOCALES = ["en", "ko"] as const
+const EVIDENCE_DIR = resolve(process.cwd(), "artifacts/qa/explore-excellence")
 
 async function seedCompletedBDevice(page: Page, locale: (typeof LOCALES)[number]) {
   await page.addInitScript(({ deviceLocale }) => {
@@ -48,19 +51,23 @@ async function expectNoPageOverflow(page: Page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true)
 }
 
-async function screenshot(page: Page, testInfo: TestInfo, name: string) {
-  await page.screenshot({ path: testInfo.outputPath(`${name}.png`), animations: "disabled" })
+async function screenshot(page: Page, name: string) {
+  await page.screenshot({ path: resolve(EVIDENCE_DIR, `${name}.png`), animations: "disabled" })
 }
 
 test.describe("ONDO Explore visual-excellence contract", () => {
   test.describe.configure({ timeout: 240_000 })
+
+  test.beforeAll(() => {
+    mkdirSync(EVIDENCE_DIR, { recursive: true })
+  })
 
   test.beforeEach(async ({ page }) => {
     await prepareBPage(page)
   })
 
   for (const locale of LOCALES) {
-    test(`${locale.toUpperCase()} onboarding is a branded Pulse journey without clipped truth or phone-width desktop framing`, async ({ page }, testInfo) => {
+    test(`${locale.toUpperCase()} onboarding is a branded Pulse journey without clipped truth or phone-width desktop framing`, async ({ page }) => {
       await seedFreshOnboarding(page, locale)
 
       for (const viewport of VIEWPORTS) {
@@ -87,12 +94,12 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(composition.sceneOpacity).toBeGreaterThan(.2)
           if (viewport.width >= 800) expect(composition.layerWidth).toBeGreaterThan(viewport.width * .82)
 
-          await screenshot(page, testInfo, `explore-onboarding-${locale}-${viewport.id}`)
+          await screenshot(page, `explore-onboarding-${locale}-${viewport.id}`)
         })
       }
     })
 
-    test(`${locale.toUpperCase()} Nation and Seoul list share the same elevated Pulse material grammar`, async ({ page }, testInfo) => {
+    test(`${locale.toUpperCase()} Nation and Seoul list share the same elevated Pulse material grammar`, async ({ page }) => {
       await seedB(page, { locale })
       await seedCompletedBDevice(page, locale)
 
@@ -114,7 +121,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(cityMaterial.shadow).not.toBe("none")
           expect(atlasScene).not.toBe("none")
           await expectNoPageOverflow(page)
-          await screenshot(page, testInfo, `explore-nation-${locale}-${viewport.id}`)
+          await screenshot(page, `explore-nation-${locale}-${viewport.id}`)
 
           await gotoB(page, "?city=seoul&view=list")
           const list = page.getByTestId("ondo-b-venue-list")
@@ -137,12 +144,12 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(rowMaterial.railWidth).toBeGreaterThanOrEqual(3)
           expect(rowMaterial.railBackground).not.toBe("rgba(0, 0, 0, 0)")
           await expectNoPageOverflow(page)
-          await screenshot(page, testInfo, `explore-list-${locale}-${viewport.id}`)
+          await screenshot(page, `explore-list-${locale}-${viewport.id}`)
         })
       }
     })
 
-    test(`${locale.toUpperCase()} place summary and detail create a tactile decision hierarchy`, async ({ page }, testInfo) => {
+    test(`${locale.toUpperCase()} place summary and detail create a tactile decision hierarchy`, async ({ page }) => {
       await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
       await seedCompletedBDevice(page, locale)
 
@@ -167,7 +174,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(peekMaterial.pulseBackground).not.toBe("none")
           expect(peekMaterial.shadow).not.toBe("none")
           await expectNoPageOverflow(page)
-          await screenshot(page, testInfo, `explore-peek-${locale}-${viewport.id}`)
+          await screenshot(page, `explore-peek-${locale}-${viewport.id}`)
 
           await page.getByTestId("canonical-place-details").click()
           const overlay = page.getByTestId("canonical-place-overlay")
@@ -191,7 +198,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
             expect(detailComposition.bodyColumns).toBeGreaterThanOrEqual(2)
           }
           await expectNoPageOverflow(page)
-          await screenshot(page, testInfo, `explore-detail-${locale}-${viewport.id}`)
+          await screenshot(page, `explore-detail-${locale}-${viewport.id}`)
         })
       }
     })
