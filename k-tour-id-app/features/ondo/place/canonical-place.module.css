@@ -1,6 +1,6 @@
-.peek { position: absolute; z-index: 76; right: 14px; bottom: calc(86px + env(safe-area-inset-bottom)); left: 14px; padding: 9px 16px 14px; border: 1px solid rgb(34 33 31 / 13%); border-radius: 18px; background: #fff; color: #22211f; box-shadow: 0 5px 22px rgb(34 33 31 / 7%); }
+.peek { position: absolute; z-index: 76; right: 14px; bottom: calc(86px + env(safe-area-inset-bottom)); left: 14px; max-height: min(72dvh, 620px); padding: 9px 16px 14px; overflow-y: auto; overscroll-behavior: contain; border: 1px solid rgb(34 33 31 / 13%); border-radius: 18px; background: #fff; color: #22211f; box-shadow: 0 5px 22px rgb(34 33 31 / 7%); -webkit-overflow-scrolling: touch; }
 .grabber { width: 34px; height: 3px; margin: 0 auto 9px; border-radius: 99px; background: #d8d5cf; }
-.close { position: absolute; top: 9px; right: 10px; display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; }
+.close { position: sticky; z-index: 3; top: 0; display: grid; width: 44px; height: 44px; place-items: center; margin: 0 0 -44px auto; border: 0; background: rgb(255 255 255 / 92%); border-radius: 12px; backdrop-filter: blur(12px); }
 .meta { display: flex; margin-right: 44px; align-items: center; gap: 8px; color: #716c65; font-size: 12px; }
 .meta i { padding-left: 8px; border-left: 1px solid #d7d3cd; font-style: normal; }
 .peek h2 { margin: 8px 44px 1px 0; font: inherit; font-size: 20px; font-weight: 700; line-height: 1.28; letter-spacing: -.035em; overflow-wrap: anywhere; }
@@ -41,12 +41,12 @@
 .localSignalAction button { display: grid; width: 100%; min-height: 64px; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid #d4d1cb; border-radius: 12px; background: #fff; color: #292724; font: inherit; text-align: left; }
 .localSignalAction button > span { display: grid; min-width: 0; gap: 3px; }
 .localSignalAction strong { font-size: 13px; }
-.localSignalAction small { color: #6e6962; font-size: 11px; font-weight: 540; line-height: 1.45; }
+.localSignalAction small { color: #6e6962; font-size: 12px; font-weight: 540; line-height: 1.45; }
 .demoOfferAction { margin: 0 0 20px; padding: 14px 0; border-block: 1px solid #dedbd5; }
 .demoOfferAction button { display: grid; width: 100%; min-height: 68px; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 9px; padding: 11px 12px; border: 1px solid #d8c7b8; border-radius: 12px; background: #fffaf5; color: #302a25; font: inherit; text-align: left; }
 .demoOfferAction button > span { display: grid; min-width: 0; gap: 3px; }
 .demoOfferAction strong { font-size: 13px; }
-.demoOfferAction small { color: #715f50; font-size: 11px; font-weight: 540; line-height: 1.45; }
+.demoOfferAction small { color: #715f50; font-size: 12px; font-weight: 540; line-height: 1.45; }
 .sourceEvidence, .before, .source { padding: 20px 0; border-top: 1px solid #dedbd5; }
 .sourceEvidence h3, .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
 .sourceEvidence > p, .source p { margin: 0 0 12px; color: #6f6a63; font-size: 12px; line-height: 1.55; }
@@ -61,6 +61,16 @@
 .saveError { margin: -6px 0 18px; padding: 12px 0 14px; border-top: 1px solid #dedbd5; border-bottom: 1px solid #dedbd5; background: transparent; }
 .saveError p { margin: 0 0 10px; color: #514d47; font-size: 12px; line-height: 1.5; }
 .saveError button { min-height: 44px; padding: 0 13px; border: 1px solid #20201e; border-radius: 10px; background: #20201e; color: #fff; font-size: 12px; font-weight: 750; }
+.close:focus-visible,
+.peekActions a:focus-visible,
+.peekActions button:focus-visible,
+.detail > header button:focus-visible,
+.detailError button:focus-visible,
+.decisionActions a:focus-visible,
+.decisionActions button:focus-visible,
+.localSignalAction button:focus-visible,
+.demoOfferAction button:focus-visible,
+.saveError button:focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 2px; }
 
 @media (max-width: 370px) {
   .peek { right: 8px; left: 8px; }
@@ -74,38 +84,41 @@
   :global([data-variant="B"]) .detail { max-width: 700px; margin-inline: auto; }
 }
 
-.pulsePeek { display: grid; gap: 4px; margin: 2px 0 10px; padding: 10px 0; border-top: 1px solid #e0ddd7; }
-.pulsePeek strong { color: #a23e30; font-size: 14px; }
-.pulsePeek small, .pulsePeek p, .pulsePeek em { margin: 0; color: #655f58; font-size: 11px; font-style: normal; line-height: 1.4; }
+.pulsePeek,
+.pulsePanel { --pulse-level: #CFCAC0; --pulse-level-text: #191816; --pulse-level-stroke: #706B64; --pulse-border-style: solid; }
+.pulsePeek[data-pulse-level="peak"], .pulsePanel[data-pulse-level="peak"] { --pulse-level: #7A2048; --pulse-level-text: #FFFDF8; --pulse-level-stroke: #4B122C; }
+.pulsePeek[data-pulse-level="hot"], .pulsePanel[data-pulse-level="hot"] { --pulse-level: #C94832; --pulse-level-text: #FFFDF8; --pulse-level-stroke: #7C2E23; }
+.pulsePeek[data-pulse-level="rising"], .pulsePanel[data-pulse-level="rising"] { --pulse-level: #E6843B; --pulse-level-text: #191816; --pulse-level-stroke: #794421; }
+.pulsePeek[data-pulse-level="warming"], .pulsePanel[data-pulse-level="warming"] { --pulse-level: #EBC463; --pulse-level-text: #191816; --pulse-level-stroke: #6B5425; }
+.pulsePeek[data-pulse-level="low"], .pulsePanel[data-pulse-level="low"] { --pulse-level: #EFE1B7; --pulse-level-text: #191816; --pulse-level-stroke: #6B6255; }
+.pulsePeek[data-pulse-level="limited"], .pulsePanel[data-pulse-level="limited"] { --pulse-level: #CFCAC0; --pulse-level-text: #191816; --pulse-level-stroke: #706B64; --pulse-border-style: dashed; }
+.pulsePeek { display: grid; gap: 4px; margin: 2px 0 10px; padding: 10px 0 10px 12px; border-top: 1px solid #e0ddd7; border-left-width: 4px; border-left-style: var(--pulse-border-style); border-left-color: var(--pulse-level); background: linear-gradient(90deg, color-mix(in srgb, var(--pulse-level) 10%, #fff), transparent 58%); }
+.pulsePeek strong { color: var(--pulse-level-stroke); font-size: 14px; }
+.pulsePeek small, .pulsePeek p, .pulsePeek em { margin: 0; color: #655f58; font-size: 12px; font-style: normal; line-height: 1.4; }
 .pulsePeek em { color: #355f50; font-weight: 720; }
-.pulsePanel { margin: 18px 0; padding: 16px; border: 1px solid #dfd7cf; border-radius: 16px; background: linear-gradient(145deg, #fffaf5, #fff); }
+.pulsePanel { margin: 18px 0; padding: 16px; border-width: 1px; border-style: var(--pulse-border-style); border-color: var(--pulse-level); border-radius: 16px; background: linear-gradient(145deg, color-mix(in srgb, var(--pulse-level) 11%, #fffaf5), #fff 72%); box-shadow: 0 12px 30px rgb(52 38 27 / 6%); }
 .pulsePanel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .pulsePanel > header div { display: grid; gap: 3px; }
-.pulsePanel > header span { color: #76675f; font-size: 10px; font-weight: 820; letter-spacing: .11em; }
-.pulsePanel > header h3 { margin: 0; color: #28231f; font-size: 21px; line-height: 1.2; }
-.pulsePanel > header > i { flex: 0 0 auto; padding: 5px 8px; border: 1px solid currentColor; border-radius: 999px; color: #8d8982; font-size: 10px; font-style: normal; font-weight: 850; }
-.pulsePanel > header > i[data-level="peak"] { color: #a52626; }
-.pulsePanel > header > i[data-level="hot"] { color: #bd3e2f; }
-.pulsePanel > header > i[data-level="rising"] { color: #a95420; }
-.pulsePanel > header > i[data-level="warming"] { color: #8b6426; }
-.pulsePanel > header > i[data-level="low"] { color: #426c59; }
-.pulseBoundary { margin: 8px 0 13px; color: #625c55; font-size: 11px; line-height: 1.5; }
+.pulsePanel > header span { color: var(--pulse-level-stroke); font-size: 12px; font-weight: 820; letter-spacing: .11em; }
+.pulsePanel > header h3 { margin: 0; color: var(--pulse-level-stroke); font-size: 21px; line-height: 1.2; }
+.pulsePanel > header > i { flex: 0 0 auto; padding: 5px 8px; border-width: 1px; border-style: var(--pulse-border-style); border-color: var(--pulse-level-stroke); border-radius: 999px; background: var(--pulse-level); color: var(--pulse-level-text); font-size: 12px; font-style: normal; font-weight: 850; }
+.pulseBoundary { margin: 8px 0 13px; color: #625c55; font-size: 12px; line-height: 1.5; }
 .pulsePanel > dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .pulsePanel > dl div { min-width: 0; padding: 8px 9px; border: 1px solid #e6dfd8; border-radius: 10px; background: rgb(255 255 255 / 72%); }
-.pulsePanel dt { color: #726a62; font-size: 10px; line-height: 1.35; }
+.pulsePanel dt { color: #726a62; font-size: 12px; line-height: 1.35; }
 .pulsePanel dd { margin: 3px 0 0; color: #2e2925; font-size: 12px; font-weight: 760; line-height: 1.4; overflow-wrap: anywhere; }
 .pulseEvidence { margin-top: 13px; padding-top: 12px; border-top: 1px solid #e4ddd6; }
 .pulseEvidence > strong { font-size: 12px; }
-.pulseEvidence ul { display: grid; gap: 5px; margin: 7px 0 0; padding-left: 18px; color: #5e5750; font-size: 11px; line-height: 1.45; }
-.pulseEvidence > p { margin: 9px 0 0; padding: 9px 10px; border-radius: 9px; background: #edf5f0; color: #355f50; font-size: 11px; line-height: 1.45; }
+.pulseEvidence ul { display: grid; gap: 5px; margin: 7px 0 0; padding-left: 18px; color: #5e5750; font-size: 12px; line-height: 1.45; }
+.pulseEvidence > p { margin: 9px 0 0; padding: 9px 10px; border-radius: 9px; background: #edf5f0; color: #355f50; font-size: 12px; line-height: 1.45; }
 .pulseAlternatives { margin-top: 14px; padding-top: 13px; border-top: 1px solid #e4ddd6; }
 .pulseAlternatives h4 { margin: 0; font-size: 14px; }
-.pulseAlternatives > p { margin: 4px 0 9px; color: #625c55; font-size: 11px; line-height: 1.45; }
+.pulseAlternatives > p { margin: 4px 0 9px; color: #625c55; font-size: 12px; line-height: 1.45; }
 .pulseAlternatives > div { display: grid; gap: 6px; }
 .pulseAlternatives button { display: flex; width: 100%; min-height: 52px; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid #ddd5cd; border-radius: 10px; background: #fff; color: #292521; font: inherit; text-align: left; }
 .pulseAlternatives button > span { display: grid; min-width: 0; gap: 2px; }
 .pulseAlternatives button strong { font-size: 12px; overflow-wrap: anywhere; }
-.pulseAlternatives button small { color: #655f58; font-size: 11px; }
+.pulseAlternatives button small { color: #655f58; font-size: 12px; }
 .pulseAlternatives button:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
 
 @media (max-width: 370px) {
