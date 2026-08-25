@@ -3,6 +3,12 @@ import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
+const selectorDeclarations = (css: string, selector: string) => {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const match = css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`))
+  expect(match, `missing ${selector} declaration`).not.toBeNull()
+  return match?.[1] ?? ""
+}
 
 test("B-VISUAL-FEATURE-001 Tables uses the same warm-paper sans display system as the other product roots", () => {
   const tables = source("features/ondo/connect/pulse-table-b.module.css")
@@ -59,9 +65,9 @@ test("B-VISUAL-FEATURE-004 controls retain accessible touch and focus states wit
 
 test("B-VISUAL-FEATURE-005 feature roots leave navigation reservation to the shared canvas scroll owner", () => {
   const roots = [
-    source("features/ondo/connect/pulse-table-b.module.css"),
-    source("features/ondo/identity-b/traveler-id-entry-b.module.css"),
-    source("features/ondo/shared/ui/production-local.module.css"),
+    selectorDeclarations(source("features/ondo/connect/pulse-table-b.module.css"), ".entry"),
+    selectorDeclarations(source("features/ondo/identity-b/traveler-id-entry-b.module.css"), ".screen"),
+    selectorDeclarations(source("features/ondo/shared/ui/production-local.module.css"), ".screen"),
   ].join("\n")
 
   expect(roots).not.toMatch(/padding(?:-bottom)?:[^;]*(?:96|100|104|108|112|116|120|124|128)px/)

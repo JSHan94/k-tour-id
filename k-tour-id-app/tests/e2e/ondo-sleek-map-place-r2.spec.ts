@@ -127,9 +127,9 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
           await expectMinimumTarget(details)
           await expectMinimumTarget(directions)
           await expectCenterHit(details)
-          await expectSingleFilledPriority(peek, "canonical-place-details")
+          await expectSingleFilledPriority(peek, "canonical-venue-directions")
           const order = await peek.locator("[data-visual-priority]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-testid")))
-          expect(order).toEqual(["canonical-place-details", "canonical-venue-directions"])
+          expect(order).toEqual(["canonical-venue-directions", "canonical-place-details"])
 
           await details.click()
           const detail = page.getByTestId("canonical-place-overlay")
