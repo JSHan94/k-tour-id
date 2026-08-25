@@ -17,11 +17,13 @@ test.describe("ONDO B map Pulse visual contract", () => {
       "ondo-pulse-points",
       "ondo-pulse-labels",
       "pulseMarkerLabel",
+      "ondo-b-pulse-marker-accessible-detail",
       "ondo-points",
       "prefers-reduced-motion: reduce",
     ]) expect(map).toContain(token)
 
     expect(map).toContain("const duration = 220")
+    expect(map).toContain('"text-size": ["interpolate", ["linear"], ["zoom"], 9, 12')
     expect(map).not.toContain("clusterProperties:")
 
     for (const level of ["peak", "hot", "rising", "warming", "low", "limited"]) {
