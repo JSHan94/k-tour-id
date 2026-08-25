@@ -53,6 +53,10 @@ test("Tables and Local Signal own photo, retry, chat, check-in, and feedback sta
   expect(tables).toContain("image/jpeg")
   expect(tables).toContain("URL.revokeObjectURL")
   expect(tables).toContain('data-testid="table-chat-image-error"')
+  expect(signal).toContain("MAX_LOCAL_SIGNAL_PHOTO_BYTES")
+  expect(signal).toContain('data-testid="local-signal-photo-error"')
+  expect(signal).toContain("JPEG, PNG, or WebP")
+  expect(signal).toContain("10 MB or smaller")
 })
 
 test("destructive copy and contextual benefit copy state their exact device and venue boundaries", () => {
