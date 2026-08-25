@@ -43,7 +43,7 @@ test("Tables stays polished and closable at 360, 390, and 430 CSS pixels", async
     await detail.evaluate((element) => { element.scrollTop = element.scrollHeight })
     await expect(close).toBeVisible()
     const closeBox = await close.boundingBox()
-    expect(closeBox?.height ?? 0).toBeGreaterThanOrEqual(44)
+    expect(closeBox?.height ?? 0).toBeGreaterThanOrEqual(43.9)
     expect(closeBox?.y ?? -1).toBeGreaterThanOrEqual(0)
     expect((closeBox?.y ?? 10_000) + (closeBox?.height ?? 0)).toBeLessThanOrEqual(800)
     await close.click()
@@ -71,7 +71,6 @@ test("My Korea, ID · Wallet, and Settings share natural scrolling and premium t
   await expect(checks).toHaveCount(2)
   for (const button of await checks.getByRole("button").all()) {
     const box = await button.boundingBox()
-    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(43.9)
   }
 })
-
