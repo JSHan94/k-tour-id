@@ -53,6 +53,8 @@ test("After19 success returns to the exact Table/draft, then confirms join and o
   await expect(gate).toContainText("Local interactive example")
   await expect(gate).toContainText("No request is sent to an external provider")
   await gate.getByTestId("after19-start").click()
+  const cancelBox = await gate.getByTestId("gate-cancel").boundingBox()
+  expect(cancelBox?.height ?? 0).toBeGreaterThanOrEqual(44)
   await gate.getByTestId("gate-success").click()
 
   const confirmation = detail.getByTestId("table-join-confirmation")
