@@ -360,9 +360,9 @@ export function CanonicalPlaceOverlay() {
   )
 
   return (
-    <div id="canonical-place-dialog" ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" tabIndex={-1} data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus}>
+    <div id="canonical-place-dialog" ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="canonical-place-title" tabIndex={-1} data-testid="canonical-place-overlay" data-venue-id={venue.id} data-save-state={saveStatus} onKeyDown={handleDetailKeyDown}>
       <button type="button" className={styles.backdrop} onClick={closeDetails} aria-label={copy.back} tabIndex={-1} />
-      <article ref={detailRef} className={styles.detail} onKeyDown={handleDetailKeyDown}>
+      <article ref={detailRef} className={styles.detail}>
         <header>
           <button ref={closeRef} type="button" onClick={closeDetails} aria-label={copy.back}><ArrowLeft size={19} /></button>
           <span>{district}</span>
