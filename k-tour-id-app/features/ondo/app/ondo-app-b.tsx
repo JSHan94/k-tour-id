@@ -1,7 +1,7 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { useEffect, useRef } from "react"
+import { useEffect, useLayoutEffect, useRef } from "react"
 import { Bookmark, Compass, Fingerprint, Settings, UsersRound } from "lucide-react"
 import { OndoBProvider, useOndoB, type OndoBTab } from "../shared/state/ondo-b-provider"
 import styles from "./ondo-shell.module.css"
@@ -30,6 +30,8 @@ const B_NAV_COPY = {
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
   const { state, actions } = useOndoB()
+  const contentRef = useRef<HTMLDivElement>(null)
+  const scrollPositions = useRef<Partial<Record<OndoBTab, number>>>({})
   const previousSurface = useRef(state.surface)
   const previousDocumentLanguage = useRef<string | null>(null)
   const appliedDocumentLanguage = useRef(state.locale)
@@ -75,15 +77,97 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
     return () => window.clearTimeout(timer)
   }, [state.surface])
 
+  useLayoutEffect(() => {
+    const region = contentRef.current
+    if (!region) return
+    const remembered = scrollPositions.current[state.tab] ?? 0
+    region.scrollTop = Math.min(remembered, Math.max(0, region.scrollHeight - region.clientHeight))
+  }, [state.tab])
+
+  useLayoutEffect(() => {
+    const region = contentRef.current
+    if (!region) return
+    const syncViewport = () => region.style.setProperty("--ondo-scroll-viewport", `${region.clientHeight}px`)
+    const observer = new ResizeObserver(syncViewport)
+    observer.observe(region)
+    syncViewport()
+    return () => {
+      observer.disconnect()
+      region.style.removeProperty("--ondo-scroll-viewport")
+    }
+  }, [])
+
+  useEffect(() => {
+    const region = contentRef.current
+    if (!region) return
+    let restoreAt: number | null = null
+    const syncModalScroll = () => {
+      const hasModal = region.querySelector("[aria-modal='true']") !== null
+      if (hasModal && restoreAt === null) {
+        restoreAt = region.scrollTop
+        region.scrollTop = 0
+      } else if (!hasModal && restoreAt !== null) {
+        const nextTop = Math.min(restoreAt, Math.max(0, region.scrollHeight - region.clientHeight))
+        restoreAt = null
+        region.scrollTop = nextTop
+        scrollPositions.current[state.tab] = nextTop
+      }
+    }
+    const observer = new MutationObserver(syncModalScroll)
+    observer.observe(region, { childList: true, subtree: true })
+    syncModalScroll()
+    return () => observer.disconnect()
+  }, [state.tab])
+
+  const selectTab = (tab: OndoBTab) => {
+    const region = contentRef.current
+    if (region) scrollPositions.current[state.tab] = region.scrollTop
+    if (tab === state.tab) {
+      if (region) {
+        region.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
+        scrollPositions.current[tab] = 0
+      }
+      return
+    }
+    actions.setTab(tab)
+  }
+
+  const activeLabel = B_NAV_COPY[state.locale][state.tab]
+
   return (
     <main className={styles.stage} data-ondo-locale={state.locale} data-testid="ondo-b-root" data-variant="B" data-locale={state.locale}>
       <section className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas">
-        <div className={styles.content} data-active-tab={state.tab} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>{active}</div>
+        <div
+          ref={contentRef}
+          className={styles.content}
+          id="ondo-active-panel"
+          role="region"
+          tabIndex={0}
+          aria-label={state.locale === "ko" ? `${activeLabel} 콘텐츠` : `${activeLabel} content`}
+          data-active-tab={state.tab}
+          data-scroll-owner="true"
+          data-testid="ondo-scroll-region"
+          inert={onboardingActive ? true : undefined}
+          aria-hidden={onboardingActive ? true : undefined}
+          onScroll={(event) => { scrollPositions.current[state.tab] = event.currentTarget.scrollTop }}
+        >
+          {active}
+        </div>
         <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
-            <button key={id} type="button" className={state.tab === id ? styles.navActive : undefined} aria-current={state.tab === id ? "page" : undefined} data-testid={`nav-${id}`} onClick={() => actions.setTab(id)}>
-              <span><Icon size={20} strokeWidth={state.tab === id ? 2.25 : 1.7} /></span>
-              <small>{B_NAV_COPY[state.locale][id]}</small>
+            <button
+              key={id}
+              type="button"
+              className={state.tab === id ? styles.navActive : undefined}
+              aria-current={state.tab === id ? "page" : undefined}
+              aria-controls="ondo-active-panel"
+              aria-label={B_NAV_COPY[state.locale][id]}
+              data-state={state.tab === id ? "selected" : "idle"}
+              data-testid={`nav-${id}`}
+              onClick={() => selectTab(id)}
+            >
+              <span className={styles.navIcon} aria-hidden="true"><Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} /></span>
+              <small className={styles.navLabel}>{B_NAV_COPY[state.locale][id]}</small>
             </button>
           ))}
         </nav>
