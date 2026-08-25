@@ -38,5 +38,6 @@ test("B-PLACE-PALETTE-002 canonical peek and detail keep a 12px text floor and i
   expect(place).toContain("min-height: 44px")
   expect(place).toContain("overflow-y: auto")
   expect(place).toContain(":focus-visible")
+  expect(place).toContain("var(--ondo-focus, #1d66d1)")
   expect(place).toContain("overscroll-behavior: contain")
 })

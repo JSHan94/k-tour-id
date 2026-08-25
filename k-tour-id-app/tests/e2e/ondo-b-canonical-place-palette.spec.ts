@@ -79,6 +79,7 @@ for (const locale of ["en", "ko"] as const) {
       await expect(peek.getByTestId("canonical-place-pulse")).toHaveAttribute("data-pulse-level", "peak")
       await expect(peek.getByTestId("canonical-place-pulse")).toHaveCSS("border-left-color", "rgb(122, 32, 72)")
       await expect(peek.getByTestId("canonical-place-details")).toBeFocused()
+      await expect(peek.getByTestId("canonical-place-details")).toHaveCSS("outline-color", "rgb(29, 102, 209)")
       await expectVisibleDirectTextAtLeast12(peek)
       await expectActionsAtLeast44(peek)
 
@@ -95,6 +96,7 @@ for (const locale of ["en", "ko"] as const) {
 
       await expect(overlay).toBeVisible()
       await expect(back).toBeFocused()
+      await expect(back).toHaveCSS("outline-color", "rgb(29, 102, 209)")
       await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
       await expect(pulse.locator("[data-level='peak']")).toHaveCSS("background-color", "rgb(122, 32, 72)")
       await expect(pulse.locator("[data-level='peak']")).toHaveCSS("color", "rgb(255, 253, 248)")
