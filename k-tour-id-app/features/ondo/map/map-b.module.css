@@ -38,7 +38,7 @@
 .map :global(.maplibregl-ctrl-group) { overflow: hidden; border: 1px solid #d9d6d0; border-radius: 15px; box-shadow: none; }
 .map :global(.maplibregl-ctrl button) { width: 44px; height: 44px; background-color: rgb(250 249 246 / 94%); }
 .cityHeader { position: absolute; z-index: 5; top: max(8px, env(safe-area-inset-top)); right: 14px; left: 14px; display: grid; min-width: 0; gap: 8px; }
-.topline { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 44px; }
+.topline { display: grid; grid-template-columns: 1fr auto 1fr; min-height: 44px; align-items: center; padding-inline: 3px; border-radius: 14px; background: rgb(255 253 249 / 76%); box-shadow: 0 5px 20px rgb(53 35 23 / 5%); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .topline h1 { margin: 0; font: inherit; font-size: 17px; font-weight: 700; }
 .topline .back { justify-self: start; }
 .topline .language { justify-self: end; }
@@ -139,12 +139,12 @@
 }
 
 @media (max-width: 340px) {
+  .topline .back span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
   .mapKey {
     width: 184px;
     overflow: hidden;
   }
   .mapKey > div { gap: 3px; }
-  .mapKey > div > span { font-size: 0; }
   .mapKey > div > b { display: none; }
   .mapKey > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
@@ -249,7 +249,6 @@
     overflow: hidden;
   }
   .mapKey > div { gap: 3px; }
-  .mapKey > div > span { font-size: 0; }
   .mapKey > div > b { display: none; }
   .mapKey > small { overflow: visible; text-overflow: clip; white-space: nowrap; }
   .mapKeyFull { display: none; }
@@ -621,21 +620,21 @@
    remain present beside every color so the scale never depends on hue alone. */
 .cityTitle { display: grid; justify-items: center; gap: 1px; }
 .cityTitle h1 { margin: 0; }
-.cityTitle small { color: #6b655e; font-size: 10px; font-weight: 720; line-height: 1.2; white-space: nowrap; }
+.cityTitle small { color: #6b655e; font-size: 12px; font-weight: 720; line-height: 1.2; white-space: nowrap; }
 .listPulse { display: grid; gap: 2px; margin: 3px 0 1px; font-style: normal; }
 .listPulse b { color: #a23e30; font-size: 12px; font-weight: 820; letter-spacing: .01em; }
-.listPulse > span { color: #655f58; font-size: 11px; font-weight: 560; line-height: 1.35; }
+.listPulse > span { color: #655f58; font-size: 12px; font-weight: 560; line-height: 1.35; }
 .listPulse .localPulse { color: #355f50; font-weight: 720; }
-.pulseDisclosure { margin: 0; padding: 10px 4px; border-bottom: 1px solid #e3e0da; color: #625d56; font-size: 11px; line-height: 1.45; }
+.pulseDisclosure { margin: 0; padding: 10px 4px; border-bottom: 1px solid #e3e0da; color: #625d56; font-size: 12px; line-height: 1.45; }
 .pulseLegend { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 2px; }
-.pulseLegend span { display: inline-flex; align-items: center; gap: 4px; color: #514d47; font-size: 10px; font-weight: 760; white-space: nowrap; }
+.pulseLegend span { display: inline-flex; align-items: center; gap: 4px; color: #514d47; font-size: 12px; font-weight: 760; white-space: nowrap; }
 .mapKey .pulseLegend i { width: 8px; height: 8px; border: 1px solid rgb(32 32 30 / 18%); border-radius: 50%; }
-.pulseLegend span[data-level="peak"] i { background: #b52e2e; }
-.pulseLegend span[data-level="hot"] i { background: #d9523d; }
-.pulseLegend span[data-level="rising"] i { background: #e98542; }
-.pulseLegend span[data-level="warming"] i { background: #eab45c; }
-.pulseLegend span[data-level="low"] i { background: #6f9c86; }
-.pulseLegend span[data-level="limited"] i { background: #8d8982; }
+.pulseLegend span[data-level="peak"] i { background: #7A2048; }
+.pulseLegend span[data-level="hot"] i { background: #C94832; }
+.pulseLegend span[data-level="rising"] i { background: #E6843B; }
+.pulseLegend span[data-level="warming"] i { background: #EBC463; }
+.pulseLegend span[data-level="low"] i { background: #EFE1B7; }
+.pulseLegend span[data-level="limited"] i { border-style: dashed; background: #CFCAC0; }
 .venueList button:focus-visible,
 .pulseDisclosure:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
 
@@ -685,14 +684,58 @@
 }
 
 .locationMessage {
+  position: relative;
+  z-index: 6;
   width: 100%;
   min-height: 46px;
-  max-height: none;
-  padding: 7px 11px;
+  max-height: 46px;
+  padding: 0;
   border-radius: 14px;
   font-size: 12px;
   font-weight: 670;
   line-height: 1.35;
+  overflow: visible;
+}
+.locationMessage summary {
+  display: flex;
+  min-width: 0;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 10px 0 12px;
+  border-radius: 13px;
+  cursor: pointer;
+  list-style: none;
+}
+.locationMessage summary::-webkit-details-marker { display: none; }
+.locationMessage summary span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.locationMessage summary svg { flex: 0 0 auto; transition: transform 180ms ease; }
+.locationMessage[open] summary svg { transform: rotate(-90deg); }
+.locationMessage summary:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 1px; }
+.locationMessage > p {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 8px);
+  left: 0;
+  box-sizing: border-box;
+  width: min(320px, calc(100cqw - 20px));
+  margin: 0;
+  padding: 12px 13px;
+  border: 1px solid rgb(94 79 68 / 17%);
+  border-radius: 16px;
+  background: rgb(255 253 249 / 97%);
+  color: #554e47;
+  box-shadow: 0 18px 48px rgb(53 35 23 / 16%);
+  font-size: 12px;
+  font-weight: 620;
+  line-height: 1.5;
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 .locate {
@@ -720,7 +763,7 @@
   border-radius: 17px;
   background:
     linear-gradient(112deg, rgb(255 253 249 / 94%), rgb(255 249 241 / 86%)),
-    linear-gradient(90deg, #bf2143, #e84d3d 22%, #f47b35 42%, #edb33f 61%, #4d987b 80%, #77746f);
+    linear-gradient(90deg, #7A2048, #C94832 22%, #E6843B 42%, #EBC463 61%, #EFE1B7 80%, #CFCAC0);
   overflow: visible;
 }
 
@@ -731,7 +774,7 @@
   left: 14px;
   height: 2px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #bf2143, #e84d3d 22%, #f47b35 42%, #edb33f 61%, #4d987b 80%, #77746f);
+  background: linear-gradient(90deg, #7A2048, #C94832 22%, #E6843B 42%, #EBC463 61%, #EFE1B7 80%, #CFCAC0);
   content: "";
   opacity: .82;
 }
@@ -749,7 +792,7 @@
   align-items: center;
   gap: 7px;
   color: #37322d;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 820;
   letter-spacing: .01em;
   white-space: nowrap;
@@ -759,16 +802,17 @@
   width: 32px;
   height: 24px;
   border: 2px solid rgb(255 255 255 / 94%);
-  background: linear-gradient(145deg, #e84d3d, #f47b35);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgb(127 42 32 / 20%), 0 3px 9px rgb(173 52 35 / 18%);
+  background: rgb(255 255 255 / 94%);
+  color: #35322f;
+  box-shadow: 0 0 0 1px rgb(98 95 89 / 75%), 0 3px 9px rgb(53 35 23 / 10%);
 }
 
 .pulseLegend {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 3px 9px;
+  gap: 3px;
+  column-gap: 2px !important;
   flex-wrap: nowrap;
   margin: 0;
   overflow-x: auto;
@@ -780,8 +824,9 @@
 .pulseLegend span {
   flex: 0 0 auto;
   gap: 2px;
+  column-gap: 2px !important;
   color: #5d554e;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 820;
   letter-spacing: .015em;
 }
@@ -833,7 +878,10 @@
   bottom: calc(100% + 8px);
   display: grid;
   width: min(320px, calc(100cqw - 20px));
+  max-height: min(260px, calc(100cqh - 300px));
   gap: 7px;
+  box-sizing: border-box;
+  overflow-y: auto;
   padding: 13px 14px;
   border: 1px solid rgb(94 79 68 / 17%);
   border-radius: 16px;
@@ -848,14 +896,62 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+.pulsePlaces {
+  display: grid;
+  gap: 4px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.pulsePlaces button {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: 44px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 20px;
+  border: 0;
+  border-radius: 11px;
+  background: rgb(255 255 255 / 72%);
+  color: #302d29;
+  font-size: 12px;
+  text-align: left;
+}
+.pulsePlaces button::before {
+  position: absolute;
+  left: 7px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgb(32 32 30 / 16%);
+  border-radius: 50%;
+  background: #CFCAC0;
+  content: "";
+}
+.pulsePlaces button[data-level="peak"]::before { background: #7A2048; }
+.pulsePlaces button[data-level="hot"]::before { background: #C94832; }
+.pulsePlaces button[data-level="rising"]::before { background: #E6843B; }
+.pulsePlaces button[data-level="warming"]::before { background: #EBC463; }
+.pulsePlaces button[data-level="low"]::before { background: #EFE1B7; }
+.pulsePlaces button[data-level="limited"]::before { border-style: dashed; background: #CFCAC0; }
+.pulsePlaces button span {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pulsePlaces button b { color: #4f4841; font-size: 12px; white-space: nowrap; }
+.pulsePlaces button:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 1px; }
 
 .resultBar {
-  min-height: 52px;
-  padding: 4px 6px 4px 13px;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 1px 6px 1px 13px;
   border-radius: 16px;
 }
 .resultBar b { font-size: 13px; }
-.resultBar small { font-size: 10px; }
+.resultBar small { font-size: 12px; }
 
 .attribution {
   position: relative;
@@ -864,6 +960,7 @@
   width: 100%;
   max-width: 100%;
   min-height: 44px;
+  box-sizing: border-box;
   padding: 0;
   border-radius: 15px;
   overflow: visible;
@@ -874,7 +971,7 @@
   box-sizing: border-box;
   justify-content: space-between;
   padding: 0 12px 0 14px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 760;
 }
 .creditDetailsBody {
@@ -897,7 +994,7 @@
 .attribution .creditDetailsBody a {
   min-width: 44px;
   min-height: 44px;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .listPanel {
@@ -907,10 +1004,10 @@
 }
 
 @keyframes pulseLegendGlow {
-  0%, 100% { box-shadow: 0 0 0 1px rgb(32 32 30 / 12%), 0 0 0 0 rgb(191 33 67 / 0%); }
-  50% { box-shadow: 0 0 0 1px rgb(32 32 30 / 12%), 0 0 0 5px rgb(191 33 67 / 11%); }
+  0% { box-shadow: 0 0 0 1px rgb(32 32 30 / 12%), 0 0 0 5px rgb(191 33 67 / 14%); }
+  100% { box-shadow: 0 0 0 1px rgb(32 32 30 / 12%), 0 0 0 0 rgb(191 33 67 / 0%); }
 }
-.pulseLegend span[data-level="peak"] i { animation: pulseLegendGlow 2.8s ease-in-out infinite; }
+.pulseLegend span[data-level="peak"] i { animation: pulseLegendGlow 220ms ease-out 1 both; }
 
 @container ondo-map-root (max-width: 430px) {
   .cityHeader { gap: 6px; }
@@ -918,8 +1015,8 @@
   .rail { border-radius: 15px; }
   .mapChrome { top: calc(170px + env(safe-area-inset-top)); }
   .locationMessage { font-size: 12px; }
-  .mapKeyLead > span { font-size: 10.5px; }
-  .pulseLegend { gap-inline: 5px; }
+  .mapKeyLead > span { font-size: 12px; }
+  .pulseLegend { gap-inline: 3px; }
   .resultBar small { display: none; }
 }
 

@@ -45,8 +45,8 @@ const SEARCH_MAX_LENGTH = 120
 const SOURCE_ID = "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
 const SOURCE_DATE = CANONICAL_MAP_VENUES_COMPACT[0]?.sourceSnapshotAt.slice(0, 10) ?? "2026-08-19"
 const CITY = {
-  seoul: { center: [126.987, 37.565] as [number, number], zoom: 10.5, label: { en: "Seoul", ko: "서울" } },
-  busan: { center: [129.055, 35.18] as [number, number], zoom: 10.35, label: { en: "Busan", ko: "부산" } },
+  seoul: { center: [126.987, 37.565] as [number, number], zoom: 10.1, label: { en: "Seoul", ko: "서울" } },
+  busan: { center: [129.055, 35.18] as [number, number], zoom: 10.05, label: { en: "Busan", ko: "부산" } },
 }
 
 const COPY = {
@@ -162,12 +162,12 @@ const MAP_VENUES = Object.freeze([...CANONICAL_MAP_VENUES_COMPACT].sort((left, r
 const PULSE_RANK = Object.freeze({ limited: 0, low: 1, warming: 2, rising: 3, hot: 4, peak: 5 } as const)
 const PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
   "match", ["get", "pulseRank"],
-  5, "#bf2143",
-  4, "#e84d3d",
-  3, "#f47b35",
-  2, "#edb33f",
-  1, "#4d987b",
-  "#77746f",
+  5, "#7A2048",
+  4, "#C94832",
+  3, "#E6843B",
+  2, "#EBC463",
+  1, "#EFE1B7",
+  "#CFCAC0",
 ]
 
 const DOT_BOUNDS = { minLon: 125.72, maxLon: 130.95, minLat: 33.02, maxLat: 38.67 }
@@ -276,7 +276,7 @@ function toFeatureCollection(
   venues: readonly CanonicalMapVenue[],
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
   selectedVenueId: string | null = null,
-): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: VenuePrimaryCategory; pulseLevel: string; pulseRank: number; pulseScore: number; localPulse: boolean; selected: boolean }> {
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: VenuePrimaryCategory; curatedSignal: boolean; selected: boolean }> {
   return {
     type: "FeatureCollection",
     features: venues.map((venue) => {
@@ -289,13 +289,40 @@ function toFeatureCollection(
           id: venue.id,
           name: venue.name.ko,
           category: venue.primaryCategory,
-          pulseLevel: pulse.level,
-          pulseRank: PULSE_RANK[pulse.level],
-          pulseScore: pulse.score ?? -1,
-          localPulse: Boolean(localPulseEvidenceByVenue[venue.id]),
+          curatedSignal: pulse.score != null,
           selected: venue.id === selectedVenueId,
         },
       }
+    }),
+  }
+}
+
+function toPulseFeatureCollection(
+  venues: readonly CanonicalMapVenue[],
+  localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
+  locale: OndoBLocale,
+  selectedVenueId: string | null = null,
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; pulseMarkerLabel: string; selected: boolean }> {
+  return {
+    type: "FeatureCollection",
+    features: venues.flatMap((venue) => {
+      const pulse = pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null)
+      if (pulse.score == null && venue.id !== selectedVenueId) return []
+      return [{
+        type: "Feature" as const,
+        id: venue.id,
+        geometry: { type: "Point" as const, coordinates: [venue.longitude, venue.latitude] },
+        properties: {
+          id: venue.id,
+          pulseLevel: pulse.level,
+          pulseRank: PULSE_RANK[pulse.level],
+          pulseScore: pulse.score ?? -1,
+          pulseMarkerLabel: pulse.score == null
+            ? pulseLevelLabel(pulse.level, locale).toUpperCase()
+            : `${pulse.score}°\n${pulseLevelLabel(pulse.level, locale).toUpperCase()}`,
+          selected: venue.id === selectedVenueId,
+        },
+      }]
     }),
   }
 }
@@ -332,12 +359,21 @@ function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId,
   onSelect(venue: CanonicalMapVenue): void
 }) {
   const copy = COPY[locale]
+  const orderedVenues = useMemo(() => venues.map((venue, index) => ({
+    venue,
+    index,
+    pulse: pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null),
+  })).sort((left, right) => {
+    if (left.pulse.score != null && right.pulse.score != null) return right.pulse.score - left.pulse.score
+    if (left.pulse.score != null) return -1
+    if (right.pulse.score != null) return 1
+    return left.index - right.index
+  }), [localPulseEvidenceByVenue, venues])
   return (
     <ul className={styles.venueList} data-testid="ondo-b-venue-list">
-      {venues.slice(0, visibleCount).map((venue) => {
+      {orderedVenues.slice(0, visibleCount).map(({ venue, pulse }) => {
         const presentation = venueNamePresentation(venue.name.ko, locale)
         const category = CATEGORY[venue.primaryCategory]
-        const pulse = pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null)
         const pulseSummary = pulse.score == null
           ? `Pulse · ${pulseLevelLabel(pulse.level, locale)}`
           : `Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)}`
@@ -345,7 +381,7 @@ function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId,
           ? PULSE_DISCLOSURE[locale]
           : `${pulse.signalCount} ${copy.pulseSignals} · ${PULSE_DISCLOSURE[locale]}`
         return (
-          <li key={venue.id} data-venue-id={venue.id}>
+          <li key={venue.id} data-venue-id={venue.id} data-pulse-priority={pulse.score == null ? undefined : pulse.level}>
             <button
               type="button"
               onClick={() => onSelect(venue)}
@@ -546,6 +582,10 @@ export function MapEntryB() {
     return !query.trim() || haystack.includes(query.trim().toLowerCase())
   }), [category, city, query])
   const filteredMap = query.trim().length > 0 || category !== "all"
+  const curatedPulseVenues = useMemo(() => venues.flatMap((venue) => {
+    const pulse = pulseForVenue(venue.id, state.localPulseEvidenceByVenue[venue.id] ?? null)
+    return pulse.score == null ? [] : [{ venue, pulse }]
+  }).sort((left, right) => (right.pulse.score ?? 0) - (left.pulse.score ?? 0)), [state.localPulseEvidenceByVenue, venues])
   filteredMapRef.current = filteredMap
   const nearestVenue = useMemo(() => {
     if (!userLocation || !venues.length) return null
@@ -554,6 +594,30 @@ export function MapEntryB() {
       return nearest == null || distance < nearest.distance ? { venue, distance } : nearest
     }, null)
   }, [userLocation, venues])
+  const locationMessage = !online
+    ? `${copy.offlineTitle} · ${copy.offlineSource} ${copy.locationDisclosure}`
+    : locationState === "idle"
+      ? copy.locationDisclosure
+      : locationState === "locating"
+        ? copy.locating
+        : locationState === "ready" && nearestVenue
+          ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}`
+          : locationState === "ready"
+            ? copy.locationReady
+            : locationState === "denied"
+              ? copy.locationDenied
+              : copy.locationUnsupported
+  const locationSummary = !online
+    ? copy.offlineTitle
+    : locationState === "idle"
+      ? locale === "ko" ? "위치 · 이 탭에서만" : "Location · this tab only"
+      : locationState === "denied"
+        ? locale === "ko" ? "위치 권한 꺼짐" : "Location access off"
+        : locationState === "unsupported"
+          ? locale === "ko" ? "위치 미지원" : "Location unavailable"
+          : locationState === "locating"
+            ? copy.locating
+            : copy.locationReady
 
   useEffect(() => { setVisibleCount(30) }, [category, city, query])
 
@@ -610,29 +674,35 @@ export function MapEntryB() {
             cluster: true,
             clusterRadius: 48,
             clusterMaxZoom: 13,
-            clusterProperties: {
-              pulseRank: ["max", ["get", "pulseRank"]],
-              curatedCount: ["+", ["case", [">", ["get", "pulseRank"], 0], 1, 0]],
-            },
+          })
+          instance.addSource("ondo-pulse", {
+            type: "geojson",
+            data: toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId),
           })
           instance.addSource("ondo-user-location", { type: "geojson", data: toUserLocationFeatureCollection(userLocationRef.current) })
-          instance.addLayer({ id: "ondo-cluster-pulse-halo", type: "circle", source: "ondo-directory", filter: ["all", ["has", "point_count"], [">", ["get", "pulseRank"], 0]], paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["step", ["get", "point_count"], 24, 15, 28, 50, 34], "circle-blur": 0.42, "circle-opacity": 0.18 } })
-          instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": ["case", [">", ["get", "pulseRank"], 0], PULSE_LEVEL_EXPRESSION, "rgba(255,255,255,0.92)"], "circle-radius": ["step", ["get", "point_count"], 16, 15, 19, 50, 23], "circle-stroke-color": ["case", [">", ["get", "pulseRank"], 0], "rgba(255,255,255,0.95)", "#625f59"], "circle-stroke-width": ["case", [">", ["get", "pulseRank"], 0], 2.5, 1.5], "circle-opacity": 0.97 } })
-          instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 11 }, paint: { "text-color": ["case", [">=", ["get", "pulseRank"], 3], "#ffffff", "#35322f"], "text-halo-color": ["case", [">=", ["get", "pulseRank"], 3], "rgba(80,20,20,.24)", "rgba(255,255,255,.72)"], "text-halo-width": 0.7 } })
-          instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], [">", ["get", "pulseRank"], 0]], paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 10, 15, 17], "circle-blur": 0.38, "circle-opacity": 0.2 } })
-          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["!", ["has", "point_count"]], paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 4.5, 15, 8], "circle-opacity": ["case", [">", ["get", "pulseRank"], 0], 0.98, 0.68], "circle-stroke-color": ["case", [">", ["get", "pulseRank"], 0], "#ffffff", "rgba(255,255,255,.9)"], "circle-stroke-width": ["case", [">", ["get", "pulseRank"], 0], 2, 1.25] } })
-          instance.addLayer({ id: "ondo-selected-pulse", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "selected"], true]], paint: { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 11, 15, 17], "circle-stroke-color": "#171715", "circle-stroke-width": 3.5, "circle-stroke-opacity": 0.94 } })
+          instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,255,255,0.93)", "circle-radius": ["step", ["get", "point_count"], 16, 15, 19, 50, 23], "circle-stroke-color": "#625f59", "circle-stroke-width": 1.5, "circle-opacity": 0.97 } })
+          instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 12 }, paint: { "text-color": "#35322f", "text-halo-color": "rgba(255,255,255,.72)", "text-halo-width": 0.7 } })
+          instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "curatedSignal"], false]], paint: { "circle-color": "#77746f", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 3.5, 15, 5.5], "circle-opacity": 0.7, "circle-stroke-color": "rgba(255,255,255,.9)", "circle-stroke-width": 1.25 } })
+          instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 25, 15, 31], "circle-blur": 0.42, "circle-opacity": 0.16 } })
+          instance.addLayer({ id: "ondo-pulse-points", type: "circle", source: "ondo-pulse", layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 22, 15, 24], "circle-opacity": 0.98, "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 2.5, "circle-blur": 0.02 } })
+          instance.addLayer({ id: "ondo-pulse-labels", type: "symbol", source: "ondo-pulse", layout: { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 9, 12, 15, 12.5], "text-line-height": 0.82, "text-letter-spacing": 0, "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }, paint: { "text-color": ["case", [">=", ["get", "pulseRank"], 3], "#ffffff", "#242320"], "text-halo-color": "rgba(32,24,18,.18)", "text-halo-width": 0.45 } })
+          instance.addLayer({ id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 31], "circle-stroke-color": "rgba(255,255,255,.98)", "circle-stroke-width": 5, "circle-stroke-opacity": 0.98 } })
+          instance.addLayer({ id: "ondo-selected-pulse", type: "circle", source: "ondo-pulse", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "rgba(255,255,255,0)", "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 31], "circle-stroke-color": "#171715", "circle-stroke-width": 2.25, "circle-stroke-opacity": 0.96 } })
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
 
           const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          if (!reducedMotion) {
+          const duration = 220
+          if (reducedMotion) instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.16)
+          else {
+            const startedAt = performance.now()
+            instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.36)
             const animatePulse = (timestamp: number) => {
               if (disposed) return
-              const glow = (Math.sin(timestamp / 760) + 1) / 2
-              instance.setPaintProperty("ondo-cluster-pulse-halo", "circle-opacity", 0.1 + glow * 0.13)
-              instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.12 + glow * 0.16)
-              pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
+              const progress = Math.min(1, (timestamp - startedAt) / duration)
+              const eased = 1 - (1 - progress) ** 3
+              instance.setPaintProperty("ondo-pulse-halo", "circle-opacity", 0.36 - eased * 0.2)
+              if (progress < 1) pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
             }
             pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
           }
@@ -656,10 +726,20 @@ export function MapEntryB() {
             actions.setSurface({ kind: "venue", venueId: id })
           }
         })
+        instance.on("click", "ondo-pulse-points", (event: MapLayerMouseEvent) => {
+          const id = event.features?.[0]?.properties?.id
+          if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
+            openBDiscoveryVenue(id)
+            if (!actions.recordRecentVenue(id)) actions.notify(copy.recentSaveFailed)
+            actions.setSurface({ kind: "venue", venueId: id })
+          }
+        })
         instance.on("mouseenter", "ondo-clusters", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseenter", "ondo-points", () => { instance.getCanvas().style.cursor = "pointer" })
+        instance.on("mouseenter", "ondo-pulse-points", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseleave", "ondo-clusters", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-points", () => { instance.getCanvas().style.cursor = "" })
+        instance.on("mouseleave", "ondo-pulse-points", () => { instance.getCanvas().style.cursor = "" })
         if (filteredMapRef.current) focusFilteredVenues(instance, venues)
         if (loadDeadline != null) window.clearTimeout(loadDeadline)
         if (!failed) {
@@ -681,12 +761,14 @@ export function MapEntryB() {
   }, [actions, city, effectiveView, locale, retryToken])
 
   useEffect(() => {
-    const source = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined
-    if (source) {
-      void source.setData(toFeatureCollection(venues, state.localPulseEvidenceByVenue, selectedVenueId))
+    const directorySource = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined
+    const pulseSource = mapRef.current?.getSource("ondo-pulse") as GeoJSONSource | undefined
+    if (directorySource) {
+      void directorySource.setData(toFeatureCollection(venues, state.localPulseEvidenceByVenue, selectedVenueId))
+      if (pulseSource) void pulseSource.setData(toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId))
       if (filteredMap) focusFilteredVenues(mapRef.current!, venues)
     }
-  }, [filteredMap, selectedVenueId, state.localPulseEvidenceByVenue, venues])
+  }, [filteredMap, locale, selectedVenueId, state.localPulseEvidenceByVenue, venues])
 
   useEffect(() => {
     userLocationRef.current = userLocation
@@ -773,7 +855,8 @@ export function MapEntryB() {
         data-location-state={locationState}
         data-user-location={userLocation ? "present" : "absent"}
         data-cluster-grammar="official-record-count"
-        data-pulse-map-grammar="heat-ranked-clusters"
+        data-pulse-map-grammar="curated-level-score-over-official-groups"
+        data-curated-pulse-count={curatedPulseVenues.length}
         data-layout-mode={mapLayoutMode}
         data-requested-view={view}
         data-effective-view={effectiveView}
@@ -783,7 +866,7 @@ export function MapEntryB() {
         <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
         <header className={styles.cityHeader} data-testid="ondo-b-city-header">
           <div className={styles.topline}>
-            <button type="button" className={styles.back} data-testid="ondo-b-city-back" onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} />{copy.back}</button>
+            <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
             <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small data-testid="ondo-b-pulse-city-status" data-pulse-city-status={PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
             <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
           </div>
@@ -793,7 +876,16 @@ export function MapEntryB() {
           </div>
         </header>
 
-        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction" hidden={effectiveView !== "map"} aria-hidden={effectiveView !== "map" ? true : undefined} />
+        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail" hidden={effectiveView !== "map"} aria-hidden={effectiveView !== "map" ? true : undefined} />
+        <ul id="ondo-b-pulse-marker-accessible-detail" className={styles.srOnly} data-testid="ondo-b-pulse-marker-accessible-detail">
+          {curatedPulseVenues.map(({ venue, pulse }) => (
+            <li key={venue.id}>
+              {locale === "ko"
+                ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
+                : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
+            </li>
+          ))}
+        </ul>
         {effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{copy.mapLoading}</p> : null}
 
         <div className={styles.mapChrome} data-testid="ondo-b-map-chrome">
@@ -819,27 +911,15 @@ export function MapEntryB() {
           </div>
 
           {effectiveView === "map" && mapState !== "error" ? (
-            <p
-              id="ondo-b-location-message"
+            <details
               className={styles.locationMessage}
-              role={!online || locationState !== "idle" ? "status" : undefined}
               data-testid="ondo-b-location-message"
+              name="ondo-map-disclosure"
               data-message-kind={!online ? "offline" : locationState === "idle" ? "disclosure" : "status"}
             >
-              {!online
-                ? <><strong>{copy.offlineTitle}</strong> · {copy.offlineSource} {copy.locationDisclosure}</>
-                : locationState === "idle"
-                  ? copy.locationDisclosure
-                  : locationState === "locating"
-                    ? copy.locating
-                    : locationState === "ready" && nearestVenue
-                      ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}`
-                      : locationState === "ready"
-                        ? copy.locationReady
-                        : locationState === "denied"
-                          ? copy.locationDenied
-                          : copy.locationUnsupported}
-            </p>
+              <summary><span>{locationSummary}</span><ChevronRight size={16} /></summary>
+              <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
+            </details>
           ) : null}
           {effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
           {effectiveView === "map" && mapState !== "error" ? (
@@ -853,6 +933,24 @@ export function MapEntryB() {
                 <div className={styles.mapKeyDetailsBody}>
                   <small>{copy.mapKeyBody}</small>
                   <small>{PULSE_DISCLOSURE[locale]}</small>
+                  <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={locale === "ko" ? "Pulse 장소" : "Pulse places"}>
+                    {curatedPulseVenues.map(({ venue, pulse }) => (
+                      <li key={venue.id}>
+                        <button
+                          type="button"
+                          data-level={pulse.level}
+                          data-pulse-place-priority={pulse.level}
+                          aria-label={locale === "ko"
+                            ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
+                            : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score}° · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
+                          onClick={() => selectVenue(venue)}
+                        >
+                          <span>{venueDisplayName(venue.name.ko, locale)}</span>
+                          <b>{pulse.score}° · {pulseLevelLabel(pulse.level, locale)}</b>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </details>
             </aside>

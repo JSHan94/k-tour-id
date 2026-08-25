@@ -139,11 +139,11 @@ export function pulseLevelLabel(level: PulseLevelB, locale: "en" | "ko") {
 
 export function pulseColor(level: PulseLevelB) {
   return ({
-    peak: "#b52e2e",
-    hot: "#d9523d",
-    rising: "#e98542",
-    warming: "#eab45c",
-    low: "#6f9c86",
-    limited: "#8d8982",
+    peak: "#7A2048",
+    hot: "#C94832",
+    rising: "#E6843B",
+    warming: "#EBC463",
+    low: "#EFE1B7",
+    limited: "#CFCAC0",
   } as const)[level]
 }
