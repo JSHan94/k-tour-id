@@ -8,12 +8,19 @@
   --ondo-heat-warm: #c84936;
   --ondo-night: #5d2947;
   --ondo-focus: var(--focus, #1d66d1);
+  --ondo-motion-fast: 180ms;
+  --ondo-motion-medium: 240ms;
+  --ondo-motion-slow: 320ms;
+  --ondo-ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ondo-radius-card: 24px;
+  --ondo-shadow-card: 0 18px 48px rgb(55 43 34 / 10%), 0 2px 8px rgb(55 43 34 / 4%);
   min-height: 100dvh;
   height: 100dvh;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 0%, rgb(255 255 255 / 88%), transparent 38%),
-    #ecebe8;
+    radial-gradient(circle at 18% 2%, rgb(255 255 255 / 94%), transparent 34%),
+    radial-gradient(circle at 86% 92%, rgb(121 72 92 / 7%), transparent 30%),
+    #ebe8e4;
   color: var(--ondo-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
@@ -116,7 +123,7 @@
   color: #68625c;
   font: inherit;
   isolation: isolate;
-  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, transform 160ms ease;
+  transition: background-color var(--ondo-motion-fast) ease, border-color var(--ondo-motion-fast) ease, box-shadow var(--ondo-motion-fast) ease, color var(--ondo-motion-fast) ease, transform var(--ondo-motion-fast) var(--ondo-ease-out);
 }
 
 .nav button::after {
@@ -129,7 +136,7 @@
   background: transparent;
   content: "";
   transform: translateX(-50%);
-  transition: width 160ms ease, background-color 160ms ease;
+  transition: width var(--ondo-motion-fast) ease, background-color var(--ondo-motion-fast) ease;
 }
 
 .navIcon {
@@ -138,7 +145,7 @@
   height: 30px;
   place-items: center;
   border-radius: 11px;
-  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+  transition: background-color var(--ondo-motion-fast) ease, color var(--ondo-motion-fast) ease, transform var(--ondo-motion-medium) var(--ondo-ease-out);
 }
 
 .navLabel {
@@ -163,6 +170,7 @@
   background: linear-gradient(180deg, #f7f5f1, #ece9e3) !important;
   color: #2c2a27 !important;
   box-shadow: 0 5px 14px rgb(47 43 38 / 8%), inset 0 1px 0 rgb(255 255 255 / 82%);
+  animation: navSettle var(--ondo-motion-medium) var(--ondo-ease-out) both;
 }
 .navActive::after { width: 22px !important; background: #514d47 !important; }
 .navActive .navIcon { background: #e6e2dc; color: #292724; transform: translateY(-1px); }
@@ -309,8 +317,15 @@
   }
 }
 
+@keyframes navSettle {
+  0% { transform: scale(.96); }
+  58% { transform: translateY(-1px) scale(1.018); }
+  100% { transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nav button, .nav button::after, .navIcon, .toast { transition: none; }
+  .navActive { animation: none; }
   .stage[data-variant="B"] button { transition: none !important; }
   .stage[data-variant="B"] button:hover,
   .stage[data-variant="B"] button:active { transform: none !important; }
@@ -336,6 +351,15 @@
   .content {
     grid-column: 2;
     grid-row: 1;
+  }
+
+  .content[data-active-tab="my"] > *,
+  .content[data-active-tab="tables"] > *,
+  .content[data-active-tab="id"] > *,
+  .content[data-active-tab="settings"] > * {
+    width: min(calc(100% - 64px), 1040px);
+    max-width: none;
+    margin-inline: auto;
   }
 
   .stage[data-variant="B"] .nav {
