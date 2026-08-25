@@ -117,10 +117,12 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
         const requestedTop = restoreAt
         restoreAt = null
         restoreFrame = window.requestAnimationFrame(() => {
-          restoreFrame = null
-          const nextTop = Math.min(requestedTop, Math.max(0, region.scrollHeight - region.clientHeight))
-          region.scrollTop = nextTop
-          scrollPositions.current[state.tab] = nextTop
+          restoreFrame = window.requestAnimationFrame(() => {
+            restoreFrame = null
+            const nextTop = Math.min(requestedTop, Math.max(0, region.scrollHeight - region.clientHeight))
+            region.scrollTop = nextTop
+            scrollPositions.current[state.tab] = nextTop
+          })
         })
       }
     }
