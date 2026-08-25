@@ -168,10 +168,12 @@ const OFFER_COPY = {
     retry: "Try again",
     receipt: "Payment complete",
     receiptBody: "Your meal benefit was applied.",
+    receiptWithoutBenefit: "Payment completed without the ONDO benefit.",
     paid: "Paid",
     remaining: "Balance left",
     receiptId: "Receipt",
     originalPayment: "Original payment",
+    paymentReceipt: "Payment receipt",
     refundReference: "Refund reference",
     refundedAmount: "Refunded",
     refund: "Request refund",
@@ -179,6 +181,7 @@ const OFFER_COPY = {
     supportBody: "Refunds here are immediate and restore the one-use benefit.",
     refunded: "Refund complete",
     refundedBody: "Your test balance and meal benefit have been restored.",
+    refundedWithoutBenefit: "Your test balance was restored. Your unused meal benefit remains available.",
     return: "Return to place",
     testMode: "Test mode details",
     testTruth: "OOKRW Test is non-live. The benefit recommendation runs on this device with no AI or provider call. The fixed test quote is not an exchange rate, redemption promise, or 1:1 guarantee. This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money.",
@@ -219,10 +222,12 @@ const OFFER_COPY = {
     retry: "다시 시도",
     receipt: "결제 완료",
     receiptBody: "식사 혜택이 적용됐어요.",
+    receiptWithoutBenefit: "ONDO 혜택 없이 결제가 완료됐어요.",
     paid: "결제",
     remaining: "남은 잔액",
     receiptId: "영수증",
     originalPayment: "원 결제",
+    paymentReceipt: "결제 영수증",
     refundReference: "환불 참조",
     refundedAmount: "환불 금액",
     refund: "환불 요청",
@@ -230,6 +235,7 @@ const OFFER_COPY = {
     supportBody: "여기서 요청한 환불은 즉시 처리되며 1회 혜택도 복원됩니다.",
     refunded: "환불 완료",
     refundedBody: "테스트 잔액과 식사 혜택이 복원됐어요.",
+    refundedWithoutBenefit: "테스트 잔액이 복원됐고 사용하지 않은 식사 혜택은 그대로 남아 있어요.",
     return: "장소로 돌아가기",
     testMode: "테스트 모드 상세",
     testTruth: "OOKRW Test는 실제로 작동하지 않습니다. 혜택 추천은 AI나 공급자 호출 없이 이 기기에서 실행됩니다. 고정 테스트 견적은 환율·상환 약속·1:1 보장을 뜻하지 않습니다. 지갑·가맹점·스테이블코인 네트워크·결제 공급자에 연결하지 않고 돈을 이동하지 않습니다.",
@@ -470,13 +476,15 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
           <div className={styles.receiptMark}>{view === "refunded" ? <RotateCcw size={31} aria-hidden="true" /> : <BadgeCheck size={33} aria-hidden="true" />}</div>
           <p className={styles.receiptEyebrow}>{venueName}</p>
           <h2>{view === "refunded" ? copy.refunded : copy.receipt}</h2>
-          <p className={styles.receiptLead}>{view === "refunded" ? copy.refundedBody : copy.receiptBody}</p>
+          <p className={styles.receiptLead}>{view === "refunded"
+            ? commerce.voucherApplied ? copy.refundedBody : copy.refundedWithoutBenefit
+            : commerce.voucherApplied ? copy.receiptBody : copy.receiptWithoutBenefit}</p>
           <section className={styles.receiptCard}>
             <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div>
             {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div> : null}
             <div><span>{copy.benefit}</span><strong>{breakdown.benefit} {copy.asset}</strong></div>
             <div><span>{copy.remaining}</span><strong>{balance} {copy.asset}</strong></div>
-            <div><span>{view === "refunded" ? copy.originalPayment : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
+            <div><span>{view === "refunded" ? copy.paymentReceipt : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
             {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
           </section>
           {view === "receipt" ? (
