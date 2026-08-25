@@ -47,7 +47,7 @@ async function acknowledgeAndApprove(page: Page, check: "Person" | "19+") {
   return walkthrough
 }
 
-test("B P0 keeps Explore guest-open and exposes separate Traveler ID and Settings tabs", async ({ page }) => {
+test("B P0 keeps Explore guest-open and exposes separate ID · Wallet and Settings tabs", async ({ page }) => {
   await seedB(page)
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
 
@@ -55,7 +55,7 @@ test("B P0 keeps Explore guest-open and exposes separate Traveler ID and Setting
   const nav = page.getByTestId("ondo-main-nav")
   await expect(nav.getByTestId("nav-ondo")).toContainText("Explore")
   await expect(nav.getByTestId("nav-my")).toContainText("My Korea")
-  await expect(nav.getByTestId("nav-id")).toContainText("Traveler ID")
+  await expect(nav.getByTestId("nav-id")).toContainText("ID · Wallet")
   await expect(nav.getByTestId("nav-settings")).toContainText("Settings")
   await nav.getByTestId("nav-id").click()
   await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()

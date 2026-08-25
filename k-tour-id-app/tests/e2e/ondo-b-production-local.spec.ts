@@ -41,7 +41,7 @@ test.describe("ONDO B production local-device shell", () => {
     await expect(nav.getByTestId("nav-ondo")).toContainText("Explore")
     await expect(nav.getByTestId("nav-my")).toContainText("My Korea")
     await expect(nav.getByTestId("nav-tables")).toContainText("Tables")
-    await expect(nav.getByTestId("nav-id")).toContainText("Traveler ID")
+    await expect(nav.getByTestId("nav-id")).toContainText("ID · Wallet")
     await expect(nav.getByTestId("nav-settings")).toContainText("Settings")
     for (const testId of ["ondo-gate-overlay", "ondo-after19-layer", "checkout-overlay", "labs-overlay", "ondo-identity-entry", "ondo-trust-panel"]) {
       await expect(page.getByTestId(testId)).toHaveCount(0)

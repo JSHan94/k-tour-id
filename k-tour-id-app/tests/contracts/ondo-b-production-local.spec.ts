@@ -19,10 +19,10 @@ test("B-PROD-LOCAL-001 B composes the complete B-native local-device product wit
   expect(product).not.toMatch(/ConnectOverlays|GateOverlay|IdentityEntry|Labs|PlaceOverlay|OndoProvider/)
 })
 
-test("B-PROD-LOCAL-002 navigation keeps Tables, Traveler ID, and Settings as separate top-level destinations", () => {
+test("B-PROD-LOCAL-002 navigation keeps Tables, ID · Wallet, and Settings as separate top-level destinations", () => {
   const app = appFile("features/ondo/app/ondo-app-b.tsx")
-  expect(app).toContain('en: { ondo: "Explore", my: "My Korea", tables: "Tables", id: "Traveler ID", settings: "Settings" }')
-  expect(app).toContain('ko: { ondo: "탐색", my: "내 한국", tables: "테이블", id: "여행자 ID", settings: "설정" }')
+  expect(app).toContain('en: { ondo: "Explore", my: "My Korea", tables: "Tables", id: "ID · Wallet", settings: "Settings" }')
+  expect(app).toContain('ko: { ondo: "탐색", my: "내 한국", tables: "테이블", id: "ID · 지갑", settings: "설정" }')
   expect(app).toContain("B_NAV")
   const bNav = app.slice(app.indexOf("const B_NAV"), app.indexOf("const B_NAV_COPY"))
   expect(bNav).toContain('id: "tables"')
