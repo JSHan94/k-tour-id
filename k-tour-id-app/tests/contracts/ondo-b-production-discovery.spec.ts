@@ -37,7 +37,7 @@ test("PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview
     const source = readFileSync(path.join(appRoot, relativePath), "utf8")
     if (relativePath === "features/ondo/place/canonical-place-overlay.tsx") {
       expect(source).toContain("canonical-meal-benefit-open")
-      expect(source).toContain("Confirm payment support with the venue")
+      expect(source).toContain("This offer comes from ONDO, not the official place record or venue")
       expect(source, relativePath).not.toMatch(/simulat|fixture|locals eat now/i)
     } else {
       expect(source, relativePath).not.toMatch(/\bdemo\b|simulat|fixture|locals eat now/i)

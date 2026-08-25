@@ -86,7 +86,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
     expect(visibleSource).toContain("OOKRW Test is a non-live product balance")
     expect(visibleSource).toContain("This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money")
-    expect(visibleSource).toContain("Confirm payment support with the venue")
+    expect(visibleSource).toContain("This offer comes from ONDO, not the official place record or venue")
   })
 
   test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {
