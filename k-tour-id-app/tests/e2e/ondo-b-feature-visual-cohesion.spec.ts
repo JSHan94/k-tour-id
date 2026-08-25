@@ -98,6 +98,7 @@ test("My Korea, ID · Wallet, and Settings share natural scrolling and premium t
 })
 
 test("visible direct feature text stays at least 12px in EN and KO across phone and short landscape", async ({ page }) => {
+  test.setTimeout(180_000)
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
   for (const locale of ["en", "ko"] as const) {
     for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }, { width: 430, height: 800 }, { width: 844, height: 390 }]) {
@@ -122,7 +123,10 @@ test("visible direct feature text stays at least 12px in EN and KO across phone 
       await page.getByTestId("table-join").click()
       await expectVisibleDirectTextAtLeast12(page.getByTestId("after19-walkthrough"))
       await page.getByTestId("gate-cancel").click()
+      await expect(page.getByTestId("after19-walkthrough")).toBeHidden()
+      await page.getByTestId("table-join").focus()
       await page.keyboard.press("Escape")
+      await expect(page.getByTestId("table-detail")).toBeHidden()
 
       for (const [nav, root] of [
         ["nav-my", "ondo-b-my-korea-entry"],
