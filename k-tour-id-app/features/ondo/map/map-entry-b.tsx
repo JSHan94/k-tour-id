@@ -686,8 +686,14 @@ export function MapEntryB() {
           const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "pulseRank"], 3], ["!=", ["get", "pulseRank"], 2]]
           const risingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 3]
           const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 2]
-          const risingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [8, 10]], 12, ["literal", [8, 10]], 13, ["literal", [0, 0]]]
+          const risingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-20, 18]], 12, ["literal", [-20, 18]], 13, ["literal", [0, 0]]]
           const warmingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-8, -10]], 12, ["literal", [-8, -10]], 13, ["literal", [0, 0]]]
+          const pulseOffsetForRank = (rank: number, zoom: number) => {
+            const scale = zoom <= 12 ? 1 : Math.max(0, 13 - zoom)
+            if (rank === 3) return { x: -20 * scale, y: 18 * scale }
+            if (rank === 2) return { x: -8 * scale, y: -10 * scale }
+            return { x: 0, y: 0 }
+          }
           const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 18, 15, 21], "circle-opacity": 0.98, "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 2.5, "circle-blur": 0.02 }
           const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 9, 12, 15, 12.5], "text-letter-spacing": 0, "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
           const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 3], "#ffffff", "#242320"], "text-halo-color": "rgba(32,24,18,.18)", "text-halo-width": 0.45 }
@@ -773,18 +779,31 @@ export function MapEntryB() {
             const allInside = pulseFeatures.length > 0 && pulseFeatures.every((feature) => {
               const point = instance.project(feature.geometry.coordinates as [number, number])
               const zoom = instance.getZoom()
-              const offsetScale = zoom <= 12 ? 1 : Math.max(0, 13 - zoom)
-              const offset = feature.properties.pulseRank === 3
-                ? { x: 8 * offsetScale, y: 10 * offsetScale }
-                : feature.properties.pulseRank === 2
-                  ? { x: -8 * offsetScale, y: -10 * offsetScale }
-                  : { x: 0, y: 0 }
+              const offset = pulseOffsetForRank(feature.properties.pulseRank, zoom)
               return point.x + offset.x >= readableLeft
                 && point.x + offset.x <= readableRight
                 && point.y + offset.y >= readableTop
                 && point.y + offset.y <= readableBottom
             })
+            const zoom = instance.getZoom()
+            const pulseRadius = 18 + Math.max(0, Math.min(1, (zoom - 9) / 6)) * 3 + 2.5
+            const clusterFeatures = instance.queryRenderedFeatures({ layers: ["ondo-clusters"] })
+              .filter((feature) => feature.geometry.type === "Point")
+            const clustersReadable = clusterFeatures.length > 0 && pulseFeatures.every((feature) => {
+              const point = instance.project(feature.geometry.coordinates as [number, number])
+              const offset = pulseOffsetForRank(feature.properties.pulseRank, zoom)
+              return clusterFeatures.every((cluster) => {
+                if (cluster.geometry.type !== "Point") return true
+                const clusterPoint = instance.project(cluster.geometry.coordinates as [number, number])
+                const digits = String(cluster.properties?.point_count_abbreviated ?? cluster.properties?.point_count ?? "").length
+                const labelHalfWidth = Math.max(7, digits * 3.8)
+                const horizontalGap = Math.max(0, Math.abs(point.x + offset.x - clusterPoint.x) - labelHalfWidth)
+                const verticalGap = Math.max(0, Math.abs(point.y + offset.y - clusterPoint.y) - 8)
+                return Math.hypot(horizontalGap, verticalGap) >= pulseRadius
+              })
+            })
             root.dataset.pulseMarkersReadable = String(allInside)
+            root.dataset.pulseOfficialClustersReadable = String(clustersReadable)
           }
           instance.once("idle", updatePulseMarkerFit)
           window.setTimeout(updatePulseMarkerFit, 240)
