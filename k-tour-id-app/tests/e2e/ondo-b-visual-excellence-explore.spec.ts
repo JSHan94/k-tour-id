@@ -49,7 +49,7 @@ async function expectNoPageOverflow(page: Page) {
 }
 
 async function screenshot(page: Page, testInfo: TestInfo, name: string) {
-  await page.screenshot({ path: testInfo.outputPath(`${name}.png`), fullPage: true, animations: "disabled" })
+  await page.screenshot({ path: testInfo.outputPath(`${name}.png`), animations: "disabled" })
 }
 
 test.describe("ONDO Explore visual-excellence contract", () => {
