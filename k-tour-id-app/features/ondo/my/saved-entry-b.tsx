@@ -33,7 +33,7 @@ const COPY = {
     plannedEmpty: "No planned meals",
     plannedEmptyBody: "Confirm a local Table join to keep its reference here.",
     localPreview: "Saved on this device · no reservation",
-    openTables: "Open Tables",
+    openTables: "Open Table",
     contributionsTitle: "Local Signal history",
     contributionsBody: "Successful Local Signals you explicitly post appear here.",
     contributionsEmpty: "No Local Signals yet",

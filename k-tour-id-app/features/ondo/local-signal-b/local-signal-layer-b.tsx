@@ -12,6 +12,9 @@ import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./local-signal-layer-b.module.css"
 
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[href],[tabindex]:not([tabindex='-1'])"
+export const MAX_LOCAL_SIGNAL_PHOTO_BYTES = 10 * 1024 * 1024
+const LOCAL_SIGNAL_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
+type PhotoError = "photoTypeError" | "photoSizeError" | "photoPrepareError"
 
 const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag; en: string; ko: string }> = [
   { id: "calm_now", en: "Calm right now", ko: "지금은 여유로워요" },
@@ -46,10 +49,12 @@ const COPY = {
     expired: "The identity check expired. Your draft and place are unchanged.",
     alreadyPosted: "Local Pulse evidence for this place already exists on this device. Posting again replaces its tag IDs and post time; it does not change shared counts.",
     photo: "Add a photo",
-    photoHelp: "JPEG, PNG, or WebP · up to 8 MB",
+    photoHelp: "JPEG, PNG, or WebP · up to 10 MB",
     replacePhoto: "Replace photo",
     removePhoto: "Remove photo",
-    photoFailed: "The photo could not be prepared.",
+    photoTypeError: "Choose a JPEG, PNG, or WebP photo.",
+    photoSizeError: "Choose a photo that is 10 MB or smaller.",
+    photoPrepareError: "The photo could not be prepared.",
     photoRetry: "Retry photo",
   },
   ko: {
@@ -77,10 +82,12 @@ const COPY = {
     expired: "본인 확인이 만료됐어요. 작성 내용과 장소는 그대로입니다.",
     alreadyPosted: "이 장소의 로컬 Pulse 근거가 이미 기기에 있습니다. 다시 게시하면 태그 ID와 시각을 교체하며 공유 신호 수는 바뀌지 않아요.",
     photo: "사진 추가",
-    photoHelp: "JPEG, PNG, WebP · 최대 8MB",
+    photoHelp: "JPEG, PNG, WebP · 최대 10MB",
     replacePhoto: "사진 교체",
     removePhoto: "사진 삭제",
-    photoFailed: "사진을 준비하지 못했어요.",
+    photoTypeError: "JPEG, PNG 또는 WebP 사진을 선택해 주세요.",
+    photoSizeError: "10 MB 이하의 사진을 선택해 주세요.",
+    photoPrepareError: "사진을 준비하지 못했어요.",
     photoRetry: "사진 다시 시도",
   },
 } as const
@@ -93,7 +100,7 @@ export function LocalSignalLayerB() {
   const [postFailed, setPostFailed] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
-  const [photoFailed, setPhotoFailed] = useState(false)
+  const [photoError, setPhotoError] = useState<PhotoError | null>(null)
   const [photoFailedOnce, setPhotoFailedOnce] = useState(false)
   const layerRef = useRef<HTMLElement>(null)
   const checkRef = useRef<HTMLButtonElement>(null)
@@ -123,6 +130,7 @@ export function LocalSignalLayerB() {
   const activeVenue = venue
   const name = venueNamePresentation(venue.name.ko, locale)
   const alreadyPosted = state.localSignalPostedVenueIds.includes(venue.id)
+  const photoFailed = photoError !== null
 
   function returnToPlace() {
     removePhoto()
@@ -161,18 +169,20 @@ export function LocalSignalLayerB() {
   function preparePhoto(file: File, allowQaFailure = true) {
     setPhotoFile(file)
     releasePhotoUrl()
-    if (!file.type.match(/^image\/(jpeg|png|webp)$/) || file.size > 8 * 1024 * 1024) {
-      setPhotoFailed(true)
-      setPhotoUrl(null)
+    if (!LOCAL_SIGNAL_PHOTO_TYPES.has(file.type)) {
+      setPhotoError("photoTypeError")
+      return
+    }
+    if (file.size > MAX_LOCAL_SIGNAL_PHOTO_BYTES) {
+      setPhotoError("photoSizeError")
       return
     }
     if (allowQaFailure && window.__ONDO_B_QA__?.localSignalPhoto === "failure" && !photoFailedOnce) {
       setPhotoFailedOnce(true)
-      setPhotoFailed(true)
-      setPhotoUrl(null)
+      setPhotoError("photoPrepareError")
       return
     }
-    setPhotoFailed(false)
+    setPhotoError(null)
     const url = URL.createObjectURL(file)
     photoUrlRef.current = url
     setPhotoUrl(url)
@@ -187,7 +197,7 @@ export function LocalSignalLayerB() {
   function removePhoto() {
     setPhotoFile(null)
     releasePhotoUrl()
-    setPhotoFailed(false)
+    setPhotoError(null)
   }
 
   function releasePhotoUrl() {
@@ -269,7 +279,7 @@ export function LocalSignalLayerB() {
                 <div><strong>{copy.photo}</strong><small>{copy.photoHelp}</small></div>
                 <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" onChange={selectPhoto} />
                 {photoUrl ? <figure><img src={photoUrl} alt="" /><figcaption><button type="button" data-testid="local-signal-photo-replace" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.replacePhoto}</button><button type="button" data-testid="local-signal-photo-remove" onClick={removePhoto}><Trash2 size={16} aria-hidden="true" />{copy.removePhoto}</button></figcaption></figure> : null}
-                {photoFailed ? <p role="alert">{copy.photoFailed}<button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button></p> : null}
+                    {photoError ? <p role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : null}</p> : null}
                 {!photoUrl && !photoFailed ? <button type="button" className={styles.photoAdd} onClick={() => photoInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{copy.photo}</button> : null}
               </section>
 

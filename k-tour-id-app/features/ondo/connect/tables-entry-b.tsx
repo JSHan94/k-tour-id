@@ -167,7 +167,7 @@ export function PulseTablesEntryB() {
   const [draft, setDraft] = useState("")
   const [returnTo, setReturnTo] = useState<BReturnToEnvelope | null>(null)
   const [gateOpen, setGateOpen] = useState(false)
-  const [joinStage, setJoinStage] = useState<JoinStage>("idle")
+  const [joinStage, setJoinStage] = useState<JoinStage>(() => state.plannedTableRefs.some(({ tableId, venueId }) => tableId === ACTIVE_TABLE_ID && venueId === TABLE_VENUE_ID) ? "joined" : "idle")
   const [reportOpen, setReportOpen] = useState(false)
   const [reported, setReported] = useState(false)
   const [blocked, setBlocked] = useState(false)
