@@ -78,8 +78,12 @@ for (const locale of ["en", "ko"] as const) {
       await expect(peek).toHaveAttribute("data-venue-id", PEAK_VENUE_ID)
       await expect(peek.getByTestId("canonical-place-pulse")).toHaveAttribute("data-pulse-level", "peak")
       await expect(peek.getByTestId("canonical-place-pulse")).toHaveCSS("border-left-color", "rgb(122, 32, 72)")
-      await expect(peek.getByTestId("canonical-place-details")).toBeFocused()
-      await expect(peek.getByTestId("canonical-place-details")).toHaveCSS("outline-color", "rgb(29, 102, 209)")
+      await expect(peek).toBeFocused()
+      await expect(peek.getByTestId("canonical-place-details")).not.toBeFocused()
+      await expect(peek.getByTestId("canonical-place-details")).toHaveCSS("outline-style", "none")
+      await page.keyboard.press("Tab")
+      await expect(peek.locator("button").first()).toBeFocused()
+      await expect(peek.locator("button").first()).toHaveCSS("outline-color", "rgb(29, 102, 209)")
       await expectVisibleDirectTextAtLeast12(peek)
       await expectActionsAtLeast44(peek)
 
@@ -112,7 +116,7 @@ for (const locale of ["en", "ko"] as const) {
 
       await page.keyboard.press("Escape")
       await expect(overlay).toBeHidden()
-      await expect(peek.getByTestId("canonical-place-details")).toBeFocused()
+      await expect(peek).toBeFocused()
       await peek.getByRole("button", { name: locale === "ko" ? "장소 닫기" : "Close place", exact: true }).click()
       await expect(peek).toBeHidden()
     }
