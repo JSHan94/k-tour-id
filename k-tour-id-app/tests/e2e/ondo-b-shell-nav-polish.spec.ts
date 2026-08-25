@@ -71,7 +71,10 @@ async function expectPolishedFiveTabDock(page: Page) {
   const current = nav.locator("[aria-current='page']")
   await expect(current).toHaveCount(1)
   await expect(current).toHaveAttribute("data-state", "selected")
-  expect(await current.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe("rgba(0, 0, 0, 0)")
+  expect(await current.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return style.backgroundImage !== "none" || style.backgroundColor !== "rgba(0, 0, 0, 0)"
+  })).toBe(true)
 
   await nav.getByTestId("nav-id").focus()
   const focus = await nav.getByTestId("nav-id").evaluate((element) => {
@@ -156,5 +159,30 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
     const [scrollBox, childBox] = await Promise.all([box(scroll), box(scroll.locator(":scope > *"))])
     expect(childBox.y + childBox.height).toBeLessThanOrEqual(scrollBox.y + scrollBox.height + 1)
     await expectNoHorizontalOverflow(page)
+  })
+
+  test("a modal opened from a scrolled tab pins to the visible region and restores its parent position", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 700 })
+    await seedPolishB(page, "en")
+    await gotoB(page)
+    await page.getByTestId("nav-tables").click()
+
+    const scroll = page.getByTestId("ondo-scroll-region")
+    const opener = page.locator("[data-testid^='table-open-']").first()
+    await opener.scrollIntoViewIfNeeded()
+    const before = await scroll.evaluate((element) => element.scrollTop)
+    expect(before).toBeGreaterThan(0)
+    await opener.click()
+
+    const detail = page.getByTestId("table-detail")
+    const close = detail.locator("header").getByRole("button", { name: "Close Table" }).first()
+    await expect(detail).toBeVisible()
+    await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0)
+    await expect.poll(() => detail.locator(":scope > article").evaluate((element) => element.scrollTop)).toBe(0)
+    expect((await box(detail)).y).toBeGreaterThanOrEqual((await box(scroll)).y - .5)
+    await expect(close).toBeInViewport()
+    await close.click()
+    await expect(detail).toBeHidden()
+    await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBeGreaterThanOrEqual(before - 1)
   })
 })
