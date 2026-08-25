@@ -34,11 +34,11 @@ test.describe("production official-source discovery", () => {
 
     const onboarding = page.getByTestId("ondo-onboarding")
     await expect(onboarding).toBeVisible()
-    await expect(onboarding).toContainText("400 public food-service licence records")
+    await expect(onboarding).toContainText("400 licensed food-service records")
     await expect(onboarding).toContainText("Seoul and Busan")
     await expect(onboarding).not.toContainText(/demo|simulat|score|persona/i)
     await onboarding.getByRole("button", { name: "한국어로 보기" }).click()
-    await expect(onboarding).toContainText("공공 일반음식점 인허가 기록 400개")
+    await expect(onboarding).toContainText("일반음식점 인허가 기록 400개")
     await expect(onboarding).toContainText("서울과 부산")
     await expectNoSeriousAxe(page, "[data-testid='ondo-onboarding']")
     await onboarding.getByTestId("onboarding-finish").click()

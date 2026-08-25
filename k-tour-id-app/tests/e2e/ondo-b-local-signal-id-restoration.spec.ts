@@ -54,7 +54,7 @@ test("B P0 keeps Explore guest-open and exposes separate Traveler ID and Setting
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   const nav = page.getByTestId("ondo-main-nav")
   await expect(nav.getByTestId("nav-ondo")).toContainText("Explore")
-  await expect(nav.getByTestId("nav-my")).toContainText("Saved")
+  await expect(nav.getByTestId("nav-my")).toContainText("My Korea")
   await expect(nav.getByTestId("nav-id")).toContainText("Traveler ID")
   await expect(nav.getByTestId("nav-settings")).toContainText("Settings")
   await nav.getByTestId("nav-id").click()
