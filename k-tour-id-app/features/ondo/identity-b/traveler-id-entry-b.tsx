@@ -1,60 +1,86 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { BadgeCheck, CalendarClock, ChevronRight, Fingerprint, Settings, Shield, UserRoundCheck } from "lucide-react"
+import {
+  BadgeCheck,
+  CalendarClock,
+  ChevronRight,
+  CircleUserRound,
+  Fingerprint,
+  Settings,
+  ShieldCheck,
+  UserRoundCheck,
+  WalletCards,
+} from "lucide-react"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { LocalCheckWalkthroughB, type LocalCheckKind, type LocalCheckOutcome } from "./local-check-walkthrough-b"
-import { IdWalletCommerceB } from "../commerce-b/id-wallet-commerce-b"
+import { IdWalletCommerceB, type WalletStatus } from "../commerce-b/id-wallet-commerce-b"
 import styles from "./traveler-id-entry-b.module.css"
 
 const COPY = {
   en: {
-    eyebrow: "ON THIS DEVICE",
-    title: "ID · Wallet",
-    body: "Review minimum identity requests before they appear in a task. These local walkthroughs create no account, identity, age proof, DID, or credential.",
-    local: "Local interactive boundary",
-    localBody: "No scan or provider is connected. You choose each return and results last only while this screen is mounted.",
+    eyebrow: "YOUR KOREA, YOUR CONTROL",
+    title: "Travel Pass",
+    body: "Keep the few answers and payment tools your trip may need — separate, private, and ready only when you choose.",
+    passLabel: "ONDO · KOREA TRAVEL PASS",
+    passState: "Guest pass",
+    passBody: "Explore first. Activate only when saving, joining or paying needs it.",
+    readiness: "Trip readiness",
+    readinessBody: "Each item stands on its own. Complete only the one an action asks for.",
+    accountTitle: "Account",
+    accountGuest: "Guest",
+    accountBody: "No account needed to explore Korea.",
     personTitle: "Person",
-    personBody: "For a future contribution that needs a minimum Person predicate. Person does not prove 19+.",
+    personBody: "Person does not prove 19+.",
     ageTitle: "19+",
-    ageBody: "For a future age-restricted task. 19+ does not prove identity or satisfy Person.",
-    personOpen: "Open Person walkthrough",
-    ageOpen: "Open 19+ walkthrough",
+    ageBody: "19+ does not prove identity.",
+    paymentTitle: "Payment",
+    paymentBody: "A separate test wallet for ONDO benefits.",
     notChecked: "Not checked",
-    success: "Completed in this session",
-    cancel: "Declined — no result kept",
-    failure: "Failed walkthrough return",
-    unavailable: "Unavailable walkthrough return",
-    expired: "Expired walkthrough return",
-    separateTitle: "Independent by design",
-    separateBody: "A Person return never changes 19+, and a 19+ return never changes Person. Neither is persisted or reused after this local session surface closes.",
-    settingsTitle: "Device data and language",
-    settingsBody: "Settings remains a separate destination for language, discovery choices, Local Signal markers, and device reset.",
-    settings: "Open Settings",
+    success: "Ready this session",
+    cancel: "Not completed",
+    failure: "Try again",
+    unavailable: "Unavailable",
+    expired: "Expired",
+    walletReady: "Ready",
+    walletNotReady: "Set up",
+    checkPerson: "Check Person",
+    checkAge: "Check 19+",
+    prototype: "Prototype mode & privacy",
+    prototypeBody: "Person, 19+ and payment readiness are independent and remain only while this screen is open. No provider, credential or live money service is connected.",
+    settings: "Device settings",
   },
   ko: {
-    eyebrow: "이 기기",
-    title: "ID · 지갑",
-    body: "작업 중 최소 신원 요청이 나타나기 전에 내용을 살펴보세요. 로컬 둘러보기는 계정·신원·나이 증명·DID·자격증명을 만들지 않습니다.",
-    local: "로컬 대화형 경계",
-    localBody: "연결된 스캔이나 공급자는 없습니다. 각 반환을 직접 선택하며 결과는 이 화면이 유지되는 동안에만 남아요.",
+    eyebrow: "나의 한국 여행, 나의 선택",
+    title: "여행 패스",
+    body: "여행에 필요한 최소 답과 결제 도구를 따로, 안전하게 준비하고 원할 때만 사용하세요.",
+    passLabel: "ONDO · KOREA TRAVEL PASS",
+    passState: "게스트 패스",
+    passBody: "먼저 둘러보세요. 저장·참여·결제에 필요할 때만 활성화합니다.",
+    readiness: "여행 준비 상태",
+    readinessBody: "각 항목은 서로 독립적이에요. 작업이 요청하는 한 가지만 완료하세요.",
+    accountTitle: "계정",
+    accountGuest: "게스트",
+    accountBody: "한국을 둘러보는 데 계정은 필요 없어요.",
     personTitle: "본인",
-    personBody: "향후 로컬 기여에 최소 본인 조건이 필요할 때를 위한 흐름입니다. 본인 확인은 19+를 증명하지 않습니다.",
+    personBody: "본인 확인은 19+를 증명하지 않습니다.",
     ageTitle: "19+",
-    ageBody: "향후 연령 제한 작업을 위한 흐름입니다. 19+는 본인을 증명하지 않습니다. 본인 조건도 충족하지 않습니다.",
-    personOpen: "본인 둘러보기 열기",
-    ageOpen: "19+ 둘러보기 열기",
+    ageBody: "19+는 본인을 증명하지 않습니다.",
+    paymentTitle: "결제",
+    paymentBody: "ONDO 혜택용 별도 테스트 지갑입니다.",
     notChecked: "확인 전",
-    success: "이 세션에서 완료",
-    cancel: "거절됨 — 보관된 결과 없음",
-    failure: "실패 반환",
-    unavailable: "이용 불가 반환",
-    expired: "만료 반환",
-    separateTitle: "서로 독립적으로 설계",
-    separateBody: "본인 반환은 19+를 바꾸지 않고, 19+ 반환은 본인을 바꾸지 않습니다. 어느 결과도 저장되지 않으며 이 로컬 세션 화면을 닫은 뒤 재사용되지 않아요.",
-    settingsTitle: "기기 데이터와 언어",
-    settingsBody: "설정은 언어·탐색 선택·로컬 시그널 표시·기기 초기화를 위한 별도 메뉴로 유지됩니다.",
-    settings: "설정 열기",
+    success: "이 세션에서 준비됨",
+    cancel: "완료 전",
+    failure: "다시 시도",
+    unavailable: "이용 불가",
+    expired: "만료됨",
+    walletReady: "준비됨",
+    walletNotReady: "설정 필요",
+    checkPerson: "본인 확인",
+    checkAge: "19+ 확인",
+    prototype: "프로토타입 모드와 개인정보",
+    prototypeBody: "본인·19+·결제 준비 상태는 서로 독립적이며 이 화면을 여는 동안에만 유지됩니다. 공급자·자격증명·실제 결제 서비스는 연결되지 않습니다.",
+    settings: "기기 설정",
   },
 } as const
 
@@ -68,13 +94,14 @@ export function TravelerIdEntryB() {
   const { state, actions } = useOndoB()
   const [personOutcome, setPersonOutcome] = useState<LocalCheckOutcome | null>(null)
   const [ageOutcome, setAgeOutcome] = useState<LocalCheckOutcome | null>(null)
+  const [walletStatus, setWalletStatus] = useState<WalletStatus>("disconnected")
   const [activeCheck, setActiveCheck] = useState<LocalCheckKind | null>(null)
   const personRef = useRef<HTMLButtonElement>(null)
   const ageRef = useRef<HTMLButtonElement>(null)
   const locale = state.locale
   const copy = COPY[locale]
 
-  function returnFromWalkthrough(outcome: LocalCheckOutcome) {
+  function returnFromCheck(outcome: LocalCheckOutcome) {
     const returningCheck = activeCheck
     if (returningCheck === "person") setPersonOutcome(outcome)
     if (returningCheck === "age") setAgeOutcome(outcome)
@@ -91,48 +118,60 @@ export function TravelerIdEntryB() {
           <span>{copy.body}</span>
         </header>
 
-        <section className={styles.boundary} aria-labelledby="traveler-local-boundary">
-          <Shield size={20} aria-hidden="true" />
-          <div><h2 id="traveler-local-boundary">{copy.local}</h2><p>{copy.localBody}</p></div>
+        <section className={styles.pass} aria-label={copy.passState}>
+          <div className={styles.passGlow} aria-hidden="true" />
+          <div className={styles.passTop}><span>{copy.passLabel}</span><Fingerprint size={28} strokeWidth={1.5} aria-hidden="true" /></div>
+          <div className={styles.passMain}>
+            <div><small>{copy.passState}</small><strong>SEOUL — BUSAN</strong></div>
+            <BadgeCheck size={23} aria-hidden="true" />
+          </div>
+          <p>{copy.passBody}</p>
         </section>
 
-        <IdWalletCommerceB />
+        <section className={styles.readiness} data-testid="travel-pass-status" aria-labelledby="travel-readiness-title">
+          <div className={styles.sectionHeading}>
+            <div><h2 id="travel-readiness-title">{copy.readiness}</h2><p>{copy.readinessBody}</p></div>
+            <ShieldCheck size={21} aria-hidden="true" />
+          </div>
 
-        <div className={styles.checks}>
-          <section className={styles.check} data-testid="traveler-id-person" aria-labelledby="traveler-person-title">
-            <div className={styles.checkIcon}><UserRoundCheck size={22} aria-hidden="true" /></div>
-            <div className={styles.checkCopy}>
-              <span data-outcome={personOutcome ?? "none"}>{outcomeLabel(locale, personOutcome)}</span>
-              <h2 id="traveler-person-title">{copy.personTitle}</h2>
+          <div className={styles.statusGrid}>
+            <article className={styles.statusCard} data-testid="traveler-id-account" data-status="guest">
+              <div className={styles.statusTop}><CircleUserRound size={20} aria-hidden="true" /><span>{copy.accountGuest}</span></div>
+              <h3>{copy.accountTitle}</h3>
+              <p>{copy.accountBody}</p>
+            </article>
+
+            <article className={styles.statusCard} data-testid="traveler-id-person" data-status={personOutcome ?? "none"}>
+              <div className={styles.statusTop}><UserRoundCheck size={20} aria-hidden="true" /><span>{outcomeLabel(locale, personOutcome)}</span></div>
+              <h3>{copy.personTitle}</h3>
               <p>{copy.personBody}</p>
-            </div>
-            <button ref={personRef} type="button" onClick={() => setActiveCheck("person")}>
-              {copy.personOpen}<ChevronRight size={17} aria-hidden="true" />
-            </button>
-          </section>
+              <button ref={personRef} type="button" onClick={() => setActiveCheck("person")}>{copy.checkPerson}<ChevronRight size={17} aria-hidden="true" /></button>
+            </article>
 
-          <section className={styles.check} data-testid="traveler-id-age" aria-labelledby="traveler-age-title">
-            <div className={styles.checkIcon}><CalendarClock size={22} aria-hidden="true" /></div>
-            <div className={styles.checkCopy}>
-              <span data-outcome={ageOutcome ?? "none"}>{outcomeLabel(locale, ageOutcome)}</span>
-              <h2 id="traveler-age-title">{copy.ageTitle}</h2>
+            <article className={styles.statusCard} data-testid="traveler-id-age" data-status={ageOutcome ?? "none"}>
+              <div className={styles.statusTop}><CalendarClock size={20} aria-hidden="true" /><span>{outcomeLabel(locale, ageOutcome)}</span></div>
+              <h3>{copy.ageTitle}</h3>
               <p>{copy.ageBody}</p>
-            </div>
-            <button ref={ageRef} type="button" onClick={() => setActiveCheck("age")}>
-              {copy.ageOpen}<ChevronRight size={17} aria-hidden="true" />
-            </button>
-          </section>
-        </div>
+              <button ref={ageRef} type="button" onClick={() => setActiveCheck("age")}>{copy.checkAge}<ChevronRight size={17} aria-hidden="true" /></button>
+            </article>
 
-        <section className={styles.separate}>
-          <BadgeCheck size={19} aria-hidden="true" />
-          <div><h2>{copy.separateTitle}</h2><p>{copy.separateBody}</p></div>
+            <article className={styles.statusCard} data-testid="traveler-id-payment" data-status={walletStatus}>
+              <div className={styles.statusTop}><WalletCards size={20} aria-hidden="true" /><span>{walletStatus === "ready" ? copy.walletReady : copy.walletNotReady}</span></div>
+              <h3>{copy.paymentTitle}</h3>
+              <p>{copy.paymentBody}</p>
+            </article>
+          </div>
         </section>
 
-        <section className={styles.settings}>
-          <div><Fingerprint size={19} aria-hidden="true" /><span><h2>{copy.settingsTitle}</h2><p>{copy.settingsBody}</p></span></div>
+        <IdWalletCommerceB walletStatus={walletStatus} onWalletStatusChange={setWalletStatus} />
+
+        <footer className={styles.footer}>
+          <details>
+            <summary>{copy.prototype}</summary>
+            <p>{copy.prototypeBody}</p>
+          </details>
           <button type="button" onClick={() => actions.setTab("settings")}><Settings size={17} aria-hidden="true" />{copy.settings}</button>
-        </section>
+        </footer>
       </div>
 
       {activeCheck ? (
@@ -142,7 +181,7 @@ export function TravelerIdEntryB() {
           origin="traveler_id"
           boundarySeen={state.localInteractionBoundarySeen}
           onAcknowledgeBoundary={actions.acknowledgeLocalInteractionBoundary}
-          onReturn={returnFromWalkthrough}
+          onReturn={returnFromCheck}
         />
       ) : null}
     </div>

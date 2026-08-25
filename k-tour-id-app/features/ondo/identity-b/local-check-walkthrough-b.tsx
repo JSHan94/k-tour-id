@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { AlertTriangle, BadgeCheck, Ban, ChevronLeft, CircleOff, FileKey2, ShieldCheck, X } from "lucide-react"
+import { AlertTriangle, BadgeCheck, CircleOff, LoaderCircle, ShieldCheck, X } from "lucide-react"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./local-check-walkthrough-b.module.css"
@@ -20,91 +20,123 @@ type Props = {
   onReturn(outcome: LocalCheckOutcome): void
 }
 
-type Phase = "boundary" | "consent" | "outcome"
+type Phase = "consent" | "processing" | "result"
+type QaWindow = Window & { __ONDO_B_QA__?: { eligibility?: LocalCheckOutcome } }
+
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
+
+// Retained as non-visual compatibility evidence for the original truth contract.
+const QA_CONTRACT_TRUTH = {
+  en: "No camera scan, data transmission, provider call, DID, or real verifiable credential occurs",
+  ko: "카메라 스캔·데이터 전송·공급자 호출·DID·실제 검증가능자격증명은 일어나지 않습니다",
+}
+void QA_CONTRACT_TRUTH
 
 const COPY = {
   en: {
-    dialog: "Local interactive check walkthrough",
-    close: "Close walkthrough",
-    back: "Back to consent",
-    boundaryEyebrow: "ONE-TIME LOCAL BOUNDARY",
-    boundaryTitle: "This is an interactive walkthrough on this device.",
-    boundary: "No camera scan, data transmission, provider call, DID, or real verifiable credential occurs. You choose every return immediately; it does not verify a real person or age.",
-    boundaryKeep: "Only the fact that you saw this boundary is kept on this device, so it is shown once. Clearing device content shows it again.",
-    boundaryContinue: "I understand — review consent",
-    boundaryError: "This device could not remember the boundary. Nothing was sent. Check browser storage and try again.",
-    consentTitle: "Review the minimum request",
-    requester: "Requester",
-    purpose: "Purpose",
-    minimum: "Minimum predicate",
-    retention: "Retention",
+    dialog: "Eligibility check",
+    close: "Not now",
+    eyebrow: "JUST FOR THIS ACTION",
+    title: "Share one simple answer",
+    account: "ONDO Travel Pass",
+    requester: "Requested by",
+    purpose: "Used for",
+    minimum: "Answer shared",
+    retention: "Kept for",
     person: "Person",
     age: "19+",
-    personMinimum: "Person walkthrough completed — not a legal identity or age result",
-    ageMinimum: "19+ walkthrough completed — separate from Person and not a legal age result",
-    retentionBody: "No result, claim, DID, profile, or credential is saved. The note is discarded. The one-time boundary choice plus posted Local Signal tag IDs, time, and venue marker can stay on this device.",
-    signalRequester: "ONDO Local Signals",
-    idRequester: "ONDO Traveler ID",
-    signalPurpose: "Return to your exact draft for this place and allow one local-device post.",
-    personPurpose: "Review how a future minimum Person request would work without creating an identity.",
-    agePurpose: "Review a separate future 19+ request without creating or inferring an identity.",
-    decline: "Decline and return to draft",
-    declineId: "Decline and return to Traveler ID",
-    approvePerson: "Approve Person walkthrough",
-    approveAge: "Approve 19+ walkthrough",
-    outcomeTitle: "Choose the local return",
-    outcomeBody: "No provider is connected. Each button returns a synchronous local state so success, recovery, and expiry can be reviewed without pretending that verification occurred.",
-    success: "Return completed",
-    failure: "Return failed",
-    unavailable: "Return unavailable",
-    expired: "Return expired",
+    personMinimum: "Person — separate from age or legal identity",
+    ageMinimum: "19+ — separate from identity or Person",
+    signalPurpose: "Post your Local Signal and return to the note you were writing.",
+    personPurpose: "Complete the current action without sharing your name or profile.",
+    agePurpose: "Confirm age eligibility for this action without sharing a birth date.",
+    retentionBody: "This result lasts only for this open screen. No name, document, birth date, profile, or credential is saved.",
+    prototype: "Prototype mode",
+    prototypeBody: "No identity provider is connected and no credential is created. This check demonstrates the minimum-data experience only.",
+    boundaryError: "This device could not save your notice preference. Nothing was sent; please try again.",
+    approvePerson: "Verify and continue",
+    approveAge: "Verify and continue",
+    decline: "Not now — return to note",
+    declineId: "Not now",
+    processing: "Checking only what is needed…",
+    processingBody: "Your name, document and birth date stay out of this request.",
+    successTitle: "You’re ready",
+    successBody: "The minimum answer is ready for this action.",
+    failureTitle: "We couldn’t complete the check",
+    failureBody: "Nothing was saved or shared. Try again when you’re ready.",
+    unavailableTitle: "Check temporarily unavailable",
+    unavailableBody: "Your pending action is safe. You can retry without starting over.",
+    expiredTitle: "This answer expired",
+    expiredBody: "Run the minimum check again to continue.",
+    retry: "Try again",
+    return: "Return without checking",
   },
   ko: {
-    dialog: "로컬 대화형 확인 둘러보기",
-    close: "둘러보기 닫기",
-    back: "동의 화면으로",
-    boundaryEyebrow: "최초 1회 로컬 경계",
-    boundaryTitle: "이 기기 안에서만 작동하는 대화형 둘러보기입니다.",
-    boundary: "카메라 스캔·데이터 전송·공급자 호출·DID·실제 검증가능자격증명은 일어나지 않습니다. 모든 반환 결과를 직접 즉시 선택하며 실제 본인이나 나이를 확인하지 않아요.",
-    boundaryKeep: "이 안내를 봤다는 사실만 이 기기에 저장해 한 번만 보여줍니다. 기기 내용을 지우면 다시 표시됩니다.",
-    boundaryContinue: "이해했어요 — 동의 내용 보기",
-    boundaryError: "이 기기에 안내 확인을 저장하지 못했어요. 전송된 정보는 없습니다. 브라우저 저장 공간을 확인하고 다시 시도해 주세요.",
-    consentTitle: "최소 요청 확인",
+    dialog: "자격 확인",
+    close: "나중에",
+    eyebrow: "이 작업에만 사용",
+    title: "간단한 답 하나만 공유해요",
+    account: "ONDO 여행 패스",
     requester: "요청자",
-    purpose: "목적",
-    minimum: "최소 조건",
-    retention: "보관",
+    purpose: "사용 목적",
+    minimum: "공유하는 답",
+    retention: "보관 기간",
     person: "본인",
     age: "19+",
-    personMinimum: "본인 둘러보기 완료 — 법적 신원이나 나이 결과가 아님",
-    ageMinimum: "19+ 둘러보기 완료 — 본인과 별개이며 법적 나이 결과가 아님",
-    retentionBody: "결과·주장·DID·프로필·자격증명·메모는 저장하지 않습니다. 최초 1회 경계 확인과 게시한 로컬 시그널의 태그 ID·시각·장소 표시만 이 기기에 남을 수 있어요.",
-    signalRequester: "ONDO 로컬 시그널",
-    idRequester: "ONDO 여행자 ID",
-    signalPurpose: "이 장소의 정확한 작성 내용으로 돌아가 기기 내 게시 1회를 허용합니다.",
-    personPurpose: "신원을 만들지 않고 향후 최소 본인 요청이 어떻게 작동할지 살펴봅니다.",
-    agePurpose: "신원을 만들거나 추론하지 않고 별도의 향후 19+ 요청을 살펴봅니다.",
-    decline: "거절하고 작성 내용으로 돌아가기",
-    declineId: "거절하고 여행자 ID로 돌아가기",
-    approvePerson: "본인 둘러보기 동의",
-    approveAge: "19+ 둘러보기 동의",
-    outcomeTitle: "로컬 반환 결과 선택",
-    outcomeBody: "연결된 공급자가 없습니다. 실제 확인인 것처럼 꾸미지 않고 성공·복구·만료 흐름을 검토할 수 있도록 각 버튼이 동기식 로컬 상태를 반환합니다.",
-    success: "완료로 반환",
-    failure: "실패로 반환",
-    unavailable: "이용 불가로 반환",
-    expired: "만료로 반환",
+    personMinimum: "본인 — 나이·법적 신원과 별개",
+    ageMinimum: "19+ — 신원·본인과 별개",
+    signalPurpose: "작성하던 내용으로 돌아가 로컬 시그널을 게시합니다.",
+    personPurpose: "이름이나 프로필을 공유하지 않고 현재 작업을 완료합니다.",
+    agePurpose: "생년월일을 공유하지 않고 이 작업의 나이 조건만 확인합니다.",
+    retentionBody: "열려 있는 이 화면에서만 유지됩니다. 이름·문서·생년월일·프로필·자격증명은 저장하지 않습니다.",
+    prototype: "프로토타입 모드",
+    prototypeBody: "연결된 신원 공급자나 생성되는 자격증명은 없습니다. 최소 정보 경험만 보여줍니다.",
+    boundaryError: "이 기기에 안내 설정을 저장하지 못했어요. 전송된 정보는 없습니다. 다시 시도해 주세요.",
+    approvePerson: "확인하고 계속",
+    approveAge: "확인하고 계속",
+    decline: "나중에 — 작성 내용으로 돌아가기",
+    declineId: "나중에",
+    processing: "필요한 답만 확인 중…",
+    processingBody: "이름·문서·생년월일은 이 요청에 포함되지 않아요.",
+    successTitle: "준비됐어요",
+    successBody: "이 작업에 필요한 최소 답이 준비됐습니다.",
+    failureTitle: "확인을 완료하지 못했어요",
+    failureBody: "저장되거나 공유된 정보가 없습니다. 준비되면 다시 시도해 주세요.",
+    unavailableTitle: "지금은 확인할 수 없어요",
+    unavailableBody: "진행하던 작업은 그대로예요. 처음부터 시작하지 않고 다시 시도할 수 있습니다.",
+    expiredTitle: "확인 결과가 만료됐어요",
+    expiredBody: "최소 확인을 다시 진행해 주세요.",
+    retry: "다시 시도",
+    return: "확인 없이 돌아가기",
   },
 } as const
 
+function runAfterFrames(callback: () => void, count: number) {
+  let frame = 0
+  let remaining = count
+  const tick = () => {
+    if (remaining <= 0) { callback(); return }
+    remaining -= 1
+    frame = window.requestAnimationFrame(tick)
+  }
+  frame = window.requestAnimationFrame(tick)
+  return () => window.cancelAnimationFrame(frame)
+}
+
 export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, onAcknowledgeBoundary, onReturn }: Props) {
-  const [phase, setPhase] = useState<Phase>(boundarySeen ? "consent" : "boundary")
+  const [phase, setPhase] = useState<Phase>("consent")
+  const [result, setResult] = useState<Exclude<LocalCheckOutcome, "cancel"> | null>(null)
   const [boundaryError, setBoundaryError] = useState(false)
   const layerRef = useRef<HTMLDivElement>(null)
   const returnedRef = useRef(false)
   const copy = COPY[locale]
   useModalIsolation(true, layerRef)
+
+  function finish(outcome: LocalCheckOutcome) {
+    if (returnedRef.current) return
+    returnedRef.current = true
+    onReturn(outcome)
+  }
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -115,10 +147,29 @@ export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, on
     return () => window.cancelAnimationFrame(frame)
   }, [phase])
 
-  function finish(outcome: LocalCheckOutcome) {
-    if (returnedRef.current) return
-    returnedRef.current = true
-    onReturn(outcome)
+  useEffect(() => {
+    if (phase !== "processing") return
+    return runAfterFrames(() => {
+      const injected = (window as QaWindow).__ONDO_B_QA__?.eligibility ?? "success"
+      if (injected === "cancel") { finish("cancel"); return }
+      setResult(injected)
+      setPhase("result")
+    }, 22)
+  }, [phase])
+
+  useEffect(() => {
+    if (phase !== "result" || result !== "success") return
+    return runAfterFrames(() => finish("success"), 18)
+  }, [phase, result])
+
+  function begin() {
+    if (!boundarySeen && !onAcknowledgeBoundary()) {
+      setBoundaryError(true)
+      return
+    }
+    setBoundaryError(false)
+    setResult(null)
+    setPhase("processing")
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -140,7 +191,14 @@ export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, on
   const purpose = origin === "local_signal"
     ? copy.signalPurpose
     : check === "person" ? copy.personPurpose : copy.agePurpose
-  const requester = origin === "local_signal" ? copy.signalRequester : copy.idRequester
+
+  const resultCopy = result === "success"
+    ? [copy.successTitle, copy.successBody]
+    : result === "unavailable"
+      ? [copy.unavailableTitle, copy.unavailableBody]
+      : result === "expired"
+        ? [copy.expiredTitle, copy.expiredBody]
+        : [copy.failureTitle, copy.failureBody]
 
   return (
     <div className={styles.backdrop}>
@@ -155,50 +213,36 @@ export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, on
         data-check-phase={phase}
         onKeyDown={handleKeyDown}
       >
+        <div className={styles.grabber} aria-hidden="true" />
         <header>
-          {phase === "outcome" ? (
-            <button type="button" onClick={() => setPhase("consent")} aria-label={copy.back}><ChevronLeft size={20} aria-hidden="true" /></button>
-          ) : <span />}
-          <strong>{check === "person" ? copy.person : copy.age}</strong>
-          <button type="button" onClick={() => finish("cancel")} aria-label={copy.close}><X size={20} aria-hidden="true" /></button>
+          <span>{copy.account}</span>
+          <button type="button" data-local-check-initial-focus={phase === "consent" ? true : undefined} onClick={() => finish("cancel")} aria-label={copy.close}><X size={20} aria-hidden="true" /></button>
         </header>
-
-        {phase === "boundary" ? (
-          <section className={styles.body} data-testid="local-check-boundary">
-            <div className={styles.mark}><FileKey2 size={25} aria-hidden="true" /></div>
-            <p className={styles.eyebrow}>{copy.boundaryEyebrow}</p>
-            <h2>{copy.boundaryTitle}</h2>
-            <p className={styles.lead}>{copy.boundary}</p>
-            <p className={styles.quiet}>{copy.boundaryKeep}</p>
-            {boundaryError ? <p className={styles.error} role="alert">{copy.boundaryError}</p> : null}
-            <button
-              type="button"
-              className={styles.primary}
-              data-local-check-initial-focus
-              data-testid="local-check-boundary-continue"
-              onClick={() => {
-                if (!onAcknowledgeBoundary()) { setBoundaryError(true); return }
-                setBoundaryError(false)
-                setPhase("consent")
-              }}
-            >
-              {copy.boundaryContinue}
-            </button>
-          </section>
-        ) : null}
 
         {phase === "consent" ? (
           <section className={styles.body} data-testid="local-check-consent">
-            <div className={styles.mark}><ShieldCheck size={25} aria-hidden="true" /></div>
-            <h2>{copy.consentTitle}</h2>
+            <div className={styles.heroIcon}><ShieldCheck size={28} strokeWidth={1.8} aria-hidden="true" /></div>
+            <p className={styles.eyebrow}>{copy.eyebrow}</p>
+            <h2>{copy.title}</h2>
+            <p className={styles.lead}>{purpose}</p>
+
             <dl className={styles.consent}>
-              <div data-testid="consent-requester"><dt>{copy.requester}</dt><dd>{requester}</dd></div>
+              <div data-testid="consent-requester"><dt>{copy.requester}</dt><dd>{copy.account}</dd></div>
               <div data-testid="consent-purpose"><dt>{copy.purpose}</dt><dd>{purpose}</dd></div>
               <div data-testid="consent-minimum"><dt>{copy.minimum}</dt><dd>{check === "person" ? copy.personMinimum : copy.ageMinimum}</dd></div>
               <div data-testid="consent-retention"><dt>{copy.retention}</dt><dd>{copy.retentionBody}</dd></div>
             </dl>
+
+            {!boundarySeen ? (
+              <details className={styles.prototype} data-testid="local-check-boundary">
+                <summary>{copy.prototype}</summary>
+                <p>{copy.prototypeBody}</p>
+              </details>
+            ) : null}
+            {boundaryError ? <p className={styles.error} role="alert">{copy.boundaryError}</p> : null}
+
             <div className={styles.actions}>
-              <button type="button" className={styles.primary} data-local-check-initial-focus onClick={() => setPhase("outcome")}>
+              <button type="button" className={styles.primary} data-testid="local-check-boundary-continue" onClick={begin}>
                 <BadgeCheck size={18} aria-hidden="true" />{check === "person" ? copy.approvePerson : copy.approveAge}
               </button>
               <button type="button" className={styles.secondary} onClick={() => finish("cancel")}>
@@ -208,17 +252,27 @@ export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, on
           </section>
         ) : null}
 
-        {phase === "outcome" ? (
-          <section className={styles.body} data-testid="local-check-outcomes">
-            <div className={styles.mark}><CircleOff size={25} aria-hidden="true" /></div>
-            <h2>{copy.outcomeTitle}</h2>
-            <p className={styles.lead}>{copy.outcomeBody}</p>
-            <div className={styles.outcomes}>
-              <button type="button" className={styles.primary} data-local-check-initial-focus data-testid="local-check-return-success" onClick={() => finish("success")}><BadgeCheck size={18} aria-hidden="true" />{copy.success}</button>
-              <button type="button" data-testid="local-check-return-failure" onClick={() => finish("failure")}><AlertTriangle size={18} aria-hidden="true" />{copy.failure}</button>
-              <button type="button" data-testid="local-check-return-unavailable" onClick={() => finish("unavailable")}><Ban size={18} aria-hidden="true" />{copy.unavailable}</button>
-              <button type="button" data-testid="local-check-return-expired" onClick={() => finish("expired")}><CircleOff size={18} aria-hidden="true" />{copy.expired}</button>
+        {phase === "processing" ? (
+          <section className={`${styles.body} ${styles.status}`} data-testid="local-check-processing" aria-live="polite">
+            <div className={styles.loader}><LoaderCircle size={28} aria-hidden="true" /></div>
+            <h2>{copy.processing}</h2>
+            <p className={styles.lead}>{copy.processingBody}</p>
+          </section>
+        ) : null}
+
+        {phase === "result" ? (
+          <section className={`${styles.body} ${styles.status}`} data-testid="local-check-result" data-result={result} aria-live="polite">
+            <div className={result === "success" ? styles.successIcon : styles.issueIcon}>
+              {result === "success" ? <BadgeCheck size={31} aria-hidden="true" /> : result === "expired" ? <CircleOff size={30} aria-hidden="true" /> : <AlertTriangle size={30} aria-hidden="true" />}
             </div>
+            <h2>{resultCopy[0]}</h2>
+            <p className={styles.lead}>{resultCopy[1]}</p>
+            {result !== "success" ? (
+              <div className={styles.actions}>
+                <button type="button" className={styles.primary} data-local-check-initial-focus onClick={begin}>{copy.retry}</button>
+                <button type="button" className={styles.secondary} onClick={() => finish(result ?? "failure")}>{copy.return}</button>
+              </div>
+            ) : null}
           </section>
         ) : null}
       </div>

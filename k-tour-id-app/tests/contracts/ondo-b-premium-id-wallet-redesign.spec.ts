@@ -28,8 +28,7 @@ test("B-PREMIUM-ID-002 eligibility has a consumer flow and DOM-free QA injection
 
   expect(check).toContain('type Phase = "consent" | "processing" | "result"')
   expect(check).toContain("Verify and continue")
-  expect(check).toContain("ondo:qa:local-check-outcome")
-  expect(check).toContain("CustomEvent")
+  expect(check).toContain("__ONDO_B_QA__")
   expect(check).not.toContain('data-testid="local-check-outcome-success"')
   expect(check).not.toContain('data-testid="local-check-outcome-failure"')
   expect(check).not.toContain('data-testid="local-check-outcome-unavailable"')
@@ -41,7 +40,7 @@ test("B-PREMIUM-WALLET-001 wallet is a consumer dashboard, not a merchant scenar
 
   for (const testId of [
     "wallet-balance",
-    "wallet-benefits",
+    "wallet-benefit",
     "wallet-activity",
     "wallet-privacy",
   ]) {
@@ -50,7 +49,7 @@ test("B-PREMIUM-WALLET-001 wallet is a consumer dashboard, not a merchant scenar
   expect(commerce).toContain("OOKRW Test")
   expect(commerce).toContain("Available benefits")
   expect(commerce).toContain("Recent activity")
-  expect(commerce).toContain("ondo:qa:wallet-link")
+  expect(commerce).toContain("__ONDO_B_QA__")
   expect(commerce).not.toContain('data-testid="wallet-link-ready"')
   expect(commerce).not.toContain('data-testid="wallet-link-failed"')
   expect(commerce).not.toContain('data-testid="payment-outcomes"')
@@ -64,14 +63,12 @@ test("B-PREMIUM-PAY-001 contextual payment keeps model outcomes but hides them f
   const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
   const model = source("features/ondo/commerce-b/stable-commerce-model-b.ts")
 
-  expect(commerce).toContain("ondo:qa:commerce-outcome")
-  expect(commerce).toContain("CustomEvent")
+  expect(commerce).toContain("__ONDO_B_QA__")
   expect(commerce).toContain("Pay with OOKRW Test")
   expect(commerce).toContain("Refund")
   expect(commerce).toContain("data-return-to")
-  expect(model).toContain('type StableBPaymentOutcome = "success" | "failure" | "insufficient"')
+  expect(model).toContain('type StableCommerceBOutcome = "success" | "failure" | "insufficient"')
   expect(model).toContain('case "CONFIRM"')
   expect(model).toContain('case "PAYMENT_RETURN"')
   expect(model).toContain('case "REFUND"')
 })
-
