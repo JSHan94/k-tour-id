@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test"
 const DEVICE_KEY = "ondo-b.device.v1"
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 
-async function seed(page: Page, locale: "en" | "ko" = "en", qa?: { wallet?: "failure"; payment?: "failure" | "insufficient" }) {
+async function seed(page: Page, locale: "en" | "ko" = "en", qa?: { wallet?: "failure"; payment?: "failure" | "insufficient"; benefit?: "ineligible" | "below_minimum" | "expired" }) {
   await page.addInitScript(({ key, language, injected }) => {
     if (!sessionStorage.getItem("ondo-b-premium-seeded")) {
       localStorage.setItem(key, JSON.stringify({
@@ -122,6 +122,52 @@ test("contextual benefit pays once, creates a consumer receipt, refunds, and ret
   await expect(myReceipts).toContainText("Refunded")
   await expect(myReceipts).toContainText("ONDO-LOCAL-20260825-001")
   await expect(myReceipts).toContainText("ONDO-LOCAL-REFUND-20260825-001")
+})
+
+test("declining the benefit preserves the 22 OOKRW quote and receipt across reload", async ({ page }) => {
+  await seed(page)
+  const { offer, place } = await openContextualOffer(page)
+  await offer.getByTestId("benefit-decline").click()
+  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-benefit-recommendation", "declined")
+  await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "available")
+  await offer.getByTestId("payment-confirm").click()
+  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
+  await offer.getByTestId("payment-minimum-consent").locator("input").check()
+  await offer.getByTestId("payment-confirm").click()
+
+  const receipt = offer.getByTestId("payment-receipt")
+  await expect(receipt).toContainText("22 OOKRW Test")
+  await expect(receipt).toContainText("0 OOKRW Test")
+  await expect(receipt).toContainText("38 OOKRW Test")
+  await receipt.getByTestId("payment-receipt-return").click()
+  await place.getByRole("button", { name: "Close place" }).last().click()
+  await page.getByTestId("nav-id").click()
+  await expect(page.getByTestId("wallet-balance")).toContainText("38")
+  await expect(page.getByTestId("wallet-activity-receipt")).toContainText("Paid 22 OOKRW Test")
+
+  await page.reload({ waitUntil: "networkidle" })
+  await page.getByTestId("nav-id").click()
+  const restored = page.getByTestId("wallet-activity-receipt")
+  await expect(page.getByTestId("wallet-balance")).toContainText("38")
+  await expect(restored).toContainText("Paid 22 OOKRW Test")
+  await restored.locator("summary").click()
+  await restored.getByTestId("wallet-activity-refund").click()
+  await expect(page.getByTestId("wallet-balance")).toContainText("60")
+})
+
+test("QA-only benefit policy recovery blocks pay without exposing outcome controls", async ({ browser }) => {
+  for (const benefit of ["ineligible", "below_minimum", "expired"] as const) {
+    const context = await browser.newContext()
+    const page = await context.newPage()
+    await seed(page, "en", { benefit })
+    const { offer } = await openContextualOffer(page)
+    const recovery = offer.getByTestId("commerce-benefit-recovery")
+    await expect(offer).toHaveAttribute("data-benefit-policy", benefit)
+    await expect(recovery).toBeVisible()
+    await expect(offer.getByTestId("payment-confirm")).toHaveCount(0)
+    await expect(offer.locator('[data-testid*="outcome"]')).toHaveCount(0)
+    await context.close()
+  }
 })
 
 test("QA injection creates recovery without exposing outcome controls", async ({ page }) => {

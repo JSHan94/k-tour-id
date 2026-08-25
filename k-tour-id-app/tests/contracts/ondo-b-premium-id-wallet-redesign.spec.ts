@@ -104,6 +104,8 @@ test("B-PREMIUM-PAY-002 wallet readiness, balance, receipts, and refunds share o
 test("B-PREMIUM-POLISH-001 consumer copy matches device persistence and the fixed non-live offer", () => {
   const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
+  const place = source("features/ondo/place/canonical-place-overlay.tsx")
+  const myKorea = source("features/ondo/my/my-korea-model.ts")
 
   expect(commerce).toContain("Eligible for this test offer · ₩22,000 minimum met")
   expect(commerce).toContain("이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족")
@@ -117,4 +119,10 @@ test("B-PREMIUM-POLISH-001 consumer copy matches device persistence and the fixe
   expect(tables).toContain("Fri, Aug 28 · 20:30 KST")
   expect(tables).toContain("8월 28일 금요일 · 20:30 KST")
   expect(tables).not.toContain('eyebrow: "Tonight in Seoul"')
+  expect(place).toContain("Fri, Aug 28 · 20:30 KST")
+  expect(place).toContain("8월 28일 금요일 · 20:30 KST")
+  expect(myKorea).toContain("Fri, Aug 28 · 20:30 KST")
+  expect(myKorea).toContain("8월 28일 금요일 · 20:30 KST")
+  expect(place).toContain("Official Korean restaurant licence record")
+  expect(place).not.toContain('active: "Official LOCALDATA record"')
 })

@@ -90,7 +90,7 @@ test.describe("production official-source discovery", () => {
     await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
     const peek = page.getByTestId("canonical-place-peek")
-    await expect(peek).toContainText("Official LOCALDATA record")
+    await expect(peek).toContainText("Official Korean restaurant licence record")
     await expect(peek.getByTestId("canonical-venue-directions")).toHaveAttribute("href", /google\.com\/maps\/dir/)
     await peek.getByTestId("canonical-place-details").click()
 

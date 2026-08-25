@@ -52,7 +52,7 @@ test("PROD-DISCOVERY-004 place surface preserves sourced facts and canonical dec
   const source = readFileSync(path.join(appRoot, "features/ondo/place/canonical-place-overlay.tsx"), "utf8")
   expect(source).toContain("canonical-venue-directions")
   expect(source).toContain("canonical-venue-save")
-  expect(source).toContain("Official LOCALDATA record")
+  expect(source).toContain("Official Korean restaurant licence record")
   expect(source).toContain("data-address-truth")
   expect(source).toContain("UNKNOWN")
 })

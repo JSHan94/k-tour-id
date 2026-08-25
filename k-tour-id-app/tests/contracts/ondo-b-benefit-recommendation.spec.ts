@@ -45,5 +45,8 @@ test("B-BENEFIT-003 consumer offer exposes recommendation decisions without outc
   }
   expect(commerce).toContain("Recommended for this meal")
   expect(commerce).toContain("no AI or provider call")
+  expect(commerce).toContain("stableCommerceBenefitPolicyB(")
+  expect(commerce).toContain("data-benefit-policy")
+  expect(commerce).toContain('data-testid="commerce-benefit-recovery"')
   expect(commerce).not.toContain('data-testid="benefit-outcomes"')
 })
