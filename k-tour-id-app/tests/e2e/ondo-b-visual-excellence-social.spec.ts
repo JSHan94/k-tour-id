@@ -220,6 +220,14 @@ for (const locale of ["en", "ko"] as const) {
 
       const chat = await openChat(page)
       await chat.scrollIntoViewIfNeeded()
+      if (viewport.label === "844x390") {
+        const plan = detail.getByTestId("table-sample-time").locator("xpath=../..")
+        const [planBox, chatBox] = await Promise.all([plan.boundingBox(), chat.boundingBox()])
+        expect(planBox?.x ?? 844).toBeLessThan(380)
+        expect(planBox?.y ?? 390).toBeGreaterThanOrEqual(62)
+        expect((planBox?.y ?? 390) + (planBox?.height ?? 0)).toBeLessThanOrEqual(390)
+        expect(chatBox?.x ?? 0).toBeGreaterThan(390)
+      }
       await quietScreenshot(page, `${locale}-${viewport.label}-table-chat`)
 
       const signal = await openLocalSignal(page)

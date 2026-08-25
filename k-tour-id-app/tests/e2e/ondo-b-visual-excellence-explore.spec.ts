@@ -93,6 +93,13 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(composition.sceneBackground).not.toBe("none")
           expect(composition.sceneOpacity).toBeGreaterThan(.2)
           if (viewport.width >= 800) expect(composition.layerWidth).toBeGreaterThan(viewport.width * .82)
+          if (viewport.height <= 390) {
+            const title = await value.getByRole("heading", { level: 1 }).boundingBox()
+            const primary = await value.getByRole("button").first().boundingBox()
+            expect(title?.y ?? 400).toBeLessThan(190)
+            expect((title?.y ?? 400) + (title?.height ?? 0)).toBeLessThan(320)
+            expect(primary?.y ?? 400).toBeLessThan(310)
+          }
 
           await screenshot(page, `explore-onboarding-${locale}-${viewport.id}`)
         })
@@ -122,6 +129,16 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(atlasScene).not.toBe("none")
           await expectNoPageOverflow(page)
           await screenshot(page, `explore-nation-${locale}-${viewport.id}`)
+
+          await gotoB(page, "?city=seoul")
+          const map = page.getByTestId("ondo-b-map-entry")
+          if (viewport.height > 390) {
+            await expect(map).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+            await expect(map).toHaveAttribute("data-pulse-markers-readable", "true")
+            await screenshot(page, `explore-map-${locale}-${viewport.id}`)
+          } else {
+            await expect(map).toHaveAttribute("data-effective-view", "list")
+          }
 
           await gotoB(page, "?city=seoul&view=list")
           const list = page.getByTestId("ondo-b-venue-list")

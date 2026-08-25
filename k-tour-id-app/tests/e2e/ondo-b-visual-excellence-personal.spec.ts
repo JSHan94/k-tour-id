@@ -143,6 +143,19 @@ test.describe("personal surfaces visual excellence", () => {
     expect(await page.getByTestId("ondo-b-traveler-id").evaluate((element) => parseFloat(getComputedStyle(element).maxWidth))).toBeGreaterThanOrEqual(1040)
   })
 
+  test("short landscape presents Travel Pass and Wallet as one usable first frame", async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await seed(page, "en")
+    const traveler = await openTab(page, "nav-id", "ondo-b-traveler-id")
+    const pass = traveler.locator(":scope > section").first()
+    const balance = page.getByTestId("wallet-balance")
+    const [passBox, balanceBox] = await Promise.all([pass.boundingBox(), balance.boundingBox()])
+    expect(passBox?.width ?? 844).toBeLessThan(390)
+    expect(balanceBox?.x ?? 0).toBeGreaterThan((passBox?.x ?? 0) + (passBox?.width ?? 0))
+    expect(balanceBox?.y ?? 390).toBeLessThan(180)
+    expect((balanceBox?.y ?? 390) + (balanceBox?.height ?? 0)).toBeLessThanOrEqual(316)
+  })
+
   test("desktop offer is asymmetric and payment/refund receipts read as distinct tickets", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.setViewportSize({ width: 1440, height: 1000 })
