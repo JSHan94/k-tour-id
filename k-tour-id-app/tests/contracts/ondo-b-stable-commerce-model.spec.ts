@@ -23,8 +23,8 @@ test("B-COMMERCE-MODEL-001 voucher-adjusted success debits once and creates one 
   expect(state.voucher).toBe("consumed")
   expect(state.redemptionCount).toBe(1)
   expect(state.ledger).toEqual([
-    expect.objectContaining({ account: "holder", amount: -19, kind: "payment", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
-    expect.objectContaining({ account: "merchant", amount: 19, kind: "payment", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
+    { side: "holder", amount: -19, kind: "PAYMENT", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" },
+    { side: "merchant", amount: 19, kind: "PAYMENT", operationId: "ONDO-LOCAL-OP-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" },
   ])
   expect(stableCommerceSettlementB(state)).toEqual({ gross: 22, benefit: 3, net: 19 })
 })
@@ -43,8 +43,8 @@ test("B-COMMERCE-MODEL-002 refund reverses the ledger and restores the one-use v
   expect(state.voucher).toBe("available")
   expect(state.redemptionCount).toBe(0)
   expect(state.ledger.slice(2)).toEqual([
-    expect.objectContaining({ account: "holder", amount: 19, kind: "refund", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
-    expect.objectContaining({ account: "merchant", amount: -19, kind: "refund", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-20260825-001" }),
+    { side: "holder", amount: 19, kind: "REFUND", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-REFUND-20260825-001" },
+    { side: "merchant", amount: -19, kind: "REFUND", operationId: "ONDO-LOCAL-REFUND-20260825-001", receiptId: "ONDO-LOCAL-REFUND-20260825-001" },
   ])
   expect(stableCommerceSettlementB(state).net).toBe(0)
 })
