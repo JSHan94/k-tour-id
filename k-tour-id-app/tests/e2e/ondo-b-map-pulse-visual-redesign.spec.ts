@@ -50,7 +50,7 @@ test.describe("ONDO B polished Pulse map", () => {
         const colors = await swatches.evaluateAll((items) => items.map((item) => getComputedStyle(item).backgroundColor))
         expect(new Set(colors).size).toBe(6)
         expect(colors.every((color) => color !== "rgba(0, 0, 0, 0)")).toBe(true)
-        if (viewport.width >= 390) {
+        if (viewport.width >= 390 || viewport.width === 320) {
           const legendWidth = await legend.evaluate((node) => ({ client: node.clientWidth, scroll: node.scrollWidth }))
           expect(legendWidth.scroll).toBeLessThanOrEqual(legendWidth.client)
         }
@@ -65,6 +65,12 @@ test.describe("ONDO B polished Pulse map", () => {
         expect(rootBox).not.toBeNull()
         const persistentChromeArea = (await Promise.all(chrome.map(area))).reduce((sum, value) => sum + value, 0)
         expect(persistentChromeArea / (rootBox!.width * rootBox!.height)).toBeLessThanOrEqual(.30)
+        if (viewport.width === 320) {
+          const compactKeyBox = await page.getByTestId("ondo-b-map-key").boundingBox()
+          expect(compactKeyBox).not.toBeNull()
+          expect(compactKeyBox!.height).toBeLessThanOrEqual(66)
+          await expect(root).toHaveAttribute("data-pulse-markers-readable", "true")
+        }
 
         const locationDetails = page.getByTestId("ondo-b-location-message")
         const keyDetails = page.getByTestId("ondo-b-map-key-details")
