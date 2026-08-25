@@ -112,6 +112,7 @@ test.describe("personal surfaces visual excellence", () => {
     const discovery = await groups.nth(1).boundingBox()
     expect(Math.abs((language?.y ?? 0) - (discovery?.y ?? 100))).toBeLessThan(4)
     expect(discovery?.width ?? 0).toBeGreaterThan((language?.width ?? 1) * 1.2)
+    expect(language?.height ?? 1000).toBeLessThan((discovery?.height ?? 0) * .72)
   })
 
   test("Travel Pass remains the benchmark while Wallet carries the same layered material", async ({ page }) => {
@@ -239,6 +240,9 @@ test.describe("personal surfaces visual excellence", () => {
       await expect(connect).toBeHidden()
       await offer.getByTestId("payment-minimum-consent").locator("input").check()
       await expect(offer.getByTestId("payment-confirm")).toBeEnabled()
+      expect(await offer.evaluate((element) => element.scrollTop)).toBeLessThanOrEqual(1)
+      const hero = offer.locator("header + div > section").first()
+      expect((await hero.boundingBox())?.y ?? 1000).toBeLessThan(220)
       await page.screenshot({ path: resolve(EVIDENCE_DIR, `${locale}-390-offer-ready.png`) })
     })
   }

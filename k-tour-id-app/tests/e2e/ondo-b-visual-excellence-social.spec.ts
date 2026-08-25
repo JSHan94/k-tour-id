@@ -125,6 +125,10 @@ test("VE-SOC-001 desktop Table is a wide social event object with a two-column i
   expect(itineraryBox).not.toBeNull()
   expect(cardBox!.width).toBeGreaterThanOrEqual(600)
   expect(itineraryBox!.x).toBeGreaterThanOrEqual(officialBox!.x + officialBox!.width + 20)
+  const [entryBox, headerBox] = await Promise.all([entry.boundingBox(), entry.locator(":scope > header").boundingBox()])
+  const topGap = (headerBox?.y ?? 0) - (entryBox?.y ?? 0)
+  const bottomGap = ((entryBox?.y ?? 0) + (entryBox?.height ?? 0)) - ((cardBox?.y ?? 0) + (cardBox?.height ?? 0))
+  expect(Math.abs(topGap - bottomGap)).toBeLessThanOrEqual(100)
 
   const detail = await openTableDetail(page)
   const sheet = detail.locator("article")

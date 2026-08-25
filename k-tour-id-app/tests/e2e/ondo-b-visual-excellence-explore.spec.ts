@@ -100,6 +100,10 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           await expect(dialog).toBeVisible()
           await expectNoClip(value.locator("section span"))
           await expectNoPageOverflow(page)
+          if (viewport.width === 320) {
+            const eyebrow = await value.locator("p").first().boundingBox()
+            expect(eyebrow?.height ?? 100).toBeLessThanOrEqual(20)
+          }
 
           const composition = await dialog.evaluate((element) => {
             const valueStep = element.querySelector("[data-testid='onboarding-step-value']")!
@@ -263,6 +267,13 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           expect(peekMaterial.titleClamp).toBe("2")
           expect(peekMaterial.pulseBackground).not.toBe("none")
           expect(peekMaterial.shadow).not.toBe("none")
+          if (viewport.width === 320) {
+            const compactTruth = await peek.locator("[data-testid='canonical-place-pulse'] small, [data-testid='canonical-place-pulse'] p").evaluateAll((nodes) => nodes.map((node) => ({
+              clientHeight: node.clientHeight,
+              scrollHeight: node.scrollHeight,
+            })))
+            expect(compactTruth.every(({ clientHeight, scrollHeight }) => scrollHeight <= clientHeight + 1)).toBe(true)
+          }
           await expectNoPageOverflow(page)
           await screenshot(page, `explore-peek-${locale}-${viewport.id}`)
 
