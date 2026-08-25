@@ -93,6 +93,7 @@ test.describe("visual-only mobile product polish", () => {
         const root = page.getByTestId("ondo-b-map-entry")
         const peek = page.getByTestId("canonical-place-peek")
         await expect(peek).toBeVisible()
+        await expect(peek).toBeFocused()
         await expect(peek.getByTestId("canonical-place-details")).toBeVisible()
         await expect(peek.getByTestId("canonical-venue-directions")).toBeVisible()
         await expect(peek.getByTestId("canonical-place-pulse")).toBeVisible()
@@ -105,6 +106,7 @@ test.describe("visual-only mobile product polish", () => {
         for (const action of [peek.getByTestId("canonical-place-details"), peek.getByTestId("canonical-venue-directions")]) {
           const actionBox = await box(action)
           expect(actionBox.height).toBeGreaterThanOrEqual(44)
+          expect(await action.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe("none")
         }
       })
     }
