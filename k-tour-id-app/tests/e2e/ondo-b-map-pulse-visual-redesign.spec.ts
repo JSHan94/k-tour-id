@@ -37,7 +37,8 @@ test.describe("ONDO B polished Pulse map", () => {
 
         const root = page.getByTestId("ondo-b-map-entry")
         await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-        await expect(root).toHaveAttribute("data-pulse-map-grammar", "heat-ranked-clusters")
+        await expect(root).toHaveAttribute("data-pulse-map-grammar", "curated-level-score-over-official-groups")
+        await expect(root).toHaveAttribute("data-curated-pulse-count", "6")
 
         const legend = page.getByTestId("ondo-b-pulse-legend")
         const swatches = legend.locator("[data-level] i")
