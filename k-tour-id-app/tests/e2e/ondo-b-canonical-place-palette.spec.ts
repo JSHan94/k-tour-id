@@ -96,6 +96,7 @@ for (const locale of ["en", "ko"] as const) {
 
       await expect(overlay).toBeVisible()
       await expect(overlay).toBeFocused()
+      await expect(overlay).toHaveCSS("outline-style", "none")
       await expect(back).not.toBeFocused()
       await page.keyboard.press("Tab")
       await expect(back).toBeFocused()
