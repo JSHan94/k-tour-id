@@ -64,8 +64,14 @@
 .content[data-active-tab="tables"],
 .content[data-active-tab="id"],
 .content[data-active-tab="settings"] { scroll-behavior: auto; }
+.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) {
+  grid-template-rows: minmax(0, 1fr) 0;
+}
 .canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) .content { overflow-y: hidden; }
-.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) .nav { visibility: hidden; }
+.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) .nav {
+  display: none;
+  visibility: hidden;
+}
 
 .nav {
   position: relative;

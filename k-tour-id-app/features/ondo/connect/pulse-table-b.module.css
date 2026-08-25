@@ -82,7 +82,7 @@
 .alternative { min-height: 44px; background: #efebe5; color: #4f4943; }
 @media (hover: hover) { .openButton:hover, .primary:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgb(157 66 50 / 26%); } }
 
-.layer { position: fixed; z-index: 112; inset: 0 0 calc(92px + env(safe-area-inset-bottom)); display: grid; align-items: end; overscroll-behavior: contain; }
+.layer { position: fixed; z-index: 112; inset: 0; display: grid; align-items: end; overscroll-behavior: contain; }
 .backdrop { position: absolute; inset: 0; border: 0; background: rgb(31 24 19 / 56%); backdrop-filter: blur(8px); animation: veilIn .2s ease both; }
 .detail { position: relative; width: 100%; max-height: 100%; overflow: auto; overscroll-behavior: contain; border: 1px solid rgb(255 255 255 / 22%); border-radius: 24px 24px 0 0; background: #fcfaf6; box-shadow: 0 -24px 64px rgb(29 21 16 / 23%); -webkit-overflow-scrolling: touch; animation: sheetIn .3s cubic-bezier(.2,.85,.2,1) both; }
 .detailHeader { position: sticky; z-index: 2; top: 0; display: grid; min-height: 62px; grid-template-columns: 44px 1fr 44px; align-items: center; border-bottom: 1px solid var(--feature-border); padding: 8px 12px; background: rgb(252 250 246 / 90%); backdrop-filter: blur(18px); text-align: center; }
@@ -168,7 +168,7 @@
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .layer { position: fixed; bottom: calc(84px + env(safe-area-inset-bottom)); place-items: stretch; padding: 0; }
+  .layer { position: fixed; bottom: 0; place-items: stretch; padding: 0; }
   .detail { width: min(100%, 900px); max-height: 100%; margin: 0 auto; border-radius: 0; }
   .detailBody { grid-template-columns: minmax(0, .9fr) minmax(300px, 1.1fr); align-items: start; padding: 14px 22px calc(18px + env(safe-area-inset-bottom)); }
   .detailBody > h2, .detailEyebrow, .detailBody > .official, .detailBody > .plan { grid-column: 1; }
