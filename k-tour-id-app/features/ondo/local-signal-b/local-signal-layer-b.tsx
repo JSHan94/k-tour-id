@@ -99,6 +99,7 @@ export function LocalSignalLayerB() {
   const checkRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const photoUrlRef = useRef<string | null>(null)
   const draft = state.localSignalDraft
   const venue = draft ? canonicalMapVenueById(draft.venueId) : undefined
   const locale = state.locale
@@ -111,6 +112,11 @@ export function LocalSignalLayerB() {
     const frame = window.requestAnimationFrame(() => layerRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
   }, [open])
+
+  useEffect(() => () => {
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
+    photoUrlRef.current = null
+  }, [])
 
   if (!open || !draft || !venue) return null
   const activeDraft = draft
@@ -154,6 +160,7 @@ export function LocalSignalLayerB() {
 
   function preparePhoto(file: File, allowQaFailure = true) {
     setPhotoFile(file)
+    releasePhotoUrl()
     if (!file.type.match(/^image\/(jpeg|png|webp)$/) || file.size > 8 * 1024 * 1024) {
       setPhotoFailed(true)
       setPhotoUrl(null)
@@ -166,7 +173,9 @@ export function LocalSignalLayerB() {
       return
     }
     setPhotoFailed(false)
-    setPhotoUrl(URL.createObjectURL(file))
+    const url = URL.createObjectURL(file)
+    photoUrlRef.current = url
+    setPhotoUrl(url)
   }
 
   function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
@@ -177,8 +186,14 @@ export function LocalSignalLayerB() {
 
   function removePhoto() {
     setPhotoFile(null)
-    setPhotoUrl(null)
+    releasePhotoUrl()
     setPhotoFailed(false)
+  }
+
+  function releasePhotoUrl() {
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
+    photoUrlRef.current = null
+    setPhotoUrl(null)
   }
 
   function handleGateReturn(outcome: LocalCheckOutcome) {

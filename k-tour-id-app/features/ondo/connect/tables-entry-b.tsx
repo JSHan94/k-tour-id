@@ -16,6 +16,8 @@ import styles from "./pulse-table-b.module.css"
 export const TABLE_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 export const ACTIVE_TABLE_ID = "table-seoul-night-bites"
 export const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
+export const MAX_TABLE_CHAT_IMAGE_BYTES = 10 * 1024 * 1024
+const TABLE_CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 
 type JoinStage = "idle" | "confirm" | "joined" | "chat"
 type MessageState = "ready" | "failed"
@@ -61,6 +63,8 @@ const COPY = {
     attach: "Add photo",
     replacePhoto: "Replace photo",
     removePhoto: "Remove attached photo",
+    photoTypeError: "Choose a JPEG, PNG, or WebP photo.",
+    photoSizeError: "Choose a photo that is 10 MB or smaller.",
     send: "Send",
     sendFailed: "Message could not be added.",
     retry: "Retry",
@@ -124,6 +128,8 @@ const COPY = {
     attach: "사진 추가",
     replacePhoto: "사진 교체",
     removePhoto: "첨부 사진 삭제",
+    photoTypeError: "JPEG, PNG 또는 WebP 사진을 선택해 주세요.",
+    photoSizeError: "10 MB 이하의 사진을 선택해 주세요.",
     send: "보내기",
     sendFailed: "메시지를 추가하지 못했어요.",
     retry: "다시 시도",
@@ -168,6 +174,7 @@ export function PulseTablesEntryB() {
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [compose, setCompose] = useState("")
   const [chatImage, setChatImage] = useState<string | null>(null)
+  const [chatImageError, setChatImageError] = useState<string | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [failedOnce, setFailedOnce] = useState(false)
   const [checkedIn, setCheckedIn] = useState(false)
@@ -178,6 +185,7 @@ export function PulseTablesEntryB() {
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const openerRef = useRef<HTMLButtonElement | null>(null)
   const imageInputRef = useRef<HTMLInputElement | null>(null)
+  const objectUrlsRef = useRef(new Set<string>())
 
   useModalIsolation(selected, layerRef)
 
@@ -196,6 +204,11 @@ export function PulseTablesEntryB() {
     openFromPlace()
     window.addEventListener(ONDO_OPEN_TABLE_EVENT, openFromPlace)
     return () => window.removeEventListener(ONDO_OPEN_TABLE_EVENT, openFromPlace)
+  }, [])
+
+  useEffect(() => () => {
+    for (const url of objectUrlsRef.current) URL.revokeObjectURL(url)
+    objectUrlsRef.current.clear()
   }, [])
 
   useEffect(() => {
@@ -240,18 +253,44 @@ export function PulseTablesEntryB() {
     const removed = actions.removePlannedTable(ACTIVE_TABLE_ID)
     if (!removed) actions.notify(locale === "ko" ? "테이블에서는 나갔지만 My Korea 계획을 지우지 못했어요." : "You left the Table, but My Korea could not remove the plan.")
     setJoinStage("idle"); setReturnTo(null); setReportOpen(false); setReported(false); setBlocked(false); setLeaveOpen(false)
-    setMessages([]); setCheckedIn(false); setFeedback(null); setFeedbackSaved(false)
+    for (const url of objectUrlsRef.current) URL.revokeObjectURL(url)
+    objectUrlsRef.current.clear()
+    setChatImage(null); setChatImageError(null); setMessages([]); setCheckedIn(false); setFeedback(null); setFeedbackSaved(false)
     focusFirstAvailableDestination(["[data-testid='table-detail'] [data-testid='table-join']"])
   }
 
   function chooseImage(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
-    setChatImage(URL.createObjectURL(file))
+    if (!TABLE_CHAT_IMAGE_TYPES.has(file.type)) {
+      setChatImageError(t.photoTypeError)
+      event.target.value = ""
+      return
+    }
+    if (file.size > MAX_TABLE_CHAT_IMAGE_BYTES) {
+      setChatImageError(t.photoSizeError)
+      event.target.value = ""
+      return
+    }
+    if (chatImage) {
+      URL.revokeObjectURL(chatImage)
+      objectUrlsRef.current.delete(chatImage)
+    }
+    const url = URL.createObjectURL(file)
+    objectUrlsRef.current.add(url)
+    setChatImage(url)
+    setChatImageError(null)
     event.target.value = ""
   }
 
-  function removeChatImage() { setChatImage(null) }
+  function removeChatImage() {
+    if (chatImage) {
+      URL.revokeObjectURL(chatImage)
+      objectUrlsRef.current.delete(chatImage)
+    }
+    setChatImage(null)
+    setChatImageError(null)
+  }
 
   function sendMessage() {
     if (!compose.trim() && !chatImage) return
@@ -343,6 +382,7 @@ export function PulseTablesEntryB() {
                 </div>
                 <div className={styles.composer}>
                   {chatImage ? <div className={styles.chatImage}><img src={chatImage} alt="" /><button type="button" onClick={removeChatImage} aria-label={t.removePhoto}><X size={15} aria-hidden="true" /></button></div> : null}
+                  {chatImageError ? <p className={styles.messageError} data-testid="table-chat-image-error" role="alert">{chatImageError}</p> : null}
                   <label><span>{t.compose}</span><textarea data-testid="table-chat-compose" value={compose} onChange={(event) => setCompose(event.target.value)} /></label>
                   <input ref={imageInputRef} className={styles.fileInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={t.attach} data-testid="table-chat-image" onChange={chooseImage} />
                   <div><button type="button" className={styles.attachButton} onClick={() => imageInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{chatImage ? t.replacePhoto : t.attach}</button><button type="button" className={styles.sendButton} data-testid="table-message-send" disabled={!compose.trim() && !chatImage} onClick={sendMessage}><Send size={17} aria-hidden="true" />{t.send}</button></div>

@@ -95,7 +95,7 @@
 }
 
 @keyframes veilIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes dialogIn { from { transform: translateY(18px) scale(.985); } to { transform: none; } }
+@keyframes dialogIn { from { transform: translateY(18px); } to { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .dialog, .backdrop { animation: none; scroll-behavior: auto; }

@@ -31,7 +31,7 @@ function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
     }}>
       <div className={styles.confirmCard}>
         <h2 id="b-clear-title">{locale === "ko" ? "이 브라우저의 저장 내용을 지울까요?" : "Clear saved content from this browser?"}</h2>
-        <p>{locale === "ko" ? "저장한 장소, 최근 본 장소, 참여한 테이블, 로컬 시그널 기록, 탐색 선택과 개인 메모를 삭제합니다." : "This removes saved places, recent views, joined Tables, Local Signal history, discovery choices, and private notes."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 본 장소, 참여한 테이블, 로컬 시그널 기록, 탐색 선택, 개인 메모와 OOKRW Test 영수증을 삭제합니다." : "This removes saved places, recent views, joined Tables, Local Signal history, discovery choices, private notes, and OOKRW Test receipts."}</p>
         <strong>{locale === "ko" ? "언어와 시작 설정은 유지됩니다." : "Language and initial setup stay unchanged."}</strong>
         <div>
           <button ref={cancelRef} type="button" onClick={onCancel}>{locale === "ko" ? "내용 유지" : "Keep content"}</button>

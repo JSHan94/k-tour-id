@@ -10,6 +10,8 @@ import { MY_KOREA_TABLE_CATALOG } from "./my-korea-model"
 import { PrivateNote } from "./private-note"
 import { STABLE_B_RECEIPT_ID, STABLE_B_REFUND_RECEIPT_ID } from "../commerce-b/stable-commerce-model-b"
 
+const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
+
 const COPY = {
   en: {
     eyebrow: "ON THIS DEVICE",
@@ -113,6 +115,14 @@ export function SavedEntryB() {
     actions.setTab("ondo")
   }
 
+  function openPlannedTable(tableId: string, venueId: string) {
+    window.__ONDO_B_TABLE_INTENT__ = { tableId, venueId, mode: "view" }
+    actions.setTab("tables")
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent(ONDO_OPEN_TABLE_EVENT, {
+      detail: { tableId, venueId, mode: "view" },
+    })), 0)
+  }
+
   return (
     <div className={styles.screen} data-testid="ondo-b-my-korea-entry">
       <header className={styles.header}>
@@ -174,7 +184,7 @@ export function SavedEntryB() {
           <div className={styles.activityHeading}><CalendarDays size={19} aria-hidden="true" /><span><h2 id="my-korea-planned-heading">{copy.plannedTitle}</h2><p>{copy.plannedBody}</p></span></div>
           {planned.length === 0 ? <ActivityEmpty testId="my-korea-planned-empty" title={copy.plannedEmpty} body={copy.plannedEmptyBody} /> : (
             <div className={styles.referenceList}>
-              {planned.map(({ reference, table, venue }) => <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{table.title[locale]}</h3><p>{table.schedule[locale]} · {venueNamePresentation(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => actions.setTab("tables")}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>)}
+              {planned.map(({ reference, table, venue }) => <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{table.title[locale]}</h3><p>{table.schedule[locale]} · {venueNamePresentation(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>)}
             </div>
           )}
         </section>
