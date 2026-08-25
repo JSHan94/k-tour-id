@@ -95,6 +95,9 @@ for (const locale of ["en", "ko"] as const) {
       const pulse = overlay.getByTestId("canonical-place-pulse")
 
       await expect(overlay).toBeVisible()
+      await expect(overlay).toBeFocused()
+      await expect(back).not.toBeFocused()
+      await page.keyboard.press("Tab")
       await expect(back).toBeFocused()
       await expect(back).toHaveCSS("outline-color", "rgb(29, 102, 209)")
       await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
