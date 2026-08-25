@@ -719,6 +719,12 @@ export function MapEntryB() {
           const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "pulseRank"], 3], ["!=", ["get", "pulseRank"], 2]]
           const risingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 3]
           const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 2]
+          const centralPeakFilter: ExpressionSpecification = ["==", ["get", "pulseScore"], 91]
+          const centralHotFilter: ExpressionSpecification = ["==", ["get", "pulseScore"], 80]
+          const unselectedPulseFilter: ExpressionSpecification = ["!=", ["get", "selected"], true]
+          const centralPeakLabelFilter: ExpressionSpecification = ["all", centralPeakFilter, unselectedPulseFilter]
+          const centralHotLabelFilter: ExpressionSpecification = ["all", centralHotFilter, unselectedPulseFilter]
+          const regularUnshiftedLabelFilter: ExpressionSpecification = ["all", unshiftedPulseFilter, ["!=", ["get", "pulseScore"], 91], ["!=", ["get", "pulseScore"], 80], unselectedPulseFilter]
           const risingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-20, 18]], 12, ["literal", [-20, 18]], 13, ["literal", [0, 0]]]
           const warmingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-8, -10]], 12, ["literal", [-8, -10]], 13, ["literal", [0, 0]]]
           const pulseOffsetForRank = (rank: number, zoom: number) => {
@@ -729,6 +735,8 @@ export function MapEntryB() {
           }
           const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": 0.98, "circle-stroke-width": 0, "circle-blur": 0.08 }
           const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": 12, "text-letter-spacing": 0.025, "text-offset": [0, -1.2], "text-anchor": "bottom", "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
+          const centralPeakLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [-0.8, 1.1], "text-anchor": "top" }
+          const centralHotLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [-0.2, 1.1], "text-anchor": "top" }
           const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 4], "#5d1732", [">=", ["get", "pulseRank"], 2], "#773421", "#403b35"], "text-halo-color": "rgba(255,253,249,.94)", "text-halo-width": 2.2, "text-halo-blur": 0.5 }
           const pulseHaloPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 42], "circle-blur": 0.82, "circle-opacity": 0.2, "circle-stroke-width": 0 }
           instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
@@ -740,7 +748,9 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0 } })
           instance.addLayer({ id: "ondo-pulse-hit-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-hit-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-labels", type: "symbol", source: "ondo-pulse", filter: unshiftedPulseFilter, layout: pulseLabelLayout, paint: pulseLabelPaint })
+          instance.addLayer({ id: "ondo-pulse-labels", type: "symbol", source: "ondo-pulse", filter: regularUnshiftedLabelFilter, layout: pulseLabelLayout, paint: pulseLabelPaint })
+          instance.addLayer({ id: "ondo-pulse-labels-central-peak", type: "symbol", source: "ondo-pulse", filter: centralPeakLabelFilter, layout: centralPeakLabelLayout, paint: pulseLabelPaint })
+          instance.addLayer({ id: "ondo-pulse-labels-central-hot", type: "symbol", source: "ondo-pulse", filter: centralHotLabelFilter, layout: centralHotLabelLayout, paint: pulseLabelPaint })
           instance.addLayer({ id: "ondo-pulse-labels-rising", type: "symbol", source: "ondo-pulse", filter: risingPulseFilter, layout: pulseLabelLayout, paint: { ...pulseLabelPaint, "text-translate": risingTranslate, "text-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-labels-warming", type: "symbol", source: "ondo-pulse", filter: warmingPulseFilter, layout: pulseLabelLayout, paint: { ...pulseLabelPaint, "text-translate": warmingTranslate, "text-translate-anchor": "viewport" } })
           const selectedUnshiftedPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], unshiftedPulseFilter]
