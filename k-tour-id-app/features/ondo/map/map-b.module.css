@@ -916,7 +916,7 @@
   .cityHeader { gap: 6px; }
   .search { min-height: 48px; border-radius: 16px; }
   .rail { border-radius: 15px; }
-  .mapChrome { top: calc(164px + env(safe-area-inset-top)); }
+  .mapChrome { top: calc(170px + env(safe-area-inset-top)); }
   .locationMessage { font-size: 12px; }
   .mapKeyLead > span { font-size: 10.5px; }
   .pulseLegend { gap-inline: 5px; }
