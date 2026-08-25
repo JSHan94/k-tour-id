@@ -56,6 +56,7 @@ const COPY = {
     photoSizeError: "Choose a photo that is 10 MB or smaller.",
     photoPrepareError: "The photo could not be prepared.",
     photoRetry: "Retry photo",
+    photoChooseAnother: "Choose another photo",
   },
   ko: {
     close: "로컬 시그널 닫기",
@@ -89,6 +90,7 @@ const COPY = {
     photoSizeError: "10 MB 이하의 사진을 선택해 주세요.",
     photoPrepareError: "사진을 준비하지 못했어요.",
     photoRetry: "사진 다시 시도",
+    photoChooseAnother: "다른 사진 선택",
   },
 } as const
 
@@ -279,7 +281,7 @@ export function LocalSignalLayerB() {
                 <div><strong>{copy.photo}</strong><small>{copy.photoHelp}</small></div>
                 <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" onChange={selectPhoto} />
                 {photoUrl ? <figure><img src={photoUrl} alt="" /><figcaption><button type="button" data-testid="local-signal-photo-replace" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.replacePhoto}</button><button type="button" data-testid="local-signal-photo-remove" onClick={removePhoto}><Trash2 size={16} aria-hidden="true" />{copy.removePhoto}</button></figcaption></figure> : null}
-                    {photoError ? <p role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : null}</p> : null}
+                    {photoError ? <p role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : <button type="button" data-testid="local-signal-photo-choose-another" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.photoChooseAnother}</button>}</p> : null}
                 {!photoUrl && !photoFailed ? <button type="button" className={styles.photoAdd} onClick={() => photoInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{copy.photo}</button> : null}
               </section>
 
