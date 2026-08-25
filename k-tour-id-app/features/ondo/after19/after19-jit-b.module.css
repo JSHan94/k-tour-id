@@ -101,3 +101,121 @@
   .dialog, .backdrop { animation: none; scroll-behavior: auto; }
   .actions button, .choiceGrid button { transition: none; }
 }
+
+/* Secure checkpoint motif. This is purely presentational: the normal CTA,
+   QA-injected outcomes, focus order, and return envelope remain unchanged. */
+.backdrop {
+  background:
+    radial-gradient(circle at 50% 42%, rgb(112 47 58 / 18%), transparent 34%),
+    rgb(25 18 17 / 68%);
+  backdrop-filter: blur(14px) saturate(.72);
+}
+
+.dialog {
+  isolation: isolate;
+  border-color: rgb(255 255 255 / 38%);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 106% -8%, rgb(178 69 74 / 18%), transparent 35%),
+    linear-gradient(155deg, #fffdf9 0%, #f8f0ea 61%, #f2e8e2 100%);
+  box-shadow:
+    0 34px 92px rgb(16 10 10 / 38%),
+    0 1px 0 rgb(255 255 255 / 82%) inset;
+}
+.dialog::before {
+  position: absolute;
+  z-index: 0;
+  top: -162px;
+  right: -138px;
+  width: 330px;
+  height: 330px;
+  border: 1px solid rgb(157 60 67 / 12%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 46%, rgb(157 60 67 / 7%) 46.5%, transparent 47.5%),
+    repeating-radial-gradient(circle, transparent 0 24px, rgb(157 60 67 / 5%) 25px 26px);
+  box-shadow: 0 0 0 42px rgb(173 70 68 / 3%), 0 0 0 86px rgb(173 70 68 / 2%);
+  content: "";
+  opacity: .86;
+  pointer-events: none;
+}
+.dialog::after {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  right: 30px;
+  left: 30px;
+  height: 3px;
+  border-radius: 0 0 999px 999px;
+  background: linear-gradient(90deg, transparent, #8e2943 22%, #c2523e 58%, #e6a65c 82%, transparent);
+  content: "";
+  pointer-events: none;
+}
+.header,
+.body { position: relative; z-index: 1; }
+
+.header { padding-top: 22px; }
+.header span { color: #584d48; }
+.header span svg { color: #8e3240; filter: drop-shadow(0 5px 9px rgb(142 50 64 / 16%)); }
+.header strong {
+  min-height: 34px;
+  border-color: rgb(155 61 62 / 20%);
+  background: rgb(255 245 239 / 88%);
+  box-shadow: 0 8px 20px rgb(128 52 51 / 9%);
+  color: #8a3538;
+}
+
+.heroIcon {
+  border: 1px solid rgb(164 62 57 / 14%);
+  border-radius: 20px;
+  background: linear-gradient(145deg, #fce6df, #fff5ef);
+  box-shadow:
+    0 0 0 7px rgb(180 72 59 / 7%),
+    0 16px 28px rgb(125 50 45 / 14%);
+  animation: securePulse 2.4s ease-in-out infinite;
+}
+
+.body h2 { max-width: 370px; font-size: clamp(27px, 7.4vw, 35px); }
+.reason { color: #5e5550; }
+.returnContext {
+  position: relative;
+  overflow: hidden;
+  border-color: rgb(151 69 61 / 14%);
+  background:
+    radial-gradient(circle at 100% 0, rgb(184 76 58 / 10%), transparent 38%),
+    rgb(255 253 249 / 90%);
+  box-shadow: 0 16px 34px rgb(73 47 34 / 9%);
+}
+.returnContext::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(#8f2e43, #ca5b40, #e6a458);
+  content: "";
+}
+.boundary summary { color: #655c56; text-decoration: underline; text-decoration-color: rgb(137 63 56 / 24%); text-underline-offset: 4px; }
+
+.actions button,
+.choiceGrid button,
+.body > .secondary { min-height: 52px; border-radius: 16px; }
+.primary {
+  min-height: 54px !important;
+  background: linear-gradient(135deg, #8f313b 0%, #b9473d 56%, #c65c41 100%);
+  box-shadow: 0 16px 34px rgb(127 47 47 / 27%), 0 1px 0 rgb(255 255 255 / 22%) inset;
+}
+.secondary { background: rgb(255 253 249 / 88%); box-shadow: 0 9px 22px rgb(69 49 37 / 6%); }
+
+@media (max-width: 520px) {
+  .dialog { border-radius: 30px 30px 0 0; }
+  .header { padding-inline: 20px; }
+  .body { padding-inline: 20px; }
+}
+
+@keyframes securePulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 7px rgb(180 72 59 / 7%), 0 16px 28px rgb(125 50 45 / 14%); }
+  50% { transform: scale(1.035); box-shadow: 0 0 0 11px rgb(180 72 59 / 3%), 0 19px 34px rgb(125 50 45 / 18%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroIcon { animation: none; }
+}
