@@ -237,6 +237,7 @@ test("FID-PACK-002 prepared standalone source positively contains the reachable 
 })
 
 test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native journeys", () => {
+  expectReachable("features/ondo/commerce-b/stable-commerce-model-b.ts")
   expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
   expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
   expectLiveEvidence([
