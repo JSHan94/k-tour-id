@@ -77,7 +77,7 @@ export type OndoBActions = {
   markLocalSignalPosted(venueId: string): boolean
   acknowledgeLocalInteractionBoundary(): boolean
   acknowledgeCommerceLocalBoundary(): boolean
-  openDemoMealOfferFromPlace(venueId: string): boolean
+  openMealBenefitFromPlace(venueId: string): boolean
   returnFromCommerceOrigin(): boolean
   clearBDeviceContent(): boolean
   notify(message: string): void
@@ -388,7 +388,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
     acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
-    openDemoMealOfferFromPlace: (venueId) => {
+    openMealBenefitFromPlace: (venueId) => {
       if (!isCanonicalVenueId(venueId)) return false
       commitEphemeral((current) => ({
         ...current,
@@ -409,7 +409,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       }))
       window.requestAnimationFrame(() => {
         window.requestAnimationFrame(() => {
-          document.querySelector<HTMLElement>("[data-testid='canonical-demo-meal-offer-open']")?.focus({ preventScroll: true })
+          document.querySelector<HTMLElement>("[data-testid='canonical-meal-benefit-open']")?.focus({ preventScroll: true })
         })
       })
       return true

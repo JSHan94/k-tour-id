@@ -25,13 +25,6 @@ type QaWindow = Window & { __ONDO_B_QA__?: { eligibility?: LocalCheckOutcome } }
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
-// Retained as non-visual compatibility evidence for the original truth contract.
-const QA_CONTRACT_TRUTH = {
-  en: "No camera scan, data transmission, provider call, DID, or real verifiable credential occurs",
-  ko: "카메라 스캔·데이터 전송·공급자 호출·DID·실제 검증가능자격증명은 일어나지 않습니다",
-}
-void QA_CONTRACT_TRUTH
-
 const COPY = {
   en: {
     dialog: "Eligibility check",
@@ -51,8 +44,8 @@ const COPY = {
     personPurpose: "Complete the current action without sharing your name or profile.",
     agePurpose: "Confirm age eligibility for this action without sharing a birth date.",
     retentionBody: "This result lasts only for this open screen. No name, document, birth date, profile, or credential is saved.",
-    prototype: "Prototype mode",
-    prototypeBody: "No identity provider is connected and no credential is created. This check demonstrates the minimum-data experience only.",
+    prototype: "How this check works",
+    prototypeBody: "No identity provider is connected and no credential is created. Only the minimum result is used for this session.",
     boundaryError: "This device could not save your notice preference. Nothing was sent; please try again.",
     approvePerson: "Verify and continue",
     approveAge: "Verify and continue",
@@ -89,8 +82,8 @@ const COPY = {
     personPurpose: "이름이나 프로필을 공유하지 않고 현재 작업을 완료합니다.",
     agePurpose: "생년월일을 공유하지 않고 이 작업의 나이 조건만 확인합니다.",
     retentionBody: "열려 있는 이 화면에서만 유지됩니다. 이름·문서·생년월일·프로필·자격증명은 저장하지 않습니다.",
-    prototype: "프로토타입 모드",
-    prototypeBody: "연결된 신원 공급자나 생성되는 자격증명은 없습니다. 최소 정보 경험만 보여줍니다.",
+    prototype: "확인 방식 안내",
+    prototypeBody: "연결된 신원 공급자나 생성되는 자격증명은 없습니다. 이 세션에는 최소 결과만 사용합니다.",
     boundaryError: "이 기기에 안내 설정을 저장하지 못했어요. 전송된 정보는 없습니다. 다시 시도해 주세요.",
     approvePerson: "확인하고 계속",
     approveAge: "확인하고 계속",

@@ -91,7 +91,7 @@ const COPY = {
     pulseActive: "Curated Pulse active",
     pulseGrowing: "Pulse coverage growing",
     pulseExplore: "Explore · limited signals",
-    pulseSignals: "walkthrough signals",
+    pulseSignals: "curated signals",
     pulseLocal: "Your Local Signal is included on this device",
     filterLabel: "Official business category",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",

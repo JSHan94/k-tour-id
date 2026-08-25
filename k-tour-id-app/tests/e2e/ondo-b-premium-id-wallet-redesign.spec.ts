@@ -36,7 +36,7 @@ async function openContextualOffer(page: Page) {
   await page.locator(`[data-venue-id="${VENUE_ID}"]`).getByRole("button").first().click()
   await page.getByTestId("canonical-place-details").click()
   const place = page.getByTestId("canonical-place-overlay")
-  const entry = place.locator('[data-testid="canonical-meal-benefit-open"], [data-testid="canonical-demo-meal-offer-open"]').first()
+  const entry = place.getByTestId("canonical-meal-benefit-open")
   await entry.click()
   const offer = page.getByTestId("ondo-b-id-wallet-commerce")
   await expect(offer).toHaveAttribute("data-origin-venue-id", VENUE_ID)

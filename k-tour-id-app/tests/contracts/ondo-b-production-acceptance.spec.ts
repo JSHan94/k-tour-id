@@ -113,16 +113,10 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
       .filter((pattern) => {
         const commerceFile = file === "features/ondo/commerce-b/id-wallet-commerce-b.tsx"
         const placeFile = file === "features/ondo/place/canonical-place-overlay.tsx"
-        const providerFile = file === "features/ondo/shared/state/ondo-b-provider.tsx"
         if (String(pattern) === String(/\blocal preview\b/i) && commerceFile && literal.startsWith("Device-local preview · no AI call")) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && commerceFile) return false
-        if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /does not claim|not evidence|근거가 아닙니다/.test(literal)) return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /OOKRW Test/.test(literal) && /Confirm payment support|실제 결제 지원/.test(literal)) return false
         if (String(pattern) === String(/\bcheckout\b/i) && commerceFile && literal === "ondo-b-stable-checkout") return false
-        if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && commerceFile && (literal.includes("ONDO demo") || literal === "OOKRW read-only local demo balance")) return false
-        if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && placeFile && (literal === "canonical-demo-meal-offer-open" || literal.includes("ONDO demo"))) return false
-        if (String(pattern) === String(/\bdemo(?:nstration)?\b/i) && providerFile && literal === "canonical-demo-meal-offer-open") return false
-        if (String(pattern) === String(/데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처|샘플\s*(?:데이터|신호)/i) && commerceFile && (literal.includes("ONDO 데모") || literal === "OOKRW 읽기 전용 로컬 데모 잔액")) return false
-        if (String(pattern) === String(/데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처|샘플\s*(?:데이터|신호)/i) && placeFile && literal.includes("ONDO 데모")) return false
         return true
       })
       .map((pattern) => ({ file, literal: literal.slice(0, 180), pattern: String(pattern) })))

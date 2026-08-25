@@ -255,24 +255,24 @@ test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native jou
   expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
   expectLiveEvidence([
     "ondo-b-id-wallet-commerce",
-    "wallet-link-ready",
-    "wallet-link-failure",
+    "travel-pass-status",
+    "wallet-balance",
+    "wallet-benefit",
+    "wallet-activity",
+    "wallet-link-open",
+    "wallet-connect-sheet",
     "wallet-link-retry",
-    "ONDO demo merchant offer",
-    "KRW display price",
-    "OOKRW read-only local demo balance",
+    "OOKRW Test",
     "payment-minimum-consent",
     "payment-confirm",
     "payment-cancel",
-    "payment-outcome-failure",
-    "payment-outcome-insufficient",
+    "payment-recovery",
     "payment-retry",
     "payment-receipt",
     "payment-refund",
-    "holder-settlement-mirror",
-    "merchant-settlement-mirror",
-    "canonical-demo-meal-offer-open",
+    "canonical-meal-benefit-open",
     "commerce-origin-return",
+    "__ONDO_B_QA__",
   ])
 })
 
@@ -281,8 +281,10 @@ test("FID-P0-013 commerce boundary and persistence rules cannot be weakened", ()
   const provider = appSource("features/ondo/shared/state/ondo-b-provider.tsx")
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  expect(commerce).toContain("No provider, chain, merchant, or asset transfer is connected")
-  expect(commerce).toContain("실제 공급자·체인·가맹점·자산 전송은 연결되지 않았습니다")
+  expect(commerce).toContain("This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money")
+  expect(commerce).toContain("지갑·가맹점·스테이블코인 네트워크·결제 공급자에 연결하지 않고 돈을 이동하지 않습니다")
   expect(commerce).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|sessionStorage|localStorage|URLSearchParams/)
+  expect(commerce).not.toContain('data-testid="payment-outcomes"')
+  expect(commerce).not.toContain('data-testid="payment-ledgers"')
   expect(deviceType).not.toMatch(/wallet|balance|payment|voucher|receipt|settlement|claim|consent|origin/i)
 })

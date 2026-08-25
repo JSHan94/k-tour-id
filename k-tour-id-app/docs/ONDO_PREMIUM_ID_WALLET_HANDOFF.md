@@ -12,8 +12,7 @@ The owned ID / Wallet lane is complete without changing the provider, Place, Tab
 
 ## Integration wiring still owned elsewhere
 
-1. Place should keep one contextual entry action and use the consumer test id `canonical-meal-benefit-open`. It must continue calling `openDemoMealOfferFromPlace(venueId)` until that provider action is renamed in a coordinated contract change.
+1. Place keeps one contextual entry action with the consumer test id `canonical-meal-benefit-open` and the typed `openMealBenefitFromPlace(venueId)` provider action.
 2. To show actual recent receipts/refunds on Travel Pass and My Korea after returning from a place, lift a privacy-safe ephemeral commerce activity summary into the B provider. Do not persist claim, consent, wallet, balance, ledger, or origin fields in device storage. The current dashboard truthfully shows an empty session state because this lane cannot mutate provider ownership.
 3. The shared shell must provide the final desktop navigation rail/composition. This lane responds at desktop widths, but it intentionally does not alter shell navigation or scroll ownership.
 4. Replace old E2E selectors that click `wallet-link-ready`, `payment-outcome-*`, `commerce-outcome-*`, ledgers, reset, or reconciliation. Use the new normal Link/Pay buttons plus `addInitScript` QA injection, as demonstrated in `tests/e2e/ondo-b-premium-id-wallet-redesign.spec.ts`.
-

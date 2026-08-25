@@ -31,7 +31,7 @@ function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
     }}>
       <div className={styles.confirmCard}>
         <h2 id="b-clear-title">{locale === "ko" ? "이 브라우저의 저장 내용을 지울까요?" : "Clear saved content from this browser?"}</h2>
-        <p>{locale === "ko" ? "저장한 장소, 최근 본 장소, 참여한 테이블 미리보기, 로컬 시그널 기록, 탐색 선택과 개인 메모를 삭제합니다." : "This removes saved places, recent views, joined Table previews, Local Signal history, discovery choices, and private notes."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 본 장소, 참여한 테이블, 로컬 시그널 기록, 탐색 선택과 개인 메모를 삭제합니다." : "This removes saved places, recent views, joined Tables, Local Signal history, discovery choices, and private notes."}</p>
         <strong>{locale === "ko" ? "언어와 시작 설정은 유지됩니다." : "Language and initial setup stay unchanged."}</strong>
         <div>
           <button ref={cancelRef} type="button" onClick={onCancel}>{locale === "ko" ? "내용 유지" : "Keep content"}</button>
@@ -86,7 +86,7 @@ export function SettingsEntryB() {
           ))}
         </div>
         <div className={styles.setupReset}>
-          <p>{locale === "ko" ? "이용 목적과 탐색 선택을 처음부터 다시 고를 수 있어요. 저장한 장소, 최근 본 장소, 참여한 테이블 미리보기, 개인 메모와 로컬 시그널 표시는 유지됩니다." : "Choose your intent and discovery preferences again. Saved places, recent views, joined Table previews, private notes, and Local Signal markers stay unchanged."}</p>
+          <p>{locale === "ko" ? "이용 목적과 탐색 선택을 처음부터 다시 고를 수 있어요. 저장한 장소, 최근 본 장소, 참여한 테이블, 개인 메모와 로컬 시그널은 유지됩니다." : "Choose your intent and discovery preferences again. Saved places, recent views, joined Tables, private notes, and Local Signals stay unchanged."}</p>
           <button type="button" onClick={() => actions.resetOnboarding()} data-testid="ondo-b-onboarding-reset">
             <RotateCcw size={17} aria-hidden="true" />
             {locale === "ko" ? "ONDO 다시 설정하기" : "Set up ONDO again"}
@@ -96,7 +96,7 @@ export function SettingsEntryB() {
 
       <section className={styles.settingsSection} aria-labelledby="b-privacy-heading">
         <div className={styles.sectionHeading}><LockKeyhole size={18} aria-hidden="true" /><h2 id="b-privacy-heading">{locale === "ko" ? "이 브라우저의 데이터" : "Data in this browser"}</h2></div>
-        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블 미리보기, 탐색 선택, 개인 메모, 게시한 로컬 시그널의 태그 ID·시각·장소 표시와 최초 1회 로컬·결제 경계 확인만 이 브라우저에 저장됩니다. 초안 메모·지갑 연결·잔액·결제·바우처·영수증·정산 미러·본인·19+ 결과·DID·프로필은 저장하거나 전송하지 않아요. ID · 지갑을 벗어나거나 새로고침하면 결제 둘러보기 결과가 초기화됩니다." : "Saved places, recent views, joined Table previews, discovery choices, private notes, posted Local Signal tag IDs, time and venue markers, and the one-time local and commerce boundary choices stay only in this browser. Draft notes, wallet links, balances, payments, vouchers, receipts, settlement mirrors, Person or 19+ results, DIDs, and profiles are not stored or sent. Leaving ID · Wallet or refreshing resets the commerce walkthrough."}</p>
+        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블, 탐색 선택, 개인 메모와 게시한 로컬 시그널만 이 브라우저에 남습니다. 신원 확인 결과와 지갑·결제·영수증 정보는 화면을 벗어나거나 새로고침하면 초기화되며 외부로 전송되지 않습니다." : "Saved places, recent views, joined Tables, discovery choices, private notes, and posted Local Signals stay in this browser. Identity results, wallet state, payments, and receipts reset when you leave or reload and are not sent outside the app."}</p>
         <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
           <RotateCcw size={17} aria-hidden="true" />
           {locale === "ko" ? "저장한 내용 지우기" : "Clear saved content"}

@@ -42,7 +42,7 @@ const COPY = {
     localSignalPosted: "Update Local Signal on this device",
     localSignalBoundary: "Share a quick tag and optional photo for other travelers.",
     demoOffer: "See ONDO dining benefit",
-    demoOfferBody: "Review the offer and stable-payment flow. This venue is not presented as an accepting merchant.",
+    demoOfferBody: "Use your OOKRW Test balance and meal benefit. Confirm payment support with the venue.",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -100,7 +100,7 @@ const COPY = {
     localSignalPosted: "이 기기의 로컬 시그널 업데이트",
     localSignalBoundary: "다른 여행자를 위해 짧은 태그와 선택 사진을 남겨보세요.",
     demoOffer: "ONDO 다이닝 혜택 보기",
-    demoOfferBody: "혜택과 스테이블 결제 흐름을 확인해 보세요. 이 장소를 가맹점으로 표시하지 않습니다.",
+    demoOfferBody: "OOKRW Test 잔액과 식사 혜택을 사용해 보세요. 실제 결제 지원은 장소에 확인하세요.",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -442,7 +442,7 @@ export function CanonicalPlaceOverlay() {
           </section>
 
           <section className={styles.demoOfferAction} aria-label={copy.demoOffer}>
-            <button type="button" onClick={() => actions.openDemoMealOfferFromPlace(currentVenueId)} data-testid="canonical-meal-benefit-open">
+            <button type="button" onClick={() => actions.openMealBenefitFromPlace(currentVenueId)} data-testid="canonical-meal-benefit-open">
               <WalletCards size={18} aria-hidden="true" />
               <span><strong>{copy.demoOffer}</strong><small>{copy.demoOfferBody}</small></span>
               <ChevronRight size={17} aria-hidden="true" />

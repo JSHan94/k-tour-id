@@ -55,27 +55,11 @@ type Props = {
 
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),[href],summary,[tabindex]:not([tabindex='-1'])"
 
-// Non-visual compatibility evidence for the pre-redesign automated harness.
-const QA_CONTRACT_EVIDENCE = [
-  "wallet-link-ready",
-  "wallet-link-failure",
-  "payment-outcome-failure",
-  "payment-outcome-insufficient",
-  "holder-settlement-mirror",
-  "merchant-settlement-mirror",
-  "ONDO demo merchant offer",
-  "KRW display price",
-  "OOKRW read-only local demo balance",
-  "No provider, chain, merchant, or asset transfer is connected",
-  "실제 공급자·체인·가맹점·자산 전송은 연결되지 않았습니다",
-]
-void QA_CONTRACT_EVIDENCE
-
 const COPY = {
   en: {
     eyebrow: "TRAVEL WALLET",
     title: "Wallet",
-    body: "A simple place for your ONDO test balance, trip benefits and receipts.",
+    body: "Your travel balance, meal benefits and receipts — ready when you choose to use them.",
     balance: "Travel balance",
     testAsset: "OOKRW Test",
     balanceReady: "Ready for ONDO test offers",
@@ -96,7 +80,7 @@ const COPY = {
     testTruth: "OOKRW Test is a non-live product balance. It does not move money and is not a stablecoin or on-chain asset.",
     linkDialog: "Connect travel wallet",
     linkTitle: "Ready for trip benefits",
-    linkBody: "Connect the local test wallet for ONDO offers on this device.",
+    linkBody: "Prepare your OOKRW Test balance for ONDO offers on this device.",
     linking: "Connecting…",
     linkingBody: "No wallet app, account or payment provider is contacted.",
     linkFailed: "Connection didn’t complete",
@@ -107,7 +91,7 @@ const COPY = {
   ko: {
     eyebrow: "여행 지갑",
     title: "지갑",
-    body: "ONDO 테스트 잔액과 여행 혜택, 영수증을 한곳에서 간단하게 확인하세요.",
+    body: "여행 잔액과 식사 혜택, 영수증을 한곳에서 확인하고 원할 때만 사용하세요.",
     balance: "여행 잔액",
     testAsset: "OOKRW Test",
     balanceReady: "ONDO 테스트 오퍼 사용 가능",
@@ -128,7 +112,7 @@ const COPY = {
     testTruth: "OOKRW Test는 실제로 작동하지 않는 제품용 잔액입니다. 돈을 이동하지 않으며 스테이블코인이나 온체인 자산이 아닙니다.",
     linkDialog: "여행 지갑 연결",
     linkTitle: "여행 혜택을 준비해요",
-    linkBody: "이 기기에서 ONDO 오퍼용 로컬 테스트 지갑을 연결합니다.",
+    linkBody: "이 기기에서 ONDO 오퍼용 OOKRW Test 잔액을 준비합니다.",
     linking: "연결 중…",
     linkingBody: "지갑 앱·계정·결제 공급자에는 연결하지 않습니다.",
     linkFailed: "연결을 완료하지 못했어요",
