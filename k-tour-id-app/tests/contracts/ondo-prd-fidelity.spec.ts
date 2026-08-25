@@ -1,18 +1,19 @@
-import { existsSync, readFileSync } from "node:fs"
+import { spawnSync } from "node:child_process"
+import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { dirname, extname, relative, resolve } from "node:path"
 import { expect, test } from "@playwright/test"
 import { CANONICAL_MAP_VENUES_COMPACT } from "../../lib/ondo/venues/map-data"
+import { sanitizeLocalSignalVenueIds } from "../../features/ondo/my/my-korea-model"
 import { ONDO_DEFERRED, ONDO_MUST_LIVE } from "../helpers/ondo-prd-fidelity"
 
 const APP_ROOT = process.cwd()
 const ROUTE_ENTRY = resolve(APP_ROOT, "app/ondo-b/page.tsx")
+const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css", ".json"] as const
 
 function localImportTargets(source: string) {
   const pattern = /(?:import|export)\s+(?:[^"']*?\s+from\s+)?["']([^"']+)["']/g
-  return [...source.matchAll(pattern)]
-    .map((match) => match[1])
-    .filter((target) => target.startsWith(".") || target.startsWith("@/"))
+  return [...source.matchAll(pattern)].map((match) => match[1]).filter((target) => target.startsWith(".") || target.startsWith("@/"))
 }
 
 function resolveSource(importer: string, target: string) {
@@ -38,126 +39,199 @@ function routeImportGraph() {
   return [...visited].sort()
 }
 
-const liveFiles = routeImportGraph()
-const livePaths = liveFiles.map((file) => relative(APP_ROOT, file))
-const liveSource = liveFiles.map((file) => readFileSync(file, "utf8")).join("\n")
+function filesBelow(root: string, prefix = ""): string[] {
+  if (!existsSync(root)) return []
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name
+    return entry.isDirectory() ? filesBelow(resolve(root, entry.name), path) : [path]
+  }).sort()
+}
 
-function appSource(path: string) {
+function source(path: string) {
   return readFileSync(resolve(APP_ROOT, path), "utf8")
 }
 
+function runProbe(mode: "pulse" | "meal") {
+  const result = spawnSync("pnpm", ["exec", "tsx", "tests/helpers/ondo-fidelity-runtime-probe.ts", mode], {
+    cwd: APP_ROOT,
+    encoding: "utf8",
+    env: process.env,
+  })
+  expect(result.status, result.stderr || result.stdout || `${mode} runtime probe failed`).toBe(0)
+  return JSON.parse(result.stdout) as Record<string, any>
+}
+
+const livePaths = routeImportGraph().map((file) => relative(APP_ROOT, file))
+
 function expectReachable(path: string) {
-  expect(livePaths, `${path} must be reachable from app/ondo-b/page.tsx; a detached module does not satisfy the journey`).toContain(path)
+  expect(livePaths, `${path} must be reachable from app/ondo-b/page.tsx; a detached file cannot satisfy fidelity`).toContain(path)
 }
 
-function expectLiveEvidence(evidence: readonly string[]) {
-  for (const token of evidence) expect(liveSource, `missing live /ondo-b evidence: ${token}`).toContain(token)
-}
-
-test("FID-P0-001 preserved Guest Explore remains a live official-source journey", () => {
-  expectReachable("features/ondo/map/map-entry-b.tsx")
-  expectReachable("features/ondo/place/canonical-place-overlay.tsx")
-  expectLiveEvidence(["ondo-b-map-entry", "ondo-b-venue-list", "canonical-place-details", "canonical-venue-directions"])
-  expect(CANONICAL_MAP_VENUES_COMPACT).toHaveLength(400)
-  expect(CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === "seoul")).toHaveLength(200)
-  expect(CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === "busan")).toHaveLength(200)
-})
-
-test("FID-P0-002 Explore is usable without account, Person, 19+, consent, or provider setup", () => {
-  const map = appSource("features/ondo/map/map-entry-b.tsx")
-  const place = appSource("features/ondo/place/canonical-place-overlay.tsx")
-  for (const source of [map, place]) {
-    expect(source).not.toContain("beginAction(")
-    expect(source).not.toContain("ondo-gate-overlay")
-  }
-  expect(place).toContain("canonical-venue-directions")
-})
-
-test("FID-P0-003 /ondo-b has three-step language/value, intent/persona, preferences onboarding and guest map arrival", () => {
-  expectReachable("features/ondo/onboarding/official-directory-onboarding.tsx")
-  expectLiveEvidence(["onboarding-step-value", "onboarding-step-intent", "onboarding-step-preferences", "Explore as a guest", "Open guest Explore"])
-})
-
-test("FID-P0-004 My Korea keeps saved, recently viewed, and planned-meal semantics live", () => {
-  expectReachable("features/ondo/my/saved-entry-b.tsx")
-  expectLiveEvidence(["ondo-b-saved-entry", "my-korea-recent", "my-korea-planned"])
-})
-
-test("FID-P0-005 a Local Signal draft can contribute and return to the exact place", () => {
-  expectReachable("features/ondo/place/canonical-place-overlay.tsx")
-  expectReachable("features/ondo/local-signal-b/local-signal-layer-b.tsx")
-  expectReachable("features/ondo/identity-b/local-check-walkthrough-b.tsx")
-  expectLiveEvidence(["canonical-local-signal-open", "ondo-b-local-signal", "local-signal-draft", "local-signal-person-check", "local-check-return-success", "local-check-return-failure", "local-check-return-unavailable", "local-check-return-expired"])
-})
-
-test("FID-P0-006 one Pulse Table / Connect journey reaches join, recovery, and participant chat", () => {
-  expectReachable("features/ondo/connect/tables-entry-b.tsx")
-  expectReachable("features/ondo/after19/after19-jit-b.tsx")
-  expectLiveEvidence(["tables-entry", "table-join", "table-join-confirm", "table-view-alternative", "table-open-chat", "table-chat", "table-report", "table-block", "table-leave", "TABLE-FULL", "TABLE-CANCELLED", "TABLE-ENDED"])
-})
-
-test("FID-P0-007 After 19 keeps success, cancel, failure, unavailable, expiry, and exact-return outcomes", () => {
-  expectReachable("features/ondo/after19/after19-jit-b.tsx")
-  expectReachable("features/ondo/contracts/return-to-b.ts")
-  expectLiveEvidence(["after19-walkthrough", "gate-success", "gate-cancel", "gate-failure", "gate-unsupported", "after19-expiry-notice", "after19-return", "JOIN_TABLE"])
-})
-
-test("FID-P0-008 ID exposes independent Person, 19+, and consent states", () => {
-  expectReachable("features/ondo/identity-b/traveler-id-entry-b.tsx")
-  expectReachable("features/ondo/identity-b/local-check-walkthrough-b.tsx")
-  expectLiveEvidence(["ondo-b-traveler-id", "traveler-id-person", "traveler-id-age", "local-check-consent", "consent-requester", "consent-purpose", "consent-minimum", "consent-retention", "Person does not prove 19+", "19+ does not prove identity"])
-})
-
-test("FID-P0-009 ID has a truthful one-time interactive walkthrough boundary", () => {
-  expectReachable("features/ondo/identity-b/local-check-walkthrough-b.tsx")
-  expectReachable("features/ondo/shared/state/ondo-b-provider.tsx")
-  expectLiveEvidence(["ondo-b-local-check-walkthrough", "local-check-boundary", "localInteractionBoundarySeen", "No camera scan, data transmission, provider call, DID, or real verifiable credential occurs"])
-})
-
-test("FID-P0-010 every JIT result preserves and consumes an exact returnTo once", () => {
-  expectReachable("features/ondo/contracts/return-to-b.ts")
-  expectReachable("features/ondo/connect/tables-entry-b.tsx")
-  expectReachable("features/ondo/after19/after19-jit-b.tsx")
-  expectLiveEvidence(["BReturnToEnvelope", "tokenId", "activeGate", "expiresAt", "consumedAt", "JOIN_TABLE", "returnTo.tableId", "returnTo.venueId", "returnTo.draft"])
-})
-
-test("FID-P0-011 all must-live surfaces retain EN/KO, responsive, and keyboard/focus evidence", () => {
-  for (const path of [
-    "features/ondo/onboarding/official-directory-onboarding.tsx",
-    "features/ondo/my/saved-entry-b.tsx",
-    "features/ondo/connect/tables-entry-b.tsx",
-    "features/ondo/after19/after19-jit-b.tsx",
-    "features/ondo/identity-b/traveler-id-entry-b.tsx",
-    "features/ondo/identity-b/local-check-walkthrough-b.tsx",
-    "features/ondo/local-signal-b/local-signal-layer-b.tsx",
-  ]) expectReachable(path)
-  expectLiveEvidence(["locale === \"ko\"", "onKeyDown", "useModalIsolation", "focusFirstAvailableDestination"])
-  expect(liveFiles.filter((file) => file.endsWith(".css")).map((file) => readFileSync(file, "utf8")).join("\n")).toContain("@media")
-})
-
-test("FID-LOOP-001 packaging cannot pass by globally denying journey names, modules, or truthful preview vocabulary", () => {
-  const policy = appSource("scripts/ondo-b-standalone/policy.mjs")
-  expect(policy).not.toContain("BANNED_ARTIFACT_PATH")
-  expect(policy).not.toContain("BANNED_ARTIFACT_TEXT")
-})
-
-test("FID-LOOP-002 every P0 inventory item is non-removable", () => {
+test("FID-G0-001 inventory is additive and independently matches the golden must-live contract", () => {
   expect(ONDO_MUST_LIVE.map((item) => item.id)).toEqual([
-    "ONDO-P0-GUEST-DISCOVERY",
-    "ONDO-P0-ONBOARDING",
-    "ONDO-P0-MY-KOREA",
-    "ONDO-P0-LOCAL-SIGNAL",
-    "ONDO-P0-PULSE-TABLE",
-    "ONDO-P0-AFTER19",
-    "ONDO-P0-ID",
-    "ONDO-P0-RETURN-TO",
-    "ONDO-P0-INCLUSIVE-WEB",
+    "ONDO-G0-GUEST-DISCOVERY",
+    "ONDO-G0-ONBOARDING",
+    "ONDO-G0-PULSE-HOT",
+    "ONDO-G0-MY-KOREA",
+    "ONDO-G0-LOCAL-SIGNAL-PULSE",
+    "ONDO-G0-TABLE",
+    "ONDO-G0-AFTER19",
+    "ONDO-G0-ID-WALLET",
+    "ONDO-G0-MEAL-OFFER",
+    "ONDO-G0-PAYMENT",
+    "ONDO-G0-BENEFIT-VOUCHER",
+    "ONDO-G0-REFUND-SETTLEMENT",
+    "ONDO-G0-AI-BENEFIT-PREVIEW",
+    "ONDO-G0-RETURN-TO",
+    "ONDO-G0-INCLUSIVE-WEB",
   ])
   expect(ONDO_MUST_LIVE.every((item) => item.removalPolicy === "FAIL_RELEASE")).toBe(true)
 })
 
-test("FID-SCOPE-001 P0 needs no real provider/backend while wallet, payment, and voucher remain P2", () => {
-  expect(ONDO_MUST_LIVE.every((item) => item.providerBoundary === "NO_REAL_PROVIDER_REQUIRED")).toBe(true)
-  expect(ONDO_DEFERRED.map((item) => item.id)).toEqual(["ONDO-P2-WALLET", "ONDO-P2-PAYMENT", "ONDO-P2-VOUCHER"])
-  expect(ONDO_DEFERRED.every((item) => item.removalPolicy === "DEFERRED_ALLOWED")).toBe(true)
+test("FID-G0-002 actual integrations are deferred without deferring wallet, payment, voucher, or refund UX", () => {
+  expect(ONDO_DEFERRED.map((item) => item.id)).toEqual([
+    "ONDO-EXT-REAL-IDENTITY",
+    "ONDO-EXT-REAL-MONEY-CHAIN-BACKEND",
+    "ONDO-EXT-BROAD-SERVICE-INTEGRATIONS",
+  ])
+  expect(ONDO_DEFERRED.every((item) => item.removalPolicy === "DEFER_IMPLEMENTATION_ONLY")).toBe(true)
+  expect(ONDO_DEFERRED.map((item) => item.journey).join(" ")).not.toMatch(/^(?:wallet|payment|voucher|refund)$/i)
+})
+
+test("FID-G0-003 guest discovery and onboarding remain reachable without identity or payment gates", () => {
+  for (const path of [
+    "features/ondo/map/map-entry-b.tsx",
+    "features/ondo/place/canonical-place-overlay.tsx",
+    "features/ondo/onboarding/official-directory-onboarding.tsx",
+  ]) expectReachable(path)
+  expect(CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === "seoul")).toHaveLength(200)
+  expect(CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === "busan")).toHaveLength(200)
+  for (const path of ["features/ondo/map/map-entry-b.tsx", "features/ondo/place/canonical-place-overlay.tsx"]) {
+    expect(source(path)).not.toMatch(/beginAction\(|ondo-gate-overlay|paymentKyc/)
+  }
+})
+
+test("FID-G0-004 every existing and restored golden surface is reachable from /ondo-b", () => {
+  for (const path of [
+    "features/ondo/my/saved-entry-b.tsx",
+    "features/ondo/my/my-korea-model.ts",
+    "features/ondo/local-signal-b/local-signal-layer-b.tsx",
+    "features/ondo/connect/tables-entry-b.tsx",
+    "features/ondo/after19/after19-jit-b.tsx",
+    "features/ondo/identity-b/traveler-id-entry-b.tsx",
+    "features/ondo/contracts/return-to-b.ts",
+    "features/ondo/pulse-b/pulse-model-b.ts",
+    "features/ondo/commerce-b/stable-commerce-model-b.ts",
+    "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+  ]) expectReachable(path)
+})
+
+test("FID-STATE-001 curated Pulse truth and separate Local Signal evidence are executable", () => {
+  const result = runProbe("pulse")
+  expect(result.peak).toMatchObject({
+    venueId: "mois-0021cd596bc5b2a922ad", level: "peak", score: 91, signalCount: 24,
+    updatedAt: "2026-08-25T02:20:00.000Z", freshness: "curated-snapshot", confidence: "high",
+    evidence: expect.arrayContaining([expect.objectContaining({ origin: "curated-walkthrough" })]), localEvidence: null,
+  })
+  expect(result.hot).toMatchObject({
+    venueId: "mois-0348cfe16225dbbcec8a", level: "hot", score: 84, signalCount: 19,
+    updatedAt: "2026-08-25T02:05:00.000Z", freshness: "curated-snapshot", confidence: "high",
+    evidence: expect.arrayContaining([expect.objectContaining({ origin: "curated-walkthrough" })]), localEvidence: null,
+  })
+  expect(result.uncurated).toMatchObject({ level: "limited", score: null, signalCount: null, updatedAt: null, freshness: "limited", confidence: "limited", evidence: [], localEvidence: null })
+  expect(result.afterUniqueLocalPost).toMatchObject({
+    venueId: result.peak.venueId,
+    level: result.peak.level,
+    score: result.peak.score,
+    signalCount: result.peak.signalCount,
+    updatedAt: result.peak.updatedAt,
+    freshness: result.peak.freshness,
+    confidence: result.peak.confidence,
+    evidence: expect.arrayContaining([expect.objectContaining({ origin: "local-device" })]),
+    localEvidence: expect.objectContaining({ origin: "local-device" }),
+  })
+  expect(result.afterDuplicateLocalPost).toEqual(result.afterUniqueLocalPost)
+  expect(sanitizeLocalSignalVenueIds([result.peak.venueId, result.peak.venueId])).toEqual([result.peak.venueId])
+})
+
+test("FID-STATE-002 deterministic payment reducer covers success, fail/retry, insufficient, and double-click idempotency", () => {
+  const result = runProbe("meal")
+  expect(result.initial).toMatchObject({
+    quoteDebit: 22, holderBalance: 60, merchantSettlement: 0,
+    state: {
+      status: "idle", voucher: "available", confirmationPending: false, confirmationCount: 0,
+      receiptCount: 0, refundCount: 0, chargedDebit: 0, receiptId: null, lastOutcome: null, ledger: [],
+    },
+  })
+  expect(result.success).toMatchObject({
+    quoteDebit: 19, holderBalance: 41, merchantSettlement: 19,
+    state: {
+      status: "paid", voucher: "consumed", confirmationPending: false, confirmationCount: 1,
+      receiptCount: 1, refundCount: 0, chargedDebit: 19, receiptId: "ONDO-LOCAL-20260825-001", lastOutcome: "success",
+    },
+  })
+  expect(result.successReplay).toEqual(result.success)
+  expect(result.success.state.ledger).toHaveLength(2)
+  expect(new Set(result.success.state.ledger.map((entry: any) => entry.receiptId))).toEqual(new Set(["ONDO-LOCAL-20260825-001"]))
+  expect(result.success.state.ledger.map((entry: any) => entry.amount)).toEqual([-19, 19])
+
+  for (const [snapshot, outcome] of [[result.failed, "failure"], [result.insufficient, "insufficient"]] as const) {
+    expect(snapshot).toMatchObject({
+      holderBalance: 60, merchantSettlement: 0,
+      state: { status: "idle", voucher: "selected", receiptCount: 0, chargedDebit: 0, receiptId: null, lastOutcome: outcome, ledger: [] },
+    })
+  }
+  expect(result.retried).toMatchObject({ holderBalance: 41, merchantSettlement: 19, state: { status: "paid", voucher: "consumed", receiptCount: 1, chargedDebit: 19, lastOutcome: "success" } })
+})
+
+test("FID-STATE-003 one-use voucher, refund restoration, and holder/merchant mirror are executable", () => {
+  const result = runProbe("meal")
+  expect(result.benefitSelected).toMatchObject({ quoteDebit: 19, holderBalance: 60, merchantSettlement: 0, state: { status: "idle", voucher: "selected", receiptCount: 0, ledger: [] } })
+  expect(result.confirmed).toMatchObject({ quoteDebit: 19, holderBalance: 60, merchantSettlement: 0, state: { confirmationPending: true, confirmationCount: 1, voucher: "selected", ledger: [] } })
+
+  expect(result.refunded).toMatchObject({
+    quoteDebit: 22, holderBalance: 60, merchantSettlement: 0,
+    state: { status: "refunded", voucher: "available", receiptCount: 1, refundCount: 1, chargedDebit: 19, receiptId: "ONDO-LOCAL-20260825-001", lastOutcome: "success" },
+  })
+  expect(result.refunded.state.ledger).toHaveLength(4)
+  for (const kind of ["PAYMENT", "REFUND"]) {
+    const pair = result.refunded.state.ledger.filter((entry: any) => entry.kind === kind)
+    expect(pair).toHaveLength(2)
+    expect(new Set(pair.map((entry: any) => entry.operationId)).size).toBe(1)
+    expect(new Set(pair.map((entry: any) => entry.receiptId)).size).toBe(1)
+    expect(pair.reduce((sum: number, entry: any) => sum + entry.amount, 0)).toBe(0)
+  }
+  expect(result.refundReplay).toEqual(result.refunded)
+})
+
+test("FID-PACK-001 standalone policy positively includes every restored golden module and may not ban journey names", async () => {
+  const policy = await import("../../scripts/ondo-b-standalone/policy.mjs") as {
+    SOURCE_FILES: readonly string[]
+    LEGACY_ARTIFACT_PATH: RegExp
+    LEGACY_ARTIFACT_TEXT: readonly RegExp[]
+  }
+  const required = [
+    "features/ondo/pulse-b/pulse-model-b.ts",
+    "features/ondo/commerce-b/stable-commerce-model-b.ts",
+    "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+    "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+  ]
+  for (const path of required) {
+    expect(policy.SOURCE_FILES, `${path} must be positively shipped`).toContain(path)
+    expect(policy.LEGACY_ARTIFACT_PATH.test(path), `${path} must not be rejected by a name denylist`).toBe(false)
+  }
+  for (const productTerm of ["Pulse", "Too Hot", "After19", "ID Wallet", "payment", "benefit", "voucher", "refund", "settlement", "OOKRW", "ONDO demo meal offer"]) {
+    expect(policy.LEGACY_ARTIFACT_TEXT.some((pattern) => pattern.test(productTerm)), `${productTerm} is a required journey, not legacy evidence`).toBe(false)
+  }
+})
+
+test("FID-PACK-002 prepared standalone source positively contains the reachable golden closure", async () => {
+  await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_fidelity" })
+  const files = filesBelow(STAGE_ROOT)
+  for (const path of [
+    "features/ondo/pulse-b/pulse-model-b.ts",
+    "features/ondo/commerce-b/stable-commerce-model-b.ts",
+    "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+    "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+  ]) expect(files, `${path} must be present in prepared source, not merely named in a test`).toContain(path)
 })

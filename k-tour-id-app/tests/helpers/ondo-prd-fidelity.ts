@@ -1,119 +1,185 @@
-export type OndoFidelityTier = "P0_MUST_LIVE" | "P2_DEFERRED"
+export type OndoFidelityTier = "GOLDEN_MUST_LIVE" | "ACTUAL_INTEGRATION_DEFERRED"
 
 export type OndoFidelityItem = {
-  id: `ONDO-${"P0" | "P2"}-${string}`
+  id: `ONDO-${"G0" | "EXT"}-${string}`
   tier: OndoFidelityTier
   journey: string
   acceptance: readonly string[]
-  providerBoundary: "NO_REAL_PROVIDER_REQUIRED" | "NOT_IN_CURRENT_GATE"
-  removalPolicy: "FAIL_RELEASE" | "DEFERRED_ALLOWED"
+  requiredModules: readonly string[]
+  providerBoundary: "OFFICIAL_READ_ONLY" | "DETERMINISTIC_LOCAL_PREVIEW" | "ACTUAL_INTEGRATION_DEFERRED"
+  removalPolicy: "FAIL_RELEASE" | "DEFER_IMPLEMENTATION_ONLY"
 }
 
 /**
- * Product-fidelity inventory for the ONDO frontend candidate.
- *
- * P0 entries are additive release obligations. A missing implementation is
- * RED; deleting its UI, test, copy, module, or fixture cannot satisfy it.
- * Real providers and backends are not a prerequisite for any P0 entry.
+ * Additive golden-candidate inventory distilled from the root proposal,
+ * PULSE direction, execution PRD, scope memory, and the latest product
+ * decision. This file declares obligations; it is deliberately not used as
+ * the assertion oracle in ondo-prd-fidelity.spec.ts.
  */
 export const ONDO_FIDELITY_INVENTORY: readonly OndoFidelityItem[] = [
   {
-    id: "ONDO-P0-GUEST-DISCOVERY",
-    tier: "P0_MUST_LIVE",
-    journey: "Guest Explore",
-    acceptance: ["official Seoul/Busan discovery", "search/list/map", "place detail", "directions", "no identity gate"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    id: "ONDO-G0-GUEST-DISCOVERY",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Guest discovery",
+    acceptance: ["official Seoul and Busan records", "map/list/search/place/directions", "no ID or wallet gate"],
+    requiredModules: ["features/ondo/map/map-entry-b.tsx", "features/ondo/place/canonical-place-overlay.tsx"],
+    providerBoundary: "OFFICIAL_READ_ONLY",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-ONBOARDING",
-    tier: "P0_MUST_LIVE",
-    journey: "Three-step onboarding",
-    acceptance: ["language and value", "intent and persona", "preferences", "guest map arrival"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    id: "ONDO-G0-ONBOARDING",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Onboarding",
+    acceptance: ["language and value", "intent", "preferences", "guest completion"],
+    requiredModules: ["features/ondo/onboarding/official-directory-onboarding.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-MY-KOREA",
-    tier: "P0_MUST_LIVE",
+    id: "ONDO-G0-PULSE-HOT",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Pulse / Hot evidence",
+    acceptance: ["evidence count", "freshness", "confidence", "Limited", "Hot", "Too Hot"],
+    requiredModules: ["features/ondo/pulse-b/pulse-model-b.ts", "features/ondo/map/map-entry-b.tsx", "features/ondo/place/canonical-place-overlay.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
+    removalPolicy: "FAIL_RELEASE",
+  },
+  {
+    id: "ONDO-G0-MY-KOREA",
+    tier: "GOLDEN_MUST_LIVE",
     journey: "My Korea",
-    acceptance: ["saved", "recently viewed", "planned meals"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    acceptance: ["saved", "recently viewed", "planned meal", "local contribution history"],
+    requiredModules: ["features/ondo/my/saved-entry-b.tsx", "features/ondo/my/my-korea-model.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-LOCAL-SIGNAL",
-    tier: "P0_MUST_LIVE",
-    journey: "Local Signal contribution",
-    acceptance: ["open draft from place", "contribute note or photo", "success/failure", "return to same place"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    id: "ONDO-G0-LOCAL-SIGNAL-PULSE",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Local Signal to Pulse",
+    acceptance: ["exact place draft", "success/failure recovery", "unique post appears as separate local-device evidence", "shared Pulse score/count unchanged", "duplicate suppression"],
+    requiredModules: ["features/ondo/local-signal-b/local-signal-layer-b.tsx", "features/ondo/pulse-b/pulse-model-b.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-PULSE-TABLE",
-    tier: "P0_MUST_LIVE",
-    journey: "Pulse Table / Connect",
-    acceptance: ["open one place-based Table", "join", "open participant chat", "cancel/failure/unavailable recovery"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    id: "ONDO-G0-TABLE",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Pulse Table",
+    acceptance: ["place-based Table", "join and recovery", "participant chat", "leave/report/block"],
+    requiredModules: ["features/ondo/connect/tables-entry-b.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-AFTER19",
-    tier: "P0_MUST_LIVE",
-    journey: "After 19",
-    acceptance: ["success", "cancel", "failure and retry", "provider unavailable", "proof expiry", "exact return"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    id: "ONDO-G0-AFTER19",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "After19",
+    acceptance: ["success", "cancel", "failure/retry", "unavailable", "expiry", "minimum exact return"],
+    requiredModules: ["features/ondo/after19/after19-jit-b.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-ID",
-    tier: "P0_MUST_LIVE",
-    journey: "ID and just-in-time walkthrough",
-    acceptance: ["Person status", "19+ status", "consent status", "independent axes", "one-time interactive walkthrough", "truthful preview boundary"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    id: "ONDO-G0-ID-WALLET",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "ID · Wallet",
+    acceptance: ["one navigation entry", "independent Person/19+/payment axes", "visible OOKRW preview balance is not fiat or a chain asset"],
+    requiredModules: ["features/ondo/identity-b/traveler-id-entry-b.tsx", "features/ondo/commerce-b/id-wallet-commerce-b.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-RETURN-TO",
-    tier: "P0_MUST_LIVE",
+    id: "ONDO-G0-MEAL-OFFER",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Representative meal service orchestration",
+    acceptance: ["separately labeled ONDO demo meal offer", "explore", "quote", "eligibility/benefit", "consent", "payment/request", "provider boundary", "refund/support", "no official LOCALDATA merchant-payment claim"],
+    requiredModules: ["features/ondo/commerce-b/id-wallet-commerce-b.tsx", "features/ondo/commerce-b/stable-commerce-model-b.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
+    removalPolicy: "FAIL_RELEASE",
+  },
+  {
+    id: "ONDO-G0-PAYMENT",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Stable preview payment",
+    acceptance: ["success", "cancel", "failure/retry", "insufficient balance", "double-click gives one OOKRW debit and one receipt", "payment and provider states separated"],
+    requiredModules: ["features/ondo/commerce-b/stable-commerce-model-b.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
+    removalPolicy: "FAIL_RELEASE",
+  },
+  {
+    id: "ONDO-G0-BENEFIT-VOUCHER",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Benefit / voucher",
+    acceptance: ["eligibility and expiry", "minimum spend", "single use", "no double redemption", "refund restoration"],
+    requiredModules: ["features/ondo/commerce-b/stable-commerce-model-b.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
+    removalPolicy: "FAIL_RELEASE",
+  },
+  {
+    id: "ONDO-G0-REFUND-SETTLEMENT",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "Refund and settlement mirror",
+    acceptance: ["holder and merchant entries share operation/receipt", "opposite deltas reconcile", "refund reverses both sides once"],
+    requiredModules: ["features/ondo/commerce-b/stable-commerce-model-b.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
+    removalPolicy: "FAIL_RELEASE",
+  },
+  {
+    id: "ONDO-G0-AI-BENEFIT-PREVIEW",
+    tier: "GOLDEN_MUST_LIVE",
+    journey: "AI benefit preview",
+    acceptance: ["deterministic local policy inputs", "recommend/accept/decline", "no AI or provider call", "no eligibility/payment decision", "no money or voucher mutation before acceptance"],
+    requiredModules: ["features/ondo/commerce-b/stable-commerce-model-b.ts", "features/ondo/commerce-b/id-wallet-commerce-b.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
+    removalPolicy: "FAIL_RELEASE",
+  },
+  {
+    id: "ONDO-G0-RETURN-TO",
+    tier: "GOLDEN_MUST_LIVE",
     journey: "Exact returnTo",
-    acceptance: ["original CTA and public context preserved", "cancel restores context", "success resumes once", "failure/unavailable/expiry never lose context"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    acceptance: ["origin CTA and public context", "cancel/failure/insufficient preserve", "success consumes once", "no private state in URL"],
+    requiredModules: ["features/ondo/contracts/return-to-b.ts", "features/ondo/commerce-b/stable-commerce-model-b.ts"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P0-INCLUSIVE-WEB",
-    tier: "P0_MUST_LIVE",
+    id: "ONDO-G0-INCLUSIVE-WEB",
+    tier: "GOLDEN_MUST_LIVE",
     journey: "Inclusive responsive web",
-    acceptance: ["English", "Korean", "390px mobile", "desktop", "keyboard-only completion and focus return"],
-    providerBoundary: "NO_REAL_PROVIDER_REQUIRED",
+    acceptance: ["English", "Korean", "390px mobile", "desktop", "keyboard completion", "dialog focus containment and exact focus return"],
+    requiredModules: ["features/ondo/app/ondo-app-b.tsx", "features/ondo/commerce-b/id-wallet-commerce-b.tsx"],
+    providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },
   {
-    id: "ONDO-P2-WALLET",
-    tier: "P2_DEFERRED",
-    journey: "Wallet",
-    acceptance: ["deferred; does not block P0 candidate"],
-    providerBoundary: "NOT_IN_CURRENT_GATE",
-    removalPolicy: "DEFERRED_ALLOWED",
+    id: "ONDO-EXT-REAL-IDENTITY",
+    tier: "ACTUAL_INTEGRATION_DEFERRED",
+    journey: "Actual identity providers and credential issuance",
+    acceptance: ["deferred until provider contracts, security, privacy, and receipts exist"],
+    requiredModules: [],
+    providerBoundary: "ACTUAL_INTEGRATION_DEFERRED",
+    removalPolicy: "DEFER_IMPLEMENTATION_ONLY",
   },
   {
-    id: "ONDO-P2-PAYMENT",
-    tier: "P2_DEFERRED",
-    journey: "Payment",
-    acceptance: ["deferred; does not block P0 candidate"],
-    providerBoundary: "NOT_IN_CURRENT_GATE",
-    removalPolicy: "DEFERRED_ALLOWED",
+    id: "ONDO-EXT-REAL-MONEY-CHAIN-BACKEND",
+    tier: "ACTUAL_INTEGRATION_DEFERRED",
+    journey: "Actual money, chain, provider, and canonical backend",
+    acceptance: ["deferred; local preview must never claim these integrations"],
+    requiredModules: [],
+    providerBoundary: "ACTUAL_INTEGRATION_DEFERRED",
+    removalPolicy: "DEFER_IMPLEMENTATION_ONLY",
   },
   {
-    id: "ONDO-P2-VOUCHER",
-    tier: "P2_DEFERRED",
-    journey: "Voucher",
-    acceptance: ["deferred; does not block P0 candidate"],
-    providerBoundary: "NOT_IN_CURRENT_GATE",
-    removalPolicy: "DEFERRED_ALLOWED",
+    id: "ONDO-EXT-BROAD-SERVICE-INTEGRATIONS",
+    tier: "ACTUAL_INTEGRATION_DEFERRED",
+    journey: "Actual transport, delivery, shopping, and reservation integrations",
+    acceptance: ["deferred individually; representative meal offer proves the reusable orchestration now"],
+    requiredModules: [],
+    providerBoundary: "ACTUAL_INTEGRATION_DEFERRED",
+    removalPolicy: "DEFER_IMPLEMENTATION_ONLY",
   },
 ] as const
 
-export const ONDO_MUST_LIVE = ONDO_FIDELITY_INVENTORY.filter((item) => item.tier === "P0_MUST_LIVE")
-export const ONDO_DEFERRED = ONDO_FIDELITY_INVENTORY.filter((item) => item.tier === "P2_DEFERRED")
+export const ONDO_MUST_LIVE = ONDO_FIDELITY_INVENTORY.filter((item) => item.tier === "GOLDEN_MUST_LIVE")
+export const ONDO_DEFERRED = ONDO_FIDELITY_INVENTORY.filter((item) => item.tier === "ACTUAL_INTEGRATION_DEFERRED")

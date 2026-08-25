@@ -17,8 +17,6 @@ function filesBelow(root: string, prefix = ""): string[] {
 }
 
 test.describe("ONDO B standalone Sites packaging contract", () => {
-  test.describe.configure({ mode: "serial" })
-
   test("B-STANDALONE-001 declares a deterministic build, scan, and probe lane", () => {
     const manifest = JSON.parse(readFileSync(resolve(APP_ROOT, "package.json"), "utf8")) as { scripts?: Record<string, string> }
     expect(manifest.scripts).toMatchObject({
@@ -62,6 +60,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
     expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
     expect(files).toContain("features/ondo/local-signal-b/local-signal-layer-b.tsx")
+    for (const file of [
+      "features/ondo/pulse-b/pulse-model-b.ts",
+      "features/ondo/commerce-b/stable-commerce-model-b.ts",
+      "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+      "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+    ]) expect(files, `${file} is required positive standalone content`).toContain(file)
   })
 
   test("B-STANDALONE-004 generated package stays isolated from retired providers and routes", async () => {
@@ -76,9 +80,11 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       .map((file) => readFileSync(resolve(STAGE_ROOT, file), "utf8"))
       .join("\n")
 
-    expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|demo-journey|mock-data|features\/ondo\/(?:commerce|identity\/|labs|rewards|trust|fixtures)/i)
+    expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|demo-journey|mock-data|features\/ondo\/(?:commerce\/|identity\/|labs\/|rewards\/|trust\/|fixtures\/)/i)
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
-    expect(visibleSource).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)/i)
+    expect(visibleSource).toMatch(/ONDO demo meal offer|ONDO 데모 식사 오퍼/)
+    expect(visibleSource).toMatch(/no (?:AI|payment provider|chain|backend).*(?:call|request)|AI·결제 공급자·체인·백엔드.*(?:호출|요청)/i)
+    expect(visibleSource).toMatch(/not official LOCALDATA merchant payment support|LOCALDATA 공식 가맹점 결제 지원.*아님/i)
   })
 
   test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {
@@ -86,11 +92,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     const blocked = [
       "{\"simulation\":null}",
       "CheckoutOverlay",
-      "Payment KYC",
       "ChatOverlay",
       "RewardsEntry",
       "LabsEntry",
       "demo-journey",
+      "WalletProvider",
+      "k-tour-id.wallet",
     ]
     for (const sample of blocked) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(sample)), sample).toBe(true)
@@ -125,10 +132,33 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       LEGACY_ARTIFACT_PATH: RegExp
       LEGACY_ARTIFACT_TEXT: readonly RegExp[]
     }
-    for (const path of ["features/ondo/after19/after19-layer.tsx", "features/ondo/connect/tables-entry.tsx", "features/ondo/identity/identity-entry.tsx"]) {
+    for (const path of [
+      "features/ondo/after19/after19-layer.tsx",
+      "features/ondo/connect/tables-entry.tsx",
+      "features/ondo/identity/identity-entry.tsx",
+      "features/ondo/pulse-b/pulse-model-b.ts",
+      "features/ondo/commerce-b/stable-commerce-model-b.ts",
+    ]) {
       expect(LEGACY_ARTIFACT_PATH.test(path), path).toBe(false)
     }
-    for (const symbol of ["After19Layer", "TablesEntry", "ConnectOverlays", "GateOverlay", "IdentityEntry", "truthful preview"]) {
+    for (const symbol of [
+      "After19Layer",
+      "TablesEntry",
+      "ConnectOverlays",
+      "GateOverlay",
+      "IdentityEntry",
+      "Pulse",
+      "Too Hot",
+      "ID Wallet",
+      "payment",
+      "benefit",
+      "voucher",
+      "refund",
+      "settlement",
+      "OOKRW",
+      "ONDO demo meal offer",
+      "truthful preview",
+    ]) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern) => pattern.test(symbol)), symbol).toBe(false)
     }
   })
@@ -153,6 +183,16 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/identity-b/traveler-id-entry-b.module.css",
       "features/ondo/local-signal-b/local-signal-layer-b.tsx",
       "features/ondo/local-signal-b/local-signal-layer-b.module.css",
+    ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+  })
+
+  test("B-STANDALONE-010 current closure positively ships Pulse and B-native commerce state/UI/CSS", async () => {
+    const { SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    for (const path of [
+      "features/ondo/pulse-b/pulse-model-b.ts",
+      "features/ondo/commerce-b/stable-commerce-model-b.ts",
+      "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+      "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })
 })
