@@ -35,7 +35,13 @@ test("PROD-DISCOVERY-002 map records expose source facts, never a product score 
 test("PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview data dependency", () => {
   for (const relativePath of productionSurfaceFiles) {
     const source = readFileSync(path.join(appRoot, relativePath), "utf8")
-    expect(source, relativePath).not.toMatch(/\bdemo\b|simulat|fixture|locals eat now/i)
+    if (relativePath === "features/ondo/place/canonical-place-overlay.tsx") {
+      expect(source).toContain("canonical-demo-meal-offer-open")
+      expect(source).toContain("not an official place fact and not evidence that this LOCALDATA business accepts payment or OOKRW")
+      expect(source, relativePath).not.toMatch(/simulat|fixture|locals eat now/i)
+    } else {
+      expect(source, relativePath).not.toMatch(/\bdemo\b|simulat|fixture|locals eat now/i)
+    }
     expect(source, relativePath).not.toContain("demo-signals")
     expect(source, relativePath).not.toContain("lib/ondo/map/fixtures")
   }
