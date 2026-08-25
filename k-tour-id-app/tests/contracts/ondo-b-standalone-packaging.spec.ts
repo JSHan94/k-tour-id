@@ -17,6 +17,8 @@ function filesBelow(root: string, prefix = ""): string[] {
 }
 
 test.describe("ONDO B standalone Sites packaging contract", () => {
+  test.describe.configure({ mode: "serial" })
+
   test("B-STANDALONE-001 declares a deterministic build, scan, and probe lane", () => {
     const manifest = JSON.parse(readFileSync(resolve(APP_ROOT, "package.json"), "utf8")) as { scripts?: Record<string, string> }
     expect(manifest.scripts).toMatchObject({

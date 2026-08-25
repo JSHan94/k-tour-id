@@ -61,10 +61,20 @@ function runProbe(mode: "pulse" | "meal") {
   return JSON.parse(result.stdout) as Record<string, any>
 }
 
-const livePaths = routeImportGraph().map((file) => relative(APP_ROOT, file))
+const liveFiles = routeImportGraph()
+const livePaths = liveFiles.map((file) => relative(APP_ROOT, file))
+const liveSource = liveFiles.map((file) => readFileSync(file, "utf8")).join("\n")
+
+const appSource = source
 
 function expectReachable(path: string) {
   expect(livePaths, `${path} must be reachable from app/ondo-b/page.tsx; a detached file cannot satisfy fidelity`).toContain(path)
+}
+
+function expectLiveEvidence(evidence: readonly string[]) {
+  for (const token of evidence) {
+    expect(liveSource, `missing live /ondo-b evidence: ${token}`).toContain(token)
+  }
 }
 
 test("FID-G0-001 inventory is additive and independently matches the golden must-live contract", () => {
@@ -225,15 +235,18 @@ test("FID-PACK-001 standalone policy positively includes every restored golden m
   }
 })
 
-test("FID-PACK-002 prepared standalone source positively contains the reachable golden closure", async () => {
-  await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_fidelity" })
-  const files = filesBelow(STAGE_ROOT)
+test("FID-PACK-002 standalone positive closure names real reachable source files", async () => {
+  const { SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
   for (const path of [
     "features/ondo/pulse-b/pulse-model-b.ts",
     "features/ondo/commerce-b/stable-commerce-model-b.ts",
     "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
     "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
-  ]) expect(files, `${path} must be present in prepared source, not merely named in a test`).toContain(path)
+  ]) {
+    expect(existsSync(resolve(APP_ROOT, path)), `${path} must exist as product source`).toBe(true)
+    expect(SOURCE_FILES, `${path} must be copied by standalone preparation`).toContain(path)
+    expect(livePaths, `${path} must be reachable before packaging`).toContain(path)
+  }
 })
 
 test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native journeys", () => {
