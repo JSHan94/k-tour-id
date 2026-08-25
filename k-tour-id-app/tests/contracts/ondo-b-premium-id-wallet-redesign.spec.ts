@@ -86,10 +86,10 @@ test("B-PREMIUM-PAY-002 wallet readiness, balance, receipts, and refunds share o
   const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
   const myKorea = source("features/ondo/my/saved-entry-b.tsx")
 
-  for (const stateField of ["commerceWalletStatus", "commerceSession"]) {
+  for (const stateField of ["commerceWalletStatus", "commerceSession", "commerceReceipts"]) {
     expect(provider, `missing shared session field ${stateField}`).toContain(stateField)
   }
-  for (const action of ["setCommerceWalletStatus", "dispatchCommerce"]) {
+  for (const action of ["setCommerceWalletStatus", "dispatchCommerce", "recordCommerceReceipt"]) {
     expect(provider, `missing shared session action ${action}`).toContain(action)
   }
   expect(commerce).not.toContain("useReducer")
@@ -98,4 +98,5 @@ test("B-PREMIUM-PAY-002 wallet readiness, balance, receipts, and refunds share o
   expect(commerce).toContain('data-testid="wallet-activity-receipt"')
   expect(commerce).toContain('data-testid="wallet-activity-refund"')
   expect(myKorea).toContain('data-testid="my-korea-receipts"')
+  expect(provider).toContain("sanitizeCommerceReceipts")
 })
