@@ -17,6 +17,7 @@ test.describe("ONDO B map Pulse visual contract", () => {
       "ondo-clusters",
       "ondo-pulse-halo",
       "ondo-pulse-points",
+      "ondo-pulse-hit",
       "ondo-pulse-labels",
       "pulseMarkerLabel",
       "ondo-b-pulse-marker-accessible-detail",
@@ -31,7 +32,12 @@ test.describe("ONDO B map Pulse visual contract", () => {
     expect(map).toContain('"text-size": ["interpolate", ["linear"], ["zoom"], 9, 12')
     expect(map).toContain('"text-size": 12')
     expect(map).toContain('id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse"')
-    expect(map).toContain('["zoom"], 9, 22')
+    expect(map).toContain('id: "ondo-selected-pulse-rising", type: "circle", source: "ondo-pulse"')
+    expect(map).toContain('id: "ondo-selected-pulse-warming", type: "circle", source: "ondo-pulse"')
+    expect(map).toContain('id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse"')
+    expect(map).toContain('"circle-radius": 22')
+    expect(map).toContain('"circle-translate": risingTranslate')
+    expect(map).toContain('"circle-translate": warmingTranslate')
     expect(map).not.toContain("clusterProperties:")
 
     const palette = {
