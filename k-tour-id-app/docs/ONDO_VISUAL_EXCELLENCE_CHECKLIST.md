@@ -19,8 +19,8 @@ donate unsupported product claims.
 | 4 | Japanese story to source/place | The Infatuation + Apple Guides | Peer-sealed · user review |
 | 5 | Place peek and full detail | Apple Place Card + Airbnb | Peer-sealed · user review |
 | 6 | Tables, 19+, join and chat | Timeleft | Peer-sealed · user review |
-| 7 | Local Signal contribution | Apple contribution + Strava | Pending |
-| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Pending |
+| 7 | Local Signal contribution | Apple contribution + Strava | Peer-sealed · user review |
+| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Active |
 | 9 | My Korea trip memory | Polarsteps | Pending |
 | 10 | Settings and device controls | Apple Settings + Arc | Pending |
 
@@ -190,10 +190,26 @@ Report/Block/Undo, Leave/cancel/storage failure for EN/KO/JA at 320x720,
 
 ### 7. Local Signal — Apple contribution + Strava
 
-- [ ] Place context and signal choices lead; optional note/photo remain optional.
-- [ ] Signal selection has immediate visual response without changing public Pulse.
-- [ ] Photo is a tactile object with clear prepare/replace/remove recovery.
-- [ ] Completion feels like a private contribution receipt, not an upload success.
+- [x] Place context and signal choices lead; optional note/photo remain optional.
+- [x] Signal selection has immediate visual response without changing public Pulse.
+- [x] Photo is a tactile object with clear prepare/replace/remove recovery.
+- [x] Completion feels like a private contribution receipt, not an upload success.
+- [x] Person consent is a short-lived, exact place-and-draft envelope; close,
+      venue change, traversal, reload and real-clock expiry invalidate it.
+- [x] MIME, size, preparation and corrupt-media failures preserve the previous
+      good preview and expose the same reachable retry decision.
+- [x] Posting and updating are durable-first; failures retain the draft and do
+      not mutate public Pulse, ranking, map markers or official facts.
+- [x] Device history and evidence remain the same bounded 12-item intersection
+      in memory, storage, reload and My Korea.
+- [x] Note and photo are discarded on close and never imply upload, provider,
+      public reputation or a shared observation.
+
+Required states sealed: initial, selected note, photo ready/remove, MIME/size/
+prepare/corrupt replacement recovery, Person consent/cancel/failure/unavailable/
+expiry/ready, post/update storage failure, posted/update receipt, Back/Forward,
+reload, My Korea and exact Place return, Settings clear failure for EN/KO/JA at
+320x720, 390x844, 844x390 and 1440x1000.
 
 ### 8. Travel Pass and Wallet — Apple Wallet
 
@@ -218,7 +234,7 @@ Report/Block/Undo, Leave/cancel/storage failure for EN/KO/JA at 320x720,
 
 ## Release record
 
-- Active flow: Local Signal contribution
+- Active flow: Travel Pass, Wallet, offer and receipt
 - Peer-sealed flow: Guest onboarding at `7555b133` (72 required state frames,
   all >=8.5, P0=P1=P2=P3=0, Arc 13/13, restoration/geometry 8/8,
   contracts 174/174)
@@ -227,6 +243,10 @@ Report/Block/Undo, Leave/cancel/storage failure for EN/KO/JA at 320x720,
 - Peer-sealed flow: Tables/19+/Join/Chat at `33722b9` (264 required state
   frames, all >=8.5, P0=P1=P2=P3=0, focused mobile 5/5, desktop 5/5,
   social direction 19/19, contracts 178/178)
+- Peer-sealed flow: Local Signal at `f0107c1` (264 required state frames plus
+  nine successor recovery frames and 66 stable desktop evidence frames, all
+  >=8.5, P0=P1=P2=P3=0, focused 14/14, contracts 191/191, optimized build
+  GREEN)
 - User-approved flows: pending the next visual checkpoint
-- Next user checkpoint: stable ONDO link plus Timeleft-inspired Tables journey;
-  implementation continues with Local Signal.
+- Next user checkpoint: stable ONDO link with the sealed Local Signal journey;
+  implementation continues with Apple Wallet-inspired Travel Pass and commerce.
