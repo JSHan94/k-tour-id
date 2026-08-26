@@ -96,6 +96,17 @@ test.describe("ONDO Explore approved visual direction", () => {
         }))
         expect(truthMetrics.every((item) => item.textOverflow !== "ellipsis" && item.horizontalOverflow <= 1 && item.verticalOverflow <= 1)).toBe(true)
       }
+      if (profile.width === 844) {
+        const cityTruthMetrics = await atlas.locator("[data-city='seoul'] small, [data-city='seoul'] em, [data-city='busan'] small, [data-city='busan'] em").evaluateAll((elements) => elements.map((element) => {
+          const node = element as HTMLElement
+          return {
+            textOverflow: getComputedStyle(node).textOverflow,
+            horizontalOverflow: node.scrollWidth - node.clientWidth,
+            verticalOverflow: node.scrollHeight - node.clientHeight,
+          }
+        }))
+        expect(cityTruthMetrics.every((item) => item.textOverflow !== "ellipsis" && item.horizontalOverflow <= 1 && item.verticalOverflow <= 1)).toBe(true)
+      }
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-atlas.png` })
     }
