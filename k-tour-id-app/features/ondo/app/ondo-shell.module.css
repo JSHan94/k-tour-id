@@ -280,6 +280,8 @@
 @media (max-width: 340px) {
   .nav { width: calc(100% - 16px); gap: 2px; padding-inline: 4px; }
   .navLabel { font-size: 12px; letter-spacing: -.045em; }
+  .stage[data-locale="ko"] .navLabel,
+  .stage[data-locale="ja"] .navLabel { letter-spacing: 0; }
 }
 
 @media (max-width: 759px) {
