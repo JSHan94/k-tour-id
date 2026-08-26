@@ -606,7 +606,10 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
 
   for (const locale of ["ko", "ja"] as const) {
     await page.setViewportSize({ width: 844, height: 390 })
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(({ key, language }) => {
+      const current = JSON.parse(localStorage.getItem(key) ?? "{}")
+      localStorage.setItem(key, JSON.stringify({ ...current, locale: language, localSignalPostedVenueIds: [], localPulseEvidenceByVenue: {} }))
+    }, { key: DEVICE_KEY, language: locale })
     await page.addInitScript(() => { window.__ONDO_B_QA__ = { localSignalPhoto: "failure" } })
     const { signal } = await openSignal(page, locale)
     const body = signal.locator(":scope > div")
@@ -628,7 +631,7 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
     await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await signal.getByTestId("local-signal-photo-remove").click()
     await expectTitleBelowHeader()
-    await signal.getByRole("button", { name: COPY[locale].close }).click()
+    await signal.locator(":scope > header button").first().click()
   }
 })
 
