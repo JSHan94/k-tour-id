@@ -27,6 +27,7 @@ import {
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
 import { useOndoB, type OndoBCommerceWalletStatus } from "../shared/state/ondo-b-provider"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import {
   STABLE_B_KRW_PRICE,
@@ -41,7 +42,7 @@ import {
 } from "./stable-commerce-model-b"
 import styles from "./id-wallet-commerce-b.module.css"
 
-type Locale = "en" | "ko"
+type Locale = OndoBLocale | "ja"
 type WalletReturn = "ready" | "failed"
 type PaymentView = "review" | "processing" | "receipt" | "failure" | "insufficient" | "refunded"
 type QaPayment = "failure" | "insufficient"
@@ -87,6 +88,8 @@ const COPY = {
     linkingBody: "No wallet app, account or payment provider is contacted.",
     linkFailed: "Connection didn’t complete",
     linkFailedBody: "Nothing changed. Try again without losing your place.",
+    noticeError: "Nothing was sent. Please try again.",
+    benefitUsed: "Used",
     cancel: "Not now",
     close: "Close",
   },
@@ -126,8 +129,51 @@ const COPY = {
     linkingBody: "지갑 앱·계정·결제 공급자에는 연결하지 않습니다.",
     linkFailed: "연결을 완료하지 못했어요",
     linkFailedBody: "변경된 내용이 없습니다. 현재 위치에서 다시 시도하세요.",
+    noticeError: "전송된 정보는 없습니다. 다시 시도해 주세요.",
+    benefitUsed: "사용됨",
     cancel: "나중에",
     close: "닫기",
+  },
+  ja: {
+    eyebrow: "トラベルウォレット",
+    title: "ウォレット",
+    body: "旅のテスト残高、食事特典、レシートをまとめて確認し、使うときだけ準備できます。",
+    balance: "旅のテスト残高",
+    testAsset: "OOKRW Test",
+    balanceReady: "ONDOのテストオファーに利用可能",
+    balanceOff: "テストオファーを使うには接続してください",
+    connect: "ウォレットを接続",
+    reconnect: "もう一度接続",
+    disconnect: "接続を解除",
+    benefits: "利用できる特典",
+    benefitTitle: "食事が₩3,000お得",
+    benefitBody: "対象のONDO食事オファーで自動的にご案内します。",
+    benefitState: "1件利用可能",
+    explore: "対象のお店を探す",
+    activity: "最近の利用履歴",
+    noActivity: "レシートはまだありません",
+    noActivityBody: "このブラウザで完了したテスト決済と返金がここに表示されます。",
+    paidActivity: "テスト決済",
+    refundedActivity: "テスト返金済み",
+    activityVenue: "食事特典の利用先",
+    activityReceipt: "レシート",
+    originalPayment: "元のテスト決済",
+    refundReference: "返金参照番号",
+    refundedAmount: "戻したテスト残高",
+    privacy: "決済時のプライバシー",
+    privacyBody: "オファーには、ウォレットの準備状況と特典の選択だけを使用します。名前、年齢、本人情報、住所は共有しません。",
+    testTruth: "OOKRW Testはテスト用の残高です。実際のお金を動かさず、ステーブルコインやオンチェーン資産ではありません。",
+    linkDialog: "トラベルウォレットを接続",
+    linkTitle: "旅の特典を使う準備",
+    linkBody: "このブラウザで、ONDOオファー用のOOKRW Test残高を準備します。",
+    linking: "接続しています…",
+    linkingBody: "ウォレットアプリ、アカウント、決済事業者には接続しません。",
+    linkFailed: "接続を完了できませんでした",
+    linkFailedBody: "変更はありません。今の画面からもう一度お試しください。",
+    noticeError: "情報は送信されていません。もう一度お試しください。",
+    benefitUsed: "使用済み",
+    cancel: "今回はしない",
+    close: "閉じる",
   },
 } as const
 
@@ -240,6 +286,60 @@ const OFFER_COPY = {
     testMode: "테스트 모드 상세",
     testTruth: "OOKRW Test는 실제로 작동하지 않습니다. 혜택 추천은 AI나 공급자 호출 없이 이 기기에서 실행됩니다. 고정 테스트 견적은 환율·상환 약속·1:1 보장을 뜻하지 않습니다. 지갑·가맹점·스테이블코인 네트워크·결제 공급자에 연결하지 않고 돈을 이동하지 않습니다.",
   },
+  ja: {
+    eyebrow: "ONDOの食事特典",
+    title: "タップひとつで、食事をもっとお得に",
+    from: "オファー対象店",
+    price: "食事代",
+    testQuote: "テスト換算",
+    benefit: "ONDO特典",
+    total: "使用する残高",
+    asset: "OOKRW Test",
+    voucher: "食事特典",
+    voucherBody: "このテストオファーの対象 · 最低金額₩22,000を達成 · 8月28日まで有効",
+    recommendation: "この食事におすすめ",
+    applied: "適用済み",
+    apply: "特典を適用",
+    remove: "今回は使わない",
+    available: "利用可能",
+    policyIneligible: "このお店では特典を利用できません",
+    policyBelowMinimum: "食事の最低金額に達していません",
+    policyExpired: "この特典の有効期限が切れています",
+    policyBody: "変更はありません。お店の画面に戻り、別の方法を選んでください。",
+    consentTitle: "必要な情報だけでテスト決済",
+    consentBody: "このオファーに使うのは、ウォレットの準備状況と特典の選択だけです。名前、本人情報、年齢、住所、元データは共有しません。",
+    consent: "このオファーにテスト残高を使うことに同意します",
+    pay: "OOKRW Testでテスト決済",
+    connectToPay: "テストウォレットを接続して続ける",
+    back: "お店の画面に戻る",
+    close: "閉じてお店の画面に戻る",
+    processing: "テスト決済を処理しています…",
+    processingBody: "選んだオファーと特典をそのまま保持しています。",
+    failed: "テスト決済を完了できませんでした",
+    failedBody: "残高は引かれておらず、特典も引き続き利用できます。",
+    insufficient: "テスト残高が不足しています",
+    insufficientBody: "残高は引かれていません。テスト残高を追加するか、お店で別の支払い方法を選んでください。",
+    retry: "もう一度試す",
+    receipt: "テスト決済が完了しました",
+    receiptBody: "食事特典を適用しました。",
+    receiptWithoutBenefit: "ONDO特典を使わずにテスト決済を完了しました。",
+    paid: "使用したテスト残高",
+    remaining: "残りのテスト残高",
+    receiptId: "レシート番号",
+    originalPayment: "元のテスト決済",
+    paymentReceipt: "決済レシート",
+    refundReference: "返金参照番号",
+    refundedAmount: "戻したテスト残高",
+    refund: "テスト返金をリクエスト",
+    support: "返金・サポート",
+    supportBody: "ここでの返金はすぐにテスト残高へ戻り、1回限りの特典も元に戻ります。実際の返金は発生しません。",
+    refunded: "テスト返金が完了しました",
+    refundedBody: "テスト残高と食事特典を元に戻しました。実際の返金は発生していません。",
+    refundedWithoutBenefit: "テスト残高を元に戻しました。未使用の食事特典はそのまま利用できます。実際の返金は発生していません。",
+    return: "同じお店の画面に戻る",
+    testMode: "テストモードの詳細",
+    testTruth: "OOKRW Testは実際の決済には使えないテスト残高です。特典のおすすめはAIや外部サービスを呼び出さず、このブラウザ内で判定します。固定のテスト換算は、為替レート、償還の約束、1:1の価値保証ではありません。ウォレット、加盟店、ステーブルコインネットワーク、決済事業者には接続せず、実際のお金も動きません。",
+  },
 } as const
 
 function runAfterFrames(callback: () => void, count: number) {
@@ -311,7 +411,7 @@ function WalletConnectSheet({ locale, boundarySeen, onAcknowledge, onClose, onRe
             <div className={styles.sheetIcon}><WalletCards size={28} aria-hidden="true" /></div>
             <h2>{copy.linkTitle}</h2><p>{copy.linkBody}</p>
             <details className={styles.truth}><summary>{copy.testAsset}</summary><p>{copy.testTruth}</p></details>
-            {noticeError ? <p className={styles.error} role="alert">{locale === "en" ? "Nothing was sent. Please try again." : "전송된 정보는 없습니다. 다시 시도해 주세요."}</p> : null}
+            {noticeError ? <p className={styles.error} role="alert">{copy.noticeError}</p> : null}
             <button type="button" className={styles.primary} onClick={begin}><Link2 size={18} aria-hidden="true" />{copy.connect}</button>
             <button type="button" className={styles.quietButton} onClick={onClose}>{copy.cancel}</button>
           </div>
@@ -511,10 +611,11 @@ export function IdWalletCommerceB() {
   const walletStatus = state.commerceWalletStatus
   const commerce = state.commerceSession
   const balance = stableCommerceBalanceB(commerce)
+  const venueLocale = locale === "ko" ? "ko" : "en"
   const originVenue = state.commerceOrigin?.kind === "canonical_place" ? canonicalMapVenueById(state.commerceOrigin.venueId) : undefined
-  const originName = originVenue ? venueDisplayName(originVenue.name.ko, locale) : null
+  const originName = originVenue ? venueDisplayName(originVenue.name.ko, venueLocale) : null
   const receiptVenue = state.commerceReceiptVenueId ? canonicalMapVenueById(state.commerceReceiptVenueId) : undefined
-  const receiptVenueName = receiptVenue ? venueDisplayName(receiptVenue.name.ko, locale) : null
+  const receiptVenueName = receiptVenue ? venueDisplayName(receiptVenue.name.ko, venueLocale) : null
 
   function closeLink() {
     setLinkOpen(false)
@@ -549,7 +650,7 @@ export function IdWalletCommerceB() {
 
       <div className={styles.dashboardGrid}>
         <section className={styles.benefitCard} data-testid="wallet-benefit">
-          <div className={styles.cardHeading}><Gift size={20} aria-hidden="true" /><span>{copy.benefits}</span><small>{commerce.status === "paid" && commerce.voucherApplied ? (locale === "ko" ? "사용됨" : "Used") : copy.benefitState}</small></div>
+          <div className={styles.cardHeading}><Gift size={20} aria-hidden="true" /><span>{copy.benefits}</span><small>{commerce.status === "paid" && commerce.voucherApplied ? copy.benefitUsed : copy.benefitState}</small></div>
           <h3>{copy.benefitTitle}</h3><p>{copy.benefitBody}</p>
           <button type="button" onClick={() => actions.setTab("ondo")}><MapPin size={16} aria-hidden="true" />{copy.explore}<ChevronRight size={16} aria-hidden="true" /></button>
         </section>

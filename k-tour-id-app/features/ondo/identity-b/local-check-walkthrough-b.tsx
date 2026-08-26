@@ -10,9 +10,10 @@ import styles from "./local-check-walkthrough-b.module.css"
 export type LocalCheckKind = "person" | "age"
 export type LocalCheckOutcome = "success" | "cancel" | "failure" | "unavailable" | "expired"
 export type LocalCheckOrigin = "local_signal" | "traveler_id"
+type IdentityLocale = OndoBLocale | "ja"
 
 type Props = {
-  locale: OndoBLocale
+  locale: IdentityLocale
   check: LocalCheckKind
   origin: LocalCheckOrigin
   boundarySeen: boolean
@@ -101,6 +102,44 @@ const COPY = {
     expiredBody: "최소 확인을 다시 진행해 주세요.",
     retry: "다시 시도",
     return: "확인 없이 돌아가기",
+  },
+  ja: {
+    dialog: "利用条件の確認",
+    close: "今回はしない",
+    eyebrow: "この操作にだけ使用",
+    title: "必要な答えをひとつだけ共有",
+    account: "ONDO トラベルパス",
+    requester: "確認元",
+    purpose: "利用目的",
+    minimum: "共有する答え",
+    retention: "保持期間",
+    person: "本人",
+    age: "19歳以上",
+    personMinimum: "本人であること — 年齢や法的身元とは別",
+    ageMinimum: "19歳以上 — 身元や本人確認とは別",
+    signalPurpose: "書きかけの内容に戻り、Local Signalを投稿します。",
+    personPurpose: "名前やプロフィールを共有せずに、この操作を完了します。",
+    agePurpose: "生年月日を共有せず、この操作に必要な年齢条件だけを確認します。",
+    retentionBody: "結果はこの画面を開いている間だけ保持されます。名前、書類、生年月日、プロフィール、資格情報は保存しません。",
+    prototype: "この確認の仕組み",
+    prototypeBody: "本人確認サービスには接続せず、資格情報も作成しません。このセッションでは必要最小限の結果だけを使用します。",
+    boundaryError: "このブラウザに案内設定を保存できませんでした。情報は送信されていません。もう一度お試しください。",
+    approvePerson: "確認して続ける",
+    approveAge: "確認して続ける",
+    decline: "今回はしない — 入力内容に戻る",
+    declineId: "今回はしない",
+    processing: "必要な項目だけを確認しています…",
+    processingBody: "名前、書類、生年月日はこの確認に含まれません。",
+    successTitle: "準備できました",
+    successBody: "この操作に必要な最小限の結果を用意しました。",
+    failureTitle: "確認を完了できませんでした",
+    failureBody: "保存・共有された情報はありません。準備ができたら、もう一度お試しください。",
+    unavailableTitle: "現在、この確認を利用できません",
+    unavailableBody: "進行中の操作はそのままです。最初からやり直さずに再試行できます。",
+    expiredTitle: "確認結果の有効期限が切れました",
+    expiredBody: "続けるには、必要最小限の確認をもう一度行ってください。",
+    retry: "もう一度試す",
+    return: "確認せずに戻る",
   },
 } as const
 

@@ -13,6 +13,7 @@ import {
   WalletCards,
 } from "lucide-react"
 import { useOndoB } from "../shared/state/ondo-b-provider"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { LocalCheckWalkthroughB, type LocalCheckKind, type LocalCheckOutcome } from "./local-check-walkthrough-b"
 import { IdWalletCommerceB } from "../commerce-b/id-wallet-commerce-b"
 import styles from "./traveler-id-entry-b.module.css"
@@ -82,9 +83,43 @@ const COPY = {
     prototypeBody: "본인·19+·결제 준비 상태는 서로 독립적이며 이 화면을 여는 동안에만 유지됩니다. 공급자·자격증명·실제 결제 서비스는 연결되지 않습니다.",
     settings: "기기 설정",
   },
+  ja: {
+    eyebrow: "韓国の旅を、自分で管理",
+    title: "トラベルパス",
+    body: "旅で必要になる最小限の確認結果と決済ツールを、別々に、非公開のまま、必要なときだけ準備できます。",
+    passLabel: "ONDO · KOREA TRAVEL PASS",
+    passState: "ゲストパス",
+    passBody: "まずは自由に探せます。保存・参加・支払いで必要になったときだけ準備します。",
+    readiness: "旅の準備状況",
+    readinessBody: "各項目は互いに独立しています。操作で求められた項目だけを完了してください。",
+    accountTitle: "アカウント",
+    accountGuest: "ゲスト",
+    accountBody: "韓国を探すだけなら、アカウントは不要です。",
+    personTitle: "本人",
+    personBody: "本人確認だけでは、19歳以上であることを証明しません。",
+    ageTitle: "19+",
+    ageBody: "19歳以上という結果だけでは、本人であることを証明しません。",
+    paymentTitle: "決済",
+    paymentBody: "ONDO特典専用の、独立したテストウォレットです。",
+    notChecked: "未確認",
+    success: "このセッションで利用可能",
+    cancel: "未完了",
+    failure: "再試行が必要",
+    unavailable: "利用不可",
+    expired: "期限切れ",
+    walletReady: "準備済み",
+    walletNotReady: "設定が必要",
+    checkPerson: "本人であることを確認",
+    checkAge: "19歳以上を確認",
+    prototype: "プライバシーと利用範囲",
+    prototypeBody: "本人、19歳以上、決済準備の各結果は互いに独立し、この画面を開いている間だけ保持されます。本人確認サービス、資格情報、実際の決済サービスには接続しません。",
+    settings: "このブラウザの設定",
+  },
 } as const
 
-function outcomeLabel(locale: "en" | "ko", outcome: LocalCheckOutcome | null) {
+type IdentityLocale = OndoBLocale | "ja"
+
+function outcomeLabel(locale: IdentityLocale, outcome: LocalCheckOutcome | null) {
   const copy = COPY[locale]
   if (!outcome) return copy.notChecked
   return copy[outcome]
