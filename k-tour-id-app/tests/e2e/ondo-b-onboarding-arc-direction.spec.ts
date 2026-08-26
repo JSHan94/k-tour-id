@@ -120,6 +120,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await intent.getByTestId("persona-travelling").click()
         const intentPrimary = intent.locator(".primary, button").filter({ hasText: /preferences|취향|好み/ }).first()
         await expectInsideViewport(page, intentPrimary)
+        await page.waitForTimeout(340)
         await capture(page, locale, profile, "intent")
 
         await intentPrimary.click()
@@ -129,6 +130,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await expectControlGeometry(preferences)
         await expectNoHorizontalOverflow(page, dialog)
         await expectInsideViewport(page, preferences.getByTestId("onboarding-finish"))
+        await page.waitForTimeout(340)
         await capture(page, locale, profile, "preferences")
 
         if (profile.width >= 1200) {
