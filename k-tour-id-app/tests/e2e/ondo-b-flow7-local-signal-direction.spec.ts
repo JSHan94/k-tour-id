@@ -576,8 +576,9 @@ test("FLOW7-CONSENT-012 phone consent shows all truth rows and both 44px decisio
   await signal.getByTestId("local-signal-person-check").click()
   const gate = page.getByTestId("ondo-b-local-check-walkthrough")
   for (const row of ["consent-requester", "consent-purpose", "consent-minimum", "consent-retention"]) await expect(gate.getByTestId(row)).toBeInViewport()
-  const verify = gate.getByTestId("local-check-boundary-continue")
-  const decline = gate.getByRole("button", { name: /Not now|나중에|あとで/ })
+  const consent = gate.getByTestId("local-check-consent")
+  const verify = consent.getByTestId("local-check-boundary-continue")
+  const decline = consent.getByRole("button", { name: /Not now|나중에|あとで/ })
   for (const action of [verify, decline]) {
     await expect(action).toBeInViewport()
     const box = await action.boundingBox()
