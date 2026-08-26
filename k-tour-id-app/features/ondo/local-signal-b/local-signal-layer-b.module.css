@@ -113,7 +113,9 @@
 }
 
 .layer {
+  position: relative;
   isolation: isolate;
+  contain: paint;
   border-color: rgb(255 255 255 / 30%);
   background:
     radial-gradient(circle at 98% 0, rgb(194 77 55 / 10%), transparent 29%),
@@ -268,21 +270,80 @@
 }
 
 @media (min-width: 900px) and (min-height: 501px) {
-  .layer { max-width: 940px; max-height: min(880px, 94dvh); border-radius: 30px 30px 0 0; }
+  /* Keep the desktop sheet in a single paint layer. Chromium can otherwise
+     composite the transformed sheet through its filtered parent in tiles,
+     exposing the dark scrim between grid items and replaced-image frames. */
+  .backdrop { backdrop-filter: none; }
+  .layer {
+    height: min(880px, 94dvh);
+    max-width: 940px;
+    max-height: min(880px, 94dvh);
+    border-radius: 30px 30px 0 0;
+    animation: none;
+    transform: none;
+  }
+  .layer > header { backdrop-filter: none; }
   .body {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: minmax(250px, .74fr) minmax(430px, 1.26fr);
     grid-template-rows: auto auto auto auto 1fr;
     align-items: start;
     gap: 0 34px;
     padding: 32px 34px calc(34px + env(safe-area-inset-bottom));
+    background:
+      radial-gradient(circle at 10% 10%, rgb(227 176 105 / 9%), transparent 28%),
+      linear-gradient(160deg, #fffdf9 0%, #f7f2eb 62%, #f2eae2 100%);
   }
   .body > .mark,
   .body > .eyebrow,
   .body > h2,
   .body > .place,
   .body > .lead { grid-column: 1; }
-  .body > .draft { grid-column: 2; grid-row: 1 / span 6; margin-top: 0; }
+  .body > .draft {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    grid-column: 2;
+    grid-row: 1 / span 6;
+    margin-top: 0;
+    overflow-x: hidden;
+  }
+  .draft fieldset,
+  .tags,
+  .note,
+  .photo,
+  .photo figure,
+  .photo figcaption,
+  .truth,
+  .actions {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .photo { overflow: hidden; isolation: auto; }
+  .photo::before { z-index: 0; }
+  .photo figure {
+    display: block;
+    overflow: hidden;
+    border-radius: 17px;
+  }
+  .photo img {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    height: 260px;
+    min-width: 0;
+    max-width: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
+    object-position: 50% 68%;
+    box-shadow: none;
+    animation: none;
+    transform: none;
+  }
+  .photo figcaption { display: grid; margin-top: 10px; }
   .body > .lead { max-width: 300px; }
 }
 
@@ -310,4 +371,116 @@
   .already,
   .gateSuccess { animation: none; }
   .tags button { transition: none; }
+}
+
+/* Apple contribution clarity with a Strava-like observation trail. The rail
+   links the existing tag, note, photo, privacy, and continuation controls; it
+   does not imply an upload or public activity feed. */
+.draft {
+  position: relative;
+  isolation: isolate;
+  padding-left: 27px;
+}
+.draft::before {
+  position: absolute;
+  z-index: -1;
+  top: 13px;
+  left: 9px;
+  width: 2px;
+  height: calc(100% - 26px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #812b47 0%, #c44c39 42%, #e18e4c 68%, #3c7c60 100%);
+  box-shadow: 0 0 0 4px rgb(159 66 58 / 5%);
+  content: "";
+  opacity: .76;
+  pointer-events: none;
+}
+.draft::after {
+  position: absolute;
+  top: 17px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff9f2;
+  border-radius: 50%;
+  background: #a43b3e;
+  box-shadow: 0 0 0 4px rgb(164 59 62 / 9%);
+  content: "";
+  pointer-events: none;
+}
+.draft fieldset,
+.note,
+.photo,
+.truth,
+.already,
+.gateSuccess,
+.gateNotice,
+.error,
+.actions { position: relative; }
+.draft fieldset::before,
+.note::before,
+.photo::after,
+.truth::before {
+  position: absolute;
+  z-index: 2;
+  top: 15px;
+  left: -23px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #fff8f0;
+  border-radius: 50%;
+  background: #be4a39;
+  box-shadow: 0 0 0 3px rgb(174 68 56 / 8%);
+  content: "";
+  pointer-events: none;
+}
+.note::before { top: 8px; background: #d88248; }
+.photo::after { top: 18px; background: #e2a756; }
+.truth::before { top: 17px; background: #39765b; }
+
+.tags button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.tags button[aria-pressed="true"] {
+  transform: translateY(-1px) scale(1.015);
+}
+.tags button[aria-pressed="true"]::before {
+  display: block;
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: 50%;
+  background: #fff7ee;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 12%);
+  content: "";
+}
+.photo figure { position: relative; }
+.photo figure::after {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgb(255 255 255 / 88%);
+  border-radius: 50%;
+  background: #3c7c60;
+  box-shadow: 0 0 0 5px rgb(32 44 36 / 16%);
+  content: "";
+  pointer-events: none;
+}
+
+@media (max-width: 430px) {
+  .draft { padding-left: 24px; }
+  .draft fieldset::before,
+  .note::before,
+  .photo::after,
+  .truth::before { left: -20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tags button[aria-pressed="true"] { transform: none; }
 }

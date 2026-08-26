@@ -497,3 +497,120 @@
     scroll-margin-top: 76px;
   }
 }
+
+/* Approved social direction: turn the existing six event facts into one
+   continuous itinerary and give the existing chat a clear shared-presence
+   cue. No event data, membership state, or action order changes here. */
+.plan {
+  isolation: isolate;
+  overflow: hidden;
+  padding-left: 27px;
+}
+.plan::before {
+  position: absolute;
+  z-index: 0;
+  top: 21px;
+  left: 15px;
+  width: 2px;
+  height: calc(100% - 42px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #852c46 0%, #c4513a 47%, #df864a 72%, #e7bd65 100%);
+  box-shadow: 0 0 0 4px rgb(182 77 58 / 6%);
+  content: "";
+  opacity: .82;
+  pointer-events: none;
+}
+.plan dl,
+.plan h3 { position: relative; z-index: 1; }
+.plan dl > div { position: relative; }
+.plan dl > div::before {
+  position: absolute;
+  top: 5px;
+  left: -17px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #f7f1ea;
+  border-radius: 50%;
+  background: #b54739;
+  box-shadow: 0 0 0 3px rgb(181 71 57 / 10%);
+  content: "";
+}
+.plan dl > div:nth-child(2n)::before { background: #d87a45; }
+.plan dl > div:nth-child(3n)::before { background: #438164; }
+
+.messages {
+  position: relative;
+  padding-left: 36px;
+}
+.messages::before {
+  position: absolute;
+  top: 1px;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  border: 2px solid #fffaf5;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 34%, #fff8f0 0 3px, transparent 3.5px),
+    radial-gradient(ellipse at 50% 88%, #fff8f0 0 8px, transparent 8.5px),
+    linear-gradient(145deg, #8a3047, #c2503a 64%, #de8750);
+  box-shadow: 0 0 0 4px rgb(151 57 55 / 9%), 0 9px 20px rgb(82 43 36 / 16%);
+  content: "";
+}
+.messages::after {
+  position: absolute;
+  top: 33px;
+  bottom: 10px;
+  left: 13px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(rgb(167 82 63 / 25%), rgb(58 119 89 / 13%));
+  content: "";
+}
+.messages p { position: relative; }
+.messages p::before {
+  position: absolute;
+  top: 17px;
+  left: -27px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #f8f1e9;
+  border-radius: 50%;
+  background: #c55a40;
+  content: "";
+}
+
+.checkIn,
+.checkedIn {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgb(57 43 33 / 7%);
+}
+.checkedIn::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 4px;
+  background: linear-gradient(#2d7058, #69a481);
+  content: "";
+}
+.feedback {
+  border: 1px solid rgb(68 55 44 / 9%);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgb(255 253 249 / 78%);
+  box-shadow: 0 14px 30px rgb(63 45 32 / 6%);
+}
+
+@media (max-width: 759px) {
+  .plan { padding-left: 25px; }
+  .plan::before { left: 14px; }
+  .plan dl > div::before { left: -15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan::before,
+  .messages::before,
+  .messages::after { animation: none; }
+}

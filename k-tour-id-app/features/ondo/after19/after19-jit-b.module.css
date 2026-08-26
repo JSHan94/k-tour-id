@@ -219,3 +219,65 @@
 @media (prefers-reduced-motion: reduce) {
   .heroIcon { animation: none; }
 }
+
+/* Timeleft-inspired staged checkpoint. The rail only communicates the
+   existing review sequence; outcome controls remain absent from consumer UI. */
+.header {
+  position: relative;
+  padding-bottom: 17px;
+}
+.header::after {
+  position: absolute;
+  right: 22px;
+  bottom: 0;
+  left: 22px;
+  height: 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, #832b46 0 30%, rgb(131 43 70 / 18%) 30% 35%, #c34e3b 35% 65%, rgb(195 78 59 / 18%) 65% 70%, #e5ad5b 70% 100%);
+  box-shadow: 0 5px 14px rgb(133 51 53 / 12%);
+  content: "";
+  opacity: .9;
+  pointer-events: none;
+}
+.header::before {
+  position: absolute;
+  z-index: 1;
+  right: 22px;
+  bottom: -3px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff7ef;
+  border-radius: 50%;
+  background: #d98949;
+  box-shadow: -137px 0 0 -2px #bd493c, -274px 0 0 -2px #832b46;
+  content: "";
+  pointer-events: none;
+}
+.boundary,
+.returnContext { scroll-margin-top: 18px; }
+.actions { position: relative; }
+.actions::before {
+  display: block;
+  width: 44px;
+  height: 2px;
+  justify-self: center;
+  border-radius: 999px;
+  background: rgb(110 81 67 / 16%);
+  content: "";
+}
+
+@media (max-width: 370px) {
+  .header::before { box-shadow: -112px 0 0 -2px #bd493c, -224px 0 0 -2px #832b46; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .header { padding-bottom: 12px; }
+  .header::after { right: 18px; left: 18px; }
+  .header::before { right: 18px; box-shadow: -184px 0 0 -2px #bd493c, -368px 0 0 -2px #832b46; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header::after,
+  .header::before { animation: none; }
+}
