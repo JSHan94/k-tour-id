@@ -83,8 +83,9 @@ const COPY = {
   },
 } as const
 
-function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
+function DeviceClearConfirmation({ locale, error, onCancel, onConfirm }: {
   locale: OndoBLocale
+  error: boolean
   onCancel(): void
   onConfirm(): void
 }) {
@@ -109,6 +110,7 @@ function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
         <h2 id="b-clear-title">{copy.confirmTitle}</h2>
         <p>{copy.confirmBody}</p>
         <strong>{copy.confirmBoundary}</strong>
+        {error ? <p className={styles.settingsInlineAlert} role="alert" data-testid="ondo-b-clear-device-error">{copy.clearFailed}</p> : null}
         <div>
           <button ref={cancelRef} type="button" onClick={onCancel}>{copy.keep}</button>
           <button ref={confirmRef} type="button" onClick={onConfirm}>{copy.clear}</button>
@@ -121,6 +123,7 @@ function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
 export function SettingsEntryB() {
   const { state, actions } = useOndoB()
   const [clearOpen, setClearOpen] = useState(false)
+  const [clearError, setClearError] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
   const clearButtonRef = useRef<HTMLButtonElement>(null)
   const resetButtonRef = useRef<HTMLButtonElement>(null)
@@ -130,6 +133,7 @@ export function SettingsEntryB() {
 
   function closeClear() {
     setClearOpen(false)
+    setClearError(false)
     window.requestAnimationFrame(() => clearButtonRef.current?.focus({ preventScroll: true }))
   }
 
@@ -209,7 +213,7 @@ export function SettingsEntryB() {
           </summary>
           <div className={styles.settingsDisclosureBody}>
             <p>{copy.dataBoundary}</p>
-            <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
+            <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => { setClearError(false); setClearOpen(true) }} data-testid="ondo-b-clear-device-open">
               <RotateCcw size={17} aria-hidden="true" />
               {copy.clear}
             </button>
@@ -219,11 +223,13 @@ export function SettingsEntryB() {
 
       {clearOpen ? <DeviceClearConfirmation
         locale={locale}
+        error={clearError}
         onCancel={closeClear}
         onConfirm={() => {
           const cleared = actions.clearBDeviceContent()
+          setClearError(!cleared)
           actions.notify(cleared ? copy.cleared : copy.clearFailed)
-          closeClear()
+          if (cleared) closeClear()
         }}
       /> : null}
     </div>

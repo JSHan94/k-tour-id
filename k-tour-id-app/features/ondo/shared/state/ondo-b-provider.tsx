@@ -241,7 +241,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
   const localPulseRecord = record.localPulseEvidenceByVenue && typeof record.localPulseEvidenceByVenue === "object"
     ? record.localPulseEvidenceByVenue as Record<string, unknown>
     : {}
-  const localPulseEvidenceByVenue = Object.fromEntries(Object.entries(localPulseRecord).flatMap(([venueId, value]) => {
+  const restoredLocalPulseEvidenceByVenue = Object.fromEntries(Object.entries(localPulseRecord).flatMap(([venueId, value]) => {
     if (!isCanonicalVenueId(venueId) || !value || typeof value !== "object") return []
     const evidence = value as Record<string, unknown>
     const tags = Array.isArray(evidence.tags)
@@ -250,6 +250,9 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     const postedAt = typeof evidence.postedAt === "string" && !Number.isNaN(Date.parse(evidence.postedAt)) ? evidence.postedAt : null
     return tags.length && postedAt ? [[venueId, { tags, postedAt } satisfies PulseLocalEvidenceB]] : []
   }))
+  const restoredLocalSignalVenueIds = sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds)
+  const localSignalPostedVenueIds = restoredLocalSignalVenueIds.filter((venueId) => restoredLocalPulseEvidenceByVenue[venueId] !== undefined)
+  const boundedLocalPulseEvidenceByVenue = Object.fromEntries(localSignalPostedVenueIds.map((venueId) => [venueId, restoredLocalPulseEvidenceByVenue[venueId]]))
   const commerceReceipts = sanitizeCommerceReceipts(record.commerceReceipts)
   return {
     locale: record.locale === "ko" || record.locale === "ja" ? record.locale : "en",
@@ -264,8 +267,8 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     privateNotesByVenue: sanitizeCanonicalVenueNotes(record.privateNotesByVenue, savedVenueIds),
     recentVenueIds: sanitizeRecentVenueIds(record.recentVenueIds),
     plannedTableRefs: sanitizePlannedTableRefs(record.plannedTableRefs),
-    localSignalPostedVenueIds: sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds),
-    localPulseEvidenceByVenue,
+    localSignalPostedVenueIds,
+    localPulseEvidenceByVenue: boundedLocalPulseEvidenceByVenue,
     localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
     commerceLocalBoundarySeen: record.commerceLocalBoundarySeen === true,
     commerceReceipts,

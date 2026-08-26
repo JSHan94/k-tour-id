@@ -243,6 +243,7 @@ export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, on
         data-testid="ondo-b-local-check-walkthrough"
         data-check-kind={check}
         data-check-phase={phase}
+        data-check-origin={origin}
         onKeyDown={handleKeyDown}
       >
         <div className={styles.grabber} aria-hidden="true" />
