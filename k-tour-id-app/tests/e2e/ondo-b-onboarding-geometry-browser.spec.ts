@@ -51,10 +51,10 @@ test.describe("ONDO B onboarding exit geometry", () => {
   test("Guest and Skip actions are fully actionable before scrolling", async ({ page }) => {
     await resetAndOpenOnboarding(page)
 
-    await expectFullyActionable(page.getByRole("button", { name: "Personalize guest Explore" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Set guest preferences" }))
     await expectFullyActionable(page.getByRole("button", { name: "Explore without setup" }))
 
-    await page.getByRole("button", { name: "Personalize guest Explore" }).click()
+    await page.getByRole("button", { name: "Set guest preferences" }).click()
     const personas = page.locator("[data-testid^='persona-']")
     await expect(personas).toHaveCount(3)
     for (let index = 0; index < 3; index += 1) await expectFullyActionable(personas.nth(index))

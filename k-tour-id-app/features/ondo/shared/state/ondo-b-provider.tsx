@@ -82,10 +82,10 @@ export type OndoBState = {
 }
 
 export type OndoBActions = {
-  setLocale(locale: OndoBLocale): void
+  setLocale(locale: OndoBLocale): boolean
   setTab(tab: OndoBTab): void
   setSurface(surface: OndoBSurface): void
-  setPersona(persona: OndoBPersona): void
+  setPersona(persona: OndoBPersona): boolean
   setDiscoveryPreferences(preferences: OndoBDiscoveryPreference[]): boolean
   resetDiscoveryPreferences(): void
   beginOnboarding(): void
@@ -388,7 +388,9 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<OndoBActions>(() => ({
     setLocale: (locale) => {
-      if (!commit((current) => ({ ...current, locale }))) notify(DEVICE_MESSAGE.locale[stateRef.current.locale])
+      const saved = commit((current) => ({ ...current, locale }))
+      if (!saved) notify(DEVICE_MESSAGE.locale[stateRef.current.locale])
+      return saved
     },
     setTab: (tab) => setState((current) => ({
       ...current,
@@ -401,7 +403,9 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       surface: surface.kind === "map" || isCanonicalVenueId(surface.venueId) ? surface : { kind: "map" },
     })),
     setPersona: (persona) => {
-      if (!commit((current) => ({ ...current, persona }))) notify(DEVICE_MESSAGE.persona[stateRef.current.locale])
+      const saved = commit((current) => ({ ...current, persona }))
+      if (!saved) notify(DEVICE_MESSAGE.persona[stateRef.current.locale])
+      return saved
     },
     setDiscoveryPreferences: (discoveryPreferences) => {
       const saved = commit((current) => ({ ...current, discoveryPreferences }))

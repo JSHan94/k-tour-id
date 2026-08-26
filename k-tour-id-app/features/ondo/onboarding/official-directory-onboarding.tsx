@@ -52,7 +52,7 @@ const COPY = {
     boundaryLabel: "Coverage boundary",
     boundary: "The source confirms an active licence at its Aug 19, 2026 snapshot. Current hours, menu, popularity, price and payment support are not provided.",
     sourceSummary: "Official source · what it confirms",
-    start: "Personalize guest Explore",
+    start: "Set guest preferences",
     guest: "Explore without setup",
     intentTitle: "What brings you to ONDO?",
     intentBody: "This choice stays on this device. Every option opens the same guest Explore and does not unlock or restrict features.",
@@ -65,6 +65,10 @@ const COPY = {
     dietaryGroup: "Dietary needs",
     dietaryBoundary: "Official records do not confirm dietary support. Check with each place before relying on a selection.",
     finish: "Open guest Explore",
+    localeFailed: "Language could not be saved on this device.",
+    intentFailed: "Intent could not be saved.",
+    setupFailed: "Setup could not be saved.",
+    guestFailed: "Guest setup could not be saved.",
   },
   ko: {
     dialog: "ONDO 게스트 시작 설정",
@@ -78,7 +82,7 @@ const COPY = {
     boundaryLabel: "확인 범위",
     boundary: "출처는 2026년 8월 19일 기준 유효 인허가 상태를 확인합니다. 현재 영업시간·메뉴·인기도·가격·결제 지원은 제공하지 않습니다.",
     sourceSummary: "공식 출처 · 확인 범위",
-    start: "취향 설정 후 게스트 탐색",
+    start: "게스트 취향 설정",
     guest: "설정 없이 탐색",
     intentTitle: "어떤 목적으로 ONDO를 찾았나요?",
     intentBody: "선택은 이 기기에만 저장됩니다. 세 선택 모두 같은 게스트 탐색으로 이어지며 기능을 열거나 제한하지 않아요.",
@@ -91,6 +95,10 @@ const COPY = {
     dietaryGroup: "식이 요구사항",
     dietaryBoundary: "공식 기록은 식이 요구사항 지원 여부를 확인하지 않습니다. 선택에 의존하기 전에 각 장소에 직접 확인해 주세요.",
     finish: "게스트 탐색 열기",
+    localeFailed: "언어 설정을 이 기기에 저장하지 못했어요.",
+    intentFailed: "이용 목적을 저장하지 못했어요.",
+    setupFailed: "시작 설정을 저장하지 못했어요.",
+    guestFailed: "게스트 시작 설정을 저장하지 못했어요.",
   },
   ja: {
     dialog: "ONDO ゲスト設定",
@@ -104,7 +112,7 @@ const COPY = {
     boundaryLabel: "確認できる範囲",
     boundary: "出典日時点（2026年8月19日）の有効な営業許可を示します。現在の営業時間、メニュー、人気、価格、決済対応は確認できません。",
     sourceSummary: "公式出典 · 確認できる範囲",
-    start: "好みを設定してゲストで見る",
+    start: "ゲストの好みを設定",
     guest: "設定せずに見る",
     intentTitle: "ONDOを使う目的は？",
     intentBody: "選択内容はこの端末にのみ保存されます。どの選択肢でも同じゲスト向けの「探す」画面が開き、機能の解放や制限には使いません。",
@@ -117,6 +125,10 @@ const COPY = {
     dietaryGroup: "食の希望・制限",
     dietaryBoundary: "公式記録では食の希望・制限への対応を確認できません。利用前に各店舗へ直接確認してください。",
     finish: "ゲスト向けの「探す」を開く",
+    localeFailed: "言語設定をこの端末に保存できませんでした。",
+    intentFailed: "利用目的を保存できませんでした。",
+    setupFailed: "初期設定を保存できませんでした。",
+    guestFailed: "ゲスト設定を保存できませんでした。",
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
@@ -175,17 +187,33 @@ export function OfficialDirectoryOnboardingLayer() {
     ])
   }
 
+  const showRecovery = (message: string) => {
+    setSaveError(message)
+    window.requestAnimationFrame(() => dialogRef.current
+      ?.querySelector<HTMLElement>("[data-onboarding-recovery='true']")
+      ?.scrollIntoView({ block: "end" }))
+  }
+
   const finish = () => {
-    setSaveError(null)
-    if (!actions.completeOnboarding(preferences)) return
+    if (!actions.completeOnboarding(preferences)) {
+      showRecovery(copy.setupFailed)
+      return
+    }
     focusExplore()
   }
 
   const skip = () => {
-    setSaveError(null)
-    if (!actions.skipOnboarding()) return
+    if (!actions.skipOnboarding()) {
+      showRecovery(copy.guestFailed)
+      return
+    }
     setPreferences([])
     focusExplore()
+  }
+
+  const changeLocale = (locale: OndoBLocale) => {
+    if (actions.setLocale(locale)) setSaveError(null)
+    else showRecovery(copy.localeFailed)
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
@@ -255,9 +283,9 @@ export function OfficialDirectoryOnboardingLayer() {
             {[1, 2, 3].map((item) => <i key={item} className={item <= stepIndex ? styles.progressActive : undefined} />)}
           </div>
           <div className={styles.language} role="group" aria-label="Language / 언어 / 言語" data-testid="onboarding-language-control">
-            <button type="button" data-locale-choice="en" aria-label="View in English" aria-pressed={state.locale === "en"} onClick={() => { setSaveError(null); actions.setLocale("en") }}>EN</button>
-            <button type="button" data-locale-choice="ko" aria-label="한국어로 보기" aria-pressed={state.locale === "ko"} onClick={() => { setSaveError(null); actions.setLocale("ko") }}>KO</button>
-            <button type="button" data-locale-choice="ja" aria-label="日本語で表示" aria-pressed={state.locale === "ja"} onClick={() => { setSaveError(null); actions.setLocale("ja") }}>JA</button>
+            <button type="button" data-locale-choice="en" aria-label="View in English" aria-pressed={state.locale === "en"} onClick={() => changeLocale("en")}>EN</button>
+            <button type="button" data-locale-choice="ko" aria-label="한국어로 보기" aria-pressed={state.locale === "ko"} onClick={() => changeLocale("ko")}>KO</button>
+            <button type="button" data-locale-choice="ja" aria-label="日本語で表示" aria-pressed={state.locale === "ja"} onClick={() => changeLocale("ja")}>JA</button>
           </div>
         </header>
 
@@ -267,7 +295,7 @@ export function OfficialDirectoryOnboardingLayer() {
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
-            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`}>
+            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button
                 type="button"
@@ -312,8 +340,8 @@ export function OfficialDirectoryOnboardingLayer() {
                     aria-pressed={selected}
                     className={selected ? styles.personaSelected : styles.persona}
                     onClick={() => {
-                      setSaveError(null)
-                      actions.setPersona(persona.id)
+                      if (actions.setPersona(persona.id)) setSaveError(null)
+                      else showRecovery(copy.intentFailed)
                     }}
                     data-testid={`persona-${persona.id}`}
                   >
@@ -324,7 +352,7 @@ export function OfficialDirectoryOnboardingLayer() {
                 )
               })}
             </div>
-            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`}>
+            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button type="button" className={styles.primary} disabled={!state.persona} onClick={() => setStep("preferences")}>
                 {copy.continueToPreferences}<ArrowRight size={18} aria-hidden="true" />
@@ -372,7 +400,7 @@ export function OfficialDirectoryOnboardingLayer() {
                 </section>
               ))}
             </div>
-            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`}>
+            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button type="button" className={styles.primary} onClick={finish} data-testid="onboarding-finish">
                 {copy.finish}<ArrowRight size={18} aria-hidden="true" />

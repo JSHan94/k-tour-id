@@ -347,15 +347,14 @@
 
 @media (max-width: 699px) {
   .actionsRecovery {
-    position: fixed;
+    position: relative;
     z-index: 12;
-    right: max(12px, env(safe-area-inset-right));
-    bottom: max(12px, env(safe-area-inset-bottom));
-    left: max(12px, env(safe-area-inset-left));
     display: grid;
+    width: 100%;
+    box-sizing: border-box;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 7px;
-    margin: 0;
+    margin-top: 10px;
     border: 1px solid rgb(82 54 42 / 13%);
     border-radius: 20px;
     padding: 8px;

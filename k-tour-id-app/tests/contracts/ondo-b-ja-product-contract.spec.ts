@@ -15,9 +15,11 @@ test("JA-B-001 Japanese is a complete persisted locale, not a partial visual tog
   expect(preferences).toContain('["en", "ko", "ja"]')
   expect(provider).toContain('record.locale === "ko" || record.locale === "ja" ? record.locale : "en"')
   expect(provider).toContain('startsWith("ja")')
+  expect(onboarding).toContain("const changeLocale = (locale: OndoBLocale) =>")
+  expect(onboarding).toContain("actions.setLocale(locale)")
   for (const locale of ["en", "ko", "ja"]) {
     expect(onboarding).toContain(`data-locale-choice="${locale}"`)
-    expect(onboarding).toContain(`actions.setLocale("${locale}")`)
+    expect(onboarding).toContain(`changeLocale("${locale}")`)
   }
   expect(settings).toContain('setLocale("ja")')
   expect(settings).toContain("日本語")

@@ -82,6 +82,16 @@ async function failNextDeviceWrite(page: Page) {
   }, DEVICE_KEY)
 }
 
+async function failEveryDeviceWrite(page: Page) {
+  await page.evaluate((key) => {
+    const original = Storage.prototype.setItem
+    Storage.prototype.setItem = function (name: string, value: string) {
+      if (name === key) throw new DOMException("Quota exceeded", "QuotaExceededError")
+      return original.call(this, name, value)
+    }
+  }, DEVICE_KEY)
+}
+
 async function rect(locator: Locator) {
   const value = await locator.boundingBox()
   expect(value).not.toBeNull()
@@ -242,6 +252,25 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
     await context.close()
   })
 
+  test("a repeated device-storage failure keeps one persistent recovery state", async ({ browser }) => {
+    const { context, page } = await openFresh(browser, "en", PROFILES[1])
+    await page.getByTestId("onboarding-step-value").locator("button").first().click()
+    await page.getByTestId("persona-travelling").click()
+    await page.getByTestId("onboarding-step-intent").locator("button").nth(3).click()
+    const preferences = page.getByTestId("onboarding-step-preferences")
+    const choice = preferences.locator("button[aria-pressed]").first()
+    await choice.click()
+    await failEveryDeviceWrite(page)
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      await preferences.getByTestId("onboarding-finish").click()
+      await expect(preferences.getByTestId("onboarding-save-status")).toHaveCount(1)
+      await expect(preferences.getByTestId("onboarding-save-status")).toBeVisible()
+      await expect(choice).toHaveAttribute("aria-pressed", "true")
+      await expect(page.getByTestId("ondo-onboarding")).toBeVisible()
+    }
+    await context.close()
+  })
+
   for (const locale of ["en", "ko", "ja"] as const) {
     test(`${locale.toUpperCase()} skip and Escape failure retain the draft across the viewport matrix`, async ({ browser }) => {
       for (const profile of PROFILES) {
@@ -311,7 +340,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
     await page.addInitScript((key) => localStorage.setItem(key, "{malformed"), DEVICE_KEY)
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
     await expect(page.locator("html")).toHaveAttribute("lang", "ja")
-    await expect(page.getByTestId("onboarding-step-value")).toContainText("好みを設定してゲストで見る")
+    await expect(page.getByTestId("onboarding-step-value")).toContainText("ゲストの好みを設定")
     await context.close()
   })
 })

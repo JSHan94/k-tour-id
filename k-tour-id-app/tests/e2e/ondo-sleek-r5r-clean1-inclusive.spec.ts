@@ -120,7 +120,7 @@ test.describe("CLEAN1 inclusive and responsive corrections", () => {
       await gotoB(page)
       const dialog = page.getByTestId("ondo-onboarding")
       await expect(dialog).toBeVisible()
-      await expect(page.getByRole("button", { name: locale === "ko" ? "취향 설정 후 게스트 탐색" : "Personalize guest Explore", exact: true })).toBeFocused()
+      await expect(page.getByRole("button", { name: locale === "ko" ? "게스트 취향 설정" : "Set guest preferences", exact: true })).toBeFocused()
       await page.keyboard.press("Escape")
       await expect(dialog).toHaveCount(0)
       await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
@@ -171,7 +171,7 @@ test.describe("CLEAN1 inclusive and responsive corrections", () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await seedFreshOnboarding(page, "en")
     await gotoB(page)
-    const target = page.getByRole("button", { name: "Personalize guest Explore", exact: true })
+    const target = page.getByRole("button", { name: "Set guest preferences", exact: true })
     await expect(target).toBeFocused()
     await expect.poll(() => target.evaluate((element) => {
       const style = getComputedStyle(element)

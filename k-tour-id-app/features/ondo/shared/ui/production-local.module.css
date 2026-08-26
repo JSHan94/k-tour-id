@@ -182,7 +182,7 @@
 .settingsDisclosure[open] > summary > svg { transform: rotate(90deg); }
 .settingsDisclosureBody { display: grid; gap: 13px; padding: 2px 0 2px; }
 .settingsDisclosureBody > p { margin: 0; color: #706861; font-size: 12px; line-height: 1.58; }
-.settingsDisclosureBody > .settingsInlineAlert {
+.settingsInlineAlert {
   margin: 0;
   border: 1px solid rgb(161 59 46 / 18%);
   border-radius: 14px;

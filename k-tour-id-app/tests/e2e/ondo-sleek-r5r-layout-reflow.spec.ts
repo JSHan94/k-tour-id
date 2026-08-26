@@ -196,7 +196,7 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
       sessionStorage.removeItem("ondo.session.v3")
     })
     await gotoB(page)
-    const primary = page.getByRole("button", { name: "Personalize guest Explore" })
+    const primary = page.getByRole("button", { name: "Set guest preferences" })
 
     const idle = await primary.evaluate((element) => ({ filter: getComputedStyle(element).filter, transform: getComputedStyle(element).transform }))
     await primary.hover()

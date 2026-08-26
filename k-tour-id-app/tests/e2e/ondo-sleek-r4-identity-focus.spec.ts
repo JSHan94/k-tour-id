@@ -12,7 +12,7 @@ import {
 
 const COPY = {
   en: {
-    start: "Personalize guest Explore",
+    start: "Set guest preferences",
     guest: "Explore without setup",
     preferences: "Choose meal preferences",
     fallback: "Open map with defaults",
@@ -26,7 +26,7 @@ const COPY = {
     after19Prompt: "Confirm 19+",
   },
   ko: {
-    start: "취향 설정 후 게스트 탐색",
+    start: "게스트 취향 설정",
     guest: "설정 없이 탐색",
     preferences: "한 끼 취향 고르기",
     fallback: "기본 설정으로 지도 열기",

@@ -234,7 +234,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.evaluate(() => { localStorage.removeItem("ondo.preferences.v3"); sessionStorage.removeItem("ondo.session.v3") })
       await test.step(evidence(flowId, "DECISION/ERROR"), async () => {
         await page.goto(`/ondo-b?onboarding=failure`, { waitUntil: "domcontentloaded" })
-        await page.getByRole("button", { name: "Personalize guest Explore" }).click()
+        await page.getByRole("button", { name: "Set guest preferences" }).click()
         await page.getByTestId(`persona-${persona}`).click()
         await page.getByRole("button", { name: "Choose meal preferences", exact: true }).click()
         await expect(page.getByTestId("onboarding-step-preferences")).toBeVisible()
