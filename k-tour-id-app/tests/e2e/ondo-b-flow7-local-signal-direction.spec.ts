@@ -589,7 +589,7 @@ test("FLOW7-CONSENT-012 phone consent shows all truth rows and both 44px decisio
 test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape photo states reset below the header", async ({ page }) => {
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: width === 320 ? 720 : 844 })
-    await page.evaluate(() => localStorage.clear())
+    if (page.url() !== "about:blank") await page.evaluate(() => localStorage.clear())
     const { signal } = await openSignal(page)
     const input = signal.getByTestId("local-signal-photo-input")
     await input.setInputFiles("public/seoul-after-rain-hero.jpg")
