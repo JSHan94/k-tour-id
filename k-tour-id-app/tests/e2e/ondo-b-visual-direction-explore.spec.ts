@@ -83,6 +83,19 @@ test.describe("ONDO Explore approved visual direction", () => {
       expect(atlasStyle.radius).toBeGreaterThanOrEqual(profile.width >= 801 && profile.height > 500 ? 36 : 28)
       expect(atlasStyle.shadow).not.toBe("none")
       expect(atlasStyle.background).toContain("radial-gradient")
+      if (profile.width === 320) {
+        const truthMetrics = await atlas.locator("[data-city] small, [data-city] em, p").evaluateAll((elements) => elements.map((element) => {
+          const node = element as HTMLElement
+          const style = getComputedStyle(node)
+          return {
+            text: node.textContent?.trim() ?? "",
+            textOverflow: style.textOverflow,
+            horizontalOverflow: node.scrollWidth - node.clientWidth,
+            verticalOverflow: node.scrollHeight - node.clientHeight,
+          }
+        }))
+        expect(truthMetrics.every((item) => item.textOverflow !== "ellipsis" && item.horizontalOverflow <= 1 && item.verticalOverflow <= 1)).toBe(true)
+      }
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-atlas.png` })
     }
