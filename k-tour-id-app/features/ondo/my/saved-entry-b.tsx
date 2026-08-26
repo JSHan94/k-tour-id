@@ -4,6 +4,7 @@ import { Bookmark, CalendarDays, ChevronRight, History, MapPin, MessageSquareTex
 import { venueNamePresentation, venueDistrictLabel } from "@/lib/ondo/venues/display"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import styles from "../shared/ui/production-local.module.css"
 import { MY_KOREA_TABLE_CATALOG } from "./my-korea-model"
@@ -11,6 +12,8 @@ import { PrivateNote } from "./private-note"
 import { STABLE_B_RECEIPT_ID, STABLE_B_REFUND_RECEIPT_ID } from "../commerce-b/stable-commerce-model-b"
 
 const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
+
+type PersonalLocale = OndoBLocale | "ja"
 
 const COPY = {
   en: {
@@ -83,11 +86,79 @@ const COPY = {
     refundReference: "환불 참조",
     openWallet: "지갑 열기",
   },
+  ja: {
+    eyebrow: "この端末",
+    title: "マイ韓国",
+    boundary: "保存した場所、最近見た場所、参加したテーブル、ローカルシグナルはこのブラウザにのみ保存されます。予約や同期されたアクティビティではありません。",
+    savedTitle: "保存した場所",
+    savedBody: "保存した公式の場所情報と、任意のプライベートメモです。",
+    savedEmpty: "まだ保存した場所はありません",
+    savedEmptyBody: "Exploreで気になる場所を保存すると、ここに表示されます。",
+    explore: "場所を探す",
+    remove: "保存した場所とプライベートメモを削除",
+    recentTitle: "最近見た公式の場所",
+    recentBody: "この端末で実際に開いた場所だけが表示されます。",
+    recentEmpty: "最近見た場所はありません",
+    recentEmptyBody: "Exploreで公式の場所を開くと、ここに追加されます。",
+    viewed: "この端末で閲覧",
+    plannedTitle: "食事の予定",
+    plannedBody: "ローカル参加を確定したテーブルだけが表示されます。予約は作成されません。",
+    plannedEmpty: "食事の予定はありません",
+    plannedEmptyBody: "ローカルテーブルへの参加を確定すると、ここに記録が残ります。",
+    localPreview: "この端末に保存 · 予約ではありません",
+    openTables: "テーブルを開く",
+    contributionsTitle: "ローカルシグナル履歴",
+    contributionsBody: "自分で投稿し、完了したローカルシグナルが表示されます。",
+    contributionsEmpty: "ローカルシグナルはまだありません",
+    contributionsEmptyBody: "この端末でローカルシグナルを投稿するまで、ここは空のままです。",
+    contributed: "この端末で追加したローカルシグナル",
+    recentSaveFailed: "場所は開きましたが、この端末の「最近見た場所」を更新できませんでした。",
+    receiptsTitle: "ウォレット履歴",
+    receiptsBody: "この端末で完了した支払いと返金です。",
+    paid: "支払い済み",
+    refunded: "返金済み",
+    originalPayment: "元の支払い",
+    refundReference: "返金参照",
+    openWallet: "ウォレットを開く",
+  },
 } as const
+
+const SAVED_EMPTY_LABEL: Record<PersonalLocale, string> = {
+  en: "No saved places",
+  ko: "저장한 장소 없음",
+  ja: "保存した場所なし",
+}
+
+const JA_TABLE_COPY: Record<keyof typeof MY_KOREA_TABLE_CATALOG, { title: string; schedule: string }> = {
+  "table-seoul-night-bites": {
+    title: "夜食を囲む、ひとつのテーブル",
+    schedule: "8月28日（金）· 20:30 KST",
+  },
+}
+
+function savedListLabel(locale: PersonalLocale, count: number) {
+  if (locale === "ko") return `저장한 장소 ${count}곳`
+  if (locale === "ja") return `保存した場所 ${count}件`
+  return `${count} saved places`
+}
+
+function personalVenueName(name: string, locale: PersonalLocale) {
+  const presentation = venueNamePresentation(name, locale === "ko" ? "ko" : "en")
+  if (locale !== "ja") return presentation
+  return {
+    ...presentation,
+    officialNameLabel: "公式出典の韓国語名",
+    transliterationLabel: "ナビ用の生成ローマ字表記 · 公式英語名ではありません",
+  }
+}
+
+function personalDistrictLabel(cityId: "seoul" | "busan", districtId: string, locale: PersonalLocale) {
+  return venueDistrictLabel(cityId, districtId, locale === "ko" ? "ko" : "en")
+}
 
 export function SavedEntryB() {
   const { state, actions } = useOndoB()
-  const locale = state.locale
+  const locale = state.locale as PersonalLocale
   const copy = COPY[locale]
   const saved = state.savedVenueIds.flatMap((venueId) => {
     const venue = canonicalMapVenueById(venueId)
@@ -135,15 +206,15 @@ export function SavedEntryB() {
         <section className={styles.activitySection} data-testid="ondo-b-saved-entry" aria-labelledby="my-korea-saved-heading">
           <div className={styles.activityHeading}><Bookmark size={19} aria-hidden="true" /><span><h2 id="my-korea-saved-heading">{copy.savedTitle}</h2><p>{copy.savedBody}</p></span></div>
           {saved.length === 0 ? (
-            <div className={styles.compactEmpty} aria-label={locale === "ko" ? "저장한 장소 없음" : "No saved places"}>
+            <div className={styles.compactEmpty} aria-label={SAVED_EMPTY_LABEL[locale]}>
               <h3>{copy.savedEmpty}</h3>
               <p>{copy.savedEmptyBody}</p>
               <button type="button" onClick={() => { actions.setSurface({ kind: "map" }); actions.setTab("ondo") }}>{copy.explore}</button>
             </div>
           ) : (
-            <div className={styles.savedList} aria-label={locale === "ko" ? `저장한 장소 ${saved.length}곳` : `${saved.length} saved places`}>
+            <div className={styles.savedList} aria-label={savedListLabel(locale, saved.length)}>
               {saved.map((venue) => {
-                const name = venueNamePresentation(venue.name.ko, locale)
+                const name = personalVenueName(venue.name.ko, locale)
                 return (
                   <article className={styles.savedCard} key={venue.id} data-testid={`saved-card-${venue.id}`}>
                     <button className={styles.savedOpen} type="button" onClick={() => openVenue(venue.id, venue.cityId)} data-testid={`saved-venue-${venue.id}`}>
@@ -151,8 +222,8 @@ export function SavedEntryB() {
                       <span>
                         <strong>{name.officialName}</strong>
                         <small>{name.officialNameLabel}</small>
-                        {locale === "en" ? <small><b>{name.transliteration}</b> · {name.transliterationLabel}</small> : null}
-                        <small>{venueDistrictLabel(venue.cityId, venue.districtId, locale)}</small>
+                        {locale !== "ko" ? <small><b>{name.transliteration}</b> · {name.transliterationLabel}</small> : null}
+                        <small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)}</small>
                       </span>
                       <ChevronRight size={18} aria-hidden="true" />
                     </button>
@@ -173,8 +244,8 @@ export function SavedEntryB() {
           {recent.length === 0 ? <ActivityEmpty testId="my-korea-recent-empty" title={copy.recentEmpty} body={copy.recentEmptyBody} /> : (
             <div className={styles.referenceList}>
               {recent.map((venue) => {
-                const name = venueNamePresentation(venue.name.ko, locale)
-                return <button key={venue.id} type="button" className={styles.referenceCard} data-testid={`recent-venue-${venue.id}`} onClick={() => openVenue(venue.id, venue.cityId)}><MapPin size={18} aria-hidden="true" /><span><strong>{name.officialName}</strong><small>{venueDistrictLabel(venue.cityId, venue.districtId, locale)} · {copy.viewed}</small></span><ChevronRight size={18} aria-hidden="true" /></button>
+                const name = personalVenueName(venue.name.ko, locale)
+                return <button key={venue.id} type="button" className={styles.referenceCard} data-testid={`recent-venue-${venue.id}`} onClick={() => openVenue(venue.id, venue.cityId)}><MapPin size={18} aria-hidden="true" /><span><strong>{name.officialName}</strong><small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)} · {copy.viewed}</small></span><ChevronRight size={18} aria-hidden="true" /></button>
               })}
             </div>
           )}
@@ -184,7 +255,10 @@ export function SavedEntryB() {
           <div className={styles.activityHeading}><CalendarDays size={19} aria-hidden="true" /><span><h2 id="my-korea-planned-heading">{copy.plannedTitle}</h2><p>{copy.plannedBody}</p></span></div>
           {planned.length === 0 ? <ActivityEmpty testId="my-korea-planned-empty" title={copy.plannedEmpty} body={copy.plannedEmptyBody} /> : (
             <div className={styles.referenceList}>
-              {planned.map(({ reference, table, venue }) => <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{table.title[locale]}</h3><p>{table.schedule[locale]} · {venueNamePresentation(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>)}
+              {planned.map(({ reference, table, venue }) => {
+                const localizedTable = locale === "ja" ? JA_TABLE_COPY[reference.tableId] : { title: table.title[locale], schedule: table.schedule[locale] }
+                return <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{localizedTable.title}</h3><p>{localizedTable.schedule} · {personalVenueName(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>
+              })}
             </div>
           )}
         </section>
@@ -195,7 +269,7 @@ export function SavedEntryB() {
             <div className={styles.referenceList}>
               <article className={styles.planReference}>
                 <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? `${copy.refunded} ${state.commerceSession.chargedDebit} OOKRW Test` : `${copy.paid} ${state.commerceSession.chargedDebit} OOKRW Test`}</span>
-                <h3>{receiptVenue ? venueNamePresentation(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
+                <h3>{receiptVenue ? personalVenueName(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
                 <p>{state.commerceSession.status === "refunded" ? `${copy.originalPayment}: ${STABLE_B_RECEIPT_ID}` : STABLE_B_RECEIPT_ID}</p>
                 {state.commerceSession.status === "refunded" ? <p>{copy.refundReference}: {STABLE_B_REFUND_RECEIPT_ID}</p> : null}
                 <button type="button" onClick={() => actions.setTab("id")}>{copy.openWallet}<ChevronRight size={16} aria-hidden="true" /></button>
@@ -209,7 +283,7 @@ export function SavedEntryB() {
           {contributions.length === 0 ? <ActivityEmpty testId="my-korea-contributions-empty" title={copy.contributionsEmpty} body={copy.contributionsEmptyBody} /> : (
             <div className={styles.referenceList}>
               {contributions.map((venue) => {
-                const name = venueNamePresentation(venue.name.ko, locale)
+                const name = personalVenueName(venue.name.ko, locale)
                 return <button key={venue.id} type="button" className={styles.referenceCard} data-testid={`contribution-venue-${venue.id}`} onClick={() => openVenue(venue.id, venue.cityId)}><MessageSquareText size={18} aria-hidden="true" /><span><strong>{name.officialName}</strong><small>{copy.contributed}</small></span><ChevronRight size={18} aria-hidden="true" /></button>
               })}
             </div>
