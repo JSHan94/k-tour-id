@@ -114,6 +114,13 @@ test.describe("ONDO Explore approved visual direction", () => {
       expect(resultRadius).toBeGreaterThanOrEqual(18)
       await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
       await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveAttribute("data-city-context", "seoul")
+      if (profile.width === 844) {
+        const searchBox = await box(page.getByTestId("ondo-b-search-shell"))
+        const railBox = await box(page.getByTestId("ondo-b-category-rail"))
+        const sharedRow = Math.max(0, Math.min(searchBox.y + searchBox.height, railBox.y + railBox.height) - Math.max(searchBox.y, railBox.y))
+        expect(sharedRow / Math.min(searchBox.height, railBox.height)).toBeGreaterThan(.75)
+        expect(searchBox.x + searchBox.width).toBeLessThanOrEqual(railBox.x - 6)
+      }
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-map.png` })
 
@@ -143,11 +150,12 @@ test.describe("ONDO Explore approved visual direction", () => {
       expect(await panel.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(24)
       expect(await firstStory.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(20)
       expect((await box(firstMedia)).height / (await box(firstStory)).height).toBeGreaterThan(.38)
+      await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial.png` })
       const sourceDisclosure = firstStory.locator("details")
       if (await sourceDisclosure.count()) await sourceDisclosure.locator(":scope > summary").click()
       await expect(firstStory.locator("a[target='_blank']").first()).toBeVisible()
       await expect(discovery).not.toContainText(/\bP[01]\b/)
-      await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial.png` })
+      await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial-sources.png` })
 
       await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
