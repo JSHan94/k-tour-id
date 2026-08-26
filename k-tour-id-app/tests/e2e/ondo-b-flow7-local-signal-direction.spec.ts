@@ -3,6 +3,12 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
+const OTHER_SIGNAL_VENUE_IDS = [
+  "mois-02d77be9fc4b43fbb360", "mois-10dc6ac2751c13751604", "mois-2a37cbb20954007d7e30",
+  "mois-3263fd989386997c87e7", "mois-3a0676cb833422b6b778", "mois-53b20aca46ab5d114b88",
+  "mois-58b4a54e257cd45fa440", "mois-5dd00545d8f7c7d8df53", "mois-5fbfe0b73d6d508efcab",
+  "mois-68ca97d50aca6cb13438", "mois-68dc154a4661821c4ab6", "mois-820a8bd1d389d6ad1f70",
+] as const
 const ARTIFACT_DIR = "artifacts/qa/flow7-local-signal"
 
 type Locale = "en" | "ko" | "ja"
@@ -148,6 +154,20 @@ async function quietCapture(page: Page, name: string) {
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
   await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur() })
   await page.screenshot({ path: `${ARTIFACT_DIR}/${name}.png`, animations: "disabled" })
+}
+
+async function sharedPlacePulseTuple(place: Locator) {
+  const pulse = place.getByTestId("canonical-place-pulse")
+  return pulse.evaluate((element) => ({
+    level: element.getAttribute("data-pulse-level"),
+    numeric: element.getAttribute("data-pulse-numeric"),
+    title: element.querySelector("h3")?.textContent?.trim() ?? element.querySelector(":scope > strong")?.textContent?.trim(),
+    score: element.querySelector("[data-testid='pulse-score'] dd")?.textContent?.trim() ?? null,
+    count: element.querySelector("[data-testid='pulse-signal-count'] dd")?.textContent?.trim() ?? null,
+    confidence: element.querySelector("[data-testid='pulse-confidence'] dd")?.textContent?.trim() ?? null,
+    freshnessUpdatedAt: Array.from(element.querySelectorAll("dl > div")).at(-1)?.querySelector("dd")?.textContent?.trim()
+      ?? element.querySelector(":scope > small")?.textContent?.trim(),
+  }))
 }
 
 test("FLOW7-VIS-001 Local Signal owns a tactile contribution hierarchy at phone and landscape widths", async ({ page }) => {
@@ -373,6 +393,7 @@ test("FLOW7-HISTORY-007 reload keeps only device evidence, opens its exact Place
   const confirm = page.getByTestId("ondo-b-clear-device-confirm")
   await confirm.getByRole("button", { name: "Clear saved content" }).click()
   await expect(confirm.getByTestId("ondo-b-clear-device-error")).toBeVisible()
+  await expect(page.getByTestId("ondo-toast")).toBeHidden()
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
   expect(stored.localSignalPostedVenueIds).toEqual([VENUE_ID])
   expect(stored.localPulseEvidenceByVenue[VENUE_ID].tags).toEqual(["calm_now"])
@@ -381,6 +402,226 @@ test("FLOW7-HISTORY-007 reload keeps only device evidence, opens its exact Place
   const cleared = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
   expect(cleared.localSignalPostedVenueIds).toEqual([])
   expect(cleared.localPulseEvidenceByVenue).toEqual({})
+})
+
+test("FLOW7-MEDIA-008 MIME-valid corrupt media is rejected atomically and every object URL is revoked once", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 })
+  await page.addInitScript(() => {
+    const originalCreate = URL.createObjectURL.bind(URL)
+    const originalRevoke = URL.revokeObjectURL.bind(URL)
+    const read = (key: string) => JSON.parse(sessionStorage.getItem(key) ?? "[]") as string[]
+    URL.createObjectURL = (value) => {
+      const url = originalCreate(value)
+      sessionStorage.setItem("flow7-created", JSON.stringify([...read("flow7-created"), url]))
+      return url
+    }
+    URL.revokeObjectURL = (url) => {
+      sessionStorage.setItem("flow7-revoked", JSON.stringify([...read("flow7-revoked"), url]))
+      originalRevoke(url)
+    }
+  })
+  const { signal, place } = await openSignal(page)
+  const input = signal.getByTestId("local-signal-photo-input")
+  await input.setInputFiles("public/seoul-after-rain-hero.jpg")
+  const preview = signal.locator("img")
+  await expect(preview).toBeVisible()
+  await preview.evaluate((image) => (image as HTMLImageElement).decode())
+  const readySource = await preview.getAttribute("src")
+
+  await input.setInputFiles({ name: "corrupt.jpg", mimeType: "image/jpeg", buffer: Buffer.from("not a decodable jpeg") })
+  await expect(preview).toHaveAttribute("src", readySource!)
+  const error = signal.getByTestId("local-signal-photo-error")
+  const chooseAnother = signal.getByTestId("local-signal-photo-choose-another")
+  await expect(error).toHaveAttribute("data-error", "photoPrepareError")
+  await expect(chooseAnother).toBeVisible()
+  await expect(signal.getByTestId("local-signal-photo-replace")).toBeVisible()
+  await expect(signal.getByTestId("local-signal-photo-remove")).toBeVisible()
+  for (const locator of [preview, error, chooseAnother]) await expect(locator).toBeInViewport()
+  let urls = await page.evaluate(() => ({
+    created: JSON.parse(sessionStorage.getItem("flow7-created") ?? "[]") as string[],
+    revoked: JSON.parse(sessionStorage.getItem("flow7-revoked") ?? "[]") as string[],
+  }))
+  expect(urls.created).toHaveLength(2)
+  expect(urls.revoked).toEqual([urls.created[1]])
+
+  await signal.getByTestId("local-signal-photo-remove").click()
+  urls = await page.evaluate(() => ({
+    created: JSON.parse(sessionStorage.getItem("flow7-created") ?? "[]") as string[],
+    revoked: JSON.parse(sessionStorage.getItem("flow7-revoked") ?? "[]") as string[],
+  }))
+  expect(urls.revoked).toEqual([urls.created[1], urls.created[0]])
+
+  await input.setInputFiles("public/seoul-after-rain-hero.jpg")
+  await expect(preview).toBeVisible()
+  await signal.getByRole("button", { name: COPY.en.close }).click()
+  await expect(signal).toBeHidden()
+  urls = await page.evaluate(() => ({
+    created: JSON.parse(sessionStorage.getItem("flow7-created") ?? "[]") as string[],
+    revoked: JSON.parse(sessionStorage.getItem("flow7-revoked") ?? "[]") as string[],
+  }))
+  expect(urls.revoked).toEqual([urls.created[1], urls.created[0], urls.created[2]])
+
+  await place.getByTestId("canonical-local-signal-open").click()
+  const postSignal = page.getByTestId("ondo-b-local-signal")
+  await postSignal.locator("fieldset button").first().click()
+  await postSignal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
+  await openEligibilityResult(page, postSignal, "success")
+  await postSignal.getByTestId("local-signal-post").click()
+  await expect(postSignal).toBeHidden()
+  urls = await page.evaluate(() => ({
+    created: JSON.parse(sessionStorage.getItem("flow7-created") ?? "[]") as string[],
+    revoked: JSON.parse(sessionStorage.getItem("flow7-revoked") ?? "[]") as string[],
+  }))
+  expect(urls.revoked.at(-1)).toBe(urls.created.at(-1))
+  expect(new Set(urls.revoked).size).toBe(urls.revoked.length)
+})
+
+test("FLOW7-TRAVERSAL-009 Back and Forward discard the draft, photo, and Person session instead of resurrecting the layer", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const { signal } = await openSignal(page)
+  await signal.locator("fieldset button").first().click()
+  await signal.getByRole("textbox", { name: COPY.en.note }).fill("Must disappear on traversal")
+  await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
+  await openEligibilityResult(page, signal, "success")
+
+  await page.goBack()
+  await expect(signal).toBeHidden()
+  await expect(page.getByTestId("canonical-place-peek")).toHaveAttribute("data-venue-id", VENUE_ID)
+  await page.goForward()
+  const place = page.getByTestId("canonical-place-overlay")
+  await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
+  await expect(page.getByTestId("ondo-b-local-signal")).toBeHidden()
+  await place.getByTestId("canonical-local-signal-open").click()
+  const reopened = page.getByTestId("ondo-b-local-signal")
+  await expect(reopened.getByRole("textbox", { name: COPY.en.note })).toHaveValue("")
+  await expect(reopened.locator("fieldset button[aria-pressed='true']")).toHaveCount(0)
+  await expect(reopened.locator("img")).toHaveCount(0)
+  await expect(reopened).toHaveAttribute("data-signal-stage", "draft")
+})
+
+test("FLOW7-DATA-010 a thirteenth post is bounded in React and disk before and after reload", async ({ page }) => {
+  await page.addInitScript(({ key, venueIds }) => {
+    const localPulseEvidenceByVenue = Object.fromEntries(venueIds.map((venueId, index) => [venueId, { tags: ["calm_now"], postedAt: `2026-08-${String(index + 1).padStart(2, "0")}T12:00:00.000Z` }]))
+    localStorage.setItem(key, JSON.stringify({
+      locale: "en", onboarding: "ONB-COMPLETE", persona: null, discoveryPreferences: [], savedVenueIds: [], privateNotesByVenue: {},
+      recentVenueIds: [], plannedTableRefs: [], localSignalPostedVenueIds: venueIds, localPulseEvidenceByVenue,
+      localInteractionBoundarySeen: true, commerceLocalBoundarySeen: true, commerceReceipts: [],
+    }))
+  }, { key: DEVICE_KEY, venueIds: OTHER_SIGNAL_VENUE_IDS })
+  const { signal } = await openSignal(page)
+  await signal.locator("fieldset button").first().click()
+  await openEligibilityResult(page, signal, "success")
+  await signal.getByTestId("local-signal-post").click()
+  await expect(signal).toBeHidden()
+
+  for (const phase of ["runtime", "reload"] as const) {
+    if (phase === "reload") {
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await waitForShell(page)
+    }
+    const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
+    expect(stored.localSignalPostedVenueIds).toHaveLength(12)
+    expect(Object.keys(stored.localPulseEvidenceByVenue)).toHaveLength(12)
+    expect(stored.localSignalPostedVenueIds[0]).toBe(VENUE_ID)
+    expect(Object.keys(stored.localPulseEvidenceByVenue).sort()).toEqual([...stored.localSignalPostedVenueIds].sort())
+    await page.getByTestId("nav-my").click({ force: true })
+    await expect(page.locator("[data-testid^='contribution-venue-']")).toHaveCount(12)
+    if (phase === "runtime") await page.getByTestId("nav-ondo").click({ force: true })
+  }
+})
+
+test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Map, and reload", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const { signal, place } = await openSignal(page)
+  const before = await sharedPlacePulseTuple(place)
+  expect(before).toEqual({
+    level: "peak", numeric: "shown", title: "Pulse 91 · PEAK", score: "91", count: "24", confidence: "High",
+    freshnessUpdatedAt: "Fixed curated snapshot · 2026-08-25 02:20 UTC",
+  })
+  await signal.locator("fieldset button").first().click()
+  await openEligibilityResult(page, signal, "success")
+  await signal.getByTestId("local-signal-post").click()
+  await expect(signal).toBeHidden()
+  expect(await sharedPlacePulseTuple(place)).toEqual(before)
+
+  await page.reload({ waitUntil: "domcontentloaded" })
+  await waitForShell(page)
+  const reloadedPlace = page.getByTestId("canonical-place-overlay")
+  expect(await sharedPlacePulseTuple(reloadedPlace)).toEqual(before)
+  await reloadedPlace.getByRole("button", { name: "Close place" }).click()
+  const list = page.getByTestId("ondo-b-venue-list")
+  const rows = list.locator("li[data-venue-id]")
+  const targetRow = rows.filter({ has: page.locator(`[data-venue-id='${VENUE_ID}']`) })
+  const rowIndex = await rows.evaluateAll((items, venueId) => items.findIndex((item) => item.getAttribute("data-venue-id") === venueId), VENUE_ID)
+  expect(rowIndex).toBe(0)
+  await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("Pulse 91 · PEAK")
+  await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("24 signals")
+  expect(await targetRow.count()).toBeLessThanOrEqual(1)
+  await page.getByTestId("ondo-b-view-toggle").click()
+  const accessible = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
+  await expect(accessible.first()).toContainText("Pulse 91 · PEAK · freshness curated-snapshot · confidence high")
+})
+
+test("FLOW7-CONSENT-012 phone consent shows all truth rows and both 44px decisions without scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 })
+  const { signal } = await openSignal(page)
+  await signal.locator("fieldset button").first().click()
+  await signal.getByTestId("local-signal-person-check").click()
+  const gate = page.getByTestId("ondo-b-local-check-walkthrough")
+  for (const row of ["consent-requester", "consent-purpose", "consent-minimum", "consent-retention"]) await expect(gate.getByTestId(row)).toBeInViewport()
+  const verify = gate.getByTestId("local-check-boundary-continue")
+  const decline = gate.getByRole("button", { name: /Not now|나중에|あとで/ })
+  for (const action of [verify, decline]) {
+    await expect(action).toBeInViewport()
+    const box = await action.boundingBox()
+    expect(box!.height).toBeGreaterThanOrEqual(44)
+  }
+})
+
+test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape photo states reset below the header", async ({ page }) => {
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: width === 320 ? 720 : 844 })
+    await page.evaluate(() => localStorage.clear())
+    const { signal } = await openSignal(page)
+    const input = signal.getByTestId("local-signal-photo-input")
+    await input.setInputFiles("public/seoul-after-rain-hero.jpg")
+    const preview = signal.locator("img")
+    await preview.evaluate((image) => (image as HTMLImageElement).decode())
+    const readySource = await preview.getAttribute("src")
+    await input.setInputFiles({ name: "corrupt.png", mimeType: "image/png", buffer: Buffer.from("not a decodable png") })
+    await expect(preview).toHaveAttribute("src", readySource!)
+    for (const visible of [preview, signal.getByTestId("local-signal-photo-error"), signal.getByTestId("local-signal-photo-choose-another")]) {
+      await expect(visible).toBeInViewport()
+    }
+    await signal.getByRole("button", { name: COPY.en.close }).click()
+  }
+
+  for (const locale of ["ko", "ja"] as const) {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await page.evaluate(() => localStorage.clear())
+    await page.addInitScript(() => { window.__ONDO_B_QA__ = { localSignalPhoto: "failure" } })
+    const { signal } = await openSignal(page, locale)
+    const body = signal.locator(":scope > div")
+    const photoTitle = signal.locator("[data-photo-stage] > div strong")
+    const header = signal.locator(":scope > header")
+    const expectTitleBelowHeader = async () => {
+      await expect(photoTitle).toBeInViewport()
+      const [titleBox, headerBox] = await Promise.all([photoTitle.boundingBox(), header.boundingBox()])
+      expect(titleBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height)
+    }
+    await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
+    await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
+    await expect(signal.getByTestId("local-signal-photo-error")).toHaveAttribute("data-error", "photoPrepareError")
+    await expectTitleBelowHeader()
+    await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
+    await signal.getByTestId("local-signal-photo-retry").click()
+    await expect(signal.locator("img")).toBeVisible()
+    await expectTitleBelowHeader()
+    await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
+    await signal.getByTestId("local-signal-photo-remove").click()
+    await expectTitleBelowHeader()
+    await signal.getByRole("button", { name: COPY[locale].close }).click()
+  }
 })
 
 for (const locale of ["en", "ko", "ja"] as const) {

@@ -121,6 +121,10 @@ test("FLOW7-MEDIA-006 invalid replacement never destroys a prepared local previe
   expect(signal).toMatch(/try\s*\{[\s\S]*URL\.createObjectURL\(file\)[\s\S]*\}\s*catch/)
   expect(signal).toMatch(/LOCAL_SIGNAL_PHOTO_TYPES\.has\(file\.type\)[\s\S]*file\.size > MAX_LOCAL_SIGNAL_PHOTO_BYTES[\s\S]*URL\.createObjectURL/)
   expect(signal).toContain("if (previousUrl) URL.revokeObjectURL(previousUrl)")
+  expect(signal).toMatch(/URL\.createObjectURL\(file\)[\s\S]*(?:await\s+decodeLocalSignalPhoto|await\s+candidateImage\.decode)/)
+  expect(signal).toContain("photoPreparationRef")
+  expect(signal).toContain("URL.revokeObjectURL(candidateUrl)")
+  expect(signal).toContain("setPhotoCanRetry(false)")
 })
 
 test("FLOW7-COPY-007 local-only draft copy never promises benefit or public contribution", () => {
@@ -145,7 +149,8 @@ test("FLOW7-COPY-007 local-only draft copy never promises benefit or public cont
     "Personチェックが完了しました",
     "Could not save this Local Signal on this device",
   ]) expect(signal).toContain(consumerTruth)
-  expect(signal).not.toMatch(/FROM THIS OFFICIAL PLACE|Identity check complete|posted marker|게시 표시|投稿済みの印/)
+  expect(signal).not.toMatch(/FROM THIS OFFICIAL PLACE|Identity check complete|posted marker|게시 표시|投稿済みの印|Pulse evidence|tag IDs|로컬 Pulse 근거|태그 ID|Pulse根拠|タグID/)
+  for (const consumerAction of ["Confirm for this action", "이 작업 확인", "この操作を確認"]) expect(signal).toContain(consumerAction)
 })
 
 test("FLOW7-DATA-008 restored Local Signal history and evidence are one canonical bounded intersection", () => {
@@ -165,4 +170,32 @@ test("FLOW7-STORAGE-009 Settings keeps a persistent inline retry decision when c
   expect(settings).toContain('role="alert"')
   expect(settings).toContain("if (cleared) closeClear()")
   expect(settings).toContain("setClearError(!cleared)")
+  expect(settings).toMatch(/if \(cleared\) \{[\s\S]*actions\.notify\(copy\.cleared\)[\s\S]*closeClear\(\)/)
+  expect(settings).not.toContain("actions.notify(cleared ? copy.cleared : copy.clearFailed)")
+})
+
+test("FLOW7-TRAVERSAL-010 browser traversal discards the ephemeral draft and cannot resurrect it on Forward", () => {
+  const signal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
+  expect(signal).toContain("B_DISCOVERY_TRAVERSAL_EVENT")
+  expect(signal).toContain('window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT')
+  expect(signal).toContain("actions.closeLocalSignal()")
+})
+
+test("FLOW7-RUNTIME-011 every successful mutation bounds ids and evidence to the same twelve-entry intersection", () => {
+  const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  expect(provider).toContain("const nextLocalSignalPostedVenueIds = sanitizeLocalSignalVenueIds")
+  expect(provider).toContain("const nextLocalPulseEvidenceByVenue = Object.fromEntries")
+  expect(provider).toContain("localSignalPostedVenueIds: nextLocalSignalPostedVenueIds")
+  expect(provider).toContain("localPulseEvidenceByVenue: nextLocalPulseEvidenceByVenue")
+})
+
+test("FLOW7-VIS-012 photo recovery and Local Signal consent keep one reachable decision viewport", () => {
+  const signal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
+  const styles = source("features/ondo/local-signal-b/local-signal-layer-b.module.css")
+  const checkStyles = source("features/ondo/identity-b/local-check-walkthrough-b.module.css")
+  expect(signal).toContain("photoSectionRef")
+  expect(signal).toContain("photoErrorRef")
+  expect(styles).toContain("scroll-margin-bottom: 104px")
+  expect(checkStyles).toContain('.layer[data-check-origin="local_signal"]')
+  expect(checkStyles).toMatch(/max-width:\s*430px[\s\S]*data-check-origin="local_signal"[\s\S]*\.actions[\s\S]*order:\s*5/)
 })
