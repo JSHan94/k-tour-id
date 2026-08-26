@@ -782,28 +782,21 @@
   .body {
     grid-template-columns: minmax(290px, .88fr) minmax(370px, 1.12fr);
     grid-template-areas:
-      "eyebrow pulse"
-      "title pulse"
-      "provenance pulse"
-      "address pulse"
+      "identity pulse"
       "decisions pulse"
       "table table"
       "offer signal"
       "save save"
       "evidence before"
       "source source";
-    grid-template-rows: repeat(10, auto);
+    grid-template-rows: repeat(7, auto);
     grid-auto-flow: row dense;
     align-content: start;
     gap: 0 28px;
     padding: 32px 34px 42px;
   }
 
-  .eyebrow { grid-area: eyebrow; }
-  .body > h2 { grid-area: title; margin-top: 8px; font-size: clamp(38px, 3.3vw, 48px); }
-  .detailNameProvenance { grid-area: provenance; }
-  .address,
-  .detailError { grid-area: address; }
+  .body > .detailIdentityStage { grid-area: identity; align-self: stretch; }
   .decisionActions { grid-area: decisions; align-self: end; margin: 18px 0 0; }
   .pulsePanel { grid-area: pulse; align-self: start; margin: 0; }
   .tableActions { grid-area: table; margin: 18px 0 0; }

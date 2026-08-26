@@ -26,7 +26,7 @@ const B_NAV: Array<{ id: OndoBTab; icon: typeof Compass }> = [
 const B_NAV_COPY = {
   en: { ondo: "Explore", my: "My Korea", tables: "Tables", id: "ID · Wallet", settings: "Settings" },
   ko: { ondo: "탐색", my: "내 한국", tables: "테이블", id: "ID · 지갑", settings: "설정" },
-  ja: { ondo: "探す", my: "My Korea", tables: "テーブル", id: "ID・ウォレット", settings: "設定" },
+  ja: { ondo: "探す", my: "マイ韓国", tables: "テーブル", id: "ID・ウォレット", settings: "設定" },
 } as const
 
 const SHELL_COPY = {

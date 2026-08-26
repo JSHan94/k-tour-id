@@ -5,6 +5,7 @@ import { resolve } from "node:path"
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
 const map = source("features/ondo/map/map-entry-b.tsx")
+const mapCss = source("features/ondo/map/map-b.module.css")
 const editorial = source("features/ondo/map/japan-first-discovery-b.tsx")
 const place = source("features/ondo/place/canonical-place-overlay.tsx")
 
@@ -24,6 +25,9 @@ test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and officia
   expect(map).toContain('data-testid="ondo-b-map-key"')
   expect(map).toContain('data-testid="ondo-b-venue-list"')
   expect(map).toContain('data-testid="ondo-b-map-fallback-status"')
+  expect(mapCss).toContain("In List, the editorial collection is part of the reading sequence")
+  expect(mapCss).toContain('.root:has(> .listPanel) > .listPanel { padding-top: 70px; }')
+  expect(mapCss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));')
 })
 
 test("B-EXPLORE-V3-003 Japanese editorial has one lead story and supporting guide cards without false Place actions", () => {

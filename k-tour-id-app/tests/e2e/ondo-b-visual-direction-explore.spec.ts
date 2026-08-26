@@ -75,6 +75,8 @@ test.describe("ONDO Explore approved visual direction", () => {
           expect(overlapArea(nodeBoxes[left], nodeBoxes[right])).toBe(0)
         }
       }
+      const truthBox = await box(atlas.locator("details").first())
+      for (const nodeBox of nodeBoxes) expect(overlapArea(nodeBox, truthBox)).toBe(0)
 
       const atlasStyle = await atlas.evaluate((element) => {
         const style = getComputedStyle(element)
@@ -154,6 +156,19 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(firstRow).toHaveAttribute("data-pulse-priority", /peak|hot|rising|warming|low|limited/)
       expect((await box(rowButton)).height).toBeGreaterThanOrEqual(44)
       expect(await firstRow.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(20)
+      const storyMarker = page.getByTestId("ondo-b-editorial-collection-marker")
+      const storyBox = await box(storyMarker)
+      const visibleButtons = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] > button:visible")
+      const visibleButtonBoxes = await visibleButtons.evaluateAll((elements) => elements.map((element) => {
+        const rect = element.getBoundingClientRect()
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height }
+      }))
+      for (const buttonBox of visibleButtonBoxes) expect(overlapArea(storyBox, buttonBox)).toBe(0)
+      if (profile.width === 844) {
+        const panelBox = await box(page.getByTestId("ondo-b-list-panel"))
+        const fullyVisible = visibleButtonBoxes.filter((buttonBox) => buttonBox.y >= panelBox.y - .5 && buttonBox.y + buttonBox.height <= panelBox.y + panelBox.height + .5)
+        expect(fullyVisible.length).toBeGreaterThanOrEqual(4)
+      }
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-list.png` })
     }
@@ -176,7 +191,16 @@ test.describe("ONDO Explore approved visual direction", () => {
       expect((await box(firstMedia)).height / (await box(firstStory)).height).toBeGreaterThan(.38)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial.png` })
       const sourceDisclosure = firstStory.locator("details")
-      if (await sourceDisclosure.count()) await sourceDisclosure.locator(":scope > summary").click()
+      if (await sourceDisclosure.count()) {
+        const sourceSummary = sourceDisclosure.locator(":scope > summary")
+        const sourceBox = await box(sourceSummary)
+        const sourceHit = await page.evaluate(({ x, y }) => {
+          const hit = document.elementFromPoint(x, y)
+          return Boolean(hit?.closest("summary")?.contains(hit))
+        }, { x: sourceBox.x + sourceBox.width / 2, y: sourceBox.y + sourceBox.height / 2 })
+        expect(sourceHit).toBe(true)
+        await sourceSummary.click()
+      }
       await expect(firstStory.locator("a[target='_blank']").first()).toBeVisible()
       await expect(discovery).not.toContainText(/\bP[01]\b/)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial-sources.png` })
@@ -204,5 +228,22 @@ test.describe("ONDO Explore approved visual direction", () => {
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-detail.png` })
     }
+
+    await page.setViewportSize({ width: 1440, height: 1000 })
+    await seed(page, "en")
+    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
+    await page.getByTestId("canonical-place-peek").getByTestId("canonical-place-details").click()
+    const desktopDetail = page.getByTestId("canonical-place-overlay")
+    const identity = desktopDetail.getByTestId("canonical-place-identity-stage")
+    await expect(identity).toBeVisible()
+    const detailBox = await box(desktopDetail)
+    const identityBox = await box(identity)
+    expect(identityBox.x).toBeGreaterThanOrEqual(detailBox.x)
+    expect(identityBox.y).toBeGreaterThanOrEqual(detailBox.y)
+    expect(identityBox.x + identityBox.width).toBeLessThanOrEqual(detailBox.x + detailBox.width + .5)
+    expect(identityBox.y + identityBox.height).toBeLessThanOrEqual(Math.min(1000, detailBox.y + detailBox.height) + .5)
+    expect(identityBox.width).toBeGreaterThanOrEqual(280)
+    await page.screenshot({ path: `${OUTPUT}/en-1440-detail.png` })
   })
 })
