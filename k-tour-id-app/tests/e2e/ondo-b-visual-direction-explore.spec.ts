@@ -1,4 +1,4 @@
-import { expect, test, type Locator, type Page } from "@playwright/test"
+import { expect, test, type Browser, type Locator, type Page } from "@playwright/test"
 
 type Locale = "en" | "ko" | "ja"
 
@@ -30,6 +30,15 @@ async function seed(page: Page, locale: Locale) {
   }, { key: DEVICE_KEY, language: locale })
 }
 
+async function openSeededPage(browser: Browser, locale: Locale, width: number, height: number, path: string) {
+  const context = await browser.newContext({ viewport: { width, height } })
+  const page = await context.newPage()
+  await seed(page, locale)
+  await page.goto(path, { waitUntil: "domcontentloaded" })
+  await expect(page.locator("html")).toHaveAttribute("lang", locale)
+  return { context, page }
+}
+
 function overlapArea(a: NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>, b: NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>) {
   return Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x))
     * Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y))
@@ -48,11 +57,9 @@ async function noHorizontalOverflow(page: Page) {
 test.describe("ONDO Explore approved visual direction", () => {
   test.describe.configure({ timeout: 180_000 })
 
-  test("Polarsteps-inspired Korea atlas keeps geographic anchors separate at every product breakpoint", async ({ page }) => {
+  test("Polarsteps-inspired Korea atlas keeps geographic anchors separate at every product breakpoint", async ({ browser }) => {
     for (const profile of MATRIX) {
-      await page.setViewportSize({ width: profile.width, height: profile.height })
-      await seed(page, profile.locale)
-      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/ondo-b")
 
       const atlas = page.getByTestId("ondo-b-korea-atlas")
       const nodes = ["seoul", "busan", "jeju"].map((city) => atlas.locator(`[data-city='${city}']`))
@@ -111,14 +118,13 @@ test.describe("ONDO Explore approved visual direction", () => {
       }
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-atlas.png` })
+      await context.close()
     }
   })
 
-  test("Mapstr plus Beli city canvas keeps a warm basemap, compact controls, Pulse truth, and tactile list rows", async ({ page }) => {
+  test("Mapstr plus Beli city canvas keeps a warm basemap, compact controls, Pulse truth, and tactile list rows", async ({ browser }) => {
     for (const profile of MATRIX) {
-      await page.setViewportSize({ width: profile.width, height: profile.height })
-      await seed(page, profile.locale)
-      await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+      const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/ondo-b?city=seoul")
 
       const root = page.getByTestId("ondo-b-map-entry")
       await expect(root).toHaveAttribute("data-pulse-visual-grammar", "borderless-aura-core-label")
@@ -171,18 +177,26 @@ test.describe("ONDO Explore approved visual direction", () => {
       }
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-list.png` })
+      await context.close()
     }
   })
 
-  test("Infatuation and Guides editorial cards plus Apple and Airbnb place sheets retain all truth and actions", async ({ page }) => {
+  test("Infatuation and Guides editorial cards plus Apple and Airbnb place sheets retain all truth and actions", async ({ browser }) => {
     for (const locale of ["en", "ko", "ja"] as const) {
-      await page.setViewportSize({ width: 390, height: 844 })
-      await seed(page, locale)
-      await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+      const { context, page } = await openSeededPage(browser, locale, 390, 844, "/ondo-b?city=seoul")
 
       const discovery = page.getByTestId("ondo-b-japan-first-discovery")
       await discovery.locator(":scope > summary").click()
       await expect(discovery).toHaveAttribute("open", "")
+      await expect(discovery.locator(":scope > summary small")).toBeHidden()
+      const openTruth = discovery.locator(":scope > summary em")
+      const openTruthMetrics = await openTruth.evaluate((element) => ({
+        horizontalOverflow: element.scrollWidth - element.clientWidth,
+        verticalOverflow: element.scrollHeight - element.clientHeight,
+        textOverflow: getComputedStyle(element).textOverflow,
+        whiteSpace: getComputedStyle(element).whiteSpace,
+      }))
+      expect(openTruthMetrics).toEqual({ horizontalOverflow: 0, verticalOverflow: 0, textOverflow: "clip", whiteSpace: "normal" })
       const panel = discovery.locator(":scope > div")
       const firstStory = discovery.locator("[data-content-id]").first()
       const firstMedia = firstStory.locator("figure")
@@ -204,6 +218,19 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(firstStory.locator("a[target='_blank']").first()).toBeVisible()
       await expect(discovery).not.toContainText(/\bP[01]\b/)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial-sources.png` })
+
+      const supportingStory = discovery.locator("[data-editorial-role='supporting']").first()
+      await supportingStory.scrollIntoViewIfNeeded()
+      await expect(supportingStory).toBeVisible()
+      await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial-supporting.png` })
+
+      await page.goto("/ondo-b?city=jeju", { waitUntil: "domcontentloaded" })
+      const jejuDiscovery = page.getByTestId("ondo-b-japan-first-discovery")
+      await jejuDiscovery.locator(":scope > summary").click()
+      const jejuSources = page.getByTestId("ondo-b-jeju-editorial-seeds")
+      await jejuSources.locator(":scope > summary").click()
+      await expect(jejuSources.locator("a[target='_blank']")).toHaveCount(4)
+      await page.screenshot({ path: `${OUTPUT}/${locale}-390-jeju-expanded.png` })
 
       await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
@@ -227,11 +254,10 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(detail.getByTestId("canonical-source-evidence")).toBeAttached()
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-detail.png` })
+      await context.close()
     }
 
-    await page.setViewportSize({ width: 1440, height: 1000 })
-    await seed(page, "en")
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    const { context, page } = await openSeededPage(browser, "en", 1440, 1000, "/ondo-b?city=seoul&view=list")
     await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
     await page.getByTestId("canonical-place-peek").getByTestId("canonical-place-details").click()
     const desktopDetail = page.getByTestId("canonical-place-overlay")
@@ -245,5 +271,6 @@ test.describe("ONDO Explore approved visual direction", () => {
     expect(identityBox.y + identityBox.height).toBeLessThanOrEqual(Math.min(1000, detailBox.y + detailBox.height) + .5)
     expect(identityBox.width).toBeGreaterThanOrEqual(280)
     await page.screenshot({ path: `${OUTPUT}/en-1440-detail.png` })
+    await context.close()
   })
 })

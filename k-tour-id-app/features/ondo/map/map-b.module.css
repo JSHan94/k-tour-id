@@ -2418,7 +2418,7 @@
 
 @media (orientation: landscape) and (max-height: 500px) {
   .koreaAtlas .cityNode[data-city="seoul"] { top: 13%; left: 51%; }
-  .koreaAtlas .cityNode[data-city="busan"] { top: 47%; left: 64%; }
+  .koreaAtlas .cityNode[data-city="busan"] { top: calc(47% - 4px); left: 64%; }
   .koreaAtlas .cityNode[data-city="jeju"] { bottom: 3%; left: 40%; }
 }
 

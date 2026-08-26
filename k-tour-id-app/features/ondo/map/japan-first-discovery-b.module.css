@@ -292,7 +292,7 @@
   width: auto;
 }
 .root[data-city-context][open] > summary {
-  min-height: 58px;
+  min-height: 78px;
   grid-template-columns: 38px minmax(0, 1fr) 18px;
   gap: 10px;
   padding: 8px 12px;
@@ -301,6 +301,15 @@
 .root[data-city-context][open] > summary > span:nth-child(2) { display: grid; }
 .root[data-city-context][open] > summary > svg { display: block; }
 .root[data-city-context][open] .mark b { display: none; }
+.root[data-city-context][open] > summary small { display: none; }
+.root[data-city-context][open] > summary strong,
+.root[data-city-context][open] > summary em {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+.root[data-city-context][open] > summary strong { line-height: 1.2; }
+.root[data-city-context][open] > summary em { line-height: 1.35; }
 .root[data-city-context][open] .panel {
   max-height: min(52dvh, 430px);
   overflow-y: auto;
