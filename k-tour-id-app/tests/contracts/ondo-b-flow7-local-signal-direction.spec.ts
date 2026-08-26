@@ -144,9 +144,9 @@ test("FLOW7-COPY-007 local-only draft copy never promises benefit or public cont
     "AT THIS OFFICIAL-LISTED PLACE",
     "공식 목록에 있는 이 장소에서",
     "公式リストに掲載されたこの場所で",
-    "Person check complete",
-    "사람 확인을 마쳤어요",
-    "Personチェックが完了しました",
+    "Confirmation complete",
+    "확인을 마쳤어요",
+    "確認が完了しました",
     "Could not save this Local Signal on this device",
   ]) expect(signal).toContain(consumerTruth)
   expect(signal).not.toMatch(/FROM THIS OFFICIAL PLACE|Identity check complete|posted marker|게시 표시|投稿済みの印|Pulse evidence|tag IDs|로컬 Pulse 근거|태그 ID|Pulse根拠|タグID/)
