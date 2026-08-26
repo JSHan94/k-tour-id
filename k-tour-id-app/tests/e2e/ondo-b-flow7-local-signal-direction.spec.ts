@@ -19,21 +19,21 @@ const VIEWPORTS: readonly Viewport[] = [
 const COPY = {
   en: {
     note: "Optional local note",
-    update: "Update on this device",
+    update: "Update Local Signal on this device",
     postFailure: "This device could not save the posted marker. Your exact draft and place remain open.",
     close: "Close Local Signal",
     photoAlt: "Local photo preview — kept in this open draft only",
   },
   ko: {
     note: "선택적 로컬 메모",
-    update: "이 기기에서 업데이트",
+    update: "이 기기의 로컬 시그널 업데이트",
     postFailure: "이 기기에 게시 표시를 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다.",
     close: "로컬 시그널 닫기",
     photoAlt: "로컬 사진 미리보기 — 열린 작성 화면에서만 유지",
   },
   ja: {
     note: "任意のローカルメモ",
-    update: "この端末で更新",
+    update: "この端末のLocal Signalを更新",
     postFailure: "この端末に投稿済みの印を保存できませんでした。下書きと場所はそのまま開いています。",
     close: "Local Signalを閉じる",
     photoAlt: "ローカル写真のプレビュー — 開いている下書きにのみ保持",
@@ -92,7 +92,8 @@ async function openSignal(page: Page, locale: Locale = "en", posted = false) {
 
 async function setEligibility(page: Page, outcome: EligibilityOutcome) {
   await page.evaluate((eligibility) => {
-    window.__ONDO_B_QA__ = { ...(window.__ONDO_B_QA__ ?? {}), eligibility }
+    const qaWindow = window as typeof window & { __ONDO_B_QA__?: Record<string, unknown> }
+    qaWindow.__ONDO_B_QA__ = { ...(qaWindow.__ONDO_B_QA__ ?? {}), eligibility }
   }, outcome)
 }
 
@@ -382,6 +383,14 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await expect(signal.locator("img")).toBeVisible()
       await signal.locator("img").evaluate((image) => (image as HTMLImageElement).decode())
       await quietCapture(page, `${locale}-${viewport.label}-photo-ready`)
+      const readySource = await signal.locator("img").getAttribute("src")
+      await input.setInputFiles({ name: "bad-replacement.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") })
+      await expect(signal.locator("img")).toHaveAttribute("src", readySource!)
+      await quietCapture(page, `${locale}-${viewport.label}-photo-invalid-replacement-preserved`)
+      await signal.getByTestId("local-signal-photo-remove").click()
+      await quietCapture(page, `${locale}-${viewport.label}-photo-removed`)
+      await input.setInputFiles("public/seoul-after-rain-hero.jpg")
+      await expect(signal.locator("img")).toBeVisible()
 
       await signal.getByTestId("local-signal-person-check").click()
       let gate = page.getByTestId("ondo-b-local-check-walkthrough")
@@ -414,10 +423,29 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await expect(updateSignal.getByTestId("local-signal-post")).toHaveText(COPY[locale].update)
       await updateSignal.getByTestId("local-signal-post").scrollIntoViewIfNeeded()
       await quietCapture(page, `${locale}-${viewport.label}-already-posted-update`)
-      await updateSignal.getByRole("button", { name: COPY[locale].close }).click()
+      await installOneShotDeviceWriteFailure(page)
+      await updateSignal.getByTestId("local-signal-post").click()
+      await expect(updateSignal.getByTestId("local-signal-post-error")).toBeVisible()
+      await quietCapture(page, `${locale}-${viewport.label}-update-storage-failure`)
+      await updateSignal.getByTestId("local-signal-post").click()
+      await expect(updateSignal).toBeHidden()
+      await page.reload({ waitUntil: "domcontentloaded" })
+      await waitForShell(page)
       await page.getByTestId("nav-my").click({ force: true })
       await page.getByTestId(`contribution-venue-${VENUE_ID}`).scrollIntoViewIfNeeded()
-      await quietCapture(page, `${locale}-${viewport.label}-my-history`)
+      await quietCapture(page, `${locale}-${viewport.label}-my-history-reload`)
+      await page.getByTestId(`contribution-venue-${VENUE_ID}`).click()
+      await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", VENUE_ID)
+      await quietCapture(page, `${locale}-${viewport.label}-my-history-exact-place`)
+      await page.getByTestId("nav-settings").click({ force: true })
+      const disclosure = page.getByTestId("ondo-b-device-data-settings")
+      await disclosure.locator("summary").click()
+      await disclosure.getByTestId("ondo-b-clear-device-open").click()
+      await installOneShotDeviceWriteFailure(page)
+      const clearConfirm = page.getByTestId("ondo-b-clear-device-confirm")
+      await clearConfirm.locator("button").last().click()
+      await expect(clearConfirm.getByTestId("ondo-b-clear-device-error")).toBeVisible()
+      await quietCapture(page, `${locale}-${viewport.label}-clear-storage-failure`)
     })
   }
 }
