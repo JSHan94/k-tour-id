@@ -143,6 +143,8 @@ test.describe("ONDO Explore approved visual direction", () => {
       expect(await panel.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(24)
       expect(await firstStory.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(20)
       expect((await box(firstMedia)).height / (await box(firstStory)).height).toBeGreaterThan(.38)
+      const sourceDisclosure = firstStory.locator("details")
+      if (await sourceDisclosure.count()) await sourceDisclosure.locator(":scope > summary").click()
       await expect(firstStory.locator("a[target='_blank']").first()).toBeVisible()
       await expect(discovery).not.toContainText(/\bP[01]\b/)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial.png` })
