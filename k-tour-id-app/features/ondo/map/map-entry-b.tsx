@@ -860,8 +860,8 @@ export function MapEntryB() {
           }
           const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": 0.98, "circle-stroke-width": 0, "circle-blur": 0.08 }
           const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": 12, "text-letter-spacing": 0.025, "text-offset": [0, -1.2], "text-anchor": "bottom", "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
-          const centralPeakLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [-0.8, 1.1], "text-anchor": "top" }
-          const centralHotLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [-0.2, 1.1], "text-anchor": "top" }
+          const centralPeakLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [-1.2, 1.1], "text-anchor": "top" }
+          const centralHotLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [0.35, 1.1], "text-anchor": "top" }
           const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 4], "#5d1732", [">=", ["get", "pulseRank"], 2], "#773421", "#403b35"], "text-halo-color": "rgba(255,253,249,.94)", "text-halo-width": 2.2, "text-halo-blur": 0.5 }
           const pulseHaloPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 42], "circle-blur": 0.82, "circle-opacity": 0.2, "circle-stroke-width": 0 }
           instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
