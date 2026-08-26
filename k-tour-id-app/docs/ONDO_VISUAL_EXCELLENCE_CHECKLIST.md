@@ -13,7 +13,7 @@ donate unsupported product claims.
 
 | # | Connected flow | Pattern references | Status |
 |---|---|---|---|
-| 1 | Guest onboarding | Arc | Active |
+| 1 | Guest onboarding | Arc | Peer-sealed · user review |
 | 2 | Korea overview and city selection | Polarsteps | Peer-sealed · user review |
 | 3 | City map, Pulse, filters and list | Mapstr + Beli | Peer-sealed · user review |
 | 4 | Japanese story to source/place | The Infatuation + Apple Guides | Peer-sealed · user review |
@@ -152,10 +152,18 @@ evidence, action modules, alternatives and exact return from every child flow.
 
 ### 1. Guest onboarding — Arc
 
-- [ ] Value -> intent -> preferences is directional, compact and narrative.
-- [ ] EN/KO/JA switching is immediate and visually stable.
-- [ ] Source truth is one progressive disclosure, not the emotional hero.
-- [ ] Guest and primary completion both land on the same Explore hierarchy.
+- [x] Value -> intent -> preferences is directional, compact and narrative.
+- [x] EN/KO/JA switching is immediate and visually stable.
+- [x] Source truth is one progressive disclosure, not the emotional hero.
+- [x] Guest and primary completion both land on the same Explore hierarchy.
+- [x] Storage failure preserves the current draft and exposes one persistent,
+      localized recovery action without covering source or dietary truth.
+- [x] Settings reset failure is recoverable in place; successful reset preserves
+      locale, saved places and activity while clearing setup fields only.
+
+Required states sealed: value, intent, preferences, skip/Escape failure,
+repeated storage failure, Settings reset failure and reset re-entry for EN/KO/JA
+at 320x720, 390x844, 844x390 and 1440x1000.
 
 ### 6. Tables and 19+ — Timeleft
 
@@ -195,8 +203,11 @@ evidence, action modules, alternatives and exact return from every child flow.
 
 ## Release record
 
-- Active flow: Guest onboarding
+- Active flow: Tables, 19+, join and chat
+- Peer-sealed flow: Guest onboarding at `7555b133` (72 required state frames,
+  all >=8.5, P0=P1=P2=P3=0, Arc 13/13, restoration/geometry 8/8,
+  contracts 174/174)
 - Peer-sealed flows: Explore 2–5 at `5deef49` (all required states >=8.5,
   P0=P1=P2=P3=0, V3 6/6, contracts 172/172)
 - User-approved flows: pending the next visual checkpoint
-- Next user checkpoint: stable Explore link plus Arc-inspired onboarding matrix
+- Next user checkpoint: stable ONDO link plus Timeleft-inspired Tables journey
