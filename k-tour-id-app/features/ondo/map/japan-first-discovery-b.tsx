@@ -1,6 +1,7 @@
 "use client"
 
-import { ArrowUpRight, ChevronRight, Flame, MapPinned, Sparkles } from "lucide-react"
+import Image from "next/image"
+import { ArrowUpRight, ChevronRight, CircleDashed, Flame, MapPinned, Sparkles } from "lucide-react"
 import {
   JAPAN_FIRST_LAUNCH_CONTENT,
   JAPAN_FIRST_FEATURED_CONTENT_IDS,
@@ -83,10 +84,22 @@ function Story({ item, copy, locale, compact = false }: {
 }) {
   return (
     <article className={compact ? styles.compactStory : undefined} data-content-id={item.id} data-verification={item.sourceVerification} data-place-edge={item.placeEdgeVerification}>
-      <small>{item.sourceReferences[0].label}</small>
-      <strong>{item.title[locale]}</strong>
-      <p lang="ja">{item.jaHook}</p>
-      <em>{copy.pending}</em>
+      {item.editorialMedia && !compact ? (
+        <figure className={styles.storyMedia} data-rights-mode={item.editorialMedia.rightsMode}>
+          <Image
+            alt={item.editorialMedia.alt[locale]}
+            fill
+            sizes="(max-width: 800px) 76vw, 320px"
+            src={item.editorialMedia.src}
+          />
+          <figcaption>{item.sourceReferences[0].label}</figcaption>
+        </figure>
+      ) : <small>{item.sourceReferences[0].label}</small>}
+      <div className={styles.storyCopy}>
+        <strong>{item.title[locale]}</strong>
+        <p lang="ja">{item.jaHook}</p>
+        <em><CircleDashed aria-hidden="true" size={14} />{copy.pending}</em>
+      </div>
       <SourceLinks item={item} copy={copy} locale={locale} />
     </article>
   )

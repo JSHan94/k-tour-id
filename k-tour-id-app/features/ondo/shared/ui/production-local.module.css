@@ -153,23 +153,41 @@
 
 /* Settings uses quiet native groups and reserves elevation for dialogs. */
 .screen:has(.settingsSection) { background: linear-gradient(180deg, #fbf9f6 0%, #f3eee7 58%, #efe9e2 100%); }
-.settingsSection { margin-top: 16px; border: 1px solid rgb(69 51 41 / 11%); border-radius: 20px; padding: 18px; background: rgb(255 253 250 / 78%); box-shadow: none; animation: groupEnter .3s cubic-bezier(.2, .8, .2, 1) both; }
+.settingsSection { margin-top: 14px; border: 1px solid rgb(69 51 41 / 11%); border-radius: 20px; padding: 16px; background: rgb(255 253 250 / 78%); box-shadow: none; animation: groupEnter .3s cubic-bezier(.2, .8, .2, 1) both; }
 .settingsSection:nth-of-type(2) { animation-delay: 40ms; }
 .settingsSection:nth-of-type(3) { animation-delay: 80ms; }
-.sectionHeading { display: flex; align-items: center; gap: 10px; }
-.sectionHeading > svg { box-sizing: content-box; border-radius: 11px; padding: 7px; background: #eee9e3; color: #514a44; }
+.sectionHeading { display: flex; align-items: center; gap: 9px; }
+.sectionHeading > svg { box-sizing: content-box; border-radius: 10px; padding: 6px; background: #eee9e3; color: #514a44; }
 .sectionHeading h2 { margin: 0; font-size: 18px; font-weight: 760; letter-spacing: -.035em; }
 .settingsSection > p { margin: 11px 0 0; color: #706861; font-size: 12px; line-height: 1.6; }
 .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 15px; border-radius: 14px; padding: 4px; background: #eae5df; box-shadow: inset 0 1px 2px rgb(67 49 40 / 5%); }
 .segmented button { min-height: 44px; border: 0; border-radius: 11px; background: transparent; color: #55504b; font: inherit; font-size: 13px; font-weight: 720; }
 .segmented button[aria-pressed="true"] { background: #fffdf9; color: #2c2825; box-shadow: 0 5px 15px rgb(52 38 27 / 9%); }
-.preferenceChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+.settingsDisclosure { margin-top: 10px; border-top: 1px solid var(--feature-hairline); }
+.settingsDisclosure > summary {
+  display: grid;
+  min-height: 58px;
+  grid-template-columns: minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.settingsDisclosure > summary::-webkit-details-marker { display: none; }
+.settingsDisclosure > summary > span { display: grid; min-width: 0; gap: 2px; }
+.settingsDisclosure > summary strong { font-size: 14px; letter-spacing: -.02em; }
+.settingsDisclosure > summary small { overflow: hidden; color: #716a63; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.settingsDisclosure > summary > svg { color: #625b55; transition: transform 180ms ease; }
+.settingsDisclosure[open] > summary > svg { transform: rotate(90deg); }
+.settingsDisclosureBody { display: grid; gap: 13px; padding: 2px 0 2px; }
+.settingsDisclosureBody > p { margin: 0; color: #706861; font-size: 12px; line-height: 1.58; }
+.preferenceChips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 0; }
 .preferenceChips button { min-height: 44px; border: 1px solid rgb(65 49 40 / 12%); border-radius: 999px; padding: 0 15px; background: rgb(255 255 255 / 64%); color: #5e5852; font: inherit; font-size: 12px; font-weight: 700; }
 .preferenceChips button[aria-pressed="true"] { border-color: #3a3430; background: #302b27; color: #fff; box-shadow: 0 8px 20px rgb(48 39 32 / 13%); }
-.setupReset { display: grid; gap: 11px; margin-top: 18px; border-top: 1px solid var(--feature-hairline); padding-top: 17px; }
+.setupReset { display: grid; gap: 9px; margin-top: 2px; border-top: 1px solid var(--feature-hairline); padding-top: 13px; }
 .setupReset p { margin: 0; color: #706861; font-size: 12px; line-height: 1.6; }
 .setupReset button { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--feature-border); border-radius: 13px; background: rgb(255 255 255 / 68%); color: #3e3935; font: inherit; font-size: 13px; font-weight: 730; }
-.clearButton { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; border: 1px solid rgb(171 76 59 / 24%); border-radius: 13px; background: #fff7f3; color: #81473d; font: inherit; font-size: 13px; font-weight: 730; }
+.clearButton { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 8px; margin-top: 0; border: 1px solid rgb(171 76 59 / 24%); border-radius: 13px; background: #fff7f3; color: #81473d; font: inherit; font-size: 13px; font-weight: 730; }
 
 .confirmLayer { position: absolute; z-index: 120; inset: 0; display: grid; align-items: end; padding: 18px; overflow: auto; overscroll-behavior: contain; background: rgb(30 23 19 / 54%); backdrop-filter: blur(10px); -webkit-overflow-scrolling: touch; }
 .confirmCard { display: grid; gap: 13px; border: 1px solid rgb(255 255 255 / 24%); border-radius: 24px; padding: 20px; background: #fffdf9; box-shadow: 0 28px 72px rgb(29 21 16 / 28%); animation: sheetIn .28s cubic-bezier(.2, .85, .2, 1) both; }
@@ -229,6 +247,8 @@
   .activitySection[data-testid="ondo-b-saved-entry"]:has(.savedCard),
   .activitySection[data-testid="my-korea-recent"]:has(.referenceCard) { order: -1; }
   .settingsSection { margin-top: 12px; padding: 15px; border-radius: 18px; }
+  .segmented { margin-top: 11px; }
+  .settingsDisclosure { margin-top: 8px; }
 }
 
 @media (max-width: 350px) {
@@ -237,6 +257,7 @@
   .settingsSection { padding: 13px; }
   .preferenceChips { gap: 6px; }
   .preferenceChips button { padding-inline: 12px; }
+  .settingsDisclosure > summary small { white-space: normal; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -257,6 +278,7 @@
   .settingsSection,
   .confirmCard { animation: none; }
   .referenceCard,
-  .preferenceChips button { transition: none; }
+  .preferenceChips button,
+  .settingsDisclosure > summary > svg { transition: none; }
   .confirmLayer { backdrop-filter: none; }
 }

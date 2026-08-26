@@ -89,7 +89,7 @@
 
 .contentRail {
   display: grid;
-  grid-auto-columns: minmax(224px, 76%);
+  grid-auto-columns: minmax(246px, 82%);
   grid-auto-flow: column;
   gap: 9px;
   overflow-x: auto;
@@ -103,13 +103,13 @@
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: 7px;
-  padding: 12px;
+  gap: 9px;
+  padding: 10px;
   border: 1px solid rgb(83 65 54 / 12%);
   border-radius: 15px;
   background: linear-gradient(155deg, #fff, #faf4ef);
 }
-.contentRail article { min-height: 166px; scroll-snap-align: start; }
+.contentRail article { min-height: 294px; scroll-snap-align: start; }
 .contentRail article > small,
 .moreStories article > small { color: #876153; font-size: 12px; font-weight: 740; }
 .contentRail article > strong,
@@ -119,6 +119,45 @@
 .moreStories article > p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .contentRail article > em,
 .moreStories article > em { color: #766f67; font-size: 12px; font-style: normal; }
+
+.storyMedia {
+  position: relative;
+  min-height: 126px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #efe3dc, #f8efe7);
+  isolation: isolate;
+}
+.storyMedia::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 52%, rgb(31 20 16 / 72%));
+  content: "";
+  pointer-events: none;
+}
+.storyMedia img { object-fit: cover; transition: transform 320ms cubic-bezier(.2, .8, .2, 1); }
+.storyMedia figcaption {
+  position: absolute;
+  z-index: 2;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  overflow: hidden;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: .01em;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 28%);
+  white-space: nowrap;
+}
+.storyCopy { display: grid; min-width: 0; gap: 4px; padding-inline: 2px; }
+.storyCopy > strong { display: -webkit-box; overflow: hidden; font-size: 15px; line-height: 1.32; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.storyCopy > p { margin: 0; overflow: hidden; color: #514a44; font-size: 13px; line-height: 1.42; text-overflow: ellipsis; white-space: nowrap; }
+.storyCopy > em { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; color: #766f67; font-size: 12px; font-style: normal; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.storyCopy > em svg { flex: 0 0 auto; color: #a85a42; }
 
 .contentRail article > nav,
 .moreStories article > nav,
@@ -147,6 +186,7 @@
 .moreStories { border-top: 1px solid rgb(54 43 36 / 10%); }
 .moreStories > div { display: grid; gap: 8px; padding-top: 4px; }
 .compactStory { grid-template-columns: minmax(0, 1fr); }
+.compactStory .storyCopy > p { display: block; }
 
 .jeju { border-top: 1px solid rgb(54 43 36 / 11%); }
 .jeju > summary { justify-content: initial; }
@@ -172,9 +212,25 @@
 @media (min-width: 801px) {
   .root > summary { min-height: 62px; }
   .root > summary strong { font-size: 16px; }
-  .contentRail { grid-auto-columns: minmax(250px, 32%); }
+  .contentRail { grid-auto-columns: minmax(286px, 32%); }
   .moreStories > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .jeju nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (hover: hover) {
+  .contentRail article:hover .storyMedia img { transform: scale(1.025); }
+}
+
+@media (max-width: 390px) {
+  .panel { gap: 9px; padding: 10px; }
+  .panel header { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .panel header > span strong { font-size: 13px; }
+  .method > summary { min-height: 40px; padding-inline: 4px; }
+  .contentRail { grid-auto-columns: minmax(242px, 84%); gap: 8px; }
+  .contentRail article { min-height: 274px; }
+  .storyMedia { min-height: 118px; }
+  .storyCopy > strong { font-size: 15px; }
+  .storyCopy > p { font-size: 13px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -186,6 +242,7 @@
 @media (prefers-reduced-motion: reduce) {
   .root summary svg { transition: none; }
   .contentRail { scroll-behavior: auto; }
+  .storyMedia img { transition: none; }
 }
 
 /* City-context editorial layer: the same progressive source content now lives

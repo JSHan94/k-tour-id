@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { Languages, LockKeyhole, RotateCcw, SlidersHorizontal } from "lucide-react"
+import { ChevronRight, Languages, LockKeyhole, RotateCcw, SlidersHorizontal } from "lucide-react"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
@@ -47,6 +47,7 @@ export function SettingsEntryB() {
   const [clearOpen, setClearOpen] = useState(false)
   const clearButtonRef = useRef<HTMLButtonElement>(null)
   const locale = state.locale
+  const selectedPreferenceCount = state.discoveryPreferences.length
 
   function closeClear() {
     setClearOpen(false)
@@ -77,30 +78,52 @@ export function SettingsEntryB() {
 
       <section className={styles.settingsSection} aria-labelledby="b-choices-heading">
         <div className={styles.sectionHeading}><SlidersHorizontal size={18} aria-hidden="true" /><h2 id="b-choices-heading">{locale === "ko" ? "탐색 선택" : "Discovery choices"}</h2></div>
-        <p>{locale === "ko" ? "관심 있는 음식, 분위기, 시간대와 식이 요구사항을 선택하세요. 공식 기록은 지원 여부를 확인하지 않으므로 장소를 숨기거나 지원 장소로 표시하지 않아요." : "Choose food, mood, timing, and dietary interests. Official records do not confirm support, so these choices do not hide or label places."}</p>
-        <div className={styles.preferenceChips}>
-          {ONDO_B_DISCOVERY_PREFERENCES.map((option) => (
-            <button key={option.id} type="button" aria-pressed={state.discoveryPreferences.includes(option.id)} onClick={() => togglePreference(option.id)}>
-              {option.label[locale]}
-            </button>
-          ))}
-        </div>
-        <div className={styles.setupReset}>
-          <p>{locale === "ko" ? "이용 목적과 탐색 선택을 처음부터 다시 고를 수 있어요. 저장한 장소, 최근 본 장소, 참여한 테이블, 개인 메모와 로컬 시그널은 유지됩니다." : "Choose your intent and discovery preferences again. Saved places, recent views, joined Tables, private notes, and Local Signals stay unchanged."}</p>
-          <button type="button" onClick={() => actions.resetOnboarding()} data-testid="ondo-b-onboarding-reset">
-            <RotateCcw size={17} aria-hidden="true" />
-            {locale === "ko" ? "ONDO 다시 설정하기" : "Set up ONDO again"}
-          </button>
-        </div>
+        <details className={styles.settingsDisclosure} data-testid="ondo-b-discovery-settings">
+          <summary>
+            <span>
+              <strong>{locale === "ko" ? `${selectedPreferenceCount}개 선택됨` : `${selectedPreferenceCount} selected`}</strong>
+              <small>{locale === "ko" ? "음식·분위기·식이 조건 편집" : "Edit food, mood, and dietary interests"}</small>
+            </span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </summary>
+          <div className={styles.settingsDisclosureBody}>
+            <p>{locale === "ko" ? "이 선택은 추천 맥락만 조정합니다. 공식 기록에서 지원 여부가 확인되지 않은 장소를 숨기거나 지원 장소로 표시하지 않아요." : "These choices shape discovery context only. They never hide places or claim support that official records do not confirm."}</p>
+            <div className={styles.preferenceChips}>
+              {ONDO_B_DISCOVERY_PREFERENCES.map((option) => (
+                <button key={option.id} type="button" aria-pressed={state.discoveryPreferences.includes(option.id)} onClick={() => togglePreference(option.id)}>
+                  {option.label[locale]}
+                </button>
+              ))}
+            </div>
+            <div className={styles.setupReset}>
+              <p>{locale === "ko" ? "처음 설정을 다시 해도 저장한 장소와 활동은 유지됩니다." : "Restarting setup keeps your saved places and activity."}</p>
+              <button type="button" onClick={() => actions.resetOnboarding()} data-testid="ondo-b-onboarding-reset">
+                <RotateCcw size={17} aria-hidden="true" />
+                {locale === "ko" ? "ONDO 다시 설정하기" : "Set up ONDO again"}
+              </button>
+            </div>
+          </div>
+        </details>
       </section>
 
       <section className={styles.settingsSection} aria-labelledby="b-privacy-heading">
         <div className={styles.sectionHeading}><LockKeyhole size={18} aria-hidden="true" /><h2 id="b-privacy-heading">{locale === "ko" ? "이 브라우저의 데이터" : "Data in this browser"}</h2></div>
-        <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블, 탐색 선택, 개인 메모, 게시한 로컬 시그널과 OOKRW Test 영수증은 이 브라우저에 남습니다. 신원 확인 결과와 지갑 연결 상태는 새로고침하면 초기화되며 외부로 전송되지 않습니다." : "Saved places, recent views, joined Tables, discovery choices, private notes, posted Local Signals, and OOKRW Test receipts stay in this browser. Identity results and wallet connection readiness reset on reload and are not sent outside the app."}</p>
-        <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
-          <RotateCcw size={17} aria-hidden="true" />
-          {locale === "ko" ? "저장한 내용 지우기" : "Clear saved content"}
-        </button>
+        <details className={styles.settingsDisclosure} data-testid="ondo-b-device-data-settings">
+          <summary>
+            <span>
+              <strong>{locale === "ko" ? "이 기기에만 저장" : "Stored on this device"}</strong>
+              <small>{locale === "ko" ? "저장 범위와 삭제 관리" : "Review storage and clear content"}</small>
+            </span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </summary>
+          <div className={styles.settingsDisclosureBody}>
+            <p>{locale === "ko" ? "저장한 장소, 최근 조회, 참여한 테이블, 탐색 선택, 개인 메모, 게시한 로컬 시그널과 OOKRW Test 영수증은 이 브라우저에 남습니다. 신원 확인 결과와 지갑 연결 상태는 새로고침하면 초기화되며 외부로 전송되지 않습니다." : "Saved places, recent views, joined Tables, discovery choices, private notes, posted Local Signals, and OOKRW Test receipts stay in this browser. Identity results and wallet connection readiness reset on reload and are not sent outside the app."}</p>
+            <button ref={clearButtonRef} className={styles.clearButton} type="button" onClick={() => setClearOpen(true)} data-testid="ondo-b-clear-device-open">
+              <RotateCcw size={17} aria-hidden="true" />
+              {locale === "ko" ? "저장한 내용 지우기" : "Clear saved content"}
+            </button>
+          </div>
+        </details>
       </section>
 
       {clearOpen ? <DeviceClearConfirmation

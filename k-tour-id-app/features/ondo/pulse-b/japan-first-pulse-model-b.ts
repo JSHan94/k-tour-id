@@ -188,6 +188,12 @@ export type JapanFirstLaunchContentB = {
   rightsMode: "link-only"
   researchRecordedAt: "2026-08-24"
   pulseEligible: false
+  editorialMedia?: {
+    src: string
+    alt: { en: string; ko: string; ja: string }
+    credit: "ONDO original editorial illustration"
+    rightsMode: "ondo-original"
+  }
 }
 
 export const JAPAN_FIRST_FEATURED_CONTENT_IDS = Object.freeze(["C01", "C03", "C06"] as const)
@@ -197,6 +203,16 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     id: "C01",
     title: { en: "Fact-check Seoul's fresh sesame-oil pilgrimage", ko: "서울 즉석 참기름 성지 팩트체크" },
     jaHook: "ソウルの『ごま油の聖地』を検証",
+    editorialMedia: {
+      src: "/editorial/japan-first-c01-sesame-oil.jpg",
+      alt: {
+        en: "Editorial still life of freshly pressed sesame oil in a Seoul market",
+        ko: "서울 시장의 즉석 참기름을 표현한 편집 이미지",
+        ja: "ソウル市場の搾りたてごま油を表現した編集画像",
+      },
+      credit: "ONDO original editorial illustration",
+      rightsMode: "ondo-original",
+    },
     cityIds: ["seoul"],
     sourceReferences: [
       { label: "Rurubu & more", url: "https://rurubu.jp/andmore/article/25110", type: "editorial", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
@@ -216,6 +232,16 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     id: "C03",
     title: { en: "What fits into an eight-hour Seoul stop?", ko: "서울 체류 8시간, 어디까지 가능할까?" },
     jaHook: "滞在8時間、ソウルでどこまでできる？",
+    editorialMedia: {
+      src: "/editorial/japan-first-c03-seoul-eight-hours.jpg",
+      alt: {
+        en: "Editorial collage of an eight-hour route through Seoul",
+        ko: "서울 8시간 여행 동선을 표현한 편집 콜라주",
+        ja: "ソウル8時間の旅程を表現した編集コラージュ",
+      },
+      credit: "ONDO original editorial illustration",
+      rightsMode: "ondo-original",
+    },
     cityIds: ["seoul"],
     sourceReferences: [{ label: "YouTube · Haru", url: "https://www.youtube.com/watch?v=6D3xv0y688I", type: "original-creator", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" }],
     sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
@@ -224,6 +250,16 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     id: "C06",
     title: { en: "Nana's monthly Korea beauty research", ko: "Nana의 한국 뷰티 취재 지도" },
     jaHook: "月1韓国美容・NanaのクリニックMAP",
+    editorialMedia: {
+      src: "/editorial/japan-first-c06-beauty-research.jpg",
+      alt: {
+        en: "Editorial beauty-research desk with skincare objects and a Seoul map",
+        ko: "스킨케어 오브제와 서울 지도를 담은 뷰티 취재 편집 이미지",
+        ja: "スキンケア用品とソウル地図を配した美容取材の編集画像",
+      },
+      credit: "ONDO original editorial illustration",
+      rightsMode: "ondo-original",
+    },
     cityIds: ["seoul"],
     sourceReferences: [
       { label: "Hanako 2025", url: "https://hanako.tokyo/travel/465904/", type: "editorial", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
@@ -254,6 +290,16 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     id: "C18",
     title: { en: "Step into Jeju's When Life Gives You Tangerines", ko: "〈폭싹 속았수다〉 제주 장면 속으로" },
     jaHook: "『おつかれさま』の済州へ",
+    editorialMedia: {
+      src: "/editorial/japan-first-c18-jeju-screen-route.jpg",
+      alt: {
+        en: "Editorial Jeju landscape with tangerines, stone walls and the sea",
+        ko: "귤과 돌담, 바다로 구성한 제주 촬영지 편집 이미지",
+        ja: "みかん、石垣、海で構成した済州ロケ地の編集画像",
+      },
+      credit: "ONDO original editorial illustration",
+      rightsMode: "ondo-original",
+    },
     cityIds: ["jeju"],
     sourceReferences: [{ label: "VISITKOREA Japanese", url: "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=222180", type: "official-tourism", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" }],
     sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
@@ -262,6 +308,16 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     id: "C20",
     title: { en: "Follow K-pop stars through Jeju", ko: "K-pop 스타가 먹고 머문 제주" },
     jaHook: "K-popスターが巡った済州",
+    editorialMedia: {
+      src: "/editorial/japan-first-c20-jeju-kpop-route.jpg",
+      alt: {
+        en: "Editorial Jeju coastal route with music and performance motifs",
+        ko: "음악과 공연 모티프를 담은 제주 해안 여행 편집 이미지",
+        ja: "音楽とステージのモチーフを配した済州海岸ルートの編集画像",
+      },
+      credit: "ONDO original editorial illustration",
+      rightsMode: "ondo-original",
+    },
     cityIds: ["jeju"],
     sourceReferences: [{ label: "VISITKOREA Japanese", url: "https://japanese.visitkorea.or.kr/svc/whereToGo/hdrdslt/hdrdsltView.do?crsSn=372386", type: "official-tourism", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" }],
     sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
