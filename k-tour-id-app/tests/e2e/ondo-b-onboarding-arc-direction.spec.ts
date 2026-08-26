@@ -55,6 +55,18 @@ async function expectInsideViewport(page: Page, locator: Locator) {
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + .5)
 }
 
+async function expectInsideDialog(page: Page, dialog: Locator, locator: Locator, bottomClearance = 0) {
+  const [layer, control] = await Promise.all([rect(dialog), rect(locator)])
+  expect(control.x).toBeGreaterThanOrEqual(layer.x - .5)
+  expect(control.y).toBeGreaterThanOrEqual(layer.y - .5)
+  expect(control.x + control.width).toBeLessThanOrEqual(layer.x + layer.width + .5)
+  expect(control.y + control.height).toBeLessThanOrEqual(layer.y + layer.height - bottomClearance + .5)
+  expect(await page.evaluate(({ x, y }) => {
+    const hit = document.elementFromPoint(x, y)
+    return Boolean(hit?.closest("button, summary"))
+  }, { x: control.x + control.width / 2, y: control.y + control.height / 2 })).toBe(true)
+}
+
 async function expectControlGeometry(scope: Locator) {
   const controls = scope.locator("button:visible, summary:visible")
   const boxes = await controls.evaluateAll((elements) => elements.map((element) => {
@@ -94,6 +106,8 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         const valueSecondary = value.locator("button").last()
         await expectInsideViewport(page, valuePrimary)
         await expectInsideViewport(page, valueSecondary)
+        await expectInsideDialog(page, dialog, valuePrimary, 16)
+        await expectInsideDialog(page, dialog, valueSecondary, 16)
         const actionHierarchy = await Promise.all([valuePrimary, valueSecondary].map((control) => control.evaluate((element) => {
           const style = getComputedStyle(element)
           return { background: style.backgroundImage, shadow: style.boxShadow, weight: Number.parseFloat(style.fontWeight) }
@@ -120,6 +134,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await intent.getByTestId("persona-travelling").click()
         const intentPrimary = intent.locator(".primary, button").filter({ hasText: /preferences|취향|好み/ }).first()
         await expectInsideViewport(page, intentPrimary)
+        await expectInsideDialog(page, dialog, intentPrimary, 16)
         await page.waitForTimeout(340)
         await capture(page, locale, profile, "intent")
 
@@ -130,6 +145,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await expectControlGeometry(preferences)
         await expectNoHorizontalOverflow(page, dialog)
         await expectInsideViewport(page, preferences.getByTestId("onboarding-finish"))
+        await expectInsideDialog(page, dialog, preferences.getByTestId("onboarding-finish"), 16)
         await page.waitForTimeout(340)
         await capture(page, locale, profile, "preferences")
 
