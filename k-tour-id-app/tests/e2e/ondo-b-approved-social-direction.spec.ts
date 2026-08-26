@@ -145,7 +145,19 @@ test("SOC-DIR-001 Timeleft event card and chat expose a social timeline", async 
   const itinerary = card.getByTestId("table-sample-time").locator("xpath=../..")
   const timeline = await pseudo(itinerary, "::before")
   expect(timeline.content).not.toBe("none")
-  expect(timeline.height).toBeGreaterThan(100)
+  expect(timeline.height).toBeGreaterThanOrEqual(60)
+  const compactItinerary = await itinerary.evaluate((element) => {
+    const rail = getComputedStyle(element, "::before")
+    const top = Number.parseFloat(rail.top)
+    const bottom = Number.parseFloat(rail.bottom)
+    const height = Number.parseFloat(rail.height)
+    const visibleRows = Array.from(element.querySelectorAll("dl > div")).filter((row) => (row as HTMLElement).offsetParent !== null).length
+    return { visibleRows, top, bottom, height, clientHeight: element.clientHeight }
+  })
+  expect(compactItinerary.visibleRows).toBe(3)
+  expect(compactItinerary.top).toBeGreaterThanOrEqual(0)
+  expect(compactItinerary.bottom).toBeGreaterThanOrEqual(0)
+  expect(compactItinerary.top + compactItinerary.height).toBeLessThanOrEqual(compactItinerary.clientHeight + 1)
 
   await openTableDetail(page)
   await openAfter19Review(page)

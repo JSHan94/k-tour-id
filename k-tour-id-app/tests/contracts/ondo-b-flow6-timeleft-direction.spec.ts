@@ -50,7 +50,7 @@ test("FLOW6-SAFE-003 storage failures and destructive actions remain recoverable
   for (const evidence of [
     "joinPersistError",
     "leavePersistError",
-    'data-testid="table-block-confirm"',
+    'confirmTestId="table-block-confirm"',
     "table-join-save-error",
     "table-leave-save-error",
   ]) expect(tables).toContain(evidence)
