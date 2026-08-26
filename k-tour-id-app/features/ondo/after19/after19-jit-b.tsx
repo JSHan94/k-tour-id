@@ -28,6 +28,7 @@ type After19JitBProps = {
   venueLabel: string
   onCancel(): void
   onEligible(returnTo: BReturnToEnvelope): void
+  onExpiredRetry(): void
 }
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
@@ -35,9 +36,9 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:
 const COPY = {
   en: {
     title: "Before you join",
-    reason: "We’ll only share that you’re over 19 for this Table. Your date of birth stays private.",
+    reason: "Only an eligible 19+ result returns to this Table on this device. Your date of birth stays private.",
     boundary: "How this check works",
-    predicate: "No provider is connected and no credential is created. The age check belongs to the Table, not the venue record. Only an eligible 19+ result returns to this Table. Date of birth is never requested or stored.",
+    predicate: "No provider is connected and no credential is created. The age check belongs to the Table, not the venue record. Only an eligible 19+ result returns to this Table. Date of birth is never requested or stored. Nothing is sent to ONDO or the host.",
     context: "You will return here",
     start: "Review and continue",
     cancel: "Not now",
@@ -56,9 +57,9 @@ const COPY = {
   },
   ko: {
     title: "참여 전 확인",
-    reason: "이 테이블에는 만 19세 이상이라는 사실만 공유해요. 생년월일은 비공개로 유지됩니다.",
+    reason: "이 기기에서 19+ 충족 결과만 이 테이블로 돌아옵니다. 생년월일은 비공개로 유지됩니다.",
     boundary: "확인 방식 안내",
-    predicate: "연결된 제공기관이나 생성되는 자격증명은 없어요. 연령 확인은 장소 기록이 아닌 테이블에만 적용되며, 이 테이블에는 19+ 충족 결과만 돌아갑니다. 생년월일을 요청하거나 저장하지 않습니다.",
+    predicate: "연결된 제공기관이나 생성되는 자격증명은 없어요. 연령 확인은 장소 기록이 아닌 테이블에만 적용되며, 이 테이블에는 19+ 충족 결과만 돌아갑니다. 생년월일을 요청하거나 저장하지 않으며 ONDO나 호스트에게 전송되는 정보도 없습니다.",
     context: "이곳으로 돌아와요",
     start: "확인하고 계속",
     cancel: "나중에",
@@ -77,9 +78,9 @@ const COPY = {
   },
   ja: {
     title: "参加前の確認",
-    reason: "このTableには、19歳以上であることだけを共有します。生年月日は非公開のままです。",
+    reason: "この端末上で、19歳以上という適格結果だけがこのTableに戻ります。生年月日は非公開のままです。",
     boundary: "確認方法",
-    predicate: "接続された提供事業者はなく、資格情報も作成されません。年齢確認は場所の記録ではなく、このTableにだけ適用されます。このTableに戻るのは19歳以上という結果だけで、生年月日を求めたり保存したりしません。",
+    predicate: "接続された提供事業者はなく、資格情報も作成されません。年齢確認は場所の記録ではなく、このTableにだけ適用されます。このTableに戻るのは19歳以上という結果だけで、生年月日を求めたり保存したりしません。ONDOやホストにも何も送信されません。",
     context: "ここに戻ります",
     start: "確認して続ける",
     cancel: "今はしない",
@@ -98,7 +99,7 @@ const COPY = {
   },
 } as const satisfies Record<SocialLocale, Record<string, string>>
 
-export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, onCancel, onEligible }: After19JitBProps) {
+export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, onCancel, onEligible, onExpiredRetry }: After19JitBProps) {
   const [view, setView] = useState<GateView>("intro")
   const layerRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLElement | null>(null)
@@ -113,7 +114,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
     setView("intro")
     const frame = window.requestAnimationFrame(() => startRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
-  }, [open, returnTo?.tokenId])
+  }, [open])
 
   if (!open || !returnTo) return null
 
@@ -164,7 +165,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
   return (
     <div ref={layerRef} className={styles.layer} data-testid="after19-gate-layer">
       <div className={styles.backdrop} aria-hidden="true" />
-      <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="after19-b-title" data-testid="after19-walkthrough" onKeyDown={handleKeyDown}>
+      <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="after19-b-title" data-testid="after19-walkthrough" data-visual-direction="timeleft-checkpoint" data-gate-view={view} onKeyDown={handleKeyDown}>
         <header className={styles.header}>
           <span><ShieldCheck size={18} aria-hidden="true" />{t.header}</span>
           <strong>{t.trust}</strong>
@@ -202,7 +203,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
 
         {view === "failure" ? <Outcome testId="gate-failure" title={t.failedTitle} body={t.failedBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("review")} onReturn={cancel} /> : null}
         {view === "unsupported" ? <Outcome testId="gate-unsupported" title={t.unsupportedTitle} body={t.unsupportedBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("review")} onReturn={cancel} /> : null}
-        {view === "expired" ? <Outcome testId="after19-expiry-notice" title={t.expiredTitle} body={t.expiredBody} retry={t.retry} returnLabel={t.return} onRetry={() => setView("review")} onReturn={cancel} /> : null}
+        {view === "expired" ? <Outcome testId="after19-expiry-notice" title={t.expiredTitle} body={t.expiredBody} retry={t.retry} returnLabel={t.return} onRetry={() => { onExpiredRetry(); setView("review") }} onReturn={cancel} /> : null}
       </section>
     </div>
   )
