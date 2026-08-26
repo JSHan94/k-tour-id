@@ -27,6 +27,9 @@ async function gotoB(page: Page, search = "") {
 }
 
 async function openMy(page: Page) {
+  const nav = page.getByTestId("ondo-main-nav")
+  await expect(nav).toBeVisible()
+  await expect.poll(() => nav.evaluate((node) => !node.hasAttribute("inert"))).toBe(true)
   await activate(page, "nav-my")
   return page.getByTestId("ondo-b-my-korea-entry")
 }
@@ -51,9 +54,13 @@ test("My Korea starts honestly empty, records an explicit official place open, r
   await expectNoSeriousAxe(page)
 
   await activate(page, "nav-ondo")
-  await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
+  const venueOpener = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first()
+  await venueOpener.click()
   const viewedVenueId = await page.getByTestId("canonical-place-peek").getAttribute("data-venue-id")
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").recentVenueIds ?? [], DEVICE_KEY)).toContain(viewedVenueId)
   await page.getByRole("button", { name: "Close place" }).click()
+  await expect(page.getByTestId("canonical-place-peek")).toBeHidden()
+  await expect(venueOpener).toBeFocused()
   my = await openMy(page)
   await expect(my.getByTestId(`recent-venue-${viewedVenueId}`)).toBeVisible()
   await expect(my).toContainText("Viewed on this device")
@@ -63,6 +70,7 @@ test("My Korea starts honestly empty, records an explicit official place open, r
   await expect(my.getByTestId(`recent-venue-${viewedVenueId}`)).toBeVisible()
 
   await activate(page, "nav-settings")
+  await page.getByTestId("ondo-b-device-data-settings").locator(":scope > summary").click()
   await page.getByTestId("ondo-b-clear-device-open").click()
   await page.getByRole("button", { name: "Clear saved content" }).click()
   await expect(page.getByTestId("ondo-b-clear-device-confirm")).toBeHidden()

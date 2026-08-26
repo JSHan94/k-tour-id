@@ -8,8 +8,6 @@ import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "../shared/ui/production-local.module.css"
 
-type PersonalLocale = OndoBLocale | "ja"
-
 const COPY = {
   en: {
     eyebrow: "ON THIS DEVICE",
@@ -82,20 +80,8 @@ const COPY = {
   },
 } as const
 
-const JA_PREFERENCE_LABELS: Record<(typeof ONDO_B_DISCOVERY_PREFERENCES)[number]["id"], string> = {
-  classic: "地元の定番",
-  cafe: "カフェ・スイーツ",
-  late: "夜遅めの食事",
-  lively: "にぎやか",
-  calm: "ゆったり",
-  vegetarian: "ベジタリアン",
-  vegan: "ヴィーガン",
-  halal: "ハラール",
-  allergy_aware: "アレルギー配慮",
-}
-
 function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
-  locale: PersonalLocale
+  locale: OndoBLocale
   onCancel(): void
   onConfirm(): void
 }) {
@@ -133,7 +119,7 @@ export function SettingsEntryB() {
   const { state, actions } = useOndoB()
   const [clearOpen, setClearOpen] = useState(false)
   const clearButtonRef = useRef<HTMLButtonElement>(null)
-  const locale = state.locale as PersonalLocale
+  const locale = state.locale
   const copy = COPY[locale]
   const selectedPreferenceCount = state.discoveryPreferences.length
 
@@ -148,8 +134,8 @@ export function SettingsEntryB() {
       : [...state.discoveryPreferences, id])
   }
 
-  function setLocale(nextLocale: PersonalLocale) {
-    actions.setLocale(nextLocale as typeof state.locale)
+  function setLocale(nextLocale: OndoBLocale) {
+    actions.setLocale(nextLocale)
   }
 
   return (
@@ -184,7 +170,7 @@ export function SettingsEntryB() {
             <div className={styles.preferenceChips}>
               {ONDO_B_DISCOVERY_PREFERENCES.map((option) => (
                 <button key={option.id} type="button" aria-pressed={state.discoveryPreferences.includes(option.id)} onClick={() => togglePreference(option.id)}>
-                  {locale === "ja" ? JA_PREFERENCE_LABELS[option.id] : option.label[locale]}
+                  {option.label[locale]}
                 </button>
               ))}
             </div>

@@ -23,27 +23,29 @@ export function romanizeKorean(value: string) {
   return result.replace(/(^|[\s(])([a-z])/g, (_, prefix: string, letter: string) => `${prefix}${letter.toUpperCase()}`)
 }
 
-export function venueDisplayName(name: string, locale: "en" | "ko") {
+export function venueDisplayName(name: string, locale: "en" | "ko" | "ja") {
   return locale === "ko" ? name : romanizeKorean(name)
 }
 
-export function venueNamePresentation(name: string, locale: "en" | "ko") {
+export function venueNamePresentation(name: string, locale: "en" | "ko" | "ja") {
   const transliteration = romanizeKorean(name)
   return {
     officialName: name,
-    officialNameLabel: locale === "ko" ? "공식 출처 한글명" : "Official Korean source name",
+    officialNameLabel: locale === "ko" ? "공식 출처 한글명" : locale === "ja" ? "韓国語の公式名称" : "Official Korean source name",
     transliteration,
     transliterationLabel: locale === "ko"
       ? "길찾기용 생성 로마자 표기 · 공식 영문명 아님"
-      : "Transliterated for navigation · Generated, not an official English name",
+      : locale === "ja"
+        ? "検索・移動用の自動ローマ字表記・公式日本語名ではありません"
+        : "Transliterated for navigation · Generated, not an official English name",
   }
 }
 
-export function venueDistrictLabel(cityId: "seoul" | "busan", districtId: string, locale: "en" | "ko") {
+export function venueDistrictLabel(cityId: "seoul" | "busan", districtId: string, locale: "en" | "ko" | "ja") {
   return locale === "ko" ? districtId : DISTRICTS[`${cityId}:${districtId}`] ?? romanizeKorean(districtId)
 }
 
-export function venueLabelById(id: string, locale: "en" | "ko") {
+export function venueLabelById(id: string, locale: "en" | "ko" | "ja") {
   const venue = canonicalMapVenueById(id)
   return venue ? venueDisplayName(venue.name.ko, locale) : undefined
 }

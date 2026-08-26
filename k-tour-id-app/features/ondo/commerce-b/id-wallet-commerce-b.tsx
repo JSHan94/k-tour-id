@@ -42,7 +42,7 @@ import {
 } from "./stable-commerce-model-b"
 import styles from "./id-wallet-commerce-b.module.css"
 
-type Locale = OndoBLocale | "ja"
+type Locale = OndoBLocale
 type WalletReturn = "ready" | "failed"
 type PaymentView = "review" | "processing" | "receipt" | "failure" | "insufficient" | "refunded"
 type QaPayment = "failure" | "insufficient"
@@ -611,7 +611,7 @@ export function IdWalletCommerceB() {
   const walletStatus = state.commerceWalletStatus
   const commerce = state.commerceSession
   const balance = stableCommerceBalanceB(commerce)
-  const venueLocale = locale === "ko" ? "ko" : "en"
+  const venueLocale = locale
   const originVenue = state.commerceOrigin?.kind === "canonical_place" ? canonicalMapVenueById(state.commerceOrigin.venueId) : undefined
   const originName = originVenue ? venueDisplayName(originVenue.name.ko, venueLocale) : null
   const receiptVenue = state.commerceReceiptVenueId ? canonicalMapVenueById(state.commerceReceiptVenueId) : undefined

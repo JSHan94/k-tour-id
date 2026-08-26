@@ -72,6 +72,14 @@ export async function scanStandaloneArtifact() {
   if (await digest(resolve(STAGE_DIST, emittedOg)) !== await digest(resolve(APP_ROOT, expectedOg))) {
     fail("The emitted ONDO social card differs from the validated source")
   }
+  for (const publicFile of PUBLIC_FILES.slice(1)) {
+    const publicPath = publicFile.replace(/^public\//, "")
+    const emittedFile = emittedImages.find((file) => file === publicPath || file.endsWith(`/${publicPath}`))
+    if (!emittedFile) fail("A required ONDO editorial image is missing", [publicPath])
+    if (await digest(resolve(STAGE_DIST, emittedFile)) !== await digest(resolve(APP_ROOT, publicFile))) {
+      fail("An emitted ONDO editorial image differs from the validated source", [publicPath])
+    }
+  }
   const legacyImages = emittedImages.filter((file) => /(?:modern-atlas|ondo-v2|ondo-baljajwi|placeholder|portrait|korean-|demo)/i.test(file))
   if (legacyImages.length) fail("Legacy public imagery was emitted", legacyImages)
 

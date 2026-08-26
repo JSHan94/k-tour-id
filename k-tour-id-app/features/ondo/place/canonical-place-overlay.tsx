@@ -132,16 +132,74 @@ const COPY = {
     after19Body: "참여를 누른 뒤 확인해요.",
     pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
   },
+  ja: {
+    active: "韓国の公式飲食店営業許可記録",
+    source: "公式出典記録",
+    sourceBody: "韓国行政安全部 LOCALDATA・一般飲食店営業許可ディレクトリ",
+    sourceBoundary: "この記録は、出典日時点で営業許可が有効だったことだけを示します。現在営業中であることを保証するものではありません。",
+    before: "この出典では確認できない情報",
+    unknown: "この出典では確認できません",
+    unknownShort: "情報なし",
+    hours: "現在の営業時間",
+    card: "海外発行カードへの対応",
+    menu: "メニューと価格",
+    language: "日本語・英語への対応",
+    category: "公式業種名",
+    licence: "営業許可の状態",
+    activeLicence: "出典日時点で有効",
+    opened: "営業許可開始日",
+    modified: "出典記録の更新日",
+    details: "公式記録の詳細",
+    directions: "経路を見る",
+    save: "この端末に保存",
+    saved: "この端末に保存済み",
+    removeSaved: "保存を解除",
+    localSignal: "ローカルシグナルを追加",
+    localSignalPosted: "この端末のローカルシグナルを更新",
+    localSignalBoundary: "ほかの旅行者のために、短いタグと任意の写真を残せます。",
+    demoOffer: "ONDOの食事特典を見る",
+    demoOfferBody: "アプリ内でONDOの食事特典を確認します。この特典は公式の場所記録や店舗ではなく、ONDOが提供します。",
+    close: "場所を閉じる",
+    back: "場所の概要に戻る",
+    saveFailed: "この端末に場所を保存できませんでした。選択中の場所は開いたままです。",
+    retrySave: "もう一度保存",
+    detailLoading: "公式住所の根拠を読み込み中…",
+    detailUnavailable: "公式住所の根拠を一時的に読み込めません",
+    retryDetail: "公式記録を再読み込み",
+    sourceSnapshot: "出典スナップショット",
+    sourceRecord: "LOCALDATA管理番号",
+    sourceReference: "出典参照",
+    pulseSignals: "最近のシグナル",
+    pulseLimited: "探索中・シグナル不足",
+    pulseConfidence: "確度",
+    pulseFreshness: "更新状況",
+    pulseEvidence: "このPulseの根拠",
+    pulseHigh: "高い",
+    pulseMedium: "中程度",
+    pulseLow: "低い",
+    pulseLimitedConfidence: "シグナル不足",
+    pulseFixedSnapshot: "選定スナップショット",
+    pulseGrowingSnapshot: "最近更新",
+    pulseTooHot: "混みそう？",
+    pulseTooHotBody: "同じ選定エリアから、より落ち着いた場所を比べられます。",
+    pulseAlternative: "落ち着いた場所を開く",
+    pulseLocalEvidence: "この端末",
+    table: "テーブルを見る",
+    tableBody: "8月28日（金）・20:30 KST・韓国語＋英語・残り1席",
+    after19: "19歳以上の確認が必要",
+    after19Body: "参加を選んだ後に確認します。",
+    pulseBoundary: "選定した訪問シグナルに基づく参考値です。リアルタイムの混雑状況でも、公式の場所情報でもありません。",
+  },
 } as const
 
 const CATEGORY = {
-  korean: { en: "Korean", ko: "한식" },
-  casual: { en: "Quick service", ko: "분식·간편식" },
-  japanese: { en: "Japanese", ko: "일식" },
-  chinese: { en: "Chinese", ko: "중식" },
-  global: { en: "Western & international", ko: "경양식·외국음식" },
-  night: { en: "Pub & café licence types", ko: "주점·카페 업태" },
-  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점" },
+  korean: { en: "Korean", ko: "한식", ja: "韓国料理" },
+  casual: { en: "Quick service", ko: "분식·간편식", ja: "軽食・ファストフード" },
+  japanese: { en: "Japanese", ko: "일식", ja: "日本料理" },
+  chinese: { en: "Chinese", ko: "중식", ja: "中華料理" },
+  global: { en: "Western & international", ko: "경양식·외국음식", ja: "洋食・各国料理" },
+  night: { en: "Pub & café licence types", ko: "주점·카페 업태", ja: "パブ・カフェ業種" },
+  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", ja: "焼き物・専門店" },
 } as const
 
 const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
@@ -156,12 +214,12 @@ function sourceDate(value: string | null | undefined, fallback: string) {
   return Number.isNaN(parsed.getTime()) ? fallback : parsed.toISOString().slice(0, 10)
 }
 
-function localTagLabel(tag: PulseLocalSignalTagB, locale: "en" | "ko") {
+function localTagLabel(tag: PulseLocalSignalTagB, locale: "en" | "ko" | "ja") {
   const labels = {
-    calm_now: { en: "Calm right now", ko: "지금은 여유로움" },
-    lively_now: { en: "Lively right now", ko: "지금은 활기참" },
-    quick_stop: { en: "Good for a quick stop", ko: "빠르게 들르기 좋음" },
-    welcoming: { en: "Welcoming service", ko: "친절한 응대" },
+    calm_now: { en: "Calm right now", ko: "지금은 여유로움", ja: "今はゆったり" },
+    lively_now: { en: "Lively right now", ko: "지금은 활기참", ja: "今はにぎやか" },
+    quick_stop: { en: "Good for a quick stop", ko: "빠르게 들르기 좋음", ja: "短時間で立ち寄りやすい" },
+    welcoming: { en: "Welcoming service", ko: "친절한 응대", ja: "親しみやすい対応" },
   } as const
   return labels[tag][locale]
 }
@@ -420,7 +478,7 @@ export function CanonicalPlaceOverlay() {
           </div>
 
           {currentVenueId === TABLE_VENUE_ID ? (
-            <section className={styles.tableActions} aria-label={locale === "ko" ? "이 장소의 테이블" : "Table at this place"}>
+            <section className={styles.tableActions} aria-label={locale === "ko" ? "이 장소의 테이블" : locale === "ja" ? "この場所のテーブル" : "Table at this place"}>
               <button type="button" className={styles.tablePrimary} onClick={openTableFromPlace} data-testid="canonical-place-table">
                 <UsersRound size={18} aria-hidden="true" />
                 <span><strong>{copy.table}</strong><small>{copy.tableBody}</small></span>

@@ -13,8 +13,6 @@ import { STABLE_B_RECEIPT_ID, STABLE_B_REFUND_RECEIPT_ID } from "../commerce-b/s
 
 const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
 
-type PersonalLocale = OndoBLocale | "ja"
-
 const COPY = {
   en: {
     eyebrow: "ON THIS DEVICE",
@@ -123,7 +121,7 @@ const COPY = {
   },
 } as const
 
-const SAVED_EMPTY_LABEL: Record<PersonalLocale, string> = {
+const SAVED_EMPTY_LABEL: Record<OndoBLocale, string> = {
   en: "No saved places",
   ko: "저장한 장소 없음",
   ja: "保存した場所なし",
@@ -136,29 +134,23 @@ const JA_TABLE_COPY: Record<keyof typeof MY_KOREA_TABLE_CATALOG, { title: string
   },
 }
 
-function savedListLabel(locale: PersonalLocale, count: number) {
+function savedListLabel(locale: OndoBLocale, count: number) {
   if (locale === "ko") return `저장한 장소 ${count}곳`
   if (locale === "ja") return `保存した場所 ${count}件`
   return `${count} saved places`
 }
 
-function personalVenueName(name: string, locale: PersonalLocale) {
-  const presentation = venueNamePresentation(name, locale === "ko" ? "ko" : "en")
-  if (locale !== "ja") return presentation
-  return {
-    ...presentation,
-    officialNameLabel: "公式出典の韓国語名",
-    transliterationLabel: "ナビ用の生成ローマ字表記 · 公式英語名ではありません",
-  }
+function personalVenueName(name: string, locale: OndoBLocale) {
+  return venueNamePresentation(name, locale)
 }
 
-function personalDistrictLabel(cityId: "seoul" | "busan", districtId: string, locale: PersonalLocale) {
-  return venueDistrictLabel(cityId, districtId, locale === "ko" ? "ko" : "en")
+function personalDistrictLabel(cityId: "seoul" | "busan", districtId: string, locale: OndoBLocale) {
+  return venueDistrictLabel(cityId, districtId, locale)
 }
 
 export function SavedEntryB() {
   const { state, actions } = useOndoB()
-  const locale = state.locale as PersonalLocale
+  const locale = state.locale
   const copy = COPY[locale]
   const saved = state.savedVenueIds.flatMap((venueId) => {
     const venue = canonicalMapVenueById(venueId)

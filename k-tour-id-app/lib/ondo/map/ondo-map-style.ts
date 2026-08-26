@@ -1,11 +1,13 @@
 import type { ExpressionSpecification, StyleSpecification } from "maplibre-gl"
 
-type MapLocale = "en" | "ko"
+type MapLocale = "en" | "ko" | "ja"
 
 export function ondoBasemapLabel(locale: MapLocale): ExpressionSpecification {
   return locale === "ko"
     ? ["coalesce", ["get", "name:ko"], ["get", "name"], ["get", "name:latin"]]
-    : ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"], ["get", "name:ko"]]
+    : locale === "ja"
+      ? ["coalesce", ["get", "name:ja"], ["get", "name:en"], ["get", "name:latin"], ["get", "name"], ["get", "name:ko"]]
+      : ["coalesce", ["get", "name:en"], ["get", "name:latin"], ["get", "name"], ["get", "name:ko"]]
 }
 
 /**

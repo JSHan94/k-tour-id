@@ -57,6 +57,11 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.tsx")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
+      "public/editorial/japan-first-c01-sesame-oil.jpg",
+      "public/editorial/japan-first-c03-seoul-eight-hours.jpg",
+      "public/editorial/japan-first-c06-beauty-research.jpg",
+      "public/editorial/japan-first-c18-jeju-screen-route.jpg",
+      "public/editorial/japan-first-c20-jeju-kpop-route.jpg",
       "public/og-ondo-directory.png",
     ])
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")

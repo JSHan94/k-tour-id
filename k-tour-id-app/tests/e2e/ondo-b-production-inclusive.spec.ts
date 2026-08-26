@@ -37,7 +37,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
     await expect(dialog).toBeVisible()
     await expect(dialog).toBeFocused()
     const receipt = await dialog.evaluate((node) => {
-      const language = node.querySelector<HTMLButtonElement>("button[aria-label='한국어로 보기']")?.getBoundingClientRect()
+      const language = node.querySelector<HTMLButtonElement>("button[aria-label='日本語で表示']")?.getBoundingClientRect()
       const heading = node.querySelector("h1")?.getBoundingClientRect()
       return {
         scrollTop: node.scrollTop,
@@ -98,7 +98,8 @@ test.describe("ONDO B production inclusive surfaces", () => {
   test("B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener", async ({ page }) => {
     await seedProduction(page, "en", [CANONICAL_VENUE_ID])
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
-    await page.getByTestId("nav-id").click()
+    await page.getByTestId("nav-settings").click()
+    await page.getByTestId("ondo-b-device-data-settings").locator(":scope > summary").click()
     const opener = page.getByTestId("ondo-b-clear-device-open")
     await opener.click()
     const dialog = page.getByTestId("ondo-b-clear-device-confirm")

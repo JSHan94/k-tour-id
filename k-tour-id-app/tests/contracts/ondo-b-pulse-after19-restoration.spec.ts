@@ -68,13 +68,13 @@ test("B-AFTER19-002 normal controls are single-path while fixture-driven recover
   expect(`${gate}\n${returnTo}`).not.toMatch(/setTimeout|fetch\(|XMLHttpRequest|WebSocket|EventSource|payment|receipt/i)
 })
 
-test("B-PULSE-004 the slice keeps concise prototype truth plus EN/KO, modal, keyboard, and responsive contracts", () => {
+test("B-PULSE-004 the slice keeps concise truth plus EN/KO/JA, modal, keyboard, and responsive contracts", () => {
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
   const gate = source("features/ondo/after19/after19-jit-b.tsx")
   const css = `${source("features/ondo/connect/pulse-table-b.module.css")}\n${source("features/ondo/after19/after19-jit-b.module.css")}`
   const productSource = `${tables}\n${gate}`
   expect(productSource).toContain("How this check works")
-  expect(productSource).toContain("locale === \"ko\"")
+  for (const locale of ["en", "ko", "ja"]) expect(productSource).toContain(`${locale}: {`)
   expect(productSource).toContain("useModalIsolation")
   expect(productSource).toContain("onKeyDown")
   expect(productSource).toContain("focusFirstAvailableDestination")

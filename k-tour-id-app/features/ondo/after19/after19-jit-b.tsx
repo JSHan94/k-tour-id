@@ -18,7 +18,7 @@ declare global {
 }
 
 type GateView = "intro" | "review" | "failure" | "unsupported" | "expired"
-type SocialLocale = OndoBLocale | "ja"
+type SocialLocale = OndoBLocale
 
 type After19JitBProps = {
   open: boolean

@@ -22,20 +22,20 @@ const PERSONAS: ReadonlyArray<{
   {
     id: "travelling",
     icon: Compass,
-    label: { en: "I’m travelling in Korea", ko: "한국을 여행 중이에요" },
-    note: { en: "Find a useful meal near where you are now.", ko: "지금 머무는 곳 가까이에서 한 끼를 찾아요." },
+    label: { en: "I’m travelling in Korea", ko: "한국을 여행 중이에요", ja: "韓国を旅行中" },
+    note: { en: "Find a useful meal near where you are now.", ko: "지금 머무는 곳 가까이에서 한 끼를 찾아요.", ja: "今いる場所の近くで食事を探します。" },
   },
   {
     id: "preparing",
     icon: CalendarDays,
-    label: { en: "I’m preparing a Korea trip", ko: "한국 여행을 준비 중이에요" },
-    note: { en: "Explore and save places before you arrive.", ko: "도착 전에 장소를 둘러보고 저장해요." },
+    label: { en: "I’m preparing a Korea trip", ko: "한국 여행을 준비 중이에요", ja: "韓国旅行を準備中" },
+    note: { en: "Explore and save places before you arrive.", ko: "도착 전에 장소를 둘러보고 저장해요.", ja: "出発前に場所を探して保存します。" },
   },
   {
     id: "local_contributor",
     icon: NotebookPen,
-    label: { en: "I contribute local food knowledge", ko: "로컬 식음료 정보를 나누고 싶어요" },
-    note: { en: "Start from official records and keep your own local notes.", ko: "공식 기록에서 시작해 나만의 로컬 메모를 남겨요." },
+    label: { en: "I contribute local food knowledge", ko: "로컬 식음료 정보를 나누고 싶어요", ja: "現地の食情報を共有したい" },
+    note: { en: "Start from official records and keep your own local notes.", ko: "공식 기록에서 시작해 나만의 로컬 메모를 남겨요.", ja: "公式記録を起点に、自分の現地メモを残します。" },
   },
 ]
 
@@ -90,7 +90,38 @@ const COPY = {
     dietaryBoundary: "공식 기록은 식이 요구사항 지원 여부를 확인하지 않습니다. 선택에 의존하기 전에 각 장소에 직접 확인해 주세요.",
     finish: "게스트 탐색 열기",
   },
+  ja: {
+    dialog: "ONDO ゲスト設定",
+    back: "戻る",
+    progress: "設定の進行状況",
+    eyebrow: "公式記録から、自分らしい旅へ",
+    title: "公的な記録を起点に、韓国で自分に合う一食を探そう。",
+    body: "ソウルと釜山の飲食店営業許可記録400件を見ながら、旅の目的や食の好みをこの端末に保存できます。",
+    categoryLabel: "このディレクトリで分かること",
+    category: "各都市200件の記録は韓国行政安全部のLOCALDATAを出典とし、分類には公式の業種名のみを使用しています。",
+    boundaryLabel: "確認できる範囲",
+    boundary: "出典日時点（2026年8月19日）の有効な営業許可を示します。現在の営業時間、メニュー、人気、価格、決済対応は確認できません。",
+    start: "はじめる",
+    guest: "ゲストで見る",
+    intentTitle: "ONDOを使う目的は？",
+    intentBody: "選択内容はこの端末にのみ保存されます。どの選択肢でも同じゲスト向けの「探す」画面が開き、機能の解放や制限には使いません。",
+    continueToPreferences: "食の好みを選ぶ",
+    skip: "スキップして見る",
+    preferenceTitle: "どんな食事や食の希望・制限がありますか？",
+    preferenceBody: "役立つ項目を選んでください。公式記録を非表示にしたり別のラベルを付けたりせず、後から設定で変更できます。",
+    mealGroup: "食の興味",
+    moodGroup: "雰囲気・時間帯",
+    dietaryGroup: "食の希望・制限",
+    dietaryBoundary: "公式記録では食の希望・制限への対応を確認できません。利用前に各店舗へ直接確認してください。",
+    finish: "ゲスト向けの「探す」を開く",
+  },
 } satisfies Record<OndoBLocale, Record<string, string>>
+
+const NEXT_LANGUAGE: Record<OndoBLocale, { locale: OndoBLocale; label: string; short: string }> = {
+  en: { locale: "ja", label: "日本語で表示", short: "JA" },
+  ja: { locale: "ko", label: "한국어로 보기", short: "KO" },
+  ko: { locale: "en", label: "View in English", short: "EN" },
+}
 
 export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
@@ -98,6 +129,7 @@ export function OfficialDirectoryOnboardingLayer() {
   const [preferences, setPreferences] = useState<OndoBDiscoveryPreference[]>([])
   const dialogRef = useRef<HTMLElement>(null)
   const copy = COPY[state.locale]
+  const nextLanguage = NEXT_LANGUAGE[state.locale]
   const stepIndex = useMemo(() => ({ value: 1, intent: 2, preferences: 3 })[step], [step])
 
   useEffect(() => {
@@ -214,10 +246,10 @@ export function OfficialDirectoryOnboardingLayer() {
           <button
             type="button"
             className={styles.language}
-            onClick={() => actions.setLocale(state.locale === "en" ? "ko" : "en")}
-            aria-label={state.locale === "en" ? "한국어로 보기" : "View in English"}
+            onClick={() => actions.setLocale(nextLanguage.locale)}
+            aria-label={nextLanguage.label}
           >
-            <Languages size={15} aria-hidden="true" />{state.locale === "en" ? "KO" : "EN"}
+            <Languages size={15} aria-hidden="true" />{nextLanguage.short}
           </button>
         </header>
 
@@ -227,7 +259,7 @@ export function OfficialDirectoryOnboardingLayer() {
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
-            <section className={styles.sourceIntro} aria-label={state.locale === "ko" ? "공식 출처와 확인 범위" : "Official source and coverage boundary"}>
+            <section className={styles.sourceIntro} aria-label={({ en: "Official source and coverage boundary", ko: "공식 출처와 확인 범위", ja: "公式出典と確認範囲" } as const)[state.locale]}>
               <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
               <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
             </section>

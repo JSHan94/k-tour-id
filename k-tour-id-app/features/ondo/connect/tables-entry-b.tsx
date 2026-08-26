@@ -23,7 +23,7 @@ const TABLE_CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]
 type JoinStage = "idle" | "confirm" | "joined" | "chat"
 type MessageState = "ready" | "failed"
 type ChatMessage = { id: number; text: string; imageUrl: string | null; state: MessageState }
-type SocialLocale = OndoBLocale | "ja"
+type SocialLocale = OndoBLocale
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 

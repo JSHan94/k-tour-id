@@ -10,7 +10,7 @@ import styles from "./local-check-walkthrough-b.module.css"
 export type LocalCheckKind = "person" | "age"
 export type LocalCheckOutcome = "success" | "cancel" | "failure" | "unavailable" | "expired"
 export type LocalCheckOrigin = "local_signal" | "traveler_id"
-type IdentityLocale = OndoBLocale | "ja"
+type IdentityLocale = OndoBLocale
 
 type Props = {
   locale: IdentityLocale

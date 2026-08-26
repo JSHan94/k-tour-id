@@ -26,6 +26,13 @@ const B_NAV: Array<{ id: OndoBTab; icon: typeof Compass }> = [
 const B_NAV_COPY = {
   en: { ondo: "Explore", my: "My Korea", tables: "Tables", id: "ID · Wallet", settings: "Settings" },
   ko: { ondo: "탐색", my: "내 한국", tables: "테이블", id: "ID · 지갑", settings: "설정" },
+  ja: { ondo: "探す", my: "My Korea", tables: "テーブル", id: "ID・ウォレット", settings: "設定" },
+} as const
+
+const SHELL_COPY = {
+  en: { app: "ONDO official food place app", content: "content", nav: "Main navigation" },
+  ko: { app: "ONDO 공식 식음료 장소 앱", content: "콘텐츠", nav: "주요 메뉴" },
+  ja: { app: "ONDO 韓国フード・旅行アプリ", content: "コンテンツ", nav: "メインメニュー" },
 } as const
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
@@ -158,14 +165,14 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
 
   return (
     <main className={styles.stage} data-ondo-locale={state.locale} data-testid="ondo-b-root" data-variant="B" data-locale={state.locale}>
-      <section ref={canvasRef} className={styles.canvas} aria-label={state.locale === "ko" ? "ONDO 공식 식음료 장소 앱" : "ONDO official food place app"} data-testid="ondo-canvas" data-responsive-shell="mobile-dock-desktop-rail">
+      <section ref={canvasRef} className={styles.canvas} aria-label={SHELL_COPY[state.locale].app} data-testid="ondo-canvas" data-responsive-shell="mobile-dock-desktop-rail">
         <div
           ref={contentRef}
           className={styles.content}
           id="ondo-active-panel"
           role="region"
           tabIndex={0}
-          aria-label={state.locale === "ko" ? `${activeLabel} 콘텐츠` : `${activeLabel} content`}
+          aria-label={`${activeLabel} ${SHELL_COPY[state.locale].content}`}
           data-active-tab={state.tab}
           data-scroll-owner="true"
           data-testid="ondo-scroll-region"
@@ -175,7 +182,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
         >
           {active}
         </div>
-        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" aria-label={state.locale === "en" ? "Main navigation" : "주요 메뉴"} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
             <button
               key={id}

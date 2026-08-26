@@ -16,7 +16,7 @@ const FOCUSABLE = "button:not([disabled]),input:not([disabled]),textarea:not([di
 export const MAX_LOCAL_SIGNAL_PHOTO_BYTES = 10 * 1024 * 1024
 const LOCAL_SIGNAL_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 type PhotoError = "photoTypeError" | "photoSizeError" | "photoPrepareError"
-type SocialLocale = OndoBLocale | "ja"
+type SocialLocale = OndoBLocale
 
 const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag } & Record<SocialLocale, string>> = [
   { id: "calm_now", en: "Calm right now", ko: "지금은 여유로워요", ja: "今は落ち着いています" },

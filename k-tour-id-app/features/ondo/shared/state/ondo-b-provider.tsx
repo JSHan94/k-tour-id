@@ -217,6 +217,16 @@ function initialState(): OndoBState {
   }
 }
 
+const DEVICE_MESSAGE = {
+  locale: { en: "Language could not be saved on this device.", ko: "언어 설정을 이 기기에 저장하지 못했어요.", ja: "言語設定をこの端末に保存できませんでした。" },
+  persona: { en: "Intent could not be saved.", ko: "이용 목적을 저장하지 못했어요.", ja: "利用目的を保存できませんでした。" },
+  choices: { en: "Choices could not be saved.", ko: "선택을 저장하지 못했어요.", ja: "選択内容を保存できませんでした。" },
+  clearChoices: { en: "Choices could not be cleared.", ko: "선택을 초기화하지 못했어요.", ja: "選択内容をリセットできませんでした。" },
+  setup: { en: "Setup could not be saved.", ko: "시작 설정을 저장하지 못했어요.", ja: "初期設定を保存できませんでした。" },
+  guest: { en: "Guest setup could not be saved.", ko: "게스트 시작 설정을 저장하지 못했어요.", ja: "ゲスト設定を保存できませんでした。" },
+  reset: { en: "Setup could not be reset.", ko: "시작 설정을 초기화하지 못했어요.", ja: "初期設定をリセットできませんでした。" },
+} satisfies Record<string, Record<OndoBLocale, string>>
+
 function isProductionPath() {
   return typeof window !== "undefined" && window.location.pathname.replace(/\/$/, "") === "/ondo-b"
 }
@@ -238,7 +248,7 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
   }))
   const commerceReceipts = sanitizeCommerceReceipts(record.commerceReceipts)
   return {
-    locale: record.locale === "ko" ? "ko" : "en",
+    locale: record.locale === "ko" || record.locale === "ja" ? record.locale : "en",
     onboarding: record.onboarding === "ONB-COMPLETE" ? "ONB-COMPLETE" : "ONB-NEW",
     persona: ONDO_B_PERSONAS.has(record.persona as OndoBPersona)
       ? record.persona as OndoBPersona
@@ -303,7 +313,8 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     }
     try {
       const stored = window.localStorage.getItem(B_DEVICE_KEY)
-      const restored = stored === null ? restoreBDeviceState({}) : restoreBDeviceState(JSON.parse(stored))
+      const prefersJapanese = navigator.languages.some((language) => language.toLowerCase().startsWith("ja"))
+      const restored = stored === null ? restoreBDeviceState({ locale: prefersJapanese ? "ja" : "en" }) : restoreBDeviceState(JSON.parse(stored))
         const next: OndoBState = {
         ...blank,
         ...restored,
@@ -374,7 +385,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
 
   const actions = useMemo<OndoBActions>(() => ({
     setLocale: (locale) => {
-      if (!commit((current) => ({ ...current, locale }))) notify(stateRef.current.locale === "ko" ? "언어 설정을 이 기기에 저장하지 못했어요." : "Language could not be saved on this device.")
+      if (!commit((current) => ({ ...current, locale }))) notify(DEVICE_MESSAGE.locale[stateRef.current.locale])
     },
     setTab: (tab) => setState((current) => ({
       ...current,
@@ -387,17 +398,17 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       surface: surface.kind === "map" || isCanonicalVenueId(surface.venueId) ? surface : { kind: "map" },
     })),
     setPersona: (persona) => {
-      if (!commit((current) => ({ ...current, persona }))) notify(stateRef.current.locale === "ko" ? "이용 목적을 저장하지 못했어요." : "Intent could not be saved.")
+      if (!commit((current) => ({ ...current, persona }))) notify(DEVICE_MESSAGE.persona[stateRef.current.locale])
     },
     setDiscoveryPreferences: (discoveryPreferences) => {
-      if (!commit((current) => ({ ...current, discoveryPreferences }))) notify(stateRef.current.locale === "ko" ? "선택을 저장하지 못했어요." : "Choices could not be saved.")
+      if (!commit((current) => ({ ...current, discoveryPreferences }))) notify(DEVICE_MESSAGE.choices[stateRef.current.locale])
     },
     resetDiscoveryPreferences: () => {
-      if (!commit((current) => ({ ...current, discoveryPreferences: [] }))) notify(stateRef.current.locale === "ko" ? "선택을 초기화하지 못했어요." : "Choices could not be cleared.")
+      if (!commit((current) => ({ ...current, discoveryPreferences: [] }))) notify(DEVICE_MESSAGE.clearChoices[stateRef.current.locale])
     },
     beginOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-IN-PROGRESS" })),
     completeOnboarding: () => {
-      if (!commit((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } }))) notify(stateRef.current.locale === "ko" ? "시작 설정을 저장하지 못했어요." : "Setup could not be saved.")
+      if (!commit((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } }))) notify(DEVICE_MESSAGE.setup[stateRef.current.locale])
     },
     skipOnboarding: () => {
       if (!commit((current) => ({
@@ -407,7 +418,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         discoveryPreferences: [],
         tab: "ondo",
         surface: { kind: "map" },
-      }))) notify(stateRef.current.locale === "ko" ? "게스트 시작 설정을 저장하지 못했어요." : "Guest setup could not be saved.")
+      }))) notify(DEVICE_MESSAGE.guest[stateRef.current.locale])
     },
     resetOnboarding: () => {
       if (!commit((current) => ({
@@ -417,7 +428,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         discoveryPreferences: [],
         tab: "ondo",
         surface: { kind: "map" },
-      }))) notify(stateRef.current.locale === "ko" ? "시작 설정을 초기화하지 못했어요." : "Setup could not be reset.")
+      }))) notify(DEVICE_MESSAGE.reset[stateRef.current.locale])
     },
     saveVenue: (venueId) => {
       persistCanonicalSavedVenue(venueId, false)

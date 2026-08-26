@@ -117,7 +117,7 @@ const COPY = {
   },
 } as const
 
-type IdentityLocale = OndoBLocale | "ja"
+type IdentityLocale = OndoBLocale
 
 function outcomeLabel(locale: IdentityLocale, outcome: LocalCheckOutcome | null) {
   const copy = COPY[locale]

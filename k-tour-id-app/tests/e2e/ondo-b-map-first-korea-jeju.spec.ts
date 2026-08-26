@@ -122,7 +122,16 @@ test.describe("map-first Korea and Jeju integration", () => {
         await expect(page).toHaveURL(/city=seoul/)
         await expect(cityRoot).toHaveAttribute("data-requested-view", "map")
         await expect(cityRoot).toHaveAttribute("data-effective-view", "map")
-        await expect(page.getByTestId("ondo-b-list-panel")).toHaveCount(0)
+        await expect(cityRoot).toHaveAttribute("data-map-state", /loading|ready|error/)
+        expect(await cityRoot.evaluate((root) => {
+          const mapState = root.getAttribute("data-map-state")
+          const hasMap = root.querySelector("[data-testid='maplibre-map']") !== null
+          const hasList = root.querySelector("[data-testid='ondo-b-list-panel']") !== null
+          const hasFallback = root.querySelector("[data-testid='ondo-b-map-fallback-status']") !== null
+          return mapState === "error"
+            ? hasList && hasFallback
+            : hasMap && !hasList
+        })).toBe(true)
         await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveAttribute("data-city-context", "seoul")
       }
     })

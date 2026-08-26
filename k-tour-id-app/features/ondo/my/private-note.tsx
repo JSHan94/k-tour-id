@@ -7,8 +7,6 @@ import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import styles from "../shared/ui/production-local.module.css"
 
-type PersonalLocale = OndoBLocale | "ja"
-
 const COPY = {
   en: {
     title: "Private note",
@@ -42,7 +40,7 @@ export function PrivateNote({ venueId }: { venueId: string }) {
   const [draft, setDraft] = useState(stored)
   const [receipt, setReceipt] = useState<"idle" | "saved" | "failed">("idle")
   const noteId = useId()
-  const locale = state.locale as PersonalLocale
+  const locale = state.locale
   const copy = COPY[locale]
 
   useEffect(() => {

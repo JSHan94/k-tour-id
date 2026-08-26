@@ -121,7 +121,7 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
         if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && /(?:Paid )?19 OOKRW Test(?: 결제)?/.test(literal)) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && literal === "${copy.paid} ${state.commerceSession.chargedDebit} OOKRW Test") return false
         if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && literal === "${copy.refunded} ${state.commerceSession.chargedDebit} OOKRW Test") return false
-        if (String(pattern) === String(/\bOOKRW\b/i) && settingsFile && /OOKRW Test (?:receipts|영수증)/.test(literal)) return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && settingsFile && /OOKRW Test(?: receipts| 영수증|のレシート)/.test(literal)) return false
         if (String(pattern) === String(/\bcheckout\b/i) && commerceFile && literal === "ondo-b-stable-checkout") return false
         return true
       })

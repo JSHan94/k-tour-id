@@ -47,9 +47,9 @@ const SEARCH_MAX_LENGTH = 120
 const SOURCE_ID = "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
 const SOURCE_DATE = CANONICAL_MAP_VENUES_COMPACT[0]?.sourceSnapshotAt.slice(0, 10) ?? "2026-08-19"
 const CITY = {
-  seoul: { center: [126.987, 37.565] as [number, number], zoom: 10.1, label: { en: "Seoul", ko: "서울" } },
-  busan: { center: [129.055, 35.18] as [number, number], zoom: 10.05, label: { en: "Busan", ko: "부산" } },
-  jeju: { center: [126.54, 33.38] as [number, number], zoom: 9.2, label: { en: "Jeju", ko: "제주" } },
+  seoul: { center: [126.987, 37.565] as [number, number], zoom: 10.1, label: { en: "Seoul", ko: "서울", ja: "ソウル" } },
+  busan: { center: [129.055, 35.18] as [number, number], zoom: 10.05, label: { en: "Busan", ko: "부산", ja: "釜山" } },
+  jeju: { center: [126.54, 33.38] as [number, number], zoom: 9.2, label: { en: "Jeju", ko: "제주", ja: "済州" } },
 }
 
 const COPY = {
@@ -163,17 +163,81 @@ const COPY = {
     filterLabel: "공식 업태 분류",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
   },
+  ja: {
+    tagline: "韓国フード・旅行マップ",
+    title: "地域を選んで、Pulseをたどろう。",
+    body: "ソウル・釜山の公式飲食店営業許可記録と、済州の編集旅行コレクションをひとつの地図で探せます。",
+    coverage: "韓国マップ・3地域",
+    openMap: "都市ディレクトリを開く",
+    source: "LOCALDATA出典スナップショット・2026年8月19日",
+    sourceBoundary: "記録は出典日時点の有効な営業許可を示します。現在の営業時間、メニュー、人気、決済対応は確認できません。",
+    search: "場所・エリア・業種を検索",
+    list: "リスト",
+    map: "地図",
+    back: "韓国マップ",
+    records: "公式記録",
+    officialName: "韓国語の公式名称",
+    categoryBasis: "公式の業種名をもとに整理した分類",
+    more: "さらに30件",
+    mapA11y: "地図は視覚情報です。プラス、マイナス、矢印キーで動かすか、キーボードで使えるリストを開いてください。",
+    editorialMapA11y: "済州の地図には地域単位の編集コレクションを1件表示します。正確な場所リンクは確認中です。情報源パネルで旅行ストーリーを確認できます。",
+    mapUnavailable: "地図を読み込めませんでした。公式記録200件はリストで引き続き確認できます。",
+    retryMap: "地図を再読み込み",
+    offlineTitle: "オフライン",
+    offlineSource: "公式ディレクトリは利用できますが、地図タイルを表示できない場合があります。",
+    locationUnavailable: "現在地は使用しませんでした。検索するか、ディレクトリから記録を選んでください。",
+    locating: "現在地を確認中…",
+    locationReady: "現在地",
+    locationDenied: "位置情報へのアクセスがオフです。検索はそのまま利用できます。ブラウザの権限を変更して再度お試しください。",
+    locationUnsupported: "このブラウザでは現在地を共有できません。検索とディレクトリは引き続き利用できます。",
+    locate: "現在地",
+    retryLocation: "現在地を再試行",
+    locationDisclosure: "位置情報はこのタブ内にのみ残ります。OpenFreeMapには地図範囲のリクエストが送られます。",
+    nearest: "最寄りの公式記録",
+    mapLoading: "ディレクトリ地図を読み込み中…",
+    editorialMapLoading: "済州の編集地図を読み込み中…",
+    noResultsTitle: "一致する記録がありません",
+    noResultsBody: "検索語と業種を解除すると、この都市のすべての公式記録を確認できます。",
+    clearResults: "検索語と業種を解除",
+    mapKey: "Pulseマップ・公式記録グループ",
+    mapKeyBody: "枠付きの数字は公式記録のまとまり、小さな点は個別の記録です。",
+    mapKeyDetails: "地図の見方",
+    mapCredits: "地図クレジット",
+    pulseActive: "キュレーションPulse提供中",
+    pulseGrowing: "Pulseカバレッジ拡大中",
+    pulseExplore: "探索中・シグナル不足",
+    pulseSignals: "キュレーションシグナル",
+    pulseLocal: "この端末のローカルシグナルを含みます",
+    jejuStatus: "編集コレクション・正確な場所は確認中",
+    jejuTruth: "旅行アイデア10件",
+    jejuMapTruth: "編集候補10件・公式ディレクトリ記録ではありません",
+    officialSourceScope: "ソウル・釜山・LOCALDATA公式記録",
+    jejuSourceScope: "済州・VISITKOREA編集情報コレクション・場所情報は確認中",
+    editorialMapUnavailable: "背景地図を読み込めませんでした。済州の編集コレクションと情報源は引き続き確認できます。",
+    aboutMap: "韓国マップについて",
+    filterLabel: "公式業種分類",
+    recentSaveFailed: "場所は開きましたが、この端末の最近見た場所には保存できませんでした。",
+  },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
-const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; compact: Record<OndoBLocale, string>; short: string }> = {
-  all: { en: "All", ko: "전체", compact: { en: "All", ko: "전체" }, short: "ALL" },
-  korean: { en: "Korean", ko: "한식", compact: { en: "Korean", ko: "한식" }, short: "K" },
-  casual: { en: "Quick service", ko: "분식·간편식", compact: { en: "Quick", ko: "분식" }, short: "Q" },
-  japanese: { en: "Japanese", ko: "일식", compact: { en: "Japanese", ko: "일식" }, short: "J" },
-  chinese: { en: "Chinese", ko: "중식", compact: { en: "Chinese", ko: "중식" }, short: "C" },
-  global: { en: "Western & international", ko: "경양식·외국음식", compact: { en: "Western", ko: "외국음식" }, short: "G" },
-  night: { en: "Pub & café licence types", ko: "주점·카페 업태", compact: { en: "Pub & café", ko: "주점·카페" }, short: "P" },
-  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", compact: { en: "Grills", ko: "구이·횟집" }, short: "S" },
+const MAP_UI = {
+  en: { atlas: "Korea overview map showing Seoul, Busan, and Jeju", clearSearch: "Clear search", mapRegion: "Official food-service directory map", editorialRegion: "Jeju editorial travel collection map", officialGroups: "Official groups", pulseRange: "Low → Peak", pulseLegend: "Pulse level legend", pulsePlaces: "Pulse places", mapAttribution: "Map attribution", shortList: "List view on a short screen", locationTab: "Location · this tab only", locationOff: "Location access off", locationUnavailable: "Location unavailable", freshness: "freshness", confidence: "confidence" },
+  ko: { atlas: "서울·부산·제주를 표시한 대한민국 탐색 지도", clearSearch: "검색어 지우기", mapRegion: "공식 일반음식점 디렉터리 지도", editorialRegion: "제주 편집 여행 컬렉션 지도", officialGroups: "공식 묶음", pulseRange: "여유 → 피크", pulseLegend: "Pulse 단계 범례", pulsePlaces: "Pulse 장소", mapAttribution: "지도 출처", shortList: "좁은 화면에서 목록 보기 사용 중", locationTab: "위치 · 이 탭에서만", locationOff: "위치 권한 꺼짐", locationUnavailable: "위치 미지원", freshness: "최신성", confidence: "신뢰도" },
+  ja: { atlas: "ソウル・釜山・済州を示す韓国マップ", clearSearch: "検索語を消去", mapRegion: "公式飲食店営業許可ディレクトリの地図", editorialRegion: "済州の編集旅行コレクション地図", officialGroups: "公式記録のまとまり", pulseRange: "ゆったり → ピーク", pulseLegend: "Pulseレベルの凡例", pulsePlaces: "Pulseの場所", mapAttribution: "地図の出典", shortList: "高さの低い画面ではリスト表示", locationTab: "現在地・このタブ内のみ", locationOff: "位置情報へのアクセスはオフ", locationUnavailable: "位置情報を利用できません", freshness: "更新状況", confidence: "確度" },
+} satisfies Record<OndoBLocale, Record<string, string>>
+
+const NEXT_LOCALE: Record<OndoBLocale, OndoBLocale> = { en: "ja", ja: "ko", ko: "en" }
+const NEXT_LOCALE_LABEL: Record<OndoBLocale, string> = { en: "JA", ja: "KO", ko: "EN" }
+
+const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; ja: string; compact: Record<OndoBLocale, string>; short: string }> = {
+  all: { en: "All", ko: "전체", ja: "すべて", compact: { en: "All", ko: "전체", ja: "すべて" }, short: "ALL" },
+  korean: { en: "Korean", ko: "한식", ja: "韓国料理", compact: { en: "Korean", ko: "한식", ja: "韓国料理" }, short: "K" },
+  casual: { en: "Quick service", ko: "분식·간편식", ja: "軽食・ファストフード", compact: { en: "Quick", ko: "분식", ja: "軽食" }, short: "Q" },
+  japanese: { en: "Japanese", ko: "일식", ja: "日本料理", compact: { en: "Japanese", ko: "일식", ja: "日本料理" }, short: "J" },
+  chinese: { en: "Chinese", ko: "중식", ja: "中華料理", compact: { en: "Chinese", ko: "중식", ja: "中華" }, short: "C" },
+  global: { en: "Western & international", ko: "경양식·외국음식", ja: "洋食・各国料理", compact: { en: "Western", ko: "외국음식", ja: "洋食・各国" }, short: "G" },
+  night: { en: "Pub & café licence types", ko: "주점·카페 업태", ja: "パブ・カフェ業種", compact: { en: "Pub & café", ko: "주점·카페", ja: "パブ・カフェ" }, short: "P" },
+  specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", ja: "焼き物・専門店", compact: { en: "Grills", ko: "구이·횟집", ja: "焼き物・専門" }, short: "S" },
 }
 
 const MAP_VENUES = Object.freeze([...CANONICAL_MAP_VENUES_COMPACT].sort((left, right) => (
@@ -247,7 +311,9 @@ const KOREA_DOTS = (() => {
 })()
 
 function resultCount(count: number, locale: OndoBLocale) {
-  return locale === "ko" ? `공식 기록 ${count}개` : `${count} official ${count === 1 ? "record" : "records"}`
+  if (locale === "ko") return `공식 기록 ${count}개`
+  if (locale === "ja") return `公式記録 ${count}件`
+  return `${count} official ${count === 1 ? "record" : "records"}`
 }
 
 function cityPulseStatus(cityId: CityId, locale: OndoBLocale) {
@@ -266,9 +332,9 @@ function distanceInMeters(from: UserLocation, venue: Pick<CanonicalMapVenue, "lo
 }
 
 function displayDistance(distance: number, locale: OndoBLocale) {
-  if (distance < 1_000) return locale === "ko" ? `${Math.max(10, Math.round(distance / 10) * 10)}m 거리` : `${Math.max(10, Math.round(distance / 10) * 10)} m away`
+  if (distance < 1_000) return locale === "ko" ? `${Math.max(10, Math.round(distance / 10) * 10)}m 거리` : locale === "ja" ? `${Math.max(10, Math.round(distance / 10) * 10)}m先` : `${Math.max(10, Math.round(distance / 10) * 10)} m away`
   const kilometers = (distance / 1_000).toFixed(distance < 10_000 ? 1 : 0)
-  return locale === "ko" ? `${kilometers}km 거리` : `${kilometers} km away`
+  return locale === "ko" ? `${kilometers}km 거리` : locale === "ja" ? `${kilometers}km先` : `${kilometers} km away`
 }
 
 function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(city: CityId): void }) {
@@ -276,7 +342,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
   return (
     <section className={styles.nation} data-testid="ondo-b-nation">
       <div className={`${styles.dotMap} ${styles.koreaAtlas}`} data-testid="ondo-b-korea-atlas">
-        <svg viewBox="0 0 300 350" role="img" aria-label={locale === "ko" ? "서울·부산·제주를 표시한 대한민국 탐색 지도" : "Korea overview map showing Seoul, Busan, and Jeju"}>
+        <svg viewBox="0 0 300 350" role="img" aria-label={MAP_UI[locale].atlas}>
           {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 2 : 1.65} />)}
         </svg>
         <div className={styles.nationIntro}>
@@ -689,11 +755,11 @@ export function MapEntryB() {
   const locationSummary = !online
     ? copy.offlineTitle
     : locationState === "idle"
-      ? locale === "ko" ? "위치 · 이 탭에서만" : "Location · this tab only"
+      ? MAP_UI[locale].locationTab
       : locationState === "denied"
-        ? locale === "ko" ? "위치 권한 꺼짐" : "Location access off"
+        ? MAP_UI[locale].locationOff
         : locationState === "unsupported"
-          ? locale === "ko" ? "위치 미지원" : "Location unavailable"
+          ? MAP_UI[locale].locationUnavailable
           : locationState === "locating"
             ? copy.locating
             : copy.locationReady
@@ -739,6 +805,13 @@ export function MapEntryB() {
           "CooperativeGesturesHandler.WindowsHelpText": "Ctrl 키를 누른 채 스크롤하여 지도를 확대하거나 축소하세요",
           "CooperativeGesturesHandler.MacHelpText": "⌘ 키를 누른 채 스크롤하여 지도를 확대하거나 축소하세요",
           "CooperativeGesturesHandler.MobileHelpText": "두 손가락으로 지도를 움직이세요",
+        } : locale === "ja" ? {
+          "Map.Title": "地図",
+          "NavigationControl.ZoomIn": "地図を拡大",
+          "NavigationControl.ZoomOut": "地図を縮小",
+          "CooperativeGesturesHandler.WindowsHelpText": "Ctrlキーを押しながらスクロールして地図を拡大・縮小します",
+          "CooperativeGesturesHandler.MacHelpText": "⌘キーを押しながらスクロールして地図を拡大・縮小します",
+          "CooperativeGesturesHandler.MobileHelpText": "2本の指で地図を動かします",
         } : undefined,
       })
       mapRef.current = instance
@@ -1052,7 +1125,7 @@ export function MapEntryB() {
       <section className={styles.root} data-testid="ondo-b-map-entry">
         <header className={styles.header}>
           <div className={styles.brand}><i /> <span><strong>ONDO</strong><small>{copy.tagline}</small></span></div>
-          <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
+          <button type="button" className={styles.language} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} />{NEXT_LOCALE_LABEL[locale]}</button>
         </header>
         <NationDirectory locale={locale} onSelect={chooseCity} />
       </section>
@@ -1092,24 +1165,22 @@ export function MapEntryB() {
           <div className={styles.topline}>
             <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
             <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
-            <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
+            <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} />{NEXT_LOCALE_LABEL[locale]}</button>
           </div>
           {city !== "jeju" ? <>
-            <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
+            <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={MAP_UI[locale].clearSearch}><X size={16} /></button> : null}</div>
             <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
               {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-label={CATEGORY[item][locale]} aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : CATEGORY[item][locale]}</button>)}
             </div>
           </> : null}
         </header>
 
-        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? locale === "ko" ? "제주 편집 여행 컬렉션 지도" : "Jeju editorial travel collection map" : locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
+        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? MAP_UI[locale].editorialRegion : MAP_UI[locale].mapRegion} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
         {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} onOpenChange={setEditorialOpen} /> : null}
         <ul id="ondo-b-pulse-marker-accessible-detail" className={styles.srOnly} data-testid="ondo-b-pulse-marker-accessible-detail" aria-hidden={editorialOpen ? true : undefined}>
           {curatedPulseVenues.map(({ venue, pulse }) => (
             <li key={venue.id}>
-              {locale === "ko"
-                ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
-                : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
+              {`${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}
             </li>
           ))}
         </ul>
@@ -1119,7 +1190,7 @@ export function MapEntryB() {
           <div className={styles.resultBar} data-testid="ondo-b-result-bar">
             <span><b>{city === "jeju" ? copy.jejuMapTruth : resultCount(venues.length, locale)}</b><small>{city === "jeju" ? copy.jejuTruth : `${copy.source} · ${copy.categoryBasis}`}</small></span>
             {city === "jeju" ? null : mapLayoutMode === "ultra-short" ? (
-              <span className={styles.forcedListLabel} data-testid="ondo-b-effective-view-label" aria-label={locale === "ko" ? "좁은 화면에서 목록 보기 사용 중" : "List view on a short screen"}><List size={17} />{copy.list}</span>
+              <span className={styles.forcedListLabel} data-testid="ondo-b-effective-view-label" aria-label={MAP_UI[locale].shortList}><List size={17} />{copy.list}</span>
             ) : (
               <button
                 type="button"
@@ -1152,15 +1223,15 @@ export function MapEntryB() {
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
             <aside className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
               <div className={styles.mapKeyLead}>
-                <span><i className={styles.clusterSwatch}>12</i><small>{locale === "ko" ? "공식 묶음" : "Official groups"}</small></span>
+                <span><i className={styles.clusterSwatch}>12</i><small>{MAP_UI[locale].officialGroups}</small></span>
               </div>
               <div className={styles.pulseScale} data-testid="ondo-b-pulse-scale" aria-hidden="true">
-                <b>Pulse</b><i /><small>{locale === "ko" ? "여유 → 피크" : "Low → Peak"}</small>
+                <b>Pulse</b><i /><small>{MAP_UI[locale].pulseRange}</small>
               </div>
               <details className={styles.mapKeyDetails} data-testid="ondo-b-map-key-details" name="ondo-map-disclosure">
                 <summary aria-label={copy.mapKeyDetails}><span>{copy.mapKeyDetails}</span><ChevronRight size={16} /></summary>
                 <div className={styles.mapKeyDetailsBody}>
-                  <div className={styles.pulseLegend} data-testid="ondo-b-pulse-legend" aria-label={locale === "ko" ? "Pulse 단계 범례" : "Pulse level legend"}>
+                  <div className={styles.pulseLegend} data-testid="ondo-b-pulse-legend" aria-label={MAP_UI[locale].pulseLegend}>
                     {(["peak", "hot", "rising", "warming", "low", "limited"] as const).map((level) => <span key={level} data-level={level}><i />{pulseLevelLabel(level, locale)}</span>)}
                   </div>
                   <small>{copy.mapKeyBody}</small>
@@ -1173,16 +1244,14 @@ export function MapEntryB() {
                       </div>
                     ))}
                   </dl>
-                  <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={locale === "ko" ? "Pulse 장소" : "Pulse places"}>
+                  <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={MAP_UI[locale].pulsePlaces}>
                     {curatedPulseVenues.map(({ venue, pulse }) => (
                       <li key={venue.id}>
                         <button
                           type="button"
                           data-level={pulse.level}
                           data-pulse-place-priority={pulse.level}
-                          aria-label={locale === "ko"
-                            ? `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · 최신성 ${pulse.freshness} · 신뢰도 ${pulse.confidence}`
-                            : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · freshness ${pulse.freshness} · confidence ${pulse.confidence}`}
+                          aria-label={`${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}
                           onClick={() => selectVenue(venue)}
                         >
                           <span>{venueDisplayName(venue.name.ko, locale)}</span>
@@ -1196,7 +1265,7 @@ export function MapEntryB() {
             </aside>
           ) : null}
           {effectiveView === "map" && mapState !== "error" ? (
-            <footer className={styles.attribution} data-testid="ondo-b-attribution" aria-label={locale === "ko" ? "지도 출처" : "Map attribution"}>
+            <footer className={styles.attribution} data-testid="ondo-b-attribution" aria-label={MAP_UI[locale].mapAttribution}>
               <details className={styles.creditDetails} data-testid="ondo-b-map-credit-details" name="ondo-map-disclosure">
                 <summary aria-label={copy.mapCredits}><span>{copy.mapCredits}</span><Info size={17} /></summary>
                 <div className={styles.creditDetailsBody}>

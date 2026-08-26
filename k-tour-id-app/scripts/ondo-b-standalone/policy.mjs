@@ -77,6 +77,11 @@ export const SOURCE_FILES = Object.freeze([
 
 export const PUBLIC_FILES = Object.freeze([
   "public/og-ondo-directory.png",
+  "public/editorial/japan-first-c01-sesame-oil.jpg",
+  "public/editorial/japan-first-c03-seoul-eight-hours.jpg",
+  "public/editorial/japan-first-c06-beauty-research.jpg",
+  "public/editorial/japan-first-c18-jeju-screen-route.jpg",
+  "public/editorial/japan-first-c20-jeju-kpop-route.jpg",
 ])
 
 export const EXPECTED_ROUTE_FILES = Object.freeze([

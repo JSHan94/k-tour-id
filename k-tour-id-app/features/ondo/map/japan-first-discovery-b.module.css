@@ -109,7 +109,7 @@
   border-radius: 15px;
   background: linear-gradient(155deg, #fff, #faf4ef);
 }
-.contentRail article { min-height: 294px; scroll-snap-align: start; }
+.contentRail article { min-height: 326px; scroll-snap-align: start; }
 .contentRail article > small,
 .moreStories article > small { color: #876153; font-size: 12px; font-weight: 740; }
 .contentRail article > strong,
@@ -122,7 +122,8 @@
 
 .storyMedia {
   position: relative;
-  min-height: 126px;
+  min-height: 0;
+  aspect-ratio: 3 / 2;
   margin: 0;
   overflow: hidden;
   border-radius: 12px;
@@ -156,7 +157,8 @@
 .storyCopy { display: grid; min-width: 0; gap: 4px; padding-inline: 2px; }
 .storyCopy > strong { display: -webkit-box; overflow: hidden; font-size: 15px; line-height: 1.32; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .storyCopy > p { margin: 0; overflow: hidden; color: #514a44; font-size: 13px; line-height: 1.42; text-overflow: ellipsis; white-space: nowrap; }
-.storyCopy > em { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; color: #766f67; font-size: 12px; font-style: normal; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.storyCopy > em { display: flex; min-width: 0; align-items: flex-start; gap: 5px; color: #766f67; font-size: 12px; font-style: normal; font-weight: 650; line-height: 1.38; white-space: normal; }
+.storyCopy > em svg { margin-top: 1px; }
 .storyCopy > em svg { flex: 0 0 auto; color: #a85a42; }
 
 .contentRail article > nav,
@@ -225,10 +227,9 @@
   .panel { gap: 9px; padding: 10px; }
   .panel header { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
   .panel header > span strong { font-size: 13px; }
-  .method > summary { min-height: 40px; padding-inline: 4px; }
+  .method > summary { min-height: 44px; padding-inline: 4px; }
   .contentRail { grid-auto-columns: minmax(242px, 84%); gap: 8px; }
-  .contentRail article { min-height: 274px; }
-  .storyMedia { min-height: 118px; }
+  .contentRail article { min-height: 312px; }
   .storyCopy > strong { font-size: 15px; }
   .storyCopy > p { font-size: 13px; }
 }

@@ -174,6 +174,7 @@
   list-style: none;
 }
 .settingsDisclosure > summary::-webkit-details-marker { display: none; }
+.settingsDisclosure > summary:focus-visible { border-radius: 10px; outline: 3px solid var(--feature-focus); outline-offset: 3px; }
 .settingsDisclosure > summary > span { display: grid; min-width: 0; gap: 2px; }
 .settingsDisclosure > summary strong { font-size: 14px; letter-spacing: -.02em; }
 .settingsDisclosure > summary small { overflow: hidden; color: #716a63; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
@@ -215,6 +216,12 @@
   .activitySection::before { left: -27px; }
   .confirmCard { width: min(100%, 520px); margin: auto; }
   .confirmLayer { align-items: center; }
+  .settingsSection:nth-of-type(3) .settingsDisclosureBody {
+    grid-template-columns: minmax(0, 1fr) minmax(230px, 280px);
+    align-items: end;
+    column-gap: 22px;
+  }
+  .settingsSection:nth-of-type(3) .settingsDisclosureBody > p { max-width: 72ch; }
 }
 
 @media (min-width: 900px) {
@@ -269,8 +276,8 @@
   .confirmLayer { align-items: center; padding: 10px; }
 }
 
-@keyframes cardEnter { from { opacity: 0; transform: translateY(10px); } }
-@keyframes groupEnter { from { opacity: 0; transform: translateY(8px); } }
+@keyframes cardEnter { from { transform: translateY(10px); } }
+@keyframes groupEnter { from { transform: translateY(8px); } }
 @keyframes sheetIn { from { opacity: .7; transform: translateY(18px) scale(.985); } }
 
 @media (prefers-reduced-motion: reduce) {

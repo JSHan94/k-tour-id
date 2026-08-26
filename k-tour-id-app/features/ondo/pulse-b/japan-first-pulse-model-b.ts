@@ -39,6 +39,7 @@ export type UnifiedPulseResultB = {
 export const PULSE_COMPOSITION_DISCLOSURE = Object.freeze({
   en: "Fixed walkthrough snapshots — not live crowding or official LOCALDATA facts. Production Pulse will use only verified Japan-interest, Korea-local and ONDO evidence; paid placements never count.",
   ko: "실시간 혼잡도나 공식 LOCALDATA 사실이 아닌 고정 워크스루 스냅샷입니다. 실제 Pulse는 검증된 일본 관심도·한국 로컬·ONDO 근거만 합산하며, 유료 노출은 제외합니다.",
+  ja: "固定された参考スナップショットであり、リアルタイムの混雑状況やLOCALDATAの公式情報ではありません。実運用のPulseでは、検証済みの日本での関心、韓国ローカル、ONDOの根拠のみを使用し、広告・有料掲載は算定に含めません。",
 })
 
 export const PULSE_PRODUCTION_DRIVER_DISCLOSURE = Object.freeze({
@@ -51,6 +52,11 @@ export const PULSE_PRODUCTION_DRIVER_DISCLOSURE = Object.freeze({
     { id: "japan", label: "일본 관심도", state: "성장 중", detail: "출처와 장소 연결 검증 중" },
     { id: "korea", label: "한국 로컬", state: "성장 중", detail: "최신 로컬 근거 미연결" },
     { id: "ondo", label: "ONDO", state: "성장 중", detail: "실서비스 자체 근거 미연결" },
+  ],
+  ja: [
+    { id: "japan", label: "日本での関心", state: "拡充中", detail: "情報源と場所リンクを確認中" },
+    { id: "korea", label: "韓国ローカル", state: "拡充中", detail: "最新のローカル根拠は未接続" },
+    { id: "ondo", label: "ONDO", state: "拡充中", detail: "実運用の自社データは未接続" },
   ],
 })
 
@@ -168,7 +174,7 @@ export function composeUnifiedPulseB(targetVenueId: string, input: UnifiedPulseI
 
 export type JapanFirstLaunchContentB = {
   id: "C01" | "C02" | "C03" | "C06" | "C08" | "C12" | "C18" | "C20" | "C22"
-  title: { en: string; ko: string }
+  title: { en: string; ko: string; ja: string }
   jaHook: string
   cityIds: readonly ("seoul" | "busan" | "jeju")[]
   sourceReferences: readonly {
@@ -191,7 +197,7 @@ export type JapanFirstLaunchContentB = {
   editorialMedia?: {
     src: string
     alt: { en: string; ko: string; ja: string }
-    credit: "ONDO original editorial illustration"
+    credit: { en: string; ko: string; ja: string }
     rightsMode: "ondo-original"
   }
 }
@@ -201,7 +207,7 @@ export const JAPAN_FIRST_FEATURED_CONTENT_IDS = Object.freeze(["C01", "C03", "C0
 export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = Object.freeze([
   {
     id: "C01",
-    title: { en: "Fact-check Seoul's fresh sesame-oil pilgrimage", ko: "서울 즉석 참기름 성지 팩트체크" },
+    title: { en: "Fact-check Seoul's fresh sesame-oil pilgrimage", ko: "서울 즉석 참기름 성지 팩트체크", ja: "ソウル『ごま油の聖地』を検証" },
     jaHook: "ソウルの『ごま油の聖地』を検証",
     editorialMedia: {
       src: "/editorial/japan-first-c01-sesame-oil.jpg",
@@ -210,7 +216,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "서울 시장의 즉석 참기름을 표현한 편집 이미지",
         ja: "ソウル市場の搾りたてごま油を表現した編集画像",
       },
-      credit: "ONDO original editorial illustration",
+      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["seoul"],
@@ -222,7 +228,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C02",
-    title: { en: "Follow a monthly Korea travel creator's 14 stops", ko: "매달 서울 가는 일본 여행 크리에이터의 14곳" },
+    title: { en: "Follow a monthly Korea travel creator's 14 stops", ko: "매달 서울 가는 일본 여행 크리에이터의 14곳", ja: "毎月渡韓する旅クリエイターの14選" },
     jaHook: "毎月渡韓する旅クリエイターの14選",
     cityIds: ["seoul"],
     sourceReferences: [{ label: "YouTube · 大人の休日CH", url: "https://www.youtube.com/watch?v=G7hPMdA7HG4", type: "original-creator", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" }],
@@ -230,7 +236,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C03",
-    title: { en: "What fits into an eight-hour Seoul stop?", ko: "서울 체류 8시간, 어디까지 가능할까?" },
+    title: { en: "What fits into an eight-hour Seoul stop?", ko: "서울 체류 8시간, 어디까지 가능할까?", ja: "ソウル滞在8時間、どこまで楽しめる？" },
     jaHook: "滞在8時間、ソウルでどこまでできる？",
     editorialMedia: {
       src: "/editorial/japan-first-c03-seoul-eight-hours.jpg",
@@ -239,7 +245,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "서울 8시간 여행 동선을 표현한 편집 콜라주",
         ja: "ソウル8時間の旅程を表現した編集コラージュ",
       },
-      credit: "ONDO original editorial illustration",
+      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["seoul"],
@@ -248,8 +254,8 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C06",
-    title: { en: "Nana's monthly Korea beauty research", ko: "Nana의 한국 뷰티 취재 지도" },
-    jaHook: "月1韓国美容・NanaのクリニックMAP",
+    title: { en: "Nana's monthly Korea beauty research", ko: "Nana의 한국 뷰티 취재 지도", ja: "Nanaの韓国美容リサーチ" },
+    jaHook: "月1渡韓の視点で見る韓国美容リサーチ",
     editorialMedia: {
       src: "/editorial/japan-first-c06-beauty-research.jpg",
       alt: {
@@ -257,7 +263,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "스킨케어 오브제와 서울 지도를 담은 뷰티 취재 편집 이미지",
         ja: "スキンケア用品とソウル地図を配した美容取材の編集画像",
       },
-      credit: "ONDO original editorial illustration",
+      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["seoul"],
@@ -269,7 +275,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C08",
-    title: { en: "Twenty Korean-supermarket gifts picked in Japan", ko: "일본 잡지가 고른 한국 슈퍼 선물 20" },
+    title: { en: "Twenty Korean-supermarket gifts picked in Japan", ko: "일본 잡지가 고른 한국 슈퍼 선물 20", ja: "日本の雑誌が選ぶ韓国スーパー土産20" },
     jaHook: "日本の雑誌が選んだ『韓国スーパー土産20』",
     cityIds: ["seoul"],
     sourceReferences: [{ label: "Hanako 2026", url: "https://hanako.tokyo/food/504388/", type: "editorial", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" }],
@@ -277,7 +283,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C12",
-    title: { en: "A Netflix chef-restaurant pilgrimage", ko: "Netflix 셰프 식당 성지순례" },
+    title: { en: "A Netflix chef-restaurant pilgrimage", ko: "Netflix 셰프 식당 성지순례", ja: "Netflixシェフの店を巡る旅" },
     jaHook: "『白と黒のスプーン』出演シェフ店巡礼",
     cityIds: ["seoul"],
     sourceReferences: [
@@ -288,7 +294,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C18",
-    title: { en: "Step into Jeju's When Life Gives You Tangerines", ko: "〈폭싹 속았수다〉 제주 장면 속으로" },
+    title: { en: "Step into Jeju's When Life Gives You Tangerines", ko: "〈폭싹 속았수다〉 제주 장면 속으로", ja: "『おつかれさま』の済州ロケ地へ" },
     jaHook: "『おつかれさま』の済州へ",
     editorialMedia: {
       src: "/editorial/japan-first-c18-jeju-screen-route.jpg",
@@ -297,7 +303,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "귤과 돌담, 바다로 구성한 제주 촬영지 편집 이미지",
         ja: "みかん、石垣、海で構成した済州ロケ地の編集画像",
       },
-      credit: "ONDO original editorial illustration",
+      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["jeju"],
@@ -306,7 +312,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C20",
-    title: { en: "Follow K-pop stars through Jeju", ko: "K-pop 스타가 먹고 머문 제주" },
+    title: { en: "Follow K-pop stars through Jeju", ko: "K-pop 스타가 먹고 머문 제주", ja: "K-popスターが巡った済州" },
     jaHook: "K-popスターが巡った済州",
     editorialMedia: {
       src: "/editorial/japan-first-c20-jeju-kpop-route.jpg",
@@ -315,7 +321,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "음악과 공연 모티프를 담은 제주 해안 여행 편집 이미지",
         ja: "音楽とステージのモチーフを配した済州海岸ルートの編集画像",
       },
-      credit: "ONDO original editorial illustration",
+      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["jeju"],
@@ -324,7 +330,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
   {
     id: "C22",
-    title: { en: "Fact-check the Nolan family Korea list", ko: "Nolan Korea List 팩트체크" },
+    title: { en: "Fact-check the Nolan family Korea list", ko: "Nolan Korea List 팩트체크", ja: "ノーラン一家の韓国リストを検証" },
     jaHook: "ノーラン一家の韓国リストを検証",
     cityIds: ["seoul"],
     sourceReferences: [
@@ -344,7 +350,7 @@ export type JejuEditorialSeedB = {
   priority: "P0" | "P1"
   sourceType: "editorial-research"
   sourceLabel: "VISITKOREA Japanese"
-  sourceCollection: { en: string; ko: string }
+  sourceCollection: { en: string; ko: string; ja: string }
   sourceUrl: string
   publishedOrObservedAt: string | null
   importedAt: "2026-08-26"
@@ -362,17 +368,17 @@ const JEJU_SCREEN_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/conte
 const JEJU_STAR_SOURCE = "https://japanese.visitkorea.or.kr/svc/whereToGo/hdrdslt/hdrdsltView.do?crsSn=372386"
 const JEJU_CULTURE_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=1592039"
 const JEJU_HAENYEO_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?menuSn=352&vcontsId=187785"
-const jejuTruth = (sourceUrl: string, sourceCollection: { en: string; ko: string }) => ({ sourceType: "editorial-research" as const, sourceLabel: "VISITKOREA Japanese" as const, sourceCollection, sourceUrl, publishedOrObservedAt: null, importedAt: "2026-08-26" as const, liveCheckedAt: null, sourceVerification: "report-linked" as const, researchRecordedAt: "2026-08-24" as const, placeEdgeVerification: "pending" as const, sponsorship: "organic-official" as const, rightsMode: "link-only" as const, canonicalVenueId: null, officialRecordCount: null })
+const jejuTruth = (sourceUrl: string, sourceCollection: { en: string; ko: string; ja: string }) => ({ sourceType: "editorial-research" as const, sourceLabel: "VISITKOREA Japanese" as const, sourceCollection, sourceUrl, publishedOrObservedAt: null, importedAt: "2026-08-26" as const, liveCheckedAt: null, sourceVerification: "report-linked" as const, researchRecordedAt: "2026-08-24" as const, placeEdgeVerification: "pending" as const, sponsorship: "organic-official" as const, rightsMode: "link-only" as const, canonicalVenueId: null, officialRecordCount: null })
 
 export const JEJU_EDITORIAL_SEEDS: readonly JejuEditorialSeedB[] = Object.freeze([
-  { id: "jeju-seongsan-ilchulbong", cityId: "jeju", name: { en: "Seongsan Ilchulbong", ko: "성산일출봉", ja: "城山日出峰" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음" }) },
-  { id: "jeju-gwangchigi-beach", cityId: "jeju", name: { en: "Gwangchigi Beach", ko: "광치기해변", ja: "クァンチギ海岸" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음" }) },
-  { id: "jeju-gwaneumsa", cityId: "jeju", name: { en: "Gwaneumsa Temple", ko: "관음사", ja: "観音寺" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음" }) },
-  { id: "jeju-donsadon", cityId: "jeju", name: { en: "Donsadon main restaurant", ko: "돈사돈 본점", ja: "トンサドン本店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
-  { id: "jeju-oneunjeong-gimbap", cityId: "jeju", name: { en: "Oneunjeong Gimbap", ko: "오는정김밥", ja: "オヌンジョンキンパ" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
-  { id: "jeju-tamura", cityId: "jeju", name: { en: "TaMuRa", ko: "TaMuRa", ja: "TaMuRa" }, category: "food", priority: "P1", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
-  { id: "jeju-sogil-byeolha", cityId: "jeju", name: { en: "Sogil Byeolha", ko: "소길별하", ja: "ソギルビョルハ" }, category: "culture-shopping", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
-  { id: "jeju-haenyeo-kitchen-bukchon", cityId: "jeju", name: { en: "Haenyeo's Kitchen Bukchon", ko: "해녀의부엌 북촌점", ja: "海女の台所 北村店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_HAENYEO_SOURCE, { en: "Jeju haenyeo culture", ko: "제주 해녀 문화" }) },
-  { id: "jeju-dongmun-market", cityId: "jeju", name: { en: "Jeju Dongmun Market", ko: "제주동문시장", ja: "済州東門市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장" }) },
-  { id: "jeju-seogwipo-olle-market", cityId: "jeju", name: { en: "Seogwipo Maeil Olle Market", ko: "서귀포매일올레시장", ja: "西帰浦毎日オルレ市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장" }) },
+  { id: "jeju-seongsan-ilchulbong", cityId: "jeju", name: { en: "Seongsan Ilchulbong", ko: "성산일출봉", ja: "城山日出峰" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }) },
+  { id: "jeju-gwangchigi-beach", cityId: "jeju", name: { en: "Gwangchigi Beach", ko: "광치기해변", ja: "クァンチギ海岸" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }) },
+  { id: "jeju-gwaneumsa", cityId: "jeju", name: { en: "Gwaneumsa Temple", ko: "관음사", ja: "観音寺" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }) },
+  { id: "jeju-donsadon", cityId: "jeju", name: { en: "Donsadon main restaurant", ko: "돈사돈 본점", ja: "トンサドン本店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
+  { id: "jeju-oneunjeong-gimbap", cityId: "jeju", name: { en: "Oneunjeong Gimbap", ko: "오는정김밥", ja: "オヌンジョンキンパ" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
+  { id: "jeju-tamura", cityId: "jeju", name: { en: "TaMuRa", ko: "TaMuRa", ja: "TaMuRa" }, category: "food", priority: "P1", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
+  { id: "jeju-sogil-byeolha", cityId: "jeju", name: { en: "Sogil Byeolha", ko: "소길별하", ja: "ソギルビョルハ" }, category: "culture-shopping", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
+  { id: "jeju-haenyeo-kitchen-bukchon", cityId: "jeju", name: { en: "Haenyeo's Kitchen Bukchon", ko: "해녀의부엌 북촌점", ja: "海女の台所 北村店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_HAENYEO_SOURCE, { en: "Jeju haenyeo culture", ko: "제주 해녀 문화", ja: "済州の海女文化" }) },
+  { id: "jeju-dongmun-market", cityId: "jeju", name: { en: "Jeju Dongmun Market", ko: "제주동문시장", ja: "済州東門市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장", ja: "済州の文化と市場" }) },
+  { id: "jeju-seogwipo-olle-market", cityId: "jeju", name: { en: "Seogwipo Maeil Olle Market", ko: "서귀포매일올레시장", ja: "西帰浦毎日オルレ市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장", ja: "済州の文化と市場" }) },
 ])

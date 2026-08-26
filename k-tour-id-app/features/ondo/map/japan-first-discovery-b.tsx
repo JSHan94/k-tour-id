@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { ArrowUpRight, ChevronRight, CircleDashed, Flame, MapPinned, Sparkles } from "lucide-react"
+import { ArrowUpRight, BookOpenText, ChevronRight, CircleDashed, MapPinned, Sparkles } from "lucide-react"
 import {
   JAPAN_FIRST_LAUNCH_CONTENT,
   JAPAN_FIRST_FEATURED_CONTENT_IDS,
@@ -56,6 +56,28 @@ const COPY = {
     sourceBoundary: "장소 정보는 지도 핀으로 연결하기 전에 다시 검증합니다.",
     newTab: "새 탭에서 열림",
   },
+  ja: {
+    eyebrow: "日本の旅行メディアから見つけた物語",
+    title: "ストーリー9件・済州アイデア10件",
+    seoulTitle: "日本の旅行メディアから見つけたソウルの物語7件",
+    jejuTitle: "済州の物語2件・アイデア10件",
+    seoulSummary: "編集コレクション・正確な場所は確認中",
+    jejuSummary: "編集コレクション・場所リンクは確認中",
+    summary: "Pulseはひとつ・場所確認後にリンク",
+    body: "元の情報源と正確な場所の対応を確認した後にのみ、Pulseへの反映や場所ページへのリンクを行います。",
+    content: "注目のストーリー",
+    jeju: "済州・Growing",
+    jejuBody: "編集アイデア10件・公式ディレクトリ記録ではありません",
+    jejuSources: "済州の公式情報コレクション",
+    pending: "情報源あり・場所の一致を確認中",
+    viewSource: "元の情報を見る",
+    viewSources: "情報源を見る",
+    method: "確認方法",
+    marker: "ストーリー",
+    language: "アプリの案内は日本語・英語・韓国語に対応しています。",
+    sourceBoundary: "地図のピンにする前に、場所情報を改めて確認します。",
+    newTab: "新しいタブで開きます",
+  },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
 type Copy = typeof COPY.en
@@ -92,12 +114,12 @@ function Story({ item, copy, locale, compact = false }: {
             sizes="(max-width: 800px) 76vw, 320px"
             src={item.editorialMedia.src}
           />
-          <figcaption>{item.sourceReferences[0].label}</figcaption>
+          <figcaption>{item.editorialMedia.credit[locale]}</figcaption>
         </figure>
       ) : <small>{item.sourceReferences[0].label}</small>}
       <div className={styles.storyCopy}>
         <strong>{item.title[locale]}</strong>
-        <p lang="ja">{item.jaHook}</p>
+        {locale === "ja" ? null : <p lang="ja">{item.jaHook}</p>}
         <em><CircleDashed aria-hidden="true" size={14} />{copy.pending}</em>
       </div>
       <SourceLinks item={item} copy={copy} locale={locale} />
@@ -128,7 +150,7 @@ export function JapanFirstDiscoveryB({ locale, city, onOpenChange }: { locale: O
       </summary>
       <div className={styles.panel}>
         <header>
-          <span><Flame aria-hidden="true" size={18} /><strong>{copy.content}</strong></span>
+          <span><BookOpenText aria-hidden="true" size={18} /><strong>{copy.content}</strong></span>
           <details className={styles.method}>
             <summary>{copy.method}<ChevronRight aria-hidden="true" size={15} /></summary>
             <p>{copy.body}</p>
@@ -140,7 +162,7 @@ export function JapanFirstDiscoveryB({ locale, city, onOpenChange }: { locale: O
         </div>
         {remaining.length ? (
           <details className={styles.moreStories} data-testid="ondo-b-japan-more-stories">
-            <summary>{locale === "ko" ? `콘텐츠 ${remaining.length}개 더 보기` : `${remaining.length} more stories`}<ChevronRight aria-hidden="true" size={16} /></summary>
+            <summary>{locale === "ko" ? `콘텐츠 ${remaining.length}개 더 보기` : locale === "ja" ? `ほかのストーリー${remaining.length}件` : `${remaining.length} more stories`}<ChevronRight aria-hidden="true" size={16} /></summary>
             <div>
               {remaining.map((item) => <Story key={item.id} item={item} copy={copy} locale={locale} compact />)}
             </div>
