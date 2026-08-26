@@ -18,7 +18,7 @@ donate unsupported product claims.
 | 3 | City map, Pulse, filters and list | Mapstr + Beli | Peer-sealed · user review |
 | 4 | Japanese story to source/place | The Infatuation + Apple Guides | Peer-sealed · user review |
 | 5 | Place peek and full detail | Apple Place Card + Airbnb | Peer-sealed · user review |
-| 6 | Tables, 19+, join and chat | Timeleft | Pending |
+| 6 | Tables, 19+, join and chat | Timeleft | Peer-sealed · user review |
 | 7 | Local Signal contribution | Apple contribution + Strava | Pending |
 | 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Pending |
 | 9 | My Korea trip memory | Polarsteps | Pending |
@@ -167,11 +167,26 @@ at 320x720, 390x844, 844x390 and 1440x1000.
 
 ### 6. Tables and 19+ — Timeleft
 
-- [ ] Event identity, time, seats and participation energy lead the composition.
-- [ ] Detail becomes an itinerary and participation flow, not a metadata form.
-- [ ] Join remains visible; After19 is a branded private checkpoint.
-- [ ] Chat emphasizes participant presence and the composer while safety remains
+- [x] Event identity, time, seats and participation energy lead the composition.
+- [x] Detail becomes an itinerary and participation flow, not a metadata form.
+- [x] Join remains visible; After19 is a branded private checkpoint.
+- [x] Chat emphasizes participant presence and the composer while safety remains
       reachable but subordinate.
+- [x] Real-clock expiry renews the exact Table, Place and draft return envelope.
+- [x] Join and leave change state only after durable plan storage succeeds;
+      failures keep the truthful current state and expose recovery.
+- [x] Report, Block and Leave each own focus, Escape, confirmation and return;
+      no action leaks through the active safety dialog.
+- [x] Messages, photos, check-in, feedback and safety state remain tab-local;
+      only the planned Table persists to My Korea on this device.
+- [x] Report and feedback receipts explicitly create no external report, public
+      rating, reputation, booking, venue transmission or payment claim.
+
+Required states sealed: invitation, detail, After19 intro/review/failure/expiry,
+join storage failure, joined, chat, send failure/retry, photo ready/MIME/size
+failure, check-in, feedback receipt, My Korea/reload/exact Table return,
+Report/Block/Undo, Leave/cancel/storage failure for EN/KO/JA at 320x720,
+390x844, 844x390 and 1440x1000.
 
 ### 7. Local Signal — Apple contribution + Strava
 
@@ -203,11 +218,15 @@ at 320x720, 390x844, 844x390 and 1440x1000.
 
 ## Release record
 
-- Active flow: Tables, 19+, join and chat
+- Active flow: Local Signal contribution
 - Peer-sealed flow: Guest onboarding at `7555b133` (72 required state frames,
   all >=8.5, P0=P1=P2=P3=0, Arc 13/13, restoration/geometry 8/8,
   contracts 174/174)
 - Peer-sealed flows: Explore 2–5 at `5deef49` (all required states >=8.5,
   P0=P1=P2=P3=0, V3 6/6, contracts 172/172)
+- Peer-sealed flow: Tables/19+/Join/Chat at `33722b9` (264 required state
+  frames, all >=8.5, P0=P1=P2=P3=0, focused mobile 5/5, desktop 5/5,
+  social direction 19/19, contracts 178/178)
 - User-approved flows: pending the next visual checkpoint
-- Next user checkpoint: stable ONDO link plus Timeleft-inspired Tables journey
+- Next user checkpoint: stable ONDO link plus Timeleft-inspired Tables journey;
+  implementation continues with Local Signal.
