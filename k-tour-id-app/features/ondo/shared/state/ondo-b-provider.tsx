@@ -86,11 +86,11 @@ export type OndoBActions = {
   setTab(tab: OndoBTab): void
   setSurface(surface: OndoBSurface): void
   setPersona(persona: OndoBPersona): void
-  setDiscoveryPreferences(preferences: OndoBDiscoveryPreference[]): void
+  setDiscoveryPreferences(preferences: OndoBDiscoveryPreference[]): boolean
   resetDiscoveryPreferences(): void
   beginOnboarding(): void
-  completeOnboarding(): void
-  skipOnboarding(): void
+  completeOnboarding(): boolean
+  skipOnboarding(): boolean
   resetOnboarding(): void
   saveVenue(venueId: string): void
   toggleSavedVenue(venueId: string): void
@@ -401,24 +401,30 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       if (!commit((current) => ({ ...current, persona }))) notify(DEVICE_MESSAGE.persona[stateRef.current.locale])
     },
     setDiscoveryPreferences: (discoveryPreferences) => {
-      if (!commit((current) => ({ ...current, discoveryPreferences }))) notify(DEVICE_MESSAGE.choices[stateRef.current.locale])
+      const saved = commit((current) => ({ ...current, discoveryPreferences }))
+      if (!saved) notify(DEVICE_MESSAGE.choices[stateRef.current.locale])
+      return saved
     },
     resetDiscoveryPreferences: () => {
       if (!commit((current) => ({ ...current, discoveryPreferences: [] }))) notify(DEVICE_MESSAGE.clearChoices[stateRef.current.locale])
     },
     beginOnboarding: () => setState((current) => ({ ...current, onboarding: "ONB-IN-PROGRESS" })),
     completeOnboarding: () => {
-      if (!commit((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } }))) notify(DEVICE_MESSAGE.setup[stateRef.current.locale])
+      const saved = commit((current) => ({ ...current, onboarding: "ONB-COMPLETE", tab: "ondo", surface: { kind: "map" } }))
+      if (!saved) notify(DEVICE_MESSAGE.setup[stateRef.current.locale])
+      return saved
     },
     skipOnboarding: () => {
-      if (!commit((current) => ({
+      const saved = commit((current) => ({
         ...current,
         onboarding: "ONB-COMPLETE",
         persona: null,
         discoveryPreferences: [],
         tab: "ondo",
         surface: { kind: "map" },
-      }))) notify(DEVICE_MESSAGE.guest[stateRef.current.locale])
+      }))
+      if (!saved) notify(DEVICE_MESSAGE.guest[stateRef.current.locale])
+      return saved
     },
     resetOnboarding: () => {
       if (!commit((current) => ({

@@ -45,7 +45,7 @@ const COPY = {
     back: "Go back",
     progress: "Setup progress",
     eyebrow: "Official places, shaped around you",
-    title: "Start with public records. Find a meal that fits your Korea.",
+    title: "Find a meal that fits your Korea—grounded in public records.",
     body: "Browse 400 licensed food-service records across Seoul and Busan, then save a starting intent and food preferences on this device.",
     categoryLabel: "What the directory knows",
     category: "The 200 records in each city come from the Ministry of the Interior and Safety LOCALDATA source. Categories use only each record’s official business type.",
@@ -71,7 +71,7 @@ const COPY = {
     back: "뒤로",
     progress: "시작 설정 진행",
     eyebrow: "공식 장소를 나에게 맞게",
-    title: "공공 기록에서 시작해, 나에게 맞는 한국의 한 끼를 찾아보세요.",
+    title: "나에게 맞는 한국의 한 끼를, 공공 기록에서 찾아보세요.",
     body: "서울과 부산의 일반음식점 인허가 기록 400개를 살펴보고, 이용 목적과 음식 취향을 이 기기에 저장할 수 있어요.",
     categoryLabel: "디렉터리가 아는 것",
     category: "각 도시 200개 기록은 행정안전부 LOCALDATA 출처에서 가져오며, 분류는 공식 업태구분명만을 사용합니다.",
@@ -97,7 +97,7 @@ const COPY = {
     back: "戻る",
     progress: "設定の進行状況",
     eyebrow: "公式記録から、自分らしい旅へ",
-    title: "公的な記録を起点に、韓国で自分に合う一食を探そう。",
+    title: "韓国で自分に合う一食を、公的な記録から探そう。",
     body: "ソウルと釜山の飲食店営業許可記録400件を見ながら、旅の目的や食の好みをこの端末に保存できます。",
     categoryLabel: "このディレクトリで分かること",
     category: "各都市200件の記録は韓国行政安全部のLOCALDATAを出典とし、分類には公式の業種名のみを使用しています。",
@@ -124,15 +124,25 @@ export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
   const [step, setStep] = useState<Step>("value")
   const [preferences, setPreferences] = useState<OndoBDiscoveryPreference[]>([])
+  const [saveError, setSaveError] = useState<string | null>(null)
   const dialogRef = useRef<HTMLElement>(null)
+  const previousOnboardingRef = useRef(state.onboarding)
+  const focusValueActionRef = useRef(false)
   const copy = COPY[state.locale]
   const stepIndex = useMemo(() => ({ value: 1, intent: 2, preferences: 3 })[step], [step])
 
   useEffect(() => {
+    focusValueActionRef.current = previousOnboardingRef.current === "ONB-COMPLETE" && state.onboarding === "ONB-NEW"
+    previousOnboardingRef.current = state.onboarding
     if (state.onboarding !== "ONB-NEW") return
     setStep("value")
     setPreferences([])
+    setSaveError(null)
   }, [state.onboarding])
+
+  useEffect(() => {
+    if (state.toast) setSaveError(state.toast)
+  }, [state.toast])
 
   useEffect(() => {
     if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return
@@ -148,7 +158,9 @@ export function OfficialDirectoryOnboardingLayer() {
         && preferredBounds.right <= dialogBounds.right
         && preferredBounds.bottom <= dialogBounds.bottom
         && preferredBounds.left >= dialogBounds.left)
-      ;(step === "value" ? dialog : preferredIsFullyVisible ? preferred : dialog)?.focus({ preventScroll: true })
+      const resetAction = step === "value" && focusValueActionRef.current && preferredIsFullyVisible ? preferred : null
+      ;(resetAction ?? (step === "value" ? dialog : preferredIsFullyVisible ? preferred : dialog))?.focus({ preventScroll: true })
+      if (step === "value") focusValueActionRef.current = false
     })
     return () => window.cancelAnimationFrame(frame)
   }, [state.hydrated, state.onboarding, step])
@@ -164,14 +176,16 @@ export function OfficialDirectoryOnboardingLayer() {
   }
 
   const finish = () => {
-    actions.setDiscoveryPreferences(preferences)
-    actions.completeOnboarding()
+    setSaveError(null)
+    if (!actions.setDiscoveryPreferences(preferences)) return
+    if (!actions.completeOnboarding()) return
     focusExplore()
   }
 
   const skip = () => {
+    setSaveError(null)
     setPreferences([])
-    actions.skipOnboarding()
+    if (!actions.skipOnboarding()) return
     focusExplore()
   }
 
@@ -212,6 +226,8 @@ export function OfficialDirectoryOnboardingLayer() {
         ref={dialogRef}
         className={styles.layer}
         data-testid="ondo-onboarding"
+        data-visual-direction="arc-narrative"
+        data-onboarding-step={step}
         role="dialog"
         aria-modal="true"
         aria-label={copy.dialog}
@@ -240,32 +256,27 @@ export function OfficialDirectoryOnboardingLayer() {
             {[1, 2, 3].map((item) => <i key={item} className={item <= stepIndex ? styles.progressActive : undefined} />)}
           </div>
           <div className={styles.language} role="group" aria-label="Language / 언어 / 言語" data-testid="onboarding-language-control">
-            <button type="button" data-locale-choice="en" aria-label="View in English" aria-pressed={state.locale === "en"} onClick={() => actions.setLocale("en")}>EN</button>
-            <button type="button" data-locale-choice="ko" aria-label="한국어로 보기" aria-pressed={state.locale === "ko"} onClick={() => actions.setLocale("ko")}>KO</button>
-            <button type="button" data-locale-choice="ja" aria-label="日本語で表示" aria-pressed={state.locale === "ja"} onClick={() => actions.setLocale("ja")}>JA</button>
+            <button type="button" data-locale-choice="en" aria-label="View in English" aria-pressed={state.locale === "en"} onClick={() => { setSaveError(null); actions.setLocale("en") }}>EN</button>
+            <button type="button" data-locale-choice="ko" aria-label="한국어로 보기" aria-pressed={state.locale === "ko"} onClick={() => { setSaveError(null); actions.setLocale("ko") }}>KO</button>
+            <button type="button" data-locale-choice="ja" aria-label="日本語で表示" aria-pressed={state.locale === "ja"} onClick={() => { setSaveError(null); actions.setLocale("ja") }}>JA</button>
           </div>
         </header>
 
         {step === "value" ? (
-          <div className={styles.value} data-testid="onboarding-step-value">
+          <div className={styles.value} data-testid="onboarding-step-value" data-stage="value">
             <div className={styles.seal}><Database size={26} aria-hidden="true" /><span>ONDO</span></div>
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
-            <details className={styles.sourceIntro} data-testid="onboarding-source-boundary">
-              <summary>{copy.sourceSummary}<ChevronRight size={16} aria-hidden="true" /></summary>
-              <div className={styles.sourceBody}>
-                <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
-                <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
-              </div>
-            </details>
             <div className={styles.actions}>
+              {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button
                 type="button"
                 data-onboarding-initial-focus
                 className={styles.primary}
-                onClick={() => {
-                  actions.beginOnboarding()
+                    onClick={() => {
+                      setSaveError(null)
+                      actions.beginOnboarding()
                   setStep("intent")
                 }}
               >
@@ -273,11 +284,18 @@ export function OfficialDirectoryOnboardingLayer() {
               </button>
               <button type="button" className={styles.secondary} onClick={skip}>{copy.guest}</button>
             </div>
+            <details className={styles.sourceIntro} data-testid="onboarding-source-boundary">
+              <summary>{copy.sourceSummary}<ChevronRight size={16} aria-hidden="true" /></summary>
+              <div className={styles.sourceBody}>
+                <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
+                <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
+              </div>
+            </details>
           </div>
         ) : null}
 
         {step === "intent" ? (
-          <div className={styles.panel} data-testid="onboarding-step-intent">
+          <div className={styles.panel} data-testid="onboarding-step-intent" data-stage="intent">
             <div className={styles.heading}>
               <span>02</span>
               <h1>{copy.intentTitle}</h1>
@@ -294,7 +312,10 @@ export function OfficialDirectoryOnboardingLayer() {
                     data-onboarding-initial-focus={persona.id === "travelling" ? "true" : undefined}
                     aria-pressed={selected}
                     className={selected ? styles.personaSelected : styles.persona}
-                    onClick={() => actions.setPersona(persona.id)}
+                    onClick={() => {
+                      setSaveError(null)
+                      actions.setPersona(persona.id)
+                    }}
                     data-testid={`persona-${persona.id}`}
                   >
                     <span className={styles.personaIcon}><Icon size={20} aria-hidden="true" /></span>
@@ -305,6 +326,7 @@ export function OfficialDirectoryOnboardingLayer() {
               })}
             </div>
             <div className={styles.actions}>
+              {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button type="button" className={styles.primary} disabled={!state.persona} onClick={() => setStep("preferences")}>
                 {copy.continueToPreferences}<ArrowRight size={18} aria-hidden="true" />
               </button>
@@ -314,7 +336,7 @@ export function OfficialDirectoryOnboardingLayer() {
         ) : null}
 
         {step === "preferences" ? (
-          <div className={styles.panel} data-testid="onboarding-step-preferences">
+          <div className={styles.panel} data-testid="onboarding-step-preferences" data-stage="preferences">
             <div className={styles.heading}>
               <span>03</span>
               <h1>{copy.preferenceTitle}</h1>
@@ -352,6 +374,7 @@ export function OfficialDirectoryOnboardingLayer() {
               ))}
             </div>
             <div className={styles.actions}>
+              {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button type="button" className={styles.primary} onClick={finish} data-testid="onboarding-finish">
                 {copy.finish}<ArrowRight size={18} aria-hidden="true" />
               </button>
