@@ -695,3 +695,117 @@
   .source dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .before { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Apple Place Card clarity with Airbnb warmth. The sheet is opaque enough to
+   own the decision, while evidence and secondary actions keep their original
+   semantics and order. */
+.peek {
+  border-color: rgb(86 56 43 / 17%);
+  border-radius: 32px;
+  background:
+    radial-gradient(circle at 92% 4%, rgb(132 35 77 / 8%), transparent 26%),
+    linear-gradient(155deg, #fffefa 0%, #faf4ee 100%);
+  box-shadow: 0 0 0 100vmax rgb(29 23 20 / 13%), 0 30px 80px rgb(39 27 20 / 24%), inset 0 1px 0 #fff;
+}
+
+.close {
+  border: 1px solid rgb(76 53 42 / 9%);
+  background: rgb(255 253 249 / 96%);
+  box-shadow: 0 7px 18px rgb(51 34 24 / 7%);
+}
+
+.meta { color: #75685f; }
+.meta i { color: #87433a; }
+.peek h2 { color: #211d19; font-weight: 780; }
+
+.pulsePeek {
+  border-color: color-mix(in srgb, var(--pulse-level) 44%, #d6cbc2);
+  border-left-color: var(--pulse-level);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 2% 50%, color-mix(in srgb, var(--pulse-level) 18%, transparent), transparent 28%),
+    linear-gradient(120deg, color-mix(in srgb, var(--pulse-level) 8%, #fffdf9), #fffdf9 78%);
+  box-shadow: inset 4px 0 0 var(--pulse-level), 0 12px 28px rgb(54 37 27 / 7%);
+}
+
+.peekActions { gap: 10px; }
+.peekActions a,
+.peekActions button { min-height: 50px; border-radius: 17px; }
+.peekActions a {
+  border-color: #28231f;
+  background: linear-gradient(135deg, #27221e, #463029 72%, #66352b);
+  box-shadow: 0 15px 32px rgb(43 29 21 / 19%), inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+.peekActions button {
+  border-color: rgb(76 54 43 / 14%);
+  background: rgb(255 254 251 / 90%);
+  box-shadow: 0 8px 20px rgb(54 37 27 / 6%);
+}
+
+.backdrop { background: rgb(24 20 17 / 38%); backdrop-filter: blur(7px) saturate(.82); }
+.detail {
+  border-color: rgb(86 56 43 / 16%);
+  background:
+    radial-gradient(circle at 94% 0, rgb(132 35 77 / 7%), transparent 27%),
+    linear-gradient(180deg, #fffefb, #f9f4ee);
+  box-shadow: 0 -22px 72px rgb(39 27 20 / 24%), inset 0 1px 0 #fff;
+}
+.detail > header { background: rgb(255 253 249 / 94%); backdrop-filter: blur(20px) saturate(1.08); }
+.body > h2 { color: #211d19; font-weight: 780; }
+
+.pulsePanel {
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 96% 4%, color-mix(in srgb, var(--pulse-level) 17%, transparent), transparent 35%),
+    linear-gradient(145deg, color-mix(in srgb, var(--pulse-level) 9%, #fffaf5), #fffefa 74%);
+  box-shadow: 0 22px 52px rgb(52 37 27 / 11%), inset 0 1px 0 #fff;
+}
+
+.decisionActions a,
+.decisionActions button { border-radius: 17px; }
+.decisionActions a {
+  background: linear-gradient(135deg, #27221e, #463029 72%, #66352b);
+  box-shadow: 0 15px 32px rgb(43 29 21 / 18%), inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+.decisionActions button { background: rgb(255 254 251 / 84%); }
+
+.tableActions,
+.demoOfferAction,
+.localSignalAction,
+.sourceEvidence,
+.before,
+.source {
+  border-color: rgb(77 55 43 / 10%);
+  background: rgb(255 254 251 / 78%);
+  box-shadow: 0 12px 30px rgb(54 37 27 / 6%), inset 0 0 0 1px rgb(74 54 43 / 5%);
+}
+
+@media (max-width: 430px) and (min-height: 600px) {
+  .peek { border-radius: 30px; }
+  .pulsePeek { border-radius: 19px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .peek { border-radius: 30px 0 0 30px; }
+}
+
+@media (min-width: 900px) and (min-height: 501px) {
+  :global([data-variant="B"]) .detail {
+    width: min(940px, calc(100% - 104px));
+    border-radius: 36px 0 0 36px;
+  }
+  .detail > header { border-radius: 36px 0 0 0; }
+  .body { column-gap: 34px; padding: 36px 40px 48px; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .peekActions a:hover,
+  .decisionActions a:hover { box-shadow: 0 19px 40px rgb(43 29 21 / 23%), inset 0 1px 0 rgb(255 255 255 / 12%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peek,
+  .detail,
+  .pulsePeek,
+  .pulsePanel { animation: none !important; transition: none !important; }
+}
