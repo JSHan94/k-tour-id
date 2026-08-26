@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { AlertTriangle, ArrowLeft, BadgeCheck, RotateCcw, ShieldCheck } from "lucide-react"
 import type { BReturnToEnvelope } from "../contracts/return-to-b"
 import { consumeBReturnTo } from "../contracts/return-to-b"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./after19-jit-b.module.css"
@@ -17,10 +18,11 @@ declare global {
 }
 
 type GateView = "intro" | "review" | "failure" | "unsupported" | "expired"
+type SocialLocale = OndoBLocale | "ja"
 
 type After19JitBProps = {
   open: boolean
-  locale: "en" | "ko"
+  locale: SocialLocale
   returnTo: BReturnToEnvelope | null
   tableTitle: string
   venueLabel: string
@@ -73,14 +75,35 @@ const COPY = {
     header: "19+ 확인",
     trust: "기본 비공개",
   },
-} as const
+  ja: {
+    title: "参加前の確認",
+    reason: "このTableには、19歳以上であることだけを共有します。生年月日は非公開のままです。",
+    boundary: "確認方法",
+    predicate: "接続された提供事業者はなく、資格情報も作成されません。年齢確認は場所の記録ではなく、このTableにだけ適用されます。このTableに戻るのは19歳以上という結果だけで、生年月日を求めたり保存したりしません。",
+    context: "ここに戻ります",
+    start: "確認して続ける",
+    cancel: "今はしない",
+    choices: "続けますか？",
+    success: "確認して続ける",
+    failedTitle: "19+確認を完了できませんでした",
+    failedBody: "Table、公式の場所、参加メモはそのままです。",
+    unsupportedTitle: "年齢確認を利用できません",
+    unsupportedBody: "Tableを変更せずに戻るか、もう一度確認できます。",
+    expiredTitle: "年齢確認の有効期限が切れました",
+    expiredBody: "Table、場所、メモを失わずにやり直せます。",
+    retry: "もう一度試す",
+    return: "同じTableに戻る",
+    header: "19+確認",
+    trust: "初期設定で非公開",
+  },
+} as const satisfies Record<SocialLocale, Record<string, string>>
 
 export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, onCancel, onEligible }: After19JitBProps) {
   const [view, setView] = useState<GateView>("intro")
   const layerRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLElement | null>(null)
   const startRef = useRef<HTMLButtonElement | null>(null)
-  const t = locale === "ko" ? COPY.ko : COPY.en
+  const t = COPY[locale]
   const qaOutcome = window.__ONDO_B_QA__?.after19 ?? null
 
   useModalIsolation(open, layerRef)

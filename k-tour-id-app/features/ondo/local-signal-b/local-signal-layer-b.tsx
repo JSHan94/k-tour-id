@@ -6,6 +6,7 @@ import { BadgeCheck, ChevronLeft, CircleAlert, ImagePlus, NotebookPen, RotateCcw
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
 import { LocalCheckWalkthroughB, type LocalCheckOutcome } from "../identity-b/local-check-walkthrough-b"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import type { OndoBLocalSignalTag } from "../shared/state/ondo-b-provider"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
@@ -15,12 +16,13 @@ const FOCUSABLE = "button:not([disabled]),input:not([disabled]),textarea:not([di
 export const MAX_LOCAL_SIGNAL_PHOTO_BYTES = 10 * 1024 * 1024
 const LOCAL_SIGNAL_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 type PhotoError = "photoTypeError" | "photoSizeError" | "photoPrepareError"
+type SocialLocale = OndoBLocale | "ja"
 
-const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag; en: string; ko: string }> = [
-  { id: "calm_now", en: "Calm right now", ko: "지금은 여유로워요" },
-  { id: "lively_now", en: "Lively right now", ko: "지금은 활기차요" },
-  { id: "quick_stop", en: "Good for a quick stop", ko: "빠르게 들르기 좋아요" },
-  { id: "welcoming", en: "Welcoming service", ko: "친절하게 맞아줘요" },
+const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag } & Record<SocialLocale, string>> = [
+  { id: "calm_now", en: "Calm right now", ko: "지금은 여유로워요", ja: "今は落ち着いています" },
+  { id: "lively_now", en: "Lively right now", ko: "지금은 활기차요", ja: "今はにぎやかです" },
+  { id: "quick_stop", en: "Good for a quick stop", ko: "빠르게 들르기 좋아요", ja: "短時間で立ち寄りやすい" },
+  { id: "welcoming", en: "Welcoming service", ko: "친절하게 맞아줘요", ja: "親しみやすい接客" },
 ]
 
 const COPY = {
@@ -92,7 +94,41 @@ const COPY = {
     photoRetry: "사진 다시 시도",
     photoChooseAnother: "다른 사진 선택",
   },
-} as const
+  ja: {
+    close: "Local Signalを閉じる",
+    dismiss: "Local Signal画面を閉じる",
+    eyebrow: "この公式の場所から",
+    title: "Local Signalを追加",
+    body: "今この場所がどんな雰囲気か共有しましょう。写真があると、ほかの旅行者がその瞬間をイメージしやすくなります。",
+    choose: "何に気づきましたか？",
+    chooseHelp: "1つ以上選んでください。公式LOCALDATAの事実ではなく、あなた自身の観察です。",
+    note: "任意のローカルメモ",
+    notePlaceholder: "ほかの訪問者に役立つ短い情報",
+    noteHelp: "メモは下書き中だけ保持され、投稿または画面を閉じると破棄されます。",
+    boundary: "プライバシーと利用範囲",
+    boundaryBody: "タグと投稿時刻だけがこの端末に残ります。メモと写真は画面を閉じると破棄され、アップロードされません。",
+    person: "本人確認に進む",
+    retry: "本人確認をもう一度試す",
+    post: "この端末に投稿",
+    posted: "この端末のPulse根拠にLocal Signalを追加しました。共有Pulseのスコアと件数は変わりません。",
+    postError: "この端末に投稿済みの印を保存できませんでした。下書きと場所はそのまま開いています。",
+    success: "本人確認が完了しました。この端末にLocal Signalを投稿できます。",
+    cancel: "確認を見送りました。下書きと場所はそのままです。",
+    failure: "本人確認を完了できませんでした。下書きと場所はそのままです。",
+    unavailable: "本人確認を利用できません。下書きと場所はそのままです。",
+    expired: "本人確認の有効期限が切れました。下書きと場所はそのままです。",
+    alreadyPosted: "この場所のローカルPulse根拠はすでにこの端末にあります。もう一度投稿するとタグIDと投稿時刻が置き換わりますが、共有件数は変わりません。",
+    photo: "写真を追加",
+    photoHelp: "JPEG、PNG、WebP・最大10 MB",
+    replacePhoto: "写真を変更",
+    removePhoto: "写真を削除",
+    photoTypeError: "JPEG、PNG、WebPの写真を選んでください。",
+    photoSizeError: "10 MB以下の写真を選んでください。",
+    photoPrepareError: "写真を準備できませんでした。",
+    photoRetry: "写真をもう一度処理",
+    photoChooseAnother: "別の写真を選ぶ",
+  },
+} as const satisfies Record<SocialLocale, Record<string, string>>
 
 export function LocalSignalLayerB() {
   const { state, actions } = useOndoB()
@@ -112,7 +148,8 @@ export function LocalSignalLayerB() {
   const draft = state.localSignalDraft
   const venue = draft ? canonicalMapVenueById(draft.venueId) : undefined
   const locale = state.locale
-  const copy = COPY[locale]
+  const socialLocale: SocialLocale = locale
+  const copy = COPY[socialLocale]
   const open = state.tab === "ondo" && Boolean(draft && venue && state.surface.kind === "venue" && state.surface.venueId === draft.venueId)
   useModalIsolation(open, layerRef)
 
@@ -260,7 +297,7 @@ export function LocalSignalLayerB() {
                 <p>{copy.chooseHelp}</p>
                 <div className={styles.tags}>
                   {TAGS.map((tag) => (
-                    <button key={tag.id} type="button" aria-pressed={draft.tags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>{tag[locale]}</button>
+                    <button key={tag.id} type="button" aria-pressed={draft.tags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>{tag[socialLocale]}</button>
                   ))}
                 </div>
               </fieldset>

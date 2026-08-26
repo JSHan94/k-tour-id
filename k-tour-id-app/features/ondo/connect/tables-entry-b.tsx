@@ -8,6 +8,7 @@ import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/dis
 import { After19JitB } from "../after19/after19-jit-b"
 import type { BReturnToEnvelope } from "../contracts/return-to-b"
 import { createBReturnTo } from "../contracts/return-to-b"
+import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
@@ -22,6 +23,7 @@ const TABLE_CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]
 type JoinStage = "idle" | "confirm" | "joined" | "chat"
 type MessageState = "ready" | "failed"
 type ChatMessage = { id: number; text: string; imageUrl: string | null; state: MessageState }
+type SocialLocale = OndoBLocale | "ja"
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
@@ -90,6 +92,14 @@ const COPY = {
     leaveConfirm: "Leave Table",
     keep: "Keep my seat",
     tableOpen: "1 seat left",
+    tableTitle: "Night bites, one shared table",
+    tableSubtitle: "A relaxed Friday meal in Gangnam",
+    joinSaveFailed: "Your seat opened, but My Korea could not save it on this device.",
+    leaveSaveFailed: "You left the Table, but My Korea could not remove the plan.",
+    venueUnavailable: "Official venue record unavailable.",
+    minMessage: "Let’s meet by the entrance at 20:20.",
+    jaeMessage: "English or Korean both work for me.",
+    you: "You",
   },
   ko: {
     eyebrow: "서울의 다음 모임",
@@ -155,13 +165,97 @@ const COPY = {
     leaveConfirm: "테이블 나가기",
     keep: "좌석 유지",
     tableOpen: "1자리 남음",
+    tableTitle: "야식 한 상, 함께 앉는 테이블",
+    tableSubtitle: "강남에서 가볍게 나누는 금요일 저녁",
+    joinSaveFailed: "좌석은 열렸지만 My Korea에 저장하지 못했어요.",
+    leaveSaveFailed: "테이블에서는 나갔지만 My Korea 계획을 지우지 못했어요.",
+    venueUnavailable: "공식 장소 기록을 불러올 수 없어요.",
+    minMessage: "20:20에 입구 옆에서 만나요.",
+    jaeMessage: "저는 영어와 한국어 모두 괜찮아요.",
+    you: "나",
   },
-} as const
+  ja: {
+    eyebrow: "ソウルで開催予定",
+    title: "Pulse Tables",
+    intro: "実在する場所を起点にした少人数の予定です。席を選ぶ前に必要な情報を確認できます。",
+    truth: "操作内容はこのタブにのみ残ります。予約、店舗への送信、決済は行われません。",
+    official: "場所の記録",
+    officialBoundary: "韓国の公式飲食店営業許可記録で場所を確認しています。集まりの詳細はホストが提供します。",
+    timeLabel: "日時",
+    time: "8月28日（金）・20:30 KST",
+    menuLabel: "食事プラン",
+    menu: "料理を2品、一緒に注文してシェア",
+    languageLabel: "使用言語",
+    language: "韓国語＋英語",
+    costLabel: "予想負担額",
+    cost: "1人約₩18,000",
+    participantsLabel: "席",
+    participants: "3人参加・残り1席",
+    meetingLabel: "集合",
+    meeting: "20:20に正面入口前",
+    open: "Tableを見る",
+    close: "Tableを閉じる",
+    ageNotice: "19+のTableです。参加を選んだときだけ年齢条件を確認します。",
+    draftLabel: "ホストへのメモ",
+    draftHint: "言語、席、食の希望（任意）",
+    join: "このTableに参加",
+    confirmTitle: "席を確保できます",
+    returnTitle: "Table、場所、メモはそのままです。",
+    confirm: "席を確定する",
+    joinedTitle: "参加しました",
+    joinedBody: "この端末のマイ韓国に予定を保存しました。",
+    openChat: "Tableチャットを開く",
+    chatTitle: "Tableチャット",
+    chatBoundary: "集合の連絡に使ってください。メッセージと写真はこのタブにのみ残ります。",
+    compose: "Tableにメッセージ",
+    attach: "写真を追加",
+    replacePhoto: "写真を変更",
+    removePhoto: "添付写真を削除",
+    photoTypeError: "JPEG、PNG、WebPの写真を選んでください。",
+    photoSizeError: "10 MB以下の写真を選んでください。",
+    send: "送信",
+    sendFailed: "メッセージを追加できませんでした。",
+    retry: "もう一度試す",
+    checkIn: "集合場所でチェックイン",
+    checkedIn: "チェックイン済み・20:20",
+    feedbackTitle: "Tableはいかがでしたか？",
+    helpful: "役に立つTable",
+    welcoming: "親切なホスト",
+    feedback: "フィードバックを保存",
+    feedbackSaved: "フィードバックを保存しました",
+    meetup: "集合",
+    contribution: "貢献",
+    meetupValue: "チェックイン済み",
+    contributionValue: "役立つメモを共有",
+    report: "報告",
+    reportTitle: "このメッセージを報告しますか？",
+    reportConfirm: "メッセージを報告",
+    reportDone: "このタブに報告を記録しました。",
+    block: "ブロック",
+    blocked: "このタブで参加者を非表示にしました。",
+    leave: "退出",
+    leaveTitle: "このTableから退出しますか？",
+    leaveConfirm: "Tableから退出",
+    keep: "席を維持",
+    tableOpen: "残り1席",
+    tableTitle: "夜のひと皿を囲むTable",
+    tableSubtitle: "江南で気軽に楽しむ金曜の夕食",
+    joinSaveFailed: "席は確保されましたが、この端末のマイ韓国に保存できませんでした。",
+    leaveSaveFailed: "Tableから退出しましたが、マイ韓国の予定を削除できませんでした。",
+    venueUnavailable: "公式の場所記録を利用できません。",
+    minMessage: "20:20に入口の横で会いましょう。",
+    jaeMessage: "英語でも韓国語でも大丈夫です。",
+    you: "自分",
+  },
+} as const satisfies Record<SocialLocale, Record<string, string>>
+
+type TableCopy = (typeof COPY)[SocialLocale]
 
 export function PulseTablesEntryB() {
   const { state, actions } = useOndoB()
   const locale = state.locale
-  const t = locale === "ko" ? COPY.ko : COPY.en
+  const socialLocale: SocialLocale = locale
+  const t = COPY[socialLocale]
   const venue = canonicalMapVenueById(TABLE_VENUE_ID)
   const [selected, setSelected] = useState(false)
   const [draft, setDraft] = useState("")
@@ -217,7 +311,7 @@ export function PulseTablesEntryB() {
     return () => window.cancelAnimationFrame(frame)
   }, [selected])
 
-  if (!venue || !venuePresentation) return <section className={styles.entry} data-testid="tables-entry" role="alert">Official venue record unavailable.</section>
+  if (!venue || !venuePresentation) return <section className={styles.entry} data-testid="tables-entry" role="alert">{t.venueUnavailable}</section>
 
   function openActiveTable() { setSelected(true) }
 
@@ -244,14 +338,14 @@ export function PulseTablesEntryB() {
 
   function confirmJoin() {
     const recorded = actions.recordPlannedTable(ACTIVE_TABLE_ID, TABLE_VENUE_ID)
-    if (!recorded) actions.notify(locale === "ko" ? "좌석은 열렸지만 My Korea에 저장하지 못했어요." : "Your seat opened, but My Korea could not save it on this device.")
+    if (!recorded) actions.notify(t.joinSaveFailed)
     setJoinStage("joined")
     focusFirstAvailableDestination(["[data-testid='table-open-chat']"])
   }
 
   function confirmLeave() {
     const removed = actions.removePlannedTable(ACTIVE_TABLE_ID)
-    if (!removed) actions.notify(locale === "ko" ? "테이블에서는 나갔지만 My Korea 계획을 지우지 못했어요." : "You left the Table, but My Korea could not remove the plan.")
+    if (!removed) actions.notify(t.leaveSaveFailed)
     setJoinStage("idle"); setReturnTo(null); setReportOpen(false); setReported(false); setBlocked(false); setLeaveOpen(false)
     for (const url of objectUrlsRef.current) URL.revokeObjectURL(url)
     objectUrlsRef.current.clear()
@@ -326,8 +420,8 @@ export function PulseTablesEntryB() {
       <div className={styles.cards}>
         <article className={styles.cardActive} data-testid={`table-card-${ACTIVE_TABLE_ID}`} data-table-state="TABLE-OPEN">
           <div className={styles.cardTop}><span>{t.tableOpen}</span><ShieldCheck size={18} aria-hidden="true" /></div>
-          <h2>{locale === "ko" ? "야식 한 상, 함께 앉는 테이블" : "Night bites, one shared table"}</h2>
-          <p>{locale === "ko" ? "강남에서 가볍게 나누는 금요일 저녁" : "A relaxed Friday meal in Gangnam"}</p>
+          <h2>{t.tableTitle}</h2>
+          <p>{t.tableSubtitle}</p>
           <OfficialVenue venueName={venuePresentation.officialName} district={district} copy={t} />
           <PlanFields copy={t} />
           <button ref={openerRef} type="button" className={styles.openButton} data-testid={`table-open-${ACTIVE_TABLE_ID}`} onClick={openActiveTable}>{t.open}<ChevronRight size={17} aria-hidden="true" /></button>
@@ -345,7 +439,7 @@ export function PulseTablesEntryB() {
             </header>
             <div className={styles.detailBody}>
               <p className={styles.detailEyebrow}>{district} · {t.tableOpen}</p>
-              <h2 id="table-b-title">{locale === "ko" ? "야식 한 상, 함께 앉는 테이블" : "Night bites, one shared table"}</h2>
+              <h2 id="table-b-title">{t.tableTitle}</h2>
               <OfficialVenue venueName={venuePresentation.officialName} district={district} copy={t} />
               <PlanFields copy={t} />
               <aside className={styles.ageNotice}><ShieldCheck size={18} aria-hidden="true" /><span>{t.ageNotice}</span></aside>
@@ -371,10 +465,10 @@ export function PulseTablesEntryB() {
                 <header><span><UsersRound size={18} aria-hidden="true" />{t.chatTitle}</span><small>4</small></header>
                 <p className={styles.chatBoundary}>{t.chatBoundary}</p>
                 <div className={styles.messages} aria-live="polite">
-                  <p><strong>Min</strong><span>{locale === "ko" ? "20:20에 입구 옆에서 만나요." : "Let’s meet by the entrance at 20:20."}</span></p>
-                  {!blocked ? <p><strong>Jae</strong><span>{locale === "ko" ? "저는 영어와 한국어 모두 괜찮아요." : "English or Korean both work for me."}</span></p> : null}
+                  <p><strong>Min</strong><span>{t.minMessage}</span></p>
+                  {!blocked ? <p><strong>Jae</strong><span>{t.jaeMessage}</span></p> : null}
                   {messages.map((message) => <article key={message.id} className={styles.myMessage} data-state={message.state}>
-                    <strong>{locale === "ko" ? "나" : "You"}</strong>
+                    <strong>{t.you}</strong>
                     {message.imageUrl ? <img src={message.imageUrl} alt="" /> : null}
                     {message.text ? <span>{message.text}</span> : null}
                     {message.state === "failed" ? <span className={styles.messageError}>{t.sendFailed}<button type="button" data-testid="table-message-retry" onClick={() => retryMessage(message.id)}><RotateCcw size={14} aria-hidden="true" />{t.retry}</button></span> : null}
@@ -401,18 +495,18 @@ export function PulseTablesEntryB() {
               </section> : null}
             </div>
           </article>
-          <After19JitB open={gateOpen} locale={locale} returnTo={returnTo} tableTitle={locale === "ko" ? "야식 한 상, 함께 앉는 테이블" : "Night bites, one shared table"} venueLabel={venuePresentation.officialName} onCancel={cancelGate} onEligible={completeGate} />
+          <After19JitB open={gateOpen} locale={socialLocale} returnTo={returnTo} tableTitle={t.tableTitle} venueLabel={venuePresentation.officialName} onCancel={cancelGate} onEligible={completeGate} />
         </div>
       ) : null}
     </section>
   )
 }
 
-function OfficialVenue({ venueName, district, copy }: { venueName: string; district: string; copy: typeof COPY.en | typeof COPY.ko }) {
+function OfficialVenue({ venueName, district, copy }: { venueName: string; district: string; copy: TableCopy }) {
   return <section className={styles.official}><strong>{copy.official}</strong><p>{venueName} · {district}</p><span>{copy.officialBoundary}</span></section>
 }
 
-function PlanFields({ copy }: { copy: typeof COPY.en | typeof COPY.ko }) {
+function PlanFields({ copy }: { copy: TableCopy }) {
   const fields = [
     { id: "table-sample-time", icon: CalendarClock, label: copy.timeLabel, value: copy.time },
     { id: "table-sample-menu", icon: Utensils, label: copy.menuLabel, value: copy.menu },
