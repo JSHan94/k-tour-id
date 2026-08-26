@@ -1,6 +1,10 @@
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
+import {
+  createStableCommerceBState,
+  stableCommerceBReducer,
+} from "../../features/ondo/commerce-b/stable-commerce-model-b"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
@@ -183,4 +187,53 @@ test("FLOW8-DURABLE-010 pay and refund are durable-first and reload reconstructs
   expect(commerce).toContain('data-testid="commerce-storage-error"')
   expect(model).toContain('type: "CANCEL_CONFIRMATION"')
   expect(model).toContain('case "CANCEL_CONFIRMATION"')
+})
+
+test("FLOW8-PRD-011 readiness snapshots stay independent and no external transport or sensitive storage enters Flow 8", () => {
+  const pass = source(PASS)
+  const commerce = source(COMMERCE)
+  const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const stored = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
+
+  for (const state of ["personOutcome", "ageOutcome", "commerceWalletStatus"]) expect(`${pass}\n${provider}`).toContain(state)
+  for (const truth of ["Person does not prove 19+", "19+ does not prove identity"]) expect(pass).toContain(truth)
+  for (const transport of ["fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "FormData"]) {
+    expect(`${commerce}\n${provider}`).not.toContain(transport)
+  }
+  for (const forbidden of ["name:", "age:", "identity:", "address:", "credential:", "walletAddress:"]) {
+    expect(stored).not.toContain(forbidden)
+  }
+  for (const selector of ["payment-outcomes", "payment-ledgers", "commerce-outcomes", "commerce-ledgers"]) {
+    expect(commerce).not.toContain(`data-testid="${selector}"`)
+  }
+})
+
+test("FLOW8-IDEMPOTENT-012 accepted, declined, and refunded operations are exact under triple dispatch", () => {
+  const settle = (accepted: boolean) => {
+    let state = createStableCommerceBState()
+    state = stableCommerceBReducer(state, { type: accepted ? "ACCEPT_BENEFIT" : "DECLINE_BENEFIT" })
+    for (let index = 0; index < 3; index += 1) state = stableCommerceBReducer(state, { type: "CONFIRM" })
+    for (let index = 0; index < 3; index += 1) state = stableCommerceBReducer(state, { type: "PAYMENT_RETURN", outcome: "success" })
+    return state
+  }
+
+  const accepted = settle(true)
+  expect(accepted.confirmationCount).toBe(1)
+  expect(accepted.receiptCount).toBe(1)
+  expect(accepted.ledger.map(({ amount }) => amount)).toEqual([-19, 19])
+  expect(new Set(accepted.ledger.map(({ receiptId }) => receiptId))).toEqual(new Set(["ONDO-LOCAL-20260825-001"]))
+
+  const declined = settle(false)
+  expect(declined.confirmationCount).toBe(1)
+  expect(declined.receiptCount).toBe(1)
+  expect(declined.ledger.map(({ amount }) => amount)).toEqual([-22, 22])
+
+  let refunded = accepted
+  for (let index = 0; index < 3; index += 1) refunded = stableCommerceBReducer(refunded, { type: "REFUND" })
+  expect(refunded.refundCount).toBe(1)
+  expect(refunded.ledger.map(({ amount }) => amount)).toEqual([-19, 19, 19, -19])
+  expect(refunded.ledger.slice(2).map(({ receiptId }) => receiptId)).toEqual([
+    "ONDO-LOCAL-REFUND-20260825-001",
+    "ONDO-LOCAL-REFUND-20260825-001",
+  ])
 })
