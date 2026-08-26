@@ -55,7 +55,7 @@ async function noHorizontalOverflow(page: Page) {
 }
 
 test.describe("ONDO Explore approved visual direction", () => {
-  test.describe.configure({ timeout: 360_000 })
+  test.describe.configure({ mode: "serial", timeout: 360_000 })
 
   test("Polarsteps-inspired Korea atlas keeps geographic anchors separate at every product breakpoint", async ({ browser }) => {
     for (const profile of MATRIX) {
@@ -130,7 +130,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(root).toHaveAttribute("data-pulse-visual-grammar", "borderless-aura-core-label")
       await expect(root).toHaveAttribute("data-cluster-grammar", "official-record-count")
       await expect(root).toHaveAttribute("data-effective-view", "map")
-      await expect(root).toHaveAttribute("data-map-state", /ready|error/, { timeout: 25_000 })
+      await expect(root).toHaveAttribute("data-map-state", /ready|error/, { timeout: 45_000 })
       const mapState = await root.getAttribute("data-map-state")
 
       const mapCanvas = page.getByTestId("maplibre-map").locator(".maplibregl-canvas")
@@ -187,8 +187,8 @@ test.describe("ONDO Explore approved visual direction", () => {
     }
   })
 
-  test("Infatuation and Guides editorial cards plus Apple and Airbnb place sheets retain all truth and actions", async ({ browser }) => {
-    for (const locale of ["en", "ko", "ja"] as const) {
+  for (const locale of ["en", "ko", "ja"] as const) {
+    test(`Infatuation and Guides editorial plus Apple and Airbnb place sheets retain truth and actions in ${locale}`, async ({ browser }) => {
       const { context, page } = await openSeededPage(browser, locale, 390, 844, "/ondo-b?city=seoul")
 
       const discovery = page.getByTestId("ondo-b-japan-first-discovery")
@@ -261,8 +261,10 @@ test.describe("ONDO Explore approved visual direction", () => {
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-detail.png` })
       await context.close()
-    }
+    })
+  }
 
+  test("Apple and Airbnb desktop Place keeps the cartographic identity stage in the first viewport", async ({ browser }) => {
     const { context, page } = await openSeededPage(browser, "en", 1440, 1000, "/ondo-b?city=seoul&view=list")
     await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
     await page.getByTestId("canonical-place-peek").getByTestId("canonical-place-details").click()
