@@ -505,6 +505,7 @@ test("FLOW7-TRAVERSAL-009 Back and Forward discard the draft, photo, and Person 
 
 test("FLOW7-DATA-010 a thirteenth post is bounded in React and disk before and after reload", async ({ page }) => {
   await page.addInitScript(({ key, venueIds }) => {
+    if (localStorage.getItem(key) !== null) return
     const localPulseEvidenceByVenue = Object.fromEntries(venueIds.map((venueId, index) => [venueId, { tags: ["calm_now"], postedAt: `2026-08-${String(index + 1).padStart(2, "0")}T12:00:00.000Z` }]))
     localStorage.setItem(key, JSON.stringify({
       locale: "en", onboarding: "ONB-COMPLETE", persona: null, discoveryPreferences: [], savedVenueIds: [], privateNotesByVenue: {},
