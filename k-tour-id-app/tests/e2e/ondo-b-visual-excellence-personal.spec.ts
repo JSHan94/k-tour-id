@@ -98,10 +98,13 @@ test.describe("personal surfaces visual excellence", () => {
     const my = await openTab(page, "nav-my", "ondo-b-my-korea-entry")
     const myRoot = await my.boundingBox()
     expect(myRoot?.width ?? 0).toBeGreaterThanOrEqual(1039)
+    const saved = await my.getByTestId("ondo-b-saved-entry").boundingBox()
     const recent = await my.getByTestId("my-korea-recent").boundingBox()
     const planned = await my.getByTestId("my-korea-planned").boundingBox()
-    expect(Math.abs((recent?.y ?? 0) - (planned?.y ?? 100))).toBeLessThan(4)
-    expect(recent?.width ?? 0).toBeGreaterThan((planned?.width ?? 1) * 1.08)
+    expect(planned?.y ?? 1000).toBeLessThan((saved?.y ?? 0) - 12)
+    expect(planned?.width ?? 0).toBeGreaterThan((saved?.width ?? 1) * 1.5)
+    expect(Math.abs((recent?.y ?? 0) - (saved?.y ?? 100))).toBeLessThan(4)
+    expect(saved?.width ?? 0).toBeGreaterThan((recent?.width ?? 1) * 1.08)
 
     await page.getByTestId("nav-settings").click()
     const settings = page.getByTestId("ondo-b-settings-entry")
@@ -110,9 +113,10 @@ test.describe("personal surfaces visual excellence", () => {
     const groups = settings.locator(":scope > section")
     const language = await groups.nth(0).boundingBox()
     const discovery = await groups.nth(1).boundingBox()
+    const deviceData = await groups.nth(2).boundingBox()
     expect(Math.abs((language?.y ?? 0) - (discovery?.y ?? 100))).toBeLessThan(4)
     expect(discovery?.width ?? 0).toBeGreaterThan((language?.width ?? 1) * 1.2)
-    expect(language?.height ?? 1000).toBeLessThan((discovery?.height ?? 0) * .72)
+    expect(deviceData?.y ?? 0).toBeGreaterThan((discovery?.y ?? 0) + (discovery?.height ?? 0))
   })
 
   test("Travel Pass remains the benchmark while Wallet carries the same layered material", async ({ page }) => {
