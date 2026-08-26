@@ -584,6 +584,7 @@ test("FLOW7-CONSENT-012 phone consent shows all truth rows and both 44px decisio
     const box = await action.boundingBox()
     expect(box!.height).toBeGreaterThanOrEqual(44)
   }
+  await quietCapture(page, "successor-en-320x720-person-consent")
 })
 
 test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape photo states reset below the header", async ({ page }) => {
@@ -601,6 +602,7 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
     for (const visible of [preview, signal.getByTestId("local-signal-photo-error"), signal.getByTestId("local-signal-photo-choose-another")]) {
       await expect(visible).toBeInViewport()
     }
+    await quietCapture(page, `successor-en-${width}x${width === 320 ? 720 : 844}-photo-decode-error-preserved`)
     await signal.getByRole("button", { name: COPY.en.close }).click()
   }
 
@@ -624,13 +626,16 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
     await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
     await expect(signal.getByTestId("local-signal-photo-error")).toHaveAttribute("data-error", "photoPrepareError")
     await expectTitleBelowHeader()
+    await quietCapture(page, `successor-${locale}-844x390-photo-prepare-error`)
     await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await signal.getByTestId("local-signal-photo-retry").click()
     await expect(signal.locator("img")).toBeVisible()
     await expectTitleBelowHeader()
+    await quietCapture(page, `successor-${locale}-844x390-photo-ready`)
     await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await signal.getByTestId("local-signal-photo-remove").click()
     await expectTitleBelowHeader()
+    await quietCapture(page, `successor-${locale}-844x390-photo-removed`)
     await signal.locator(":scope > header button").first().click()
   }
 })
