@@ -73,6 +73,7 @@ test("B onboarding is fully Korean and resettable from local-device Settings", a
   await page.getByTestId("onboarding-finish").click()
 
   await page.getByTestId("nav-settings").click()
+  await page.getByTestId("ondo-b-discovery-settings").locator(":scope > summary").click()
   await page.getByTestId("ondo-b-onboarding-reset").click()
   await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
   await expect(page.getByRole("button", { name: "시작하기", exact: true })).toBeFocused()
@@ -90,7 +91,7 @@ test("B onboarding traps keyboard focus and remains usable in short landscape", 
   const dialog = page.getByTestId("ondo-onboarding")
   const start = page.getByRole("button", { name: "Get started", exact: true })
   const skip = page.getByRole("button", { name: "Explore as a guest", exact: true })
-  const language = page.getByRole("button", { name: "한국어로 보기", exact: true })
+  const language = page.getByRole("button", { name: "日本語で表示", exact: true })
 
   await expect(dialog).toBeFocused()
   await expect(dialog.getByRole("heading", { level: 1 })).toBeVisible()

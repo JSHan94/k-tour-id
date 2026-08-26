@@ -94,6 +94,13 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         const valueSecondary = value.locator("button").last()
         await expectInsideViewport(page, valuePrimary)
         await expectInsideViewport(page, valueSecondary)
+        const actionHierarchy = await Promise.all([valuePrimary, valueSecondary].map((control) => control.evaluate((element) => {
+          const style = getComputedStyle(element)
+          return { background: style.backgroundImage, shadow: style.boxShadow, weight: Number.parseFloat(style.fontWeight) }
+        })))
+        expect(actionHierarchy[0].background).not.toBe(actionHierarchy[1].background)
+        expect(actionHierarchy[0].shadow).not.toBe("none")
+        expect(actionHierarchy[0].weight).toBeGreaterThanOrEqual(actionHierarchy[1].weight)
         await capture(page, locale, profile, "value")
 
         await valuePrimary.click()
@@ -102,6 +109,14 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await expect(intent).toBeVisible()
         await expectControlGeometry(intent)
         await expectNoHorizontalOverflow(page, dialog)
+        if (profile.width === 844) {
+          const notes = await intent.locator("[data-testid^='persona-'] small").evaluateAll((elements) => elements.map((element) => ({
+            horizontalOverflow: element.scrollWidth - element.clientWidth,
+            verticalOverflow: element.scrollHeight - element.clientHeight,
+            textOverflow: getComputedStyle(element).textOverflow,
+          })))
+          expect(notes.every((note) => note.horizontalOverflow <= 1 && note.verticalOverflow <= 1 && note.textOverflow !== "ellipsis")).toBe(true)
+        }
         await intent.getByTestId("persona-travelling").click()
         const intentPrimary = intent.locator(".primary, button").filter({ hasText: /preferences|취향|好み/ }).first()
         await expectInsideViewport(page, intentPrimary)
@@ -139,5 +154,34 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
       .filter((name) => name !== "none"))
     expect(animations).toEqual([])
     await reduced.context.close()
+  })
+
+  test("a device-storage failure keeps the selected draft and retry action legible", async ({ browser }) => {
+    const { context, page } = await openFresh(browser, "en", PROFILES[1])
+    await page.getByTestId("onboarding-step-value").locator("button").first().click()
+    await page.getByTestId("persona-travelling").click()
+    await page.getByTestId("onboarding-step-intent").getByRole("button", { name: "Choose food preferences", exact: true }).click()
+    const preferences = page.getByTestId("onboarding-step-preferences")
+    const choice = preferences.getByRole("button", { name: "Local classics", exact: true })
+    await choice.click()
+    await page.evaluate((key) => {
+      const original = Storage.prototype.setItem
+      let rejected = false
+      Storage.prototype.setItem = function (name: string, value: string) {
+        if (name === key && !rejected) {
+          rejected = true
+          throw new DOMException("Quota exceeded", "QuotaExceededError")
+        }
+        return original.call(this, name, value)
+      }
+    }, DEVICE_KEY)
+    await preferences.getByTestId("onboarding-finish").click()
+    await expect(preferences).toBeVisible()
+    await expect(choice).toHaveAttribute("aria-pressed", "true")
+    await expect(page.getByTestId("ondo-toast")).toBeVisible()
+    await expectInsideViewport(page, preferences.getByTestId("onboarding-finish"))
+    await preferences.getByTestId("onboarding-finish").click()
+    await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+    await context.close()
   })
 })
