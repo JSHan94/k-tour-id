@@ -228,8 +228,10 @@ export function SettingsEntryB() {
         onConfirm={() => {
           const cleared = actions.clearBDeviceContent()
           setClearError(!cleared)
-          actions.notify(cleared ? copy.cleared : copy.clearFailed)
-          if (cleared) closeClear()
+          if (cleared) {
+            actions.notify(copy.cleared)
+            closeClear()
+          }
         }}
       /> : null}
     </div>

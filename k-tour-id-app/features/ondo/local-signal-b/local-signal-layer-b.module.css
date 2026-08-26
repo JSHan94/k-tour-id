@@ -530,6 +530,9 @@
   .layer > header button:last-child { visibility: hidden; pointer-events: none; }
   .personBoundary { margin-top: 9px; }
   .error { scroll-margin-bottom: 104px; }
+  .photo { scroll-margin-block: 12px 116px; }
+  .photo > p { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .photo > p button { width: 100%; min-height: 44px; margin: 0; }
   .body { padding-bottom: calc(106px + env(safe-area-inset-bottom)); }
   .actions {
     position: fixed;

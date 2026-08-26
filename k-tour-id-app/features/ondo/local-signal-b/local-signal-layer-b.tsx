@@ -6,6 +6,7 @@ import { BadgeCheck, ChevronLeft, CircleAlert, ImagePlus, NotebookPen, RotateCcw
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
 import { LocalCheckWalkthroughB, type LocalCheckOutcome } from "../identity-b/local-check-walkthrough-b"
+import { B_DISCOVERY_TRAVERSAL_EVENT } from "../map/b-discovery-history"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import type { OndoBLocalSignalTag } from "../shared/state/ondo-b-provider"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -25,6 +26,13 @@ type LocalSignalGateSession = {
   issuedAt: number
   expiresAt: number
   outcome: LocalCheckOutcome
+}
+
+async function decodeLocalSignalPhoto(url: string) {
+  const candidateImage = new Image()
+  candidateImage.src = url
+  await candidateImage.decode()
+  if (candidateImage.naturalWidth < 1 || candidateImage.naturalHeight < 1) throw new Error("Photo has no decodable pixels")
 }
 
 const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag } & Record<SocialLocale, string>> = [
@@ -48,20 +56,20 @@ const COPY = {
     noteHelp: "The note stays in this draft only and is discarded after posting or closing.",
     boundary: "Privacy & availability",
     boundaryBody: "Tags and post time stay on this device. Your note and photo are discarded when this screen closes; nothing is uploaded.",
-    personBoundary: "A session-only Person result unlocks saving. No account, ID, or credential is created.",
-    person: "Check Person for this action",
-    retry: "Retry Person check",
+    personBoundary: "A session-only confirmation unlocks saving. No account, ID, or credential is created.",
+    person: "Confirm for this action",
+    retry: "Try confirmation again",
     post: "Save Local Signal on this device",
     update: "Update Local Signal on this device",
-    posted: "Local Signal saved to this device’s Pulse evidence. Shared Pulse scores and counts do not change.",
-    updated: "Local Signal updated on this device. Shared Pulse scores and counts do not change.",
+    posted: "Local Signal saved on this device. Your selections and time stay in Local Signal history; the public Pulse score, count, level, and ranking do not change.",
+    updated: "Local Signal updated on this device. Your selections and time were replaced; the public Pulse score, count, level, and ranking do not change.",
     postError: "Could not save this Local Signal on this device. Your exact draft and place remain open.",
-    success: "Person check complete. Your Local Signal is ready to save on this device.",
+    success: "Confirmation complete. Your Local Signal is ready to save on this device.",
     cancel: "You declined. Your exact draft and place are unchanged.",
-    failure: "The Person check did not complete. Your draft and place are unchanged.",
-    unavailable: "The Person check is unavailable. Your draft and place are unchanged.",
-    expired: "The Person check expired. Your draft and place are unchanged.",
-    alreadyPosted: "Local Pulse evidence for this place already exists on this device. Posting again replaces its tag IDs and post time; it does not change shared counts.",
+    failure: "Confirmation did not complete. Your draft and place are unchanged.",
+    unavailable: "Confirmation is unavailable. Your draft and place are unchanged.",
+    expired: "Confirmation expired. Your draft and place are unchanged.",
+    alreadyPosted: "A Local Signal for this place is already saved on this device. Saving again replaces its selections and time; the public Pulse stays unchanged.",
     photo: "Add a photo",
     photoHelp: "JPEG, PNG, or WebP · up to 10 MB",
     replacePhoto: "Replace photo",
@@ -86,20 +94,20 @@ const COPY = {
     noteHelp: "메모는 작성 중에만 남고 게시하거나 닫으면 폐기됩니다.",
     boundary: "개인정보와 이용 범위",
     boundaryBody: "태그와 게시 시각만 기기에 남아요. 메모와 사진은 화면을 닫으면 폐기되며 업로드하지 않습니다.",
-    personBoundary: "이 화면에서만 유지되는 사람 확인 결과로 저장을 진행합니다. 계정·ID·자격증명을 만들지 않습니다.",
-    person: "이 작업에서 사람 확인",
-    retry: "사람 확인 다시 시도",
+    personBoundary: "이 화면에서만 유지되는 확인 결과로 저장을 진행합니다. 계정·ID·자격증명을 만들지 않습니다.",
+    person: "이 작업 확인",
+    retry: "다시 확인",
     post: "이 기기에 로컬 시그널 저장",
     update: "이 기기의 로컬 시그널 업데이트",
-    posted: "이 기기의 Pulse 근거에 로컬 시그널을 저장했어요. 공유 Pulse 점수와 신호 수는 바뀌지 않습니다.",
-    updated: "이 기기의 로컬 시그널을 업데이트했어요. 공유 Pulse 점수와 신호 수는 바뀌지 않습니다.",
+    posted: "이 기기에 로컬 시그널을 저장했어요. 선택한 관찰과 시각은 로컬 시그널 기록에만 남고 공개 Pulse 점수·신호 수·단계·순위는 바뀌지 않습니다.",
+    updated: "이 기기의 로컬 시그널을 업데이트했어요. 선택한 관찰과 시각만 교체되며 공개 Pulse 점수·신호 수·단계·순위는 바뀌지 않습니다.",
     postError: "이 기기에 이 로컬 시그널을 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다.",
-    success: "사람 확인을 마쳤어요. 이 기기에 로컬 시그널을 저장할 수 있어요.",
+    success: "확인을 마쳤어요. 이 기기에 로컬 시그널을 저장할 수 있어요.",
     cancel: "거절했어요. 정확한 작성 내용과 장소는 그대로입니다.",
-    failure: "사람 확인을 완료하지 못했어요. 작성 내용과 장소는 그대로입니다.",
-    unavailable: "사람 확인을 이용할 수 없어요. 작성 내용과 장소는 그대로입니다.",
-    expired: "사람 확인이 만료됐어요. 작성 내용과 장소는 그대로입니다.",
-    alreadyPosted: "이 장소의 로컬 Pulse 근거가 이미 기기에 있습니다. 다시 게시하면 태그 ID와 시각을 교체하며 공유 신호 수는 바뀌지 않아요.",
+    failure: "확인을 완료하지 못했어요. 작성 내용과 장소는 그대로입니다.",
+    unavailable: "확인을 이용할 수 없어요. 작성 내용과 장소는 그대로입니다.",
+    expired: "확인이 만료됐어요. 작성 내용과 장소는 그대로입니다.",
+    alreadyPosted: "이 장소의 로컬 시그널이 이미 기기에 저장되어 있어요. 다시 저장하면 선택한 관찰과 시각만 교체되며 공개 Pulse는 바뀌지 않습니다.",
     photo: "사진 추가",
     photoHelp: "JPEG, PNG, WebP · 최대 10MB",
     replacePhoto: "사진 교체",
@@ -124,20 +132,20 @@ const COPY = {
     noteHelp: "メモは下書き中だけ保持され、投稿または画面を閉じると破棄されます。",
     boundary: "プライバシーと利用範囲",
     boundaryBody: "タグと投稿時刻だけがこの端末に残ります。メモと写真は画面を閉じると破棄され、アップロードされません。",
-    personBoundary: "この画面だけで有効なPersonチェックの結果で保存を続けます。アカウント、ID、資格情報は作成されません。",
-    person: "この操作でPersonチェック",
-    retry: "Personチェックをもう一度試す",
+    personBoundary: "この画面だけで有効な確認結果で保存を続けます。アカウント、ID、資格情報は作成されません。",
+    person: "この操作を確認",
+    retry: "もう一度確認",
     post: "この端末にLocal Signalを保存",
     update: "この端末のLocal Signalを更新",
-    posted: "この端末のPulse根拠にLocal Signalを保存しました。共有Pulseのスコアと件数は変わりません。",
-    updated: "この端末のLocal Signalを更新しました。共有Pulseのスコアと件数は変わりません。",
+    posted: "この端末にLocal Signalを保存しました。選んだ内容と時刻はLocal Signal履歴だけに残り、公開Pulseのスコア・件数・レベル・順位は変わりません。",
+    updated: "この端末のLocal Signalを更新しました。選んだ内容と時刻だけが置き換わり、公開Pulseのスコア・件数・レベル・順位は変わりません。",
     postError: "この端末にこのLocal Signalを保存できませんでした。下書きと場所はそのまま開いています。",
-    success: "Personチェックが完了しました。この端末にLocal Signalを保存できます。",
+    success: "確認が完了しました。この端末にLocal Signalを保存できます。",
     cancel: "確認を見送りました。下書きと場所はそのままです。",
-    failure: "Personチェックを完了できませんでした。下書きと場所はそのままです。",
-    unavailable: "Personチェックを利用できません。下書きと場所はそのままです。",
-    expired: "Personチェックの有効期限が切れました。下書きと場所はそのままです。",
-    alreadyPosted: "この場所のローカルPulse根拠はすでにこの端末にあります。もう一度投稿するとタグIDと投稿時刻が置き換わりますが、共有件数は変わりません。",
+    failure: "確認を完了できませんでした。下書きと場所はそのままです。",
+    unavailable: "確認を利用できません。下書きと場所はそのままです。",
+    expired: "確認の有効期限が切れました。下書きと場所はそのままです。",
+    alreadyPosted: "この場所のLocal Signalはすでにこの端末に保存されています。もう一度保存すると選んだ内容と時刻だけが置き換わり、公開Pulseは変わりません。",
     photo: "写真を追加",
     photoHelp: "JPEG、PNG、WebP・最大10 MB",
     replacePhoto: "写真を変更",
@@ -160,12 +168,16 @@ export function LocalSignalLayerB() {
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState<PhotoError | null>(null)
+  const [photoCanRetry, setPhotoCanRetry] = useState(false)
   const [photoFailedOnce, setPhotoFailedOnce] = useState(false)
   const layerRef = useRef<HTMLElement>(null)
   const checkRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const photoUrlRef = useRef<string | null>(null)
+  const photoPreparationRef = useRef(0)
+  const photoSectionRef = useRef<HTMLElement>(null)
+  const photoErrorRef = useRef<HTMLParagraphElement>(null)
   const postErrorRef = useRef<HTMLParagraphElement>(null)
   const draft = state.localSignalDraft
   const venue = draft ? canonicalMapVenueById(draft.venueId) : undefined
@@ -177,17 +189,26 @@ export function LocalSignalLayerB() {
   useModalIsolation(open, layerRef)
 
   useEffect(() => {
+    photoPreparationRef.current += 1
     setWalkthroughOpen(false)
     setGateSession(null)
     setPostFailed(false)
     setPhotoFile(null)
     setPhotoError(null)
+    setPhotoCanRetry(false)
     setPhotoFailedOnce(false)
     if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
     photoUrlRef.current = null
     setPhotoUrl(null)
     setDraftNonce(activeVenueId ? `${activeVenueId}:${Date.now()}:${Math.random().toString(36).slice(2)}` : "")
   }, [activeVenueId])
+
+  useEffect(() => {
+    if (!open) return
+    const discardOnTraversal = () => actions.closeLocalSignal()
+    window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal)
+    return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal)
+  }, [actions, open])
 
   useEffect(() => {
     if (!gateSession || gateSession.outcome !== "success") return
@@ -215,6 +236,7 @@ export function LocalSignalLayerB() {
   }, [postFailed])
 
   useEffect(() => () => {
+    photoPreparationRef.current += 1
     if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
     photoUrlRef.current = null
   }, [])
@@ -273,49 +295,89 @@ export function LocalSignalLayerB() {
     })
   }
 
-  function preparePhoto(file: File, allowQaFailure = true) {
+  function revealPhotoState() {
+    window.requestAnimationFrame(() => {
+      if (window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches) {
+        photoSectionRef.current?.scrollIntoView({ block: "start" })
+      } else {
+        photoSectionRef.current?.scrollIntoView({ block: "nearest" })
+        photoErrorRef.current?.scrollIntoView({ block: "nearest" })
+      }
+    })
+  }
+
+  async function preparePhoto(file: File, allowQaFailure = true) {
+    const preparation = ++photoPreparationRef.current
     if (!LOCAL_SIGNAL_PHOTO_TYPES.has(file.type)) {
       setPhotoFile(file)
+      setPhotoCanRetry(false)
       setPhotoError("photoTypeError")
+      revealPhotoState()
       return
     }
     if (file.size > MAX_LOCAL_SIGNAL_PHOTO_BYTES) {
       setPhotoFile(file)
+      setPhotoCanRetry(false)
       setPhotoError("photoSizeError")
+      revealPhotoState()
       return
     }
     if (allowQaFailure && window.__ONDO_B_QA__?.localSignalPhoto === "failure" && !photoFailedOnce) {
       setPhotoFile(file)
       setPhotoFailedOnce(true)
+      setPhotoCanRetry(true)
       setPhotoError("photoPrepareError")
+      revealPhotoState()
       return
     }
     const previousUrl = photoUrlRef.current
-    let url: string
+    let candidateUrl: string
     try {
-      url = URL.createObjectURL(file)
+      candidateUrl = URL.createObjectURL(file)
     } catch {
       setPhotoFile(file)
+      setPhotoCanRetry(false)
       setPhotoError("photoPrepareError")
+      revealPhotoState()
+      return
+    }
+    try {
+      await decodeLocalSignalPhoto(candidateUrl)
+    } catch {
+      URL.revokeObjectURL(candidateUrl)
+      if (preparation !== photoPreparationRef.current) return
+      setPhotoFile(file)
+      setPhotoCanRetry(false)
+      setPhotoError("photoPrepareError")
+      revealPhotoState()
+      return
+    }
+    if (preparation !== photoPreparationRef.current) {
+      URL.revokeObjectURL(candidateUrl)
       return
     }
     setPhotoFile(file)
+    setPhotoCanRetry(false)
     setPhotoError(null)
-    photoUrlRef.current = url
-    setPhotoUrl(url)
+    photoUrlRef.current = candidateUrl
+    setPhotoUrl(candidateUrl)
     if (previousUrl) URL.revokeObjectURL(previousUrl)
+    revealPhotoState()
   }
 
   function selectPhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
-    if (file) preparePhoto(file)
+    if (file) void preparePhoto(file)
     event.target.value = ""
   }
 
   function removePhoto() {
+    photoPreparationRef.current += 1
     setPhotoFile(null)
     releasePhotoUrl()
+    setPhotoCanRetry(false)
     setPhotoError(null)
+    revealPhotoState()
   }
 
   function releasePhotoUrl() {
@@ -412,11 +474,11 @@ export function LocalSignalLayerB() {
               </div>
 
               <div className={styles.completion}>
-                <section className={styles.photo} data-photo-stage={photoStage}>
+                <section ref={photoSectionRef} className={styles.photo} data-photo-stage={photoStage}>
                 <div><strong>{copy.photo}</strong><small>{copy.photoHelp}</small></div>
                 <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" onChange={selectPhoto} />
                 {photoUrl ? <figure role="status"><img src={photoUrl} alt={copy.photoAlt} /><figcaption><button type="button" data-testid="local-signal-photo-replace" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.replacePhoto}</button><button type="button" data-testid="local-signal-photo-remove" onClick={removePhoto}><Trash2 size={16} aria-hidden="true" />{copy.removePhoto}</button></figcaption></figure> : null}
-                    {photoError ? <p role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : <button type="button" data-testid="local-signal-photo-choose-another" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.photoChooseAnother}</button>}</p> : null}
+                    {photoError ? <p ref={photoErrorRef} role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" && photoCanRetry ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) void preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : <button type="button" data-testid="local-signal-photo-choose-another" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.photoChooseAnother}</button>}</p> : null}
                 {!photoUrl && !photoFailed ? <button type="button" className={styles.photoAdd} onClick={() => photoInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{copy.photo}</button> : null}
                 </section>
 

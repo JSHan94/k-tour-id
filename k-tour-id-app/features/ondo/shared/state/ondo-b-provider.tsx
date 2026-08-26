@@ -506,14 +506,21 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       const safeTags = [...new Set(draft.tags.filter((tag): tag is OndoBLocalSignalTag => B_LOCAL_SIGNAL_TAGS.has(tag)))]
       if (!safeTags.length) return false
       const postedAt = new Date().toISOString()
-      return commit((current) => ({
-        ...current,
-        localSignalPostedVenueIds: sanitizeLocalSignalVenueIds([venueId, ...current.localSignalPostedVenueIds.filter((id) => id !== venueId)]),
-        localPulseEvidenceByVenue: {
+      return commit((current) => {
+        const nextLocalSignalPostedVenueIds = sanitizeLocalSignalVenueIds([venueId, ...current.localSignalPostedVenueIds.filter((id) => id !== venueId)])
+        const candidateLocalPulseEvidenceByVenue = {
           ...current.localPulseEvidenceByVenue,
           [venueId]: { tags: safeTags, postedAt },
-        },
-      }))
+        }
+        const nextLocalPulseEvidenceByVenue = Object.fromEntries(nextLocalSignalPostedVenueIds
+          .filter((id) => candidateLocalPulseEvidenceByVenue[id])
+          .map((id) => [id, candidateLocalPulseEvidenceByVenue[id]]))
+        return {
+          ...current,
+          localSignalPostedVenueIds: nextLocalSignalPostedVenueIds,
+          localPulseEvidenceByVenue: nextLocalPulseEvidenceByVenue,
+        }
+      })
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
     acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
