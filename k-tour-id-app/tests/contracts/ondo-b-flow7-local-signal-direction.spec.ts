@@ -48,7 +48,7 @@ test("FLOW7-TRUTH-002 every Local Signal action and recovery state remains reach
 
   for (const truth of [
     "nothing is uploaded",
-    "Shared Pulse scores and counts do not change",
+    "public Pulse score, count, level, and ranking do not change",
     "Your exact draft and place remain open",
     "note and photo are discarded",
     "failure",
@@ -168,7 +168,6 @@ test("FLOW7-STORAGE-009 Settings keeps a persistent inline retry decision when c
 
   expect(settings).toContain("data-testid=\"ondo-b-clear-device-error\"")
   expect(settings).toContain('role="alert"')
-  expect(settings).toContain("if (cleared) closeClear()")
   expect(settings).toContain("setClearError(!cleared)")
   expect(settings).toMatch(/if \(cleared\) \{[\s\S]*actions\.notify\(copy\.cleared\)[\s\S]*closeClear\(\)/)
   expect(settings).not.toContain("actions.notify(cleared ? copy.cleared : copy.clearFailed)")
