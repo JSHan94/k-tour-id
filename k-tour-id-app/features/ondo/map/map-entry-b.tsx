@@ -341,8 +341,12 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
   const copy = COPY[locale]
   return (
     <section className={styles.nation} data-testid="ondo-b-nation">
-      <div className={`${styles.dotMap} ${styles.koreaAtlas}`} data-testid="ondo-b-korea-atlas">
+      <div className={`${styles.dotMap} ${styles.koreaAtlas}`} data-testid="ondo-b-korea-atlas" data-visual-object="living-atlas">
         <svg viewBox="0 0 300 350" role="img" aria-label={MAP_UI[locale].atlas}>
+          <path className={styles.atlasRoute} data-testid="ondo-b-atlas-route" d="M154 92 C166 124 165 167 178 206 C189 240 160 270 99 306" />
+          <circle className={styles.atlasStop} cx="154" cy="92" r="4.5" />
+          <circle className={styles.atlasStop} cx="178" cy="206" r="4.5" />
+          <circle className={styles.atlasStop} cx="99" cy="306" r="4.5" />
           {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 2 : 1.65} />)}
         </svg>
         <div className={styles.nationIntro}>
@@ -356,6 +360,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
             type="button"
             className={styles.cityNode}
             data-city={cityId}
+            data-region-role="official-directory"
             data-official-count="200"
             data-directory-source={SOURCE_ID}
             onClick={() => onSelect(cityId)}
@@ -373,6 +378,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
           type="button"
           className={`${styles.cityNode} ${styles.jejuNode}`}
           data-city="jeju"
+          data-region-role="editorial-collection"
           data-truth-kind="editorial-region"
           data-editorial-count="10"
           onClick={() => onSelect("jeju")}

@@ -397,9 +397,12 @@ export function CanonicalPlaceOverlay() {
     <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} tabIndex={-1} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
-      <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>
-      <h2>{name.officialName}</h2>
-      <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
+      <section className={styles.peekIdentityStage} data-testid="canonical-place-identity-stage" data-pulse-level={pulse.level}>
+        <div className={styles.placeAtmosphere} data-testid="canonical-place-atmosphere" aria-hidden="true"><i /><i /><i /></div>
+        <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>
+        <h2>{name.officialName}</h2>
+        <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
+      </section>
       <section className={styles.pulsePeek} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
         <strong>{pulseTitle}</strong>
         <small>{pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot}</small>
@@ -427,17 +430,20 @@ export function CanonicalPlaceOverlay() {
           <button type="button" onClick={close} aria-label={copy.close}><X size={19} /></button>
         </header>
         <div className={styles.body}>
-          <p className={styles.eyebrow}>{district} · {category}</p>
-          <h2 id="canonical-place-title">{name.officialName}</h2>
-          <div className={styles.detailNameProvenance} data-testid="canonical-detail-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
-          {detailState === "error" ? (
-            <section className={styles.detailError} role="alert" data-detail-state="error" data-address-truth="ERROR">
-              <p><MapPin size={16} />{copy.detailUnavailable}</p>
-              <button type="button" onClick={() => { setDetail(null); setDetailState("loading"); setDetailAttempt((attempt) => attempt + 1) }}>{copy.retryDetail}</button>
-            </section>
-          ) : (
-            <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
-          )}
+          <section className={styles.detailIdentityStage} data-testid="canonical-place-identity-stage" data-pulse-level={pulse.level}>
+            <div className={styles.placeAtmosphere} data-testid="canonical-place-atmosphere" aria-hidden="true"><i /><i /><i /></div>
+            <p className={styles.eyebrow}>{district} · {category}</p>
+            <h2 id="canonical-place-title">{name.officialName}</h2>
+            <div className={styles.detailNameProvenance} data-testid="canonical-detail-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
+            {detailState === "error" ? (
+              <section className={styles.detailError} role="alert" data-detail-state="error" data-address-truth="ERROR">
+                <p><MapPin size={16} />{copy.detailUnavailable}</p>
+                <button type="button" onClick={() => { setDetail(null); setDetailState("loading"); setDetailAttempt((attempt) => attempt + 1) }}>{copy.retryDetail}</button>
+              </section>
+            ) : (
+              <p className={styles.address} role={detailState === "loading" ? "status" : undefined} aria-live={detailState === "loading" ? "polite" : undefined} data-detail-state={detailState} data-address-truth={addressEvidence?.truth ?? (detailState === "ready" ? "UNKNOWN" : detailState.toUpperCase())}><MapPin size={16} />{address}</p>
+            )}
+          </section>
 
           <details className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
             <summary>

@@ -66,7 +66,7 @@ const COPY = {
     summary: "Pulseはひとつ・場所確認後にリンク",
     body: "元の情報源と正確な場所の対応を確認した後にのみ、Pulseへの反映や場所ページへのリンクを行います。",
     content: "注目のストーリー",
-    jeju: "済州・Growing",
+    jeju: "済州・成長中",
     jejuBody: "編集アイデア10件・公式ディレクトリ記録ではありません",
     jejuSources: "済州の公式情報コレクション",
     pending: "情報源あり・場所の一致を確認中",
@@ -98,14 +98,15 @@ function SourceLinks({ item, copy, locale }: { item: JapanFirstLaunchContentB; c
   )
 }
 
-function Story({ item, copy, locale, compact = false }: {
+function Story({ item, copy, locale, compact = false, visualRole = compact ? "compact" : "supporting" }: {
   item: JapanFirstLaunchContentB
   copy: Copy
   locale: OndoBLocale
   compact?: boolean
+  visualRole?: "lead" | "supporting" | "compact"
 }) {
   return (
-    <article className={compact ? styles.compactStory : undefined} data-content-id={item.id} data-verification={item.sourceVerification} data-place-edge={item.placeEdgeVerification}>
+    <article className={compact ? styles.compactStory : undefined} data-content-id={item.id} data-editorial-role={visualRole} data-verification={item.sourceVerification} data-place-edge={item.placeEdgeVerification}>
       {item.editorialMedia && !compact ? (
         <figure className={styles.storyMedia} data-rights-mode={item.editorialMedia.rightsMode}>
           <Image
@@ -157,14 +158,14 @@ export function JapanFirstDiscoveryB({ locale, city, onOpenChange }: { locale: O
             <small>{copy.language}</small>
           </details>
         </header>
-        <div className={styles.contentRail}>
-          {featured.map((item) => <Story key={item.id} item={item} copy={copy} locale={locale} />)}
+        <div className={styles.contentRail} data-testid="ondo-b-editorial-guide-grid">
+          {featured.map((item, index) => <Story key={item.id} item={item} copy={copy} locale={locale} visualRole={index === 0 ? "lead" : "supporting"} />)}
         </div>
         {remaining.length ? (
           <details className={styles.moreStories} data-testid="ondo-b-japan-more-stories">
             <summary>{locale === "ko" ? `콘텐츠 ${remaining.length}개 더 보기` : locale === "ja" ? `ほかのストーリー${remaining.length}件` : `${remaining.length} more stories`}<ChevronRight aria-hidden="true" size={16} /></summary>
             <div>
-              {remaining.map((item) => <Story key={item.id} item={item} copy={copy} locale={locale} compact />)}
+              {remaining.map((item) => <Story key={item.id} item={item} copy={copy} locale={locale} compact visualRole="compact" />)}
             </div>
           </details>
         ) : null}
