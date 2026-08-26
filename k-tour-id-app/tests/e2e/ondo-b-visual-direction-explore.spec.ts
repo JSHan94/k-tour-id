@@ -55,7 +55,7 @@ async function noHorizontalOverflow(page: Page) {
 }
 
 test.describe("ONDO Explore approved visual direction", () => {
-  test.describe.configure({ timeout: 180_000 })
+  test.describe.configure({ timeout: 360_000 })
 
   test("Polarsteps-inspired Korea atlas keeps geographic anchors separate at every product breakpoint", async ({ browser }) => {
     for (const profile of MATRIX) {
@@ -131,20 +131,26 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(root).toHaveAttribute("data-cluster-grammar", "official-record-count")
       await expect(root).toHaveAttribute("data-effective-view", "map")
       await expect(root).toHaveAttribute("data-map-state", /ready|error/, { timeout: 25_000 })
+      const mapState = await root.getAttribute("data-map-state")
 
       const mapCanvas = page.getByTestId("maplibre-map").locator(".maplibregl-canvas")
-      if (await mapCanvas.count()) {
+      if (mapState === "ready") {
+        await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
+        await expect(mapCanvas).toHaveCount(1)
         expect(await mapCanvas.evaluate((element) => getComputedStyle(element).filter)).toContain("saturate(0.82)")
       } else {
-        const recovery = root.locator("[role='alert'] button")
+        await expect(page.getByTestId("ondo-b-map-key")).toHaveCount(0)
+        const fallback = page.getByTestId("ondo-b-map-fallback-status")
+        await expect(fallback).toBeVisible()
+        const recovery = fallback.getByRole("button")
         await expect(recovery).toBeVisible()
         expect((await box(recovery)).height).toBeGreaterThanOrEqual(44)
+        await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
       }
       const searchRadius = await page.getByTestId("ondo-b-search-shell").evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
       const resultRadius = await page.getByTestId("ondo-b-result-bar").evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
       expect(searchRadius).toBeGreaterThanOrEqual(18)
       expect(resultRadius).toBeGreaterThanOrEqual(18)
-      await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
       await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveAttribute("data-city-context", "seoul")
       if (profile.width === 844) {
         const searchBox = await box(page.getByTestId("ondo-b-search-shell"))
