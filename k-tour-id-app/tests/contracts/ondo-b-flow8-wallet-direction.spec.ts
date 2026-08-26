@@ -5,6 +5,11 @@ import {
   createStableCommerceBState,
   stableCommerceBReducer,
 } from "../../features/ondo/commerce-b/stable-commerce-model-b"
+import {
+  commerceSessionFromReceipts,
+  sanitizeCommerceReceipts,
+  type OndoBCommerceReceipt,
+} from "../../features/ondo/shared/state/ondo-b-provider"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
@@ -236,4 +241,32 @@ test("FLOW8-IDEMPOTENT-012 accepted, declined, and refunded operations are exact
     "ONDO-LOCAL-REFUND-20260825-001",
     "ONDO-LOCAL-REFUND-20260825-001",
   ])
+})
+
+test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts restore behaviorally exact state", () => {
+  const receipt = (status: "paid" | "refunded", benefitOOKRW: 0 | 3): OndoBCommerceReceipt => ({
+    receiptId: "ONDO-LOCAL-20260825-001",
+    refundReceiptId: status === "refunded" ? "ONDO-LOCAL-REFUND-20260825-001" : null,
+    offerId: "meal-offer-gukbap",
+    venueId: "mois-0021cd596bc5b2a922ad",
+    status,
+    paidOOKRW: benefitOOKRW === 3 ? 19 : 22,
+    benefitOOKRW,
+    balanceOOKRW: status === "paid" ? (benefitOOKRW === 3 ? 41 : 38) : 60,
+  })
+
+  const accepted = commerceSessionFromReceipts([receipt("paid", 3)])
+  expect(accepted).toMatchObject({ status: "paid", voucher: "consumed", benefitRecommendation: "accepted", confirmationCount: 1, receiptCount: 1, refundCount: 0, chargedDebit: 19, redemptionCount: 1 })
+  expect(accepted.ledger.map(({ amount, kind }) => [amount, kind])).toEqual([[-19, "PAYMENT"], [19, "PAYMENT"]])
+
+  const declined = commerceSessionFromReceipts([receipt("paid", 0)])
+  expect(declined).toMatchObject({ status: "paid", voucher: "available", benefitRecommendation: "declined", confirmationCount: 1, receiptCount: 1, chargedDebit: 22, redemptionCount: 0 })
+  expect(declined.ledger.map(({ amount }) => amount)).toEqual([-22, 22])
+
+  const refunded = commerceSessionFromReceipts([receipt("refunded", 3)])
+  expect(refunded).toMatchObject({ status: "refunded", voucher: "available", confirmationCount: 1, receiptCount: 1, refundCount: 1, chargedDebit: 19, redemptionCount: 0 })
+  expect(refunded.ledger.map(({ amount, kind }) => [amount, kind])).toEqual([[-19, "PAYMENT"], [19, "PAYMENT"], [19, "REFUND"], [-19, "REFUND"]])
+
+  expect(sanitizeCommerceReceipts([{ ...receipt("paid", 3), receiptId: "made-up" }])).toEqual([])
+  expect(commerceSessionFromReceipts([])).toEqual(createStableCommerceBState())
 })
