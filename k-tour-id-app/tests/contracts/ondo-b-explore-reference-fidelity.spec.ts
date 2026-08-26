@@ -26,13 +26,14 @@ test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and officia
   expect(map).toContain('data-testid="ondo-b-venue-list"')
   expect(map).toContain('data-testid="ondo-b-map-fallback-status"')
   expect(mapCss).toContain("In List, the editorial collection is part of the reading sequence")
-  expect(mapCss).toContain('.root:has(> .listPanel) > .listPanel { padding-top: 70px; }')
+  expect(mapCss).toContain('.root:has(> .listPanel) > .listPanel { padding-top: 96px; }')
   expect(mapCss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));')
 })
 
 test("B-EXPLORE-V3-003 Japanese editorial has one lead story and supporting guide cards without false Place actions", () => {
   expect(editorial).toContain('visualRole?: "lead" | "supporting" | "compact"')
   expect(editorial).toContain('data-editorial-role={visualRole}')
+  expect(editorial).toContain('data-presentation={presentation}')
   expect(editorial).toContain('visualRole={index === 0 ? "lead" : "supporting"}')
   expect(editorial).toContain('data-place-edge={item.placeEdgeVerification}')
   expect(editorial).toContain("item.editorialMedia.credit[locale]")

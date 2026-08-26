@@ -128,7 +128,7 @@ function Story({ item, copy, locale, compact = false, visualRole = compact ? "co
   )
 }
 
-export function JapanFirstDiscoveryB({ locale, city, onOpenChange }: { locale: OndoBLocale; city: "seoul" | "jeju"; onOpenChange?(open: boolean): void }) {
+export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpenChange }: { locale: OndoBLocale; city: "seoul" | "jeju"; presentation?: "map" | "list"; onOpenChange?(open: boolean): void }) {
   const copy = COPY[locale]
   const cityItems = JAPAN_FIRST_LAUNCH_CONTENT.filter((item) => item.cityIds.includes(city))
   const featured = city === "seoul"
@@ -139,7 +139,7 @@ export function JapanFirstDiscoveryB({ locale, city, onOpenChange }: { locale: O
   const title = city === "seoul" ? copy.seoulTitle : copy.jejuTitle
   const summary = city === "seoul" ? copy.seoulSummary : copy.jejuSummary
   return (
-    <details className={styles.root} data-testid="ondo-b-japan-first-discovery" data-city-context={city} data-truth-kind="editorial-collection" data-geometry-basis="region" data-place-point-count="0" onToggle={(event) => onOpenChange?.(event.currentTarget.open)}>
+    <details className={styles.root} data-testid="ondo-b-japan-first-discovery" data-city-context={city} data-presentation={presentation} data-truth-kind="editorial-collection" data-geometry-basis="region" data-place-point-count="0" onToggle={(event) => onOpenChange?.(event.currentTarget.open)}>
       <summary data-testid="ondo-b-editorial-collection-marker" aria-label={`${title}. ${summary}`}>
         <span className={styles.mark}><Sparkles aria-hidden="true" size={20} /><b>{copy.marker}</b></span>
         <span>

@@ -37,7 +37,9 @@ test("JP-MAP-FIRST-003 Japan stories are a contextual map layer, never a Nation 
   const discovery = source("features/ondo/map/japan-first-discovery-b.tsx")
   const nationDirectory = map.slice(map.indexOf("function NationDirectory"), map.indexOf("function toFeatureCollection"))
 
-  expect(map).toContain('<JapanFirstDiscoveryB locale={locale} city={city} onOpenChange={setEditorialOpen}')
+  expect(map).toContain('<JapanFirstDiscoveryB locale={locale} city={city}')
+  expect(map).toContain('presentation={effectiveView === "list" || mapState === "error" ? "list" : "map"}')
+  expect(map).toContain('onOpenChange={setEditorialOpen}')
   expect(map).toContain('inert={editorialOpen ? true : undefined}')
   expect(map).toContain('aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined}')
   expect(nationDirectory).not.toContain("<JapanFirstDiscoveryB")

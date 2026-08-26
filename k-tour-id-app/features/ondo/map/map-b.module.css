@@ -2232,7 +2232,7 @@
 }
 
 .root:has(> .listPanel) > [data-testid="ondo-b-japan-first-discovery"]:not([open]) .mark b { display: none; }
-.root:has(> .listPanel) > .listPanel { padding-top: 70px; }
+.root:has(> .listPanel) > .listPanel { padding-top: 96px; }
 .root:has(> [data-testid="ondo-b-japan-first-discovery"][open]) > .listPanel {
   visibility: hidden;
   pointer-events: none;
@@ -2291,7 +2291,7 @@
     right: 26px;
     left: 26px;
   }
-  .root:has(> .listPanel) > .listPanel { padding-top: 76px; }
+  .root:has(> .listPanel) > .listPanel { padding-top: 102px; }
 }
 
 /* Short landscape is one compact discovery toolbar, not three stacked
@@ -2404,7 +2404,7 @@
 
   .koreaAtlas .cityNode[data-city="seoul"] { top: 27%; left: 39%; }
   .koreaAtlas .cityNode[data-city="busan"] { top: 48%; left: 40%; }
-  .koreaAtlas .cityNode[data-city="jeju"] { bottom: 13%; left: 5%; width: min(196px, 61vw); min-height: 78px; }
+  .koreaAtlas .cityNode[data-city="jeju"] { bottom: 15%; left: 5%; width: min(196px, 61vw); min-height: 78px; }
 }
 
 @media (max-width: 340px) and (min-height: 600px) {
@@ -2413,7 +2413,7 @@
   .koreaAtlas .cityNode[data-city="busan"] { width: 184px; }
   .koreaAtlas .cityNode[data-city="seoul"] { top: 26%; left: 39%; }
   .koreaAtlas .cityNode[data-city="busan"] { top: 47%; left: 39%; }
-  .koreaAtlas .cityNode[data-city="jeju"] { bottom: 12%; left: 4%; width: 190px; }
+  .koreaAtlas .cityNode[data-city="jeju"] { bottom: 15%; left: 4%; width: 190px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {

@@ -1182,7 +1182,7 @@ export function MapEntryB() {
         </header>
 
         <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? MAP_UI[locale].editorialRegion : MAP_UI[locale].mapRegion} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
-        {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} onOpenChange={setEditorialOpen} /> : null}
+        {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} presentation={effectiveView === "list" || mapState === "error" ? "list" : "map"} onOpenChange={setEditorialOpen} /> : null}
         <ul id="ondo-b-pulse-marker-accessible-detail" className={styles.srOnly} data-testid="ondo-b-pulse-marker-accessible-detail" aria-hidden={editorialOpen ? true : undefined}>
           {curatedPulseVenues.map(({ venue, pulse }) => (
             <li key={venue.id}>

@@ -448,19 +448,21 @@
   display: grid;
   grid-auto-flow: row;
   grid-auto-columns: initial;
+  grid-auto-rows: max-content;
   grid-template-columns: minmax(0, 1fr);
+  align-content: start;
   gap: 12px;
   padding: 2px 2px 10px;
-  overflow-x: hidden;
+  overflow-x: clip;
+  overflow-y: visible;
   scroll-snap-type: none;
 }
 
 .contentRail article[data-editorial-role="lead"] {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   grid-column: 1;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto auto;
-  min-height: 0;
+  min-height: max-content;
   overflow: hidden;
   padding: 12px;
   border-radius: 24px;
@@ -474,6 +476,7 @@
   position: relative;
   width: 100%;
   height: auto;
+  flex: 0 0 auto;
   aspect-ratio: 3 / 2;
   min-height: 0;
   border-radius: 20px;
@@ -487,7 +490,7 @@
 .contentRail article[data-editorial-role="supporting"] {
   display: grid;
   min-width: 0;
-  min-height: 0;
+  min-height: 160px;
   grid-template-columns: 108px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: start;
@@ -558,4 +561,52 @@
 
 @media (prefers-reduced-motion: reduce) {
   .contentRail article[data-editorial-role] { transition: none !important; }
+}
+
+/* List presentation is a guide introduction in normal reading order. Its
+   icon never repeats the title, and the pending-place boundary is allowed to
+   wrap instead of being compressed into a map-marker label. */
+.root[data-presentation="list"]:not([open]) > summary {
+  min-height: 76px;
+  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  gap: 10px;
+  padding: 9px 11px;
+}
+
+.root[data-presentation="list"]:not([open]) > summary > span:nth-child(2),
+.root[data-presentation="list"]:not([open]) > summary > svg { display: grid; }
+.root[data-presentation="list"]:not([open]) .mark {
+  width: 38px;
+  height: 38px;
+  grid-template-columns: 1fr;
+  padding: 0;
+}
+.root[data-presentation="list"]:not([open]) .mark b,
+.root[data-presentation="list"]:not([open]) > summary small { display: none; }
+.root[data-presentation="list"]:not([open]) > summary strong,
+.root[data-presentation="list"]:not([open]) > summary em {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+.root[data-presentation="list"]:not([open]) > summary strong { font-size: 14px; line-height: 1.2; }
+.root[data-presentation="list"]:not([open]) > summary em { line-height: 1.3; }
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .root[data-presentation="list"]:not([open]) > summary {
+    min-height: 52px;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 6px;
+  }
+  .root[data-presentation="list"]:not([open]) > summary > span:nth-child(2),
+  .root[data-presentation="list"]:not([open]) > summary > svg { display: none; }
+  .root[data-presentation="list"]:not([open]) .mark {
+    width: 100%;
+    height: 38px;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 6px;
+    padding-inline: 7px;
+  }
+  .root[data-presentation="list"]:not([open]) .mark b { display: block; }
 }
