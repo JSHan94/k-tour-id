@@ -198,3 +198,15 @@ test("FLOW7-VIS-012 photo recovery and Local Signal consent keep one reachable d
   expect(checkStyles).toContain('.layer[data-check-origin="local_signal"]')
   expect(checkStyles).toMatch(/max-width:\s*430px[\s\S]*data-check-origin="local_signal"[\s\S]*\.actions[\s\S]*order:\s*5/)
 })
+
+test("FLOW7-EVIDENCE-013 desktop evidence captures the settled app root at CSS-pixel scale", () => {
+  const e2e = source("tests/e2e/ondo-b-flow7-local-signal-direction.spec.ts")
+  const capture = e2e.slice(e2e.indexOf("async function quietCapture"), e2e.indexOf("async function sharedPlacePulseTuple"))
+
+  expect(capture).toContain("await document.fonts.ready")
+  expect(capture).toMatch(/requestAnimationFrame\(\(\) => requestAnimationFrame/)
+  expect(capture).toContain('page.getByTestId("ondo-b-root")')
+  expect(capture).toContain("await root.screenshot")
+  expect(capture).toContain('>= 1200 ? "css" : "device"')
+  expect(capture).not.toContain("await page.screenshot")
+})

@@ -152,8 +152,19 @@ async function expectControlGeometry(root: Locator) {
 async function quietCapture(page: Page, name: string) {
   mkdirSync(ARTIFACT_DIR, { recursive: true })
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
-  await page.evaluate(() => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur() })
-  await page.screenshot({ path: `${ARTIFACT_DIR}/${name}.png`, animations: "disabled" })
+  await page.evaluate(async () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    await document.fonts.ready
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  })
+  const root = page.getByTestId("ondo-b-root")
+  await expect(root).toBeVisible()
+  await root.screenshot({
+    path: `${ARTIFACT_DIR}/${name}.png`,
+    animations: "disabled",
+    caret: "hide",
+    scale: (page.viewportSize()?.width ?? 0) >= 1200 ? "css" : "device",
+  })
 }
 
 async function sharedPlacePulseTuple(place: Locator) {
