@@ -543,7 +543,7 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   const before = await sharedPlacePulseTuple(place)
   expect(before).toEqual({
     level: "peak", numeric: "shown", title: "Pulse 91 · PEAK", score: "91", count: "24", confidence: "High",
-    freshnessUpdatedAt: "Fixed curated snapshot · 2026-08-25 02:20 UTC",
+    freshnessUpdatedAt: "Curated snapshot · 2026-08-25 02:20 UTC",
   })
   await signal.locator("fieldset button").first().click()
   await openEligibilityResult(page, signal, "success")
