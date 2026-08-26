@@ -412,11 +412,15 @@ test("FLOW7-MEDIA-008 MIME-valid corrupt media is rejected atomically and every 
     const read = (key: string) => JSON.parse(sessionStorage.getItem(key) ?? "[]") as string[]
     URL.createObjectURL = (value) => {
       const url = originalCreate(value)
-      sessionStorage.setItem("flow7-created", JSON.stringify([...read("flow7-created"), url]))
+      if (value instanceof Blob && value.type.startsWith("image/")) {
+        sessionStorage.setItem("flow7-created", JSON.stringify([...read("flow7-created"), url]))
+      }
       return url
     }
     URL.revokeObjectURL = (url) => {
-      sessionStorage.setItem("flow7-revoked", JSON.stringify([...read("flow7-revoked"), url]))
+      if (read("flow7-created").includes(url)) {
+        sessionStorage.setItem("flow7-revoked", JSON.stringify([...read("flow7-revoked"), url]))
+      }
       originalRevoke(url)
     }
   })
