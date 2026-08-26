@@ -67,6 +67,34 @@ test.describe("Warm Living Atlas personal journey", () => {
     })
   }
 
+  test("320px EN KO JA controls, truth disclosure, and localized nav stay inside the canvas", async ({ browser }) => {
+    for (const locale of ["en", "ko", "ja"] as const) {
+      const context = await browser.newContext({ viewport: { width: 320, height: 800 }, reducedMotion: "reduce" })
+      const page = await context.newPage()
+      await fresh(page, locale)
+      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      const control = page.getByTestId("onboarding-language-control")
+      const controlBox = await control.boundingBox()
+      expect(controlBox?.x ?? -1).toBeGreaterThanOrEqual(0)
+      expect((controlBox?.x ?? 321) + (controlBox?.width ?? 0)).toBeLessThanOrEqual(320)
+
+      const source = page.getByTestId("onboarding-source-boundary")
+      const summary = source.locator("summary")
+      expect((await summary.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44)
+      await summary.click()
+      expect(await summary.evaluate((node) => getComputedStyle(node).outlineStyle)).toBe("none")
+      await page.getByTestId("onboarding-step-value").locator("button").last().click()
+      await expect(page.getByTestId("ondo-main-nav")).toBeVisible()
+      for (const item of await page.getByTestId("ondo-main-nav").locator("button").all()) {
+        const box = await item.boundingBox()
+        expect(box?.x ?? -1).toBeGreaterThanOrEqual(0)
+        expect((box?.x ?? 321) + (box?.width ?? 0)).toBeLessThanOrEqual(320)
+      }
+      await noHorizontalOverflow(page)
+      await context.close()
+    }
+  })
+
   test("JA mobile personal surfaces use a trip-first and native-group hierarchy", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await seed(page, "ja", true)
@@ -111,6 +139,33 @@ test.describe("Warm Living Atlas personal journey", () => {
     await expect(offer.getByTestId("payment-receipt")).toHaveAttribute("data-refunded", "true")
     await noHorizontalOverflow(page)
     await shot(page, "ja-390-refund")
+  })
+
+  test("JA 320 receipt and refund keep complete identifiers without horizontal overflow", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.setViewportSize({ width: 320, height: 800 })
+    await seed(page, "ja")
+    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
+    await page.getByTestId("canonical-meal-benefit-open").click()
+    const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+    await offer.getByTestId("benefit-accept").click()
+    await offer.getByTestId("payment-confirm").click()
+    await page.getByTestId("wallet-connect-sheet").locator("button").nth(1).click()
+    await expect(page.getByTestId("wallet-connect-sheet")).toBeHidden()
+    await offer.getByTestId("payment-minimum-consent").locator("input").check()
+    await offer.getByTestId("payment-confirm").click()
+    const receipt = offer.getByTestId("payment-receipt")
+    await expect(receipt.getByText("ONDO-LOCAL-20260825-001", { exact: true })).toBeVisible()
+    await noHorizontalOverflow(page)
+    await receipt.locator("details summary").click()
+    await receipt.getByTestId("payment-refund").click()
+    await expect(receipt.getByText("ONDO-LOCAL-REFUND-20260825-001", { exact: true })).toBeVisible()
+    for (const code of await receipt.locator("code").all()) {
+      expect(await code.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true)
+    }
+    await noHorizontalOverflow(page)
+    await shot(page, "ja-320-refund")
   })
 
   test("personal surfaces keep their composition at 320, short landscape, and desktop", async ({ browser }) => {
