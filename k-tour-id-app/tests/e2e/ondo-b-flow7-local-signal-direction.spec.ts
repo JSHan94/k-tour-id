@@ -20,21 +20,21 @@ const COPY = {
   en: {
     note: "Optional local note",
     update: "Update Local Signal on this device",
-    postFailure: "This device could not save the posted marker. Your exact draft and place remain open.",
+    postFailure: "Could not save this Local Signal on this device. Your exact draft and place remain open.",
     close: "Close Local Signal",
     photoAlt: "Local photo preview — kept in this open draft only",
   },
   ko: {
     note: "선택적 로컬 메모",
     update: "이 기기의 로컬 시그널 업데이트",
-    postFailure: "이 기기에 게시 표시를 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다.",
+    postFailure: "이 기기에 이 로컬 시그널을 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다.",
     close: "로컬 시그널 닫기",
     photoAlt: "로컬 사진 미리보기 — 열린 작성 화면에서만 유지",
   },
   ja: {
     note: "任意のローカルメモ",
     update: "この端末のLocal Signalを更新",
-    postFailure: "この端末に投稿済みの印を保存できませんでした。下書きと場所はそのまま開いています。",
+    postFailure: "この端末にこのLocal Signalを保存できませんでした。下書きと場所はそのまま開いています。",
     close: "Local Signalを閉じる",
     photoAlt: "ローカル写真のプレビュー — 開いている下書きにのみ保持",
   },
@@ -238,32 +238,45 @@ test("FLOW7-GATE-003 Person cancel, failure, unavailable, expired, and Escape re
 })
 
 test("FLOW7-SESSION-004 Person success expires on the actual clock and cannot cross close, venue, navigation, or reload boundaries", async ({ page }) => {
-  await page.clock.install({ time: new Date("2026-08-27T00:00:00.000Z") })
   await page.setViewportSize({ width: 390, height: 844 })
   let { signal, place } = await openSignal(page)
   await signal.locator("fieldset button").first().click()
   await openEligibilityResult(page, signal, "success")
   await expect(signal.getByTestId("local-signal-post")).toBeVisible()
+  const issuedAt = await page.evaluate(() => Date.now())
+  await page.clock.install({ time: issuedAt })
   await page.clock.fastForward(300_001)
+  await signal.getByTestId("local-signal-post").click()
   await expect(signal.getByTestId("local-signal-person-check")).toBeVisible()
   await expect(signal.getByTestId("local-signal-draft")).toHaveAttribute("data-gate-return", "expired")
+  await page.clock.resume()
 
   await signal.getByRole("button", { name: COPY.en.close }).click()
   await place.getByRole("button", { name: "Close place" }).click()
-  const venueButtons = page.getByTestId("ondo-b-venue-list").locator("li button")
-  await venueButtons.nth(1).click({ force: true })
-  place = page.getByTestId("canonical-place-overlay")
-  const switchedVenue = await place.getAttribute("data-venue-id")
+  await expect(place).toBeHidden()
+  const venueList = page.getByTestId("ondo-b-venue-list")
+  if (!await venueList.isVisible()) await page.getByTestId("ondo-b-view-toggle").click({ force: true })
+  await expect(venueList).toBeVisible()
+  const venueButtons = venueList.locator("li button")
+  await venueButtons.nth(1).scrollIntoViewIfNeeded()
+  await venueButtons.nth(1).click()
+  const switchedPeek = page.getByTestId("canonical-place-peek")
+  await expect(switchedPeek).toBeVisible()
+  const switchedVenue = await switchedPeek.getAttribute("data-venue-id")
   expect(switchedVenue).not.toBe(VENUE_ID)
-  await place.getByTestId("canonical-place-details").click({ force: true })
+  await switchedPeek.getByTestId("canonical-place-details").click()
+  place = page.getByTestId("canonical-place-overlay")
+  await expect(place).toBeVisible()
   await place.getByTestId("canonical-local-signal-open").click({ force: true })
   signal = page.getByTestId("ondo-b-local-signal")
   await expect(signal.getByTestId("local-signal-draft")).toHaveAttribute("data-gate-return", "none")
   await expect(signal.getByTestId("local-signal-person-check")).toBeVisible()
 
   await signal.getByRole("button", { name: COPY.en.close }).click()
+  await place.getByRole("button", { name: "Close place" }).click()
+  await expect(place).toBeHidden()
   await page.getByTestId("nav-my").click({ force: true })
-  await page.getByTestId("nav-explore").click({ force: true })
+  await page.getByTestId("nav-ondo").click({ force: true })
   await page.reload({ waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await expect(page.getByTestId("ondo-b-local-signal")).toBeHidden()
@@ -274,7 +287,12 @@ test("FLOW7-POST-005 device persistence is durable-first, keeps Pulse invariant,
   const { signal, place } = await openSignal(page)
   const draft = signal.getByTestId("local-signal-draft")
   const note = draft.getByRole("textbox", { name: COPY.en.note })
-  const pulseBefore = await place.getByTestId("canonical-place-pulse").evaluate((element) => ({ text: element.textContent, level: element.getAttribute("data-pulse-level"), numeric: element.getAttribute("data-pulse-numeric") }))
+  const pulseBefore = await place.getByTestId("canonical-place-pulse").evaluate((element) => ({
+    level: element.getAttribute("data-pulse-level"),
+    numeric: element.getAttribute("data-pulse-numeric"),
+    score: element.querySelector("[data-testid='pulse-score']")?.textContent,
+    count: element.querySelector("[data-testid='pulse-signal-count']")?.textContent,
+  }))
   await draft.locator("fieldset button").first().click()
   await note.fill("This note must never enter storage.")
   await openEligibilityResult(page, signal, "success")
@@ -292,7 +310,12 @@ test("FLOW7-POST-005 device persistence is durable-first, keeps Pulse invariant,
   await expect(signal).toBeHidden()
   await expect(place).toBeVisible()
   await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
-  const pulseAfter = await place.getByTestId("canonical-place-pulse").evaluate((element) => ({ text: element.textContent, level: element.getAttribute("data-pulse-level"), numeric: element.getAttribute("data-pulse-numeric") }))
+  const pulseAfter = await place.getByTestId("canonical-place-pulse").evaluate((element) => ({
+    level: element.getAttribute("data-pulse-level"),
+    numeric: element.getAttribute("data-pulse-numeric"),
+    score: element.querySelector("[data-testid='pulse-score']")?.textContent,
+    count: element.querySelector("[data-testid='pulse-signal-count']")?.textContent,
+  }))
   expect(pulseAfter).toEqual(pulseBefore)
   stored = await page.evaluate((key) => localStorage.getItem(key) ?? "", DEVICE_KEY)
   expect(stored).not.toContain("This note must never enter storage")
@@ -328,11 +351,19 @@ test("FLOW7-HISTORY-007 reload keeps only device evidence, opens its exact Place
   await signal.getByTestId("local-signal-post").click()
   await page.reload({ waitUntil: "domcontentloaded" })
   await waitForShell(page)
+  const restoredPlace = page.getByTestId("canonical-place-overlay")
+  await expect(restoredPlace).toHaveAttribute("data-venue-id", VENUE_ID)
+  await restoredPlace.getByRole("button", { name: "Close place" }).click()
   await page.getByTestId("nav-my").click({ force: true })
   const history = page.getByTestId(`contribution-venue-${VENUE_ID}`)
   await expect(history).toBeVisible()
   await history.click()
-  await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", VENUE_ID)
+  const historyPeek = page.getByTestId("canonical-place-peek")
+  await expect(historyPeek).toHaveAttribute("data-venue-id", VENUE_ID)
+  await historyPeek.getByTestId("canonical-place-details").click()
+  const historyPlace = page.getByTestId("canonical-place-overlay")
+  await expect(historyPlace).toHaveAttribute("data-venue-id", VENUE_ID)
+  await historyPlace.getByRole("button", { name: "Close place" }).click()
 
   await page.getByTestId("nav-settings").click({ force: true })
   const disclosure = page.getByTestId("ondo-b-device-data-settings")
@@ -395,7 +426,8 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await signal.getByTestId("local-signal-person-check").click()
       let gate = page.getByTestId("ondo-b-local-check-walkthrough")
       await quietCapture(page, `${locale}-${viewport.label}-person-consent`)
-      await page.keyboard.press("Escape")
+      await gate.locator("header button").click()
+      await expect(gate).toBeHidden()
       await quietCapture(page, `${locale}-${viewport.label}-person-cancel-return`)
 
       for (const outcome of ["failure", "unavailable", "expired"] as const) {
@@ -431,12 +463,21 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await expect(updateSignal).toBeHidden()
       await page.reload({ waitUntil: "domcontentloaded" })
       await waitForShell(page)
+      const reloadedPlace = page.getByTestId("canonical-place-overlay")
+      await expect(reloadedPlace).toHaveAttribute("data-venue-id", VENUE_ID)
+      await quietCapture(page, `${locale}-${viewport.label}-reloaded-exact-place`)
+      await reloadedPlace.locator("header button").last().click()
       await page.getByTestId("nav-my").click({ force: true })
       await page.getByTestId(`contribution-venue-${VENUE_ID}`).scrollIntoViewIfNeeded()
       await quietCapture(page, `${locale}-${viewport.label}-my-history-reload`)
       await page.getByTestId(`contribution-venue-${VENUE_ID}`).click()
-      await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", VENUE_ID)
+      const historyPeek = page.getByTestId("canonical-place-peek")
+      await expect(historyPeek).toHaveAttribute("data-venue-id", VENUE_ID)
+      await historyPeek.getByTestId("canonical-place-details").click()
+      const historyPlace = page.getByTestId("canonical-place-overlay")
+      await expect(historyPlace).toHaveAttribute("data-venue-id", VENUE_ID)
       await quietCapture(page, `${locale}-${viewport.label}-my-history-exact-place`)
+      await historyPlace.locator("header button").last().click()
       await page.getByTestId("nav-settings").click({ force: true })
       const disclosure = page.getByTestId("ondo-b-device-data-settings")
       await disclosure.locator("summary").click()

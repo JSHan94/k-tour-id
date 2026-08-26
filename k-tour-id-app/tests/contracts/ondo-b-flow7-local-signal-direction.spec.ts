@@ -136,6 +136,16 @@ test("FLOW7-COPY-007 local-only draft copy never promises benefit or public cont
     "계정·ID·자격증명을 만들지",
     "アカウント、ID、資格情報は作成されません",
   ]) expect(signal).toContain(truth)
+  for (const consumerTruth of [
+    "AT THIS OFFICIAL-LISTED PLACE",
+    "공식 목록에 있는 이 장소에서",
+    "公式リストに掲載されたこの場所で",
+    "Person check complete",
+    "사람 확인을 마쳤어요",
+    "Personチェックが完了しました",
+    "Could not save this Local Signal on this device",
+  ]) expect(signal).toContain(consumerTruth)
+  expect(signal).not.toMatch(/FROM THIS OFFICIAL PLACE|Identity check complete|posted marker|게시 표시|投稿済みの印/)
 })
 
 test("FLOW7-DATA-008 restored Local Signal history and evidence are one canonical bounded intersection", () => {
