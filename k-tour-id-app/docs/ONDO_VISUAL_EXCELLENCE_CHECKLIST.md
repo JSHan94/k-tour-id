@@ -13,11 +13,11 @@ donate unsupported product claims.
 
 | # | Connected flow | Pattern references | Status |
 |---|---|---|---|
-| 1 | Guest onboarding | Arc | Pending |
-| 2 | Korea overview and city selection | Polarsteps | Active with Explore |
-| 3 | City map, Pulse, filters and list | Mapstr + Beli | Active with Explore |
-| 4 | Japanese story to source/place | The Infatuation + Apple Guides | Active with Explore |
-| 5 | Place peek and full detail | Apple Place Card + Airbnb | Active with Explore |
+| 1 | Guest onboarding | Arc | Active |
+| 2 | Korea overview and city selection | Polarsteps | Peer-sealed · user review |
+| 3 | City map, Pulse, filters and list | Mapstr + Beli | Peer-sealed · user review |
+| 4 | Japanese story to source/place | The Infatuation + Apple Guides | Peer-sealed · user review |
+| 5 | Place peek and full detail | Apple Place Card + Airbnb | Peer-sealed · user review |
 | 6 | Tables, 19+, join and chat | Timeleft | Pending |
 | 7 | Local Signal contribution | Apple contribution + Strava | Pending |
 | 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Pending |
@@ -195,7 +195,8 @@ evidence, action modules, alternatives and exact return from every child flow.
 
 ## Release record
 
-- Active flow: Explore
-- Approved flows: none under the new 8.5-per-state standard
-- Next user checkpoint: final Explore before/after matrix
-
+- Active flow: Guest onboarding
+- Peer-sealed flows: Explore 2–5 at `5deef49` (all required states >=8.5,
+  P0=P1=P2=P3=0, V3 6/6, contracts 172/172)
+- User-approved flows: pending the next visual checkpoint
+- Next user checkpoint: stable Explore link plus Arc-inspired onboarding matrix
