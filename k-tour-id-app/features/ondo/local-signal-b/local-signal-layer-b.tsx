@@ -166,6 +166,7 @@ export function LocalSignalLayerB() {
   const closeRef = useRef<HTMLButtonElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const photoUrlRef = useRef<string | null>(null)
+  const postErrorRef = useRef<HTMLParagraphElement>(null)
   const draft = state.localSignalDraft
   const venue = draft ? canonicalMapVenueById(draft.venueId) : undefined
   const locale = state.locale
@@ -206,6 +207,12 @@ export function LocalSignalLayerB() {
     const frame = window.requestAnimationFrame(() => layerRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
   }, [open])
+
+  useEffect(() => {
+    if (!postFailed) return
+    const frame = window.requestAnimationFrame(() => postErrorRef.current?.scrollIntoView({ block: "nearest" }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [postFailed])
 
   useEffect(() => () => {
     if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
@@ -422,7 +429,7 @@ export function LocalSignalLayerB() {
 
                 {alreadyPosted ? <p className={styles.already}>{copy.alreadyPosted}</p> : null}
                 {gateReturn ? <p className={personReady ? styles.gateSuccess : styles.gateNotice} role="status"><CircleAlert size={16} aria-hidden="true" />{copy[gateReturn]}</p> : null}
-                {postFailed ? <p className={styles.error} role="alert" data-testid="local-signal-post-error">{copy.postError}</p> : null}
+                {postFailed ? <p ref={postErrorRef} className={styles.error} role="alert" data-testid="local-signal-post-error">{copy.postError}</p> : null}
 
                 <div className={styles.actions}>
                   {personReady ? (
