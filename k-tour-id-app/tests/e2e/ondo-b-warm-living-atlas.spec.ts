@@ -1,0 +1,135 @@
+import { mkdirSync } from "node:fs"
+import { resolve } from "node:path"
+import { expect, test, type Page } from "@playwright/test"
+
+const DEVICE_KEY = "ondo-b.device.v1"
+const VENUE_ID = "mois-0021cd596bc5b2a922ad"
+const EVIDENCE_DIR = resolve(process.cwd(), "artifacts/qa/warm-living-atlas")
+
+type Locale = "en" | "ko" | "ja"
+
+async function seed(page: Page, locale: Locale, active = false) {
+  await page.addInitScript(({ key, nextLocale, venueId, activeState }) => {
+    localStorage.setItem(key, JSON.stringify({
+      locale: nextLocale,
+      onboarding: "ONB-COMPLETE",
+      persona: "travelling",
+      discoveryPreferences: [],
+      savedVenueIds: activeState ? [venueId] : [],
+      privateNotesByVenue: {},
+      recentVenueIds: activeState ? [venueId] : [],
+      plannedTableRefs: activeState ? [{ tableId: "table-seoul-night-bites", venueId }] : [],
+      localSignalPostedVenueIds: activeState ? [venueId] : [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+  }, { key: DEVICE_KEY, nextLocale: locale, venueId: VENUE_ID, activeState: active })
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
+}
+
+async function fresh(page: Page, locale: Locale) {
+  await page.addInitScript(({ key, nextLocale }) => {
+    localStorage.setItem(key, JSON.stringify({ locale: nextLocale, onboarding: "ONB-NEW" }))
+  }, { key: DEVICE_KEY, nextLocale: locale })
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
+}
+
+async function shot(page: Page, name: string) {
+  await page.screenshot({ path: resolve(EVIDENCE_DIR, `${name}.png`), animations: "disabled" })
+}
+
+async function noHorizontalOverflow(page: Page) {
+  expect(await page.locator("html").evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true)
+}
+
+test.describe("Warm Living Atlas personal journey", () => {
+  test.describe.configure({ timeout: 180_000 })
+  test.beforeAll(() => mkdirSync(EVIDENCE_DIR, { recursive: true }))
+
+  for (const locale of ["en", "ko", "ja"] as const) {
+    test(`${locale} onboarding directly exposes all languages and a compact truth boundary`, async ({ page }) => {
+      await page.setViewportSize({ width: locale === "ja" ? 390 : 320, height: locale === "ja" ? 844 : 800 })
+      await fresh(page, locale)
+      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      const control = page.getByTestId("onboarding-language-control")
+      await expect(control).toBeVisible()
+      await expect(control.locator("button")).toHaveCount(3)
+      for (const button of await control.locator("button").all()) {
+        expect((await button.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44)
+      }
+      await expect(page.getByTestId("onboarding-source-boundary")).not.toHaveAttribute("open", "")
+      const value = page.getByTestId("onboarding-step-value")
+      await expect(value.locator("button[data-onboarding-initial-focus]")).toBeInViewport()
+      await noHorizontalOverflow(page)
+      await shot(page, `${locale}-${locale === "ja" ? 390 : 320}-onboarding`)
+    })
+  }
+
+  test("JA mobile personal surfaces use a trip-first and native-group hierarchy", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seed(page, "ja", true)
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.getByTestId("nav-my").click()
+    const my = page.getByTestId("ondo-b-my-korea-entry")
+    await expect(my.locator(":scope > div > section").first()).toHaveAttribute("data-testid", "my-korea-planned")
+    await shot(page, "ja-390-my-active")
+    await page.getByTestId("nav-settings").click()
+    await expect(page.getByTestId("settings-language-control").locator("button")).toHaveCount(3)
+    await expect(page.getByTestId("ondo-b-discovery-settings")).not.toHaveAttribute("open", "")
+    await expect(page.getByTestId("ondo-b-device-data-settings")).not.toHaveAttribute("open", "")
+    await shot(page, "ja-390-settings")
+    await page.getByTestId("nav-id").click()
+    await expect(page.getByTestId("wallet-balance")).toContainText("OOKRW Test")
+    await expect(page.getByTestId("travel-pass-status")).toBeAttached()
+    await noHorizontalOverflow(page)
+    await shot(page, "ja-390-id-wallet")
+  })
+
+  test("JA contextual benefit completes the honest test payment and refund journey", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seed(page, "ja")
+    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
+    await page.getByTestId("canonical-meal-benefit-open").click()
+    const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+    await expect(offer).toHaveAttribute("data-visual-direction", "warm-living-offer")
+    await shot(page, "ja-390-offer-recommended")
+    await offer.getByTestId("benefit-accept").click()
+    await offer.getByTestId("payment-confirm").click()
+    const connect = page.getByTestId("wallet-connect-sheet")
+    await connect.locator("button").nth(1).click()
+    await expect(connect).toBeHidden()
+    await offer.getByTestId("payment-minimum-consent").locator("input").check()
+    await offer.getByTestId("payment-confirm").click()
+    await expect(offer.getByTestId("payment-receipt")).toBeVisible()
+    await shot(page, "ja-390-receipt")
+    await offer.getByTestId("payment-receipt").locator("details summary").click()
+    await offer.getByTestId("payment-refund").click()
+    await expect(offer.getByTestId("payment-receipt")).toHaveAttribute("data-refunded", "true")
+    await noHorizontalOverflow(page)
+    await shot(page, "ja-390-refund")
+  })
+
+  test("personal surfaces keep their composition at 320, short landscape, and desktop", async ({ browser }) => {
+    for (const viewport of [
+      { width: 320, height: 800, name: "en-320" },
+      { width: 844, height: 390, name: "ja-844" },
+      { width: 1440, height: 1000, name: "ja-1440" },
+    ]) {
+      const context = await browser.newContext({ viewport, reducedMotion: "reduce" })
+      const page = await context.newPage()
+      await seed(page, viewport.name.startsWith("en") ? "en" : "ja", true)
+      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
+      for (const [nav, name] of [["nav-my", "my"], ["nav-settings", "settings"], ["nav-id", "id-wallet"]] as const) {
+        await page.getByTestId(nav).click()
+        await noHorizontalOverflow(page)
+        await shot(page, `${viewport.name}-${name}`)
+      }
+      await context.close()
+    }
+  })
+})
