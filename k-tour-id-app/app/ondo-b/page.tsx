@@ -2,8 +2,8 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
-const title = "ONDO — Licensed food-place records in Seoul and Busan"
-const description = "Browse 400 licensed food-service records from the Ministry of the Interior and Safety LOCALDATA snapshot, with source dates and clear coverage limits."
+const title = "ONDO — Korea Pulse map for Seoul, Busan, and Jeju"
+const description = "Browse 400 licensed Seoul and Busan food-service records alongside a source-linked Jeju editorial collection; pending places remain separate from official records."
 
 function configuredOrigin() {
   const configured = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN
@@ -48,7 +48,7 @@ export async function generateMetadata(): Promise<Metadata> {
         url: imageUrl,
         width: 1200,
         height: 630,
-        alt: "ONDO licensed food-place directory for Seoul and Busan with 400 public records",
+        alt: "ONDO Korea map with 400 official Seoul and Busan records and a separate Jeju editorial collection",
       }],
     },
     twitter: {

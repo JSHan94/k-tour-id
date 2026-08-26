@@ -1,4 +1,4 @@
-export type BDiscoveryCity = "seoul" | "busan"
+export type BDiscoveryCity = "seoul" | "busan" | "jeju"
 export type BDiscoveryView = "map" | "list"
 export type BDiscoveryCategory = "all" | "korean" | "casual" | "japanese" | "chinese" | "global" | "night" | "specialty"
 
@@ -6,6 +6,7 @@ type BDiscoveryFocus =
   | { kind: "city"; city: BDiscoveryCity }
   | { kind: "venue"; venueId: string }
   | { kind: "search" }
+  | { kind: "editorial" }
   | { kind: "view-toggle" }
 
 export type BDiscoveryHistoryEntry = {
@@ -43,7 +44,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function cityValue(value: unknown): BDiscoveryCity | undefined {
-  return value === "seoul" || value === "busan" ? value : undefined
+  return value === "seoul" || value === "busan" || value === "jeju" ? value : undefined
 }
 
 function viewValue(value: unknown): BDiscoveryView {
@@ -75,7 +76,7 @@ function focusValue(value: unknown): BDiscoveryFocus | undefined {
     const venueId = venueValue(value.venueId)
     return venueId ? { kind: "venue", venueId } : undefined
   }
-  if (value.kind === "search" || value.kind === "view-toggle") return { kind: value.kind }
+  if (value.kind === "search" || value.kind === "editorial" || value.kind === "view-toggle") return { kind: value.kind }
   return undefined
 }
 
@@ -208,7 +209,16 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
   replaceEntry(nation)
   if (!requestedCity) return nation
 
-  const city: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city: requestedCity, view: requestedView, query: requestedQuery, category: requestedCategory, focus: { kind: "search" } }
+  const city: BDiscoveryHistoryEntry = {
+    v: 2,
+    documentId: documentId(),
+    level: "city",
+    city: requestedCity,
+    view: requestedCity === "jeju" ? "map" : requestedView,
+    query: requestedCity === "jeju" ? "" : requestedQuery,
+    category: requestedCity === "jeju" ? "all" : requestedCategory,
+    focus: { kind: requestedCity === "jeju" ? "editorial" : "search" },
+  }
   pushEntry(city)
   if (!requestedVenueId || !resolvedVenueCity) return city
 
@@ -224,7 +234,7 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
 export function enterBDiscoveryCity(city: BDiscoveryCity) {
   const current = readBDiscoveryHistory()
   if (current?.level === "nation") replaceEntry({ ...current, focus: { kind: "city", city } })
-  const next: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", focus: { kind: "search" } }
+  const next: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", focus: { kind: city === "jeju" ? "editorial" : "search" } }
   pushEntry(next)
   return next
 }
@@ -322,5 +332,6 @@ export function focusBDiscoveryTarget(entry: BDiscoveryHistoryEntry) {
       ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")
   }
   if (focus.kind === "search") return document.querySelector<HTMLElement>("[data-testid='ondo-b-search']")
+  if (focus.kind === "editorial") return document.querySelector<HTMLElement>("[data-testid='ondo-b-japan-first-discovery'] > summary")
   return document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")
 }

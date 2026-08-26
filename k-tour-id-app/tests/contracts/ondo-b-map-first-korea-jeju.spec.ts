@@ -23,6 +23,9 @@ test("JP-MAP-FIRST-002 city entry defaults to map without measuring or short-lan
 
   expect(history).toContain('export type BDiscoveryCity = "seoul" | "busan" | "jeju"')
   expect(history).toContain('value === "jeju"')
+  expect(history).toContain('view: requestedCity === "jeju" ? "map" : requestedView')
+  expect(history).toContain('query: requestedCity === "jeju" ? "" : requestedQuery')
+  expect(history).toContain('category: requestedCity === "jeju" ? "all" : requestedCategory')
   expect(map).toContain('mapLayoutMode === "ultra-short" ? "list" : view')
   expect(map).not.toContain('mapLayoutMode === "ultra-short" || mapLayoutMode === "measuring" ? "list" : view')
   expect(map).toContain('height < 240')
@@ -32,9 +35,12 @@ test("JP-MAP-FIRST-002 city entry defaults to map without measuring or short-lan
 test("JP-MAP-FIRST-003 Japan stories are a contextual map layer, never a Nation feed", () => {
   const map = source("features/ondo/map/map-entry-b.tsx")
   const discovery = source("features/ondo/map/japan-first-discovery-b.tsx")
+  const nationDirectory = map.slice(map.indexOf("function NationDirectory"), map.indexOf("function toFeatureCollection"))
 
-  expect(map).toContain('<JapanFirstDiscoveryB locale={locale} city={city}')
-  expect(map).not.toMatch(/function NationDirectory[\s\S]*<JapanFirstDiscoveryB/)
+  expect(map).toContain('<JapanFirstDiscoveryB locale={locale} city={city} onOpenChange={setEditorialOpen}')
+  expect(map).toContain('inert={editorialOpen ? true : undefined}')
+  expect(map).toContain('aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined}')
+  expect(nationDirectory).not.toContain("<JapanFirstDiscoveryB")
   expect(discovery).toContain('city: "seoul" | "jeju"')
   expect(discovery).toContain('data-truth-kind="editorial-collection"')
   expect(discovery).toContain("item.cityIds.includes(city)")
@@ -48,5 +54,5 @@ test("JP-MAP-FIRST-004 pending Jeju research cannot become an invented place poi
 
   const map = source("features/ondo/map/map-entry-b.tsx")
   expect(map).not.toMatch(/JEJU_EDITORIAL_SEEDS[\s\S]{0,300}(toFeatureCollection|GeoJSON\.Point|latitude|longitude)/)
-  expect(map).toContain('data-editorial-point-count="0"')
+  expect(map).toContain('data-editorial-point-count={city === "jeju" ? "0" : undefined}')
 })

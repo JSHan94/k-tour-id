@@ -52,22 +52,30 @@ checkout/community flow is introduced.
 - Every record keeps its report-linked source URL(s), source type, last-check
   date, sponsorship state, link-only rights mode, and a separate pending
   place-edge state. A hard-coded `sponsored: false` is not verification.
-- The Nation/Explore screen shows a compact Japan-first research strip. It is
-  not another feed or route.
+- Explore remains one map-first skeleton: a Korea overview atlas leads to the
+  Seoul, Busan, or Jeju regional map. Japan-first stories never appear as a
+  sibling feed below the atlas.
+- Seoul and Jeju expose one compact editorial collection marker on their
+  existing regional map. Opening it reveals the current progressive source
+  disclosure without adding a route, tab, provider, or persistence state.
 - A content-to-place action may open the existing Place surface only after a
   canonical place ID, coordinates, and evidence edge are verified.
-- Until then, the card remains a research lead and routes only to its existing
-  city context; it cannot fabricate a venue, opening hours, Japanese support,
+- Until then, the story remains a research lead inside its regional collection;
+  it cannot fabricate a venue, opening hours, Japanese support,
   reservation availability, or partner status.
 
 ### 3. Jeju without corrupting the official directory
 
 - Jeju is included immediately as ten editorial seeds from the source report.
-- Jeju is labelled `Growing · 10 content-linked candidates`.
+- The Korea overview includes a truthful Jeju editorial-region anchor. The
+  Jeju regional map contains one collection marker, not ten place pins.
+- Jeju is labelled `Growing · 10 editorial ideas · exact place links pending`.
 - It is not labelled as MOIS LOCALDATA coverage and does not inherit the Seoul
   or Busan `200 official records` claim.
-- A native progressive disclosure previews the ten candidates inside Explore.
-  There is no new provider state, route, tab, or modal.
+- A native progressive disclosure exposes the two Jeju stories and four
+  official source collections. The ten pending names remain in the bounded
+  model but are not emitted as GeoJSON points or false Place actions.
+- There is no new provider state, route, tab, or modal.
 
 ### 4. Japanese-first, not Japanese-only
 
@@ -99,7 +107,8 @@ production measurements and are never converted directly into a Pulse score.
 1. One score; Japan/Korea/ONDO drivers; sponsored exclusion; confidence gate.
 2. Nine launch content records and ten Jeju seeds have bounded, typed source,
    date, sponsorship, rights, and place-edge verification states.
-3. Explore reuses the current Nation surface and keeps exactly five nav tabs.
+3. Explore uses one Korea overview → regional map skeleton and keeps exactly
+   five nav tabs; there is no sibling story feed or second map mode.
 4. Jeju truth never uses the official-record source/count claim.
 5. Existing Map/Place/Table/After19/Wallet/My Korea actions and test IDs remain.
 

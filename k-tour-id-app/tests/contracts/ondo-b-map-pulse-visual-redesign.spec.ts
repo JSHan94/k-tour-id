@@ -30,8 +30,8 @@ test.describe("ONDO B map Pulse visual contract", () => {
 
     expect(map).toContain("const duration = 240")
     expect(map).toContain('"text-size": 12')
-    expect(map).toContain('data-pulse-visual-grammar="borderless-aura-core-label"')
-    expect(map).toContain('data-selected-pulse-grammar="one-shot-halo-place-capsule"')
+    expect(map).toContain('data-pulse-visual-grammar={city === "jeju" ? undefined : "borderless-aura-core-label"}')
+    expect(map).toContain('data-selected-pulse-grammar={city === "jeju" ? undefined : "one-shot-halo-place-capsule"}')
     expect(map).toContain('id: "ondo-selected-pulse-outer", type: "circle", source: "ondo-pulse"')
     expect(map).toContain('id: "ondo-selected-pulse-rising", type: "circle", source: "ondo-pulse"')
     expect(map).toContain('id: "ondo-selected-pulse-warming", type: "circle", source: "ondo-pulse"')
@@ -76,7 +76,7 @@ test.describe("ONDO B map Pulse visual contract", () => {
     const map = source("features/ondo/map/map-entry-b.tsx")
     const css = source("features/ondo/map/map-b.module.css")
 
-    expect(map).toContain("data-pulse-map-grammar=\"curated-level-score-over-official-groups\"")
+    expect(map).toContain('data-pulse-map-grammar={city === "jeju" ? undefined : "curated-level-score-over-official-groups"}')
     expect(map).toContain("data-testid=\"ondo-b-map-key-details\"")
     expect(map).toContain("data-testid=\"ondo-b-map-credit-details\"")
     expect(map).toContain("data-testid=\"ondo-b-location-details\"")

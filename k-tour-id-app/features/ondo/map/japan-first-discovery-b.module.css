@@ -52,6 +52,7 @@
   background: rgb(122 32 72 / 8%);
   color: #7a2048;
 }
+.mark b { display: none; font-size: 12px; letter-spacing: -.01em; white-space: nowrap; }
 
 .panel {
   display: grid;
@@ -156,8 +157,8 @@
 .jeju > div > small { color: #6d665f; font-size: 12px; line-height: 1.45; }
 .jeju > div { display: grid; gap: 8px; padding-top: 6px; }
 .jeju > div > strong { font-size: 12px; }
-.jeju nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.jeju a span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jeju nav { grid-template-columns: minmax(0, 1fr); }
+.jeju a span:first-child { overflow-wrap: anywhere; white-space: normal; }
 
 .srOnly {
   position: absolute;
@@ -185,4 +186,93 @@
 @media (prefers-reduced-motion: reduce) {
   .root summary svg { transition: none; }
   .contentRail { scroll-behavior: auto; }
+}
+
+/* City-context editorial layer: the same progressive source content now lives
+   on the map canvas instead of becoming a separate Nation feed. */
+.root[data-city-context] {
+  position: absolute;
+  z-index: 8;
+  top: calc(214px + env(safe-area-inset-top));
+  right: 10px;
+  width: 112px;
+}
+.root[data-city-context="jeju"] { top: calc(72px + env(safe-area-inset-top)); }
+.root[data-city-context] > summary {
+  min-height: 52px;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 6px;
+  border-radius: 16px;
+  background: rgb(255 251 247 / 92%);
+  box-shadow: 0 16px 38px rgb(53 34 23 / 13%);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+}
+.root[data-city-context]:not([open]) > summary > span:nth-child(2),
+.root[data-city-context]:not([open]) > summary > svg { display: none; }
+.root[data-city-context]:not([open]) .mark {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  height: 38px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  margin: auto;
+  padding-inline: 7px;
+}
+.root[data-city-context]:not([open]) .mark b { display: block; }
+.root[data-city-context="jeju"]:not([open]) > summary { border-style: dashed; }
+.root[data-city-context] > summary small,
+.root[data-city-context] > summary em { font-size: 12px; }
+.root[data-city-context][open] {
+  top: auto;
+  right: 10px;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  left: 10px;
+  width: auto;
+}
+.root[data-city-context][open] > summary {
+  min-height: 58px;
+  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 18px 18px 12px 12px;
+}
+.root[data-city-context][open] > summary > span:nth-child(2) { display: grid; }
+.root[data-city-context][open] > summary > svg { display: block; }
+.root[data-city-context][open] .mark b { display: none; }
+.root[data-city-context][open] .panel {
+  max-height: min(52dvh, 430px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 16px;
+  box-shadow: 0 22px 60px rgb(42 27 19 / 18%);
+}
+
+@media (max-width: 340px) {
+  .root[data-city-context] { right: 8px; width: 112px; }
+  .root[data-city-context][open] { right: 8px; bottom: calc(92px + env(safe-area-inset-bottom)); left: 8px; width: auto; }
+  .root[data-city-context][open] .panel { max-height: 48dvh; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .root[data-city-context],
+  .root[data-city-context="jeju"] { top: calc(92px + env(safe-area-inset-top)); right: 10px; width: 112px; }
+  .root[data-city-context][open] {
+    top: calc(58px + env(safe-area-inset-top));
+    right: 8px;
+    bottom: calc(78px + env(safe-area-inset-bottom));
+    left: auto;
+    width: min(370px, 44vw);
+  }
+  .root[data-city-context][open] .panel { max-height: calc(100dvh - 220px); }
+}
+
+@media (min-width: 900px) and (min-height: 501px) {
+  .root[data-city-context],
+  .root[data-city-context="jeju"] { top: 226px; right: 26px; width: 112px; }
+  .root[data-city-context][open] { top: 102px; right: 26px; bottom: 86px; left: auto; width: 380px; }
+  .root[data-city-context][open] .panel { max-height: calc(100dvh - 270px); }
 }

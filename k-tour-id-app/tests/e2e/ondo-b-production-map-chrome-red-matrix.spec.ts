@@ -81,7 +81,7 @@ const EXPECTED_KEY = {
 function expectedLayoutForRoot(root: Rect): LayoutMode {
   // Measured in Chromium against the worst EN/KO offline copy and rounded up
   // for font/platform safety. Equality is intentionally a Map boundary.
-  if (root.height < 400 || (root.width < 600 && root.height < 600)) return "ultra-short"
+  if (root.height < 240 || (root.width < 480 && root.height < 360)) return "ultra-short"
   if (root.width <= 430 || (root.width > root.height && root.height <= 568)) return "compact-map"
   return "spacious-map"
 }

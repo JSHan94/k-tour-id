@@ -132,11 +132,15 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     await expect(root).toHaveAttribute("data-pulse-visual-grammar", "borderless-aura-core-label")
   })
 
-  test("844x390 keeps the compact list state scrollable without horizontal overflow", async ({ page }) => {
+  test("844x390 opens on the compact map and an explicit List remains scrollable", async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
     await seed(page, "ko")
     await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
+    await expect(root).toHaveAttribute("data-effective-view", "map")
+    await expect(page.getByTestId("maplibre-map")).toBeVisible()
+    await page.getByTestId("ondo-b-view-toggle").click()
+    await expect(root).toHaveAttribute("data-requested-view", "list")
     await expect(root).toHaveAttribute("data-effective-view", "list")
     const list = page.getByTestId("ondo-b-list-panel")
     await expect(list).toBeVisible()

@@ -109,7 +109,7 @@ async function chromeReceipt(
   await expect(locate).toHaveAttribute("aria-describedby", "ondo-b-location-message")
   const keyDetails = key.getByTestId("ondo-b-map-key-details")
   await keyDetails.locator("summary").click()
-  const keyTruth = key.locator("small")
+  const keyTruth = keyDetails.locator(":scope > div > small")
   await expect(keyTruth).toHaveCount(2)
   for (let index = 0; index < 2; index += 1) await expectVisibleText(keyTruth.nth(index), `${state} map explanation ${index + 1}`, viewport)
   await keyDetails.locator("summary").click()

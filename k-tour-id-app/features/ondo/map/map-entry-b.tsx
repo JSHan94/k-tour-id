@@ -37,7 +37,7 @@ import {
 } from "./b-discovery-history"
 import styles from "./map-b.module.css"
 
-type CityId = "seoul" | "busan"
+type CityId = "seoul" | "busan" | "jeju"
 type ViewMode = "map" | "list"
 type MapLayoutMode = "measuring" | "ultra-short" | "compact-map" | "spacious-map"
 type LocationState = "idle" | "locating" | "ready" | "denied" | "unsupported"
@@ -49,26 +49,28 @@ const SOURCE_DATE = CANONICAL_MAP_VENUES_COMPACT[0]?.sourceSnapshotAt.slice(0, 1
 const CITY = {
   seoul: { center: [126.987, 37.565] as [number, number], zoom: 10.1, label: { en: "Seoul", ko: "서울" } },
   busan: { center: [129.055, 35.18] as [number, number], zoom: 10.05, label: { en: "Busan", ko: "부산" } },
+  jeju: { center: [126.54, 33.38] as [number, number], zoom: 9.2, label: { en: "Jeju", ko: "제주" } },
 }
 
 const COPY = {
   en: {
-    tagline: "Official food-service directory",
-    title: "Browse public food-service licence records in Seoul and Busan.",
-    body: "This directory contains 200 records in each city from the Ministry of the Interior and Safety LOCALDATA source.",
-    coverage: "400 public records · 20 districts",
+    tagline: "Korea food & travel map",
+    title: "Choose a region, then follow the Pulse.",
+    body: "Browse official food-service records in Seoul and Busan, or open Jeju's editorial travel collection.",
+    coverage: "Korea map · 3 regions",
     openMap: "Open city directory",
     source: "LOCALDATA source snapshot · Aug 19, 2026",
     sourceBoundary: "A record shows an active licence at the source date. It does not confirm today’s hours, menu, popularity or payment support.",
     search: "Place, district or category",
     list: "List",
     map: "Map",
-    back: "Both cities",
+    back: "Korea map",
     records: "official records",
     officialName: "Official Korean source name",
     categoryBasis: "Category normalized from the official business type",
     more: "Load 30 more",
     mapA11y: "The map is visual. Use plus, minus and arrow keys to move it, or open the List for keyboard-accessible directory results.",
+    editorialMapA11y: "The Jeju map shows one regional editorial collection. Exact place links are still being checked; use its source panel to review the travel stories.",
     mapUnavailable: "The map could not load. 200 official records remain available in the list.",
     retryMap: "Retry map",
     offlineTitle: "Offline",
@@ -83,6 +85,7 @@ const COPY = {
     locationDisclosure: "Location stays in this tab. OpenFreeMap receives map-area requests.",
     nearest: "nearest official record",
     mapLoading: "Loading the directory map…",
+    editorialMapLoading: "Loading the Jeju editorial map…",
     noResultsTitle: "No records match",
     noResultsBody: "Clear the search and category to see every official record in this city.",
     clearResults: "Clear search and category",
@@ -95,26 +98,34 @@ const COPY = {
     pulseExplore: "Explore · limited signals",
     pulseSignals: "curated signals",
     pulseLocal: "Your Local Signal is included on this device",
+    jejuStatus: "Editorial · exact places pending",
+    jejuTruth: "10 travel ideas",
+    jejuMapTruth: "10 editorial leads · not official directory records",
+    officialSourceScope: "Seoul and Busan · official LOCALDATA records",
+    jejuSourceScope: "Jeju · VISITKOREA editorial source collections; place facts pending",
+    editorialMapUnavailable: "The basemap could not load. The Jeju editorial collection and sources remain available.",
+    aboutMap: "About this Korea map",
     filterLabel: "Official business category",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
   },
   ko: {
-    tagline: "공식 일반음식점 디렉터리",
-    title: "서울과 부산의 공공 일반음식점 인허가 기록을 살펴보세요.",
-    body: "행정안전부 LOCALDATA 출처에서 각 도시 200개씩 선별한 디렉터리입니다.",
-    coverage: "공공 기록 400개 · 20개 자치구·군",
+    tagline: "한국 음식·여행 지도",
+    title: "지역을 고르고 Pulse를 따라가 보세요.",
+    body: "서울·부산의 공식 일반음식점 기록과 제주의 편집 여행 컬렉션을 한 지도에서 탐색합니다.",
+    coverage: "대한민국 지도 · 3개 지역",
     openMap: "도시 디렉터리 열기",
     source: "LOCALDATA 출처 스냅샷 · 2026. 8. 19.",
     sourceBoundary: "기록은 출처 기준일의 유효 인허가 상태를 뜻합니다. 현재 영업시간·메뉴·인기도·결제 지원은 확인하지 않습니다.",
     search: "장소명, 지역 또는 업태",
     list: "목록",
     map: "지도",
-    back: "두 도시",
+    back: "대한민국 지도",
     records: "공식 기록",
     officialName: "공식 출처 한글명",
     categoryBasis: "공식 업태구분명을 기준으로 정규화한 분류",
     more: "30개 더 보기",
     mapA11y: "지도는 시각 정보입니다. 더하기, 빼기와 방향키로 움직이거나 키보드로 탐색할 수 있는 목록을 여세요.",
+    editorialMapA11y: "제주 지도에는 지역 단위 편집 컬렉션 하나만 표시합니다. 정확한 장소 연결은 확인 중이며, 출처 패널에서 여행 콘텐츠를 검토할 수 있어요.",
     mapUnavailable: "지도를 불러오지 못했어요. 공식 기록 200개는 목록에서 계속 볼 수 있어요.",
     retryMap: "지도 다시 불러오기",
     offlineTitle: "오프라인",
@@ -129,6 +140,7 @@ const COPY = {
     locationDisclosure: "위치는 이 탭에만 남습니다. OpenFreeMap은 지도 영역 요청을 받습니다.",
     nearest: "가장 가까운 공식 기록",
     mapLoading: "디렉터리 지도를 불러오는 중…",
+    editorialMapLoading: "제주 편집 지도를 불러오는 중…",
     noResultsTitle: "일치하는 기록이 없어요",
     noResultsBody: "검색어와 업태를 초기화하면 이 도시의 모든 공식 기록을 볼 수 있어요.",
     clearResults: "검색어와 업태 초기화",
@@ -141,6 +153,13 @@ const COPY = {
     pulseExplore: "탐색 · 신호 부족",
     pulseSignals: "선별 신호",
     pulseLocal: "이 기기의 로컬 시그널이 포함됨",
+    jejuStatus: "편집 컬렉션 · 장소 확인 중",
+    jejuTruth: "여행 아이디어 10곳",
+    jejuMapTruth: "편집 후보 10곳 · 공식 디렉터리 기록 아님",
+    officialSourceScope: "서울·부산 · LOCALDATA 공식 기록",
+    jejuSourceScope: "제주 · VISITKOREA 편집 출처 모음; 장소 정보 확인 중",
+    editorialMapUnavailable: "배경 지도를 불러오지 못했어요. 제주 편집 컬렉션과 출처는 계속 볼 수 있어요.",
+    aboutMap: "대한민국 지도 안내",
     filterLabel: "공식 업태 분류",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
   },
@@ -232,6 +251,7 @@ function resultCount(count: number, locale: OndoBLocale) {
 }
 
 function cityPulseStatus(cityId: CityId, locale: OndoBLocale) {
+  if (cityId === "jeju") return COPY[locale].jejuStatus
   return PULSE_CITY_STATUS[cityId] === "active" ? COPY[locale].pulseActive : COPY[locale].pulseGrowing
 }
 
@@ -254,16 +274,16 @@ function displayDistance(distance: number, locale: OndoBLocale) {
 function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(city: CityId): void }) {
   const copy = COPY[locale]
   return (
-    <section className={styles.nation} data-testid="ondo-b-nation" data-directory-source={SOURCE_ID}>
-      <div className={styles.nationIntro}>
-        <small>{copy.coverage}</small>
-        <h1>{copy.title}</h1>
-        <p>{copy.body}</p>
-      </div>
-      <div className={styles.dotMap}>
-        <svg viewBox="0 0 300 350" role="img" aria-label={locale === "ko" ? "서울과 부산의 디렉터리 범위를 표시한 대한민국 윤곽" : "Korea outline showing Seoul and Busan directory coverage"}>
+    <section className={styles.nation} data-testid="ondo-b-nation">
+      <div className={`${styles.dotMap} ${styles.koreaAtlas}`} data-testid="ondo-b-korea-atlas">
+        <svg viewBox="0 0 300 350" role="img" aria-label={locale === "ko" ? "서울·부산·제주를 표시한 대한민국 탐색 지도" : "Korea overview map showing Seoul, Busan, and Jeju"}>
           {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 2 : 1.65} />)}
         </svg>
+        <div className={styles.nationIntro}>
+          <small>{copy.coverage}</small>
+          <h1>{copy.title}</h1>
+          <p>{copy.body}</p>
+        </div>
         {(["seoul", "busan"] as const).map((cityId) => (
           <button
             key={cityId}
@@ -271,30 +291,56 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
             className={styles.cityNode}
             data-city={cityId}
             data-official-count="200"
+            data-directory-source={SOURCE_ID}
             onClick={() => onSelect(cityId)}
             aria-label={`${CITY[cityId].label[locale]} · ${resultCount(200, locale)} · ${copy.openMap}`}
           >
             <i>200</i>
             <span>
               <strong>{CITY[cityId].label[locale]}</strong>
-              <small>{copy.openMap}</small>
               <small data-pulse-city-status={PULSE_CITY_STATUS[cityId]}>{cityPulseStatus(cityId, locale)}</small>
               <em className={styles.cityRecordTruth}>{resultCount(200, locale)}</em>
             </span>
           </button>
         ))}
-      </div>
-      <JapanFirstDiscoveryB locale={locale} />
-      <aside className={styles.cityTruthLegend} data-testid="ondo-b-city-truth-legend">
-        {(["seoul", "busan"] as const).map((cityId) => (
-          <div key={cityId}>
-            <strong>{CITY[cityId].label[locale]}</strong>
-            <span>{resultCount(200, locale)}</span>
-            <small>{copy.categoryBasis}</small>
+        <button
+          type="button"
+          className={`${styles.cityNode} ${styles.jejuNode}`}
+          data-city="jeju"
+          data-truth-kind="editorial-region"
+          data-editorial-count="10"
+          onClick={() => onSelect("jeju")}
+          aria-label={`${CITY.jeju.label[locale]} · ${copy.jejuStatus} · ${copy.jejuTruth}`}
+        >
+          <i aria-hidden="true">✦</i>
+          <span>
+            <strong>{CITY.jeju.label[locale]}</strong>
+            <small>{copy.jejuStatus}</small>
+            <em className={styles.cityRecordTruth}>{copy.jejuTruth}</em>
+          </span>
+        </button>
+        <details className={`${styles.cityTruthLegend} ${styles.atlasTruth}`} data-testid="ondo-b-city-truth-legend">
+          <summary>{copy.aboutMap}<ChevronRight size={16} /></summary>
+          <div className={styles.atlasTruthBody}>
+            {(["seoul", "busan"] as const).map((cityId) => (
+              <div key={cityId}>
+                <strong>{CITY[cityId].label[locale]}</strong>
+                <span>{resultCount(200, locale)}</span>
+                <small>{copy.categoryBasis}</small>
+              </div>
+            ))}
+            <div>
+              <strong>{CITY.jeju.label[locale]}</strong>
+              <span>{copy.jejuMapTruth}</span>
+              <small>{copy.jejuTruth}</small>
+            </div>
+            <footer>
+              <div><strong>{copy.officialSourceScope}</strong><br />{copy.source}<br />{copy.sourceBoundary}</div>
+              <div><strong>{copy.jejuSourceScope}</strong></div>
+            </footer>
           </div>
-        ))}
-      </aside>
-      <footer><span /><div><strong>{copy.source}</strong><br />{copy.sourceBoundary}</div></footer>
+        </details>
+      </div>
     </section>
   )
 }
@@ -469,10 +515,13 @@ export function MapEntryB() {
   const [online, setOnline] = useState(true)
   const [mapLayoutMode, setMapLayoutMode] = useState<MapLayoutMode>("measuring")
   const [mapRootBlockSize, setMapRootBlockSize] = useState(0)
+  const [editorialOpen, setEditorialOpen] = useState(false)
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
   const selectedVenue = selectedVenueId ? CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === selectedVenueId) ?? null : null
   const selectedPulse = selectedVenue ? pulseForVenue(selectedVenue.id, state.localPulseEvidenceByVenue[selectedVenue.id] ?? null) : null
-  const effectiveView: ViewMode = mapLayoutMode === "ultra-short" || mapLayoutMode === "measuring" ? "list" : view
+  const effectiveView: ViewMode = city === "jeju" ? "map" : mapLayoutMode === "ultra-short" ? "list" : view
+
+  useEffect(() => setEditorialOpen(false), [city])
 
   useLayoutEffect(() => {
     const root = cityRootNode.current
@@ -491,8 +540,8 @@ export function MapEntryB() {
     const root = cityRootNode.current
     let previousMode: MapLayoutMode = "measuring"
     const applyLayout = (width: number, height: number) => {
-      const usesUltraShortList = height < 400
-        || (width < 600 && height < 600)
+      const usesUltraShortList = height < 240
+        || (width < 480 && height < 360)
       const nextMode: MapLayoutMode = usesUltraShortList
         ? "ultra-short"
         : width <= 430 || (width > height && height <= 568)
@@ -789,7 +838,7 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
 
-          if (!initialFilteredVenue && !filteredMapRef.current && cityRootNode.current) {
+          if (!initialFilteredVenue && !filteredMapRef.current && cityRootNode.current && venues.length > 0) {
             const rootBox = cityRootNode.current.getBoundingClientRect()
             const headerBox = cityRootNode.current.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
             const locationBox = cityRootNode.current.querySelector<HTMLElement>("[data-testid='ondo-b-location-message']")?.getBoundingClientRect()
@@ -1000,7 +1049,7 @@ export function MapEntryB() {
 
   if (!city) return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
-      <section className={styles.root} data-testid="ondo-b-map-entry" data-directory-source={SOURCE_ID}>
+      <section className={styles.root} data-testid="ondo-b-map-entry">
         <header className={styles.header}>
           <div className={styles.brand}><i /> <span><strong>ONDO</strong><small>{copy.tagline}</small></span></div>
           <button type="button" className={styles.language} onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
@@ -1016,42 +1065,46 @@ export function MapEntryB() {
         ref={cityRootNode}
         className={`${styles.root} ${mapLayoutMode === "ultra-short" ? styles.ultraShort : ""}`}
         data-testid="ondo-b-map-entry"
-        data-directory-source={SOURCE_ID}
-        data-source-date={SOURCE_DATE}
-        data-city-record-count={MAP_VENUES.filter((venue) => venue.cityId === city).length}
+        data-directory-source={city === "jeju" ? undefined : SOURCE_ID}
+        data-source-date={city === "jeju" ? undefined : SOURCE_DATE}
+        data-city-record-count={city === "jeju" ? undefined : MAP_VENUES.filter((venue) => venue.cityId === city).length}
+        data-editorial-point-count={city === "jeju" ? "0" : undefined}
         data-result-count={venues.length}
         data-map-state={mapState}
         data-map-attempt={retryToken + 1}
         data-connectivity={online ? "online" : "offline"}
         data-location-state={locationState}
         data-user-location={userLocation ? "present" : "absent"}
-        data-cluster-grammar="official-record-count"
-        data-pulse-map-grammar="curated-level-score-over-official-groups"
-        data-pulse-visual-grammar="borderless-aura-core-label"
-        data-pulse-motion="one-shot-bloom-reduced-safe"
-        data-selected-pulse-grammar="one-shot-halo-place-capsule"
-        data-curated-pulse-count={curatedPulseVenues.length}
+        data-cluster-grammar={city === "jeju" ? undefined : "official-record-count"}
+        data-pulse-map-grammar={city === "jeju" ? undefined : "curated-level-score-over-official-groups"}
+        data-pulse-visual-grammar={city === "jeju" ? undefined : "borderless-aura-core-label"}
+        data-pulse-motion={city === "jeju" ? undefined : "one-shot-bloom-reduced-safe"}
+        data-selected-pulse-grammar={city === "jeju" ? undefined : "one-shot-halo-place-capsule"}
+        data-curated-pulse-count={city === "jeju" ? undefined : curatedPulseVenues.length}
         data-layout-mode={mapLayoutMode}
         data-requested-view={view}
         data-effective-view={effectiveView}
         data-map-root-block-size={mapRootBlockSize.toFixed(1)}
         data-selected-venue-id={selectedVenueId ?? "none"}
       >
-        <p id="ondo-b-map-instruction" className={styles.srOnly}>{copy.mapA11y}</p>
+        <p id="ondo-b-map-instruction" className={styles.srOnly} aria-hidden={editorialOpen ? true : undefined}>{city === "jeju" ? copy.editorialMapA11y : copy.mapA11y}</p>
         <header className={styles.cityHeader} data-testid="ondo-b-city-header">
           <div className={styles.topline}>
             <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
-            <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small data-testid="ondo-b-pulse-city-status" data-pulse-city-status={PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
+            <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
             <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(locale === "en" ? "ko" : "en")}><Languages size={16} />{locale === "en" ? "KO" : "EN"}</button>
           </div>
-          <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
-          <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
-            {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-label={CATEGORY[item][locale]} aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : CATEGORY[item][locale]}</button>)}
-          </div>
+          {city !== "jeju" ? <>
+            <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={locale === "ko" ? "검색어 지우기" : "Clear search"}><X size={16} /></button> : null}</div>
+            <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
+              {(Object.keys(CATEGORY) as BDiscoveryCategory[]).map((item) => <button key={item} type="button" aria-label={CATEGORY[item][locale]} aria-pressed={category === item} onClick={() => { setCategory(item); updateCityContext({ category: item }) }}>{mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : CATEGORY[item][locale]}</button>)}
+            </div>
+          </> : null}
         </header>
 
-        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail" hidden={effectiveView !== "map"} aria-hidden={effectiveView !== "map" ? true : undefined} />
-        <ul id="ondo-b-pulse-marker-accessible-detail" className={styles.srOnly} data-testid="ondo-b-pulse-marker-accessible-detail">
+        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? locale === "ko" ? "제주 편집 여행 컬렉션 지도" : "Jeju editorial travel collection map" : locale === "ko" ? "공식 일반음식점 디렉터리 지도" : "Official food-service directory map"} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
+        {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} onOpenChange={setEditorialOpen} /> : null}
+        <ul id="ondo-b-pulse-marker-accessible-detail" className={styles.srOnly} data-testid="ondo-b-pulse-marker-accessible-detail" aria-hidden={editorialOpen ? true : undefined}>
           {curatedPulseVenues.map(({ venue, pulse }) => (
             <li key={venue.id}>
               {locale === "ko"
@@ -1060,12 +1113,12 @@ export function MapEntryB() {
             </li>
           ))}
         </ul>
-        {effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{copy.mapLoading}</p> : null}
+        {!editorialOpen && effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{city === "jeju" ? copy.editorialMapLoading : copy.mapLoading}</p> : null}
 
         <div className={styles.mapChrome} data-testid="ondo-b-map-chrome">
           <div className={styles.resultBar} data-testid="ondo-b-result-bar">
-            <span><b>{resultCount(venues.length, locale)}</b><small>{copy.source} · {copy.categoryBasis}</small></span>
-            {mapLayoutMode === "ultra-short" ? (
+            <span><b>{city === "jeju" ? copy.jejuMapTruth : resultCount(venues.length, locale)}</b><small>{city === "jeju" ? copy.jejuTruth : `${copy.source} · ${copy.categoryBasis}`}</small></span>
+            {city === "jeju" ? null : mapLayoutMode === "ultra-short" ? (
               <span className={styles.forcedListLabel} data-testid="ondo-b-effective-view-label" aria-label={locale === "ko" ? "좁은 화면에서 목록 보기 사용 중" : "List view on a short screen"}><List size={17} />{copy.list}</span>
             ) : (
               <button
@@ -1084,7 +1137,7 @@ export function MapEntryB() {
             )}
           </div>
 
-          {effectiveView === "map" && mapState !== "error" ? (
+          {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
             <details
               className={styles.locationMessage}
               data-testid="ondo-b-location-message"
@@ -1095,8 +1148,8 @@ export function MapEntryB() {
               <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
             </details>
           ) : null}
-          {effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
-          {effectiveView === "map" && mapState !== "error" ? (
+          {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
+          {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
             <aside className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
               <div className={styles.mapKeyLead}>
                 <span><i className={styles.clusterSwatch}>12</i><small>{locale === "ko" ? "공식 묶음" : "Official groups"}</small></span>
@@ -1156,7 +1209,8 @@ export function MapEntryB() {
           ) : null}
         </div>
 
-        {effectiveView === "list" || mapState === "error" ? (
+        {city === "jeju" && mapState === "error" ? <div className={`${styles.mapError} ${styles.editorialMapError}`} role="status" data-testid="ondo-b-map-fallback-status"><span>{copy.editorialMapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}
+        {city !== "jeju" && (effectiveView === "list" || mapState === "error") ? (
           <div className={styles.listPanel} data-testid="ondo-b-list-panel">
             {mapState === "error" ? <div className={styles.mapError} role="status" data-testid="ondo-b-map-fallback-status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}
             <p className={styles.pulseDisclosure} data-testid="ondo-b-pulse-disclosure">{PULSE_DISCLOSURE[locale]}</p>

@@ -50,7 +50,7 @@ type LocationCase = "idle" | "ready" | "denied" | "offline"
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
 
 function expectedLayout(width: number, height: number) {
-  if (height < 400 || (width < 600 && height < 600)) return "ultra-short"
+  if (height < 240 || (width < 480 && height < 360)) return "ultra-short"
   if (width <= 430 || (width > height && height <= 568)) return "compact-map"
   return "spacious-map"
 }
@@ -270,7 +270,7 @@ test.describe("ONDO B structural production map chrome", () => {
           const attribution = page.getByTestId("ondo-b-attribution")
           const keyDetails = key.getByTestId("ondo-b-map-key-details")
           await keyDetails.locator("summary").click()
-          const keyTruth = key.locator("small")
+          const keyTruth = keyDetails.locator(":scope > div > small")
           await expect(keyTruth).toHaveCount(2)
           for (let index = 0; index < 2; index += 1) await expectUnclippedTruth(keyTruth.nth(index), `${viewport.width}x${viewport.height} map key ${index + 1}`)
           await keyDetails.locator("summary").click()

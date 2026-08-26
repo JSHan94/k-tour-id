@@ -27,11 +27,6 @@ async function rect(locator: Locator) {
   return value!
 }
 
-function intersects(a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }) {
-  return Math.min(a.x + a.width, b.x + b.width) > Math.max(a.x, b.x)
-    && Math.min(a.y + a.height, b.y + b.height) > Math.max(a.y, b.y)
-}
-
 test.describe("Japan-first discovery reuses the existing Explore skeleton", () => {
   test.describe.configure({ timeout: 120_000 })
 
@@ -49,44 +44,35 @@ test.describe("Japan-first discovery reuses the existing Explore skeleton", () =
         await seed(page, locale)
         await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
 
-        const nation = page.getByTestId("ondo-b-nation")
-        const discovery = page.getByTestId("ondo-b-japan-first-discovery")
-        const summary = discovery.locator(":scope > summary")
-        const seoul = nation.locator("[data-city='seoul']")
-        const busan = nation.locator("[data-city='busan']")
-        await expect(nation).toBeVisible()
-        await expect(discovery).toBeVisible()
-        await expect(discovery).not.toHaveAttribute("open", "")
+        const atlas = page.getByTestId("ondo-b-korea-atlas")
+        const seoul = atlas.locator("[data-city='seoul']")
+        const jeju = atlas.locator("[data-city='jeju']")
+        await expect(atlas).toBeVisible()
+        await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveCount(0)
         await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("data-nav-count", "5")
-
-        expect(await discovery.evaluate((element) => {
-          const seoulButton = element.parentElement?.querySelector("[data-city='seoul']")
-          return Boolean(seoulButton && (seoulButton.compareDocumentPosition(element) & Node.DOCUMENT_POSITION_FOLLOWING))
-        })).toBe(true)
-        expect((await rect(summary)).height).toBeGreaterThanOrEqual(44)
-        expect(await summary.evaluate((element) => {
-          const bounds = element.getBoundingClientRect()
-          return document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)?.closest("summary") === element
-        })).toBe(true)
+        expect((await rect(jeju)).height).toBeGreaterThanOrEqual(44)
+        await expect(jeju).toHaveAttribute("data-truth-kind", "editorial-region")
+        await expect(jeju).not.toHaveAttribute("data-official-count", /.+/)
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
 
+        await seoul.click()
+        await expect(page).toHaveURL(/city=seoul/)
+        await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-effective-view", "map")
+        let discovery = page.getByTestId("ondo-b-japan-first-discovery")
+        await expect(discovery).toHaveAttribute("data-city-context", "seoul")
+        let summary = discovery.locator(":scope > summary")
+        expect((await rect(summary)).height).toBeGreaterThanOrEqual(44)
         await summary.click()
         await expect(discovery).toHaveAttribute("open", "")
-        await expect(discovery.locator("[data-content-id]")).toHaveCount(9)
+        await expect(discovery.locator("[data-content-id]")).toHaveCount(7)
         expect(await discovery.locator("[data-content-id]:visible").evaluateAll((items) => items.map((item) => item.getAttribute("data-content-id")))).toEqual(["C01", "C03", "C06"])
-        const jeju = page.getByTestId("ondo-b-jeju-editorial-seeds")
-        await expect(jeju).toHaveAttribute("data-seed-count", "10")
-        await expect(jeju).toHaveAttribute("data-source-type", "editorial-research")
-        await expect(jeju).toHaveAttribute("data-official-record-count", "none")
-        await expect(jeju).not.toContainText(/200 official|공식 기록 200/)
         await discovery.getByTestId("ondo-b-japan-more-stories").locator(":scope > summary").click()
-        await expect(discovery.locator("[data-content-id]:visible")).toHaveCount(9)
+        await expect(discovery.locator("[data-content-id]:visible")).toHaveCount(7)
         for (const contentId of ["C01", "C06", "C12", "C22"]) {
           await discovery.getByTestId(`ondo-b-story-sources-${contentId}`).locator(":scope > summary").click()
         }
-        await expect(discovery.locator("[data-content-id] a[target='_blank']:visible")).toHaveCount(14)
+        await expect(discovery.locator("[data-content-id] a[target='_blank']:visible")).toHaveCount(12)
         await expect(discovery).not.toContainText(/\bC0?\d\b|\bP[01]\b/)
-
         const firstSource = discovery.locator("[data-content-id='C02'] a")
         expect((await rect(firstSource)).height).toBeGreaterThanOrEqual(44)
         const visibleTextBelowFloor = await discovery.evaluate((root) => Array.from(root.querySelectorAll<HTMLElement>("*"))
@@ -99,22 +85,28 @@ test.describe("Japan-first discovery reuses the existing Explore skeleton", () =
         expect(visibleTextBelowFloor).toEqual([])
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
 
-        for (const city of [seoul, busan]) {
-          const [cityBox, discoveryBox] = await Promise.all([rect(city), rect(discovery)])
-          expect(intersects(cityBox, discoveryBox)).toBe(false)
-        }
-
-        await jeju.locator(":scope > summary").click()
-        await expect(jeju.locator("a[target='_blank']:visible")).toHaveCount(4)
-        const jejuBoundary = jeju.locator(":scope > div > small")
+        await page.getByTestId("ondo-b-city-back").click()
+        await expect(atlas).toBeVisible()
+        await jeju.click()
+        await expect(page).toHaveURL(/city=jeju/)
+        await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-effective-view", "map")
+        discovery = page.getByTestId("ondo-b-japan-first-discovery")
+        await expect(discovery).toHaveAttribute("data-city-context", "jeju")
+        summary = discovery.locator(":scope > summary")
+        await summary.click()
+        await expect(discovery.locator("[data-content-id]")).toHaveCount(2)
+        await expect(discovery.locator("[data-content-id] a[target='_blank']:visible")).toHaveCount(2)
+        const jejuSeeds = page.getByTestId("ondo-b-jeju-editorial-seeds")
+        await expect(jejuSeeds).toHaveAttribute("data-seed-count", "10")
+        await expect(jejuSeeds).toHaveAttribute("data-source-type", "editorial-research")
+        await expect(jejuSeeds).toHaveAttribute("data-official-record-count", "none")
+        await expect(jejuSeeds).not.toContainText(/200 official|공식 기록 200/)
+        await jejuSeeds.locator(":scope > summary").click()
+        await expect(jejuSeeds.locator("a[target='_blank']:visible")).toHaveCount(4)
+        const jejuBoundary = jejuSeeds.locator(":scope > div > small")
         await jejuBoundary.scrollIntoViewIfNeeded()
         await expect(jejuBoundary).toBeInViewport()
-
-        await summary.click()
-        await expect(discovery).not.toHaveAttribute("open", "")
-        await seoul.click()
-        await expect(page).toHaveURL(/city=seoul/)
-        await expect(page.getByTestId("ondo-b-map-entry").getByRole("heading", { level: 1 })).toHaveText(locale === "ko" ? "서울" : "Seoul")
+        await expect(discovery).not.toContainText(/Directions|길찾기|Table|테이블|Payment|결제/)
       }
     })
   }

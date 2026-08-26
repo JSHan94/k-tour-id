@@ -91,16 +91,14 @@ test.describe("ONDO B polished Pulse map", () => {
   }
 
   for (const locale of ["en", "ko"] as const) {
-    test(`${locale} 844x390 compact composition and mobile List remain scrollable`, async ({ page }) => {
+    test(`${locale} 844x390 keeps the map first and an explicit mobile List remains scrollable`, async ({ page }) => {
       await page.setViewportSize({ width: 844, height: 390 })
       await seedDirectory(page, locale)
       await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
       const root = page.getByTestId("ondo-b-map-entry")
-      await expect(root).toHaveAttribute("data-effective-view", "list")
-      const landscapePanel = page.getByTestId("ondo-b-list-panel")
-      await expect(landscapePanel).toBeVisible()
-      await landscapePanel.evaluate((node) => { node.scrollTop = 120 })
-      expect(await landscapePanel.evaluate((node) => node.scrollTop)).toBeGreaterThan(0)
+      await expect(root).toHaveAttribute("data-effective-view", "map")
+      await expect(page.getByTestId("maplibre-map")).toBeVisible()
+      await expect(page.getByTestId("ondo-b-list-panel")).toHaveCount(0)
 
       await page.setViewportSize({ width: 390, height: 844 })
       await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })

@@ -13,8 +13,8 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "ONDO — Licensed food-place records in Seoul and Busan",
-  description: "Browse 400 licensed food-service records from the Ministry of the Interior and Safety LOCALDATA snapshot.",
+  title: "ONDO — Korea Pulse map for Seoul, Busan, and Jeju",
+  description: "Browse 400 licensed Seoul and Busan food-service records alongside a separate source-linked Jeju editorial collection.",
   robots: { index: false, follow: false },
 }
 

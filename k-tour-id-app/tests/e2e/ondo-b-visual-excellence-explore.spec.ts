@@ -206,7 +206,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
 
           await gotoB(page, "?city=seoul")
           const map = page.getByTestId("ondo-b-map-entry")
-          if (viewport.height > 390) {
+          if (viewport.height >= 390) {
             await expect(map).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
             await expect(map).toHaveAttribute("data-pulse-markers-readable", "true")
             await screenshot(page, `explore-map-${locale}-${viewport.id}`)
