@@ -528,6 +528,8 @@ test("FLOW7-DATA-010 a thirteenth post is bounded in React and disk before and a
     expect(Object.keys(stored.localPulseEvidenceByVenue)).toHaveLength(12)
     expect(stored.localSignalPostedVenueIds[0]).toBe(VENUE_ID)
     expect(Object.keys(stored.localPulseEvidenceByVenue).sort()).toEqual([...stored.localSignalPostedVenueIds].sort())
+    const place = page.getByTestId("canonical-place-overlay")
+    if (await place.isVisible()) await place.getByRole("button", { name: "Close place" }).click()
     await page.getByTestId("nav-my").click({ force: true })
     await expect(page.locator("[data-testid^='contribution-venue-']")).toHaveCount(12)
     if (phase === "runtime") await page.getByTestId("nav-ondo").click({ force: true })
