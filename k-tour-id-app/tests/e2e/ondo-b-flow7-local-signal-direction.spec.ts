@@ -562,7 +562,7 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   const rowIndex = await rows.evaluateAll((items, venueId) => items.findIndex((item) => item.getAttribute("data-venue-id") === venueId), VENUE_ID)
   expect(rowIndex).toBe(0)
   await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("Pulse 91 · PEAK")
-  await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("24 signals")
+  await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("24 curated signals")
   expect(await targetRow.count()).toBeLessThanOrEqual(1)
   await page.getByTestId("ondo-b-view-toggle").click()
   const accessible = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
