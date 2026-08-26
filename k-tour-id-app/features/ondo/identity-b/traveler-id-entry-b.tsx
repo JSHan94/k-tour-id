@@ -146,7 +146,7 @@ export function TravelerIdEntryB() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.screen} data-testid="ondo-b-traveler-id">
+      <div className={styles.screen} data-testid="ondo-b-traveler-id" data-visual-direction="warm-living-wallet">
         <header className={styles.header}>
           <p>{copy.eyebrow}</p>
           <h1>{copy.title}</h1>

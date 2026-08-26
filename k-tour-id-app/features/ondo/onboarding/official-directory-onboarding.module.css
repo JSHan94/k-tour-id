@@ -943,3 +943,111 @@
   .sourceIntro { margin-top: 15px; }
   .sourceIntro p { padding: 10px 12px; }
 }
+
+/* Warm Living Atlas: Arc-like immediacy with source truth available just in
+   time. The facts remain verbatim inside the disclosure. */
+.layer {
+  --atlas-coral: #b94f3c;
+  --atlas-apricot: #e7a063;
+  --atlas-plum: #713a55;
+  --atlas-ink: #27211e;
+  --atlas-hairline: rgb(78 54 42 / 12%);
+  background:
+    radial-gradient(circle at 94% 8%, rgb(226 132 83 / 15%), transparent 27%),
+    radial-gradient(circle at 5% 88%, rgb(113 58 85 / 8%), transparent 30%),
+    linear-gradient(180deg, #fffaf5 0%, #f7efe6 58%, #f2e8df 100%);
+}
+
+.header {
+  grid-template-columns: 44px minmax(54px, 1fr) auto;
+  gap: 8px;
+}
+
+.language {
+  display: grid;
+  min-width: 144px;
+  height: auto;
+  grid-template-columns: repeat(3, minmax(44px, 1fr));
+  gap: 3px;
+  border: 1px solid var(--atlas-hairline);
+  border-radius: 16px;
+  padding: 3px;
+  background: rgb(255 253 249 / 74%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 90%), 0 8px 20px rgb(70 45 31 / 5%);
+  backdrop-filter: blur(16px);
+}
+
+.language button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #70655e;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 820;
+  letter-spacing: .04em;
+}
+
+.language button[aria-pressed="true"] {
+  background: var(--atlas-ink);
+  color: #fffaf5;
+  box-shadow: 0 7px 16px rgb(48 34 27 / 16%);
+}
+
+.sourceIntro {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--atlas-hairline);
+  border-radius: 17px;
+  background: rgb(255 253 249 / 68%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 88%);
+}
+
+.sourceIntro > summary {
+  display: flex;
+  min-height: 48px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  color: #5f4438;
+  font-size: 12px;
+  font-weight: 820;
+  list-style: none;
+}
+
+.sourceIntro > summary::-webkit-details-marker { display: none; }
+.sourceIntro > summary svg { flex: 0 0 auto; transition: transform 180ms ease; }
+.sourceIntro[open] > summary svg { transform: rotate(90deg); }
+.sourceBody { display: grid; border-top: 1px solid var(--atlas-hairline); }
+.sourceBody p { border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.sourceBody p + p { border-top: 1px solid var(--atlas-hairline); }
+
+@media (max-width: 430px) {
+  .layer { padding-inline: 16px; }
+  .progress { gap: 4px; }
+  .progress i { width: 18px; }
+  .language { min-width: 138px; }
+  .value { justify-content: flex-start; }
+  .value .sourceIntro { order: 2; margin-top: 14px; }
+}
+
+@media (max-width: 340px) {
+  .layer { padding-inline: 12px; }
+  .header { gap: 5px; }
+  .progress i { width: 15px; }
+  .language { min-width: 132px; }
+}
+
+@media (min-width: 700px) {
+  .sourceBody { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sourceBody p + p { border-top: 0; border-left: 1px solid var(--atlas-hairline); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sourceIntro > summary svg,
+  .language button { transition: none; }
+}

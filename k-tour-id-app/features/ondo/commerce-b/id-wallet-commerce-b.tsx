@@ -507,6 +507,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
       data-wallet-status={walletStatus}
       data-benefit-policy={benefitPolicy.status}
       data-locale={locale}
+      data-visual-direction="warm-living-offer"
       onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}
     >
       <header className={styles.offerHeader}>
@@ -635,7 +636,7 @@ export function IdWalletCommerceB() {
   }
 
   return (
-    <section className={styles.root} data-testid="ondo-b-id-wallet-commerce" data-wallet={walletStatus} aria-labelledby="id-wallet-commerce-title">
+    <section className={styles.root} data-testid="ondo-b-id-wallet-commerce" data-wallet={walletStatus} data-visual-direction="warm-living-wallet" aria-labelledby="id-wallet-commerce-title">
       <div className={styles.heading}><p>{copy.eyebrow}</p><h2 id="id-wallet-commerce-title">{copy.title}</h2><span>{copy.body}</span></div>
 
       <section className={styles.balanceCard} data-testid="wallet-balance">

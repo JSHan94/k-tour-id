@@ -187,7 +187,7 @@ export function SavedEntryB() {
   }
 
   return (
-    <div className={styles.screen} data-testid="ondo-b-my-korea-entry">
+    <div className={styles.screen} data-testid="ondo-b-my-korea-entry" data-visual-direction="warm-living-atlas">
       <header className={styles.header}>
         <p>{copy.eyebrow}</p>
         <h1>{copy.title}</h1>
@@ -195,6 +195,18 @@ export function SavedEntryB() {
       </header>
 
       <div className={styles.activitySections}>
+        <section className={styles.activitySection} data-testid="my-korea-planned" aria-labelledby="my-korea-planned-heading">
+          <div className={styles.activityHeading}><CalendarDays size={19} aria-hidden="true" /><span><h2 id="my-korea-planned-heading">{copy.plannedTitle}</h2><p>{copy.plannedBody}</p></span></div>
+          {planned.length === 0 ? <ActivityEmpty testId="my-korea-planned-empty" title={copy.plannedEmpty} body={copy.plannedEmptyBody} /> : (
+            <div className={styles.referenceList}>
+              {planned.map(({ reference, table, venue }) => {
+                const localizedTable = locale === "ja" ? JA_TABLE_COPY[reference.tableId] : { title: table.title[locale], schedule: table.schedule[locale] }
+                return <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{localizedTable.title}</h3><p>{localizedTable.schedule} · {personalVenueName(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>
+              })}
+            </div>
+          )}
+        </section>
+
         <section className={styles.activitySection} data-testid="ondo-b-saved-entry" aria-labelledby="my-korea-saved-heading">
           <div className={styles.activityHeading}><Bookmark size={19} aria-hidden="true" /><span><h2 id="my-korea-saved-heading">{copy.savedTitle}</h2><p>{copy.savedBody}</p></span></div>
           {saved.length === 0 ? (
@@ -238,18 +250,6 @@ export function SavedEntryB() {
               {recent.map((venue) => {
                 const name = personalVenueName(venue.name.ko, locale)
                 return <button key={venue.id} type="button" className={styles.referenceCard} data-testid={`recent-venue-${venue.id}`} onClick={() => openVenue(venue.id, venue.cityId)}><MapPin size={18} aria-hidden="true" /><span><strong>{name.officialName}</strong><small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)} · {copy.viewed}</small></span><ChevronRight size={18} aria-hidden="true" /></button>
-              })}
-            </div>
-          )}
-        </section>
-
-        <section className={styles.activitySection} data-testid="my-korea-planned" aria-labelledby="my-korea-planned-heading">
-          <div className={styles.activityHeading}><CalendarDays size={19} aria-hidden="true" /><span><h2 id="my-korea-planned-heading">{copy.plannedTitle}</h2><p>{copy.plannedBody}</p></span></div>
-          {planned.length === 0 ? <ActivityEmpty testId="my-korea-planned-empty" title={copy.plannedEmpty} body={copy.plannedEmptyBody} /> : (
-            <div className={styles.referenceList}>
-              {planned.map(({ reference, table, venue }) => {
-                const localizedTable = locale === "ja" ? JA_TABLE_COPY[reference.tableId] : { title: table.title[locale], schedule: table.schedule[locale] }
-                return <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{localizedTable.title}</h3><p>{localizedTable.schedule} · {personalVenueName(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>
               })}
             </div>
           )}

@@ -139,7 +139,7 @@ export function SettingsEntryB() {
   }
 
   return (
-    <div className={styles.screen} data-testid="ondo-b-settings-entry">
+    <div className={styles.screen} data-testid="ondo-b-settings-entry" data-visual-direction="warm-living-atlas">
       <header className={styles.header}>
         <p>{copy.eyebrow}</p>
         <h1>{copy.title}</h1>
@@ -148,7 +148,7 @@ export function SettingsEntryB() {
 
       <section className={styles.settingsSection} aria-labelledby="b-language-heading">
         <div className={styles.sectionHeading}><Languages size={18} aria-hidden="true" /><h2 id="b-language-heading">{copy.language}</h2></div>
-        <div className={styles.segmented} role="group" aria-label={copy.language} style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+        <div className={styles.segmented} role="group" aria-label={copy.language} data-testid="settings-language-control">
           <button type="button" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
           <button type="button" aria-pressed={locale === "ko"} onClick={() => setLocale("ko")}>한국어</button>
           <button type="button" aria-pressed={locale === "ja"} onClick={() => setLocale("ja")}>日本語</button>

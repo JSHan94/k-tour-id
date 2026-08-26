@@ -289,3 +289,119 @@
   .settingsDisclosure > summary > svg { transition: none; }
   .confirmLayer { backdrop-filter: none; }
 }
+
+/* Warm Living Atlas personal surfaces. My Korea reads as a trip route and
+   Settings as calm native groups rather than nested administration cards. */
+.screen {
+  --atlas-route: linear-gradient(180deg, #bb513d 0%, #de9b5d 38%, #74415c 70%, #3f7863 100%);
+  --settings-group-material: rgb(255 253 249 / 88%);
+  --atlas-ceramic-shadow: 0 18px 46px rgb(58 39 28 / 8%);
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] {
+  background:
+    radial-gradient(circle at 92% 7%, rgb(222 135 80 / 15%), transparent 24%),
+    radial-gradient(circle at 2% 76%, rgb(113 58 85 / 8%), transparent 28%),
+    linear-gradient(180deg, #fffaf5 0%, #f5ede4 62%, #eee5dc 100%);
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before {
+  width: 3px;
+  background: var(--atlas-route);
+  box-shadow: 0 0 0 6px rgb(255 250 245 / 72%);
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection {
+  border-color: rgb(255 255 255 / 84%);
+  background: linear-gradient(150deg, rgb(255 254 251 / 97%), rgb(248 242 235 / 92%));
+  box-shadow: var(--atlas-ceramic-shadow), inset 0 0 0 1px rgb(79 55 42 / 4%);
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] {
+  border-color: rgb(203 121 67 / 17%);
+  background:
+    radial-gradient(circle at 94% 8%, rgb(229 162 91 / 23%), transparent 32%),
+    linear-gradient(145deg, #fffaf1, #f7eadb);
+  box-shadow: 0 22px 52px rgb(93 56 34 / 11%), inset 0 1px 0 rgb(255 255 255 / 92%);
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] .activityHeading > svg {
+  background: #322924;
+  color: #fff8ef;
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty,
+.screen[data-testid="ondo-b-my-korea-entry"] .savedCard,
+.screen[data-testid="ondo-b-my-korea-entry"] .referenceCard {
+  border-color: rgb(76 55 44 / 9%);
+  background: rgb(255 255 255 / 56%);
+}
+
+.screen[data-testid="ondo-b-settings-entry"] {
+  background:
+    radial-gradient(circle at 94% 5%, rgb(204 102 72 / 10%), transparent 25%),
+    linear-gradient(180deg, #fbf8f4 0%, #f1ebe5 100%);
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .settingsSection {
+  overflow: hidden;
+  border: 1px solid rgb(70 52 43 / 10%);
+  border-radius: 22px;
+  padding: 0;
+  background: var(--settings-group-material);
+  box-shadow: none;
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .settingsSection > .sectionHeading {
+  min-height: 55px;
+  padding: 0 16px;
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg {
+  border-radius: 11px;
+  background: #f1e7df;
+  color: #754335;
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .segmented {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 12px 13px;
+  background: #eee7e1;
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .settingsDisclosure {
+  margin: 0;
+  border-top: 1px solid rgb(70 52 43 / 8%);
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .settingsDisclosure > summary {
+  min-height: 62px;
+  padding: 8px 16px;
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .settingsDisclosure > summary small {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.screen[data-testid="ondo-b-settings-entry"] .settingsDisclosureBody {
+  padding: 2px 16px 16px;
+}
+
+@media (max-width: 430px) {
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections { padding-left: 15px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection { border-radius: 20px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] { order: -5; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-receipts"] { order: -4; }
+  .screen[data-testid="ondo-b-settings-entry"] .settingsSection { border-radius: 20px; }
+}
+
+@media (min-width: 900px) {
+  .screen[data-testid="ondo-b-settings-entry"] {
+    grid-template-columns: minmax(300px, .76fr) minmax(0, 1.24fr);
+    column-gap: 24px;
+  }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(3) { grid-column: 2; grid-row: 3; }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(1) { grid-row: 2 / span 2; }
+}

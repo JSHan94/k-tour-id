@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useMemo, useEffect, useRef, useState } from "react"
-import { ArrowRight, CalendarDays, Check, ChevronLeft, Compass, Database, Languages, NotebookPen } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, Database, NotebookPen } from "lucide-react"
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "../shared/state/ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -51,6 +51,7 @@ const COPY = {
     category: "The 200 records in each city come from the Ministry of the Interior and Safety LOCALDATA source. Categories use only each record’s official business type.",
     boundaryLabel: "Coverage boundary",
     boundary: "The source confirms an active licence at its Aug 19, 2026 snapshot. Current hours, menu, popularity, price and payment support are not provided.",
+    sourceSummary: "Official source · what it confirms",
     start: "Get started",
     guest: "Explore as a guest",
     intentTitle: "What brings you to ONDO?",
@@ -76,6 +77,7 @@ const COPY = {
     category: "각 도시 200개 기록은 행정안전부 LOCALDATA 출처에서 가져오며, 분류는 공식 업태구분명만을 사용합니다.",
     boundaryLabel: "확인 범위",
     boundary: "출처는 2026년 8월 19일 기준 유효 인허가 상태를 확인합니다. 현재 영업시간·메뉴·인기도·가격·결제 지원은 제공하지 않습니다.",
+    sourceSummary: "공식 출처 · 확인 범위",
     start: "시작하기",
     guest: "게스트로 탐색",
     intentTitle: "어떤 목적으로 ONDO를 찾았나요?",
@@ -101,6 +103,7 @@ const COPY = {
     category: "各都市200件の記録は韓国行政安全部のLOCALDATAを出典とし、分類には公式の業種名のみを使用しています。",
     boundaryLabel: "確認できる範囲",
     boundary: "出典日時点（2026年8月19日）の有効な営業許可を示します。現在の営業時間、メニュー、人気、価格、決済対応は確認できません。",
+    sourceSummary: "公式出典 · 確認できる範囲",
     start: "はじめる",
     guest: "ゲストで見る",
     intentTitle: "ONDOを使う目的は？",
@@ -117,19 +120,12 @@ const COPY = {
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
-const NEXT_LANGUAGE: Record<OndoBLocale, { locale: OndoBLocale; label: string; short: string }> = {
-  en: { locale: "ja", label: "日本語で表示", short: "JA" },
-  ja: { locale: "ko", label: "한국어로 보기", short: "KO" },
-  ko: { locale: "en", label: "View in English", short: "EN" },
-}
-
 export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
   const [step, setStep] = useState<Step>("value")
   const [preferences, setPreferences] = useState<OndoBDiscoveryPreference[]>([])
   const dialogRef = useRef<HTMLElement>(null)
   const copy = COPY[state.locale]
-  const nextLanguage = NEXT_LANGUAGE[state.locale]
   const stepIndex = useMemo(() => ({ value: 1, intent: 2, preferences: 3 })[step], [step])
 
   useEffect(() => {
@@ -243,14 +239,11 @@ export function OfficialDirectoryOnboardingLayer() {
           >
             {[1, 2, 3].map((item) => <i key={item} className={item <= stepIndex ? styles.progressActive : undefined} />)}
           </div>
-          <button
-            type="button"
-            className={styles.language}
-            onClick={() => actions.setLocale(nextLanguage.locale)}
-            aria-label={nextLanguage.label}
-          >
-            <Languages size={15} aria-hidden="true" />{nextLanguage.short}
-          </button>
+          <div className={styles.language} role="group" aria-label="Language / 언어 / 言語" data-testid="onboarding-language-control">
+            <button type="button" data-locale-choice="en" aria-label="View in English" aria-pressed={state.locale === "en"} onClick={() => actions.setLocale("en")}>EN</button>
+            <button type="button" data-locale-choice="ko" aria-label="한국어로 보기" aria-pressed={state.locale === "ko"} onClick={() => actions.setLocale("ko")}>KO</button>
+            <button type="button" data-locale-choice="ja" aria-label="日本語で表示" aria-pressed={state.locale === "ja"} onClick={() => actions.setLocale("ja")}>JA</button>
+          </div>
         </header>
 
         {step === "value" ? (
@@ -259,10 +252,13 @@ export function OfficialDirectoryOnboardingLayer() {
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
-            <section className={styles.sourceIntro} aria-label={({ en: "Official source and coverage boundary", ko: "공식 출처와 확인 범위", ja: "公式出典と確認範囲" } as const)[state.locale]}>
-              <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
-              <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
-            </section>
+            <details className={styles.sourceIntro} data-testid="onboarding-source-boundary">
+              <summary>{copy.sourceSummary}<ChevronRight size={16} aria-hidden="true" /></summary>
+              <div className={styles.sourceBody}>
+                <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
+                <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
+              </div>
+            </details>
             <div className={styles.actions}>
               <button
                 type="button"
