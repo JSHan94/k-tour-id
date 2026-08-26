@@ -73,8 +73,8 @@ test.describe("ONDO Explore visual-excellence R2 composition", () => {
       await gotoB(page)
 
       const value = page.getByTestId("onboarding-step-value")
-      const primary = value.getByRole("button", { name: locale === "ko" ? "시작하기" : "Get started", exact: true })
-      const secondary = value.getByRole("button", { name: locale === "ko" ? "게스트로 탐색" : "Explore as a guest", exact: true })
+      const primary = value.getByRole("button", { name: locale === "ko" ? "취향 설정 후 게스트 탐색" : "Personalize guest Explore", exact: true })
+      const secondary = value.getByRole("button", { name: locale === "ko" ? "설정 없이 탐색" : "Explore without setup", exact: true })
       const source = value.locator("section")
       const metrics = await value.evaluate((element) => {
         const actionGroup = element.querySelector("button[data-onboarding-initial-focus]")!.parentElement!

@@ -349,7 +349,7 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
 
     const onboarding = page.getByTestId("ondo-onboarding")
     const assertReturned = await expectSiblingModalLocksShell(page, onboarding, 0)
-    await onboarding.getByRole("button", { name: "Explore as a guest" }).click()
+    await onboarding.getByRole("button", { name: "Explore without setup" }).click()
     await assertReturned()
     await expect(scroll).toHaveAttribute("data-active-tab", "ondo")
     await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBe(0)

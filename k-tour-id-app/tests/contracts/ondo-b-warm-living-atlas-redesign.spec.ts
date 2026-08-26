@@ -25,7 +25,7 @@ test("ATLAS-001 onboarding offers direct three-language choice and folds source 
   }
   expect(onboarding).toContain('data-testid="onboarding-source-boundary"')
   expect(onboarding).toMatch(/<details[^>]+className=\{styles\.sourceIntro\}/)
-  expect(onboardingStyles).toContain("--atlas-coral")
+  expect(onboardingStyles).toContain("--arc-coral")
 })
 
 test("ATLAS-002 My Korea starts with the travel plan and carries the Living Atlas direction", () => {

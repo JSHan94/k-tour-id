@@ -12,8 +12,8 @@ import {
 
 const COPY = {
   en: {
-    start: "Get started",
-    guest: "Explore as a guest",
+    start: "Personalize guest Explore",
+    guest: "Explore without setup",
     preferences: "Choose meal preferences",
     fallback: "Open map with defaults",
     accountStart: "Create account · Simulated",
@@ -26,8 +26,8 @@ const COPY = {
     after19Prompt: "Confirm 19+",
   },
   ko: {
-    start: "시작하기",
-    guest: "먼저 둘러보기",
+    start: "취향 설정 후 게스트 탐색",
+    guest: "설정 없이 탐색",
     preferences: "한 끼 취향 고르기",
     fallback: "기본 설정으로 지도 열기",
     accountStart: "계정 만들기 · 시뮬레이션",

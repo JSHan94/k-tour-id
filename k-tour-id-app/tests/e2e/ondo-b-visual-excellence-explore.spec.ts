@@ -311,7 +311,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await gotoB(page)
     expect(await page.getByTestId("onboarding-step-value").evaluate((element) => getComputedStyle(element).animationName)).toBe("none")
-    await page.getByRole("button", { name: "Explore as a guest", exact: true }).click()
+    await page.getByRole("button", { name: "Explore without setup", exact: true }).click()
     await openCanonicalVenue(page, { expanded: false })
     expect(await page.getByTestId("canonical-place-peek").evaluate((element) => getComputedStyle(element).animationName)).toBe("none")
   })

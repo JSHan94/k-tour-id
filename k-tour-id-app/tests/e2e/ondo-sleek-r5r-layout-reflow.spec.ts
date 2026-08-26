@@ -149,7 +149,7 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
       const onboardingBox = await box(page.getByTestId("ondo-onboarding"))
       expect(onboardingBox.width).toBeLessThanOrEqual(430.5)
       expect(Math.abs((onboardingBox.x + onboardingBox.width / 2) - (canvasBox.x + canvasBox.width / 2))).toBeLessThanOrEqual(1)
-      await page.getByRole("button", { name: locale === "ko" ? "먼저 둘러보기" : "Explore as a guest" }).click()
+      await page.getByRole("button", { name: locale === "ko" ? "설정 없이 탐색" : "Explore without setup" }).click()
 
       await gotoB(page, "?city=seoul&view=list")
       await page.getByTestId("ondo-b-venue-list").getByRole("button").first().click()
@@ -196,7 +196,7 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
       sessionStorage.removeItem("ondo.session.v3")
     })
     await gotoB(page)
-    const primary = page.getByRole("button", { name: "Get started" })
+    const primary = page.getByRole("button", { name: "Personalize guest Explore" })
 
     const idle = await primary.evaluate((element) => ({ filter: getComputedStyle(element).filter, transform: getComputedStyle(element).transform }))
     await primary.hover()

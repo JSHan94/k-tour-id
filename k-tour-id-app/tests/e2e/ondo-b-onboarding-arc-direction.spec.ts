@@ -40,6 +40,48 @@ async function openFresh(browser: Browser, locale: Locale, profile: (typeof PROF
   return { context, page }
 }
 
+async function openCompleted(browser: Browser, locale: Locale, profile: (typeof PROFILES)[number]) {
+  const context = await browser.newContext({ viewport: profile })
+  const page = await context.newPage()
+  await page.addInitScript(({ key, language }) => {
+    const venueId = "mois-0021cd596bc5b2a922ad"
+    localStorage.setItem(key, JSON.stringify({
+      locale: language,
+      onboarding: "ONB-COMPLETE",
+      persona: "travelling",
+      discoveryPreferences: ["classic"],
+      savedVenueIds: [venueId],
+      privateNotesByVenue: { [venueId]: "Keep this note" },
+      recentVenueIds: [venueId],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+  }, { key: DEVICE_KEY, language: locale })
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
+  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await expect(page.locator("html")).toHaveAttribute("lang", locale)
+  await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+  return { context, page }
+}
+
+async function failNextDeviceWrite(page: Page) {
+  await page.evaluate((key) => {
+    const original = Storage.prototype.setItem
+    let rejected = false
+    Storage.prototype.setItem = function (name: string, value: string) {
+      if (name === key && !rejected) {
+        rejected = true
+        throw new DOMException("Quota exceeded", "QuotaExceededError")
+      }
+      return original.call(this, name, value)
+    }
+  }, DEVICE_KEY)
+}
+
 async function rect(locator: Locator) {
   const value = await locator.boundingBox()
   expect(value).not.toBeNull()
@@ -182,28 +224,94 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
     const preferences = page.getByTestId("onboarding-step-preferences")
     const choice = preferences.getByRole("button", { name: "Local classics", exact: true })
     await choice.click()
-    await page.evaluate((key) => {
-      const original = Storage.prototype.setItem
-      let rejected = false
-      Storage.prototype.setItem = function (name: string, value: string) {
-        if (name === key && !rejected) {
-          rejected = true
-          throw new DOMException("Quota exceeded", "QuotaExceededError")
-        }
-        return original.call(this, name, value)
-      }
-    }, DEVICE_KEY)
+    await failNextDeviceWrite(page)
     await preferences.getByTestId("onboarding-finish").click()
     await expect(preferences).toBeVisible()
     await expect(choice).toHaveAttribute("aria-pressed", "true")
-    await expect(page.getByTestId("ondo-toast")).toBeVisible()
-    await expect(preferences.getByTestId("onboarding-save-status")).toBeVisible()
-    await page.waitForTimeout(2_300)
     await expect(page.getByTestId("ondo-toast")).toHaveCount(0)
+    await expect(preferences.getByTestId("onboarding-save-status")).toBeVisible()
+    expect(await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)).toMatchObject({
+      onboarding: "ONB-NEW",
+      discoveryPreferences: [],
+    })
+    await page.waitForTimeout(2_300)
     await expect(preferences.getByTestId("onboarding-save-status")).toBeVisible()
     await expectInsideViewport(page, preferences.getByTestId("onboarding-finish"))
     await preferences.getByTestId("onboarding-finish").click()
     await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+    await context.close()
+  })
+
+  for (const locale of ["en", "ko", "ja"] as const) {
+    test(`${locale.toUpperCase()} skip and Escape failure retain the draft across the viewport matrix`, async ({ browser }) => {
+      for (const profile of PROFILES) {
+        const { context, page } = await openFresh(browser, locale, profile)
+        const dialog = page.getByTestId("ondo-onboarding")
+        await page.getByTestId("onboarding-step-value").locator("button").first().click()
+        await page.getByTestId("persona-travelling").click()
+        await page.getByTestId("onboarding-step-intent").locator("button").nth(3).click()
+        const preferences = page.getByTestId("onboarding-step-preferences")
+        const choice = preferences.locator(".chips button, button[aria-pressed]").first()
+        await choice.click()
+        await failNextDeviceWrite(page)
+        await choice.focus()
+        await page.keyboard.press("Escape")
+        await expect(dialog).toBeVisible()
+        await expect(dialog).toHaveAttribute("data-onboarding-step", "preferences")
+        await expect(choice).toHaveAttribute("aria-pressed", "true")
+        await expect(preferences.getByTestId("onboarding-save-status")).toBeVisible()
+        await expectInsideViewport(page, preferences.getByTestId("onboarding-save-status"))
+        await expectInsideViewport(page, preferences.locator("button").last())
+        await capture(page, locale, profile, "skip-failure")
+        await preferences.locator("button").last().click()
+        await expect(dialog).toHaveCount(0)
+        await context.close()
+      }
+    })
+
+    test(`${locale.toUpperCase()} Settings reset failure and recovery preserve local content`, async ({ browser }) => {
+      for (const profile of PROFILES) {
+        const { context, page } = await openCompleted(browser, locale, profile)
+        await page.getByTestId("nav-settings").click()
+        const disclosure = page.getByTestId("ondo-b-discovery-settings")
+        await disclosure.locator(":scope > summary").click()
+        const reset = page.getByTestId("ondo-b-onboarding-reset")
+        await reset.scrollIntoViewIfNeeded()
+        await failNextDeviceWrite(page)
+        await reset.click()
+        const status = page.getByTestId("ondo-b-onboarding-reset-status")
+        await expect(status).toBeVisible()
+        await expectInsideViewport(page, status)
+        await expectInsideViewport(page, reset)
+        await expect(page.getByTestId("ondo-toast")).toHaveCount(0)
+        await capture(page, locale, profile, "reset-failure")
+        await reset.click()
+        const dialog = page.getByTestId("ondo-onboarding")
+        await expect(dialog).toBeVisible()
+        await expect(page.locator("html")).toHaveAttribute("lang", locale)
+        await expect(dialog.locator("[data-onboarding-initial-focus]")).toBeFocused()
+        const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
+        expect(stored).toMatchObject({
+          locale,
+          onboarding: "ONB-NEW",
+          persona: null,
+          discoveryPreferences: [],
+          savedVenueIds: ["mois-0021cd596bc5b2a922ad"],
+          recentVenueIds: ["mois-0021cd596bc5b2a922ad"],
+        })
+        await capture(page, locale, profile, "reset-reentry")
+        await context.close()
+      }
+    })
+  }
+
+  test("malformed device JSON fails closed while retaining a Japanese browser locale", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: PROFILES[1], locale: "ja-JP" })
+    const page = await context.newPage()
+    await page.addInitScript((key) => localStorage.setItem(key, "{malformed"), DEVICE_KEY)
+    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await expect(page.locator("html")).toHaveAttribute("lang", "ja")
+    await expect(page.getByTestId("onboarding-step-value")).toContainText("好みを設定してゲストで見る")
     await context.close()
   })
 })

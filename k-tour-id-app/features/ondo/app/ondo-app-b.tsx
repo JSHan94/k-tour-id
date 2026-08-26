@@ -202,7 +202,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
           ))}
         </nav>
         {slots.overlays}
-        {state.toast ? <div className={styles.toast} data-testid="ondo-toast" role="status">{state.toast}</div> : null}
+        {state.toast && !onboardingActive ? <div className={styles.toast} data-testid="ondo-toast" role="status">{state.toast}</div> : null}
       </section>
     </main>
   )

@@ -15,7 +15,8 @@ test("B-ONBOARDING-RESTORE-001 production B owns a three-step guest onboarding c
   expect(onboarding).toContain('data-testid="onboarding-step-intent"')
   expect(onboarding).toContain('data-testid="onboarding-step-preferences"')
   expect(onboarding).toContain('data-testid="onboarding-finish"')
-  expect(onboarding).toContain("Explore as a guest")
+  expect(onboarding).toContain("Personalize guest Explore")
+  expect(onboarding).toContain("Explore without setup")
   expect(onboarding).toContain("건너뛰고 탐색")
 })
 
@@ -41,7 +42,8 @@ test("B-ONBOARDING-RESTORE-003 onboarding state is a local-device allowlist with
   expect(preferences).toContain('export type OndoBPersona = "travelling" | "preparing" | "local_contributor"')
   expect(provider).toContain("persona: OndoBPersona | null")
   expect(provider).toContain("setPersona(persona: OndoBPersona): void")
-  expect(provider).toContain("resetOnboarding(): void")
+  expect(provider).toContain("completeOnboarding(preferences: OndoBDiscoveryPreference[]): boolean")
+  expect(provider).toContain("resetOnboarding(): boolean")
   expect(provider).toContain("persona: ONDO_B_PERSONAS.has(record.persona as OndoBPersona)")
   expect(settings).toContain("actions.resetOnboarding()")
 

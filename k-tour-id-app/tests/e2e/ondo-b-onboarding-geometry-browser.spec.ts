@@ -51,10 +51,10 @@ test.describe("ONDO B onboarding exit geometry", () => {
   test("Guest and Skip actions are fully actionable before scrolling", async ({ page }) => {
     await resetAndOpenOnboarding(page)
 
-    await expectFullyActionable(page.getByRole("button", { name: "Get started" }))
-    await expectFullyActionable(page.getByRole("button", { name: "Explore as a guest" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Personalize guest Explore" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Explore without setup" }))
 
-    await page.getByRole("button", { name: "Get started" }).click()
+    await page.getByRole("button", { name: "Personalize guest Explore" }).click()
     const personas = page.locator("[data-testid^='persona-']")
     await expect(personas).toHaveCount(3)
     for (let index = 0; index < 3; index += 1) await expectFullyActionable(personas.nth(index))
@@ -71,7 +71,7 @@ test.describe("ONDO B onboarding exit geometry", () => {
   test("the onboarding layer remains scrollable in a constrained viewport", async ({ page }, testInfo) => {
     await page.setViewportSize({
       width: testInfo.project.name === "mobile-chromium" ? 390 : 1440,
-      height: 620,
+      height: 460,
     })
     await resetAndOpenOnboarding(page)
 
@@ -83,6 +83,6 @@ test.describe("ONDO B onboarding exit geometry", () => {
 
     await layer.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await expect.poll(() => layer.evaluate((element) => element.scrollTop > 0)).toBe(true)
-    await expectFullyActionable(page.getByRole("button", { name: "Explore as a guest" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Explore without setup" }))
   })
 })

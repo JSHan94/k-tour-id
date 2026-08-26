@@ -22,7 +22,7 @@ async function storedDevice(page: Page) {
 for (const persona of PERSONAS) {
   test(`B onboarding completes the ${persona} intent into the same guest Explore`, async ({ page }) => {
     await openFresh(page)
-    await page.getByRole("button", { name: "Get started", exact: true }).click()
+    await page.getByRole("button", { name: "Personalize guest Explore", exact: true }).click()
     await page.getByTestId(`persona-${persona}`).click()
     await page.getByRole("button", { name: "Choose food preferences", exact: true }).click()
     await page.getByRole("button", { name: "Local classics", exact: true }).click()
@@ -51,7 +51,7 @@ for (const persona of PERSONAS) {
 
 test("B onboarding skip is persisted and remains an ungated guest Explore path", async ({ page }) => {
   await openFresh(page)
-  await page.getByRole("button", { name: "Explore as a guest", exact: true }).click()
+  await page.getByRole("button", { name: "Explore without setup", exact: true }).click()
 
   await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
@@ -65,7 +65,7 @@ test("B onboarding skip is persisted and remains an ungated guest Explore path",
 test("B onboarding is fully Korean and resettable from local-device Settings", async ({ page }) => {
   await openFresh(page)
   await page.getByRole("button", { name: "한국어로 보기", exact: true }).click()
-  await page.getByRole("button", { name: "시작하기", exact: true }).click()
+  await page.getByRole("button", { name: "취향 설정 후 게스트 탐색", exact: true }).click()
   await page.getByTestId("persona-preparing").click()
   await page.getByRole("button", { name: "음식 취향 고르기", exact: true }).click()
   await expect(page.getByRole("heading", { name: "어떤 음식과 식이 조건을 찾고 있나요?" })).toBeVisible()
@@ -76,7 +76,7 @@ test("B onboarding is fully Korean and resettable from local-device Settings", a
   await page.getByTestId("ondo-b-discovery-settings").locator(":scope > summary").click()
   await page.getByTestId("ondo-b-onboarding-reset").click()
   await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
-  await expect(page.getByRole("button", { name: "시작하기", exact: true })).toBeFocused()
+  await expect(page.getByRole("button", { name: "취향 설정 후 게스트 탐색", exact: true })).toBeFocused()
   expect(await storedDevice(page)).toMatchObject({
     locale: "ko",
     onboarding: "ONB-NEW",
@@ -89,10 +89,11 @@ test("B onboarding traps keyboard focus and remains usable in short landscape", 
   await page.setViewportSize({ width: 844, height: 390 })
   await openFresh(page)
   const dialog = page.getByTestId("ondo-onboarding")
-  const start = page.getByRole("button", { name: "Get started", exact: true })
-  const skip = page.getByRole("button", { name: "Explore as a guest", exact: true })
+  const start = page.getByRole("button", { name: "Personalize guest Explore", exact: true })
+  const skip = page.getByRole("button", { name: "Explore without setup", exact: true })
   const firstLanguage = page.getByRole("button", { name: "View in English", exact: true })
   const lastLanguage = page.getByRole("button", { name: "日本語で表示", exact: true })
+  const sourceSummary = page.getByTestId("onboarding-source-boundary").locator(":scope > summary")
 
   await expect(dialog).toBeFocused()
   await expect(dialog.getByRole("heading", { level: 1 })).toBeVisible()
@@ -105,6 +106,8 @@ test("B onboarding traps keyboard focus and remains usable in short landscape", 
   await page.keyboard.press("Tab")
   await expect(start).toBeFocused()
   await skip.focus()
+  await page.keyboard.press("Tab")
+  await expect(sourceSummary).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(firstLanguage).toBeFocused()
 

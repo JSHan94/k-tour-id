@@ -114,7 +114,7 @@ test.describe("R5R onboarding tablet backdrop isolation", () => {
         await openFreshOnboarding(page, locale, viewport)
         await expectBackdropIsolation(page)
 
-        await page.getByRole("button", { name: locale === "ko" ? "시작하기" : "Get started", exact: true }).click()
+        await page.getByRole("button", { name: locale === "ko" ? "취향 설정 후 게스트 탐색" : "Personalize guest Explore", exact: true }).click()
         await expect(page.getByTestId("onboarding-step-intent")).toBeVisible()
         await expectBackdropIsolation(page)
 
@@ -142,8 +142,8 @@ test.describe("R5R onboarding tablet backdrop isolation", () => {
   test("Escape takes the guest path and reduced motion removes persona transitions", async ({ page }) => {
     await openFreshOnboarding(page, "en", { width: 768, height: 1024 })
     const dialog = page.getByTestId("ondo-onboarding")
-    const exit = dialog.getByRole("button", { name: "Explore as a guest", exact: true })
-    await expect(dialog.getByRole("button", { name: "Get started", exact: true })).toBeFocused()
+    const exit = dialog.getByRole("button", { name: "Explore without setup", exact: true })
+    await expect(dialog.getByRole("button", { name: "Personalize guest Explore", exact: true })).toBeFocused()
     await exit.focus()
     await page.keyboard.press("Tab")
     await expect(dialog.getByRole("button", { name: "KO", exact: true })).toBeFocused()
@@ -152,7 +152,7 @@ test.describe("R5R onboarding tablet backdrop isolation", () => {
     await expect(page.getByTestId("ondo-b-nation").locator("[data-city='seoul']")).toBeFocused()
 
     await openFreshOnboarding(page, "en", { width: 768, height: 1024 })
-    await dialog.getByRole("button", { name: "Get started", exact: true }).click()
+    await dialog.getByRole("button", { name: "Personalize guest Explore", exact: true }).click()
     await page.emulateMedia({ reducedMotion: "reduce" })
     await expect(page.getByTestId("persona-short_term")).toHaveCSS("transition-duration", "0s")
   })

@@ -20,6 +20,7 @@ const COPY = {
     choicesBoundary: "These choices shape discovery context only. They never hide places or claim support that official records do not confirm.",
     resetBoundary: "Restarting setup keeps your saved places and activity.",
     reset: "Set up ONDO again",
+    resetFailed: "Setup could not be reset. Check browser storage and try again.",
     data: "Data in this browser",
     stored: "Stored on this device",
     reviewData: "Review storage and clear content",
@@ -43,6 +44,7 @@ const COPY = {
     choicesBoundary: "이 선택은 추천 맥락만 조정합니다. 공식 기록에서 지원 여부가 확인되지 않은 장소를 숨기거나 지원 장소로 표시하지 않아요.",
     resetBoundary: "처음 설정을 다시 해도 저장한 장소와 활동은 유지됩니다.",
     reset: "ONDO 다시 설정하기",
+    resetFailed: "시작 설정을 초기화하지 못했어요. 브라우저 저장 공간을 확인한 뒤 다시 시도해 주세요.",
     data: "이 브라우저의 데이터",
     stored: "이 기기에만 저장",
     reviewData: "저장 범위와 삭제 관리",
@@ -66,6 +68,7 @@ const COPY = {
     choicesBoundary: "これらの選択は探索の文脈だけを調整します。公式記録で対応が確認されていない場所を隠したり、対応済みと表示したりすることはありません。",
     resetBoundary: "初期設定をやり直しても、保存した場所とアクティビティは残ります。",
     reset: "ONDOをもう一度設定",
+    resetFailed: "初期設定をリセットできませんでした。ブラウザの保存容量を確認して、もう一度お試しください。",
     data: "このブラウザのデータ",
     stored: "この端末にのみ保存",
     reviewData: "保存範囲の確認と削除",
@@ -118,7 +121,9 @@ function DeviceClearConfirmation({ locale, onCancel, onConfirm }: {
 export function SettingsEntryB() {
   const { state, actions } = useOndoB()
   const [clearOpen, setClearOpen] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
   const clearButtonRef = useRef<HTMLButtonElement>(null)
+  const resetButtonRef = useRef<HTMLButtonElement>(null)
   const locale = state.locale
   const copy = COPY[locale]
   const selectedPreferenceCount = state.discoveryPreferences.length
@@ -176,7 +181,14 @@ export function SettingsEntryB() {
             </div>
             <div className={styles.setupReset}>
               <p>{copy.resetBoundary}</p>
-              <button type="button" onClick={() => actions.resetOnboarding()} data-testid="ondo-b-onboarding-reset">
+              {resetError ? <p className={styles.settingsInlineAlert} role="alert" data-testid="ondo-b-onboarding-reset-status">{resetError}</p> : null}
+              <button ref={resetButtonRef} type="button" onClick={() => {
+                setResetError(null)
+                if (!actions.resetOnboarding()) {
+                  setResetError(copy.resetFailed)
+                  window.requestAnimationFrame(() => resetButtonRef.current?.scrollIntoView({ block: "nearest" }))
+                }
+              }} data-testid="ondo-b-onboarding-reset">
                 <RotateCcw size={17} aria-hidden="true" />
                 {copy.reset}
               </button>

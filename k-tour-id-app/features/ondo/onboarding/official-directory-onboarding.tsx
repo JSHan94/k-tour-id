@@ -11,7 +11,7 @@ import styles from "./official-directory-onboarding.module.css"
 
 type Step = "value" | "intent" | "preferences"
 
-const FOCUSABLE = "a[href],button:not([disabled]),input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
+const FOCUSABLE = "a[href],button:not([disabled]),summary,input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
 const PERSONAS: ReadonlyArray<{
   id: OndoBPersona
@@ -52,8 +52,8 @@ const COPY = {
     boundaryLabel: "Coverage boundary",
     boundary: "The source confirms an active licence at its Aug 19, 2026 snapshot. Current hours, menu, popularity, price and payment support are not provided.",
     sourceSummary: "Official source · what it confirms",
-    start: "Get started",
-    guest: "Explore as a guest",
+    start: "Personalize guest Explore",
+    guest: "Explore without setup",
     intentTitle: "What brings you to ONDO?",
     intentBody: "This choice stays on this device. Every option opens the same guest Explore and does not unlock or restrict features.",
     continueToPreferences: "Choose food preferences",
@@ -78,8 +78,8 @@ const COPY = {
     boundaryLabel: "확인 범위",
     boundary: "출처는 2026년 8월 19일 기준 유효 인허가 상태를 확인합니다. 현재 영업시간·메뉴·인기도·가격·결제 지원은 제공하지 않습니다.",
     sourceSummary: "공식 출처 · 확인 범위",
-    start: "시작하기",
-    guest: "게스트로 탐색",
+    start: "취향 설정 후 게스트 탐색",
+    guest: "설정 없이 탐색",
     intentTitle: "어떤 목적으로 ONDO를 찾았나요?",
     intentBody: "선택은 이 기기에만 저장됩니다. 세 선택 모두 같은 게스트 탐색으로 이어지며 기능을 열거나 제한하지 않아요.",
     continueToPreferences: "음식 취향 고르기",
@@ -104,8 +104,8 @@ const COPY = {
     boundaryLabel: "確認できる範囲",
     boundary: "出典日時点（2026年8月19日）の有効な営業許可を示します。現在の営業時間、メニュー、人気、価格、決済対応は確認できません。",
     sourceSummary: "公式出典 · 確認できる範囲",
-    start: "はじめる",
-    guest: "ゲストで見る",
+    start: "好みを設定してゲストで見る",
+    guest: "設定せずに見る",
     intentTitle: "ONDOを使う目的は？",
     intentBody: "選択内容はこの端末にのみ保存されます。どの選択肢でも同じゲスト向けの「探す」画面が開き、機能の解放や制限には使いません。",
     continueToPreferences: "食の好みを選ぶ",
@@ -177,15 +177,14 @@ export function OfficialDirectoryOnboardingLayer() {
 
   const finish = () => {
     setSaveError(null)
-    if (!actions.setDiscoveryPreferences(preferences)) return
-    if (!actions.completeOnboarding()) return
+    if (!actions.completeOnboarding(preferences)) return
     focusExplore()
   }
 
   const skip = () => {
     setSaveError(null)
-    setPreferences([])
     if (!actions.skipOnboarding()) return
+    setPreferences([])
     focusExplore()
   }
 
@@ -268,7 +267,7 @@ export function OfficialDirectoryOnboardingLayer() {
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
-            <div className={styles.actions}>
+            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button
                 type="button"
@@ -325,7 +324,7 @@ export function OfficialDirectoryOnboardingLayer() {
                 )
               })}
             </div>
-            <div className={styles.actions}>
+            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button type="button" className={styles.primary} disabled={!state.persona} onClick={() => setStep("preferences")}>
                 {copy.continueToPreferences}<ArrowRight size={18} aria-hidden="true" />
@@ -373,7 +372,7 @@ export function OfficialDirectoryOnboardingLayer() {
                 </section>
               ))}
             </div>
-            <div className={styles.actions}>
+            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button type="button" className={styles.primary} onClick={finish} data-testid="onboarding-finish">
                 {copy.finish}<ArrowRight size={18} aria-hidden="true" />

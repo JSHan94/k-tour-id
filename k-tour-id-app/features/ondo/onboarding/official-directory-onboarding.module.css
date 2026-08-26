@@ -345,6 +345,31 @@
   line-height: 1.4;
 }
 
+@media (max-width: 699px) {
+  .actionsRecovery {
+    position: fixed;
+    z-index: 12;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 7px;
+    margin: 0;
+    border: 1px solid rgb(82 54 42 / 13%);
+    border-radius: 20px;
+    padding: 8px;
+    background: rgb(255 250 245 / 94%);
+    box-shadow: 0 22px 52px rgb(52 34 26 / 22%), inset 0 1px 0 rgb(255 255 255 / 90%);
+    backdrop-filter: blur(20px);
+  }
+
+  .actionsRecovery .inlineAlert { margin: 0; }
+  .actionsRecovery .primary,
+  .actionsRecovery .secondary { min-height: 46px; }
+  .actionsRecovery .secondary { padding-inline: 10px; }
+}
+
 .sourceIntro {
   display: block;
   order: 2;

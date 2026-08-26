@@ -32,8 +32,7 @@ test("B-ONBOARDING-ARC-002 source truth and guest actions remain subordinate but
   expect(onboarding).toContain('className={styles.primary}')
   expect(onboarding).toContain('className={styles.secondary}')
   expect(onboarding).toContain('data-testid="onboarding-finish"')
-  expect(onboarding).toContain("actions.completeOnboarding()")
+  expect(onboarding).toContain("actions.completeOnboarding(preferences)")
   expect(onboarding).toContain("actions.skipOnboarding()")
-  expect(onboarding).toContain("actions.setDiscoveryPreferences(preferences)")
+  expect(onboarding).not.toContain("actions.setDiscoveryPreferences(preferences)")
 })
-
