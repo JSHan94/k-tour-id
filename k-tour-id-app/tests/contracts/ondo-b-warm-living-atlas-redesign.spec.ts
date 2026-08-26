@@ -43,9 +43,10 @@ test("ATLAS-003 Settings uses a direct native three-language control without inl
 })
 
 test("ATLAS-004 Travel Pass and Wallet expose one honest warm wallet material system", () => {
-  expect(traveler).toContain('data-visual-direction="warm-living-wallet"')
-  expect(commerce).toContain('data-visual-direction="warm-living-wallet"')
-  expect(commerce).toContain('data-visual-direction="warm-living-offer"')
+  expect(traveler).toContain('data-visual-direction="apple-wallet-flow8"')
+  expect(commerce).toContain('data-visual-direction="apple-wallet-flow8"')
+  expect(commerce).toContain('data-flow8-object="wallet"')
+  expect(commerce).toContain('data-flow8-object="offer"')
   expect(travelerStyles).toContain("--pass-ceramic")
   expect(commerceStyles).toContain("--wallet-ceramic")
 })

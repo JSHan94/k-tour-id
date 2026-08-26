@@ -266,7 +266,22 @@ test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts res
   const refunded = commerceSessionFromReceipts([receipt("refunded", 3)])
   expect(refunded).toMatchObject({ status: "refunded", voucher: "available", confirmationCount: 1, receiptCount: 1, refundCount: 1, chargedDebit: 19, redemptionCount: 0 })
   expect(refunded.ledger.map(({ amount, kind }) => [amount, kind])).toEqual([[-19, "PAYMENT"], [19, "PAYMENT"], [19, "REFUND"], [-19, "REFUND"]])
+  expect(refunded.ledger.map(({ operationId, receiptId }) => [operationId, receiptId])).toEqual([
+    ["ONDO-LOCAL-OP-20260825-001", "ONDO-LOCAL-20260825-001"],
+    ["ONDO-LOCAL-OP-20260825-001", "ONDO-LOCAL-20260825-001"],
+    ["ONDO-LOCAL-REFUND-20260825-001", "ONDO-LOCAL-REFUND-20260825-001"],
+    ["ONDO-LOCAL-REFUND-20260825-001", "ONDO-LOCAL-REFUND-20260825-001"],
+  ])
+  expect(refunded.ledger.reduce((sum, entry) => sum + entry.amount, 0)).toBe(0)
+
+  const declinedRefunded = commerceSessionFromReceipts([receipt("refunded", 0)])
+  expect(declinedRefunded).toMatchObject({ status: "refunded", voucher: "available", benefitRecommendation: "declined", chargedDebit: 22, refundCount: 1 })
+  expect(declinedRefunded.ledger.map(({ amount }) => amount)).toEqual([-22, 22, 22, -22])
+  expect(declinedRefunded.ledger.reduce((sum, entry) => sum + entry.amount, 0)).toBe(0)
 
   expect(sanitizeCommerceReceipts([{ ...receipt("paid", 3), receiptId: "made-up" }])).toEqual([])
+  expect(sanitizeCommerceReceipts([{ ...receipt("paid", 3), refundReceiptId: "made-up" }])).toEqual([])
+  expect(sanitizeCommerceReceipts([{ ...receipt("refunded", 3), refundReceiptId: null }])).toEqual([])
+  expect(sanitizeCommerceReceipts([{ ...receipt("refunded", 3), refundReceiptId: "made-up" }])).toEqual([])
   expect(commerceSessionFromReceipts([])).toEqual(createStableCommerceBState())
 })
