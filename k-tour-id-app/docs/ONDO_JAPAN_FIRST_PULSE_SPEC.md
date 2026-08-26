@@ -35,6 +35,13 @@ checkout/community flow is introduced.
 - Sponsored or paid-placement evidence is excluded from the score.
 - A precise number is published only when every driver is present, dated, and
   verified. Otherwise the public state is `Growing` with no invented number.
+- Every accepted reference must match the target canonical venue and the
+  driver's allowed source class. IDs and URLs must be unique across drivers.
+- Confidence uses independently hosted sources, verification state, source-type
+  diversity, recency, and bias review; it is never inferred from count alone.
+- Existing numbered demo snapshots are explicitly marked as fixed
+  `curated-walkthrough` snapshots. They do not enter the unified weighting and
+  are not represented as measured Japan demand or production evidence.
 - Internal drivers stay inspectable in progressive disclosure; the primary UI
   always shows one Pulse.
 
@@ -42,6 +49,9 @@ checkout/community flow is introduced.
 
 - Launch content uses the report's nine shortlisted records:
   `C01, C02, C03, C06, C08, C12, C18, C20, C22`.
+- Every record keeps its report-linked source URL(s), source type, last-check
+  date, sponsorship state, link-only rights mode, and a separate pending
+  place-edge state. A hard-coded `sponsored: false` is not verification.
 - The Nation/Explore screen shows a compact Japan-first research strip. It is
   not another feed or route.
 - A content-to-place action may open the existing Place surface only after a
@@ -87,8 +97,8 @@ production measurements and are never converted directly into a Pulse score.
 ### P0 — release blocking
 
 1. One score; Japan/Korea/ONDO drivers; sponsored exclusion; confidence gate.
-2. Nine launch content records and ten Jeju seeds have bounded, typed source and
-   verification states.
+2. Nine launch content records and ten Jeju seeds have bounded, typed source,
+   date, sponsorship, rights, and place-edge verification states.
 3. Explore reuses the current Nation surface and keeps exactly five nav tabs.
 4. Jeju truth never uses the official-record source/count claim.
 5. Existing Map/Place/Table/After19/Wallet/My Korea actions and test IDs remain.

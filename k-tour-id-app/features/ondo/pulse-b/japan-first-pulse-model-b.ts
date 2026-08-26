@@ -1,0 +1,322 @@
+export const UNIFIED_PULSE_WEIGHTS = Object.freeze({
+  japanMomentum: 0.4,
+  koreaLocalMomentum: 0.4,
+  ondoMomentum: 0.2,
+} as const)
+
+export type UnifiedPulseDriverB = keyof typeof UNIFIED_PULSE_WEIGHTS
+
+export type UnifiedPulseSourceReferenceB = {
+  id: string
+  sourceType: "official-tourism" | "original-creator" | "editorial" | "korea-local" | "ondo-first-party"
+  url: string
+  observedAt: string
+  verifiedAt: string
+  verificationState: "verified" | "pending" | "rejected"
+  canonicalVenueId: string
+  placeEdgeVerified: boolean
+  sponsorship: "organic" | "paid" | "unknown"
+}
+
+export type UnifiedPulseEvidenceB = {
+  value: number
+  valueExcludesSponsored: true
+  biasReview: "passed" | "pending" | "failed"
+  references: readonly UnifiedPulseSourceReferenceB[]
+}
+
+export type UnifiedPulseInputB = Record<UnifiedPulseDriverB, UnifiedPulseEvidenceB | null>
+
+export type UnifiedPulseResultB = {
+  score: number | null
+  confidence: "high" | "medium" | "growing"
+  publicState: "scored" | "growing"
+  publicScoreCount: 0 | 1
+  excludedSponsoredEvidence: number
+  drivers: Readonly<Record<UnifiedPulseDriverB, number | null>>
+}
+
+export const PULSE_COMPOSITION_DISCLOSURE = Object.freeze({
+  en: "Fixed walkthrough snapshots — not live crowding or official LOCALDATA facts. Production Pulse will use only verified Japan-interest, Korea-local and ONDO evidence; paid placements never count.",
+  ko: "실시간 혼잡도나 공식 LOCALDATA 사실이 아닌 고정 워크스루 스냅샷입니다. 실제 Pulse는 검증된 일본 관심도·한국 로컬·ONDO 근거만 합산하며, 유료 노출은 제외합니다.",
+})
+
+export const PULSE_PRODUCTION_DRIVER_DISCLOSURE = Object.freeze({
+  en: [
+    { id: "japan", label: "Japan interest", state: "Growing", detail: "Source and place links pending verification" },
+    { id: "korea", label: "Korea local", state: "Growing", detail: "Current local evidence not connected" },
+    { id: "ondo", label: "ONDO", state: "Growing", detail: "First-party production evidence not connected" },
+  ],
+  ko: [
+    { id: "japan", label: "일본 관심도", state: "성장 중", detail: "출처와 장소 연결 검증 중" },
+    { id: "korea", label: "한국 로컬", state: "성장 중", detail: "최신 로컬 근거 미연결" },
+    { id: "ondo", label: "ONDO", state: "성장 중", detail: "실서비스 자체 근거 미연결" },
+  ],
+})
+
+export const PULSE_EVIDENCE_MAX_AGE_DAYS = 30
+
+function validDate(value: string) {
+  return !Number.isNaN(Date.parse(value))
+}
+
+function parseHttpsUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === "https:" && url.hostname && !url.username && !url.password ? url : null
+  } catch {
+    return null
+  }
+}
+
+const DRIVER_SOURCE_TYPES: Readonly<Record<UnifiedPulseDriverB, readonly UnifiedPulseSourceReferenceB["sourceType"][]>> = Object.freeze({
+  japanMomentum: ["official-tourism", "original-creator", "editorial"],
+  koreaLocalMomentum: ["korea-local"],
+  ondoMomentum: ["ondo-first-party"],
+})
+
+function validSourceReference(reference: UnifiedPulseSourceReferenceB, driver: UnifiedPulseDriverB, targetVenueId: string, asOf: string) {
+  if (reference.verificationState !== "verified" || reference.sponsorship !== "organic" || !reference.placeEdgeVerified || !reference.canonicalVenueId.trim()) return false
+  if (!reference.id.trim() || reference.canonicalVenueId !== targetVenueId || !DRIVER_SOURCE_TYPES[driver].includes(reference.sourceType)) return false
+  if (!parseHttpsUrl(reference.url)) return false
+  if (!validDate(reference.observedAt) || !validDate(reference.verifiedAt) || !validDate(asOf)) return false
+  const observedAt = Date.parse(reference.observedAt)
+  const verifiedAt = Date.parse(reference.verifiedAt)
+  const releaseAt = Date.parse(asOf)
+  if (observedAt > verifiedAt || verifiedAt > releaseAt) return false
+  return releaseAt - observedAt <= PULSE_EVIDENCE_MAX_AGE_DAYS * 86_400_000
+}
+
+function acceptedReferences(evidence: UnifiedPulseEvidenceB | null, driver: UnifiedPulseDriverB, targetVenueId: string, asOf: string) {
+  if (!evidence) return []
+  return evidence.references.filter((reference) => validSourceReference(reference, driver, targetVenueId, asOf))
+}
+
+const MULTIPART_PUBLIC_SUFFIXES = new Set(["co.jp", "ne.jp", "co.kr", "or.kr", "go.kr", "co.uk", "com.au"])
+
+function publisherIdentity(value: string) {
+  const parsed = parseHttpsUrl(value)
+  if (!parsed) return null
+  const parts = parsed.hostname.toLowerCase().replace(/^(?:www|m|mobile|amp)\./, "").split(".")
+  const suffix = parts.slice(-2).join(".")
+  return parts.slice(MULTIPART_PUBLIC_SUFFIXES.has(suffix) ? -3 : -2).join(".")
+}
+
+function canonicalEvidenceUrl(value: string) {
+  const url = parseHttpsUrl(value)
+  if (!url) return null
+  url.hash = ""
+  for (const key of [...url.searchParams.keys()]) if (/^(?:utm_|fbclid|gclid)/i.test(key)) url.searchParams.delete(key)
+  url.searchParams.sort()
+  url.hostname = url.hostname.toLowerCase().replace(/^(?:www|m|mobile|amp)\./, "")
+  return url.toString()
+}
+
+function validEvidence(evidence: UnifiedPulseEvidenceB | null, driver: UnifiedPulseDriverB, targetVenueId: string, asOf: string): evidence is UnifiedPulseEvidenceB {
+  if (!evidence || evidence.valueExcludesSponsored !== true || evidence.biasReview !== "passed") return false
+  if (!Number.isFinite(evidence.value) || evidence.value < 0 || evidence.value > 100) return false
+  const accepted = acceptedReferences(evidence, driver, targetVenueId, asOf)
+  if (accepted.length < 1) return false
+  if (accepted.length !== evidence.references.length) return false
+  return new Set(accepted.map((reference) => reference.id)).size === accepted.length
+}
+
+export function composeUnifiedPulseB(targetVenueId: string, input: UnifiedPulseInputB, asOf: string): UnifiedPulseResultB {
+  const excludedSponsoredEvidence = Object.values(input).reduce((total, evidence) => (
+    total + (evidence?.references.filter((reference) => reference.sponsorship !== "organic").length ?? 0)
+  ), 0)
+  const allReferences = Object.values(input).flatMap((evidence) => evidence?.references ?? [])
+  const canonicalUrls = allReferences.map((reference) => canonicalEvidenceUrl(reference.url))
+  const globallyUnique = canonicalUrls.every((url): url is string => url !== null)
+    && new Set(allReferences.map((reference) => reference.id)).size === allReferences.length
+    && new Set(canonicalUrls).size === allReferences.length
+  const accepted = Object.fromEntries((Object.keys(UNIFIED_PULSE_WEIGHTS) as UnifiedPulseDriverB[]).map((driver) => [
+    driver,
+    globallyUnique && targetVenueId.trim() && validEvidence(input[driver], driver, targetVenueId, asOf) ? input[driver] : null,
+  ])) as Record<UnifiedPulseDriverB, UnifiedPulseEvidenceB | null>
+  const drivers = Object.freeze({
+    japanMomentum: accepted.japanMomentum?.value ?? null,
+    koreaLocalMomentum: accepted.koreaLocalMomentum?.value ?? null,
+    ondoMomentum: accepted.ondoMomentum?.value ?? null,
+  })
+  if (Object.values(accepted).some((evidence) => evidence === null)) {
+    return {
+      score: null,
+      confidence: "growing",
+      publicState: "growing",
+      publicScoreCount: 0,
+      excludedSponsoredEvidence,
+      drivers,
+    }
+  }
+  const score = Math.round((Object.keys(UNIFIED_PULSE_WEIGHTS) as UnifiedPulseDriverB[]).reduce((sum, driver) => (
+    sum + accepted[driver]!.value * UNIFIED_PULSE_WEIGHTS[driver]
+  ), 0))
+  const acceptedByDriver = (Object.keys(UNIFIED_PULSE_WEIGHTS) as UnifiedPulseDriverB[]).map((driver) => acceptedReferences(accepted[driver], driver, targetVenueId, asOf))
+  const independentPerDriver = acceptedByDriver.every((references) => new Set(references.map((reference) => publisherIdentity(reference.url)).filter(Boolean)).size >= 2)
+  const sourceTypeDiversity = new Set(acceptedByDriver.flat().map((reference) => reference.sourceType)).size
+  const confidence = independentPerDriver && sourceTypeDiversity >= 3 ? "high" : "medium"
+  return {
+    score,
+    confidence,
+    publicState: "scored",
+    publicScoreCount: 1,
+    excludedSponsoredEvidence,
+    drivers,
+  }
+}
+
+export type JapanFirstLaunchContentB = {
+  id: "C01" | "C02" | "C03" | "C06" | "C08" | "C12" | "C18" | "C20" | "C22"
+  title: { en: string; ko: string }
+  jaHook: string
+  cityIds: readonly ("seoul" | "busan" | "jeju")[]
+  sourceReferences: readonly {
+    label: string
+    url: string
+    type: "original-creator" | "official-tourism" | "official-context" | "editorial" | "secondary-reporting"
+    publishedOrObservedAt: string | null
+    importedAt: "2026-08-26"
+    liveCheckedAt: string | null
+    verificationState: "report-linked"
+    sponsorship: "organic-official" | "unknown"
+    rightsMode: "link-only"
+  }[]
+  sourceVerification: "report-linked"
+  placeEdgeVerification: "pending"
+  sponsorship: "organic-official" | "unknown"
+  rightsMode: "link-only"
+  researchRecordedAt: "2026-08-24"
+  pulseEligible: false
+}
+
+export const JAPAN_FIRST_FEATURED_CONTENT_IDS = Object.freeze(["C01", "C03", "C06"] as const)
+
+export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = Object.freeze([
+  {
+    id: "C01",
+    title: { en: "Fact-check Seoul's fresh sesame-oil pilgrimage", ko: "서울 즉석 참기름 성지 팩트체크" },
+    jaHook: "ソウルの『ごま油の聖地』を検証",
+    cityIds: ["seoul"],
+    sourceReferences: [
+      { label: "Rurubu & more", url: "https://rurubu.jp/andmore/article/25110", type: "editorial", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+      { label: "The Fact 2026", url: "https://news.tf.co.kr/read/video/2324687.htm", type: "secondary-reporting", publishedOrObservedAt: "2026-06-02", importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+    ],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C02",
+    title: { en: "Follow a monthly Korea travel creator's 14 stops", ko: "매달 서울 가는 일본 여행 크리에이터의 14곳" },
+    jaHook: "毎月渡韓する旅クリエイターの14選",
+    cityIds: ["seoul"],
+    sourceReferences: [{ label: "YouTube · 大人の休日CH", url: "https://www.youtube.com/watch?v=G7hPMdA7HG4", type: "original-creator", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" }],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C03",
+    title: { en: "What fits into an eight-hour Seoul stop?", ko: "서울 체류 8시간, 어디까지 가능할까?" },
+    jaHook: "滞在8時間、ソウルでどこまでできる？",
+    cityIds: ["seoul"],
+    sourceReferences: [{ label: "YouTube · Haru", url: "https://www.youtube.com/watch?v=6D3xv0y688I", type: "original-creator", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" }],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C06",
+    title: { en: "Nana's monthly Korea beauty research", ko: "Nana의 한국 뷰티 취재 지도" },
+    jaHook: "月1韓国美容・NanaのクリニックMAP",
+    cityIds: ["seoul"],
+    sourceReferences: [
+      { label: "Hanako 2025", url: "https://hanako.tokyo/travel/465904/", type: "editorial", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+      { label: "Ministry of Health and Welfare", url: "https://mohw.go.kr/board.es?act=view&bid=0027&list_no=1485191&mid=a10503010300&nPage=19&tag=", type: "official-context", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" },
+    ],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C08",
+    title: { en: "Twenty Korean-supermarket gifts picked in Japan", ko: "일본 잡지가 고른 한국 슈퍼 선물 20" },
+    jaHook: "日本の雑誌が選んだ『韓国スーパー土産20』",
+    cityIds: ["seoul"],
+    sourceReferences: [{ label: "Hanako 2026", url: "https://hanako.tokyo/food/504388/", type: "editorial", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" }],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C12",
+    title: { en: "A Netflix chef-restaurant pilgrimage", ko: "Netflix 셰프 식당 성지순례" },
+    jaHook: "『白と黒のスプーン』出演シェフ店巡礼",
+    cityIds: ["seoul"],
+    sourceReferences: [
+      { label: "Hanako 2025", url: "https://hanako.tokyo/tags/202504-special-korea/", type: "editorial", publishedOrObservedAt: "2025-04-01", importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+      { label: "Korea Tourism Data Lab", url: "https://datalab.visitkorea.or.kr/site/portal/ex/bbs/View.do?bcIdx=310879&cateCont=omt03&cbIdx=1132&pageIndex=1", type: "official-context", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" },
+    ],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C18",
+    title: { en: "Step into Jeju's When Life Gives You Tangerines", ko: "〈폭싹 속았수다〉 제주 장면 속으로" },
+    jaHook: "『おつかれさま』の済州へ",
+    cityIds: ["jeju"],
+    sourceReferences: [{ label: "VISITKOREA Japanese", url: "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=222180", type: "official-tourism", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" }],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C20",
+    title: { en: "Follow K-pop stars through Jeju", ko: "K-pop 스타가 먹고 머문 제주" },
+    jaHook: "K-popスターが巡った済州",
+    cityIds: ["jeju"],
+    sourceReferences: [{ label: "VISITKOREA Japanese", url: "https://japanese.visitkorea.or.kr/svc/whereToGo/hdrdslt/hdrdsltView.do?crsSn=372386", type: "official-tourism", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" }],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+  {
+    id: "C22",
+    title: { en: "Fact-check the Nolan family Korea list", ko: "Nolan Korea List 팩트체크" },
+    jaHook: "ノーラン一家の韓国リストを検証",
+    cityIds: ["seoul"],
+    sourceReferences: [
+      { label: "Unedited interview", url: "https://www.youtube.com/watch?v=2QGqdzpcGE0", type: "original-creator", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+      { label: "Yonhap 2026-08-03", url: "https://www.yna.co.kr/view/AKR20260803065651005", type: "secondary-reporting", publishedOrObservedAt: "2026-08-03", importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+      { label: "Edaily 2026-08-04", url: "https://en.edaily.co.kr/news/eda202608045876/", type: "secondary-reporting", publishedOrObservedAt: "2026-08-04", importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "unknown", rightsMode: "link-only" },
+    ],
+    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "unknown", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+  },
+])
+
+export type JejuEditorialSeedB = {
+  id: string
+  cityId: "jeju"
+  name: { en: string; ko: string; ja: string }
+  category: "screen-location" | "food" | "market" | "culture-shopping"
+  priority: "P0" | "P1"
+  sourceType: "editorial-research"
+  sourceLabel: "VISITKOREA Japanese"
+  sourceCollection: { en: string; ko: string }
+  sourceUrl: string
+  publishedOrObservedAt: string | null
+  importedAt: "2026-08-26"
+  liveCheckedAt: null
+  sourceVerification: "report-linked"
+  researchRecordedAt: "2026-08-24"
+  placeEdgeVerification: "pending"
+  sponsorship: "organic-official"
+  rightsMode: "link-only"
+  canonicalVenueId: null
+  officialRecordCount: null
+}
+
+const JEJU_SCREEN_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=222180"
+const JEJU_STAR_SOURCE = "https://japanese.visitkorea.or.kr/svc/whereToGo/hdrdslt/hdrdsltView.do?crsSn=372386"
+const JEJU_CULTURE_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=1592039"
+const JEJU_HAENYEO_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?menuSn=352&vcontsId=187785"
+const jejuTruth = (sourceUrl: string, sourceCollection: { en: string; ko: string }) => ({ sourceType: "editorial-research" as const, sourceLabel: "VISITKOREA Japanese" as const, sourceCollection, sourceUrl, publishedOrObservedAt: null, importedAt: "2026-08-26" as const, liveCheckedAt: null, sourceVerification: "report-linked" as const, researchRecordedAt: "2026-08-24" as const, placeEdgeVerification: "pending" as const, sponsorship: "organic-official" as const, rightsMode: "link-only" as const, canonicalVenueId: null, officialRecordCount: null })
+
+export const JEJU_EDITORIAL_SEEDS: readonly JejuEditorialSeedB[] = Object.freeze([
+  { id: "jeju-seongsan-ilchulbong", cityId: "jeju", name: { en: "Seongsan Ilchulbong", ko: "성산일출봉", ja: "城山日出峰" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음" }) },
+  { id: "jeju-gwangchigi-beach", cityId: "jeju", name: { en: "Gwangchigi Beach", ko: "광치기해변", ja: "クァンチギ海岸" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음" }) },
+  { id: "jeju-gwaneumsa", cityId: "jeju", name: { en: "Gwaneumsa Temple", ko: "관음사", ja: "観音寺" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음" }) },
+  { id: "jeju-donsadon", cityId: "jeju", name: { en: "Donsadon main restaurant", ko: "돈사돈 본점", ja: "トンサドン本店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
+  { id: "jeju-oneunjeong-gimbap", cityId: "jeju", name: { en: "Oneunjeong Gimbap", ko: "오는정김밥", ja: "オヌンジョンキンパ" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
+  { id: "jeju-tamura", cityId: "jeju", name: { en: "TaMuRa", ko: "TaMuRa", ja: "TaMuRa" }, category: "food", priority: "P1", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
+  { id: "jeju-sogil-byeolha", cityId: "jeju", name: { en: "Sogil Byeolha", ko: "소길별하", ja: "ソギルビョルハ" }, category: "culture-shopping", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스" }) },
+  { id: "jeju-haenyeo-kitchen-bukchon", cityId: "jeju", name: { en: "Haenyeo's Kitchen Bukchon", ko: "해녀의부엌 북촌점", ja: "海女の台所 北村店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_HAENYEO_SOURCE, { en: "Jeju haenyeo culture", ko: "제주 해녀 문화" }) },
+  { id: "jeju-dongmun-market", cityId: "jeju", name: { en: "Jeju Dongmun Market", ko: "제주동문시장", ja: "済州東門市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장" }) },
+  { id: "jeju-seogwipo-olle-market", cityId: "jeju", name: { en: "Seogwipo Maeil Olle Market", ko: "서귀포매일올레시장", ja: "西帰浦毎日オルレ市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장" }) },
+])

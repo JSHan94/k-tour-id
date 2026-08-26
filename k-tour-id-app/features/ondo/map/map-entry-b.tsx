@@ -16,8 +16,10 @@ import {
   pulseLevelLabel,
   type PulseLocalEvidenceB,
 } from "../pulse-b/pulse-model-b"
+import { PULSE_COMPOSITION_DISCLOSURE, PULSE_PRODUCTION_DRIVER_DISCLOSURE } from "../pulse-b/japan-first-pulse-model-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
+import { JapanFirstDiscoveryB } from "./japan-first-discovery-b"
 import {
   B_DISCOVERY_TRAVERSAL_EVENT,
   enterBDiscoveryCity,
@@ -282,6 +284,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
           </button>
         ))}
       </div>
+      <JapanFirstDiscoveryB locale={locale} />
       <aside className={styles.cityTruthLegend} data-testid="ondo-b-city-truth-legend">
         {(["seoul", "busan"] as const).map((cityId) => (
           <div key={cityId}>
@@ -1108,7 +1111,15 @@ export function MapEntryB() {
                     {(["peak", "hot", "rising", "warming", "low", "limited"] as const).map((level) => <span key={level} data-level={level}><i />{pulseLevelLabel(level, locale)}</span>)}
                   </div>
                   <small>{copy.mapKeyBody}</small>
-                  <small>{PULSE_DISCLOSURE[locale]}</small>
+                  <small data-testid="ondo-b-pulse-composition-disclosure">{PULSE_COMPOSITION_DISCLOSURE[locale]}</small>
+                  <dl className={styles.pulseCompositionRows} data-testid="ondo-b-pulse-production-drivers">
+                    {PULSE_PRODUCTION_DRIVER_DISCLOSURE[locale].map((driver) => (
+                      <div key={driver.id}>
+                        <dt>{driver.label}</dt>
+                        <dd><strong>{driver.state}</strong><span>{driver.detail}</span></dd>
+                      </div>
+                    ))}
+                  </dl>
                   <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={locale === "ko" ? "Pulse 장소" : "Pulse places"}>
                     {curatedPulseVenues.map(({ venue, pulse }) => (
                       <li key={venue.id}>

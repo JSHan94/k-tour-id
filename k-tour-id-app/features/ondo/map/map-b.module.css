@@ -1505,6 +1505,24 @@
   .venueList li[data-venue-id] { animation: none !important; transition: none !important; }
 }
 
+/* Japan-first discovery stays subordinate to the existing city atlas. It is a
+   Nation row, never an absolutely positioned third city inside the map art. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .nation:has(> [data-testid="ondo-b-japan-first-discovery"]) {
+    grid-template-rows: minmax(154px, 1fr) auto auto;
+  }
+
+  .nation > [data-testid="ondo-b-japan-first-discovery"] { grid-area: 2 / 1 / 3 / 3; }
+  .nation .cityTruthLegend { grid-area: 3 / 1; }
+  .nation footer { grid-area: 3 / 2; }
+
+  .nation:has(> [data-testid="ondo-b-japan-first-discovery"][open]) {
+    height: auto;
+    grid-template-rows: minmax(154px, auto) auto auto;
+  }
+  .nation > [data-testid="ondo-b-japan-first-discovery"][open] { grid-area: 2 / 1 / 3 / 3; }
+}
+
 /* R2 desktop atlas: Seoul and Busan occupy a deliberate north-to-south field
    instead of sharing one shallow card row. The source ledger closes the same
    vertical composition at the bottom edge. */
@@ -1635,3 +1653,33 @@
     backdrop-filter: blur(14px);
   }
 }
+
+@media (min-width: 801px) and (min-height: 501px) {
+  .nation:has(> [data-testid="ondo-b-japan-first-discovery"]) {
+    grid-template-rows: minmax(0, 1fr) auto auto;
+  }
+
+  .nation > [data-testid="ondo-b-japan-first-discovery"] { grid-area: 2 / 1; }
+  .nation .cityTruthLegend { grid-area: 3 / 1; }
+  .nation footer { grid-area: 3 / 2; }
+
+  .compatRoot:has(.nation > [data-testid="ondo-b-japan-first-discovery"][open]),
+  .root:has(.nation > [data-testid="ondo-b-japan-first-discovery"][open]) { overflow: auto; }
+  .nation:has(> [data-testid="ondo-b-japan-first-discovery"][open]) {
+    height: auto;
+    grid-template-rows: minmax(560px, auto) auto auto;
+    align-items: start;
+  }
+  .nation:has(> [data-testid="ondo-b-japan-first-discovery"][open]) .dotMap { grid-area: 1 / 2; }
+  .nation > [data-testid="ondo-b-japan-first-discovery"][open] { grid-area: 2 / 1 / 3 / 3; }
+}
+
+.pulseCompositionRows { display: grid; gap: 6px; margin: 10px 0 0; }
+.pulseCompositionRows > div { display: grid; grid-template-columns: minmax(82px, .35fr) minmax(0, 1fr); gap: 9px; }
+.pulseCompositionRows dt,
+.pulseCompositionRows dd,
+.pulseCompositionRows strong,
+.pulseCompositionRows span { margin: 0; font-size: 12px; line-height: 1.35; }
+.pulseCompositionRows dt { color: #49433e; font-weight: 760; }
+.pulseCompositionRows dd { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px; color: #6c655e; }
+.pulseCompositionRows strong { color: #805345; }
