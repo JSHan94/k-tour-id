@@ -1,26 +1,25 @@
 .stage {
-  --ondo-paper: #fbfaf7;
-  --ondo-surface: #fff;
-  --ondo-ink: #1f1e1c;
-  --ondo-muted: #5f5b55;
-  --ondo-quiet: #706a62;
-  --ondo-line: rgb(31 30 28 / 14%);
+  --ondo-canvas: #ffffff;
+  --ondo-paper: #f7f7f5;
+  --ondo-surface: #ffffff;
+  --ondo-ink: #171717;
+  --ondo-muted: #626262;
+  --ondo-quiet: #737373;
+  --ondo-line: rgb(23 23 23 / 11%);
   --ondo-heat-warm: #c84936;
   --ondo-night: #5d2947;
   --ondo-focus: var(--focus, #1d66d1);
+  --ondo-phone-edge: 16px;
   --ondo-motion-fast: 180ms;
   --ondo-motion-medium: 240ms;
   --ondo-motion-slow: 320ms;
   --ondo-ease-out: cubic-bezier(.2, .8, .2, 1);
-  --ondo-radius-card: 24px;
-  --ondo-shadow-card: 0 18px 48px rgb(55 43 34 / 10%), 0 2px 8px rgb(55 43 34 / 4%);
+  --ondo-radius-card: 20px;
+  --ondo-shadow-card: 0 14px 36px rgb(0 0 0 / 8%), 0 2px 7px rgb(0 0 0 / 3%);
   min-height: 100dvh;
   height: 100dvh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 18% 2%, rgb(255 255 255 / 94%), transparent 34%),
-    radial-gradient(circle at 86% 92%, rgb(121 72 92 / 7%), transparent 30%),
-    #ebe8e4;
+  background: #f1f1ef;
   color: var(--ondo-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
@@ -40,7 +39,7 @@
   grid-template-rows: minmax(0, 1fr) auto;
   margin: 0 auto;
   overflow: hidden;
-  background: var(--ondo-paper);
+  background: var(--ondo-canvas);
   border-right: 1px solid var(--ondo-line);
   border-left: 1px solid var(--ondo-line);
 }
@@ -56,7 +55,8 @@
   overscroll-behavior-x: none;
   overscroll-behavior-y: contain;
   scroll-padding-block: 20px;
-  scrollbar-color: rgb(105 96 87 / 48%) transparent;
+  background: var(--ondo-canvas);
+  scrollbar-color: rgb(23 23 23 / 34%) transparent;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   touch-action: pan-y;
@@ -66,7 +66,7 @@
 .content:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: -2px; }
 .content::-webkit-scrollbar { width: 5px; }
 .content::-webkit-scrollbar-track { background: transparent; }
-.content::-webkit-scrollbar-thumb { border-radius: 999px; background: rgb(105 96 87 / 42%); }
+.content::-webkit-scrollbar-thumb { border-radius: 999px; background: rgb(23 23 23 / 32%); }
 .content[data-active-tab="my"],
 .content[data-active-tab="tables"],
 .content[data-active-tab="id"],
@@ -93,12 +93,12 @@
   margin: 8px auto calc(8px + env(safe-area-inset-bottom));
   padding: 6px;
   overflow: visible;
-  border: 1px solid rgb(46 39 34 / 11%);
-  border-radius: 24px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 98%), rgb(251 249 246 / 96%));
+  border: 1px solid var(--ondo-line);
+  border-radius: 21px;
+  background: rgb(255 255 255 / 97%);
   box-shadow:
-    0 16px 38px rgb(48 39 31 / 12%),
-    0 3px 10px rgb(48 39 31 / 5%),
+    0 12px 30px rgb(0 0 0 / 9%),
+    0 2px 8px rgb(0 0 0 / 4%),
     inset 0 1px 0 rgb(255 255 255 / 90%);
   backdrop-filter: blur(20px) saturate(1.25);
   -webkit-backdrop-filter: blur(20px) saturate(1.25);
@@ -120,7 +120,7 @@
   border: 1px solid transparent;
   border-radius: 18px;
   background: transparent;
-  color: #68625c;
+  color: #666;
   font: inherit;
   isolation: isolate;
   transition: background-color var(--ondo-motion-fast) ease, border-color var(--ondo-motion-fast) ease, box-shadow var(--ondo-motion-fast) ease, color var(--ondo-motion-fast) ease, transform var(--ondo-motion-fast) var(--ondo-ease-out);
@@ -166,14 +166,15 @@
 }
 
 .navActive {
-  border-color: rgb(45 42 38 / 13%) !important;
-  background: linear-gradient(180deg, #f7f5f1, #ece9e3) !important;
-  color: #2c2a27 !important;
-  box-shadow: 0 5px 14px rgb(47 43 38 / 8%), inset 0 1px 0 rgb(255 255 255 / 82%);
+  border-color: #171717 !important;
+  background: #171717 !important;
+  color: #fff !important;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 17%);
   animation: navSettle var(--ondo-motion-medium) var(--ondo-ease-out) both;
 }
-.navActive::after { width: 22px !important; background: #514d47 !important; }
-.navActive .navIcon { background: #e6e2dc; color: #292724; transform: translateY(-1px); }
+.navActive::after { width: 22px !important; background: #fff !important; }
+.navActive .navIcon { background: transparent; color: #fff; transform: translateY(-1px); }
+.nav button[data-state="selected"] { color: #fff; }
 .nav button:focus-visible {
   z-index: 2;
   outline: 2px solid var(--ondo-focus);
@@ -215,6 +216,10 @@
 
 @media (max-width: 800px) {
   .canvas { width: 100vw; border: 0; }
+}
+
+@media (min-width: 370px) {
+  .stage { --ondo-phone-edge: 20px; }
 }
 
 @media (min-width: 801px) {
@@ -346,8 +351,8 @@
     grid-template-columns: 92px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     background:
-      linear-gradient(90deg, #f2eee8 0 92px, var(--ondo-paper) 92px),
-      var(--ondo-paper);
+      linear-gradient(90deg, #f4f4f2 0 92px, var(--ondo-canvas) 92px),
+      var(--ondo-canvas);
   }
 
   .content {
@@ -377,10 +382,10 @@
     gap: 8px;
     margin: 12px 8px;
     padding: 6px;
-    border-color: rgb(46 39 34 / 10%);
-    border-radius: 22px;
-    background: rgb(255 253 249 / 82%);
-    box-shadow: 0 14px 34px rgb(48 39 31 / 9%), inset 0 1px 0 rgb(255 255 255 / 86%);
+    border-color: rgb(23 23 23 / 9%);
+    border-radius: 20px;
+    background: rgb(255 255 255 / 92%);
+    box-shadow: 0 12px 30px rgb(0 0 0 / 8%), inset 0 1px 0 rgb(255 255 255 / 86%);
   }
 
   .stage[data-variant="B"] .nav button {
@@ -409,7 +414,36 @@
 
   .stage[data-variant="B"] .navIcon { width: 30px; height: 30px; }
   .stage[data-variant="B"] .navActive .navIcon { transform: none; }
-  .stage[data-variant="B"] .navLabel { font-size: 12px; line-height: 1.02; }
+  .stage[data-variant="B"] .navLabel {
+    position: absolute;
+    z-index: 4;
+    top: 50%;
+    left: calc(100% + 10px);
+    display: flex;
+    width: max-content;
+    max-width: 180px;
+    min-height: 34px;
+    align-items: center;
+    padding: 0 11px;
+    border: 1px solid rgb(23 23 23 / 10%);
+    border-radius: 10px;
+    background: #171717;
+    color: #fff;
+    box-shadow: 0 8px 22px rgb(0 0 0 / 16%);
+    font-size: 12px;
+    line-height: 1.1;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-5px, -50%);
+    transition: opacity var(--ondo-motion-fast) ease, transform var(--ondo-motion-fast) var(--ondo-ease-out);
+  }
+
+  .stage[data-variant="B"] .nav button:hover .navLabel,
+  .stage[data-variant="B"] .nav button:focus-visible .navLabel,
+  .stage[data-variant="B"] .nav button[data-state="selected"] .navLabel {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
 
   .stage[data-variant="B"] .toast {
     right: 24px;
@@ -426,7 +460,7 @@
   .stage[data-variant="B"] .canvas {
     grid-template-columns: 74px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
-    background: linear-gradient(90deg, #f2eee8 0 74px, var(--ondo-paper) 74px);
+    background: linear-gradient(90deg, #f4f4f2 0 74px, var(--ondo-canvas) 74px);
   }
 
   .stage[data-variant="B"] .content { grid-column: 2; grid-row: 1; }
@@ -465,5 +499,5 @@
   }
   .stage[data-variant="B"] .navActive::after { width: 3px !important; height: 22px; }
   .stage[data-variant="B"] .navIcon { width: 24px; height: 24px; }
-  .stage[data-variant="B"] .navLabel { font-size: 12px; line-height: 1; }
+  .stage[data-variant="B"] .navLabel { display: none; }
 }

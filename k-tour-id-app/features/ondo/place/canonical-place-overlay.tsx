@@ -409,10 +409,10 @@ export function CanonicalPlaceOverlay() {
         <p>{copy.pulseBoundary}</p>
         {pulse.localEvidence ? <em data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</em> : null}
       </section>
-      <section className={styles.recordSummary} data-testid="canonical-place-source-summary">
-        <strong>{copy.source}</strong>
+      <details className={styles.recordSummary} data-testid="canonical-place-source-summary" data-source-presentation="compact-ribbon">
+        <summary><span><strong>{copy.source}</strong><small>{copy.activeLicence}</small></span><ChevronRight size={16} /></summary>
         <p>{copy.sourceBoundary}</p>
-      </section>
+      </details>
       <div className={styles.peekActions}>
         <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="primary"><Navigation size={17} />{copy.directions}</a>
         <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="secondary">{copy.details}<ChevronRight size={17} /></button>
@@ -515,16 +515,18 @@ export function CanonicalPlaceOverlay() {
 
           {saveStatus === "SAV-FAILED" ? <section className={styles.saveError} role="alert" data-testid="canonical-save-error"><p>{copy.saveFailed}</p><button type="button" onClick={() => actions.saveVenue(currentVenueId)} data-testid="canonical-save-retry" data-visual-priority="primary">{copy.retrySave}</button></section> : null}
 
-          <section className={styles.sourceEvidence} data-testid="canonical-source-evidence">
-            <h3>{copy.source}</h3>
-            <p>{copy.sourceBoundary}</p>
-            <dl>
-              <div><dt>{copy.category}</dt><dd>{evidenceValue(detail?.sourceCategory.value, copy.unknown)}</dd></div>
-              <div><dt>{copy.licence}</dt><dd>{detail?.licenseStatus.value === "ACTIVE_LICENSE_RECORD" ? copy.activeLicence : copy.unknown}</dd></div>
-              <div><dt>{copy.opened}</dt><dd>{sourceDate(detail?.licenseOpenedAt.value, copy.unknown)}</dd></div>
-              <div><dt>{copy.modified}</dt><dd>{sourceDate(detail?.sourceModifiedAt.value, copy.unknown)}</dd></div>
-            </dl>
-          </section>
+          <details className={styles.sourceEvidence} data-testid="canonical-source-evidence" data-source-presentation="progressive-details">
+            <summary><span><strong>{copy.source}</strong><small>{copy.activeLicence}</small></span><ChevronRight size={17} /></summary>
+            <div className={styles.sourceDisclosureBody}>
+              <p>{copy.sourceBoundary}</p>
+              <dl>
+                <div><dt>{copy.category}</dt><dd>{evidenceValue(detail?.sourceCategory.value, copy.unknown)}</dd></div>
+                <div><dt>{copy.licence}</dt><dd>{detail?.licenseStatus.value === "ACTIVE_LICENSE_RECORD" ? copy.activeLicence : copy.unknown}</dd></div>
+                <div><dt>{copy.opened}</dt><dd>{sourceDate(detail?.licenseOpenedAt.value, copy.unknown)}</dd></div>
+                <div><dt>{copy.modified}</dt><dd>{sourceDate(detail?.sourceModifiedAt.value, copy.unknown)}</dd></div>
+              </dl>
+            </div>
+          </details>
 
           <section className={styles.before}>
             <h3>{copy.before}</h3>
@@ -536,15 +538,17 @@ export function CanonicalPlaceOverlay() {
             ].map(([label, value]) => <div key={label}><CircleHelp size={17} /><span><strong>{label}</strong><small>{value}</small></span></div>)}
           </section>
 
-          <section className={styles.source} data-detail-source={detail?.address.road.sourceRefId ?? detail?.address.lot.sourceRefId ?? "NOT_LOADED"}>
-            <h3>{copy.source}</h3>
-            <p>{copy.sourceBody}</p>
-            <dl>
-              <div><dt>{copy.sourceSnapshot}</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div>
-              <div><dt>{copy.sourceRecord}</dt><dd>{detail?.sourceIds.moisManagementId ?? copy.unknownShort}</dd></div>
-              <div><dt>{copy.sourceReference}</dt><dd>MOIS LOCALDATA</dd></div>
-            </dl>
-          </section>
+          <details className={styles.source} data-detail-source={detail?.address.road.sourceRefId ?? detail?.address.lot.sourceRefId ?? "NOT_LOADED"} data-source-presentation="progressive-details">
+            <summary><span><strong>{copy.sourceReference}</strong><small>MOIS LOCALDATA</small></span><ChevronRight size={17} /></summary>
+            <div className={styles.sourceDisclosureBody}>
+              <p>{copy.sourceBody}</p>
+              <dl>
+                <div><dt>{copy.sourceSnapshot}</dt><dd>{venue.sourceSnapshotAt.slice(0, 10)}</dd></div>
+                <div><dt>{copy.sourceRecord}</dt><dd>{detail?.sourceIds.moisManagementId ?? copy.unknownShort}</dd></div>
+                <div><dt>{copy.sourceReference}</dt><dd>MOIS LOCALDATA</dd></div>
+              </dl>
+            </div>
+          </details>
         </div>
       </article>
     </div>

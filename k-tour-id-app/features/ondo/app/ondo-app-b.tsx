@@ -182,7 +182,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
         >
           {active}
         </div>
-        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" data-nav-presentation="mobile-labeled-desktop-icon-first" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
             <button
               key={id}
@@ -197,7 +197,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
               onClick={() => selectTab(id)}
             >
               <span className={styles.navIcon} aria-hidden="true"><Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} /></span>
-              <small className={styles.navLabel}>{B_NAV_COPY[state.locale][id]}</small>
+              <small className={styles.navLabel} aria-hidden="true" data-nav-tooltip={B_NAV_COPY[state.locale][id]}>{B_NAV_COPY[state.locale][id]}</small>
             </button>
           ))}
         </nav>

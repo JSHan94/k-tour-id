@@ -1,8 +1,8 @@
 .compatRoot, .root { position: relative; min-height: 100%; height: 100%; }
 .compatRoot { overflow: hidden; }
-.root { container-name: ondo-map-root; container-type: size; overflow: hidden; background: #fbfaf7; color: #20201e; }
+.root { container-name: ondo-map-root; container-type: size; overflow: hidden; background: var(--ondo-canvas, #fff); color: var(--ondo-ink, #171717); }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-.header { position: absolute; z-index: 10; top: max(18px, env(safe-area-inset-top)); right: 20px; left: 20px; display: flex; align-items: center; justify-content: space-between; }
+.header { position: absolute; z-index: 10; top: max(20px, env(safe-area-inset-top)); right: var(--map-edge, 16px); left: var(--map-edge, 16px); display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand > i { width: 9px; height: 9px; border-radius: 50%; background: #20201e; box-shadow: 0 0 0 5px rgb(32 32 30 / 7%); }
 .brand span { display: grid; line-height: 1; }
@@ -664,33 +664,34 @@
 }
 
 .cityHeader {
-  top: max(4px, env(safe-area-inset-top));
-  gap: 4px;
+  top: max(12px, env(safe-area-inset-top));
+  right: var(--map-edge);
+  left: var(--map-edge);
+  gap: 6px;
 }
 .search { min-height: 44px; }
 
 .mapChrome {
   top: calc(154px + env(safe-area-inset-top));
-  right: 10px;
-  bottom: 4px;
-  left: 10px;
-  grid-template-columns: minmax(0, 1fr) 44px;
-  grid-template-rows: 44px minmax(0, 1fr) 48px 48px;
+  right: var(--map-edge);
+  bottom: 8px;
+  left: var(--map-edge);
+  grid-template-columns: max-content minmax(0, 1fr) 44px;
+  grid-template-rows: 44px minmax(0, 1fr) 48px;
   grid-template-areas:
-    "message locate"
-    ". ."
-    "key key"
-    "result attribution";
-  gap: 6px;
+    "message message locate"
+    ". . ."
+    "key result attribution";
+  gap: 8px;
 }
 
 .locationMessage,
 .mapKey,
 .resultBar,
 .attribution {
-  border-color: rgb(94 79 68 / 16%);
-  background: rgb(255 253 249 / 88%);
-  box-shadow: 0 8px 28px rgb(53 35 23 / 8%);
+  border-color: rgb(23 23 23 / 11%);
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 7%);
   -webkit-backdrop-filter: blur(18px) saturate(1.1);
   backdrop-filter: blur(18px) saturate(1.1);
 }
@@ -703,7 +704,7 @@
   max-height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 14px;
+  border-radius: 13px;
   font-size: 12px;
   font-weight: 670;
   line-height: 1.35;
@@ -717,7 +718,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 0 10px 0 12px;
-  border-radius: 13px;
+  border-radius: 12px;
   cursor: pointer;
   list-style: none;
 }
@@ -739,11 +740,11 @@
   width: min(320px, calc(100cqw - 20px));
   margin: 0;
   padding: 12px 13px;
-  border: 1px solid rgb(94 79 68 / 17%);
-  border-radius: 16px;
-  background: rgb(255 253 249 / 97%);
-  color: #554e47;
-  box-shadow: 0 18px 48px rgb(53 35 23 / 16%);
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 98%);
+  color: #555;
+  box-shadow: 0 14px 36px rgb(0 0 0 / 12%);
   font-size: 12px;
   font-weight: 620;
   line-height: 1.5;
@@ -754,9 +755,9 @@
 .locate {
   width: 44px;
   height: 44px;
-  border-color: rgb(94 79 68 / 16%);
-  background: rgb(255 253 249 / 92%);
-  box-shadow: 0 8px 24px rgb(53 35 23 / 9%);
+  border-color: rgb(23 23 23 / 11%);
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
@@ -766,19 +767,17 @@
   inset: auto;
   box-sizing: border-box;
   display: grid;
-  width: 100%;
-  max-width: 100%;
+  width: 126px;
+  max-width: 126px;
   min-height: 48px;
   max-height: 48px;
-  grid-template-columns: auto minmax(90px, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) 44px;
   grid-template-rows: 1fr;
   align-items: center;
-  gap: 9px;
-  padding: 2px 2px 2px 8px;
-  border-radius: 16px;
-  background:
-    linear-gradient(112deg, rgb(255 253 249 / 94%), rgb(255 249 241 / 86%)),
-    linear-gradient(90deg, #7A2048, #C94832 22%, #E6843B 42%, #EBC463 61%, #EFE1B7 80%, #CFCAC0);
+  gap: 4px;
+  padding: 2px 44px 2px 8px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 96%);
   overflow: visible;
 }
 
@@ -823,7 +822,7 @@
 .pulseScale {
   display: grid;
   min-width: 0;
-  grid-template-columns: auto minmax(32px, 1fr) auto;
+  grid-template-columns: 30px auto;
   align-items: center;
   gap: 6px;
 }
@@ -834,10 +833,11 @@
   font-weight: 790;
   white-space: nowrap;
 }
-.pulseScale small { color: #6a625b; font-weight: 680; }
+.pulseScale small { display: none; color: #6a625b; font-weight: 680; }
 .pulseScale > i {
-  height: 8px;
-  min-width: 34px;
+  width: 30px;
+  height: 10px;
+  min-width: 30px;
   border-radius: 999px;
   background:
     radial-gradient(circle at 96% 50%, rgb(122 32 72 / 86%), transparent 38%),
@@ -907,11 +907,12 @@
 
 .mapKeyDetailsBody {
   position: absolute;
-  right: -4px;
+  right: auto;
   bottom: calc(100% + 8px);
+  left: calc(-100% - 44px);
   display: grid;
-  width: min(320px, calc(100cqw - 20px));
-  max-height: min(320px, calc(100cqh - 244px));
+  width: min(304px, calc(100cqw - (2 * var(--map-edge))));
+  max-height: min(264px, calc(100cqh - 230px));
   gap: 7px;
   box-sizing: border-box;
   overflow-y: auto;
@@ -919,10 +920,10 @@
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   padding: 13px 14px;
-  border: 1px solid rgb(94 79 68 / 17%);
-  border-radius: 16px;
-  background: rgb(255 253 249 / 96%);
-  box-shadow: 0 18px 48px rgb(53 35 23 / 16%);
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 16px 38px rgb(0 0 0 / 13%);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
@@ -934,6 +935,22 @@
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+.methodologyDisclosure { padding-top: 2px; border-top: 1px solid rgb(23 23 23 / 9%); }
+.methodologyDisclosure > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #3f3f3f;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 760;
+  list-style: none;
+}
+.methodologyDisclosure > summary::-webkit-details-marker { display: none; }
+.methodologyDisclosure > summary svg { transition: transform 180ms ease; }
+.methodologyDisclosure[open] > summary svg { transform: rotate(90deg); }
 .pulsePlaces {
   display: grid;
   gap: 4px;
@@ -987,7 +1004,8 @@
   min-height: 48px;
   height: 48px;
   padding: 1px 6px 1px 13px;
-  border-radius: 16px;
+  min-width: 0;
+  border-radius: 14px;
 }
 .resultBar b { font-size: 13px; }
 .resultBar small { font-size: 12px; }
@@ -1002,7 +1020,7 @@
   height: 48px;
   box-sizing: border-box;
   padding: 0;
-  border-radius: 15px;
+  border-radius: 14px;
   overflow: visible;
 }
 .creditDetails { width: 44px; }
@@ -1032,10 +1050,10 @@
   flex-wrap: wrap;
   gap: 0 8px;
   padding: 8px 10px;
-  border: 1px solid rgb(94 79 68 / 17%);
-  border-radius: 16px;
-  background: rgb(255 253 249 / 97%);
-  box-shadow: 0 18px 48px rgb(53 35 23 / 16%);
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 12%);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
 }
@@ -1059,8 +1077,8 @@
 
 @container ondo-map-root (max-width: 430px) {
   .cityHeader {
-    top: max(4px, env(safe-area-inset-top));
-    gap: 4px;
+    top: max(12px, env(safe-area-inset-top));
+    gap: 6px;
   }
   .search { min-height: 44px; border-radius: 15px; }
   .rail { border-radius: 15px; }
@@ -1072,19 +1090,19 @@
 }
 
 @container ondo-map-root (max-width: 380px) {
-  .mapKey { grid-template-columns: auto minmax(70px, 1fr) 44px; gap: 6px; }
-  .mapKeyLead small { display: none; }
-  .pulseScale small { font-size: 12px; }
+  .mapKey { width: 118px; max-width: 118px; }
+  .resultBar b[data-compact-count] { font-size: 0; }
+  .resultBar b[data-compact-count]::after { content: attr(data-compact-count); font-size: 13px; }
 }
 
 @container ondo-map-root (min-width: 600px) and (min-height: 400px) and (max-height: 568px) {
   .mapChrome {
     top: calc(184px + env(safe-area-inset-top));
-    grid-template-columns: minmax(0, 1fr) minmax(0, .7fr) 46px;
+    grid-template-columns: 126px minmax(0, 1fr) 46px;
     grid-template-rows: minmax(0, 1fr) auto;
     grid-template-areas:
-      "key message locate"
-      "result attribution attribution";
+      "message message locate"
+      "key result attribution";
   }
   .mapKey { align-self: start; }
   .attribution { align-self: end; }
@@ -1701,7 +1719,7 @@
   max-width: none;
   height: 100%;
   min-height: 100%;
-  padding: calc(66px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom));
+  padding: calc(72px + env(safe-area-inset-top)) var(--map-edge) calc(12px + env(safe-area-inset-bottom));
   overflow: hidden;
 }
 
@@ -1756,8 +1774,8 @@
 .koreaAtlas .nationIntro {
   position: absolute;
   z-index: 2;
-  top: 18px;
-  left: 18px;
+  top: 22px;
+  left: var(--map-edge);
   width: min(76%, 320px);
   max-width: none;
   padding: 0;
@@ -1876,6 +1894,9 @@
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
 }
+.koreaAtlas .atlasTruth > summary > span { display: grid; min-width: 0; gap: 1px; }
+.koreaAtlas .atlasTruth > summary > span strong { color: #282828; font-size: 12px; line-height: 1.25; }
+.koreaAtlas .atlasTruth > summary > span small { overflow: hidden; color: #6a6a6a; font-size: 12px; font-weight: 620; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .koreaAtlas .atlasTruth > summary::-webkit-details-marker { display: none; }
 .koreaAtlas .atlasTruth[open] > summary svg { transform: rotate(90deg); }
 .koreaAtlas .atlasTruthBody {
@@ -1883,13 +1904,15 @@
   right: 0;
   bottom: 50px;
   display: grid;
-  width: min(286px, calc(100vw - 40px));
+  width: min(304px, calc(100cqw - (2 * var(--map-edge))));
+  max-height: min(292px, calc(100cqh - 170px));
   gap: 8px;
   padding: 12px;
-  border: 1px solid rgb(74 53 42 / 13%);
-  border-radius: 16px;
-  background: rgb(255 253 249 / 97%);
-  box-shadow: 0 18px 48px rgb(53 34 23 / 14%);
+  overflow-y: auto;
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 12%);
 }
 .koreaAtlas .atlasTruthBody > div { display: grid; gap: 1px; }
 .koreaAtlas .atlasTruthBody strong,
@@ -1981,29 +2004,30 @@
 }
 .map[data-editorial-inert="true"] { pointer-events: none; }
 
-/* Warm Living Atlas — approved Explore art direction.
+/* Modern white/ink Living Atlas reset.
    Polarsteps supplies the macro cartographic hierarchy; Mapstr/Beli supply
    the compact, tactile discovery chrome. Product truth and DOM order remain
    unchanged. */
 .root {
-  --atlas-paper: #fffdf9;
-  --atlas-wash: #f4eee7;
-  --atlas-ink: #211f1c;
-  --atlas-line: rgb(66 47 37 / 12%);
+  --map-edge: var(--ondo-phone-edge, 16px);
+  --atlas-paper: #ffffff;
+  --atlas-wash: #f4f4f2;
+  --atlas-ink: #171717;
+  --atlas-line: rgb(23 23 23 / 11%);
   --atlas-plum: #5d2947;
   --atlas-coral: #c84936;
-  --atlas-shadow: 0 26px 74px rgb(55 35 24 / 12%);
+  --atlas-shadow: 0 18px 48px rgb(0 0 0 / 9%);
 }
 
 .koreaAtlas,
 .dotMap.koreaAtlas {
-  border-color: rgb(91 59 43 / 13%);
-  border-radius: 30px;
+  border-color: rgb(23 23 23 / 10%);
+  border-radius: 24px;
   background:
-    radial-gradient(circle at 78% 27%, rgb(132 35 77 / 15%) 0 2px, transparent 3px 39px, rgb(132 35 77 / 7%) 40px 41px, transparent 42px),
-    radial-gradient(circle at 72% 68%, rgb(228 125 67 / 16%) 0 2px, transparent 3px 44px, rgb(228 125 67 / 7%) 45px 46px, transparent 47px),
-    radial-gradient(circle at 26% 82%, rgb(93 41 71 / 12%) 0 2px, transparent 3px 36px, rgb(93 41 71 / 6%) 37px 38px, transparent 39px),
-    linear-gradient(151deg, #fffdfa 0%, #faf5ee 52%, #f2e7dd 100%);
+    radial-gradient(circle at 78% 27%, rgb(122 32 72 / 11%) 0 2px, transparent 3px 39px, rgb(122 32 72 / 5%) 40px 41px, transparent 42px),
+    radial-gradient(circle at 72% 68%, rgb(228 125 67 / 11%) 0 2px, transparent 3px 44px, rgb(228 125 67 / 5%) 45px 46px, transparent 47px),
+    radial-gradient(circle at 26% 82%, rgb(93 41 71 / 8%) 0 2px, transparent 3px 36px, rgb(93 41 71 / 4%) 37px 38px, transparent 39px),
+    linear-gradient(151deg, #fff 0%, #fafafa 58%, #f1f1ef 100%);
   box-shadow: var(--atlas-shadow), inset 0 1px 0 rgb(255 255 255 / 98%);
 }
 
@@ -2074,8 +2098,8 @@
 .topline {
   border: 1px solid rgb(75 55 44 / 9%);
   border-radius: 18px;
-  background: rgb(255 253 249 / 91%);
-  box-shadow: 0 10px 28px rgb(55 36 25 / 8%);
+  background: rgb(255 255 255 / 91%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 7%);
   backdrop-filter: blur(18px) saturate(1.12);
 }
 
@@ -2083,20 +2107,20 @@
 
 .search {
   min-height: 48px;
-  border-color: rgb(72 52 41 / 13%);
-  border-radius: 20px;
-  background: rgb(255 254 251 / 95%);
-  box-shadow: 0 12px 30px rgb(53 35 24 / 8%);
+  border-color: rgb(23 23 23 / 11%);
+  border-radius: 15px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 7%);
   backdrop-filter: blur(18px) saturate(1.1);
 }
 
 .rail {
   gap: 4px;
   padding: 3px;
-  border-color: rgb(72 52 41 / 12%);
-  border-radius: 18px;
-  background: rgb(255 254 251 / 93%);
-  box-shadow: 0 10px 28px rgb(53 35 24 / 7%);
+  border-color: rgb(23 23 23 / 11%);
+  border-radius: 15px;
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 6%);
   backdrop-filter: blur(18px) saturate(1.1);
 }
 
@@ -2107,41 +2131,41 @@
 }
 
 .resultBar {
-  border-color: rgb(75 55 44 / 13%);
-  border-radius: 20px;
-  background: rgb(255 253 249 / 95%);
-  box-shadow: 0 14px 34px rgb(53 35 24 / 10%);
+  border-color: rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 7%);
   backdrop-filter: blur(18px) saturate(1.1);
 }
 
 .mapKey,
 .locationMessage,
 .attribution {
-  border-color: rgb(75 55 44 / 12%);
-  background: rgb(255 253 249 / 94%);
-  box-shadow: 0 12px 30px rgb(53 35 24 / 9%);
+  border-color: rgb(23 23 23 / 11%);
+  background: rgb(255 255 255 / 95%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 7%);
   backdrop-filter: blur(18px) saturate(1.1);
 }
 
-.mapKey { border-radius: 18px; }
+.mapKey { border-radius: 14px; }
 .locate {
-  border-color: rgb(75 55 44 / 13%);
-  background: rgb(255 253 249 / 96%);
-  box-shadow: 0 12px 28px rgb(53 35 24 / 10%);
+  border-color: rgb(23 23 23 / 11%);
+  background: rgb(255 255 255 / 97%);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
 }
 
 .listPanel {
   background:
-    radial-gradient(circle at 92% 4%, rgb(132 35 77 / 5%), transparent 24%),
-    linear-gradient(180deg, #fbfaf7, #f6f0ea);
+    radial-gradient(circle at 92% 4%, rgb(122 32 72 / 3%), transparent 24%),
+    linear-gradient(180deg, #fff, #f6f6f4);
 }
 
 .venueList { gap: 10px; }
 .venueList li[data-venue-id] {
-  border-color: rgb(77 55 43 / 12%);
-  border-radius: 22px;
-  background: linear-gradient(145deg, rgb(255 254 251 / 98%), rgb(249 244 238 / 95%));
-  box-shadow: 0 12px 30px rgb(55 36 25 / 8%), inset 0 1px 0 #fff;
+  border-color: rgb(23 23 23 / 10%);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 6%), inset 0 1px 0 #fff;
 }
 
 .venueList li[data-venue-id]::before { width: 3px; top: 14px; bottom: 14px; }
@@ -2306,7 +2330,18 @@
   .topline { grid-column: 1 / -1; grid-row: 1; }
   .search { grid-column: 1; grid-row: 2; width: 100%; max-width: none; }
   .rail { grid-column: 2; grid-row: 2; width: 100%; max-width: none; }
-  .mapChrome { top: calc(104px + env(safe-area-inset-top)); }
+  .mapChrome {
+    top: calc(104px + env(safe-area-inset-top));
+    grid-template-columns: 126px minmax(120px, .48fr) minmax(170px, 1fr) 44px 44px;
+    grid-template-rows: minmax(0, 1fr) 48px;
+    grid-template-areas:
+      ". . . . ."
+      "key message result locate attribution";
+  }
+  .locationMessage,
+  .locate,
+  .mapKey { align-self: end; }
+  .locationMessage { width: 100%; justify-self: stretch; }
   .listPanel { top: calc(104px + env(safe-area-inset-top)); }
 }
 
@@ -2368,16 +2403,15 @@
 .koreaAtlas .cityNode[data-city="seoul"],
 .koreaAtlas .cityNode[data-city="busan"],
 .koreaAtlas .cityNode[data-city="jeju"] {
-  border-radius: 17px;
-  background:
-    linear-gradient(135deg, rgb(255 255 253 / 96%), rgb(250 244 237 / 88%));
+  border-radius: 16px;
+  background: rgb(255 255 255 / 96%);
   box-shadow:
-    0 12px 30px rgb(54 34 23 / 11%),
+    0 9px 24px rgb(0 0 0 / 9%),
     0 0 0 1px rgb(255 255 255 / 66%) inset;
 }
 
 .koreaAtlas .cityNode[data-region-role="official-directory"] {
-  border-left: 3px solid color-mix(in srgb, var(--atlas-coral) 56%, #fff);
+  border-left: 3px solid rgb(23 23 23 / 48%);
 }
 
 .koreaAtlas .cityNode[data-region-role="editorial-collection"] {

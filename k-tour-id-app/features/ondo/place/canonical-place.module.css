@@ -9,9 +9,35 @@
 .nameProvenance span, .detailNameProvenance span { color: #777169; font-weight: 680; }
 .nameProvenance strong, .detailNameProvenance strong { color: #34312d; font-size: 12px; overflow-wrap: anywhere; }
 .nameProvenance small, .detailNameProvenance small { color: #716b64; font-size: 12px; overflow-wrap: anywhere; }
-.recordSummary { padding: 10px 0; border-top: 1px solid #e0ddd7; border-bottom: 1px solid #e0ddd7; }
+.recordSummary { margin: 0 0 7px; padding: 0; border-top: 1px solid #e0e0de; border-bottom: 1px solid #e0e0de; }
+.recordSummary > summary,
+.sourceEvidence > summary,
+.source > summary {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.recordSummary > summary::-webkit-details-marker,
+.sourceEvidence > summary::-webkit-details-marker,
+.source > summary::-webkit-details-marker { display: none; }
+.recordSummary > summary > span,
+.sourceEvidence > summary > span,
+.source > summary > span { display: grid; min-width: 0; gap: 1px; }
+.recordSummary > summary small,
+.sourceEvidence > summary small,
+.source > summary small { overflow: hidden; color: #707070; font-size: 12px; font-weight: 620; text-overflow: ellipsis; white-space: nowrap; }
+.recordSummary > summary svg,
+.sourceEvidence > summary svg,
+.source > summary svg { flex: 0 0 auto; transition: transform 180ms ease; }
+.recordSummary[open] > summary svg,
+.sourceEvidence[open] > summary svg,
+.source[open] > summary svg { transform: rotate(90deg); }
 .recordSummary strong { font-size: 13px; }
-.recordSummary p { margin: 3px 0 0; color: #6f6a63; font-size: 12px; line-height: 1.5; }
+.recordSummary p { margin: 0; padding: 2px 0 10px; color: #666; font-size: 12px; line-height: 1.45; }
 .peekActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .peekActions a, .peekActions button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border-radius: 13px; font-size: 13px; font-weight: 750; text-decoration: none; }
 .peekActions button { border: 0; background: #22211f; color: white; }
@@ -61,7 +87,7 @@
 .demoOfferAction small { color: #715f50; font-size: 12px; font-weight: 540; line-height: 1.45; }
 .sourceEvidence, .before, .source { padding: 20px 0; border-top: 1px solid #dedbd5; }
 .sourceEvidence h3, .before h3, .source h3 { margin: 0 0 10px; font-size: 16px; }
-.sourceEvidence > p, .source p { margin: 0 0 12px; color: #6f6a63; font-size: 12px; line-height: 1.55; }
+.sourceDisclosureBody > p { margin: 0 0 12px; color: #666; font-size: 12px; line-height: 1.55; }
 .sourceEvidence dl, .source dl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0; }
 .sourceEvidence dl div, .source dl div { min-width: 0; padding-top: 8px; border-top: 1px solid #e7e4df; }
 .sourceEvidence dt, .source dt { color: #6f6962; font-size: 12px; line-height: 1.35; }
@@ -195,9 +221,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.recordSummary { display: none; }
+.recordSummary { display: block; }
 .recordSummary strong { white-space: nowrap; }
-.recordSummary p { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recordSummary p { min-width: 0; overflow: visible; white-space: normal; }
 .peekActions { margin-top: 8px; }
 .peekActions a,
 .peekActions button { min-height: 48px; border-radius: 15px; }
@@ -355,8 +381,8 @@
 }
 
 @keyframes detailEnter {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { transform: translateY(14px); }
+  to { transform: translateY(0); }
 }
 
 .detail > header {
@@ -466,6 +492,13 @@
   border-radius: 20px;
   background: rgb(255 254 251 / 62%);
 }
+.sourceEvidence,
+.source { padding: 0 16px; }
+.sourceEvidence > summary,
+.source > summary { min-height: 54px; }
+.sourceEvidence > summary strong,
+.source > summary strong { color: #292929; font-size: 14px; }
+.sourceDisclosureBody { padding: 0 0 16px; }
 
 .sourceEvidence h3,
 .before h3,
@@ -567,9 +600,9 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border: 1px solid rgb(79 55 43 / 11%);
+  border: 1px solid rgb(23 23 23 / 10%);
   background:
-    linear-gradient(145deg, rgb(255 254 251 / 95%), rgb(248 240 233 / 88%));
+    linear-gradient(145deg, rgb(255 255 255 / 97%), rgb(245 245 243 / 92%));
 }
 
 .peekIdentityStage[data-pulse-level="peak"],
@@ -590,8 +623,8 @@
   overflow: hidden;
   background:
     radial-gradient(circle at 84% 34%, color-mix(in srgb, var(--identity-pulse) 25%, transparent) 0 5px, transparent 6px 31px, color-mix(in srgb, var(--identity-pulse) 10%, transparent) 32px 33px, transparent 34px),
-    repeating-radial-gradient(circle at 78% 45%, transparent 0 34px, rgb(91 64 48 / 5%) 35px 36px),
-    linear-gradient(155deg, transparent 49.5%, rgb(102 70 52 / 8%) 50%, transparent 50.5%);
+    repeating-radial-gradient(circle at 78% 45%, transparent 0 34px, rgb(23 23 23 / 4%) 35px 36px),
+    linear-gradient(155deg, transparent 49.5%, rgb(23 23 23 / 7%) 50%, transparent 50.5%);
 }
 
 .placeAtmosphere::before,
@@ -599,7 +632,7 @@
   position: absolute;
   width: 56%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgb(106 70 52 / 16%), transparent);
+  background: linear-gradient(90deg, transparent, rgb(23 23 23 / 13%), transparent);
   content: "";
   transform: rotate(-17deg);
 }
@@ -634,7 +667,7 @@
   min-height: 196px;
   padding: 24px;
   border-radius: 28px;
-  box-shadow: 0 18px 46px rgb(55 36 25 / 8%), inset 0 1px 0 #fff;
+  box-shadow: 0 12px 34px rgb(0 0 0 / 7%), inset 0 1px 0 #fff;
 }
 .detailIdentityStage .eyebrow,
 .detailIdentityStage > h2,
@@ -643,7 +676,7 @@
 .detailIdentityStage .detailError { position: relative; z-index: 1; max-width: 78%; }
 .detailIdentityStage > h2 {
   margin: 8px 0 1px;
-  color: #241f1b;
+  color: #171717;
   font-size: clamp(29px, 8vw, 44px);
   line-height: 1.05;
   letter-spacing: -.055em;
@@ -819,78 +852,77 @@
   .before { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Apple Place Card clarity with Airbnb warmth. The sheet is opaque enough to
-   own the decision, while evidence and secondary actions keep their original
-   semantics and order. */
+/* Modern Place clarity. The sheet is opaque enough to own the decision while
+   Pulse remains the only warm signal and source truth stays progressive. */
 .peek {
-  border-color: rgb(86 56 43 / 17%);
-  border-radius: 32px;
+  border-color: rgb(23 23 23 / 13%);
+  border-radius: 24px;
   background:
-    radial-gradient(circle at 92% 4%, rgb(132 35 77 / 8%), transparent 26%),
-    linear-gradient(155deg, #fffefa 0%, #faf4ee 100%);
-  box-shadow: 0 0 0 100vmax rgb(29 23 20 / 13%), 0 30px 80px rgb(39 27 20 / 24%), inset 0 1px 0 #fff;
+    radial-gradient(circle at 92% 4%, rgb(122 32 72 / 5%), transparent 24%),
+    #fff;
+  box-shadow: 0 0 0 100vmax rgb(0 0 0 / 10%), 0 22px 56px rgb(0 0 0 / 18%), inset 0 1px 0 #fff;
 }
 
 .close {
-  border: 1px solid rgb(76 53 42 / 9%);
-  background: rgb(255 253 249 / 96%);
-  box-shadow: 0 7px 18px rgb(51 34 24 / 7%);
+  border: 1px solid rgb(23 23 23 / 9%);
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 6%);
 }
 
-.meta { color: #75685f; }
-.meta i { color: #87433a; }
-.peek h2 { color: #211d19; font-weight: 780; }
+.meta { color: #686868; }
+.meta i { color: #4f4f4f; }
+.peek h2 { color: #171717; font-weight: 780; }
 
 .pulsePeek {
   border-color: color-mix(in srgb, var(--pulse-level) 44%, #d6cbc2);
   border-left-color: var(--pulse-level);
-  border-radius: 20px;
+  border-radius: 16px;
   background:
     radial-gradient(circle at 2% 50%, color-mix(in srgb, var(--pulse-level) 18%, transparent), transparent 28%),
-    linear-gradient(120deg, color-mix(in srgb, var(--pulse-level) 8%, #fffdf9), #fffdf9 78%);
-  box-shadow: inset 4px 0 0 var(--pulse-level), 0 12px 28px rgb(54 37 27 / 7%);
+    linear-gradient(120deg, color-mix(in srgb, var(--pulse-level) 7%, #fff), #fff 78%);
+  box-shadow: inset 4px 0 0 var(--pulse-level), 0 8px 22px rgb(0 0 0 / 5%);
 }
 
 .peekActions { gap: 10px; }
 .peekActions a,
 .peekActions button { min-height: 50px; border-radius: 17px; }
 .peekActions a {
-  border-color: #28231f;
-  background: linear-gradient(135deg, #27221e, #463029 72%, #66352b);
-  box-shadow: 0 15px 32px rgb(43 29 21 / 19%), inset 0 1px 0 rgb(255 255 255 / 12%);
+  border-color: #171717;
+  background: #171717;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 16%);
 }
 .peekActions button {
-  border-color: rgb(76 54 43 / 14%);
-  background: rgb(255 254 251 / 90%);
-  box-shadow: 0 8px 20px rgb(54 37 27 / 6%);
+  border-color: rgb(23 23 23 / 14%);
+  background: rgb(255 255 255 / 92%);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 5%);
 }
 
-.backdrop { background: rgb(24 20 17 / 38%); backdrop-filter: blur(7px) saturate(.82); }
+.backdrop { background: rgb(0 0 0 / 34%); backdrop-filter: blur(7px) saturate(.82); }
 .detail {
-  border-color: rgb(86 56 43 / 16%);
+  border-color: rgb(23 23 23 / 13%);
   background:
-    radial-gradient(circle at 94% 0, rgb(132 35 77 / 7%), transparent 27%),
-    linear-gradient(180deg, #fffefb, #f9f4ee);
-  box-shadow: 0 -22px 72px rgb(39 27 20 / 24%), inset 0 1px 0 #fff;
+    radial-gradient(circle at 94% 0, rgb(122 32 72 / 4%), transparent 25%),
+    #fff;
+  box-shadow: 0 -18px 58px rgb(0 0 0 / 19%), inset 0 1px 0 #fff;
 }
-.detail > header { background: rgb(255 253 249 / 94%); backdrop-filter: blur(20px) saturate(1.08); }
-.body > h2 { color: #211d19; font-weight: 780; }
+.detail > header { background: rgb(255 255 255 / 95%); backdrop-filter: blur(20px) saturate(1.02); }
+.body > h2 { color: #171717; font-weight: 780; }
 
 .pulsePanel {
-  border-radius: 26px;
+  border-radius: 20px;
   background:
-    radial-gradient(circle at 96% 4%, color-mix(in srgb, var(--pulse-level) 17%, transparent), transparent 35%),
-    linear-gradient(145deg, color-mix(in srgb, var(--pulse-level) 9%, #fffaf5), #fffefa 74%);
-  box-shadow: 0 22px 52px rgb(52 37 27 / 11%), inset 0 1px 0 #fff;
+    radial-gradient(circle at 96% 4%, color-mix(in srgb, var(--pulse-level) 14%, transparent), transparent 34%),
+    linear-gradient(145deg, color-mix(in srgb, var(--pulse-level) 7%, #fff), #fff 74%);
+  box-shadow: 0 14px 36px rgb(0 0 0 / 8%), inset 0 1px 0 #fff;
 }
 
 .decisionActions a,
 .decisionActions button { border-radius: 17px; }
 .decisionActions a {
-  background: linear-gradient(135deg, #27221e, #463029 72%, #66352b);
-  box-shadow: 0 15px 32px rgb(43 29 21 / 18%), inset 0 1px 0 rgb(255 255 255 / 12%);
+  background: #171717;
+  box-shadow: 0 12px 26px rgb(0 0 0 / 16%);
 }
-.decisionActions button { background: rgb(255 254 251 / 84%); }
+.decisionActions button { background: rgb(255 255 255 / 88%); }
 
 .tableActions,
 .demoOfferAction,
@@ -898,32 +930,32 @@
 .sourceEvidence,
 .before,
 .source {
-  border-color: rgb(77 55 43 / 10%);
-  background: rgb(255 254 251 / 78%);
-  box-shadow: 0 12px 30px rgb(54 37 27 / 6%), inset 0 0 0 1px rgb(74 54 43 / 5%);
+  border-color: rgb(23 23 23 / 9%);
+  background: rgb(255 255 255 / 86%);
+  box-shadow: 0 9px 24px rgb(0 0 0 / 5%), inset 0 0 0 1px rgb(23 23 23 / 4%);
 }
 
 @media (max-width: 430px) and (min-height: 600px) {
-  .peek { border-radius: 30px; }
-  .pulsePeek { border-radius: 19px; }
+  .peek { border-radius: 22px; }
+  .pulsePeek { border-radius: 16px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .peek { border-radius: 30px 0 0 30px; }
+  .peek { border-radius: 22px 0 0 22px; }
 }
 
 @media (min-width: 900px) and (min-height: 501px) {
   :global([data-variant="B"]) .detail {
     width: min(940px, calc(100% - 104px));
-    border-radius: 36px 0 0 36px;
+    border-radius: 28px 0 0 28px;
   }
-  .detail > header { border-radius: 36px 0 0 0; }
+  .detail > header { border-radius: 28px 0 0 0; }
   .body { column-gap: 34px; padding: 36px 40px 48px; }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .peekActions a:hover,
-  .decisionActions a:hover { box-shadow: 0 19px 40px rgb(43 29 21 / 23%), inset 0 1px 0 rgb(255 255 255 / 12%); }
+  .decisionActions a:hover { box-shadow: 0 16px 34px rgb(0 0 0 / 22%); }
 }
 
 @media (prefers-reduced-motion: reduce) {

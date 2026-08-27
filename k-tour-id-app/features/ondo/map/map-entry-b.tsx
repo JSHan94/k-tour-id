@@ -2,7 +2,7 @@
 
 import type { CircleLayerSpecification, ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, SymbolLayerSpecification } from "maplibre-gl"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, ChevronRight, Info, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
+import { ArrowLeft, ChevronRight, Info, Languages, List, LocateFixed, Map as MapIcon, MapPin, Search, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues/contracts"
@@ -55,8 +55,8 @@ const CITY = {
 const COPY = {
   en: {
     tagline: "Korea food & travel map",
-    title: "Choose a region, then follow the Pulse.",
-    body: "Browse official food-service records in Seoul and Busan, or open Jeju's editorial travel collection.",
+    title: "Find your next stop in Korea.",
+    body: "Official food records in Seoul and Busan. Editorial travel ideas in Jeju.",
     coverage: "Korea map · 3 regions",
     openMap: "Open city directory",
     source: "LOCALDATA source snapshot · Aug 19, 2026",
@@ -105,13 +105,15 @@ const COPY = {
     jejuSourceScope: "Jeju · VISITKOREA editorial source collections; place facts pending",
     editorialMapUnavailable: "The basemap could not load. The Jeju editorial collection and sources remain available.",
     aboutMap: "About this Korea map",
+    mapScopeSummary: "400 official records · Jeju editorial",
+    methodology: "Pulse methodology and places",
     filterLabel: "Official business category",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
   },
   ko: {
     tagline: "한국 음식·여행 지도",
-    title: "지역을 고르고 Pulse를 따라가 보세요.",
-    body: "서울·부산의 공식 일반음식점 기록과 제주의 편집 여행 컬렉션을 한 지도에서 탐색합니다.",
+    title: "한국에서 다음 장소를 찾아보세요.",
+    body: "서울·부산은 공식 음식점 기록, 제주는 편집 여행 아이디어를 보여줍니다.",
     coverage: "대한민국 지도 · 3개 지역",
     openMap: "도시 디렉터리 열기",
     source: "LOCALDATA 출처 스냅샷 · 2026. 8. 19.",
@@ -160,13 +162,15 @@ const COPY = {
     jejuSourceScope: "제주 · VISITKOREA 편집 출처 모음; 장소 정보 확인 중",
     editorialMapUnavailable: "배경 지도를 불러오지 못했어요. 제주 편집 컬렉션과 출처는 계속 볼 수 있어요.",
     aboutMap: "대한민국 지도 안내",
+    mapScopeSummary: "공식 기록 400개 · 제주 편집 컬렉션",
+    methodology: "Pulse 산정 방식과 장소",
     filterLabel: "공식 업태 분류",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
   },
   ja: {
     tagline: "韓国フード・旅行マップ",
-    title: "地域を選んで、Pulseをたどろう。",
-    body: "ソウル・釜山の公式飲食店営業許可記録と、済州の編集旅行コレクションをひとつの地図で探せます。",
+    title: "韓国で次の場所を見つけよう。",
+    body: "ソウル・釜山は公式飲食店記録、済州は編集旅行アイデアです。",
     coverage: "韓国マップ・3地域",
     openMap: "都市ディレクトリを開く",
     source: "LOCALDATA出典スナップショット・2026年8月19日",
@@ -215,6 +219,8 @@ const COPY = {
     jejuSourceScope: "済州・VISITKOREA編集情報コレクション・場所情報は確認中",
     editorialMapUnavailable: "背景地図を読み込めませんでした。済州の編集コレクションと情報源は引き続き確認できます。",
     aboutMap: "韓国マップについて",
+    mapScopeSummary: "公式記録400件・済州は編集情報",
+    methodology: "Pulseの算定方法と場所",
     filterLabel: "公式業種分類",
     recentSaveFailed: "場所は開きましたが、この端末の最近見た場所には保存できませんでした。",
   },
@@ -366,10 +372,10 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
             onClick={() => onSelect(cityId)}
             aria-label={`${CITY[cityId].label[locale]} · ${resultCount(200, locale)} · ${copy.openMap}`}
           >
-            <i>200</i>
+            <i aria-hidden="true"><MapPin size={18} /></i>
             <span>
               <strong>{CITY[cityId].label[locale]}</strong>
-              <small data-pulse-city-status={PULSE_CITY_STATUS[cityId]}>{cityPulseStatus(cityId, locale)}</small>
+              <small className={styles.srOnly} data-pulse-city-status={PULSE_CITY_STATUS[cityId]}>{cityPulseStatus(cityId, locale)}</small>
               <em className={styles.cityRecordTruth}>{resultCount(200, locale)}</em>
             </span>
           </button>
@@ -391,8 +397,8 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
             <em className={styles.cityRecordTruth}>{copy.jejuTruth}</em>
           </span>
         </button>
-        <details className={`${styles.cityTruthLegend} ${styles.atlasTruth}`} data-testid="ondo-b-city-truth-legend">
-          <summary>{copy.aboutMap}<ChevronRight size={16} /></summary>
+        <details className={`${styles.cityTruthLegend} ${styles.atlasTruth}`} data-testid="ondo-b-city-truth-legend" data-source-disclosure="compact-ribbon" data-official-count="400">
+          <summary><span><strong>{copy.aboutMap}</strong><small>{copy.mapScopeSummary}</small></span><ChevronRight size={16} /></summary>
           <div className={styles.atlasTruthBody}>
             {(["seoul", "busan"] as const).map((cityId) => (
               <div key={cityId}>
@@ -447,7 +453,7 @@ function toPulseFeatureCollection(
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
   locale: OndoBLocale,
   selectedVenueId: string | null = null,
-): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; pulseMarkerLabel: string; selectedMarkerLabel: string; selected: boolean }> {
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; selectedMarkerLabel: string; selected: boolean }> {
   return {
     type: "FeatureCollection",
     features: venues.flatMap((venue) => {
@@ -462,9 +468,6 @@ function toPulseFeatureCollection(
           pulseLevel: pulse.level,
           pulseRank: PULSE_RANK[pulse.level],
           pulseScore: pulse.score ?? -1,
-          pulseMarkerLabel: pulse.score == null
-            ? pulseLevelLabel(pulse.level, locale).toUpperCase()
-            : `${pulse.score} · ${pulseLevelLabel(pulse.level, locale).toUpperCase()}`,
           selectedMarkerLabel: pulse.score == null
             ? venueDisplayName(venue.name.ko, locale)
             : `${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale).toUpperCase()}`,
@@ -850,12 +853,6 @@ export function MapEntryB() {
           const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "pulseRank"], 3], ["!=", ["get", "pulseRank"], 2]]
           const risingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 3]
           const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 2]
-          const centralPeakFilter: ExpressionSpecification = ["==", ["get", "pulseScore"], 91]
-          const centralHotFilter: ExpressionSpecification = ["==", ["get", "pulseScore"], 80]
-          const unselectedPulseFilter: ExpressionSpecification = ["!=", ["get", "selected"], true]
-          const centralPeakLabelFilter: ExpressionSpecification = ["all", centralPeakFilter, unselectedPulseFilter]
-          const centralHotLabelFilter: ExpressionSpecification = ["all", centralHotFilter, unselectedPulseFilter]
-          const regularUnshiftedLabelFilter: ExpressionSpecification = ["all", unshiftedPulseFilter, ["!=", ["get", "pulseScore"], 91], ["!=", ["get", "pulseScore"], 80], unselectedPulseFilter]
           const risingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-20, 18]], 12, ["literal", [-20, 18]], 13, ["literal", [0, 0]]]
           const warmingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-8, -10]], 12, ["literal", [-8, -10]], 13, ["literal", [0, 0]]]
           const pulseOffsetForRank = (rank: number, zoom: number) => {
@@ -865,10 +862,6 @@ export function MapEntryB() {
             return { x: 0, y: 0 }
           }
           const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": 0.98, "circle-stroke-width": 0, "circle-blur": 0.08 }
-          const pulseLabelLayout: SymbolLayerSpecification["layout"] = { "text-field": ["get", "pulseMarkerLabel"], "text-font": ["Noto Sans Bold"], "text-size": 12, "text-letter-spacing": 0.025, "text-offset": [0, -1.2], "text-anchor": "bottom", "text-allow-overlap": true, "text-ignore-placement": true, "symbol-sort-key": ["get", "pulseRank"] }
-          const centralPeakLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [-1.2, 1.1], "text-anchor": "top" }
-          const centralHotLabelLayout: SymbolLayerSpecification["layout"] = { ...pulseLabelLayout, "text-offset": [0.35, 1.1], "text-anchor": "top" }
-          const pulseLabelPaint: SymbolLayerSpecification["paint"] = { "text-color": ["case", [">=", ["get", "pulseRank"], 4], "#5d1732", [">=", ["get", "pulseRank"], 2], "#773421", "#403b35"], "text-halo-color": "rgba(255,253,249,.94)", "text-halo-width": 2.2, "text-halo-blur": 0.5 }
           const pulseHaloPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 28, 15, 42], "circle-blur": 0.82, "circle-opacity": 0.2, "circle-stroke-width": 0 }
           instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
           instance.addLayer({ id: "ondo-pulse-halo-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
@@ -879,11 +872,6 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0 } })
           instance.addLayer({ id: "ondo-pulse-hit-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-hit-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-labels", type: "symbol", source: "ondo-pulse", filter: regularUnshiftedLabelFilter, layout: pulseLabelLayout, paint: pulseLabelPaint })
-          instance.addLayer({ id: "ondo-pulse-labels-central-peak", type: "symbol", source: "ondo-pulse", filter: centralPeakLabelFilter, layout: centralPeakLabelLayout, paint: pulseLabelPaint })
-          instance.addLayer({ id: "ondo-pulse-labels-central-hot", type: "symbol", source: "ondo-pulse", filter: centralHotLabelFilter, layout: centralHotLabelLayout, paint: pulseLabelPaint })
-          instance.addLayer({ id: "ondo-pulse-labels-rising", type: "symbol", source: "ondo-pulse", filter: risingPulseFilter, layout: pulseLabelLayout, paint: { ...pulseLabelPaint, "text-translate": risingTranslate, "text-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-labels-warming", type: "symbol", source: "ondo-pulse", filter: warmingPulseFilter, layout: pulseLabelLayout, paint: { ...pulseLabelPaint, "text-translate": warmingTranslate, "text-translate-anchor": "viewport" } })
           const selectedUnshiftedPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], unshiftedPulseFilter]
           const selectedRisingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], risingPulseFilter]
           const selectedWarmingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], warmingPulseFilter]
@@ -1159,8 +1147,8 @@ export function MapEntryB() {
         data-location-state={locationState}
         data-user-location={userLocation ? "present" : "absent"}
         data-cluster-grammar={city === "jeju" ? undefined : "official-record-count"}
-        data-pulse-map-grammar={city === "jeju" ? undefined : "curated-level-score-over-official-groups"}
-        data-pulse-visual-grammar={city === "jeju" ? undefined : "borderless-aura-core-label"}
+        data-pulse-map-grammar={city === "jeju" ? undefined : "aura-over-official-groups"}
+        data-pulse-visual-grammar={city === "jeju" ? undefined : "aura-scale-selection-label"}
         data-pulse-motion={city === "jeju" ? undefined : "one-shot-bloom-reduced-safe"}
         data-selected-pulse-grammar={city === "jeju" ? undefined : "one-shot-halo-place-capsule"}
         data-curated-pulse-count={city === "jeju" ? undefined : curatedPulseVenues.length}
@@ -1174,7 +1162,7 @@ export function MapEntryB() {
         <header className={styles.cityHeader} data-testid="ondo-b-city-header">
           <div className={styles.topline}>
             <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
-            <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
+            <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small className={styles.srOnly} data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
             <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} />{NEXT_LOCALE_LABEL[locale]}</button>
           </div>
           {city !== "jeju" ? <>
@@ -1197,8 +1185,8 @@ export function MapEntryB() {
         {!editorialOpen && effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{city === "jeju" ? copy.editorialMapLoading : copy.mapLoading}</p> : null}
 
         <div className={styles.mapChrome} data-testid="ondo-b-map-chrome">
-          <div className={styles.resultBar} data-testid="ondo-b-result-bar">
-            <span><b>{city === "jeju" ? copy.jejuMapTruth : resultCount(venues.length, locale)}</b><small>{city === "jeju" ? copy.jejuTruth : `${copy.source} · ${copy.categoryBasis}`}</small></span>
+          <div className={styles.resultBar} data-testid="ondo-b-result-bar" data-chrome-role="count-view">
+            <span><b data-compact-count={city === "jeju" ? undefined : venues.length}>{city === "jeju" ? copy.jejuMapTruth : resultCount(venues.length, locale)}</b><small>{city === "jeju" ? copy.jejuTruth : `${copy.source} · ${copy.categoryBasis}`}</small></span>
             {city === "jeju" ? null : mapLayoutMode === "ultra-short" ? (
               <span className={styles.forcedListLabel} data-testid="ondo-b-effective-view-label" aria-label={MAP_UI[locale].shortList}><List size={17} />{copy.list}</span>
             ) : (
@@ -1231,12 +1219,9 @@ export function MapEntryB() {
           ) : null}
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
-            <aside className={styles.mapKey} data-testid="ondo-b-map-key" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
-              <div className={styles.mapKeyLead}>
-                <span><i className={styles.clusterSwatch}>12</i><small>{MAP_UI[locale].officialGroups}</small></span>
-              </div>
+            <aside className={styles.mapKey} data-testid="ondo-b-map-key" data-pulse-key-presentation="compact-gradient" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
               <div className={styles.pulseScale} data-testid="ondo-b-pulse-scale" aria-hidden="true">
-                <b>Pulse</b><i /><small>{MAP_UI[locale].pulseRange}</small>
+                <i /><b>Pulse</b><small>{MAP_UI[locale].pulseRange}</small>
               </div>
               <details className={styles.mapKeyDetails} data-testid="ondo-b-map-key-details" name="ondo-map-disclosure">
                 <summary aria-label={copy.mapKeyDetails}><span>{copy.mapKeyDetails}</span><ChevronRight size={16} /></summary>
@@ -1246,36 +1231,39 @@ export function MapEntryB() {
                   </div>
                   <small>{copy.mapKeyBody}</small>
                   <small data-testid="ondo-b-pulse-composition-disclosure">{PULSE_COMPOSITION_DISCLOSURE[locale]}</small>
-                  <dl className={styles.pulseCompositionRows} data-testid="ondo-b-pulse-production-drivers">
-                    {PULSE_PRODUCTION_DRIVER_DISCLOSURE[locale].map((driver) => (
-                      <div key={driver.id}>
-                        <dt>{driver.label}</dt>
-                        <dd><strong>{driver.state}</strong><span>{driver.detail}</span></dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={MAP_UI[locale].pulsePlaces}>
-                    {curatedPulseVenues.map(({ venue, pulse }) => (
-                      <li key={venue.id}>
-                        <button
-                          type="button"
-                          data-level={pulse.level}
-                          data-pulse-place-priority={pulse.level}
-                          aria-label={`${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}
-                          onClick={() => selectVenue(venue)}
-                        >
-                          <span>{venueDisplayName(venue.name.ko, locale)}</span>
-                          <b>{pulse.score} · {pulseLevelLabel(pulse.level, locale)}</b>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <details className={styles.methodologyDisclosure} data-testid="ondo-b-pulse-methodology">
+                    <summary>{copy.methodology}<ChevronRight size={15} /></summary>
+                    <dl className={styles.pulseCompositionRows} data-testid="ondo-b-pulse-production-drivers">
+                      {PULSE_PRODUCTION_DRIVER_DISCLOSURE[locale].map((driver) => (
+                        <div key={driver.id}>
+                          <dt>{driver.label}</dt>
+                          <dd><strong>{driver.state}</strong><span>{driver.detail}</span></dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <ul className={styles.pulsePlaces} data-testid="ondo-b-map-pulse-places" aria-label={MAP_UI[locale].pulsePlaces}>
+                      {curatedPulseVenues.map(({ venue, pulse }) => (
+                        <li key={venue.id}>
+                          <button
+                            type="button"
+                            data-level={pulse.level}
+                            data-pulse-place-priority={pulse.level}
+                            aria-label={`${venueDisplayName(venue.name.ko, locale)} · Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}
+                            onClick={() => selectVenue(venue)}
+                          >
+                            <span>{venueDisplayName(venue.name.ko, locale)}</span>
+                            <b>{pulse.score} · {pulseLevelLabel(pulse.level, locale)}</b>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
                 </div>
               </details>
             </aside>
           ) : null}
           {effectiveView === "map" && mapState !== "error" ? (
-            <footer className={styles.attribution} data-testid="ondo-b-attribution" aria-label={MAP_UI[locale].mapAttribution}>
+            <footer className={styles.attribution} data-testid="ondo-b-attribution" data-attribution-presentation="compact-legal" aria-label={MAP_UI[locale].mapAttribution}>
               <details className={styles.creditDetails} data-testid="ondo-b-map-credit-details" name="ondo-map-disclosure">
                 <summary aria-label={copy.mapCredits}><span>{copy.mapCredits}</span><Info size={17} /></summary>
                 <div className={styles.creditDetailsBody}>
