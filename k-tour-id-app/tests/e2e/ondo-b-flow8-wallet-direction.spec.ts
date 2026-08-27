@@ -8,7 +8,7 @@ const ARTIFACT_DIR = "artifacts/qa/flow8-wallet"
 type Locale = "en" | "ko" | "ja"
 type Viewport = { label: string; width: number; height: number }
 type BenefitQa = "ineligible" | "below_minimum" | "expired"
-type Flow8Qa = { wallet?: "failure"; payment?: "failure" | "insufficient"; benefit?: BenefitQa }
+type Flow8Qa = { wallet?: "failure"; payment?: "failure" | "insufficient"; benefit?: BenefitQa; holdProcessing?: boolean }
 
 const VIEWPORTS: readonly Viewport[] = [
   { label: "320x720", width: 320, height: 720 },
@@ -153,7 +153,6 @@ async function processingCapture(page: Page, name: string) {
     caret: "hide",
     scale: (page.viewportSize()?.width ?? 0) >= 1200 ? "css" : "device",
   })
-  await expect(page.getByTestId("payment-processing")).toBeVisible()
 }
 
 async function navigateToOfferFromExplore(page: Page) {
@@ -412,6 +411,24 @@ test("FLOW8-CANCEL-008 Escape during processing cancels pending confirmation and
   expect((await storedDevice(page)).commerceReceipts).toHaveLength(1)
 })
 
+test("FLOW8-PROCESSING-014 visual evidence can hold the session-only processing frame without changing normal payment", async ({ page }) => {
+  const { offer } = await openOffer(page)
+  await offer.getByTestId("payment-confirm").click()
+  await connectWallet(page, "en")
+  await offer.getByTestId("payment-minimum-consent").locator("input").check()
+  await setCaptureQa(page, { holdProcessing: true })
+  await offer.getByTestId("payment-confirm").click()
+  await expect(offer.getByTestId("payment-processing")).toBeVisible()
+  await page.waitForTimeout(650)
+  await expect(offer.getByTestId("payment-processing")).toBeVisible()
+  await expect(offer.getByTestId("payment-receipt")).toHaveCount(0)
+  await page.evaluate(() => {
+    delete (window as Window & { __ONDO_B_QA__?: Flow8Qa }).__ONDO_B_QA__
+    window.dispatchEvent(new Event("ondo-b-flow8-release-payment"))
+  })
+  await expect(offer.getByTestId("payment-receipt")).toBeVisible()
+})
+
 test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and reload remain separate snapshots", async ({ page }) => {
   await openTravelPass(page)
   const account = page.getByTestId("traveler-id-account")
@@ -486,7 +503,9 @@ test("FLOW8-TRUTH-010 every locale keeps non-live truth visible and commerce act
     const external: string[] = []
     page.on("request", (request) => {
       const url = request.url()
-      if (["fetch", "xhr", "websocket"].includes(request.resourceType()) && !url.startsWith("http://127.0.0.1")) external.push(url)
+      if (["fetch", "xhr", "websocket"].includes(request.resourceType())
+        && !url.startsWith("http://127.0.0.1")
+        && !url.startsWith("https://tiles.openfreemap.org/")) external.push(url)
     })
     await page.getByTestId("wallet-link-open").click()
     await connectWallet(page, locale)
@@ -566,11 +585,22 @@ test("FLOW8-FIRSTVIEW-013 compact Wallet, offer choice, venue truth, and recover
   expect(prepareBox).not.toBeNull()
   expect(dockBox).not.toBeNull()
   expect(prepareBox!.y + prepareBox!.height).toBeLessThanOrEqual(dockBox!.y - 8)
+  expect(await prepare.evaluate((button) => {
+    const rect = button.getBoundingClientRect()
+    return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)?.closest("button") === button
+  })).toBe(true)
   await prepare.click()
   await connectWallet(page, "en")
   const { offer } = await navigateToOfferFromExplore(page)
   const venueBoundary = offer.getByTestId("commerce-venue-test-boundary")
   await expect(venueBoundary).toBeVisible()
+  const venueBoundaryBox = await venueBoundary.boundingBox()
+  expect(venueBoundaryBox).not.toBeNull()
+  expect(venueBoundaryBox!.height).toBeLessThanOrEqual(60)
+  expect(await venueBoundary.evaluate((node) => ({
+    align: getComputedStyle(node).textAlign,
+    size: Number.parseFloat(getComputedStyle(node).fontSize),
+  }))).toEqual({ align: "left", size: 12 })
   const benefitChoice = await offer.getByTestId("benefit-accept").boundingBox()
   expect(benefitChoice).not.toBeNull()
   expect(benefitChoice!.y + benefitChoice!.height).toBeLessThanOrEqual(720 - 96)
@@ -588,6 +618,24 @@ test("FLOW8-FIRSTVIEW-013 compact Wallet, offer choice, venue truth, and recover
 
 for (const locale of ["en", "ko", "ja"] as const) {
   for (const viewport of VIEWPORTS) {
+    test(`FLOW8-CAPTURE-POLISH ${locale} ${viewport.label} venue truth and deterministic processing`, async ({ page }) => {
+      test.skip(process.env.ONDO_FLOW8_CAPTURE !== "1", "Run after PRODUCT seal with ONDO_FLOW8_CAPTURE=1")
+      await page.setViewportSize({ width: viewport.width, height: viewport.height })
+      await seed(page, locale)
+      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await waitForShell(page)
+      const { offer } = await navigateToOfferFromExplore(page)
+      await quietCapture(page, `${locale}-${viewport.label}-offer-recommended`)
+      await offer.getByTestId("payment-confirm").click()
+      await connectWallet(page, locale)
+      await offer.getByTestId("payment-minimum-consent").locator("input").check()
+      await setCaptureQa(page, { holdProcessing: true })
+      await offer.getByTestId("payment-confirm").click()
+      await expect(offer.getByTestId("payment-processing")).toBeVisible()
+      await processingCapture(page, `${locale}-${viewport.label}-payment-processing`)
+      await expect(offer.getByTestId("payment-processing")).toBeVisible()
+    })
+
     test(`FLOW8-CAPTURE-SUCCESSOR ${locale} ${viewport.label} paid and declined evidence`, async ({ page }) => {
       test.skip(process.env.ONDO_FLOW8_CAPTURE !== "1", "Run after PRODUCT seal with ONDO_FLOW8_CAPTURE=1")
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
@@ -667,9 +715,15 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await place.getByTestId("canonical-meal-benefit-open").click()
       offer = page.getByTestId("ondo-b-id-wallet-commerce")
       await offer.getByTestId("payment-minimum-consent").locator("input").check()
+      await setCaptureQa(page, { holdProcessing: true })
       await offer.getByTestId("payment-confirm").click()
       await expect(offer.getByTestId("payment-processing")).toBeVisible()
       await processingCapture(page, `${locale}-${viewport.label}-payment-processing`)
+      await expect(offer.getByTestId("payment-processing")).toBeVisible()
+      await page.evaluate(() => {
+        delete (window as Window & { __ONDO_B_QA__?: Flow8Qa }).__ONDO_B_QA__
+        window.dispatchEvent(new Event("ondo-b-flow8-release-payment"))
+      })
       await expect(offer.getByTestId("payment-receipt")).toBeVisible()
       await quietCapture(page, `${locale}-${viewport.label}-receipt`)
 

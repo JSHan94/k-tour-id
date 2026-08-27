@@ -298,7 +298,11 @@ test("FLOW8-COPY-014 every locale names the local test and venue boundary withou
     "이 기기에서 준비 중",
     "この端末で準備しています",
   ]) expect(commerce).toContain(truth)
-  for (const stale of ["Connect travel wallet", "Connecting…", "여행 지갑 연결", "연결 중…", "トラベルウォレットを接続", "接続しています…"]) {
+  for (const stale of [
+    "Connect travel wallet", "Connecting…", "Connect test wallet to pay", "Disconnect",
+    "여행 지갑 연결", "연결 중…", "테스트 지갑 연결 후 결제", "연결 해제",
+    "トラベルウォレットを接続", "接続しています…", "テストウォレットを接続して続ける", "接続を解除",
+  ]) {
     expect(commerce).not.toContain(stale)
   }
   for (const visibleTestTruth of ["Test payment recorded", "테스트 결제 기록", "テスト決済の記録"]) {
