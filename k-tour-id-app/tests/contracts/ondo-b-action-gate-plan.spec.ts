@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import {
+  abandonPendingBAction,
   B_ACTION_AXIS_TTL_MS,
   B_ACTION_GATE_SESSION_KEY,
   B_ACTION_GATE_TTL_MS,
@@ -10,6 +11,7 @@ import {
   createBCheckoutActionReturn,
   createBLocalSignalActionReturn,
   createBTableActionReturn,
+  finalizeConsumedBAction,
   gatePlanForBAction,
   isBActionReturnPending,
   isBActionReturnStructurallyValid,
@@ -79,6 +81,32 @@ test("B-ACTION-GATE-002 the full plan is rechecked and a return envelope can be 
   const unrelated = createBCheckoutActionReturn({ venueId: VENUE_ID, now: new Date(NOW.getTime() + 1) })
   expect(restoreConsumedBActionAfterMutationFailure(storage as unknown as Storage, { ...unrelated, consumedAt: NOW.toISOString() }, NOW)).toBe(false)
 
+  const signal = createBLocalSignalActionReturn({ venueId: VENUE_ID, draftNonce: "private:1", tags: ["calm_now"], note: "discard this note", now: NOW })
+  const signalStorage = new MemoryStorage({
+    [B_ACTION_GATE_SESSION_KEY]: JSON.stringify({
+      version: 1,
+      person: { status: "eligible", expiresAt: new Date(NOW.getTime() + B_ACTION_AXIS_TTL_MS).toISOString() },
+      payment: { status: "unverified", expiresAt: null },
+      pending: signal,
+      lastConsumed: null,
+      outcome: null,
+    }),
+  })
+  const consumedSignal = consumePendingBActionAtMutation(signalStorage as unknown as Storage, signal, new Set(["account", "person"]), NOW)!
+  const consumedSession = JSON.parse(signalStorage.raw(B_ACTION_GATE_SESSION_KEY)!)
+  expect(consumedSession.lastConsumed).toEqual({ tokenId: signal.tokenId, cta: signal.cta, consumedAt: NOW.toISOString() })
+  expect(signalStorage.raw(B_ACTION_GATE_SESSION_KEY)).not.toContain("discard this note")
+  expect(finalizeConsumedBAction(signalStorage as unknown as Storage, consumedSignal, NOW)).toBe(true)
+  expect(restoreBActionGateSession(signalStorage as unknown as Storage, NOW).lastConsumed).toBeNull()
+
+  const abandoned = createBLocalSignalActionReturn({ venueId: VENUE_ID, draftNonce: "private:2", tags: ["welcoming"], note: "close me", now: NOW })
+  signalStorage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify({
+    ...restoreBActionGateSession(signalStorage as unknown as Storage, NOW),
+    pending: abandoned,
+  }))
+  expect(abandonPendingBAction(signalStorage as unknown as Storage, abandoned, NOW)).toBe(true)
+  expect(signalStorage.raw(B_ACTION_GATE_SESSION_KEY)).not.toContain("close me")
+
   expect(isBActionReturnStructurallyValid({ ...envelope, gatePlan: ["payment_kyc"] })).toBe(false)
   expect(isBActionReturnStructurallyValid({ ...envelope, tableId: "table-injected" })).toBe(false)
   expect(isBActionReturnStructurallyValid({ ...envelope, tokenId: `RT-START_CHECKOUT-${NOW.getTime() + 1}` })).toBe(false)
@@ -119,11 +147,27 @@ test("B-ACTION-GATE-004 B-native consumers, reset, localization and provider bou
   expect(coordinator).not.toMatch(/OndoProvider|GateOverlay|fetch\(|XMLHttpRequest|WebSocket/)
   expect(table).toContain("createBTableActionReturn")
   expect(table).toContain("consumePendingBActionAtMutation")
+  expect(table).toContain("restoreConsumedBActionAfterMutationFailure")
+  expect(table).toContain("finalizeConsumedBAction")
   expect(signal).toContain("createBLocalSignalActionReturn")
   expect(signal).toContain("consumePendingBActionAtMutation")
+  expect(signal).toContain("abandonPendingBAction")
+  expect(signal).toContain("finalizeConsumedBAction")
   expect(checkout).toContain("createBCheckoutActionReturn")
   expect(checkout).toContain("consumePendingBActionAtMutation")
-  expect(provider).toContain("previousActionGateSession")
+  expect(checkout).toContain("restoreConsumedBActionAfterMutationFailure")
+  expect(checkout).toContain("finalizeConsumedBAction")
+  const checkoutConfirm = checkout.indexOf('actions.dispatchCommerce({ type: "CONFIRM" })')
+  const checkoutDurableReturn = checkout.indexOf('actions.dispatchCommerce({ type: "PAYMENT_RETURN", outcome })')
+  const checkoutReadyListener = checkout.indexOf("const complete =", checkoutConfirm)
+  expect(checkoutConfirm).toBeGreaterThan(-1)
+  expect(checkoutDurableReturn).toBeGreaterThan(checkoutConfirm)
+  expect(checkoutReadyListener).toBeGreaterThan(checkoutConfirm)
+  expect(checkout.slice(checkoutConfirm, checkoutReadyListener)).not.toContain("finalizeConsumedBAction")
+  expect(checkout.indexOf("restoreConsumedBActionAfterMutationFailure", checkoutDurableReturn)).toBeGreaterThan(checkoutDurableReturn)
+  expect(checkout.indexOf("finalizeConsumedBAction", checkoutDurableReturn)).toBeGreaterThan(checkoutDurableReturn)
+  expect(provider).toContain("actionGate: window.sessionStorage.getItem(B_ACTION_GATE_SESSION_KEY)")
+  expect(provider).toContain("restoreValue(window.sessionStorage, B_ACTION_GATE_SESSION_KEY, previous.actionGate)")
   expect(provider).toContain("window.sessionStorage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify(DEFAULT_B_ACTION_GATE_SESSION))")
   expect(updateBActionAxisSession(new MemoryStorage() as unknown as Storage, "person", "eligible", NOW)?.person.status).toBe("eligible")
 })

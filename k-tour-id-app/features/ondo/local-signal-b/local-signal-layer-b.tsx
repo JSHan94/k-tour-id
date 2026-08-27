@@ -6,11 +6,13 @@ import { BadgeCheck, ChevronLeft, CircleAlert, ImagePlus, NotebookPen, RotateCcw
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
 import {
+  abandonPendingBAction,
   B_ACTION_GATE_CANCEL_EVENT,
   B_ACTION_GATE_COMPLETE_EVENT,
   B_ACTION_GATE_READY_EVENT,
   consumePendingBActionAtMutation,
   createBLocalSignalActionReturn,
+  finalizeConsumedBAction,
   requestBActionGate,
   restoreBActionGateSession,
   restoreConsumedBActionAfterMutationFailure,
@@ -234,10 +236,13 @@ export function LocalSignalLayerB() {
 
   useEffect(() => {
     if (!open) return
-    const discardOnTraversal = () => actions.closeLocalSignal()
+    const discardOnTraversal = () => {
+      discardPendingSignalAction()
+      actions.closeLocalSignal()
+    }
     window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal)
     return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal)
-  }, [actions, open])
+  }, [actions, activeVenueId, draftNonce, open])
 
   useEffect(() => {
     if (!gateSession || gateSession.outcome !== "success") return
@@ -287,7 +292,18 @@ export function LocalSignalLayerB() {
   const signalStage = postFailed ? "post_failed" : personReady ? "ready" : alreadyPosted ? "posted" : gateReturn ?? "draft"
   const photoStage = photoError ?? (photoUrl ? "ready" : "empty")
 
+  function discardPendingSignalAction() {
+    const latest = restoreBActionGateSession(window.sessionStorage)
+    const pending = latest.pending
+    if (pending?.cta === "SUBMIT_LOCAL_SIGNAL"
+      && pending.venueId === activeVenueId
+      && pending.draftNonce === draftNonce) {
+      abandonPendingBAction(window.sessionStorage, pending)
+    }
+  }
+
   function returnToPlace() {
+    discardPendingSignalAction()
     removePhoto()
     setGateSession(null)
     actions.closeLocalSignal()
@@ -450,6 +466,7 @@ export function LocalSignalLayerB() {
     }
     setPostFailed(false)
     activityActions.recordContribution(`contribution:${activeVenue.id}:${draftNonce}`)
+    finalizeConsumedBAction(window.sessionStorage, consumed)
     window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
     removePhoto()
     actions.closeLocalSignal()

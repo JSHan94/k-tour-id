@@ -6,12 +6,16 @@ import { AlertTriangle, ArrowLeft, CalendarClock, Camera, Check, ChevronRight, C
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
 import {
+  abandonPendingBAction,
   B_ACTION_GATE_CANCEL_EVENT,
   B_ACTION_GATE_COMPLETE_EVENT,
   B_ACTION_GATE_READY_EVENT,
   consumePendingBActionAtMutation,
   createBTableActionReturn,
+  finalizeConsumedBAction,
   requestBActionGate,
+  restoreBActionGateSession,
+  restoreConsumedBActionAfterMutationFailure,
   type BTableActionReturn,
 } from "../identity-b/action-gate-contract-b"
 import { isGlobalAfter19AgeCurrent, restoreGlobalAfter19B } from "../after19/after19-global-b-model"
@@ -430,6 +434,10 @@ export function PulseTablesEntryB() {
   function openActiveTable() { setSelected(true) }
 
   function closeTable() {
+    const pending = restoreBActionGateSession(window.sessionStorage).pending
+    if (pending?.cta === "JOIN_TABLE" && pending.tableId === ACTIVE_TABLE_ID && pending.venueId === TABLE_VENUE_ID) {
+      abandonPendingBAction(window.sessionStorage, pending)
+    }
     setReturnTo(null)
     setSelected(false)
     window.requestAnimationFrame(() => openerRef.current?.focus({ preventScroll: true }))
@@ -455,12 +463,14 @@ export function PulseTablesEntryB() {
     }
     const recorded = actions.recordPlannedTable(ACTIVE_TABLE_ID, TABLE_VENUE_ID)
     if (!recorded) {
+      restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)
       setJoinPersistError(true)
       return
     }
     setJoinPersistError(false)
     setReturnTo(consumed as BTableActionReturn)
     setJoinStage("joined")
+    finalizeConsumedBAction(window.sessionStorage, consumed)
     window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
     focusFirstAvailableDestination(["[data-testid='table-open-chat']"])
   }

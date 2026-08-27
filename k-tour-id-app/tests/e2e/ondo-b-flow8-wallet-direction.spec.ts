@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
+const ACTION_GATE_KEY = "ondo-b.action-gates.v1"
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 const ARTIFACT_DIR = "artifacts/qa/flow8-wallet"
 
@@ -370,15 +371,38 @@ test("FLOW8-DURABLE-007 payment and refund do not visually complete before devic
   await offer.getByTestId("payment-confirm").click()
   await connectWallet(page, "en")
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
-  await installOneShotDeviceWriteFailure(page)
+  await page.evaluate(() => {
+    const target = window as Window & { __ONDO_B_QA__?: Flow8Qa }
+    target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), holdProcessing: true }
+  })
   await offer.getByTestId("payment-confirm").click()
+  await expect(offer.getByTestId("payment-processing")).toBeVisible()
+  const consumedGate = await page.evaluate((key) => {
+    const session = JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: { tokenId?: string } | null; lastConsumed?: { tokenId?: string } | null } | null
+    return { pending: session?.pending ?? null, tokenId: session?.lastConsumed?.tokenId ?? null }
+  }, ACTION_GATE_KEY)
+  expect(consumedGate.pending).toBeNull()
+  const consumedToken = consumedGate.tokenId
+  expect(consumedToken).toEqual(expect.any(String))
+  await installOneShotDeviceWriteFailure(page)
+  await page.evaluate(() => {
+    const target = window as Window & { __ONDO_B_QA__?: Flow8Qa }
+    if (target.__ONDO_B_QA__) target.__ONDO_B_QA__.holdProcessing = false
+    window.dispatchEvent(new Event("ondo-b-flow8-release-payment"))
+  })
   await expect(offer.getByTestId("payment-receipt")).toHaveCount(0)
   await expect(offer.getByTestId("commerce-storage-error")).toBeVisible()
   expect((await storedDevice(page)).commerceReceipts ?? []).toEqual([])
+  const restoredGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: { tokenId?: string } | null; lastConsumed?: { tokenId?: string } | null } | null, ACTION_GATE_KEY)
+  expect(restoredGate?.pending?.tokenId).toBe(consumedToken)
+  expect(restoredGate?.lastConsumed ?? null).toBeNull()
   await offer.getByTestId("payment-retry").click()
   await offer.getByTestId("payment-confirm").click()
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt).toBeVisible()
+  const finalizedGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: unknown; lastConsumed?: unknown } | null, ACTION_GATE_KEY)
+  expect(finalizedGate?.pending ?? null).toBeNull()
+  expect(finalizedGate?.lastConsumed ?? null).toBeNull()
   expect((await storedDevice(page)).commerceReceipts).toEqual([expect.objectContaining({ status: "paid", paidOOKRW: 19, benefitOOKRW: 3, balanceOOKRW: 41 })])
 
   await receipt.locator("details summary").click()

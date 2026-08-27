@@ -206,3 +206,50 @@ test("clear saved content tombstones every B session axis without reviving legac
   expect(state.after19).toMatchObject({ age: "unverified", mode: "off" })
   expect(state.legacy).toContain("PER-VERIFIED")
 })
+
+test("clear saved content rolls back every session key when a mid-transaction tombstone write fails", async ({ page }) => {
+  await seed(page, "en", 4)
+  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.evaluate(() => sessionStorage.setItem("ondo-b.labs.v1", JSON.stringify({ stage: "ready", private: "keep-on-failure" })))
+  const before = await page.evaluate(({ deviceKey, accountKey, actionKey, activityKey, preferenceKey, sessionKey }) => ({
+    device: localStorage.getItem(deviceKey),
+    account: sessionStorage.getItem(accountKey),
+    action: sessionStorage.getItem(actionKey),
+    activity: sessionStorage.getItem(activityKey),
+    preference: localStorage.getItem(preferenceKey),
+    after19: sessionStorage.getItem(sessionKey),
+    labs: sessionStorage.getItem("ondo-b.labs.v1"),
+  }), { deviceKey: DEVICE_KEY, accountKey: ACCOUNT_KEY, actionKey: ACTION_KEY, activityKey: ACTIVITY_KEY, preferenceKey: AFTER19_PREFERENCE_KEY, sessionKey: AFTER19_SESSION_KEY })
+  await page.evaluate((accountKey) => {
+    const original = Storage.prototype.setItem
+    let failOnce = true
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (this === sessionStorage && key === accountKey && failOnce) {
+        failOnce = false
+        throw new DOMException("Injected session failure", "QuotaExceededError")
+      }
+      return original.call(this, key, value)
+    }
+  }, ACCOUNT_KEY)
+
+  await page.getByTestId("nav-settings").click()
+  const settings = page.getByTestId("ondo-b-device-data-settings")
+  await settings.locator("summary").click()
+  await page.getByTestId("ondo-b-clear-device-open").click()
+  const dialog = page.getByTestId("ondo-b-clear-device-confirm")
+  await dialog.getByRole("button", { name: "Clear saved content" }).click()
+  await expect(page.getByTestId("ondo-b-clear-device-error")).toBeVisible()
+  const afterFailure = await page.evaluate(({ deviceKey, accountKey, actionKey, activityKey, preferenceKey, sessionKey }) => ({
+    device: localStorage.getItem(deviceKey),
+    account: sessionStorage.getItem(accountKey),
+    action: sessionStorage.getItem(actionKey),
+    activity: sessionStorage.getItem(activityKey),
+    preference: localStorage.getItem(preferenceKey),
+    after19: sessionStorage.getItem(sessionKey),
+    labs: sessionStorage.getItem("ondo-b.labs.v1"),
+  }), { deviceKey: DEVICE_KEY, accountKey: ACCOUNT_KEY, actionKey: ACTION_KEY, activityKey: ACTIVITY_KEY, preferenceKey: AFTER19_PREFERENCE_KEY, sessionKey: AFTER19_SESSION_KEY })
+  expect(afterFailure).toEqual(before)
+
+  await dialog.getByRole("button", { name: "Clear saved content" }).click()
+  await expect(dialog).toHaveCount(0)
+})

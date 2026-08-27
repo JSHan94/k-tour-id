@@ -1002,7 +1002,19 @@
     width: auto;
     box-shadow: 0 18px 42px rgb(77 34 32 / 30%), 0 0 0 7px rgb(255 252 247 / 86%);
   }
-  .detail[data-join-stage="idle"] .joinPanel { animation: tableStateFadeIn var(--table-motion-medium) ease-out both; }
+  /* The pinned Table decision belongs to the detail sheet, not to the
+     minimum-check dialog layered above it. Remove it from the visual and
+     pointer stack while that dialog is open so its rounded edge cannot peek
+     around the narrower modal on short phones. */
+  :global(body:has([data-testid="ondo-b-action-gate"]))
+    .detail[data-join-stage="idle"] .joinPanel > .primary {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  /* A transformed join panel becomes the containing block for the fixed CTA
+     during its entrance. Keep the panel fade-only so the decision never drops
+     below a short mobile viewport, even on the first animation frame. */
+  .detail[data-join-stage="idle"] .joinPanel { animation: tableSheetFadeIn var(--table-motion-medium) ease-out both; }
   .inlineConfirm {
     position: sticky;
     z-index: 7;
@@ -1117,8 +1129,8 @@
   to { transform: none; }
 }
 @keyframes tableSheetFadeIn {
-  from { transform: translateY(6px); }
-  to { transform: none; }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @keyframes tableStateIn {
   from { transform: translateY(8px); }

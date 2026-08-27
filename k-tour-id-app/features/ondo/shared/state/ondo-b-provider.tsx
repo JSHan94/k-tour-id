@@ -811,26 +811,55 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       return true
     },
     clearBDeviceContent: () => {
-      let previousLabsSession: string | null
-      let previousAccountSession: string | null
-      let previousActionGateSession: string | null
-      let previousAfter19Preference: string | null
-      let previousAfter19Session: string | null
-      let previousActivityProfile: string | null
+      let previous: {
+        labs: string | null
+        account: string | null
+        actionGate: string | null
+        after19Preference: string | null
+        after19Session: string | null
+        activityProfile: string | null
+      }
       try {
-        previousLabsSession = window.sessionStorage.getItem("ondo-b.labs.v1")
-        previousAccountSession = window.sessionStorage.getItem(B_ACCOUNT_SESSION_KEY)
-        previousActionGateSession = window.sessionStorage.getItem(B_ACTION_GATE_SESSION_KEY)
-        previousAfter19Preference = window.localStorage.getItem(GLOBAL_AFTER19_PREFERENCE_KEY)
-        previousAfter19Session = window.sessionStorage.getItem(GLOBAL_AFTER19_SESSION_KEY)
-        previousActivityProfile = window.sessionStorage.getItem(B_ACTIVITY_PROFILE_SESSION_KEY)
-        window.sessionStorage.removeItem("ondo-b.labs.v1")
+        previous = {
+          labs: window.sessionStorage.getItem("ondo-b.labs.v1"),
+          account: window.sessionStorage.getItem(B_ACCOUNT_SESSION_KEY),
+          actionGate: window.sessionStorage.getItem(B_ACTION_GATE_SESSION_KEY),
+          after19Preference: window.localStorage.getItem(GLOBAL_AFTER19_PREFERENCE_KEY),
+          after19Session: window.sessionStorage.getItem(GLOBAL_AFTER19_SESSION_KEY),
+          activityProfile: window.sessionStorage.getItem(B_ACTIVITY_PROFILE_SESSION_KEY),
+        }
+      } catch {
+        return false
+      }
+      const restorePrevious = () => {
+        let restored = true
+        const restoreValue = (storage: Storage, key: string, value: string | null) => {
+          try {
+            if (value == null) storage.removeItem(key)
+            else storage.setItem(key, value)
+          } catch {
+            restored = false
+          }
+        }
+        restoreValue(window.sessionStorage, "ondo-b.labs.v1", previous.labs)
+        restoreValue(window.sessionStorage, B_ACCOUNT_SESSION_KEY, previous.account)
+        restoreValue(window.sessionStorage, B_ACTION_GATE_SESSION_KEY, previous.actionGate)
+        restoreValue(window.localStorage, GLOBAL_AFTER19_PREFERENCE_KEY, previous.after19Preference)
+        restoreValue(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, previous.after19Session)
+        restoreValue(window.sessionStorage, B_ACTIVITY_PROFILE_SESSION_KEY, previous.activityProfile)
+        return restored
+      }
+      try {
         window.sessionStorage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify(DEFAULT_B_ACTION_GATE_SESSION))
         window.sessionStorage.setItem(B_ACCOUNT_SESSION_KEY, JSON.stringify({ account: "ACC-GUEST", returnTo: null } satisfies BAccountSessionState))
         window.localStorage.setItem(GLOBAL_AFTER19_PREFERENCE_KEY, JSON.stringify(DEFAULT_GLOBAL_AFTER19_PREFERENCE))
         window.sessionStorage.setItem(GLOBAL_AFTER19_SESSION_KEY, JSON.stringify(DEFAULT_GLOBAL_AFTER19_SESSION))
         window.sessionStorage.setItem(B_ACTIVITY_PROFILE_SESSION_KEY, JSON.stringify(restoreBActivityProfile(null)))
+        // The only destructive session mutation is last, after every tombstone
+        // write has succeeded, so a mid-sequence failure can restore all keys.
+        window.sessionStorage.removeItem("ondo-b.labs.v1")
       } catch {
+        restorePrevious()
         return false
       }
       const cleared = commit((current) => ({
@@ -860,23 +889,9 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         surface: { kind: "map" },
       }))
       if (!cleared) {
-        try {
-          if (previousLabsSession == null) window.sessionStorage.removeItem("ondo-b.labs.v1")
-          else window.sessionStorage.setItem("ondo-b.labs.v1", previousLabsSession)
-          if (previousAccountSession == null) window.sessionStorage.removeItem(B_ACCOUNT_SESSION_KEY)
-          else window.sessionStorage.setItem(B_ACCOUNT_SESSION_KEY, previousAccountSession)
-          if (previousActionGateSession == null) window.sessionStorage.removeItem(B_ACTION_GATE_SESSION_KEY)
-          else window.sessionStorage.setItem(B_ACTION_GATE_SESSION_KEY, previousActionGateSession)
-          if (previousAfter19Preference == null) window.localStorage.removeItem(GLOBAL_AFTER19_PREFERENCE_KEY)
-          else window.localStorage.setItem(GLOBAL_AFTER19_PREFERENCE_KEY, previousAfter19Preference)
-          if (previousAfter19Session == null) window.sessionStorage.removeItem(GLOBAL_AFTER19_SESSION_KEY)
-          else window.sessionStorage.setItem(GLOBAL_AFTER19_SESSION_KEY, previousAfter19Session)
-          if (previousActivityProfile == null) window.sessionStorage.removeItem(B_ACTIVITY_PROFILE_SESSION_KEY)
-          else window.sessionStorage.setItem(B_ACTIVITY_PROFILE_SESSION_KEY, previousActivityProfile)
-        } catch {
-          // Device content was not committed; keep the operation failed even if
-          // a storage-disabled browser also prevents session rollback.
-        }
+        // Device content was not committed, so restore every session/local
+        // value captured before the clear transaction.
+        restorePrevious()
       } else {
         window.dispatchEvent(new CustomEvent(B_ACTION_AXIS_SESSION_EVENT, { detail: DEFAULT_B_ACTION_GATE_SESSION }))
         window.dispatchEvent(new CustomEvent(GLOBAL_AFTER19_SESSION_EVENT, { detail: DEFAULT_GLOBAL_AFTER19_SESSION }))

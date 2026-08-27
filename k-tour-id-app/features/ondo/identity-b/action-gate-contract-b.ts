@@ -170,12 +170,20 @@ export type BActionGateOutcome = {
   gate: BActionGateKind
   status: "failure" | "unavailable" | "expired"
 }
+export type BActionConsumptionMarker = {
+  tokenId: string
+  cta: BActionGateCta
+  consumedAt: string
+}
 export type BActionGateSession = {
   version: 1
   person: BActionAxis
   payment: BActionAxis
   pending: BActionReturnTo | null
-  lastConsumed: BActionReturnTo | null
+  // Only a non-sensitive receipt is persisted across the synchronous
+  // consume -> device-mutation boundary. Draft text, tags and place context
+  // must never survive in the consumed slot.
+  lastConsumed: BActionConsumptionMarker | null
   outcome: BActionGateOutcome | null
 }
 
@@ -192,6 +200,20 @@ function sanitizeAxis(value: unknown, now: Date): BActionAxis {
 
 function parse(storage: Pick<Storage, "getItem">, key: string): unknown {
   try { const raw = storage.getItem(key); return raw ? JSON.parse(raw) : null } catch { return null }
+}
+
+function sanitizeConsumptionMarker(value: unknown): BActionConsumptionMarker | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  const cta = record.cta
+  const consumedAt = typeof record.consumedAt === "string" ? Date.parse(record.consumedAt) : Number.NaN
+  if ((cta !== "JOIN_TABLE" && cta !== "SUBMIT_LOCAL_SIGNAL" && cta !== "START_CHECKOUT")
+    || typeof record.tokenId !== "string"
+    || !Number.isFinite(consumedAt)) return null
+  // Accept the previous full-envelope representation only to migrate it
+  // one-way into this payload-free marker on the next persistence write.
+  if (Object.keys(record).length !== 3 && !isBActionReturnStructurallyValid(value)) return null
+  return { tokenId: record.tokenId, cta, consumedAt: new Date(consumedAt).toISOString() }
 }
 
 function migrateLegacyActionAxes(storage: Pick<Storage, "getItem">, now: Date): BActionGateSession {
@@ -228,7 +250,7 @@ export function restoreBActionGateSession(storage: Pick<Storage, "getItem">, now
     person: sanitizeAxis(record.person, now),
     payment: sanitizeAxis(record.payment, now),
     pending,
-    lastConsumed: isBActionReturnStructurallyValid(record.lastConsumed) && record.lastConsumed.consumedAt !== null ? record.lastConsumed : null,
+    lastConsumed: sanitizeConsumptionMarker(record.lastConsumed),
     outcome,
   }
 }
@@ -265,7 +287,8 @@ export function consumePendingBActionAtMutation(
   if (!latest.pending || latest.pending.tokenId !== expected.tokenId) return null
   const consumed = consumeBActionReturnTo(latest.pending, satisfied, now)
   if (!consumed) return null
-  const next = { ...latest, pending: null, lastConsumed: consumed, outcome: null }
+  const lastConsumed: BActionConsumptionMarker = { tokenId: consumed.tokenId, cta: consumed.cta, consumedAt: consumed.consumedAt! }
+  const next = { ...latest, pending: null, lastConsumed, outcome: null }
   return persistBActionGateSession(storage, next) ? consumed : null
 }
 
@@ -279,6 +302,29 @@ export function restoreConsumedBActionAfterMutationFailure(
   const pending = { ...consumed, consumedAt: null }
   if (!isBActionReturnPending(pending, now)) return false
   return persistBActionGateSession(storage, { ...latest, pending, lastConsumed: null, outcome: null })
+}
+
+export function finalizeConsumedBAction(
+  storage: Pick<Storage, "getItem" | "setItem">,
+  consumed: BActionReturnTo,
+  now = new Date(),
+) {
+  const latest = restoreBActionGateSession(storage, now)
+  if (latest.pending || latest.lastConsumed?.tokenId !== consumed.tokenId || consumed.consumedAt === null) return false
+  return persistBActionGateSession(storage, { ...latest, lastConsumed: null, outcome: null })
+}
+
+export function abandonPendingBAction(
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem">,
+  expected: Pick<BActionReturnTo, "tokenId">,
+  now = new Date(),
+) {
+  const latest = restoreBActionGateSession(storage, now)
+  if (!latest.pending || latest.pending.tokenId !== expected.tokenId) return false
+  if (persistBActionGateSession(storage, { ...latest, pending: null, outcome: null })) return true
+  // Privacy-first fallback: if a browser refuses the bounded rewrite, remove
+  // the complete gate record so a discarded draft cannot survive a reload.
+  try { storage.removeItem(B_ACTION_GATE_SESSION_KEY); return true } catch { return false }
 }
 
 export function clearBActionGateSession(storage: Pick<Storage, "removeItem">) {

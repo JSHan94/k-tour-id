@@ -27,13 +27,16 @@ import {
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
 import {
+  abandonPendingBAction,
   B_ACTION_GATE_CANCEL_EVENT,
   B_ACTION_GATE_COMPLETE_EVENT,
   B_ACTION_GATE_READY_EVENT,
   consumePendingBActionAtMutation,
   createBCheckoutActionReturn,
+  finalizeConsumedBAction,
   requestBActionGate,
   restoreBActionGateSession,
+  restoreConsumedBActionAfterMutationFailure,
   type BCheckoutActionReturn,
 } from "../identity-b/action-gate-contract-b"
 import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
@@ -465,6 +468,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   const copy = OFFER_COPY[locale]
   const rootRef = useRef<HTMLElement>(null)
   const pendingRef = useRef(false)
+  const consumedCheckoutRef = useRef<BCheckoutActionReturn | null>(null)
   const commerce = state.commerceSession
   const [view, setView] = useState<PaymentView>(() => commerce.status === "paid" ? "receipt" : commerce.status === "refunded" ? "refunded" : "review")
   const [consent, setConsent] = useState(false)
@@ -521,19 +525,21 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
       if (state.account === "ACC-ACTIVE") satisfied.add("account")
       if (latest.payment.status === "eligible" && latest.payment.expiresAt && Date.parse(latest.payment.expiresAt) > Date.now()) satisfied.add("payment_kyc")
       const consumed = consumePendingBActionAtMutation(window.sessionStorage, detail, satisfied)
-      if (!consumed) {
+      if (!consumed || consumed.cta !== "START_CHECKOUT") {
         setStorageError("gate")
         return
       }
+      consumedCheckoutRef.current = consumed
       pendingRef.current = true
       setStorageError(null)
       if (!actions.dispatchCommerce({ type: "CONFIRM" })) {
+        restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)
+        consumedCheckoutRef.current = null
         pendingRef.current = false
         setStorageError("payment")
         return
       }
       setView("processing")
-      window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
     }
     const complete = (event: Event) => returnFromPaymentGate(event, true)
     const cancel = (event: Event) => returnFromPaymentGate(event, false)
@@ -550,6 +556,12 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
     const cancelPending = (event: globalThis.KeyboardEvent) => {
       if (event.key !== "Escape") return
       event.preventDefault()
+      const consumed = consumedCheckoutRef.current
+      if (consumed) {
+        finalizeConsumedBAction(window.sessionStorage, consumed)
+        consumedCheckoutRef.current = null
+        window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
+      }
       pendingRef.current = false
       actions.dispatchCommerce({ type: "CANCEL_CONFIRMATION" })
       onClose()
@@ -568,10 +580,19 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
       const committed = actions.dispatchCommerce({ type: "PAYMENT_RETURN", outcome })
       pendingRef.current = false
       if (!committed) {
+        const consumed = consumedCheckoutRef.current
+        if (consumed) restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)
+        consumedCheckoutRef.current = null
         actions.dispatchCommerce({ type: "CANCEL_CONFIRMATION" })
         setStorageError("payment")
         setView("failure")
         return
+      }
+      const consumed = consumedCheckoutRef.current
+      if (consumed) {
+        finalizeConsumedBAction(window.sessionStorage, consumed)
+        consumedCheckoutRef.current = null
+        window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
       }
       setView(outcome === "success" ? "receipt" : outcome)
     }
@@ -609,6 +630,16 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   }
 
   function closeOffer() {
+    const pending = restoreBActionGateSession(window.sessionStorage).pending
+    if (pending?.cta === "START_CHECKOUT" && pending.venueId === venueId && pending.offerId === "meal-offer-gukbap") {
+      abandonPendingBAction(window.sessionStorage, pending)
+    }
+    const consumed = consumedCheckoutRef.current
+    if (consumed) {
+      finalizeConsumedBAction(window.sessionStorage, consumed)
+      consumedCheckoutRef.current = null
+      window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
+    }
     pendingRef.current = false
     if (commerce.confirmationPending || view === "processing") actions.dispatchCommerce({ type: "CANCEL_CONFIRMATION" })
     onClose()
