@@ -249,6 +249,35 @@
   .editorialBand { aspect-ratio: 1.72 / 1; border-radius: 28px; }
 }
 
+/* On wide screens the shared meal is context, while the Table decision is
+   the task. Compose them side by side so date, seats and View Table remain in
+   the first useful viewport instead of sitting below a poster-sized image. */
+@media (min-width: 1100px) {
+  .entry {
+    display: grid;
+    grid-template-columns: minmax(320px, .82fr) minmax(520px, 1.18fr);
+    grid-template-rows: auto auto;
+    align-content: start;
+    align-items: start;
+    column-gap: 30px;
+  }
+  .entryHeader { grid-column: 1; grid-row: 1; padding-bottom: 20px; }
+  .editorialBand {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    height: clamp(220px, 27vh, 280px);
+    aspect-ratio: auto;
+    margin: 0;
+  }
+  .cards {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cardActive { grid-row: auto; }
+}
+
 @media (orientation: landscape) and (max-height: 500px) and (min-width: 760px) {
   .editorialBand { display: none; }
 }

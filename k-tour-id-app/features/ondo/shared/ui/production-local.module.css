@@ -310,6 +310,51 @@
   .journeyInspiration img { object-position: 62% 52%; }
 }
 
+/* A short landscape viewport is a task surface, not an image viewer. Keep
+   the empty-journey meaning and Explore decision visible together while the
+   remaining preserved sections continue below. */
+@media (min-width: 700px) and (orientation: landscape) and (max-height: 500px) {
+  .screen[data-testid="ondo-b-my-korea-entry"] { padding: 18px 24px 32px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .header { gap: 4px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .header h1 { font-size: 32px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .header span { max-width: 760px; font-size: 12px; line-height: 1.35; }
+  .journeyInspiration { display: none; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+    padding-left: 0;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before,
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection::before { display: none; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection {
+    grid-column: auto;
+    gap: 8px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="ondo-b-saved-entry"] { order: -2; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] { order: -1; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading > svg { padding: 5px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading h2 { font-size: 15px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading p { line-height: 1.35; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: 4px 8px;
+    padding-top: 8px;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty:has(button) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty button {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+}
+
 @media (max-width: 430px) {
   .screen { padding-top: max(24px, env(safe-area-inset-top)); }
   .header { gap: 6px; }

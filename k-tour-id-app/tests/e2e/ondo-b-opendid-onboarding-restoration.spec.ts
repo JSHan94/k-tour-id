@@ -21,6 +21,12 @@ const COPY = {
     privateCredential: "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
     passportProvider: "Passport eKYC uses a separate provider — not OmniOne CX",
     assuranceChange: "Passport eKYC does not verify registered-resident status and is not an equivalent residence-card check.",
+    presentationRequester: "ONDO Table demo verifier",
+    presentationPurpose: "Minimum trip eligibility for this one request",
+    presentationEvidence: "K-Tour travel eligibility · yes/no only",
+    presentationRetention: "One request · nonce and expiry semantics · no VP stored",
+    presentationApproved: "SIMULATED · APPROVED ONCE",
+    unchanged: "unchanged",
   },
   ko: {
     guest: "설정 없이 탐색",
@@ -28,6 +34,12 @@ const COPY = {
     privateCredential: "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
     passportProvider: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
     assuranceChange: "여권 eKYC는 등록외국인 체류 자격을 확인하지 않으며 외국인등록증 확인과 동등하지 않습니다.",
+    presentationRequester: "ONDO 테이블 데모 검증자",
+    presentationPurpose: "이번 한 번의 요청을 위한 최소 여행 자격 확인",
+    presentationEvidence: "K-Tour 여행 자격 · 예/아니오만",
+    presentationRetention: "한 번의 요청 · nonce와 만료 의미 적용 · VP 저장 안 함",
+    presentationApproved: "시뮬레이션 · 한 번 승인됨",
+    unchanged: "상태 변경 없음",
   },
   ja: {
     guest: "設定せずに見る",
@@ -35,6 +47,12 @@ const COPY = {
     privateCredential: "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
     passportProvider: "パスポートeKYCはOmniOne CXではなく別の事業者",
     assuranceChange: "パスポートeKYCは登録居住者の在留資格を確認せず、在留カード確認と同等ではありません。",
+    presentationRequester: "ONDOテーブルのデモ検証者",
+    presentationPurpose: "今回一回の依頼に必要な最小限の旅行資格確認",
+    presentationEvidence: "K-Tour旅行資格 · 可否のみ",
+    presentationRetention: "一回の依頼 · nonceと有効期限を適用 · VPは保存しない",
+    presentationApproved: "シミュレーション · 一回のみ承認",
+    unchanged: "状態変更なし",
   },
 } as const
 
@@ -281,6 +299,32 @@ test("OPENDID-E2E-003 EN KO JA expose all three consent/provider truths", async 
       await expect(evidence).toContainText(METHOD_EVIDENCE[locale][method])
       await context.close()
     }
+  }
+})
+
+test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation decision", async ({ browser }) => {
+  for (const locale of ["en", "ko", "ja"] as const) {
+    const { context, page } = await newSeededPage(browser, locale)
+    await page.getByTestId("nav-id").click()
+    await page.getByTestId("traveler-id-ktour-id-open").click()
+    const setup = page.getByTestId("k-tour-id-setup")
+    await reachCredential(setup)
+
+    await setup.getByTestId("k-tour-id-presentation-open").click()
+    const request = setup.getByTestId("k-tour-id-presentation-request")
+    await expect(request.getByTestId("identity-presentation-requester")).toContainText(COPY[locale].presentationRequester)
+    await expect(request.getByTestId("identity-presentation-purpose")).toContainText(COPY[locale].presentationPurpose)
+    await expect(request.getByTestId("identity-presentation-evidence")).toContainText(COPY[locale].presentationEvidence)
+    await expect(request.getByTestId("identity-presentation-retention")).toContainText(COPY[locale].presentationRetention)
+
+    await setup.getByTestId("k-tour-id-continue").click()
+    const consent = setup.getByTestId("k-tour-id-presentation-consent")
+    await expect(consent).toContainText(COPY[locale].presentationRequester)
+    await expect(consent.getByTestId("identity-presentation-predicate")).toContainText(COPY[locale].presentationEvidence)
+    await setup.getByTestId("k-tour-id-presentation-approve").click()
+    await expect(setup.getByTestId("identity-presentation-result-status")).toHaveText(COPY[locale].presentationApproved)
+    await expect(setup.getByTestId("identity-presentation-credential-state")).toContainText(COPY[locale].unchanged)
+    await context.close()
   }
 })
 

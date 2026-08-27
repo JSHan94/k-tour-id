@@ -439,8 +439,7 @@
   }
 
   .stage[data-variant="B"] .nav button:hover .navLabel,
-  .stage[data-variant="B"] .nav button:focus-visible .navLabel,
-  .stage[data-variant="B"] .nav button[data-state="selected"] .navLabel {
+  .stage[data-variant="B"] .nav button:focus-visible .navLabel {
     opacity: 1;
     transform: translate(0, -50%);
   }

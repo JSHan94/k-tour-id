@@ -109,7 +109,12 @@ test("planned meals appear only after the explicit local join confirmation and s
 })
 
 test("cancel creates no plan while the Local Signal merge contract can render honest device history in Korean", async ({ page }) => {
-  await seedDevice(page, "ko", { localSignalPostedVenueIds: [VENUE_ID] })
+  await seedDevice(page, "ko", {
+    localSignalPostedVenueIds: [VENUE_ID],
+    localPulseEvidenceByVenue: {
+      [VENUE_ID]: { tags: ["calm_now"], postedAt: "2026-08-27T00:00:00.000Z" },
+    },
+  })
   await gotoB(page)
   await activate(page, "nav-tables")
   await page.getByTestId(`table-open-${TABLE_ID}`).click()

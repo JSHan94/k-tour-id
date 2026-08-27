@@ -234,6 +234,11 @@ const MAP_UI = {
 
 const NEXT_LOCALE: Record<OndoBLocale, OndoBLocale> = { en: "ja", ja: "ko", ko: "en" }
 const NEXT_LOCALE_LABEL: Record<OndoBLocale, string> = { en: "JA", ja: "KO", ko: "EN" }
+const NEXT_LOCALE_ACCESSIBLE_LABEL: Record<OndoBLocale, string> = {
+  en: "Switch to Japanese",
+  ja: "韓国語に切り替える",
+  ko: "영어로 전환",
+}
 
 const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; ja: string; compact: Record<OndoBLocale, string>; short: string }> = {
   all: { en: "All", ko: "전체", ja: "すべて", compact: { en: "All", ko: "전체", ja: "すべて" }, short: "ALL" },
@@ -1123,7 +1128,7 @@ export function MapEntryB() {
       <section className={styles.root} data-testid="ondo-b-map-entry">
         <header className={styles.header}>
           <div className={styles.brand}><i /> <span><strong>ONDO</strong><small>{copy.tagline}</small></span></div>
-          <button type="button" className={styles.language} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} />{NEXT_LOCALE_LABEL[locale]}</button>
+          <button type="button" className={styles.language} aria-label={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} title={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} data-language-target={NEXT_LOCALE[locale]} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} aria-hidden="true" />{NEXT_LOCALE_LABEL[locale]}</button>
         </header>
         <NationDirectory locale={locale} onSelect={chooseCity} />
       </section>
@@ -1163,7 +1168,7 @@ export function MapEntryB() {
           <div className={styles.topline}>
             <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
             <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small className={styles.srOnly} data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
-            <button type="button" className={styles.language} data-testid="ondo-b-language" onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} />{NEXT_LOCALE_LABEL[locale]}</button>
+            <button type="button" className={styles.language} data-testid="ondo-b-language" aria-label={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} title={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} data-language-target={NEXT_LOCALE[locale]} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} aria-hidden="true" />{NEXT_LOCALE_LABEL[locale]}</button>
           </div>
           {city !== "jeju" ? <>
             <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={MAP_UI[locale].clearSearch}><X size={16} /></button> : null}</div>

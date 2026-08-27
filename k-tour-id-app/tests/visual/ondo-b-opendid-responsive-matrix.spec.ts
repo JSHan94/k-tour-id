@@ -9,6 +9,12 @@ const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 1000 },
 ] as const
 
+const PRESENTATION_COPY = {
+  en: { requester: "ONDO Table demo verifier", evidence: "K-Tour travel eligibility · yes/no only", retention: "One request · nonce and expiry semantics · no VP stored", approved: "SIMULATED · APPROVED ONCE", unchanged: "unchanged" },
+  ko: { requester: "ONDO 테이블 데모 검증자", evidence: "K-Tour 여행 자격 · 예/아니오만", retention: "한 번의 요청 · nonce와 만료 의미 적용 · VP 저장 안 함", approved: "시뮬레이션 · 한 번 승인됨", unchanged: "상태 변경 없음" },
+  ja: { requester: "ONDOテーブルのデモ検証者", evidence: "K-Tour旅行資格 · 可否のみ", retention: "一回の依頼 · nonceと有効期限を適用 · VPは保存しない", approved: "シミュレーション · 一回のみ承認", unchanged: "状態変更なし" },
+} as const
+
 async function seed(page: Page, locale: typeof LOCALES[number]) {
   await page.addInitScript(({ key, language }) => {
     localStorage.setItem(key, JSON.stringify({
@@ -101,9 +107,16 @@ for (const locale of LOCALES) {
       await testInfo.attach("credential-ready", { body: await page.getByTestId("k-tour-id-setup").screenshot(), contentType: "image/png" })
 
       await page.getByTestId("k-tour-id-presentation-open").click()
+      const request = page.getByTestId("k-tour-id-presentation-request")
+      await expect(request.getByTestId("identity-presentation-requester")).toContainText(PRESENTATION_COPY[locale].requester)
+      await expect(request.getByTestId("identity-presentation-evidence")).toContainText(PRESENTATION_COPY[locale].evidence)
+      await expect(request.getByTestId("identity-presentation-retention")).toContainText(PRESENTATION_COPY[locale].retention)
       await page.getByTestId("k-tour-id-continue").click()
+      await expect(page.getByTestId("identity-presentation-predicate")).toContainText(PRESENTATION_COPY[locale].evidence)
       await page.getByTestId("k-tour-id-presentation-approve").click()
       await expect(page.getByTestId("k-tour-id-presentation-result")).toHaveAttribute("data-result", "success")
+      await expect(page.getByTestId("identity-presentation-result-status")).toHaveText(PRESENTATION_COPY[locale].approved)
+      await expect(page.getByTestId("identity-presentation-credential-state")).toContainText(PRESENTATION_COPY[locale].unchanged)
       await expectResponsiveTruth(page)
       expect(pageErrors).toEqual([])
     })
