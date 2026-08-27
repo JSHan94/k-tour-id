@@ -239,6 +239,7 @@ test.describe("Warm Living Atlas personal journey", () => {
       await seed(narrow, locale)
       await narrow.goto("/ondo-b", { waitUntil: "domcontentloaded" })
       await narrow.getByTestId("nav-my").click()
+      await expect(narrow.getByTestId("ondo-b-my-korea-entry").locator(":scope > div > section").first()).toHaveAttribute("data-testid", "ondo-b-saved-entry")
       const explore = narrow.getByTestId("ondo-b-saved-entry").locator("button")
       const dock = narrow.getByTestId("ondo-main-nav")
       await expect(explore).toBeVisible()
@@ -248,6 +249,7 @@ test.describe("Warm Living Atlas personal journey", () => {
       await shot(narrow, `${locale}-320x720-my-empty-first-action`)
       await explore.click()
       await expect(narrow.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
+      await expect(narrow.getByTestId("ondo-scroll-region")).toBeFocused()
       await noHorizontalOverflow(narrow)
       await narrowContext.close()
     }

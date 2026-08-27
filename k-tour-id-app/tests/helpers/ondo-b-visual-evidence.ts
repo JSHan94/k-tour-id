@@ -632,7 +632,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await expect(page.getByTestId("onboarding-step-intent")).toBeVisible()
     }
     if (state === "ONBOARDING-PREFERENCES") {
-      await page.getByTestId("persona-short_term").click()
+      await page.getByTestId("persona-travelling").click()
       await page.getByTestId("onboarding-step-intent").locator("button").filter({ has: page.locator("svg") }).last().click()
       await expect(page.getByTestId("onboarding-step-preferences")).toBeVisible()
       await page.getByTestId("onboarding-step-preferences").locator("button").nth(1).click()

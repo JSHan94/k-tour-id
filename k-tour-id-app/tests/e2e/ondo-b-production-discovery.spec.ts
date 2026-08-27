@@ -36,10 +36,18 @@ test.describe("production official-source discovery", () => {
     await expect(onboarding).toBeVisible()
     await expect(onboarding).toContainText("400 licensed food-service records")
     await expect(onboarding).toContainText("Seoul and Busan")
-    await expect(onboarding).not.toContainText(/demo|simulat|score|persona/i)
+    const identityEntry = onboarding.getByTestId("k-tour-id-setup-open")
+    await expect(identityEntry).toContainText(/simulated identity route/i)
+    const discoveryCopy = await onboarding.evaluate((element) => {
+      const copy = element.cloneNode(true) as HTMLElement
+      copy.querySelector("[data-testid='k-tour-id-setup-open']")?.remove()
+      return copy.innerText
+    })
+    expect(discoveryCopy).not.toMatch(/demo|simulat|score|persona/i)
     await onboarding.getByRole("button", { name: "한국어로 보기" }).click()
     await expect(onboarding).toContainText("일반음식점 인허가 기록 400개")
     await expect(onboarding).toContainText("서울과 부산")
+    await expect(identityEntry).toContainText(/신원.*시뮬레이션/)
     await expectNoSeriousAxe(page, "[data-testid='ondo-onboarding']")
     await onboarding.getByRole("button", { name: "설정 없이 탐색", exact: true }).click()
     await expect(page.getByTestId("ondo-b-nation")).toBeVisible()

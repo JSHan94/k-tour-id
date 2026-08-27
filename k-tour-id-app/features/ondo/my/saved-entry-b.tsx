@@ -201,6 +201,64 @@ export function SavedEntryB() {
     })), 0)
   }
 
+  function openExplore() {
+    actions.setSurface({ kind: "map" })
+    actions.setTab("ondo")
+    window.requestAnimationFrame(() => document.getElementById("ondo-active-panel")?.focus())
+  }
+
+  const plannedSection = (
+    <section key="planned" className={styles.activitySection} data-testid="my-korea-planned" aria-labelledby="my-korea-planned-heading">
+      <div className={styles.activityHeading}><CalendarDays size={19} aria-hidden="true" /><span><h2 id="my-korea-planned-heading">{copy.plannedTitle}</h2><p>{copy.plannedBody}</p></span></div>
+      {planned.length === 0 ? <ActivityEmpty testId="my-korea-planned-empty" title={copy.plannedEmpty} body={copy.plannedEmptyBody} /> : (
+        <div className={styles.referenceList}>
+          {planned.map(({ reference, table, venue }) => {
+            const localizedTable = locale === "ja" ? JA_TABLE_COPY[reference.tableId] : { title: table.title[locale], schedule: table.schedule[locale] }
+            return <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{localizedTable.title}</h3><p>{localizedTable.schedule} · {personalVenueName(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>
+          })}
+        </div>
+      )}
+    </section>
+  )
+
+  const savedSection = (
+    <section key="saved" className={styles.activitySection} data-testid="ondo-b-saved-entry" aria-labelledby="my-korea-saved-heading">
+      <div className={styles.activityHeading}><Bookmark size={19} aria-hidden="true" /><span><h2 id="my-korea-saved-heading">{copy.savedTitle}</h2><p>{copy.savedBody}</p></span></div>
+      {saved.length === 0 ? (
+        <div className={styles.compactEmpty} aria-label={SAVED_EMPTY_LABEL[locale]}>
+          <h3>{copy.savedEmpty}</h3>
+          <p>{copy.savedEmptyBody}</p>
+          <button type="button" onClick={openExplore}>{copy.explore}</button>
+        </div>
+      ) : (
+        <div className={styles.savedList} aria-label={savedListLabel(locale, saved.length)}>
+          {saved.map((venue) => {
+            const name = personalVenueName(venue.name.ko, locale)
+            return (
+              <article className={styles.savedCard} key={venue.id} data-testid={`saved-card-${venue.id}`}>
+                <button className={styles.savedOpen} type="button" onClick={() => openVenue(venue.id, venue.cityId)} data-testid={`saved-venue-${venue.id}`}>
+                  <MapPin size={18} aria-hidden="true" />
+                  <span>
+                    <strong>{name.officialName}</strong>
+                    <small>{name.officialNameLabel}</small>
+                    {locale !== "ko" ? <small><b>{name.transliteration}</b> · {name.transliterationLabel}</small> : null}
+                    <small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)}</small>
+                  </span>
+                  <ChevronRight size={18} aria-hidden="true" />
+                </button>
+                <PrivateNote venueId={venue.id} />
+                <button className={styles.remove} type="button" onClick={() => actions.toggleSavedVenue(venue.id)}>
+                  <Trash2 size={16} aria-hidden="true" />
+                  {copy.remove}
+                </button>
+              </article>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+
   return (
     <div className={styles.screen} data-testid="ondo-b-my-korea-entry" data-visual-direction="warm-living-atlas">
       <header className={styles.header}>
@@ -217,53 +275,8 @@ export function SavedEntryB() {
       ) : null}
 
       <div className={styles.activitySections}>
-        <section className={styles.activitySection} data-testid="my-korea-planned" aria-labelledby="my-korea-planned-heading">
-          <div className={styles.activityHeading}><CalendarDays size={19} aria-hidden="true" /><span><h2 id="my-korea-planned-heading">{copy.plannedTitle}</h2><p>{copy.plannedBody}</p></span></div>
-          {planned.length === 0 ? <ActivityEmpty testId="my-korea-planned-empty" title={copy.plannedEmpty} body={copy.plannedEmptyBody} /> : (
-            <div className={styles.referenceList}>
-              {planned.map(({ reference, table, venue }) => {
-                const localizedTable = locale === "ja" ? JA_TABLE_COPY[reference.tableId] : { title: table.title[locale], schedule: table.schedule[locale] }
-                return <article key={reference.tableId} className={styles.planReference} data-testid={`planned-table-${reference.tableId}`}><span className={styles.localBadge}>{copy.localPreview}</span><h3>{localizedTable.title}</h3><p>{localizedTable.schedule} · {personalVenueName(venue.name.ko, locale).officialName}</p><button type="button" onClick={() => openPlannedTable(reference.tableId, reference.venueId)}>{copy.openTables}<ChevronRight size={16} aria-hidden="true" /></button></article>
-              })}
-            </div>
-          )}
-        </section>
-
-        <section className={styles.activitySection} data-testid="ondo-b-saved-entry" aria-labelledby="my-korea-saved-heading">
-          <div className={styles.activityHeading}><Bookmark size={19} aria-hidden="true" /><span><h2 id="my-korea-saved-heading">{copy.savedTitle}</h2><p>{copy.savedBody}</p></span></div>
-          {saved.length === 0 ? (
-            <div className={styles.compactEmpty} aria-label={SAVED_EMPTY_LABEL[locale]}>
-              <h3>{copy.savedEmpty}</h3>
-              <p>{copy.savedEmptyBody}</p>
-              <button type="button" onClick={() => { actions.setSurface({ kind: "map" }); actions.setTab("ondo") }}>{copy.explore}</button>
-            </div>
-          ) : (
-            <div className={styles.savedList} aria-label={savedListLabel(locale, saved.length)}>
-              {saved.map((venue) => {
-                const name = personalVenueName(venue.name.ko, locale)
-                return (
-                  <article className={styles.savedCard} key={venue.id} data-testid={`saved-card-${venue.id}`}>
-                    <button className={styles.savedOpen} type="button" onClick={() => openVenue(venue.id, venue.cityId)} data-testid={`saved-venue-${venue.id}`}>
-                      <MapPin size={18} aria-hidden="true" />
-                      <span>
-                        <strong>{name.officialName}</strong>
-                        <small>{name.officialNameLabel}</small>
-                        {locale !== "ko" ? <small><b>{name.transliteration}</b> · {name.transliterationLabel}</small> : null}
-                        <small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)}</small>
-                      </span>
-                      <ChevronRight size={18} aria-hidden="true" />
-                    </button>
-                    <PrivateNote venueId={venue.id} />
-                    <button className={styles.remove} type="button" onClick={() => actions.toggleSavedVenue(venue.id)}>
-                      <Trash2 size={16} aria-hidden="true" />
-                      {copy.remove}
-                    </button>
-                  </article>
-                )
-              })}
-            </div>
-          )}
-        </section>
+        {saved.length === 0 ? savedSection : plannedSection}
+        {saved.length === 0 ? plannedSection : savedSection}
 
         <section className={styles.activitySection} data-testid="my-korea-recent" aria-labelledby="my-korea-recent-heading">
           <div className={styles.activityHeading}><History size={19} aria-hidden="true" /><span><h2 id="my-korea-recent-heading">{copy.recentTitle}</h2><p>{copy.recentBody}</p></span></div>

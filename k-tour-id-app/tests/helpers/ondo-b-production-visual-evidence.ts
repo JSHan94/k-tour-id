@@ -75,6 +75,21 @@ export async function expectBProductionRuntimeClean(page: Page) {
 }
 
 export async function prepareBProductionVisualPage(page: Page) {
+  await page.route("https://tiles.openfreemap.org/planet", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify(STRUCTURAL_TILEJSON),
+  }))
+  await page.route("https://tiles.openfreemap.org/ondo-production-visual-empty/**", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/x-protobuf",
+    body: Buffer.alloc(0),
+  }))
+  await page.route("https://tiles.openfreemap.org/fonts/**", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/x-protobuf",
+    body: Buffer.alloc(0),
+  }))
   installBProductionRuntimeGuard(page)
   await page.addInitScript(() => {
     window.addEventListener("unhandledrejection", (event) => console.error(`unhandledrejection: ${String(event.reason)}`))
@@ -91,16 +106,6 @@ export async function prepareBProductionVisualPage(page: Page) {
 }
 
 export async function prepareBProductionStructuralVisualPage(page: Page) {
-  await page.route("https://tiles.openfreemap.org/planet", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify(STRUCTURAL_TILEJSON),
-  }))
-  await page.route("https://tiles.openfreemap.org/ondo-production-visual-empty/**", (route) => route.fulfill({
-    status: 200,
-    contentType: "application/x-protobuf",
-    body: Buffer.alloc(0),
-  }))
   await prepareBProductionVisualPage(page)
 }
 
@@ -250,11 +255,12 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
   } else if (item.setup === "saved-empty" || item.setup === "saved-place" || item.setup === "private-note") {
     await page.getByTestId("nav-my").click()
     await expect(page.getByTestId("ondo-b-saved-entry")).toBeVisible()
-    if (item.setup === "saved-empty") await expect(page.getByRole("region", { name: "No saved places" })).toBeVisible()
+    if (item.setup === "saved-empty") await expect(page.getByTestId("ondo-b-saved-entry").getByLabel("No saved places")).toBeVisible()
   } else if (item.setup === "settings" || item.setup === "reset-confirm") {
-    await page.getByTestId("nav-id").click()
+    await page.getByTestId("nav-settings").click()
     await expect(page.getByTestId("ondo-b-settings-entry")).toBeVisible()
     if (item.setup === "reset-confirm") {
+      await page.getByTestId("ondo-b-device-data-settings").locator("summary").click()
       await page.getByTestId("ondo-b-clear-device-open").click()
       await expect(page.getByTestId("ondo-b-clear-device-confirm")).toBeVisible()
     }
@@ -288,13 +294,18 @@ export async function setupBProductionStructuralVisualCase(page: Page, item: BPr
 export async function stabilizeBProductionVisual(page: Page, item: BProductionVisualCase) {
   await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", item.locale)
   await page.evaluate(async () => {
-    await document.fonts.ready
-    await Promise.all(Array.from(document.images).map((image) => image.complete
-      ? Promise.resolve()
-      : new Promise<void>((resolve) => {
-          image.addEventListener("load", () => resolve(), { once: true })
-          image.addEventListener("error", () => resolve(), { once: true })
-        })))
+    await Promise.race([
+      Promise.all([
+        document.fonts.ready,
+        ...Array.from(document.images).map((image) => image.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              image.addEventListener("load", () => resolve(), { once: true })
+              image.addEventListener("error", () => resolve(), { once: true })
+            })),
+      ]),
+      new Promise<void>((resolve) => window.setTimeout(resolve, 3_000)),
+    ])
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
   })
   await page.waitForTimeout(120)
@@ -397,8 +408,15 @@ export async function expectBProductionVisualGuards(page: Page, item: BProductio
   await expectMinimumTargetsAndType(root)
   await expectModalAndFocus(page, item)
 
-  const visibleCopy = await root.innerText()
+  const visibleCopy = await root.evaluate((element) => {
+    const copy = element.cloneNode(true) as HTMLElement
+    copy.querySelector("[data-testid='k-tour-id-setup-open']")?.remove()
+    return copy.innerText
+  })
   expect(visibleCopy, `${item.id} production-banned visible copy`).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|\bfixtures?\b|\bhypoth(?:esis|eses)\b|\btest[- ]?tokens?\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처/i)
+  if (item.setup === "first-run") {
+    await expect(root.getByTestId("k-tour-id-setup-open")).toContainText(item.locale === "ko" ? /신원.*시뮬레이션/ : /simulated identity/i)
+  }
 }
 
 export async function expectBProductionStructuralVisualGuards(page: Page, item: BProductionStructuralVisualCase) {
