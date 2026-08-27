@@ -130,3 +130,124 @@ test("OPENDID-B-007 existing B and A product seams remain frozen", () => {
   expect(product).toContain("<OfficialDirectoryOnboardingLayer />")
   expect(source("features/ondo/identity/gate-overlay.tsx")).toContain("export function GateOverlay")
 })
+
+test("OPENDID-B-008 freezes the complete consent-to-presentation state machine", () => {
+  for (const phase of [
+    '"method_select"',
+    '"consent"',
+    '"route_prepare"',
+    '"cx_handoff_preview"',
+    '"document_preview"',
+    '"face_liveness_preview"',
+    '"provider_processing_preview"',
+    '"evidence_preview"',
+    '"issuance_preview"',
+    '"holder_delivery_preview"',
+    '"credential_ready"',
+    '"presentation_request"',
+    '"presentation_consent"',
+    '"presentation_result"',
+  ]) expect(setup).toContain(phase)
+
+  for (const testId of [
+    'data-testid="k-tour-id-setup"',
+    'data-testid="k-tour-id-environment"',
+    'data-testid="k-tour-id-private-boundary"',
+    'data-testid="k-tour-id-methods"',
+    'data-testid="k-tour-id-method-mobile-id"',
+    'data-testid="k-tour-id-method-mobile-residence-card"',
+    'data-testid="k-tour-id-method-passport-ekyc"',
+    'data-testid="k-tour-id-consent"',
+    'data-testid="identity-consent-requester"',
+    'data-testid="identity-consent-purpose"',
+    'data-testid="identity-consent-provider"',
+    'data-testid="identity-consent-evidence"',
+    'data-testid="identity-consent-retention"',
+    'data-testid="k-tour-id-route-step"',
+    'data-testid="k-tour-id-evidence-preview"',
+    'data-testid="k-tour-id-issuance-preview"',
+    'data-testid="k-tour-id-holder-delivery"',
+    'data-testid="k-tour-id-credential"',
+    'data-testid="k-tour-id-presentation-request"',
+    'data-testid="k-tour-id-presentation-consent"',
+    'data-testid="k-tour-id-presentation-result"',
+    'data-testid="k-tour-id-failure"',
+    'data-testid="k-tour-id-unavailable"',
+    'data-testid="k-tour-id-expired"',
+    'data-testid="k-tour-id-retry"',
+    'data-testid="k-tour-id-cancel"',
+    'data-testid="k-tour-id-return"',
+  ]) expect(setup).toContain(testId)
+})
+
+test("OPENDID-B-009 fixes the release environment to simulation and preserves exact truth in three locales", () => {
+  for (const truth of [
+    "SIMULATED · No identity provider or OpenDID service is contacted.",
+    "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
+    "시뮬레이션 · 신원확인 기관이나 OpenDID 서비스에 요청을 보내지 않습니다.",
+    "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
+    "シミュレーション · 本人確認事業者やOpenDIDサービスには送信しません。",
+    "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
+  ]) expect(setup).toContain(truth)
+
+  expect(setup).toContain('data-environment="simulated"')
+  expect(setup).toContain('data-integration-status="not_configured"')
+  expect(setup).not.toMatch(/navigator\.(?:mediaDevices|credentials)|NDEFReader|showOpenFilePicker/)
+  expect(setup).not.toMatch(/<input[^>]+type=["']file["']/)
+})
+
+test("OPENDID-B-010 freezes deterministic recovery, credential status, and one-shot guards", () => {
+  for (const code of [
+    "IDENTITY_METHOD_UNAVAILABLE",
+    "CONSENT_DECLINED",
+    "DOCUMENT_PERMISSION_DENIED",
+    "PASSPORT_NFC_UNSUPPORTED",
+    "PASSPORT_READ_FAILED",
+    "UNSUPPORTED_DOCUMENT",
+    "DOCUMENT_AUTH_FAILED",
+    "FACE_MISMATCH",
+    "LIVENESS_FAILED",
+    "RETRY_LIMIT_REACHED",
+    "MANUAL_REVIEW_REQUIRED",
+    "PROVIDER_TIMEOUT",
+    "CALLBACK_INVALID",
+    "IDENTITY_SESSION_EXPIRED",
+    "ISSUER_UNAVAILABLE",
+    "CREDENTIAL_ISSUANCE_FAILED",
+    "HOLDER_DELIVERY_FAILED",
+    "CREDENTIAL_EXPIRED",
+    "CREDENTIAL_SUSPENDED",
+    "CREDENTIAL_REVOKED",
+    "PRESENTATION_REQUEST_EXPIRED",
+    "PRESENTATION_DENIED",
+    "PRESENTATION_REPLAY",
+  ]) expect(`${model}\n${setup}`).toContain(code)
+
+  for (const status of ["none", "simulated_ready", "expired", "suspended", "revoked"]) {
+    expect(model).toContain(`"${status}"`)
+  }
+  expect(setup).toContain("issuedOnceRef")
+  expect(setup).toContain("__ONDO_B_QA__")
+})
+
+test("OPENDID-B-011 keeps the five axes independent and identity data out of device persistence", () => {
+  const originalActions = [
+    "beginOnboarding", "completeOnboarding", "skipOnboarding", "resetOnboarding", "setPersona",
+    "setDiscoveryPreferences", "openLocalSignal", "closeLocalSignal", "acknowledgeCommerceLocalBoundary",
+    "setCommerceWalletStatus", "dispatchCommerce", "clearBDeviceContent",
+  ]
+  for (const action of originalActions) expect(provider).toContain(action)
+
+  const deviceState = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
+  expect(deviceState).not.toMatch(/identity|passport|credential|did|presentation/i)
+  expect(provider).toContain('const B_DEVICE_KEY = "ondo-b.device.v1"')
+  expect(setup).not.toMatch(/(?:localStorage|sessionStorage|indexedDB|caches)\./)
+})
+
+test("OPENDID-B-012 keeps onboarding guest-primary and places one compact optional entry", () => {
+  expect(onboarding.match(/data-testid="onboarding-step-value"/g) ?? []).toHaveLength(1)
+  expect(onboarding.match(/data-testid="k-tour-id-setup-open"/g) ?? []).toHaveLength(1)
+  expect(onboarding.indexOf('data-testid="k-tour-id-setup-open"')).toBeGreaterThan(onboarding.indexOf('data-testid="onboarding-step-value"'))
+  expect(onboarding.indexOf('data-testid="k-tour-id-setup-open"')).toBeLessThan(onboarding.indexOf('data-testid="onboarding-source-boundary"'))
+  expect(onboarding).not.toMatch(/persona[\s\S]{0,300}(?:mobile_id|mobile_residence_card|passport_ekyc)/)
+})
