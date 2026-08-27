@@ -233,6 +233,25 @@ test.describe("Warm Living Atlas personal journey", () => {
     await shot(landscape, "ja-844-my-empty-first-decision")
     await landscapeContext.close()
 
+    for (const locale of ["en", "ko", "ja"] as const) {
+      const narrowContext = await browser.newContext({ viewport: { width: 320, height: 720 }, reducedMotion: "reduce" })
+      const narrow = await narrowContext.newPage()
+      await seed(narrow, locale)
+      await narrow.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await narrow.getByTestId("nav-my").click()
+      const explore = narrow.getByTestId("ondo-b-saved-entry").locator("button")
+      const dock = narrow.getByTestId("ondo-main-nav")
+      await expect(explore).toBeVisible()
+      const [exploreBox, dockBox] = await Promise.all([explore.boundingBox(), dock.boundingBox()])
+      expect(exploreBox?.height ?? 0).toBeGreaterThanOrEqual(44)
+      expect((exploreBox?.y ?? 721) + (exploreBox?.height ?? 0)).toBeLessThanOrEqual(dockBox?.y ?? 0)
+      await shot(narrow, `${locale}-320x720-my-empty-first-action`)
+      await explore.click()
+      await expect(narrow.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
+      await noHorizontalOverflow(narrow)
+      await narrowContext.close()
+    }
+
     const languageContext = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" })
     const languagePage = await languageContext.newPage()
     await seed(languagePage, "ja")

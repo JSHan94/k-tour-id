@@ -522,6 +522,7 @@
 @media (max-width: 430px) {
   .screen[data-testid="ondo-b-my-korea-entry"] .activitySections { padding-left: 15px; }
   .screen[data-testid="ondo-b-my-korea-entry"] .activitySection { border-radius: 20px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="ondo-b-saved-entry"]:has(.compactEmpty button) { order: -6; }
   .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] { order: -5; }
   .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-receipts"] { order: -4; }
   .screen[data-testid="ondo-b-settings-entry"] .settingsSection { border-radius: 20px; }
