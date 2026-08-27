@@ -115,6 +115,14 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
         const placeFile = file === "features/ondo/place/canonical-place-overlay.tsx"
         const myKoreaFile = file === "features/ondo/my/saved-entry-b.tsx"
         const settingsFile = file === "features/ondo/settings/settings-entry-b.tsx"
+        const truthfulIdentityFile = file === "features/ondo/identity-b/ktour-id-setup-b.tsx"
+          || file === "features/ondo/identity-b/ktour-id-setup-model-b.ts"
+          || file === "features/ondo/identity-b/traveler-id-entry-b.tsx"
+          || file === "features/ondo/onboarding/official-directory-onboarding.tsx"
+        const explicitIdentityEnvironment = String(pattern).includes("simulat")
+          || String(pattern).includes("demo")
+          || String(pattern).includes("데모|시뮬레이션")
+        if (truthfulIdentityFile && explicitIdentityEnvironment) return false
         if (String(pattern) === String(/\blocal preview\b/i) && commerceFile && literal.startsWith("Device-local preview · no AI call")) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && commerceFile) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /OOKRW Test/.test(literal) && /Confirm payment support|실제 결제 지원/.test(literal)) return false

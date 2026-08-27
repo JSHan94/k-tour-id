@@ -155,7 +155,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
 
         const value = page.getByTestId("onboarding-step-value")
         const valuePrimary = value.locator("button").first()
-        const valueSecondary = value.locator("button").last()
+        const valueSecondary = page.getByTestId("onboarding-guest-skip")
         await expectInsideViewport(page, valuePrimary)
         await expectInsideViewport(page, valueSecondary)
         await expectInsideDialog(page, dialog, valuePrimary, 16)
@@ -165,7 +165,8 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
           return { background: style.backgroundImage, shadow: style.boxShadow, weight: Number.parseFloat(style.fontWeight) }
         })))
         expect(actionHierarchy[0].background).not.toBe(actionHierarchy[1].background)
-        expect(actionHierarchy[0].shadow).not.toBe("none")
+        expect(actionHierarchy[0].background).toBe("none")
+        expect(actionHierarchy[0].shadow).toBe("none")
         expect(actionHierarchy[0].weight).toBeGreaterThanOrEqual(actionHierarchy[1].weight)
         await capture(page, locale, profile, "value")
 

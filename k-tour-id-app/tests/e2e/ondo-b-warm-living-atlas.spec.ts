@@ -83,7 +83,7 @@ test.describe("Warm Living Atlas personal journey", () => {
       expect((await summary.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44)
       await summary.click()
       expect(await summary.evaluate((node) => getComputedStyle(node).outlineStyle)).toBe("none")
-      await page.getByTestId("onboarding-step-value").locator("button").last().click()
+      await page.getByTestId("onboarding-guest-skip").click()
       await expect(page.getByTestId("ondo-main-nav")).toBeVisible()
       for (const item of await page.getByTestId("ondo-main-nav").locator("button").all()) {
         const box = await item.boundingBox()
@@ -123,7 +123,7 @@ test.describe("Warm Living Atlas personal journey", () => {
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
     await page.getByTestId("canonical-meal-benefit-open").click()
     const offer = page.getByTestId("ondo-b-id-wallet-commerce")
-    await expect(offer).toHaveAttribute("data-visual-direction", "warm-living-offer")
+    await expect(offer).toHaveAttribute("data-visual-direction", "apple-wallet-flow8")
     await shot(page, "ja-390-offer-recommended")
     await offer.getByTestId("benefit-accept").click()
     await offer.getByTestId("payment-confirm").click()

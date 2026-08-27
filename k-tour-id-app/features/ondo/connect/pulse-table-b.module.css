@@ -185,6 +185,74 @@
   .openButton, .primary { transition: none; }
 }
 
+/* People are invitation ambience only; operational Table detail remains
+   deterministic product UI and never inherits this editorial image. */
+.editorialBand {
+  position: relative;
+  width: min(100%, 950px);
+  aspect-ratio: 1.52 / 1;
+  margin: 0 0 16px;
+  overflow: hidden;
+  border: 1px solid rgb(25 25 25 / 10%);
+  border-radius: 22px;
+  background: #f3f3f1;
+}
+
+.editorialBand img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 51% 48%;
+}
+
+.editorialBand figcaption {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgb(20 20 20 / 72%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  backdrop-filter: blur(10px);
+}
+
+.entry {
+  --feature-paper: #fff;
+  --feature-ink: #191919;
+  --feature-accent: #4f4f4f;
+  --feature-card: #fff;
+  --feature-border: rgb(25 25 25 / 11%);
+  --feature-shadow: 0 16px 42px rgb(25 25 25 / 7%);
+  background: #fff;
+}
+
+.cardActive {
+  border-color: rgb(25 25 25 / 14%);
+  background: #fff;
+}
+
+.cardActive::before { background: #191919; }
+.cardTop { color: #333; }
+.cardTop span { background: #f1f1ef; color: #333; }
+.plan { background: #f5f5f3; }
+.openButton,
+.primary { background: #191919; box-shadow: none; }
+.detail,
+.detailHeader { background: #fff; }
+
+@media (min-width: 760px) {
+  .editorialBand { aspect-ratio: 1.72 / 1; border-radius: 28px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 760px) {
+  .editorialBand { display: none; }
+}
+
 /* Mobile detail is a decision sheet. Keep all six plan facts, but compact
    them into a scannable grid and pin the existing Join action to the sheet. */
 @media (max-width: 759px) {
@@ -855,7 +923,7 @@
 @media (max-width: 759px) {
   .entry {
     display: grid;
-    grid-template-areas: "eyebrow" "title" "cards" "intro" "truth";
+    grid-template-areas: "eyebrow" "title" "editorial" "cards" "intro" "truth";
     gap: 0;
     padding-top: max(23px, env(safe-area-inset-top));
   }
@@ -864,6 +932,7 @@
   .entryHeader > h1 { grid-area: title; margin: 0 2px 17px; font-size: clamp(32px, 10vw, 40px); }
   .entryHeader > span { grid-area: intro; margin: 18px 2px 0; }
   .prototypeTruth { grid-area: truth; margin: 9px 2px 0; }
+  .editorialBand { grid-area: editorial; }
   .cards { grid-area: cards; }
 
   .cardActive {
@@ -1039,3 +1108,27 @@
   .openButton,
   .primary { transition: none; }
 }
+
+/* Final neutral material override; keep this after the sealed Flow 6 layers. */
+.entry {
+  --feature-paper: #fff;
+  --feature-ink: #191919;
+  --feature-accent: #4f4f4f;
+  --feature-card: #fff;
+  --feature-border: rgb(25 25 25 / 11%);
+  --feature-shadow: 0 16px 42px rgb(25 25 25 / 7%);
+  background: #fff;
+}
+.entry::before { display: none; }
+.entryHeader p,
+.detailEyebrow { color: #555; }
+.prototypeTruth { border-left-color: rgb(25 25 25 / 22%); }
+.cardActive { border-color: rgb(25 25 25 / 14%); background: #fff; color: #191919; }
+.cardActive::before { background: #191919; }
+.cardTop { color: #333; }
+.cardTop span { background: #f1f1ef; color: #333; }
+.plan { background: #f5f5f3; }
+.openButton,
+.primary { background: #191919; background-image: none; box-shadow: none; }
+.detail,
+.detailHeader { background: #fff; }

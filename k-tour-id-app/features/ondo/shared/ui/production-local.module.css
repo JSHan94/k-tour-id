@@ -244,6 +244,72 @@
   .screen:has(.settingsSection) > .settingsSection:nth-of-type(3) { grid-column: 1 / -1; grid-row: 3; }
 }
 
+/* Modern white personal surfaces. Journey color lives in real content and
+   semantic state; the application canvas itself stays white and quiet. */
+.screen[data-testid="ondo-b-my-korea-entry"],
+.screen[data-testid="ondo-b-settings-entry"] {
+  background: #fff;
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"]::before { display: none; }
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before {
+  background: #d6d6d3;
+  box-shadow: 0 0 0 6px #fff;
+}
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection,
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] {
+  border-color: rgb(25 25 25 / 10%);
+  background: #fff;
+  box-shadow: 0 14px 38px rgb(25 25 25 / 6%);
+}
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] .activityHeading > svg,
+.screen[data-testid="ondo-b-my-korea-entry"] .activityHeading > svg {
+  background: #f1f1ef;
+  color: #333;
+}
+.screen[data-testid="ondo-b-settings-entry"] .settingsSection,
+.screen[data-testid="ondo-b-settings-entry"] .segmented,
+.screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg {
+  background: #f7f7f5;
+}
+
+.journeyInspiration {
+  position: relative;
+  width: min(100%, 780px);
+  aspect-ratio: 1.62 / 1;
+  margin: 24px 0 0;
+  overflow: hidden;
+  border: 1px solid rgb(25 25 25 / 10%);
+  border-radius: 22px;
+  background: #f3f3f1;
+}
+.journeyInspiration img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 69% 55%;
+}
+.journeyInspiration figcaption {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgb(20 20 20 / 72%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  backdrop-filter: blur(10px);
+}
+
+@media (min-width: 700px) {
+  .journeyInspiration { aspect-ratio: 1.82 / 1; }
+  .journeyInspiration img { object-position: 62% 52%; }
+}
+
 @media (max-width: 430px) {
   .screen { padding-top: max(24px, env(safe-area-inset-top)); }
   .header { gap: 6px; }
@@ -417,3 +483,26 @@
   .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(3) { grid-column: 2; grid-row: 3; }
   .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(1) { grid-row: 2 / span 2; }
 }
+
+/* Final neutral material override; keep after the historical Atlas layer. */
+.screen[data-testid="ondo-b-my-korea-entry"],
+.screen[data-testid="ondo-b-settings-entry"] { background: #fff; }
+.screen[data-testid="ondo-b-my-korea-entry"]::before { display: none; }
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before {
+  background: #d6d6d3;
+  box-shadow: 0 0 0 6px #fff;
+}
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection,
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] {
+  border-color: rgb(25 25 25 / 10%);
+  background: #fff;
+  box-shadow: 0 14px 38px rgb(25 25 25 / 6%);
+}
+.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] .activityHeading > svg,
+.screen[data-testid="ondo-b-my-korea-entry"] .activityHeading > svg {
+  background: #f1f1ef;
+  color: #333;
+}
+.screen[data-testid="ondo-b-settings-entry"] .settingsSection,
+.screen[data-testid="ondo-b-settings-entry"] .segmented,
+.screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg { background: #f7f7f5; }

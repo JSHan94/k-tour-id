@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useMemo, useEffect, useRef, useState } from "react"
-import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, Database, KeyRound, NotebookPen } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, KeyRound, NotebookPen } from "lucide-react"
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "../shared/state/ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -137,6 +137,12 @@ const COPY = {
     guestFailed: "ゲスト設定を保存できませんでした。",
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
+
+const EDITORIAL = {
+  en: { alt: "Three fictional travelers talking on a bright transit walkway", caption: "Editorial scene · fictional travelers" },
+  ko: { alt: "밝은 이동 통로에서 대화하는 가상의 여행자 세 명", caption: "에디토리얼 이미지 · 가상의 여행자" },
+  ja: { alt: "明るい通路で話す架空の旅行者3人", caption: "編集イメージ · 架空の旅行者" },
+} satisfies Record<OndoBLocale, { alt: string; caption: string }>
 
 export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
@@ -297,10 +303,14 @@ export function OfficialDirectoryOnboardingLayer() {
 
         {step === "value" ? (
           <div className={styles.value} data-testid="onboarding-step-value" data-stage="value">
-            <div className={styles.seal}><Database size={26} aria-hidden="true" /><span>ONDO</span></div>
+            <div className={styles.brandLockup}><img src="/brand/ondo-lockup.svg" alt="ONDO" /></div>
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
+            <figure className={styles.valueEditorial} data-testid="onboarding-editorial-image">
+              <img src="/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg" alt={EDITORIAL[state.locale].alt} />
+              <figcaption>{EDITORIAL[state.locale].caption}</figcaption>
+            </figure>
             <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
               <button
@@ -315,7 +325,7 @@ export function OfficialDirectoryOnboardingLayer() {
               >
                 {copy.start}<ArrowRight size={18} aria-hidden="true" />
               </button>
-              <button type="button" className={styles.secondary} onClick={skip}>{copy.guest}</button>
+              <button type="button" className={styles.secondary} data-testid="onboarding-guest-skip" onClick={skip}>{copy.guest}</button>
             </div>
             <button
               type="button"

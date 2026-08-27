@@ -130,6 +130,12 @@ const SAVED_EMPTY_LABEL: Record<OndoBLocale, string> = {
   ja: "保存した場所なし",
 }
 
+const EMPTY_INSPIRATION = {
+  en: { alt: "A fictional traveler looking across a coastal landscape", caption: "Travel inspiration · fictional editorial scene" },
+  ko: { alt: "해안 풍경을 바라보는 가상의 여행자", caption: "여행 영감 · 가상의 에디토리얼 이미지" },
+  ja: { alt: "海辺の景色を眺める架空の旅行者", caption: "旅のインスピレーション · 架空の編集イメージ" },
+} satisfies Record<OndoBLocale, { alt: string; caption: string }>
+
 const JA_TABLE_COPY: Record<keyof typeof MY_KOREA_TABLE_CATALOG, { title: string; schedule: string }> = {
   "table-seoul-night-bites": {
     title: "夜食を囲む、ひとつのテーブル",
@@ -173,6 +179,12 @@ export function SavedEntryB() {
     return venue ? [venue] : []
   })
   const receiptVenue = state.commerceReceiptVenueId ? canonicalMapVenueById(state.commerceReceiptVenueId) : undefined
+  const isEmptyJourney = saved.length === 0
+    && recent.length === 0
+    && planned.length === 0
+    && contributions.length === 0
+    && state.commerceSession.status !== "paid"
+    && state.commerceSession.status !== "refunded"
 
   function openVenue(venueId: string, cityId: "seoul" | "busan") {
     if (!openSavedBDiscoveryVenue(venueId, cityId)) return
@@ -196,6 +208,13 @@ export function SavedEntryB() {
         <h1>{copy.title}</h1>
         <span>{copy.boundary}</span>
       </header>
+
+      {isEmptyJourney ? (
+        <figure className={styles.journeyInspiration} data-testid="my-korea-empty-inspiration">
+          <img src="/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg" alt={EMPTY_INSPIRATION[locale].alt} />
+          <figcaption>{EMPTY_INSPIRATION[locale].caption}</figcaption>
+        </figure>
+      ) : null}
 
       <div className={styles.activitySections}>
         <section className={styles.activitySection} data-testid="my-korea-planned" aria-labelledby="my-korea-planned-heading">

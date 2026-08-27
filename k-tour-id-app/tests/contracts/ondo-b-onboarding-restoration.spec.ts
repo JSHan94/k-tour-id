@@ -54,12 +54,15 @@ test("B-ONBOARDING-RESTORE-003 onboarding state is a local-device allowlist with
   expect(deviceType).not.toMatch(/account:|person:|age:|paymentKyc:|gate:|provider:/)
 })
 
-test("B-ONBOARDING-RESTORE-004 onboarding starts no identity, provider, timer, or query scenario", () => {
+test("B-ONBOARDING-RESTORE-004 optional identity never gates or auto-starts the guest journey", () => {
   const onboarding = source("features/ondo/onboarding/official-directory-onboarding.tsx")
   const product = source("features/ondo/app/ondo-product-b.tsx")
   const policy = source("scripts/ondo-b-standalone/policy.mjs")
 
-  expect(onboarding).not.toMatch(/GateOverlay|IdentityEntry|After19|Checkout|sessionStorage|setTimeout|URLSearchParams|services\/|provider:/i)
+  expect(onboarding).toContain('data-testid="k-tour-id-setup-open"')
+  expect(onboarding).toContain('onClick={() => actions.openIdentitySetup("onboarding")}')
+  expect(onboarding).toContain('data-testid="onboarding-guest-skip"')
+  expect(onboarding).not.toMatch(/GateOverlay|After19|Checkout|sessionStorage|setTimeout|URLSearchParams|services\/|provider:/i)
   expect(product).toContain("OfficialDirectoryOnboardingLayer")
   expect(product).not.toContain('from "../onboarding/onboarding-layer"')
   expect(policy).not.toMatch(/\(\?:\^\|\[\^A-Za-z0-9\]\|_\)persona/)

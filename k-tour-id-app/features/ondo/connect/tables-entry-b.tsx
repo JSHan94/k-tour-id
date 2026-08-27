@@ -281,6 +281,12 @@ const COPY = {
 
 type TableCopy = (typeof COPY)[SocialLocale]
 
+const TABLE_EDITORIAL = {
+  en: { alt: "Four fictional travelers sharing a Korean meal", caption: "Editorial scene · fictional diners, not this Table or venue" },
+  ko: { alt: "한국 음식을 함께 나누는 가상의 여행자 네 명", caption: "에디토리얼 이미지 · 이 테이블이나 장소의 실제 참여자가 아닙니다" },
+  ja: { alt: "韓国料理を囲む架空の旅行者4人", caption: "編集イメージ · このTableや店舗の実際の参加者ではありません" },
+} satisfies Record<SocialLocale, { alt: string; caption: string }>
+
 export function PulseTablesEntryB() {
   const { state, actions } = useOndoB()
   const locale = state.locale
@@ -511,6 +517,11 @@ export function PulseTablesEntryB() {
         <p>{t.eyebrow}</p><h1>{t.title}</h1><span>{t.intro}</span>
         <small className={styles.prototypeTruth}>{t.truth}</small>
       </header>
+
+      <figure className={styles.editorialBand} data-testid="tables-editorial-image">
+        <img src="/editorial/people/ondo-tables-dinner-v2-landscape.jpg" alt={TABLE_EDITORIAL[socialLocale].alt} />
+        <figcaption>{TABLE_EDITORIAL[socialLocale].caption}</figcaption>
+      </figure>
 
       <div className={styles.cards}>
         <article className={styles.cardActive} data-testid={`table-card-${ACTIVE_TABLE_ID}`} data-table-state="TABLE-OPEN">

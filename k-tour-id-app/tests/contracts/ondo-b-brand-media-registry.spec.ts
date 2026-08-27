@@ -4,9 +4,9 @@ import { resolve } from "node:path"
 
 const root = process.cwd()
 const media = [
-  "public/editorial/people/ondo-onboarding-travelers-v1.jpg",
-  "public/editorial/people/ondo-tables-dinner-v1.jpg",
-  "public/editorial/people/ondo-my-korea-memory-v1.jpg",
+  "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
+  "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
+  "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
 ] as const
 const marks = [
   "public/brand/ondo-mark.svg",
@@ -29,7 +29,9 @@ test("BRAND-MEDIA-001 generated people are bounded, registered editorial assets"
   }
 
   expect(registry).toMatch(/not documentary\s+evidence/)
-  expect(registry).toContain("Never use in identity, eKYC or credential proof")
+  expect(registry).toContain("Never use in identity, eKYC, credential, official evidence or verified-traveler UI")
+  expect(registry).toContain("Never use in Table detail, chat, avatar, matching, attendance, check-in, venue evidence or safety proof")
+  expect(registry).toContain("Hide when user history exists")
 })
 
 test("BRAND-MEDIA-002 ONDO mark is a flat vector brand object, not an official seal", () => {
@@ -83,6 +85,8 @@ test("BRAND-MEDIA-003 fictional people never enter identity or evidence source c
   const forbiddenConsumers = [
     "features/ondo/identity-b/local-check-walkthrough-b.tsx",
     "features/ondo/identity-b/traveler-id-entry-b.tsx",
+    "features/ondo/identity-b/ktour-id-setup-b.tsx",
+    "features/ondo/after19/after19-jit-b.tsx",
     "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
     "features/ondo/pulse-b/japan-first-pulse-model-b.ts",
   ]

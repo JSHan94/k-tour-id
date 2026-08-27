@@ -39,6 +39,9 @@ test("PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview
       expect(source).toContain("canonical-meal-benefit-open")
       expect(source).toContain("This offer comes from ONDO, not the official place record or venue")
       expect(source, relativePath).not.toMatch(/simulat|fixture|locals eat now/i)
+    } else if (relativePath === "features/ondo/onboarding/official-directory-onboarding.tsx") {
+      expect(source).toContain("Optional simulated identity route · guest Explore stays open")
+      expect(source, relativePath).not.toMatch(/\bdemo\b|fixture|locals eat now/i)
     } else {
       expect(source, relativePath).not.toMatch(/\bdemo\b|simulat|fixture|locals eat now/i)
     }

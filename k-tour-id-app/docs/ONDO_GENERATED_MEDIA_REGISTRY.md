@@ -6,9 +6,9 @@ proof that a depicted event occurred.
 
 | Asset | Intended surface | Generation record | Public boundary |
 |---|---|---|---|
-| `public/editorial/people/ondo-onboarding-travelers-v1.jpg` | Guest onboarding editorial hero | OpenAI ImageGen, 2026-08-27 | Fictional travelers. Never use in identity, eKYC or credential proof. |
-| `public/editorial/people/ondo-tables-dinner-v1.jpg` | Tables invitation and social context | OpenAI ImageGen, 2026-08-27 | Fictional participants. Does not prove matching, booking, attendance or venue endorsement. |
-| `public/editorial/people/ondo-my-korea-memory-v1.jpg` | My Korea journey memory | OpenAI ImageGen, 2026-08-27 | Fictional traveler. Does not represent a saved user, exact trip or verified place visit. |
+| `public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg` | Guest onboarding editorial band | OpenAI ImageGen, 2026-08-27 | Fictional travelers. Never use in identity, eKYC, credential, official evidence or verified-traveler UI. |
+| `public/editorial/people/ondo-tables-dinner-v2-landscape.jpg` | Tables root invitation ambience only | OpenAI ImageGen, 2026-08-27 | Fictional diners. Never use in Table detail, chat, avatar, matching, attendance, check-in, venue evidence or safety proof. |
+| `public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg` | Empty My Korea inspiration only | OpenAI ImageGen, 2026-08-27 | Fictional traveler. Hide when user history exists; never present as a saved place, visit, route, memory or user photo. |
 | `public/brand/ondo-mark.svg` | Light surfaces and app mark | Original vector redrawn from an ImageGen concept board, 2026-08-27 | Brand mark only; not a government, identity or payment seal. |
 | `public/brand/ondo-mark-inverse.svg` | Dark surfaces | Original vector redrawn from an ImageGen concept board, 2026-08-27 | Brand mark only; not a government, identity or payment seal. |
 | `public/brand/ondo-lockup.svg` | Header and marketing lockup | Original vector redrawn from an ImageGen concept board, 2026-08-27 | Brand lockup only. |
@@ -24,6 +24,8 @@ proof that a depicted event occurred.
 - Keep generated people out of official LOCALDATA evidence, exact editorial
   source attribution, Passport capture, face/liveness, Mobile ID and OpenDID
   credential surfaces.
+- Use the three people images only as wide, shallow editorial bands with copy
+  outside the bitmap. Do not derive avatars or portrait identity crops.
 - Retain the original generated files outside the repository. Product copies are
   versioned, non-destructive derivatives.
 - Any future replacement receives a new filename and registry row so sealed
