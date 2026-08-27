@@ -1419,6 +1419,7 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
 }
 
 export async function expectBVisualSnapshot(page: Page, item: BVisualCase, viewport: BSleekViewportId, testInfo: TestInfo) {
+  if (process.env.ONDO_B_VISUAL_PREFLIGHT === "1") return
   const screenshotOptions = {
     animations: "disabled" as const,
     caret: "hide" as const,
