@@ -31,6 +31,11 @@ type QaWindow = Window & {
   __ONDO_B_QA__?: {
     identitySetupOutcome?: "success" | OndoBIdentityRecoveryCode
     credentialStatus?: Exclude<OndoBCredentialStatus, "none">
+    identity?: {
+      outcome?: "IDENTITY_METHOD_UNAVAILABLE"
+      credentialStatus?: Exclude<OndoBCredentialStatus, "none">
+      presentationOutcome?: "PRESENTATION_DENIED" | "PRESENTATION_REQUEST_EXPIRED" | "PRESENTATION_REPLAY"
+    }
   }
 }
 
@@ -107,8 +112,8 @@ const COPY = {
     boundary: "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
     optional: "任意 · 設定なしでもゲスト利用可能", title: "民間のK-Tour IDを設定",
     lead: "該当する方法を自分で選びます。設定なしでも探せて、アカウント、本人、19歳以上、決済とは別です。",
-    mobile: "韓国人向けMobile ID", mobileNote: "韓国籍の方 · OmniOne CX",
-    residence: "Mobile Residence Card", residenceNote: "外国人登録済みの居住者 · OmniOne CX",
+    mobile: "韓国人向けモバイル身分証", mobileNote: "韓国籍の方 · OmniOne CX",
+    residence: "モバイル在留カード", residenceNote: "外国人登録済みの居住者 · OmniOne CX",
     passport: "パスポートeKYC", passportNote: "短期旅行者 · 別のNFC / OCR、顔・ライブネス事業者",
     separate: "パスポートeKYCはOmniOne CXではなく別の事業者です。", review: "同意内容を確認", later: "今はしない — ゲスト利用を続ける",
     consentTitle: "シミュレーション依頼を確認", consentBody: "同意前には何も始まりません。カメラ、NFC、ファイル選択、事業者接続は開きません。",
@@ -141,9 +146,9 @@ const ISSUER = "K-Tour ID Demo Issuer"
 const CREDENTIAL_TYPE = "KTourVisitorCredential"
 
 function methodDetails(method: OndoBIdentityMethod, copy: typeof COPY.en) {
-  if (method === "mobile_id") return { title: copy.mobile, note: copy.mobileNote, provider: "OmniOne CX", evidence: "Korean Mobile ID result" }
-  if (method === "mobile_residence_card") return { title: copy.residence, note: copy.residenceNote, provider: "OmniOne CX", evidence: "Mobile Residence Card result" }
-  return { title: copy.passport, note: copy.passportNote, provider: "Separate Passport eKYC provider · not configured", evidence: "NFC / OCR document result + face and liveness result" }
+  if (method === "mobile_id") return { title: copy.mobile, note: copy.mobileNote, provider: "OmniOne CX", evidence: copy.mobile }
+  if (method === "mobile_residence_card") return { title: copy.residence, note: copy.residenceNote, provider: "OmniOne CX", evidence: copy.residence }
+  return { title: copy.passport, note: copy.passportNote, provider: `${copy.separate} · not configured`, evidence: copy.passportNote }
 }
 
 function progressStep(phase: Phase) {
@@ -169,12 +174,11 @@ export function KTourIdSetupB() {
   const active = origin !== null
   const copy = COPY[state.locale]
   const details = methodDetails(method, copy)
-  const injectedStatus = typeof window === "undefined" ? undefined : (window as QaWindow).__ONDO_B_QA__?.credentialStatus
+  const injectedStatus = typeof window === "undefined" ? undefined : ((window as QaWindow).__ONDO_B_QA__?.identity?.credentialStatus ?? (window as QaWindow).__ONDO_B_QA__?.credentialStatus)
   const credentialStatus: OndoBCredentialStatus = injectedStatus ?? state.identityCredential?.status ?? "none"
   const returnLabel = origin === "onboarding" ? copy.returnOnboarding : copy.returnTraveler
   const steps = [copy.chooseStep, copy.checkStep, copy.issueStep, copy.presentStep]
   const currentStep = progressStep(phase)
-  useModalIsolation(active, layerRef)
 
   const routes = useMemo(() => [
     { id: "mobile_id" as const, icon: Smartphone, title: copy.mobile, note: copy.mobileNote, oldId: "ktour-id-route-mobile-id", newId: "k-tour-id-method-mobile-id" },
@@ -196,6 +200,8 @@ export function KTourIdSetupB() {
       })
     }
   }, [active, origin, state.identityCredential])
+
+  useModalIsolation(active, layerRef)
 
   useEffect(() => {
     if (!active) return
@@ -225,7 +231,8 @@ export function KTourIdSetupB() {
 
   function advance(next: Phase, safePhase = phase) {
     if (!session || !isIdentitySetupSessionActiveB(session)) return fail("IDENTITY_SESSION_EXPIRED", "route_prepare")
-    const outcome = (window as QaWindow).__ONDO_B_QA__?.identitySetupOutcome ?? "success"
+    const qa = (window as QaWindow).__ONDO_B_QA__
+    const outcome = qa?.identity?.outcome ?? qa?.identitySetupOutcome ?? "success"
     if (outcome !== "success") return fail(outcome, safePhase)
     setPhase(next)
   }
@@ -281,32 +288,32 @@ export function KTourIdSetupB() {
 
       {phase === "method_select" ? <div className={styles.body}>
         <p className={styles.eyebrow}>{copy.optional}</p><h1>{copy.title}</h1><p className={styles.lead}>{copy.lead}</p>
-        <div className={styles.routes} data-testid="k-tour-id-methods">{routes.map(({ id, icon: Icon, title, note, oldId, newId }) => <button key={id} type="button" data-testid={oldId} className={method === id ? styles.routeSelected : styles.route} aria-pressed={method === id} onClick={() => setMethod(id)}><span data-testid={newId}><Icon size={22} aria-hidden="true" /></span><span><strong>{title}</strong><small>{note}</small></span><i>{method === id ? <Check size={14} aria-hidden="true" /> : null}</i></button>)}</div>
+        <div className={styles.routes} data-testid="k-tour-id-methods">{routes.map(({ id, icon: Icon, title, note, oldId, newId }) => <button key={id} type="button" data-testid={oldId} className={method === id ? styles.routeSelected : styles.route} aria-pressed={method === id} onClick={() => { setMethod(id); setPhase("consent") }}><span data-testid={newId}><Icon size={22} aria-hidden="true" /></span><span><strong>{title}</strong><small>{note}</small></span><i>{method === id ? <Check size={14} aria-hidden="true" /> : null}</i></button>)}</div>
         <p className={styles.routeBoundary}>{copy.separate}</p>
         <div className={styles.actions}><button type="button" className={styles.primary} onClick={() => setPhase("consent")}>{copy.review}<ArrowRight size={17} aria-hidden="true" /></button><button type="button" className={styles.secondary} onClick={actions.closeIdentitySetup}>{copy.later}</button></div>
       </div> : null}
 
       {phase === "consent" ? <div className={styles.body} data-testid="k-tour-id-consent"><p className={styles.eyebrow}>{details.title}</p><h1>{copy.consentTitle}</h1><p className={styles.lead}>{copy.consentBody}</p>
         <Disclosure rows={[[copy.requester, copy.requesterValue, "identity-consent-requester"], [copy.purpose, copy.purposeValue, "identity-consent-purpose"], [copy.provider, details.provider, "identity-consent-provider"], [copy.evidence, details.evidence, "identity-consent-evidence"], [copy.retention, copy.retentionValue, "identity-consent-retention"]]} />
-        <div className={styles.actions}><button type="button" data-identity-initial-focus className={styles.primary} onClick={acceptConsent}>{copy.accept}</button><button type="button" className={styles.secondary} onClick={actions.closeIdentitySetup}>{copy.decline}</button></div>
+        <div className={styles.actions}><button type="button" data-identity-initial-focus data-testid="k-tour-id-consent-approve" className={styles.primary} onClick={acceptConsent}>{copy.accept}</button><button type="button" className={styles.secondary} onClick={actions.closeIdentitySetup}>{copy.decline}</button></div>
       </div> : null}
 
       {phase === "route_prepare" ? <Panel testId="k-tour-id-route-step" icon={<ShieldCheck />} eyebrow={details.title} title={copy.prepare} body={copy.prepareBody} action={copy.next} onAction={beginRoute} /> : null}
-      {phase === "cx_handoff_preview" ? <Panel testId="k-tour-id-route-step" alias="ktour-id-mobile-handoff" icon={<Smartphone />} eyebrow="OmniOne CX · SIMULATED" title={copy.cx} body={copy.cxBody} action={copy.next} onAction={() => advance("provider_processing_preview", "cx_handoff_preview")} visual="phone" /> : null}
-      {phase === "document_preview" ? <Panel testId="k-tour-id-route-step" alias="ktour-id-passport-document" icon={<BookOpenCheck />} eyebrow="Passport eKYC · SIMULATED" title={copy.document} body={copy.documentBody} action={copy.next} onAction={() => advance("face_liveness_preview", "document_preview")} visual="document" /> : null}
-      {phase === "face_liveness_preview" ? <Panel testId="k-tour-id-route-step" alias="ktour-id-passport-face" icon={<ScanFace />} eyebrow="FACE + LIVENESS · SIMULATED" title={copy.face} body={copy.faceBody} action={copy.next} onAction={() => advance("provider_processing_preview", "face_liveness_preview")} visual="face" /> : null}
+      {phase === "cx_handoff_preview" ? <Panel testId="k-tour-id-route-step" aliases={["ktour-id-mobile-handoff"]} icon={<Smartphone />} eyebrow="OmniOne CX · SIMULATED" title={copy.cx} body={copy.cxBody} action={copy.next} onAction={() => advance("provider_processing_preview", "cx_handoff_preview")} visual="phone" /> : null}
+      {phase === "document_preview" ? <Panel testId="k-tour-id-passport-document" aliases={["ktour-id-passport-document", "k-tour-id-route-step"]} icon={<BookOpenCheck />} eyebrow="Passport eKYC · SIMULATED" title={copy.document} body={copy.documentBody} action={copy.next} onAction={() => advance("face_liveness_preview", "document_preview")} visual="document" /> : null}
+      {phase === "face_liveness_preview" ? <Panel testId="k-tour-id-passport-face" aliases={["ktour-id-passport-face", "k-tour-id-route-step"]} icon={<ScanFace />} eyebrow="FACE + LIVENESS · SIMULATED" title={copy.face} body={copy.faceBody} action={copy.next} onAction={() => advance("provider_processing_preview", "face_liveness_preview")} visual="face" /> : null}
       {phase === "provider_processing_preview" ? <Panel testId="k-tour-id-route-step" icon={<RefreshCw />} eyebrow={`${details.provider} · SIMULATED`} title={copy.processing} body={copy.processingBody} action={copy.next} onAction={() => advance("evidence_preview", "provider_processing_preview")} visual="processing" /> : null}
       {phase === "evidence_preview" ? <Panel testId="k-tour-id-evidence-preview" icon={<FileCheck2 />} eyebrow="MINIMUM RESULT · SIMULATED" title={copy.evidenceTitle} body={copy.evidenceBody} action={copy.next} onAction={() => advance("issuance_preview", "evidence_preview")} visual="evidence" /> : null}
-      {phase === "issuance_preview" ? <Panel testId="k-tour-id-issuance-preview" alias="ktour-id-opendid-issue" icon={<FileKey2 />} eyebrow="OpenDID · ISSUE PREVIEW" title={copy.issue} body={copy.issueBody} action={copy.next} onAction={() => advance("holder_delivery_preview", "issuance_preview")} meta={[ISSUER, CREDENTIAL_TYPE]} /> : null}
+      {phase === "issuance_preview" ? <Panel testId="k-tour-id-issuance-preview" aliases={["ktour-id-opendid-issue"]} icon={<FileKey2 />} eyebrow="OpenDID · ISSUE PREVIEW" title={copy.issue} body={copy.issueBody} action={copy.next} onAction={() => advance("holder_delivery_preview", "issuance_preview")} meta={[ISSUER, CREDENTIAL_TYPE]} /> : null}
       {phase === "holder_delivery_preview" ? <Panel testId="k-tour-id-holder-delivery" icon={<WalletCards />} eyebrow="OpenDID · HOLDER DELIVERY PREVIEW" title={copy.holder} body={copy.holderBody} action={copy.next} onAction={finishHolder} meta={[CREDENTIAL_TYPE, "IN-MEMORY · THIS TAB"]} /> : null}
 
-      {phase === "credential_ready" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-credential"><span data-testid="ktour-id-result" className={styles.heroIcon}><BadgeCheck size={31} aria-hidden="true" /></span><p className={styles.eyebrow}>SIMULATED READY · THIS TAB</p><h1>{copy.ready}</h1><p className={styles.lead}>{copy.readyBody}</p><div className={styles.credential}><FileKey2 size={27} aria-hidden="true" /><span><strong>{CREDENTIAL_TYPE}</strong><small>{ISSUER} · SIMULATED</small></span></div>{statusMessage ? <p className={styles.statusWarning} role="alert">{statusMessage}</p> : null}<div className={styles.actions}>{!statusMessage ? <button type="button" className={styles.primary} onClick={() => setPhase("presentation_request")}>{copy.present}<ArrowRight size={17} aria-hidden="true" /></button> : null}<button type="button" data-identity-initial-focus data-testid="k-tour-id-return" className={styles.secondary} onClick={actions.closeIdentitySetup}>{returnLabel}</button></div></div> : null}
+      {phase === "credential_ready" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-credential" data-status={credentialStatus} data-code={statusMessage ? `CREDENTIAL_${credentialStatus.toUpperCase()}` : undefined} data-issuance-count={issuedOnceRef.current ? 1 : 0}><span data-testid="ktour-id-result" className={styles.heroIcon}><BadgeCheck size={31} aria-hidden="true" /></span><p className={styles.eyebrow}>SIMULATED READY · THIS TAB</p><h1>{copy.ready}</h1><p className={styles.lead}>{copy.readyBody}</p><div className={styles.credential}><FileKey2 size={27} aria-hidden="true" /><span><strong>{CREDENTIAL_TYPE}</strong><small>{ISSUER} · SIMULATED</small></span></div>{statusMessage ? <p className={styles.statusWarning} role="alert">{statusMessage}</p> : null}<div className={styles.actions}><button type="button" data-testid="k-tour-id-presentation-open" disabled={Boolean(statusMessage)} className={styles.primary} onClick={() => setPhase("presentation_request")}>{copy.present}<ArrowRight size={17} aria-hidden="true" /></button><button type="button" data-identity-initial-focus data-testid="k-tour-id-return" className={styles.secondary} onClick={actions.closeIdentitySetup}>{returnLabel}</button></div></div> : null}
 
-      {phase === "presentation_request" ? <div className={styles.body} data-testid="k-tour-id-presentation-request"><p className={styles.eyebrow}>OpenDID · PRESENTATION REQUEST</p><h1>{copy.request}</h1><p className={styles.lead}>{copy.requestBody}</p><Disclosure rows={[[copy.requester, "ONDO Table demo verifier"], [copy.purpose, "Minimum trip eligibility for this one request"], [copy.evidence, "K-Tour travel eligibility · yes/no only"], [copy.retention, "One request · nonce and expiry semantics · no VP stored"]]} /><div className={styles.actions}><button type="button" className={styles.primary} onClick={() => setPhase("presentation_consent")}>{copy.next}</button><button type="button" className={styles.secondary} onClick={() => setPhase("credential_ready")}>{copy.later}</button></div></div> : null}
-      {phase === "presentation_consent" ? <div className={styles.body} data-testid="k-tour-id-presentation-consent"><p className={styles.eyebrow}>ONDO TABLE DEMO VERIFIER</p><h1>{copy.presentConsent}</h1><p className={styles.lead}>{copy.presentConsentBody}</p><div className={styles.predicate}><ShieldCheck size={22} aria-hidden="true" /><span><strong>K-Tour travel eligibility · yes/no only</strong><small>One request · no VP stored</small></span></div><div className={styles.actions}><button type="button" className={styles.primary} onClick={() => { setPresentationApproved(true); advance("presentation_result", "presentation_consent") }}>{copy.approve}</button><button type="button" className={styles.secondary} onClick={() => { setPresentationApproved(false); setRecoveryCode("PRESENTATION_DENIED"); setPhase("presentation_result") }}>{copy.deny}</button></div></div> : null}
-      {phase === "presentation_result" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-presentation-result"><span className={styles.heroIcon}>{presentationApproved ? <BadgeCheck size={31} aria-hidden="true" /> : <X size={31} aria-hidden="true" />}</span><p className={styles.eyebrow}>{presentationApproved ? "SIMULATED · APPROVED ONCE" : "SIMULATED · PRESENTATION_DENIED"}</p><h1>{copy.result}</h1><p className={styles.lead}>{copy.resultBody}</p><div className={styles.actions}><button type="button" className={styles.primary} onClick={() => setPhase("credential_ready")}>{copy.returnTraveler}</button><button type="button" data-testid="k-tour-id-return" className={styles.secondary} onClick={actions.closeIdentitySetup}>{returnLabel}</button></div></div> : null}
+      {phase === "presentation_request" ? <div className={styles.body} data-testid="k-tour-id-presentation-request"><p className={styles.eyebrow}>OpenDID · PRESENTATION REQUEST</p><h1>{copy.request}</h1><p className={styles.lead}>{copy.requestBody}</p><Disclosure rows={[[copy.requester, "ONDO Table demo verifier"], [copy.purpose, "Minimum trip eligibility for this one request"], [copy.evidence, "K-Tour travel eligibility · yes/no only"], [copy.retention, "One request · nonce and expiry semantics · no VP stored"]]} /><div className={styles.actions}><button type="button" data-testid="k-tour-id-continue" className={styles.primary} onClick={() => setPhase("presentation_consent")}>{copy.next}</button><button type="button" className={styles.secondary} onClick={() => setPhase("credential_ready")}>{copy.later}</button></div></div> : null}
+      {phase === "presentation_consent" ? <div className={styles.body} data-testid="k-tour-id-presentation-consent"><p className={styles.eyebrow}>ONDO TABLE DEMO VERIFIER</p><h1>{copy.presentConsent}</h1><p className={styles.lead}>{copy.presentConsentBody}</p><div className={styles.predicate}><ShieldCheck size={22} aria-hidden="true" /><span><strong>K-Tour travel eligibility · yes/no only</strong><small>One request · no VP stored</small></span></div><div className={styles.actions}><button type="button" data-testid="k-tour-id-presentation-approve" className={styles.primary} onClick={() => { const outcome = (window as QaWindow).__ONDO_B_QA__?.identity?.presentationOutcome; setPresentationApproved(outcome ? false : true); setRecoveryCode(outcome ?? null); setPhase("presentation_result") }}>{copy.approve}</button><button type="button" className={styles.secondary} onClick={() => { setPresentationApproved(false); setRecoveryCode("PRESENTATION_DENIED"); setPhase("presentation_result") }}>{copy.deny}</button></div></div> : null}
+      {phase === "presentation_result" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-presentation-result" data-result={recoveryCode === "PRESENTATION_REQUEST_EXPIRED" ? "expired" : recoveryCode === "PRESENTATION_REPLAY" ? "replay" : recoveryCode === "PRESENTATION_DENIED" ? "denied" : "success"} data-code={recoveryCode ?? undefined}><span className={styles.heroIcon}>{presentationApproved ? <BadgeCheck size={31} aria-hidden="true" /> : <X size={31} aria-hidden="true" />}</span><p className={styles.eyebrow}>{presentationApproved ? "SIMULATED · APPROVED ONCE" : `SIMULATED · ${recoveryCode ?? "PRESENTATION_DENIED"}`}</p><h1>{copy.result}</h1><p className={styles.lead}>{copy.resultBody}</p><div className={styles.credential} data-testid="k-tour-id-credential" data-status={credentialStatus} data-issuance-count={issuedOnceRef.current ? 1 : 0}><FileKey2 size={24} aria-hidden="true" /><span><strong>{CREDENTIAL_TYPE}</strong><small>{ISSUER} · unchanged</small></span></div><div className={styles.actions}><button type="button" className={styles.primary} onClick={() => setPhase("credential_ready")}>{copy.returnTraveler}</button><button type="button" data-testid="k-tour-id-return" className={styles.secondary} onClick={actions.closeIdentitySetup}>{returnLabel}</button></div></div> : null}
 
-      {phase === "unavailable" ? <StatusPanel testId="k-tour-id-unavailable" alias="ktour-id-setup-unavailable" code="IDENTITY_METHOD_UNAVAILABLE" title={copy.unavailable} body={copy.unavailableBody} extra={copy.assurance} primary={copy.usePassport} onPrimary={() => { setMethod("passport_ekyc"); setPhase("consent") }} secondary={copy.another} onSecondary={() => setPhase("method_select")} /> : null}
+      {phase === "unavailable" ? <StatusPanel testId="k-tour-id-unavailable" alias="ktour-id-setup-unavailable" code="IDENTITY_METHOD_UNAVAILABLE" title={copy.unavailable} body={copy.unavailableBody} extra={copy.assurance} primary={copy.usePassport} onPrimary={() => { setMethod("passport_ekyc"); setPhase("consent") }} primaryTestId="k-tour-id-alternate-passport" secondary={copy.another} onSecondary={() => setPhase("method_select")} /> : null}
       {phase === "failed" ? <StatusPanel testId="k-tour-id-failure" alias="ktour-id-setup-failure" code={recoveryCode ?? "PROVIDER_TIMEOUT"} title={copy.failure} body={copy.failureBody} primary={copy.retry} onPrimary={() => { setRecoveryCode(null); setPhase(retryPhase) }} primaryTestId="k-tour-id-retry" secondary={copy.another} onSecondary={() => setPhase("method_select")} /> : null}
       {phase === "expired" ? <StatusPanel testId="k-tour-id-expired" alias="ktour-id-setup-expired" code="IDENTITY_SESSION_EXPIRED" title={copy.expired} body={copy.expiredBody} primary={copy.retry} onPrimary={() => { setSession(createIdentitySetupSessionB(origin, method)); setPhase("route_prepare") }} primaryTestId="k-tour-id-retry" secondary={copy.later} onSecondary={actions.closeIdentitySetup} /> : null}
 
@@ -320,10 +327,10 @@ function Disclosure({ rows }: { rows: Array<[string, string, string?]> }) {
   return <dl className={styles.disclosure}>{rows.map(([term, value, testId]) => <div key={`${term}:${value}`} data-testid={testId}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>
 }
 
-function Panel({ testId, alias, icon, eyebrow, title, body, action, onAction, visual, meta }: { testId: string; alias?: string; icon: ReactNode; eyebrow: string; title: string; body: string; action: string; onAction: () => void; visual?: "phone" | "document" | "face" | "processing" | "evidence"; meta?: [string, string] }) {
-  return <div className={`${styles.body} ${styles.centered}`} data-testid={testId}><span data-testid={alias} className={styles.heroIcon}>{icon}</span><p className={styles.eyebrow}>{eyebrow}</p><h1>{title}</h1><p className={styles.lead}>{body}</p>{visual ? <div className={styles.visual} data-visual={visual} aria-hidden="true">{visual === "document" ? <><BookOpenCheck /><Nfc /></> : visual === "face" ? <><Camera /><ScanFace /></> : visual === "phone" ? <><Smartphone /><BadgeCheck /></> : visual === "processing" ? <><RefreshCw /><i /></> : <><FileCheck2 /><Check /></>}</div> : null}{meta ? <div className={styles.meta}><strong>{meta[0]}</strong><span>{meta[1]}</span></div> : null}<div className={styles.actions}><button type="button" data-identity-initial-focus className={styles.primary} onClick={onAction}>{action}<ArrowRight size={17} aria-hidden="true" /></button></div></div>
+function Panel({ testId, aliases = [], icon, eyebrow, title, body, action, onAction, visual, meta }: { testId: string; aliases?: string[]; icon: ReactNode; eyebrow: string; title: string; body: string; action: string; onAction: () => void; visual?: "phone" | "document" | "face" | "processing" | "evidence"; meta?: [string, string] }) {
+  return <div className={`${styles.body} ${styles.centered}`} data-testid={testId}><span data-testid={aliases[0]} className={styles.heroIcon}><span data-testid={aliases[1]}>{icon}</span></span><p className={styles.eyebrow}>{eyebrow}</p><h1>{title}</h1><p className={styles.lead}>{body}</p>{visual ? <div className={styles.visual} data-visual={visual} aria-hidden="true">{visual === "document" ? <><BookOpenCheck /><Nfc /></> : visual === "face" ? <><Camera /><ScanFace /></> : visual === "phone" ? <><Smartphone /><BadgeCheck /></> : visual === "processing" ? <><RefreshCw /><i /></> : <><FileCheck2 /><Check /></>}</div> : null}{meta ? <div className={styles.meta}><strong>{meta[0]}</strong><span>{meta[1]}</span></div> : null}<div className={styles.actions}><button type="button" data-identity-initial-focus data-testid="k-tour-id-continue" className={styles.primary} onClick={onAction}>{action}<ArrowRight size={17} aria-hidden="true" /></button></div></div>
 }
 
 function StatusPanel({ testId, alias, code, title, body, extra, primary, onPrimary, primaryTestId, secondary, onSecondary }: { testId: string; alias: string; code: string; title: string; body: string; extra?: string; primary: string; onPrimary: () => void; primaryTestId?: string; secondary: string; onSecondary: () => void }) {
-  return <div className={`${styles.body} ${styles.centered}`} data-testid={testId} role="alert"><span data-testid={alias} className={styles.issueIcon}><TriangleAlert size={30} aria-hidden="true" /></span><p className={styles.errorCode}>{code}</p><h1>{title}</h1><p className={styles.lead}>{body}</p>{extra ? <p className={styles.assurance}>{extra}</p> : null}<div className={styles.actions}><button type="button" data-identity-initial-focus data-testid={primaryTestId} className={styles.primary} onClick={onPrimary}><RefreshCw size={17} aria-hidden="true" />{primary}</button><button type="button" className={styles.secondary} onClick={onSecondary}>{secondary}</button></div></div>
+  return <div className={`${styles.body} ${styles.centered}`} data-testid={testId} data-code={code} role="alert"><span data-testid={alias} className={styles.issueIcon}><TriangleAlert size={30} aria-hidden="true" /></span><p className={styles.errorCode}>{code}</p><h1>{title}</h1><p className={styles.lead}>{body}</p>{extra ? <p className={styles.assurance}>{extra}</p> : null}<div className={styles.actions}><button type="button" data-identity-initial-focus data-testid={primaryTestId} className={styles.primary} onClick={onPrimary}><RefreshCw size={17} aria-hidden="true" />{primary}</button><button type="button" className={styles.secondary} onClick={onSecondary}>{secondary}</button></div></div>
 }

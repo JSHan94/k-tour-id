@@ -320,10 +320,10 @@ export function OfficialDirectoryOnboardingLayer() {
             <button
               type="button"
               className={styles.identityEntry}
-              data-testid="onboarding-ktour-id-open"
+              data-testid="k-tour-id-setup-open"
               onClick={() => actions.openIdentitySetup("onboarding")}
             >
-              <span data-testid="k-tour-id-setup-open"><KeyRound size={19} aria-hidden="true" /></span>
+              <span data-testid="onboarding-ktour-id-open"><KeyRound size={19} aria-hidden="true" /></span>
               <span><strong>{copy.identityTitle}</strong><small>{copy.identityNote}</small></span>
               <span>SIMULATED</span>
               <ChevronRight size={18} aria-hidden="true" />
