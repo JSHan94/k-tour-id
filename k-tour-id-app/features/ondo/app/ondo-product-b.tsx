@@ -3,6 +3,7 @@
 import { MapEntryB } from "../map/map-entry-b"
 import { PulseTablesEntryB } from "../connect/tables-entry-b"
 import { TravelerIdEntryB } from "../identity-b/traveler-id-entry-b"
+import { KTourIdSetupB } from "../identity-b/ktour-id-setup-b"
 import { LocalSignalLayerB } from "../local-signal-b/local-signal-layer-b"
 import { SavedEntryB } from "../my/saved-entry-b"
 import { OfficialDirectoryOnboardingLayer } from "../onboarding/official-directory-onboarding"
@@ -18,7 +19,7 @@ export function OndoProductB() {
       tables: <PulseTablesEntryB />,
       travelerId: <TravelerIdEntryB />,
       settings: <SettingsEntryB />,
-      overlays: <><CanonicalPlaceMount /><LocalSignalLayerB /><OfficialDirectoryOnboardingLayer /></>,
+      overlays: <><CanonicalPlaceMount /><LocalSignalLayerB /><OfficialDirectoryOnboardingLayer /><KTourIdSetupB /></>,
     }} />
   )
 }

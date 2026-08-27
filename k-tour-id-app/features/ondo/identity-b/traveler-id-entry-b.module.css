@@ -73,6 +73,7 @@
 .statusCard:nth-child(2) { animation-delay: 35ms; }
 .statusCard:nth-child(3) { animation-delay: 70ms; }
 .statusCard:nth-child(4) { animation-delay: 105ms; }
+.statusCard:nth-child(5) { animation-delay: 140ms; }
 .statusTop { display: flex; min-width: 0; align-items: flex-start; gap: 8px; color: #766d68; }
 .statusTop svg { flex: 0 0 auto; }
 .statusTop span { min-width: 0; overflow: visible; font-size: 12px; font-weight: 780; line-height: 1.35; text-overflow: clip; white-space: normal; }
@@ -93,7 +94,7 @@
   .screen { width: min(100%, 1040px); max-width: 1040px; margin: 0 auto; padding: 54px 38px 92px; }
   .pass { min-height: 224px; padding: 28px; }
   .passMain { margin-top: 48px; }
-  .statusGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .statusGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (min-width: 900px) {
@@ -103,6 +104,7 @@
   .walletPane { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
   .readiness { grid-column: 1 / -1; grid-row: 3; }
   .footer { grid-column: 1 / -1; grid-row: 4; }
+  .statusGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
 @media (max-width: 430px) {

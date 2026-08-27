@@ -34,6 +34,12 @@ import {
   type StableCommerceBAction,
   type StableCommerceBState,
 } from "../../commerce-b/stable-commerce-model-b"
+import {
+  createSimulatedCredentialB,
+  type OndoBIdentityMethod,
+  type OndoBIdentitySetupOrigin,
+  type OndoBSimulatedCredential,
+} from "../../identity-b/ktour-id-setup-model-b"
 
 export type OndoBTab = "ondo" | "my" | "tables" | "id" | "settings"
 export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
@@ -73,6 +79,8 @@ export type OndoBState = {
   localSignalPostedVenueIds: string[]
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
+  identitySetupOrigin: OndoBIdentitySetupOrigin | null
+  identityCredential: OndoBSimulatedCredential | null
   commerceLocalBoundarySeen: boolean
   commerceOrigin: OndoBCommerceOrigin | null
   commerceWalletStatus: OndoBCommerceWalletStatus
@@ -105,6 +113,9 @@ export type OndoBActions = {
   removePlannedTable(tableId: string): boolean
   markLocalSignalPosted(venueId: string): boolean
   acknowledgeLocalInteractionBoundary(): boolean
+  openIdentitySetup(origin: OndoBIdentitySetupOrigin): void
+  closeIdentitySetup(): void
+  completeIdentitySetup(method: OndoBIdentityMethod): void
   acknowledgeCommerceLocalBoundary(): boolean
   setCommerceWalletStatus(status: OndoBCommerceWalletStatus): void
   dispatchCommerce(action: StableCommerceBAction): boolean
@@ -243,6 +254,8 @@ function initialState(): OndoBState {
     localSignalPostedVenueIds: [],
     localPulseEvidenceByVenue: {},
     localInteractionBoundarySeen: false,
+    identitySetupOrigin: null,
+    identityCredential: null,
     commerceLocalBoundarySeen: false,
     commerceOrigin: null,
     commerceWalletStatus: "disconnected",
@@ -560,6 +573,12 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       })
     },
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
+    openIdentitySetup: (identitySetupOrigin) => commitEphemeral((current) => ({ ...current, identitySetupOrigin })),
+    closeIdentitySetup: () => commitEphemeral((current) => ({ ...current, identitySetupOrigin: null })),
+    completeIdentitySetup: (method) => commitEphemeral((current) => ({
+      ...current,
+      identityCredential: createSimulatedCredentialB(method),
+    })),
     acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
     setCommerceWalletStatus: (commerceWalletStatus) => commitEphemeral((current) => ({ ...current, commerceWalletStatus })),
     dispatchCommerce: (action) => {
@@ -632,6 +651,8 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       localSignalPostedVenueIds: [],
       localPulseEvidenceByVenue: {},
       localInteractionBoundarySeen: false,
+      identitySetupOrigin: null,
+      identityCredential: null,
       commerceLocalBoundarySeen: false,
       commerceOrigin: null,
       commerceWalletStatus: "disconnected",

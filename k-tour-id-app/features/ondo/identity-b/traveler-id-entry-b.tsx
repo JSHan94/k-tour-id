@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CircleUserRound,
   Compass,
+  FileKey2,
   MapPinned,
   Settings,
   ShieldCheck,
@@ -38,6 +39,11 @@ const COPY = {
     ageBody: "19+ does not prove identity.",
     paymentTitle: "Payment",
     paymentBody: "A separate test wallet for ONDO benefits.",
+    credentialTitle: "K-Tour ID",
+    credentialBody: "Optional private service credential · separate from Person and 19+.",
+    credentialReady: "Simulated · this tab",
+    credentialEmpty: "Not set up",
+    credentialOpen: "Set up or present",
     notChecked: "Not checked",
     success: "Local result · this session",
     cancel: "Not completed",
@@ -71,6 +77,11 @@ const COPY = {
     ageBody: "19+는 본인을 증명하지 않습니다.",
     paymentTitle: "결제",
     paymentBody: "ONDO 혜택용 별도 테스트 지갑입니다.",
+    credentialTitle: "K-Tour ID",
+    credentialBody: "선택형 민간 서비스 자격증명 · 본인·19+와 별개입니다.",
+    credentialReady: "시뮬레이션 · 이 탭",
+    credentialEmpty: "설정 전",
+    credentialOpen: "설정 또는 제시",
     notChecked: "확인 전",
     success: "이 세션의 로컬 결과",
     cancel: "완료 전",
@@ -104,6 +115,11 @@ const COPY = {
     ageBody: "19歳以上という結果だけでは、本人であることを証明しません。",
     paymentTitle: "決済",
     paymentBody: "ONDO特典専用の、独立したテストウォレットです。",
+    credentialTitle: "K-Tour ID",
+    credentialBody: "任意の民間サービス資格情報 · 本人・19歳以上とは別です。",
+    credentialReady: "シミュレーション · このタブ",
+    credentialEmpty: "未設定",
+    credentialOpen: "設定または提示",
     notChecked: "未確認",
     success: "このセッションだけのローカル結果",
     cancel: "未完了",
@@ -196,6 +212,13 @@ export function TravelerIdEntryB() {
               <h3>{copy.ageTitle}</h3>
               <p>{copy.ageBody}</p>
               <button ref={ageRef} type="button" onClick={() => setActiveCheck("age")}>{copy.checkAge}<ChevronRight size={17} aria-hidden="true" /></button>
+            </article>
+
+            <article className={styles.statusCard} data-testid="traveler-id-credential" data-status={state.identityCredential?.status ?? "none"}>
+              <div className={styles.statusTop}><FileKey2 size={20} aria-hidden="true" /><span>{state.identityCredential ? copy.credentialReady : copy.credentialEmpty}</span></div>
+              <h3>{copy.credentialTitle}</h3>
+              <p>{copy.credentialBody}</p>
+              <button type="button" data-testid="traveler-id-ktour-id-open" onClick={() => actions.openIdentitySetup("traveler_id")}>{copy.credentialOpen}<ChevronRight size={17} aria-hidden="true" /></button>
             </article>
 
             <article className={styles.statusCard} data-testid="traveler-id-payment" data-status={walletStatus}>

@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useMemo, useEffect, useRef, useState } from "react"
-import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, Database, NotebookPen } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, Database, KeyRound, NotebookPen } from "lucide-react"
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "../shared/state/ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -54,6 +54,8 @@ const COPY = {
     sourceSummary: "Official source · what it confirms",
     start: "Set guest preferences",
     guest: "Explore without setup",
+    identityTitle: "Set up K-Tour ID",
+    identityNote: "Optional simulated identity route · guest Explore stays open",
     intentTitle: "What brings you to ONDO?",
     intentBody: "This choice stays on this device. Every option opens the same guest Explore and does not unlock or restrict features.",
     continueToPreferences: "Choose food preferences",
@@ -84,6 +86,8 @@ const COPY = {
     sourceSummary: "공식 출처 · 확인 범위",
     start: "게스트 취향 설정",
     guest: "설정 없이 탐색",
+    identityTitle: "K-Tour ID 설정",
+    identityNote: "선택형 신원 경로 시뮬레이션 · 게스트 탐색은 그대로",
     intentTitle: "어떤 목적으로 ONDO를 찾았나요?",
     intentBody: "선택은 이 기기에만 저장됩니다. 세 선택 모두 같은 게스트 탐색으로 이어지며 기능을 열거나 제한하지 않아요.",
     continueToPreferences: "음식 취향 고르기",
@@ -114,6 +118,8 @@ const COPY = {
     sourceSummary: "公式出典 · 確認できる範囲",
     start: "ゲストの好みを設定",
     guest: "設定せずに見る",
+    identityTitle: "K-Tour IDを設定",
+    identityNote: "任意の本人確認ルートをシミュレーション · ゲスト利用はそのまま",
     intentTitle: "ONDOを使う目的は？",
     intentBody: "選択内容はこの端末にのみ保存されます。どの選択肢でも同じゲスト向けの「探す」画面が開き、機能の解放や制限には使いません。",
     continueToPreferences: "食の好みを選ぶ",
@@ -311,6 +317,17 @@ export function OfficialDirectoryOnboardingLayer() {
               </button>
               <button type="button" className={styles.secondary} onClick={skip}>{copy.guest}</button>
             </div>
+            <button
+              type="button"
+              className={styles.identityEntry}
+              data-testid="onboarding-ktour-id-open"
+              onClick={() => actions.openIdentitySetup("onboarding")}
+            >
+              <span data-testid="k-tour-id-setup-open"><KeyRound size={19} aria-hidden="true" /></span>
+              <span><strong>{copy.identityTitle}</strong><small>{copy.identityNote}</small></span>
+              <span>SIMULATED</span>
+              <ChevronRight size={18} aria-hidden="true" />
+            </button>
             <details className={styles.sourceIntro} data-testid="onboarding-source-boundary">
               <summary>{copy.sourceSummary}<ChevronRight size={16} aria-hidden="true" /></summary>
               <div className={styles.sourceBody}>
