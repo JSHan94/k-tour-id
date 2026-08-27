@@ -20,7 +20,7 @@ donate unsupported product claims.
 | 5 | Place peek and full detail | Apple Place Card + Airbnb | Peer-sealed · user review |
 | 6 | Tables, 19+, join and chat | Timeleft | Peer-sealed · user review |
 | 7 | Local Signal contribution | Apple contribution + Strava | Peer-sealed · user review |
-| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Active |
+| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Peer-sealed · user review |
 | 9 | My Korea trip memory | Polarsteps | Pending |
 | 10 | Settings and device controls | Apple Settings + Arc | Pending |
 
@@ -213,11 +213,28 @@ reload, My Korea and exact Place return, Settings clear failure for EN/KO/JA at
 
 ### 8. Travel Pass and Wallet — Apple Wallet
 
-- [ ] Travel Pass and wallet are memorable, distinct objects with honest test
+- [x] Travel Pass and wallet are memorable, distinct objects with honest test
       semantics.
-- [ ] Offer review foregrounds quote, benefit delta and one sticky action.
-- [ ] Paid and refunded receipts are visually distinct completion objects.
-- [ ] No visual treatment implies a real credential, money, chain or provider.
+- [x] Offer review foregrounds quote, benefit delta and one sticky action.
+- [x] Paid and refunded receipts are visually distinct completion objects.
+- [x] No visual treatment implies a real credential, money, chain or provider.
+- [x] Account, Person, 19+, Wallet and Payment remain independent readiness axes.
+- [x] Accepted and declined benefits preserve exact 19/41 and 22/38 test
+      amounts; refund restores 60 and only the benefit actually used.
+- [x] Pay and refund are durable-first, fail closed on malformed references and
+      restore paired zero-sum ledgers deterministically after reload.
+- [x] Processing cancel, policy ineligible/minimum/expiry, failure,
+      insufficient balance and storage errors retain an honest same-Place
+      recovery instead of visually completing.
+- [x] Wallet activity and My Korea return to the exact canonical Place without
+      exposing QA outcome or ledger controls.
+
+Required states sealed: Travel Pass disconnected, prepare info/failure/ready,
+Wallet paid/reload, recommended/accepted/declined/consented offer, policy
+ineligible/below-minimum/expired, deterministic processing, payment failure,
+insufficient balance, payment/refund storage error, accepted/declined receipt,
+refund, My Korea paid/refunded and exact Place return for EN/KO/JA at 320x720,
+390x844, 844x390 and 1440x1000.
 
 ### 9. My Korea — Polarsteps
 
@@ -234,7 +251,7 @@ reload, My Korea and exact Place return, Settings clear failure for EN/KO/JA at
 
 ## Release record
 
-- Active flow: Travel Pass, Wallet, offer and receipt
+- Active flow: paused for user review and global simplification planning
 - Peer-sealed flow: Guest onboarding at `7555b133` (72 required state frames,
   all >=8.5, P0=P1=P2=P3=0, Arc 13/13, restoration/geometry 8/8,
   contracts 174/174)
@@ -247,6 +264,9 @@ reload, My Korea and exact Place return, Settings clear failure for EN/KO/JA at
   nine successor recovery frames and 66 stable desktop evidence frames, all
   >=8.5, P0=P1=P2=P3=0, focused 14/14, contracts 191/191, optimized build
   GREEN)
+- Peer-sealed flow: Travel Pass/Wallet/offer/receipt at `7f92ecd` (288 required
+  state frames, all >=8.5, P0=P1=P2=P3=0, focused 14/14, contracts 205/205,
+  optimized build GREEN)
 - User-approved flows: pending the next visual checkpoint
-- Next user checkpoint: stable ONDO link with the sealed Local Signal journey;
-  implementation continues with Apple Wallet-inspired Travel Pass and commerce.
+- Next user checkpoint: stable ONDO link with the sealed Flow 8 journey plus a
+  product-wide white/black simplification and OpenDID/eKYC restoration plan.
