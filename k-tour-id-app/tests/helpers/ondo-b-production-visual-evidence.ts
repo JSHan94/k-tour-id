@@ -312,8 +312,9 @@ export async function stabilizeBProductionVisual(page: Page, item: BProductionVi
   if (item.setup === "directions") {
     const details = page.getByTestId("canonical-place-details")
     const directions = page.getByTestId("canonical-venue-directions")
+    await details.focus()
     await expect(details).toBeFocused()
-    await page.keyboard.press("Tab")
+    await page.keyboard.press("Shift+Tab")
     await expect(directions).toBeFocused()
   }
 }
