@@ -207,6 +207,16 @@ async function reachCredential(setup: Locator, rapidIssue = false) {
   return advanceUntil(setup, "k-tour-id-credential")
 }
 
+async function reachSuccessfulPresentationResult(setup: Locator) {
+  await reachCredential(setup)
+  await setup.getByTestId("k-tour-id-presentation-open").click()
+  await advanceUntil(setup, "k-tour-id-presentation-consent")
+  await setup.getByTestId("k-tour-id-presentation-approve").click()
+  const result = setup.getByTestId("k-tour-id-presentation-result")
+  await expect(result).toHaveAttribute("data-result", "success")
+  return result
+}
+
 async function setIdentityQa(page: Page, qa: NonNullable<IdentityQa["identity"]>) {
   await page.evaluate((identity) => {
     const target = window as Window & { __ONDO_B_QA__?: IdentityQa }
@@ -419,12 +429,22 @@ test("OPENDID-E2E-006 cancel and Escape restore focus to each exact optional ent
   await onboardingEntry.opener.click()
   await onboardingPage.keyboard.press("Escape")
   await expect(onboardingEntry.opener).toBeFocused()
+  await onboardingEntry.opener.click()
+  await reachSuccessfulPresentationResult(onboardingEntry.setup)
+  await onboardingEntry.setup.getByTestId("k-tour-id-return").click()
+  await expect(onboardingEntry.setup).toHaveCount(0)
+  await expect(onboardingEntry.opener).toBeFocused()
   await onboardingContext.close()
 
   const travelerContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const travelerPage = await travelerContext.newPage()
   const travelerEntry = await openTravelerSetup(travelerPage)
   await travelerPage.keyboard.press("Escape")
+  await expect(travelerEntry.setup).toHaveCount(0)
+  await expect(travelerEntry.opener).toBeFocused()
+  await travelerEntry.opener.click()
+  await reachSuccessfulPresentationResult(travelerEntry.setup)
+  await travelerEntry.setup.getByTestId("k-tour-id-return").click()
   await expect(travelerEntry.setup).toHaveCount(0)
   await expect(travelerEntry.opener).toBeFocused()
   await travelerContext.close()

@@ -129,6 +129,13 @@ async function expectControlGeometry(scope: Locator) {
   expect(boxes.every(({ height }) => height >= 44)).toBe(true)
 }
 
+async function expectExactHitTarget(page: Page, locator: Locator, testId: string) {
+  const box = await rect(locator)
+  expect(await page.evaluate(({ x, y }) => {
+    return document.elementFromPoint(x, y)?.closest("[data-testid]")?.getAttribute("data-testid") ?? null
+  }, { x: box.x + box.width / 2, y: box.y + box.height / 2 })).toBe(testId)
+}
+
 async function expectNoHorizontalOverflow(page: Page, scope: Locator) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1)
   expect(await scope.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
@@ -211,6 +218,36 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
       }
     })
   }
+
+  test("short-landscape guest and source actions remain separate, hittable and clickable", async ({ browser }) => {
+    const profile = PROFILES[2]
+    for (const locale of ["en", "ko", "ja"] as const) {
+      const { context, page } = await openFresh(browser, locale, profile, "reduce")
+      const guest = page.getByTestId("onboarding-guest-skip")
+      const source = page.getByTestId("onboarding-source-boundary").locator("summary")
+      const [guestBox, sourceBox] = await Promise.all([rect(guest), rect(source)])
+
+      expect(guestBox.height).toBeGreaterThanOrEqual(44)
+      expect(sourceBox.height).toBeGreaterThanOrEqual(44)
+      await expectInsideViewport(page, guest)
+      await expectInsideViewport(page, source)
+      expect(
+        guestBox.x < sourceBox.x + sourceBox.width
+          && guestBox.x + guestBox.width > sourceBox.x
+          && guestBox.y < sourceBox.y + sourceBox.height
+          && guestBox.y + guestBox.height > sourceBox.y,
+      ).toBe(false)
+      await expectExactHitTarget(page, guest, "onboarding-guest-skip")
+      await expectExactHitTarget(page, source, "onboarding-source-boundary")
+
+      await source.click()
+      await expect(page.getByTestId("onboarding-source-boundary")).toHaveAttribute("open", "")
+      await source.click()
+      await guest.click()
+      await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+      await context.close()
+    }
+  })
 
   test("motion is purposeful in the default mode and absent for reduced motion", async ({ browser }) => {
     const profile = PROFILES[1]

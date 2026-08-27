@@ -184,7 +184,6 @@ export function KTourIdSetupB() {
   const issuedOnceRef = useRef(false)
   const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
-  const openerRef = useRef<HTMLElement | null>(null)
   const origin = state.identitySetupOrigin
   const active = origin !== null
   const copy = COPY[state.locale]
@@ -203,17 +202,20 @@ export function KTourIdSetupB() {
 
   useEffect(() => {
     if (!active) return
-    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    return () => {
+      window.requestAnimationFrame(() => {
+        if (opener?.isConnected && !opener.closest("[inert],[aria-hidden='true']")) opener.focus({ preventScroll: true })
+      })
+    }
+  }, [active, origin])
+
+  useEffect(() => {
+    if (!active) return
     setMethod(state.identityCredential?.method ?? "passport_ekyc")
     setPhase(state.identityCredential ? "credential_ready" : "method_select")
     setSession(null); setRecoveryCode(null); setPresentationApproved(null)
     issuedOnceRef.current = Boolean(state.identityCredential)
-    return () => {
-      window.requestAnimationFrame(() => {
-        const opener = openerRef.current
-        if (opener?.isConnected && !opener.closest("[inert],[aria-hidden='true']")) opener.focus({ preventScroll: true })
-      })
-    }
   }, [active, origin, state.identityCredential])
 
   useModalIsolation(active, layerRef)
