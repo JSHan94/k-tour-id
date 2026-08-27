@@ -285,3 +285,23 @@ test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts res
   expect(sanitizeCommerceReceipts([{ ...receipt("refunded", 3), refundReceiptId: "made-up" }])).toEqual([])
   expect(commerceSessionFromReceipts([])).toEqual(createStableCommerceBState())
 })
+
+test("FLOW8-COPY-014 every locale names the local test and venue boundary without connect, share, or live-payment shorthand", () => {
+  const commerce = source(COMMERCE)
+  const myKorea = source("features/ondo/my/saved-entry-b.tsx")
+
+  for (const truth of [
+    "venue neither offers nor accepts it",
+    "장소는 이 테스트를 제공하거나 받지 않음",
+    "お店はこのテストを提供も受け付けもしません",
+    "Preparing locally",
+    "이 기기에서 준비 중",
+    "この端末で準備しています",
+  ]) expect(commerce).toContain(truth)
+  for (const stale of ["Connect travel wallet", "Connecting…", "여행 지갑 연결", "연결 중…", "トラベルウォレットを接続", "接続しています…"]) {
+    expect(commerce).not.toContain(stale)
+  }
+  for (const visibleTestTruth of ["Test payment recorded", "테스트 결제 기록", "テスト決済の記録"]) {
+    expect(myKorea).toContain(visibleTestTruth)
+  }
+})

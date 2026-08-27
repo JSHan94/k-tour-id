@@ -538,6 +538,36 @@ test("FLOW8-DECLINED-012 declined benefit keeps 22 → 38, refunds to 60, and re
   await expect(page.getByTestId("wallet-benefit")).toContainText("1 available")
 })
 
+test("FLOW8-FIRSTVIEW-013 compact Wallet, offer choice, venue truth, and recovery remain complete decisions", async ({ browser }) => {
+  const mobile = await browser.newContext({ viewport: { width: 320, height: 720 } })
+  const page = await mobile.newPage()
+  await openTravelPass(page)
+  const prepare = page.getByTestId("wallet-link-open")
+  const dock = page.getByTestId("ondo-main-nav")
+  const [prepareBox, dockBox] = await Promise.all([prepare.boundingBox(), dock.boundingBox()])
+  expect(prepareBox).not.toBeNull()
+  expect(dockBox).not.toBeNull()
+  expect(prepareBox!.y + prepareBox!.height).toBeLessThanOrEqual(dockBox!.y - 8)
+  await prepare.click()
+  await connectWallet(page, "en")
+  const { offer } = await navigateToOfferFromExplore(page)
+  const venueBoundary = offer.getByTestId("commerce-venue-test-boundary")
+  await expect(venueBoundary).toBeVisible()
+  const benefitChoice = await offer.getByTestId("benefit-accept").boundingBox()
+  expect(benefitChoice).not.toBeNull()
+  expect(benefitChoice!.y + benefitChoice!.height).toBeLessThanOrEqual(720 - 96)
+  await mobile.close()
+
+  const desktop = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+  const desktopPage = await desktop.newPage()
+  const { offer: recoveryOffer } = await openOffer(desktopPage, "en", { benefit: "ineligible" })
+  const recovery = recoveryOffer.getByTestId("commerce-benefit-recovery")
+  const recoveryBox = await recovery.boundingBox()
+  expect(recoveryBox).not.toBeNull()
+  expect(recoveryBox!.height).toBeLessThanOrEqual(420)
+  await desktop.close()
+})
+
 for (const locale of ["en", "ko", "ja"] as const) {
   for (const viewport of VIEWPORTS) {
     test(`FLOW8-CAPTURE-SUCCESSOR ${locale} ${viewport.label} paid and declined evidence`, async ({ page }) => {
