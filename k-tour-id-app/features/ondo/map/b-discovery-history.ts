@@ -1,3 +1,6 @@
+import { captureQaControls } from "../shared/ui/use-qa-controls"
+import { isEditorialPlaceId, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
+
 export type BDiscoveryCity = "seoul" | "busan" | "jeju"
 export type BDiscoveryView = "map" | "list"
 export type BDiscoveryCategory = "all" | "korean" | "casual" | "japanese" | "chinese" | "global" | "night" | "specialty"
@@ -5,12 +8,13 @@ export type BDiscoveryCategory = "all" | "korean" | "casual" | "japanese" | "chi
 type BDiscoveryFocus =
   | { kind: "city"; city: BDiscoveryCity }
   | { kind: "venue"; venueId: string }
+  | { kind: "editorial-place"; editorialPlaceId: EditorialPlaceB["id"] }
   | { kind: "search" }
   | { kind: "editorial" }
   | { kind: "view-toggle" }
 
 export type BDiscoveryHistoryEntry = {
-  v: 2
+  v: 3
   documentId: string
   level: "nation" | "city" | "peek" | "detail"
   city?: BDiscoveryCity
@@ -18,6 +22,7 @@ export type BDiscoveryHistoryEntry = {
   query: string
   category: BDiscoveryCategory
   venueId?: string
+  editorialPlaceId?: EditorialPlaceB["id"]
   focus?: BDiscoveryFocus
 }
 
@@ -62,6 +67,10 @@ function venueValue(value: unknown): string | undefined {
   return typeof value === "string" && VENUE_ID_PATTERN.test(value) ? value : undefined
 }
 
+function editorialPlaceValue(value: unknown): EditorialPlaceB["id"] | undefined {
+  return isEditorialPlaceId(value) ? value : undefined
+}
+
 function queryValue(value: unknown): string {
   return typeof value === "string" ? value.slice(0, MAX_QUERY_LENGTH) : ""
 }
@@ -76,27 +85,34 @@ function focusValue(value: unknown): BDiscoveryFocus | undefined {
     const venueId = venueValue(value.venueId)
     return venueId ? { kind: "venue", venueId } : undefined
   }
+  if (value.kind === "editorial-place") {
+    const editorialPlaceId = editorialPlaceValue(value.editorialPlaceId)
+    return editorialPlaceId ? { kind: "editorial-place", editorialPlaceId } : undefined
+  }
   if (value.kind === "search" || value.kind === "editorial" || value.kind === "view-toggle") return { kind: value.kind }
   return undefined
 }
 
 function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
-  if (!isRecord(value) || (value.v !== 1 && value.v !== 2)) return null
+  if (!isRecord(value) || (value.v !== 1 && value.v !== 2 && value.v !== 3)) return null
   const level = value.level
   if (level !== "nation" && level !== "city" && level !== "peek" && level !== "detail") return null
   const city = cityValue(value.city)
   const venueId = venueValue(value.venueId)
+  const editorialPlaceId = editorialPlaceValue(value.editorialPlaceId)
   if (level !== "nation" && !city) return null
-  if ((level === "peek" || level === "detail") && !venueId) return null
+  if ((level === "peek" || level === "detail") && (!venueId === !editorialPlaceId)) return null
+  if (editorialPlaceId && city !== "jeju") return null
   return {
-    v: 2,
+    v: 3,
     documentId: typeof value.documentId === "string" ? value.documentId.slice(0, 64) : "legacy",
     level,
     city,
     view: viewValue(value.view),
     query: queryValue(value.query),
-    category: value.v === 2 ? categoryValue(value.category) : "all",
+    category: value.v === 2 || value.v === 3 ? categoryValue(value.category) : "all",
     venueId: level === "peek" || level === "detail" ? venueId : undefined,
+    editorialPlaceId: level === "peek" || level === "detail" ? editorialPlaceId : undefined,
     focus: focusValue(value.focus),
   }
 }
@@ -144,6 +160,10 @@ function entryUrl(entry: BDiscoveryHistoryEntry) {
     url.searchParams.set("venueId", entry.venueId)
     if (entry.level === "detail") url.searchParams.set("detail", "1")
   }
+  if ((entry.level === "peek" || entry.level === "detail") && entry.editorialPlaceId) {
+    url.searchParams.set("editorialPlaceId", entry.editorialPlaceId)
+    if (entry.level === "detail") url.searchParams.set("detail", "1")
+  }
   return `${url.pathname}${url.search}`
 }
 
@@ -186,7 +206,7 @@ export function normalizeBDiscoveryHistoryForActiveDocument() {
   const existing = readBDiscoveryHistory()
   if (!existing) return null
   const currentDocumentId = documentId()
-  if (existing.documentId === currentDocumentId && existing.v === 2) {
+  if (existing.documentId === currentDocumentId && existing.v === 3) {
     replaceEntry(existing)
     return existing
   }
@@ -194,23 +214,25 @@ export function normalizeBDiscoveryHistoryForActiveDocument() {
 }
 
 export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDiscoveryCity | undefined) {
+  captureQaControls(window.location.search)
   const existing = normalizeBDiscoveryHistoryForActiveDocument()
   if (existing) return existing
 
   const url = new URL(window.location.href)
   const requestedVenueId = venueValue(url.searchParams.get("venueId"))
+  const requestedEditorialPlaceId = editorialPlaceValue(url.searchParams.get("editorialPlaceId"))
   const resolvedVenueCity = requestedVenueId ? venueCity(requestedVenueId) : undefined
-  const requestedCity = resolvedVenueCity ?? cityValue(url.searchParams.get("city"))
+  const requestedCity = resolvedVenueCity ?? (requestedEditorialPlaceId ? "jeju" : cityValue(url.searchParams.get("city")))
   const requestedView = viewValue(url.searchParams.get("view"))
   const requestedCategory = categoryValue(url.searchParams.get("category"))
   const requestedQuery = queryValue(url.searchParams.get("q"))
   const wantsDetail = url.searchParams.get("detail") === "1"
-  const nation: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "nation", view: "map", query: "", category: "all" }
+  const nation: BDiscoveryHistoryEntry = { v: 3, documentId: documentId(), level: "nation", view: "map", query: "", category: "all" }
   replaceEntry(nation)
   if (!requestedCity) return nation
 
   const city: BDiscoveryHistoryEntry = {
-    v: 2,
+    v: 3,
     documentId: documentId(),
     level: "city",
     city: requestedCity,
@@ -220,6 +242,14 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
     focus: { kind: requestedCity === "jeju" ? "editorial" : "search" },
   }
   pushEntry(city)
+  if (requestedEditorialPlaceId) {
+    const peek: BDiscoveryHistoryEntry = { ...city, level: "peek", editorialPlaceId: requestedEditorialPlaceId, focus: undefined }
+    pushEntry(peek)
+    if (!wantsDetail) return peek
+    const detail: BDiscoveryHistoryEntry = { ...peek, level: "detail" }
+    pushEntry(detail)
+    return detail
+  }
   if (!requestedVenueId || !resolvedVenueCity) return city
 
   const peek: BDiscoveryHistoryEntry = { ...city, level: "peek", venueId: requestedVenueId, focus: undefined }
@@ -234,7 +264,7 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
 export function enterBDiscoveryCity(city: BDiscoveryCity) {
   const current = readBDiscoveryHistory()
   if (current?.level === "nation") replaceEntry({ ...current, focus: { kind: "city", city } })
-  const next: BDiscoveryHistoryEntry = { v: 2, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", focus: { kind: city === "jeju" ? "editorial" : "search" } }
+  const next: BDiscoveryHistoryEntry = { v: 3, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", focus: { kind: city === "jeju" ? "editorial" : "search" } }
   pushEntry(next)
   return next
 }
@@ -243,7 +273,7 @@ export function replaceBDiscoveryCityContext(input: Pick<BDiscoveryHistoryEntry,
   const current = readBDiscoveryHistory()
   if (current?.level !== "city" || !input.city) return current
   const next: BDiscoveryHistoryEntry = {
-    v: 2,
+    v: 3,
     documentId: documentId(),
     level: "city",
     city: input.city,
@@ -265,6 +295,20 @@ export function openBDiscoveryVenue(venueId: string) {
   return true
 }
 
+export function openBDiscoveryEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]) {
+  const current = readBDiscoveryHistory()
+  const safeEditorialPlaceId = editorialPlaceValue(editorialPlaceId)
+  if (!safeEditorialPlaceId || current?.city !== "jeju") return false
+  if (current.level === "peek") {
+    replaceEntry({ ...current, editorialPlaceId: safeEditorialPlaceId, focus: undefined })
+    return true
+  }
+  if (current.level !== "city") return false
+  replaceEntry({ ...current, focus: { kind: "editorial-place", editorialPlaceId: safeEditorialPlaceId } })
+  pushEntry({ ...current, level: "peek", editorialPlaceId: safeEditorialPlaceId, focus: undefined })
+  return true
+}
+
 export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryCity) {
   if (typeof window === "undefined" || window.location.pathname !== "/ondo-b") return false
   const safeVenueId = venueValue(venueId)
@@ -277,7 +321,7 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
 
   const city: BDiscoveryHistoryEntry = current?.level === "city" && current.city === safeVenueCity
     ? { ...current, focus: { kind: "venue", venueId: safeVenueId } }
-    : { v: 2, documentId: documentId(), level: "city", city: safeVenueCity, view: "map", query: "", category: "all", focus: { kind: "venue", venueId: safeVenueId } }
+    : { v: 3, documentId: documentId(), level: "city", city: safeVenueCity, view: "map", query: "", category: "all", focus: { kind: "venue", venueId: safeVenueId } }
 
   if (current?.level === "nation") {
     replaceEntry({ ...current, focus: { kind: "city", city: safeVenueCity } })
@@ -287,10 +331,33 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
   } else if (current) {
     pushEntry(city)
   } else {
-    replaceEntry({ v: 2, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", focus: { kind: "city", city: safeVenueCity } })
+    replaceEntry({ v: 3, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", focus: { kind: "city", city: safeVenueCity } })
     pushEntry(city)
   }
   pushEntry({ ...city, level: "peek", venueId: safeVenueId, focus: undefined })
+  return true
+}
+
+export function openSavedBDiscoveryEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]) {
+  if (typeof window === "undefined" || window.location.pathname !== "/ondo-b") return false
+  const safeEditorialPlaceId = editorialPlaceValue(editorialPlaceId)
+  if (!safeEditorialPlaceId) return false
+  const current = readBDiscoveryHistory()
+  if (current?.level === "peek" && current.editorialPlaceId === safeEditorialPlaceId) return true
+  if (current?.level === "detail" && current.editorialPlaceId === safeEditorialPlaceId) return returnToBDiscoveryEditorialPeek(safeEditorialPlaceId)
+  const city: BDiscoveryHistoryEntry = current?.level === "city" && current.city === "jeju"
+    ? { ...current, focus: { kind: "editorial-place", editorialPlaceId: safeEditorialPlaceId } }
+    : { v: 3, documentId: documentId(), level: "city", city: "jeju", view: "map", query: "", category: "all", focus: { kind: "editorial-place", editorialPlaceId: safeEditorialPlaceId } }
+  if (current?.level === "nation") {
+    replaceEntry({ ...current, focus: { kind: "city", city: "jeju" } })
+    pushEntry(city)
+  } else if (current?.level === "city" && current.city === "jeju") replaceEntry(city)
+  else if (current) pushEntry(city)
+  else {
+    replaceEntry({ v: 3, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", focus: { kind: "city", city: "jeju" } })
+    pushEntry(city)
+  }
+  pushEntry({ ...city, level: "peek", editorialPlaceId: safeEditorialPlaceId, focus: undefined })
   return true
 }
 
@@ -298,6 +365,14 @@ export function openBDiscoveryDetail(venueId: string) {
   const current = readBDiscoveryHistory()
   const safeVenueId = venueValue(venueId)
   if (current?.level !== "peek" || current.venueId !== safeVenueId) return false
+  pushEntry({ ...current, level: "detail" })
+  return true
+}
+
+export function openBDiscoveryEditorialDetail(editorialPlaceId: EditorialPlaceB["id"]) {
+  const current = readBDiscoveryHistory()
+  const safeEditorialPlaceId = editorialPlaceValue(editorialPlaceId)
+  if (current?.level !== "peek" || current.editorialPlaceId !== safeEditorialPlaceId) return false
   pushEntry({ ...current, level: "detail" })
   return true
 }
@@ -316,6 +391,13 @@ export function returnToBDiscoveryPeek(venueId: string) {
   return true
 }
 
+export function returnToBDiscoveryEditorialPeek(editorialPlaceId: EditorialPlaceB["id"]) {
+  const current = readBDiscoveryHistory()
+  if (current?.level !== "detail" || current.editorialPlaceId !== editorialPlaceValue(editorialPlaceId)) return false
+  window.history.back()
+  return true
+}
+
 export function closeBDiscoveryPlace() {
   const current = readBDiscoveryHistory()
   if (current?.level !== "peek" && current?.level !== "detail") return false
@@ -330,6 +412,10 @@ export function focusBDiscoveryTarget(entry: BDiscoveryHistoryEntry) {
   if (focus.kind === "venue") {
     return document.querySelector<HTMLElement>(`[data-venue-opener='${CSS.escape(focus.venueId)}']`)
       ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")
+  }
+  if (focus.kind === "editorial-place") {
+    return document.querySelector<HTMLElement>(`[data-editorial-place-opener='${CSS.escape(focus.editorialPlaceId)}']`)
+      ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-japan-first-discovery'] > summary")
   }
   if (focus.kind === "search") return document.querySelector<HTMLElement>("[data-testid='ondo-b-search']")
   if (focus.kind === "editorial") return document.querySelector<HTMLElement>("[data-testid='ondo-b-japan-first-discovery'] > summary")

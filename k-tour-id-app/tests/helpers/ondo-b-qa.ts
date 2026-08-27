@@ -16,7 +16,7 @@ export const B_CHECKPOINTS = [
 
 export type BFlowId = (typeof B_FLOW_IDS)[number]
 export type BCheckpoint = (typeof B_CHECKPOINTS)[number]
-export type BLocale = "en" | "ko"
+export type BLocale = "en" | "ko" | "ja"
 export type EvidenceDisposition = "actual" | "gap" | "not_applicable"
 
 export type BCheckpointContract = {
@@ -266,12 +266,14 @@ export async function seedB(
         localInteractionBoundarySeen: false,
         commerceLocalBoundarySeen: false,
         commerceReceipts: [],
+        ...nextLocal,
       }))
     }
     if (shouldClear && sessionStorage.getItem("ondo.qa.b-seed-cleared") !== "1") {
       sessionStorage.removeItem("ondo.chat.v2")
       sessionStorage.removeItem("ondo.table-outcomes.v2")
       sessionStorage.removeItem("ondo.labs.v2")
+      sessionStorage.removeItem("ondo-b.labs.v1")
       sessionStorage.removeItem("ondo.accepted-visits.v2")
       sessionStorage.setItem("ondo.qa.b-seed-cleared", "1")
     }
@@ -286,6 +288,7 @@ export async function seedFreshOnboarding(page: Page, locale: BLocale = "en") {
     sessionStorage.removeItem("ondo.chat.v2")
     sessionStorage.removeItem("ondo.table-outcomes.v2")
     sessionStorage.removeItem("ondo.labs.v2")
+    sessionStorage.removeItem("ondo-b.labs.v1")
     sessionStorage.removeItem("ondo.accepted-visits.v2")
     if (nextLocale === "ko") localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "ko", guideSeen: false, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
   }, locale)
@@ -333,7 +336,11 @@ export async function openLabs(page: Page) {
   const milestone = page.getByTestId("open-labs-milestone")
   if (await milestone.isVisible().catch(() => false)) await milestone.click()
   else await page.getByTestId("open-labs").click()
-  await expect(page.getByRole("dialog", { name: "Labs" })).toBeVisible()
+  // The B-native Labs dialog label follows the active locale (Labs / 기술
+  // 실험실 / 技術ラボ). The provider-neutral sheet test id proves that the
+  // actual modal mounted without baking an English-only accessible name into
+  // shared visual setup.
+  await expect(page.getByTestId("ondo-sheet")).toBeVisible()
 }
 
 export async function finishAccountGate(page: Page) {

@@ -81,6 +81,7 @@ export function useModalIsolation(open: boolean, modalRef: RefObject<HTMLElement
 
     const covered = new Set<HTMLElement>()
     const owner = Symbol("ondo-modal-isolation")
+    const priority = Number(modal.dataset.modalLayerPriority ?? "0") || 0
     let branch: HTMLElement = modal
 
     const remember = (element: HTMLElement) => {
@@ -93,6 +94,14 @@ export function useModalIsolation(open: boolean, modalRef: RefObject<HTMLElement
       if (!parent) break
       Array.from(parent.children).forEach((candidate) => {
         if (!(candidate instanceof HTMLElement) || candidate === branch || candidate.contains(modal)) return
+        const priorityOwner = candidate.matches("[data-modal-layer-priority]")
+          ? candidate
+          : candidate.querySelector<HTMLElement>("[data-modal-layer-priority]")
+        const candidatePriority = Number(priorityOwner?.dataset.modalLayerPriority ?? "0") || 0
+        // A parent sheet can mount after a restored nested gate. Keep the
+        // explicitly higher-priority child operable instead of making it inert
+        // just because React committed the parent later on this reload.
+        if (candidatePriority > priority) return
         remember(candidate)
         candidate.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']").forEach(remember)
       })

@@ -47,6 +47,10 @@ async function expectNoSeriousAxe(page: Page) {
 test("My Korea starts honestly empty, records an explicit official place open, reloads, and resets", async ({ page }) => {
   await seedDevice(page)
   await gotoB(page, "?city=seoul&view=list")
+  await page.evaluate(() => {
+    sessionStorage.setItem("ondo.labs.v2", "legacy-a-session")
+    sessionStorage.setItem("ondo-b.labs.v1", "b-session")
+  })
   let my = await openMy(page)
   await expect(my.getByTestId("my-korea-recent-empty")).toBeVisible()
   await expect(my.getByTestId("my-korea-planned-empty")).toBeVisible()
@@ -75,8 +79,36 @@ test("My Korea starts honestly empty, records an explicit official place open, r
   await page.getByRole("button", { name: "Clear saved content" }).click()
   await expect(page.getByTestId("ondo-b-clear-device-confirm")).toBeHidden()
   await expect(page.getByTestId("ondo-b-clear-device-open")).toBeFocused()
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo-b.labs.v1"))).toBeNull()
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.labs.v2"))).toBe("legacy-a-session")
   my = await openMy(page)
   await expect(my.getByTestId("my-korea-recent-empty")).toBeVisible()
+})
+
+test("device clear leaves saved content and both Labs sessions intact when B session storage cannot be cleared", async ({ page }) => {
+  await seedDevice(page, "en", { savedVenueIds: [VENUE_ID] })
+  await gotoB(page)
+  await page.evaluate(() => {
+    sessionStorage.setItem("ondo.labs.v2", "legacy-a-session")
+    sessionStorage.setItem("ondo-b.labs.v1", "b-session")
+    const originalRemove = Storage.prototype.removeItem
+    Object.defineProperty(window.sessionStorage, "removeItem", {
+      configurable: true,
+      value(key: string) {
+        if (key === "ondo-b.labs.v1") throw new DOMException("blocked", "SecurityError")
+        return originalRemove.call(this, key)
+      },
+    })
+  })
+  await activate(page, "nav-settings")
+  await page.getByTestId("ondo-b-device-data-settings").locator(":scope > summary").click()
+  await page.getByTestId("ondo-b-clear-device-open").click()
+  const confirm = page.getByTestId("ondo-b-clear-device-confirm")
+  await confirm.getByRole("button", { name: "Clear saved content" }).click()
+  await expect(confirm.getByTestId("ondo-b-clear-device-error")).toBeVisible()
+  await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").savedVenueIds ?? [], DEVICE_KEY)).toEqual([VENUE_ID])
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo-b.labs.v1"))).toBe("b-session")
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.labs.v2"))).toBe("legacy-a-session")
 })
 
 test("planned meals appear only after the explicit local join confirmation and survive reload", async ({ page }) => {
@@ -85,8 +117,8 @@ test("planned meals appear only after the explicit local join confirmation and s
   await activate(page, "nav-tables")
   await page.getByTestId(`table-open-${TABLE_ID}`).click()
   await page.getByTestId("table-join").click()
+  await page.getByTestId("action-gate-confirm").click()
   await page.getByTestId("after19-start").click()
-  await page.getByTestId("gate-success").click()
 
   await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").plannedTableRefs ?? [], DEVICE_KEY)).toEqual([])
   await page.getByTestId("table-join-confirm").click()
@@ -119,7 +151,7 @@ test("cancel creates no plan while the Local Signal merge contract can render ho
   await activate(page, "nav-tables")
   await page.getByTestId(`table-open-${TABLE_ID}`).click()
   await page.getByTestId("table-join").click()
-  await page.getByTestId("gate-cancel").click()
+  await page.getByTestId("action-gate-cancel").click()
   await page.getByTestId("table-detail").locator("header").getByRole("button", { name: "테이블 닫기" }).first().click()
   await expect(page.getByTestId("table-detail")).toBeHidden()
   await expect(page.getByTestId(`table-open-${TABLE_ID}`)).toBeFocused()

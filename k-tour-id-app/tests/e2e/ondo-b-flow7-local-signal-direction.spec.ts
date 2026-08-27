@@ -18,6 +18,8 @@ type Viewport = { label: string; width: number; height: number }
 const VIEWPORTS: readonly Viewport[] = [
   { label: "320x720", width: 320, height: 720 },
   { label: "390x844", width: 390, height: 844 },
+  { label: "430x932", width: 430, height: 932 },
+  { label: "768x1024", width: 768, height: 1024 },
   { label: "844x390", width: 844, height: 390 },
   { label: "1440x1000", width: 1440, height: 1000 },
 ]
@@ -103,11 +105,21 @@ async function setEligibility(page: Page, outcome: EligibilityOutcome) {
   }, outcome)
 }
 
-async function openEligibilityResult(page: Page, signal: Locator, outcome: EligibilityOutcome) {
-  await setEligibility(page, outcome)
+async function openPersonConsent(page: Page, signal: Locator) {
   await signal.getByTestId("local-signal-person-check").click()
+  const actionGate = page.getByTestId("ondo-b-action-gate")
+  const accountConfirm = actionGate.getByTestId("action-gate-confirm")
+  if (await accountConfirm.isVisible().catch(() => false)) {
+    await accountConfirm.click()
+  }
   const gate = page.getByTestId("ondo-b-local-check-walkthrough")
   await expect(gate).toBeVisible()
+  return gate
+}
+
+async function openEligibilityResult(page: Page, signal: Locator, outcome: EligibilityOutcome) {
+  await setEligibility(page, outcome)
+  const gate = await openPersonConsent(page, signal)
   await gate.getByTestId("local-check-boundary-continue").click()
   if (outcome === "success") {
     await expect(gate).toBeHidden()
@@ -181,23 +193,27 @@ async function sharedPlacePulseTuple(place: Locator) {
   }))
 }
 
-test("FLOW7-VIS-001 Local Signal owns a tactile contribution hierarchy at phone and landscape widths", async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 720 })
-  const { signal } = await openSignal(page)
-  await expect(signal).toHaveAttribute("data-visual-direction", "apple-contribution-strava")
-  await expect(signal).toHaveAttribute("data-signal-stage", "draft")
-  await expectNoHorizontalOverflow(signal)
-  const primary = signal.getByTestId("local-signal-person-check")
-  await expect(primary).toBeDisabled()
-  await signal.locator("fieldset button").first().click()
-  await expect(primary).toBeEnabled()
-  const box = await primary.boundingBox()
-  expect(box).not.toBeNull()
-  expect(box!.height).toBeGreaterThanOrEqual(52)
-  expect(box!.y).toBeGreaterThanOrEqual(0)
-  expect(box!.y + box!.height).toBeLessThanOrEqual(720)
-  await expectControlGeometry(signal)
-})
+for (const viewport of VIEWPORTS.filter(({ width }) => width <= 430)) {
+  test(`FLOW7-VIS-001 Local Signal keeps its in-flow continuation in the first useful ${viewport.label} viewport`, async ({ page }) => {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height })
+    const { signal } = await openSignal(page)
+    await expect(signal).toHaveAttribute("data-visual-direction", "apple-contribution-strava")
+    await expect(signal).toHaveAttribute("data-signal-stage", "draft")
+    await expectNoHorizontalOverflow(signal)
+    const primary = signal.getByTestId("local-signal-person-check")
+    await expect(primary).toBeDisabled()
+    await signal.locator("fieldset button").first().click()
+    await expect(primary).toBeEnabled()
+    await expect(primary.locator("xpath=..")).toHaveCSS("position", "static")
+    const box = await primary.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.height).toBeGreaterThanOrEqual(52)
+    expect(box!.y).toBeGreaterThanOrEqual(0)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height)
+    await expect(signal).toHaveCSS("background-color", "rgb(255, 255, 255)")
+    await expectControlGeometry(signal)
+  })
+}
 
 test("FLOW7-MEDIA-002 photo MIME, size, prepare, retry, replace, and remove remain distinct local states", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -250,8 +266,7 @@ test("FLOW7-GATE-003 Person cancel, failure, unavailable, expired, and Escape re
   await draft.locator("fieldset button").first().click()
   await note.fill("Keep this exact Local Signal draft.")
 
-  await signal.getByTestId("local-signal-person-check").click()
-  let gate = page.getByTestId("ondo-b-local-check-walkthrough")
+  let gate = await openPersonConsent(page, signal)
   await expect(signal).toHaveAttribute("inert", "")
   await page.keyboard.press("Escape")
   await expect(gate).toBeHidden()
@@ -553,7 +568,7 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   const { signal, place } = await openSignal(page)
   const before = await sharedPlacePulseTuple(place)
   expect(before).toEqual({
-    level: "peak", numeric: "shown", title: "Pulse 91 · PEAK", score: "91", count: "24", confidence: "High",
+    level: "peak", numeric: "hidden", title: "Pulse 91 · PEAK", score: "91", count: "24", confidence: "High",
     freshnessUpdatedAt: "Curated snapshot · 2026-08-25 02:20 UTC",
   })
   await signal.locator("fieldset button").first().click()
@@ -572,8 +587,9 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   const targetRow = rows.filter({ has: page.locator(`[data-venue-id='${VENUE_ID}']`) })
   const rowIndex = await rows.evaluateAll((items, venueId) => items.findIndex((item) => item.getAttribute("data-venue-id") === venueId), VENUE_ID)
   expect(rowIndex).toBe(0)
-  await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("Pulse 91 · PEAK")
-  await expect(list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)).toContainText("24 curated signals")
+  const listPulse = list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)
+  await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
+  await expect(listPulse).toHaveAttribute("aria-label", /Pulse 91 · PEAK · 24 curated signals/)
   expect(await targetRow.count()).toBeLessThanOrEqual(1)
   await page.getByTestId("ondo-b-view-toggle").click()
   const accessible = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
@@ -584,12 +600,10 @@ test("FLOW7-CONSENT-012 phone consent shows all truth rows and both 44px decisio
   await page.setViewportSize({ width: 320, height: 720 })
   const { signal } = await openSignal(page)
   await signal.locator("fieldset button").first().click()
-  await signal.getByTestId("local-signal-person-check").click()
-  const gate = page.getByTestId("ondo-b-local-check-walkthrough")
+  const gate = await openPersonConsent(page, signal)
   for (const row of ["consent-requester", "consent-purpose", "consent-minimum", "consent-retention"]) await expect(gate.getByTestId(row)).toBeInViewport()
-  const consent = gate.getByTestId("local-check-consent")
-  const verify = consent.getByTestId("local-check-boundary-continue")
-  const decline = consent.getByRole("button", { name: /Not now|나중에|あとで/ })
+  const verify = gate.getByTestId("local-check-boundary-continue")
+  const decline = gate.getByTestId("action-gate-cancel")
   for (const action of [verify, decline]) {
     await expect(action).toBeInViewport()
     const box = await action.boundingBox()
@@ -691,8 +705,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await input.setInputFiles("public/seoul-after-rain-hero.jpg")
       await expect(signal.locator("img")).toBeVisible()
 
-      await signal.getByTestId("local-signal-person-check").click()
-      let gate = page.getByTestId("ondo-b-local-check-walkthrough")
+      let gate = await openPersonConsent(page, signal)
       await quietCapture(page, `${locale}-${viewport.label}-person-consent`)
       await gate.locator("header button").click()
       await expect(gate).toBeHidden()

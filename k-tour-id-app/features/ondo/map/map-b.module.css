@@ -149,6 +149,78 @@
   .mapKey > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
+/* Jeju editorial places are a separate, source-backed map layer. This compact
+   disclosure keeps every pin keyboard reachable without borrowing official
+   record clusters or the Pulse heat grammar. */
+.editorialPlaceList {
+  position: absolute;
+  z-index: 8;
+  top: 0;
+  left: 0;
+  width: min(290px, calc(100% - 52px));
+  min-height: 44px;
+  border: 1px solid rgb(23 23 23 / 12%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 9px 24px rgb(0 0 0 / 8%);
+  color: #171717;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+.editorialPlaceList > summary {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 11px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 760;
+  list-style: none;
+}
+.editorialPlaceList > summary::-webkit-details-marker { display: none; }
+.editorialPlaceList > summary span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.editorialPlaceList > summary svg:last-child { transition: transform 180ms ease; }
+.editorialPlaceList[open] > summary svg:last-child { transform: rotate(90deg); }
+.editorialPlaceList > div {
+  display: grid;
+  max-height: min(46dvh, 360px);
+  gap: 3px;
+  padding: 5px;
+  overflow-y: auto;
+  border-top: 1px solid rgb(23 23 23 / 10%);
+}
+.editorialPlaceList button {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #292929;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 680;
+  text-align: left;
+}
+.editorialPlaceList button[aria-current="location"] { background: #171717; color: #fff; }
+.editorialPlaceList summary:focus-visible,
+.editorialPlaceList button:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 1px; }
+
+@media (max-width: 390px) {
+  .editorialPlaceList { width: min(270px, calc(100% - 50px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .editorialPlaceList > summary svg:last-child { transition: none; }
+}
+
 @media (min-width: 900px) {
   /* Variant B now keeps the same bottom-navigation grammar at every width. */
   .listPanel { left: 0; }
@@ -526,6 +598,7 @@
   .venueList .categoryTruth { display: none; }
   .venueList button > span:nth-child(2) > .listPulse { display: block; }
   .listPulse > span { display: none; }
+  .listPulse > .listPulseSignal { display: inline-flex; }
 }
 
 @container ondo-map-root (max-width: 599px) {
@@ -1110,6 +1183,187 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pulseLegend span[data-level="peak"] i { animation: none !important; }
+}
+
+/* Feedback closure: keep Explore visually quiet. Product truth remains in
+   accessible names and progressive disclosures; the persistent canvas shows
+   only the controls needed for the current map decision. */
+.brand {
+  display: grid;
+  grid-template-columns: auto;
+  gap: 3px;
+}
+.brand > img { display: block; width: 86px; height: auto; }
+.brand > small { color: #666; font-size: 12px; line-height: 1.1; }
+
+.resultBar[data-effective-view="map"],
+.resultBar[data-effective-view="list"] {
+  width: 48px;
+  justify-self: end;
+  padding: 2px;
+}
+.resultBar[data-effective-view="map"] > span,
+.resultBar[data-effective-view="list"] > span:not(.forcedListLabel) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.resultBar[data-effective-view="map"] > button,
+.resultBar[data-effective-view="list"] > button {
+  width: 44px;
+  min-width: 44px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.listPulse {
+  display: flex;
+  min-height: 18px;
+  align-items: center;
+  margin: 3px 0 1px;
+}
+.listPulseSignal {
+  display: inline-flex;
+  min-width: 42px;
+  align-items: center;
+  gap: 5px;
+}
+.listPulseSignal i {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgb(23 23 23 / 12%);
+  border-radius: 50%;
+  background: var(--list-pulse, #8d8d8d);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--list-pulse, #8d8d8d) 36%, transparent);
+}
+.listPulse[data-pulse-level="low"] .listPulseSignal i:nth-child(n + 2),
+.listPulse[data-pulse-level="limited"] .listPulseSignal i:nth-child(n + 2) { opacity: .14; }
+.listPulse[data-pulse-level="warming"] .listPulseSignal i:nth-child(3) { opacity: .18; }
+.listPulse[data-pulse-level="rising"] .listPulseSignal i:nth-child(3) { opacity: .48; }
+.listPulse[data-pulse-level="hot"] .listPulseSignal i:nth-child(3) { opacity: .78; }
+
+.listPanel { background: #fafafa; }
+.venueList li[data-venue-id] {
+  background: #fff;
+  border-color: rgb(23 23 23 / 10%);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 6%);
+}
+.categoryBadge { background: #f6f6f5; box-shadow: none; }
+.dotMap::before {
+  background:
+    radial-gradient(circle at 26% 28%, rgb(23 23 23 / 13%) 0 2px, transparent 3px 27px, rgb(23 23 23 / 5%) 28px 29px, transparent 30px),
+    radial-gradient(circle at 76% 72%, rgb(23 23 23 / 11%) 0 3px, transparent 4px 32px, rgb(23 23 23 / 4%) 33px 34px, transparent 35px),
+    radial-gradient(circle at 50% 50%, #fff, #f4f4f2 56%, transparent 75%),
+    repeating-radial-gradient(circle at 48% 50%, transparent 0 42px, rgb(23 23 23 / 4%) 43px 44px);
+}
+.cityNode,
+.cityNode[data-city="seoul"],
+.cityNode[data-city="busan"],
+.koreaAtlas .cityNode[data-city="jeju"] {
+  background: rgb(255 255 255 / 97%);
+  border-color: rgb(23 23 23 / 12%);
+  box-shadow: 0 14px 38px rgb(0 0 0 / 8%);
+}
+.koreaAtlas .atlasTruth { width: 44px; }
+.koreaAtlas .atlasTruth > summary {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  justify-content: center;
+  padding: 0;
+  border-color: rgb(23 23 23 / 11%);
+  background: rgb(255 255 255 / 95%);
+  color: #444;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 7%);
+}
+.koreaAtlas .atlasTruthBody { background: rgb(255 255 255 / 99%); }
+
+/* Global After 19 is an ONDO presentation layer, not venue truth. Keep its
+   trigger in an owned map lane and use a neutral night treatment only while
+   the session-scoped layer is active. */
+.root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
+  filter: grayscale(.2) saturate(.66) contrast(1.04) brightness(.78);
+}
+
+.root:has(:global([data-testid="global-after19-prompt-layer"])) .map :global(.maplibregl-cooperative-gesture-screen),
+.root:has(:global([data-testid="global-after19-prompt-layer"])) .map :global(.maplibregl-cooperative-gesture-screen *) {
+  visibility: hidden !important;
+}
+
+.root:has(> .listPanel) > :global([data-testid="ondo-b-after19-global"]) {
+  top: calc(246px + env(safe-area-inset-top));
+}
+
+.root:has(> :global([data-testid="ondo-b-after19-global"])) > .listPanel {
+  padding-top: 58px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .root:has(> .listPanel) > :global([data-testid="ondo-b-after19-global"]) {
+    top: auto !important;
+    right: 184px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    left: auto !important;
+    width: min(318px, calc(100% - 20px));
+    justify-items: end;
+  }
+
+  .root:has(> :global([data-testid="ondo-b-after19-global"])) > .listPanel {
+    padding-top: 52px;
+  }
+}
+
+.root[data-editorial-point-count] > :global([data-testid="ondo-b-after19-global"]) {
+  top: calc(84px + env(safe-area-inset-top));
+}
+
+/* The ultra-short composition owns one 46px utility lane between the filters
+   and the forced list. Keep both optional entry points in that lane instead
+   of floating them over filters or canonical venue rows. The list itself is
+   already the truthful effective-view indicator, so the otherwise blank
+   forced-list badge is redundant at this height. */
+.root.ultraShort:has(> .listPanel) > :global([data-testid="ondo-b-after19-global"]) {
+  top: calc(104px + env(safe-area-inset-top)) !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 10px !important;
+  width: 44px !important;
+  justify-items: start !important;
+}
+
+.ultraShort > :global([data-testid="ondo-b-japan-first-discovery"]) {
+  top: calc(104px + env(safe-area-inset-top)) !important;
+  right: 10px !important;
+  width: 112px !important;
+}
+
+.ultraShort .forcedListLabel {
+  width: 44px;
+  min-width: 44px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.ultraShort .resultBar {
+  position: absolute;
+  top: 0;
+  right: 122px;
+  left: auto;
+}
+
+.ultraShort:has(> :global([data-testid="ondo-b-after19-global"])) > .listPanel {
+  padding-top: 0;
+}
+
+@container ondo-map-root (min-height: 569px) {
+  .mapChrome { top: calc(176px + env(safe-area-inset-top)); }
 }
 
 /* Visual-only product polish: the nation choice is a responsive product
@@ -1988,6 +2242,20 @@
   .koreaAtlas .atlasTruth { right: auto; bottom: 7%; left: 6%; width: 280px; }
 }
 
+/* Tablet atlas cards keep their factual record label complete. Desktop nodes
+   already have sufficient room; phones retain their compact localized cards. */
+@media (min-width: 700px) and (max-width: 800px) and (min-height: 501px) {
+  .koreaAtlas .cityNode,
+  .koreaAtlas .cityNode[data-city="seoul"],
+  .koreaAtlas .cityNode[data-city="busan"] { width: 184px; }
+  .koreaAtlas .cityNode small,
+  .koreaAtlas .cityNode .cityRecordTruth {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .koreaAtlas .cityNode,
   .koreaAtlas .atlasTruth svg { transition: none !important; animation: none !important; }
@@ -2256,7 +2524,7 @@
 }
 
 .root:has(> .listPanel) > [data-testid="ondo-b-japan-first-discovery"]:not([open]) .mark b { display: none; }
-.root:has(> .listPanel) > .listPanel { padding-top: 96px; }
+.root:has(> .listPanel) > .listPanel { padding-top: 114px; }
 .root:has(> [data-testid="ondo-b-japan-first-discovery"][open]) > .listPanel {
   visibility: hidden;
   pointer-events: none;
@@ -2463,3 +2731,47 @@
   .koreaAtlas .cityNode[data-city="busan"] { top: 59%; left: 69%; }
   .koreaAtlas .cityNode[data-city="jeju"] { bottom: 9%; left: 42%; }
 }
+
+/* Compact landscape cards still need the visual Pulse cue. The older
+   short-height compaction rule hides secondary <em> content wholesale, so
+   opt this deliberately non-verbal signal back in without restoring copy. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .root .venueList button > span:nth-child(2) > em.listPulse {
+    display: flex;
+    min-height: 12px;
+    margin-block: 1px 0;
+  }
+
+  .root .listPulseSignal {
+    display: inline-flex;
+    min-width: 34px;
+    gap: 4px;
+  }
+
+  .root .listPulseSignal i {
+    width: 7px;
+    height: 7px;
+  }
+}
+
+/* Final neutral cascade: later atlas composition rules may position these
+   objects, but must not reintroduce the discarded cream application cast. */
+.listPanel { background: #fafafa; }
+.venueList li[data-venue-id] { background: #fff; border-color: rgb(23 23 23 / 10%); }
+.categoryBadge { background: #f6f6f5; box-shadow: none; }
+.koreaAtlas .cityNode,
+.koreaAtlas .cityNode[data-city="seoul"],
+.koreaAtlas .cityNode[data-city="busan"],
+.koreaAtlas .cityNode[data-city="jeju"] { background: rgb(255 255 255 / 97%); }
+.koreaAtlas .atlasTruth { width: 44px; }
+.koreaAtlas .atlasTruth > summary {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  justify-content: center;
+  padding: 0;
+  border-color: rgb(23 23 23 / 11%);
+  background: rgb(255 255 255 / 96%);
+  color: #444;
+}
+.koreaAtlas .atlasTruthBody { background: rgb(255 255 255 / 99%); }

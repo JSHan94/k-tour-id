@@ -4,11 +4,23 @@ export const APP_ROOT = resolve(import.meta.dirname, "../..")
 export const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 export const STAGE_DIST = resolve(STAGE_ROOT, "dist")
 export const LOCAL_ONLY_PROJECT_ID = "appgprj_local_only_ondo_b_artifact"
+export const HISTORICAL_B_PROJECT_ID = "appgprj_6a85de65d6148191aa042ae9c2787dd2"
 
 // These modules are intentionally B-native: they implement truthful,
 // synchronous device-local walkthroughs and do not import the legacy provider,
 // KYC, wallet, chain, or mock-product graph.
 export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
+  "features/ondo/after19/after19-global-b-model.ts",
+  "features/ondo/after19/after19-global-b.tsx",
+  "features/ondo/after19/after19-global-b.module.css",
+  "features/ondo/identity-b/account-save-gate-b.tsx",
+  "features/ondo/identity-b/account-save-gate-b.module.css",
+  "features/ondo/identity-b/action-gate-contract-b.ts",
+  "features/ondo/identity-b/action-gate-coordinator-b.tsx",
+  "features/ondo/identity-b/action-gate-coordinator-b.module.css",
+  "features/ondo/identity-b/activity-profile-b-provider.tsx",
+  "features/ondo/identity-b/profile-reputation-b.tsx",
+  "features/ondo/identity-b/profile-reputation-b.module.css",
   "features/ondo/identity-b/local-check-walkthrough-b.tsx",
   "features/ondo/identity-b/local-check-walkthrough-b.module.css",
   "features/ondo/identity-b/traveler-id-entry-b.tsx",
@@ -27,6 +39,23 @@ export const REQUIRED_B_NATIVE_COMMERCE_FILES = Object.freeze([
   "features/ondo/commerce-b/stable-commerce-model-b.ts",
   "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
   "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+  "features/ondo/commerce-b/visit-stamp-receipt-b.tsx",
+  "features/ondo/commerce-b/visit-stamp-receipt-b.module.css",
+])
+
+// Labs is a product-owned, deterministic technical preview. The standalone
+// preparation keeps only its B adapter so the legacy OndoProvider graph never
+// crosses the isolated artifact boundary.
+export const REQUIRED_B_NATIVE_LABS_FILES = Object.freeze([
+  "features/ondo/contracts/commerce.ts",
+  "features/ondo/contracts/domain.ts",
+  "features/ondo/contracts/evidence.ts",
+  "features/ondo/labs/labs-entry.tsx",
+  "features/ondo/labs/labs-model.ts",
+  "features/ondo/labs/labs.module.css",
+  "features/ondo/shared/ui/sheet-b.tsx",
+  "features/ondo/shared/ui/ui.module.css",
+  "features/ondo/shared/ui/use-qa-controls.ts",
 ])
 
 export const SOURCE_FILES = Object.freeze([
@@ -51,12 +80,17 @@ export const SOURCE_FILES = Object.freeze([
   "features/ondo/map/japan-first-discovery-b.module.css",
   "features/ondo/my/private-note.tsx",
   "features/ondo/my/my-korea-model.ts",
+  "features/ondo/my/korea-memory-map-b.tsx",
+  "features/ondo/my/korea-memory-map-b.module.css",
   "features/ondo/my/saved-entry-b.tsx",
   "features/ondo/onboarding/official-directory-onboarding.tsx",
   "features/ondo/onboarding/official-directory-onboarding.module.css",
   "features/ondo/place/canonical-place-mount.tsx",
   "features/ondo/place/canonical-place-overlay.tsx",
   "features/ondo/place/canonical-place.module.css",
+  "features/ondo/place/editorial-place-mount-b.tsx",
+  "features/ondo/place/editorial-place-overlay-b.tsx",
+  "features/ondo/place/editorial-place-overlay-b.module.css",
   "features/ondo/pulse-b/pulse-model-b.ts",
   "features/ondo/pulse-b/japan-first-pulse-model-b.ts",
   "features/ondo/settings/settings-entry-b.tsx",
@@ -76,11 +110,15 @@ export const SOURCE_FILES = Object.freeze([
   "lib/ondo/venues/map-discovery-aliases.ts",
   ...B_NATIVE_INTERACTIVE_FILES,
   ...REQUIRED_B_NATIVE_COMMERCE_FILES,
+  ...REQUIRED_B_NATIVE_LABS_FILES,
 ])
 
 export const PUBLIC_FILES = Object.freeze([
   "public/og-ondo-directory.png",
   "public/brand/ondo-lockup.svg",
+  "public/brand/ondo-mark.svg",
+  "public/brand/ondo-mark-inverse.svg",
+  "public/brand/ondo-mark-micro-24.svg",
   "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
   "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
   "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
@@ -129,21 +167,22 @@ export const BLOCKED_HTTP_PATHS = Object.freeze([
 
 // Keep retired prototype clusters out of the standalone artifact without
 // treating required journey truth (including simulated OpenDID/eKYC) as a
-// failure. Unsafe legacy payment-KYC and checkout phrases stay blocked below.
-export const LEGACY_ARTIFACT_PATH = /(^|\/)(?:demo|fixtures?|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
+// failure. Retired overlay symbols stay blocked below; current Payment KYC is
+// a required, provider-neutral B axis and is proven by the positive source list.
+export const LEGACY_ARTIFACT_PATH = /(^|\/)(?:(?:demo|fixtures?|mock|partner|rewards|trust|wallet)(?:[./_-]|\/|$)|profile(?:\/|$))/i
 
 export const LEGACY_ARTIFACT_TEXT = Object.freeze([
   /"simulation"\s*:\s*null/i,
-  /\b(?:reward|rewards|Labs)\b/i,
+  /\b(?:reward|rewards)\b/i,
   /demo-journey/i,
   /mock-data/i,
   /WalletProvider|chainProvider|blockchain/i,
   /ondo-after19/i,
   /Checkout simulation/i,
-  /Payment KYC|paymentKyc|CheckoutOverlay|ChatOverlay|RewardsEntry/i,
+  /CheckoutOverlay|ChatOverlay|RewardsEntry/i,
   /결제 시뮬레이션/i,
   /Labs · (?:Local|로컬)/i,
-  /CheckoutOverlay|ChatOverlay|RewardsEntry|LabsEntry/,
+  /CheckoutOverlay|ChatOverlay|RewardsEntry|\bLabsEntry\b/,
   /k-tour-id\.wallet/i,
   /(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/m,
 ])

@@ -54,7 +54,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
           : slots.explore
   const onboardingActive = state.onboarding !== "ONB-COMPLETE"
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     previousDocumentLanguage.current = document.documentElement.lang
     const languageObserver = new MutationObserver(() => {
       if (document.documentElement.lang === appliedDocumentLanguage.current) return
@@ -70,9 +70,9 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
     }
   }, [])
 
-  useEffect(() => {
-    document.documentElement.lang = state.locale
+  useLayoutEffect(() => {
     appliedDocumentLanguage.current = state.locale
+    document.documentElement.lang = state.locale
   }, [state.locale])
 
   useEffect(() => {
@@ -196,7 +196,11 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
               onFocus={(event) => event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" })}
               onClick={() => selectTab(id)}
             >
-              <span className={styles.navIcon} aria-hidden="true"><Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} /></span>
+              <span className={styles.navIcon} aria-hidden="true">
+                {id === "ondo"
+                  ? <img src="/brand/ondo-mark-micro-24.svg" alt="" />
+                  : <Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} />}
+              </span>
               <small className={styles.navLabel} aria-hidden="true" data-nav-tooltip={B_NAV_COPY[state.locale][id]}>{B_NAV_COPY[state.locale][id]}</small>
             </button>
           ))}

@@ -1,0 +1,121 @@
+.memory {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  height: 176px;
+  margin: 20px 0 0;
+  overflow: hidden;
+  border: 1px solid rgb(23 23 23 / 10%);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 78% 26%, rgb(255 255 255 / 92%), transparent 22%),
+    linear-gradient(145deg, #f7f7f5, #eeeeeb);
+  color: #171717;
+  box-shadow: 0 16px 40px rgb(23 23 23 / 6%);
+}
+.memory::after {
+  position: absolute;
+  right: -38px;
+  bottom: -68px;
+  width: 190px;
+  height: 190px;
+  border: 1px solid rgb(23 23 23 / 7%);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+.memory svg {
+  position: absolute;
+  top: -33px;
+  right: -1px;
+  width: 61%;
+  height: 236px;
+  overflow: visible;
+}
+.outline {
+  fill: rgb(255 255 255 / 88%);
+  fill-rule: evenodd;
+  stroke: rgb(23 23 23 / 23%);
+  stroke-linejoin: round;
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+}
+.aura { fill: rgb(178 73 55 / 14%); stroke: rgb(178 73 55 / 16%); stroke-width: 1; }
+.core { fill: #b24937; stroke: #fff; stroke-width: 2.5; filter: drop-shadow(0 3px 5px rgb(91 39 31 / 26%)); }
+.point[data-city="busan"] .aura { fill: rgb(221 137 67 / 15%); stroke: rgb(221 137 67 / 19%); }
+.point[data-city="busan"] .core { fill: #d98543; }
+.point[data-city="jeju"] .aura { fill: rgb(112 49 79 / 14%); stroke: rgb(112 49 79 / 18%); }
+.point[data-city="jeju"] .core { fill: #70314f; }
+.memory figcaption {
+  position: absolute;
+  z-index: 2;
+  top: 17px;
+  left: 17px;
+  display: grid;
+  max-width: 54%;
+  gap: 8px;
+}
+.memory figcaption > span { display: grid; gap: 2px; }
+.memory figcaption small { color: #756d67; font-size: 12px; font-weight: 780; letter-spacing: .09em; }
+.memory figcaption strong { font-size: 20px; font-weight: 780; letter-spacing: -.04em; line-height: 1.05; }
+.memory figcaption > b { width: fit-content; border-radius: 999px; padding: 6px 9px; background: #171717; color: #fff; font-size: 12px; font-weight: 740; }
+.memory ul {
+  position: absolute;
+  z-index: 2;
+  bottom: 14px;
+  left: 14px;
+  display: flex;
+  max-width: 61%;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.memory li { display: flex; min-height: 28px; align-items: center; gap: 5px; border: 1px solid rgb(23 23 23 / 8%); border-radius: 999px; padding: 0 8px; background: rgb(255 255 255 / 86%); font-size: 12px; font-weight: 690; }
+.memory li i { width: 7px; height: 7px; border-radius: 50%; background: #b24937; }
+.memory li i[data-city="busan"] { background: #d98543; }
+.memory li i[data-city="jeju"] { background: #70314f; }
+.memory li b { font-variant-numeric: tabular-nums; }
+
+@media (min-width: 700px) {
+  .memory { height: 210px; margin-top: 26px; }
+  .memory svg { top: -22px; right: 5%; width: 49%; height: 258px; }
+  .memory figcaption { top: 24px; left: 24px; }
+  .memory figcaption strong { font-size: 25px; }
+  .memory ul { bottom: 20px; left: 20px; }
+}
+
+@media (min-width: 1100px) {
+  .memory { height: 220px; }
+  .memory svg { right: 9%; width: 42%; }
+}
+
+@media (max-width: 350px) {
+  .memory { height: 160px; border-radius: 19px; }
+  .memory svg { top: -40px; right: -12px; width: 66%; }
+  .memory figcaption { top: 14px; left: 14px; }
+  .memory figcaption strong { font-size: 18px; }
+  .memory ul { bottom: 10px; left: 10px; max-width: 66%; }
+  .memory li { min-height: 26px; padding-inline: 7px; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .memory { height: 116px; margin-top: 12px; border-radius: 18px; }
+  .memory svg { top: -66px; right: 2%; width: 38%; height: 242px; }
+  .memory figcaption { top: 13px; left: 14px; gap: 5px; }
+  .memory figcaption strong { font-size: 19px; }
+  .memory figcaption > b { padding-block: 4px; }
+  .memory ul { right: 42%; bottom: 10px; left: 14px; max-width: none; }
+  .memory li { min-height: 25px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .core { animation: memoryPulse 2.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .core { filter: none; }
+}
+
+@keyframes memoryPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }

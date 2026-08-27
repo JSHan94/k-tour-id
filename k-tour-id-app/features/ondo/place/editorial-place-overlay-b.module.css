@@ -1,0 +1,49 @@
+.layer { position: absolute; z-index: 170; inset: 0; display: grid; align-items: end; color: #171717; }
+.backdrop { position: absolute; inset: 0; border: 0; background: rgb(23 23 23 / 36%); backdrop-filter: blur(5px); }
+.sheet { position: relative; z-index: 1; box-sizing: border-box; width: 100%; max-height: min(88dvh, 760px); overflow: hidden; border: 1px solid rgb(23 23 23 / 12%); border-radius: 26px 26px 0 0; background: #fff; box-shadow: 0 -20px 58px rgb(0 0 0 / 18%); }
+.sheet > header { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 18px; border-bottom: 1px solid rgb(23 23 23 / 10%); }
+.sheet > header > span { display: flex; align-items: center; gap: 7px; color: #554f49; font-size: 12px; font-weight: 760; }
+.sheet > header button { display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: #f4f4f2; color: #171717; }
+.body { display: grid; max-height: calc(min(88dvh, 760px) - 58px); gap: 16px; padding: 18px 18px calc(24px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
+.atmosphere { position: relative; min-height: 112px; overflow: hidden; border-radius: 20px; background: radial-gradient(circle at 72% 30%, rgb(255 255 255 / 92%) 0 7%, transparent 8%), linear-gradient(155deg, #ececea, #fafaf8 58%, #e2e2df); }
+.atmosphere::before { position: absolute; inset: 57% -8% -34%; border: 1px solid rgb(23 23 23 / 12%); border-radius: 50%; content: ""; transform: rotate(-8deg); }
+.atmosphere i { position: absolute; width: 10px; height: 10px; border: 2px solid #171717; border-radius: 50%; background: #fff; }
+.atmosphere i:nth-child(1) { top: 27%; left: 22%; }
+.atmosphere i:nth-child(2) { top: 58%; left: 54%; }
+.atmosphere i:nth-child(3) { top: 34%; right: 18%; }
+.atmosphere b { position: absolute; right: 11%; bottom: 19%; width: 42px; height: 2px; border-radius: 99px; background: #171717; transform: rotate(-8deg); }
+.identity { display: grid; gap: 5px; }
+.identity p { margin: 0; color: #6a625b; font-size: 12px; font-weight: 750; }
+.identity h2 { margin: 0; font-size: clamp(25px, 8vw, 36px); letter-spacing: -.045em; line-height: 1.08; }
+.identity small { color: #68635d; font-size: 12px; line-height: 1.45; }
+.address { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 9px; margin: 0; padding: 13px; border: 1px solid rgb(23 23 23 / 10%); border-radius: 15px; background: #f7f7f5; }
+.address > span { display: grid; gap: 3px; color: #4e4a46; font-size: 13px; line-height: 1.45; }
+.address b { color: #171717; font-size: 12px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions a, .actions button { box-sizing: border-box; display: flex; min-height: 50px; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; border: 1px solid #171717; border-radius: 14px; font: inherit; font-size: 13px; font-weight: 780; text-decoration: none; }
+.actions a { background: #171717; color: #fff; }
+.actions button { background: #fff; color: #171717; }
+.actions button[aria-pressed="true"] { background: #f1f1ef; }
+.error { margin: -6px 0 0; color: #a1302c; font-size: 12px; font-weight: 700; }
+.sources { display: grid; gap: 7px; padding-top: 4px; border-top: 1px solid rgb(23 23 23 / 10%); }
+.sources > p { margin: 8px 0 2px; color: #69635d; font-size: 12px; line-height: 1.45; }
+.sources a { display: grid; min-height: 48px; grid-template-columns: minmax(0, 1fr) 18px; align-items: center; gap: 8px; padding: 0 11px; border: 1px solid rgb(23 23 23 / 10%); border-radius: 13px; color: #171717; text-decoration: none; }
+.sources a span { display: grid; min-width: 0; gap: 2px; }
+.sources a b { font-size: 12px; }
+.sources a small { overflow: hidden; color: #66615c; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.layer :focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
+
+@media (min-width: 801px) {
+  .layer { align-items: center; justify-items: end; padding: 24px; }
+  .sheet { width: min(430px, calc(100% - 48px)); max-height: min(820px, calc(100dvh - 48px)); border-radius: 24px; }
+  .body { max-height: calc(min(820px, 100dvh - 48px) - 58px); padding-bottom: 24px; }
+}
+
+@media (max-width: 350px) {
+  .body { gap: 12px; padding-inline: 14px; }
+  .actions { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop { backdrop-filter: none; }
+}

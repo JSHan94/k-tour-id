@@ -29,17 +29,18 @@ test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and officia
   expect(map).toContain("instance.triggerRepaint()")
   expect(map).toContain("window.setTimeout(failMap, 8_000)")
   expect(mapCss).toContain("In List, the editorial collection is part of the reading sequence")
-  expect(mapCss).toContain('.root:has(> .listPanel) > .listPanel { padding-top: 96px; }')
+  expect(mapCss).toContain('.root:has(> .listPanel) > .listPanel { padding-top: 114px; }')
   expect(mapCss).toContain('grid-template-columns: repeat(2, minmax(0, 1fr));')
 })
 
-test("B-EXPLORE-V3-003 Japanese editorial has one lead story and supporting guide cards without false Place actions", () => {
+test("B-EXPLORE-V3-003 Japanese editorial keeps source truth while verified Jeju stories may focus an editorial point", () => {
   expect(editorial).toContain('visualRole?: "lead" | "supporting" | "compact"')
   expect(editorial).toContain('data-editorial-role={visualRole}')
   expect(editorial).toContain('data-presentation={presentation}')
   expect(editorial).toContain('visualRole={index === 0 ? "lead" : "supporting"}')
   expect(editorial).toContain('data-place-edge={item.placeEdgeVerification}')
   expect(editorial).toContain("item.editorialMedia.credit[locale]")
+  expect(editorial).toContain('data-editorial-story-opener={mappedPlace.id}')
   expect(editorial).not.toMatch(/canonical-venue-directions|canonical-venue-save|canonical-place-table|canonical-meal-benefit-open/)
 })
 
@@ -68,7 +69,8 @@ test("B-EXPLORE-V3-005 redesign freezes the connected journey actions and truth 
     "canonical-local-signal-open",
   ]) expect(`${map}\n${editorial}\n${place}`).toContain(`data-testid="${testid}"`)
 
-  expect(map).toContain('data-editorial-point-count={city === "jeju" ? "0" : undefined}')
+  expect(map).toContain('data-editorial-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : undefined}')
   expect(map).toContain('data-directory-source={city === "jeju" ? undefined : SOURCE_ID}')
-  expect(editorial).toContain('data-place-point-count="0"')
+  expect(editorial).toContain('data-geometry-basis={city === "jeju" ? "verified-points" : "region"}')
+  expect(editorial).toContain('data-place-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : 0}')
 })

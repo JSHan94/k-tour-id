@@ -66,7 +66,7 @@ test("premium Travel Pass keeps readiness independent and wallet linking consume
   const sheet = page.getByTestId("wallet-connect-sheet")
   await sheet.getByRole("button", { name: "Connect wallet" }).click()
   await expect(commerce).toHaveAttribute("data-wallet", "ready")
-  await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "ready")
+  await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "none")
   await expect(page.locator("body")).not.toContainText(/choose.*outcome|return wallet ready|settlement mirror/i)
 
   const violations = await new AxeBuilder({ page }).include("[data-testid='ondo-b-traveler-id']").analyze()

@@ -62,7 +62,7 @@ async function openCheckout(page: Page, query = "") {
 async function seedAcknowledgedLabs(page: Page, locale: BLocale, query: string) {
   await seedReady(page, locale, false)
   await page.addInitScript(() => {
-    sessionStorage.setItem("ondo.labs.v2", JSON.stringify({
+    sessionStorage.setItem("ondo-b.labs.v1", JSON.stringify({
       acknowledged: true,
       wallet: "WAL-READY",
       bridge: "BRG-IDLE",
@@ -204,7 +204,7 @@ test("D4-005 KO consumer explanations avoid raw English engineering nouns; ordin
   await expect(page.getByTestId("ondo-identity-entry")).not.toContainText(BANNED_KO_ENGINEERING_NOUNS)
 
   await page.addInitScript(() => {
-    sessionStorage.setItem("ondo.labs.v2", JSON.stringify({ acknowledged: true, wallet: "WAL-READY", bridge: "BRG-IDLE", phase: "none", mint: "NFT-ELIGIBLE", consent: false, quoteExpiresAt: null, traitStates: {} }))
+    sessionStorage.setItem("ondo-b.labs.v1", JSON.stringify({ acknowledged: true, wallet: "WAL-READY", bridge: "BRG-IDLE", phase: "none", mint: "NFT-ELIGIBLE", consent: false, quoteExpiresAt: null, traitStates: {} }))
   })
   await gotoB(page, "?qa=1")
   await openLabs(page)

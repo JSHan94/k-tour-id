@@ -5,7 +5,18 @@ import { useEffect, useRef, useState } from "react"
 import { BadgeCheck, ChevronLeft, CircleAlert, ImagePlus, NotebookPen, RotateCcw, Send, ShieldCheck, Trash2, X } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
-import { LocalCheckWalkthroughB, type LocalCheckOutcome } from "../identity-b/local-check-walkthrough-b"
+import {
+  B_ACTION_GATE_CANCEL_EVENT,
+  B_ACTION_GATE_COMPLETE_EVENT,
+  B_ACTION_GATE_READY_EVENT,
+  consumePendingBActionAtMutation,
+  createBLocalSignalActionReturn,
+  requestBActionGate,
+  restoreBActionGateSession,
+  restoreConsumedBActionAfterMutationFailure,
+  type BLocalSignalActionReturn,
+} from "../identity-b/action-gate-contract-b"
+import { useBActivityProfile } from "../identity-b/activity-profile-b-provider"
 import { B_DISCOVERY_TRAVERSAL_EVENT } from "../map/b-discovery-history"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import type { OndoBLocalSignalTag } from "../shared/state/ondo-b-provider"
@@ -15,7 +26,6 @@ import styles from "./local-signal-layer-b.module.css"
 
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[href],[tabindex]:not([tabindex='-1'])"
 export const MAX_LOCAL_SIGNAL_PHOTO_BYTES = 10 * 1024 * 1024
-export const LOCAL_SIGNAL_PERSON_RESULT_TTL_MS = 5 * 60 * 1000
 const LOCAL_SIGNAL_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 type PhotoError = "photoTypeError" | "photoSizeError" | "photoPrepareError"
 type SocialLocale = OndoBLocale
@@ -25,7 +35,7 @@ type LocalSignalGateSession = {
   draftNonce: string
   issuedAt: number
   expiresAt: number
-  outcome: LocalCheckOutcome
+  outcome: "success" | "cancel" | "failure" | "unavailable" | "expired"
 }
 
 async function decodeLocalSignalPhoto(url: string) {
@@ -161,7 +171,7 @@ const COPY = {
 
 export function LocalSignalLayerB() {
   const { state, actions } = useOndoB()
-  const [walkthroughOpen, setWalkthroughOpen] = useState(false)
+  const { actions: activityActions } = useBActivityProfile()
   const [draftNonce, setDraftNonce] = useState("")
   const [gateSession, setGateSession] = useState<LocalSignalGateSession | null>(null)
   const [postFailed, setPostFailed] = useState(false)
@@ -190,7 +200,6 @@ export function LocalSignalLayerB() {
 
   useEffect(() => {
     photoPreparationRef.current += 1
-    setWalkthroughOpen(false)
     setGateSession(null)
     setPostFailed(false)
     setPhotoFile(null)
@@ -201,6 +210,26 @@ export function LocalSignalLayerB() {
     photoUrlRef.current = null
     setPhotoUrl(null)
     setDraftNonce(activeVenueId ? `${activeVenueId}:${Date.now()}:${Math.random().toString(36).slice(2)}` : "")
+  }, [activeVenueId])
+
+  useEffect(() => {
+    function returnFromGate(event: Event, outcome: LocalSignalGateSession["outcome"]) {
+      const detail = event instanceof CustomEvent ? event.detail as BLocalSignalActionReturn & { gateOutcome?: Exclude<LocalSignalGateSession["outcome"], "success"> } : null
+      if (!detail || detail.cta !== "SUBMIT_LOCAL_SIGNAL" || detail.venueId !== activeVenueId) return
+      setDraftNonce(detail.draftNonce)
+      const restored = restoreBActionGateSession(window.sessionStorage)
+      const expiresAt = restored.person.expiresAt ? Date.parse(restored.person.expiresAt) : Date.now()
+      setGateSession({ origin: "local_signal", venueId: detail.venueId, draftNonce: detail.draftNonce, issuedAt: Date.now(), expiresAt, outcome: detail.gateOutcome ?? outcome })
+      window.requestAnimationFrame(() => checkRef.current?.focus({ preventScroll: true }))
+    }
+    const complete = (event: Event) => returnFromGate(event, "success")
+    const cancel = (event: Event) => returnFromGate(event, "cancel")
+    window.addEventListener(B_ACTION_GATE_READY_EVENT, complete)
+    window.addEventListener(B_ACTION_GATE_CANCEL_EVENT, cancel)
+    return () => {
+      window.removeEventListener(B_ACTION_GATE_READY_EVENT, complete)
+      window.removeEventListener(B_ACTION_GATE_CANCEL_EVENT, cancel)
+    }
   }, [activeVenueId])
 
   useEffect(() => {
@@ -261,7 +290,6 @@ export function LocalSignalLayerB() {
   function returnToPlace() {
     removePhoto()
     setGateSession(null)
-    setWalkthroughOpen(false)
     actions.closeLocalSignal()
     window.requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-testid='canonical-local-signal-open']")?.focus({ preventScroll: true }))
   }
@@ -386,18 +414,13 @@ export function LocalSignalLayerB() {
     setPhotoUrl(null)
   }
 
-  function handleGateReturn(outcome: LocalCheckOutcome) {
-    const issuedAt = Date.now()
-    setWalkthroughOpen(false)
-    setGateSession({
-      origin: "local_signal",
-      venueId: activeVenue.id,
-      draftNonce,
-      issuedAt,
-      expiresAt: issuedAt + LOCAL_SIGNAL_PERSON_RESULT_TTL_MS,
-      outcome,
-    })
-    window.requestAnimationFrame(() => checkRef.current?.focus({ preventScroll: true }))
+  function beginGate() {
+    setPostFailed(false)
+    const envelope = createBLocalSignalActionReturn({ venueId: activeVenue.id, draftNonce, tags: activeDraft.tags, note: activeDraft.note })
+    if (!requestBActionGate(envelope)) {
+      const issuedAt = Date.now()
+      setGateSession({ origin: "local_signal", venueId: activeVenue.id, draftNonce, issuedAt, expiresAt: issuedAt, outcome: "failure" })
+    }
   }
 
   function post() {
@@ -406,11 +429,28 @@ export function LocalSignalLayerB() {
       return
     }
     if (exactGateSession.outcome !== "success" || activeDraft.tags.length === 0) return
+    const actionSession = restoreBActionGateSession(window.sessionStorage)
+    const pending = actionSession.pending
+    if (!pending || pending.cta !== "SUBMIT_LOCAL_SIGNAL" || pending.venueId !== activeVenue.id || pending.draftNonce !== draftNonce) {
+      setPostFailed(true)
+      return
+    }
+    const satisfied = new Set<"account" | "person">()
+    if (state.account === "ACC-ACTIVE") satisfied.add("account")
+    if (actionSession.person.status === "eligible" && actionSession.person.expiresAt && Date.parse(actionSession.person.expiresAt) > Date.now()) satisfied.add("person")
+    const consumed = consumePendingBActionAtMutation(window.sessionStorage, pending, satisfied)
+    if (!consumed) {
+      setPostFailed(true)
+      return
+    }
     if (!actions.markLocalSignalPosted(activeVenue.id)) {
+      restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)
       setPostFailed(true)
       return
     }
     setPostFailed(false)
+    activityActions.recordContribution(`contribution:${activeVenue.id}:${draftNonce}`)
+    window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
     removePhoto()
     actions.closeLocalSignal()
     actions.notify(alreadyPosted ? copy.updated : copy.posted)
@@ -428,6 +468,7 @@ export function LocalSignalLayerB() {
           aria-labelledby="local-signal-title"
           tabIndex={-1}
           data-testid="ondo-b-local-signal"
+          data-modal-layer-priority="50"
           data-venue-id={venue.id}
           data-visual-direction="apple-contribution-strava"
           data-signal-stage={signalStage}
@@ -497,7 +538,7 @@ export function LocalSignalLayerB() {
                   {personReady ? (
                     <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-post" disabled={draft.tags.length === 0} onClick={post}><Send size={18} aria-hidden="true" />{alreadyPosted ? copy.update : copy.post}</button>
                   ) : (
-                    <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-person-check" disabled={draft.tags.length === 0} onClick={() => { setPostFailed(false); setWalkthroughOpen(true) }}>
+                    <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-person-check" disabled={draft.tags.length === 0} onClick={beginGate}>
                       {gateReturn ? <RotateCcw size={17} aria-hidden="true" /> : <BadgeCheck size={18} aria-hidden="true" />}
                       {gateReturn ? copy.retry : copy.person}
                     </button>
@@ -509,16 +550,6 @@ export function LocalSignalLayerB() {
         </section>
       </div>
 
-      {walkthroughOpen ? (
-        <LocalCheckWalkthroughB
-          locale={locale}
-          check="person"
-          origin="local_signal"
-          boundarySeen={state.localInteractionBoundarySeen}
-          onAcknowledgeBoundary={actions.acknowledgeLocalInteractionBoundary}
-          onReturn={handleGateReturn}
-        />
-      ) : null}
     </>
   )
 }

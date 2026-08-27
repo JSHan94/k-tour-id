@@ -32,6 +32,15 @@ async function openMealOffer(page: Page) {
   return { entry, offer }
 }
 
+async function completePaymentGate(page: Page) {
+  const gate = page.getByTestId("ondo-b-action-gate")
+  await expect(gate).toHaveAttribute("data-active-gate", "account")
+  await gate.getByTestId("action-gate-confirm").click()
+  await expect(gate).toHaveAttribute("data-active-gate", "payment_kyc")
+  await gate.getByTestId("action-gate-confirm").click()
+  await expect(gate).toHaveCount(0)
+}
+
 test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and peak-only Too Hot in EN and KO", async ({ page, browser }) => {
   await seedGoldenCandidate(page, "en")
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
@@ -41,13 +50,14 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   const curatedRow = page.locator(`[data-venue-id='${VENUE_ID}']`)
   const listPulse = curatedRow.getByTestId("ondo-b-list-pulse")
   await expect(listPulse).toHaveAttribute("data-pulse-level", "peak")
-  await expect(listPulse).toContainText("Pulse 91 · PEAK")
+  await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
+  await expect(listPulse).toHaveAttribute("aria-label", /Pulse 91 · PEAK/)
   await curatedRow.locator("button").click()
   await page.getByTestId("canonical-place-details").click()
 
   const pulse = page.getByTestId("canonical-place-pulse")
   await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
-  await expect(pulse).toHaveAttribute("data-pulse-numeric", "shown")
+  await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
   await expect(pulse.getByTestId("pulse-score")).toContainText("91")
   await expect(pulse.getByTestId("pulse-confidence")).toContainText(/Confidence.*High/i)
   await expect(pulse.getByTestId("pulse-evidence").locator("[data-origin='curated-walkthrough']")).toHaveCount(1)
@@ -62,7 +72,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
     await koPage.locator("[data-city='seoul']").click()
     await koPage.getByTestId("ondo-b-view-toggle").click()
     const koCuratedRow = koPage.locator(`[data-venue-id='${VENUE_ID}']`)
-    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toContainText("Pulse 91 · 피크")
+    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", /Pulse 91 · 피크/)
   } finally {
     await koContext.close()
   }
@@ -77,9 +87,10 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
   await offer.getByTestId("benefit-accept").click()
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
   await offer.getByTestId("payment-confirm").click()
-  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
+  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Prepare test wallet" }).click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
-  await offer.getByTestId("payment-confirm").dblclick()
+  await offer.getByTestId("payment-confirm").click()
+  await completePaymentGate(page)
 
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt).toContainText("ONDO-LOCAL-20260825-001")
@@ -95,6 +106,10 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
 })
 
 test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-offer return", async ({ browser }) => {
+  // This composite deliberately proves one cancel context plus two independent
+  // recovery contexts. Keep the normal assertion timeouts while giving the
+  // full three-context journey enough wall-clock budget on mobile CI.
+  test.slow()
   const expectedReturn = JSON.stringify({ cta: "START_MEAL_PAYMENT", venueId: VENUE_ID, offerId: "meal-offer-gukbap" })
 
   const cancelContext = await browser.newContext()
@@ -118,9 +133,10 @@ test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-o
     await expect(opened.offer).toHaveAttribute("data-return-to", expectedReturn)
     await opened.offer.getByTestId("benefit-accept").click()
     await opened.offer.getByTestId("payment-confirm").click()
-    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
+    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Prepare test wallet" }).click()
     await opened.offer.getByTestId("payment-minimum-consent").locator("input").check()
     await opened.offer.getByTestId("payment-confirm").click()
+    await completePaymentGate(page)
     await expect(opened.offer.getByTestId("payment-recovery")).toHaveAttribute("data-recovery", outcome)
     await expect(opened.offer.locator("[data-operation-kind]")).toHaveCount(0)
     await page.evaluate(() => { delete (window as Window & { __ONDO_B_QA__?: unknown }).__ONDO_B_QA__ })

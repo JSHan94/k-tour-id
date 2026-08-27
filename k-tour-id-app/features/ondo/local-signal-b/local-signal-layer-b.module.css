@@ -86,29 +86,13 @@
   .photo > p { grid-column: 1 / -1; }
   .photo .photoAdd { min-width: 110px; }
   .truth { margin-top: 12px; padding-block: 9px; }
-  .actions {
-    position: fixed;
-    z-index: 128;
-    right: 15px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    left: 15px;
-    margin: 0;
-    padding: 8px;
-    border: 1px solid rgb(54 43 36 / 12%);
-    border-radius: 18px;
-    background: rgb(251 250 247 / 94%);
-    box-shadow: 0 14px 36px rgb(38 30 24 / 18%);
-    backdrop-filter: blur(18px);
-  }
 }
 
 /* Pulse sensory composer. All inputs, validation states, photo controls and
    the single continuation action are preserved; the surface gains a distinct
    contribution identity and a photographic object hierarchy. */
 .backdrop {
-  background:
-    radial-gradient(circle at 50% 34%, rgb(132 54 62 / 16%), transparent 34%),
-    rgb(24 19 18 / 60%);
+  background: rgb(20 20 20 / 58%);
   backdrop-filter: blur(11px) saturate(.78);
 }
 
@@ -116,10 +100,8 @@
   position: relative;
   isolation: isolate;
   contain: paint;
-  border-color: rgb(255 255 255 / 30%);
-  background:
-    radial-gradient(circle at 98% 0, rgb(194 77 55 / 10%), transparent 29%),
-    linear-gradient(160deg, #fffdf9 0%, #f7f2eb 62%, #f2eae2 100%);
+  border-color: rgb(32 32 32 / 12%);
+  background: #fff;
   box-shadow: 0 -26px 78px rgb(17 12 10 / 29%);
   animation: signalSheetIn .3s cubic-bezier(.2,.85,.2,1) both;
 }
@@ -138,11 +120,11 @@
 .layer > header {
   position: relative;
   z-index: 3;
-  background: rgb(255 253 249 / 89%);
-  box-shadow: 0 9px 24px rgb(63 43 31 / 6%);
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 9px 24px rgb(0 0 0 / 5%);
   backdrop-filter: blur(18px);
 }
-.body { background: radial-gradient(circle at 12% 12%, rgb(227 176 105 / 8%), transparent 25%); }
+.body { background: #fff; }
 
 .mark {
   position: relative;
@@ -169,9 +151,9 @@
   box-shadow: 0 0 0 5px rgb(196 75 54 / 10%);
   content: "";
 }
-.eyebrow { color: #9b4135; }
+.eyebrow { color: #5f5b56; }
 .body > h2 { font-size: clamp(29px, 7.6vw, 37px); }
-.place { border-left: 3px solid rgb(179 72 54 / 58%); padding-left: 11px; }
+.place { border-left: 3px solid #20201e; padding-left: 11px; }
 
 .draft fieldset {
   border-top-color: rgb(105 79 60 / 11%);
@@ -179,7 +161,7 @@
 .tags button {
   border-radius: 999px;
   background: rgb(255 255 255 / 86%);
-  box-shadow: 0 7px 18px rgb(60 45 33 / 5%);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 4%);
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .tags button[aria-pressed="true"] {
@@ -190,56 +172,53 @@
 @media (hover: hover) { .tags button:hover { transform: translateY(-1px); box-shadow: 0 11px 24px rgb(60 45 33 / 9%); } }
 
 .note textarea {
-  border-color: rgb(102 77 60 / 14%);
+  border-color: rgb(32 32 32 / 15%);
   border-radius: 15px;
   background: rgb(255 255 255 / 91%);
-  box-shadow: 0 10px 26px rgb(67 48 34 / 6%);
+  box-shadow: 0 10px 26px rgb(0 0 0 / 5%);
 }
 
 .photo {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border-color: rgb(150 76 56 / 17%);
+  border-color: rgb(32 32 32 / 13%);
   border-radius: 22px;
   padding: 16px;
-  background:
-    radial-gradient(circle at 100% 0, rgb(225 151 76 / 20%), transparent 34%),
-    radial-gradient(circle at 0 100%, rgb(126 49 70 / 10%), transparent 36%),
-    linear-gradient(145deg, rgb(255 253 248 / 98%), rgb(248 238 229 / 96%));
-  box-shadow: 0 20px 48px rgb(74 46 29 / 12%);
+  background: #fff;
+  box-shadow: 0 16px 38px rgb(0 0 0 / 8%);
 }
 .photo::before {
   position: absolute;
   z-index: -1;
   inset: 0 0 auto;
   height: 3px;
-  background: linear-gradient(90deg, #7a2846, #c54d35 47%, #e7b65d);
+  background: #20201e;
   content: "";
 }
-.photo > div strong { color: #493e37; font-size: 14px; }
+.photo > div strong { color: #20201e; font-size: 14px; }
 .photo img {
   border: 1px solid rgb(255 255 255 / 70%);
   border-radius: 17px;
   box-shadow: 0 18px 40px rgb(37 29 23 / 24%);
   animation: signalPhotoIn .34s cubic-bezier(.2,.8,.2,1) both;
 }
-.photo button { border-radius: 14px; background: rgb(255 255 255 / 88%); box-shadow: 0 8px 20px rgb(62 44 31 / 6%); }
+.photo button { border-radius: 14px; background: #fff; box-shadow: 0 8px 20px rgb(0 0 0 / 5%); }
 .photo .photoAdd {
   min-height: 50px;
-  border-color: rgb(150 76 56 / 28%);
-  background: rgb(255 250 245 / 82%);
-  color: #85443a;
+  border-color: rgb(32 32 32 / 24%);
+  background: #fff;
+  color: #20201e;
 }
 
 .truth {
-  border: 1px solid rgb(52 110 83 / 13%);
+  border: 1px solid rgb(32 32 32 / 12%);
   border-radius: 18px;
   padding: 14px;
-  background: linear-gradient(145deg, rgb(239 247 242 / 86%), rgb(250 252 249 / 88%));
-  box-shadow: 0 12px 28px rgb(44 89 68 / 7%);
+  background: #fff;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 5%);
 }
-.truth > svg { color: #367158; }
+.truth > svg { color: #20201e; }
 
 .already,
 .gateSuccess {
@@ -256,10 +235,10 @@
 
 .primary {
   min-height: 54px;
-  border-color: #9a3d37;
+  border-color: #20201e;
   border-radius: 16px;
-  background: linear-gradient(135deg, #7e2b43 0%, #aa4037 55%, #c45a3e 100%);
-  box-shadow: 0 16px 34px rgb(117 43 45 / 27%), 0 1px 0 rgb(255 255 255 / 21%) inset;
+  background: #20201e;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 18%), 0 1px 0 rgb(255 255 255 / 18%) inset;
 }
 
 @media (max-width: 430px) {
@@ -292,9 +271,7 @@
     align-items: start;
     gap: 0 34px;
     padding: 32px 34px calc(34px + env(safe-area-inset-bottom));
-    background:
-      radial-gradient(circle at 10% 10%, rgb(227 176 105 / 9%), transparent 28%),
-      linear-gradient(160deg, #fffdf9 0%, #f7f2eb 62%, #f2eae2 100%);
+    background: #fff;
   }
   .body > .mark,
   .body > .eyebrow,
@@ -389,8 +366,8 @@
   width: 2px;
   height: calc(100% - 26px);
   border-radius: 999px;
-  background: linear-gradient(180deg, #812b47 0%, #c44c39 42%, #e18e4c 68%, #3c7c60 100%);
-  box-shadow: 0 0 0 4px rgb(159 66 58 / 5%);
+  background: linear-gradient(180deg, #20201e 0%, #77736e 70%, #39755a 100%);
+  box-shadow: 0 0 0 4px rgb(32 32 30 / 4%);
   content: "";
   opacity: .76;
   pointer-events: none;
@@ -401,10 +378,10 @@
   left: 3px;
   width: 10px;
   height: 10px;
-  border: 2px solid #fff9f2;
+  border: 2px solid #fff;
   border-radius: 50%;
-  background: #a43b3e;
-  box-shadow: 0 0 0 4px rgb(164 59 62 / 9%);
+  background: #20201e;
+  box-shadow: 0 0 0 4px rgb(32 32 30 / 8%);
   content: "";
   pointer-events: none;
 }
@@ -427,15 +404,15 @@
   left: -23px;
   width: 7px;
   height: 7px;
-  border: 2px solid #fff8f0;
+  border: 2px solid #fff;
   border-radius: 50%;
-  background: #be4a39;
-  box-shadow: 0 0 0 3px rgb(174 68 56 / 8%);
+  background: #34322f;
+  box-shadow: 0 0 0 3px rgb(32 32 30 / 7%);
   content: "";
   pointer-events: none;
 }
-.note::before { top: 8px; background: #d88248; }
-.photo::after { top: 18px; background: #e2a756; }
+.note::before { top: 8px; background: #6e6a65; }
+.photo::after { top: 18px; background: #8a857e; }
 .truth::before { top: 17px; background: #39765b; }
 
 .tags button {
@@ -490,7 +467,7 @@
    media, recovery, and completed state without implying public sharing. */
 .layer {
   --signal-ink: #201d1a;
-  --signal-paper: #fffdf8;
+  --signal-paper: #fff;
   --signal-coral: #c64e38;
   --signal-plum: #7d2946;
   --signal-mint: #39755a;
@@ -505,7 +482,7 @@
 .completion { min-width: 0; }
 .personBoundary {
   margin: 12px 0 0;
-  border-left: 3px solid rgb(125 41 70 / 38%);
+  border-left: 3px solid rgb(32 32 30 / 28%);
   padding: 2px 0 2px 10px;
   color: #675e58;
   font-size: 12px;
@@ -523,31 +500,82 @@
 .layer[data-signal-stage="post_failed"] .error { animation: signalError var(--signal-motion-state) ease both; }
 
 @media (max-width: 430px) {
-  .intro .mark { width: 44px; height: 44px; margin-bottom: 10px; border-radius: 16px; }
-  .intro > h2 { font-size: 25px; }
-  .intro .place { margin-top: 7px; }
-  .intro .lead { margin-top: 8px; line-height: 1.45; }
+  .layer > header { min-height: 54px; flex-basis: 54px; }
+  .body { padding: 12px 15px calc(22px + env(safe-area-inset-bottom)); }
+  .intro { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: 2px 10px; }
+  .intro .mark { width: 44px; height: 44px; grid-column: 1; grid-row: 1 / span 2; margin: 0; border-radius: 16px; }
+  .intro .eyebrow { grid-column: 2; margin: 0; letter-spacing: .07em; }
+  .intro > h2 { grid-column: 2; margin: 0; font-size: 24px; }
+  .intro .place { display: flex; grid-column: 1 / -1; align-items: baseline; gap: 8px; margin-top: 7px; }
+  .intro .place span { min-width: 0; }
+  .intro .lead { grid-column: 1 / -1; margin-top: 7px; line-height: 1.4; }
+  .draft { margin-top: 10px; }
+  .draft fieldset { padding-top: 10px; }
+  .draft fieldset > p { margin-top: 4px; line-height: 1.35; }
+  .tags {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 7px;
+    padding-bottom: 2px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+  .tags::-webkit-scrollbar { display: none; }
+  .tags button { flex: 0 0 auto; }
+  .note { margin-top: 10px; }
+  .note textarea { min-height: 44px; max-height: 72px; padding-block: 9px; }
+  .note small { min-height: 0; max-height: none; overflow: visible; line-height: 1.35; }
   .layer > header button:last-child { visibility: hidden; pointer-events: none; }
-  .personBoundary { margin-top: 9px; }
+  .personBoundary { margin-top: 7px; line-height: 1.35; }
   .error { scroll-margin-bottom: 104px; }
   .photo { scroll-margin-block: 12px 116px; }
+  .photo { gap: 6px; margin-top: 9px; padding: 8px 9px; border-radius: 14px; box-shadow: 0 8px 20px rgb(0 0 0 / 5%); }
+  .photo > div { gap: 1px; }
+  .photo > div small { max-width: 145px; overflow: visible; line-height: 1.25; white-space: normal; }
+  .photo .photoAdd { min-width: 104px; min-height: 44px; }
   .photo > p { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .photo > p button { width: 100%; min-height: 44px; margin: 0; }
-  .body { padding-bottom: calc(106px + env(safe-area-inset-bottom)); }
+  .truth { margin-top: 9px; padding: 9px 10px; border-radius: 14px; }
+  .truth small { margin-top: 2px; line-height: 1.35; }
   .actions {
-    position: fixed;
-    z-index: 128;
-    right: 15px;
-    bottom: calc(12px + env(safe-area-inset-bottom));
-    left: 15px;
-    margin: 0;
-    padding: 8px;
-    border: 1px solid rgb(54 43 36 / 12%);
-    border-radius: 20px;
-    background: rgb(251 250 247 / 94%);
-    box-shadow: 0 14px 36px rgb(38 30 24 / 18%);
-    backdrop-filter: blur(18px);
+    position: static;
+    margin-top: 9px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
   }
+  .primary { min-height: 52px; }
+}
+
+@media (max-width: 359px) {
+  .body { padding: 8px 12px calc(18px + env(safe-area-inset-bottom)); }
+  .intro > h2 { font-size: 22px; }
+  .intro .place { margin-top: 4px; }
+  .intro .lead { margin-top: 4px; line-height: 1.32; }
+  .intro .lead { display: -webkit-box; max-height: 34px; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+  .draft { margin-top: 6px; padding-left: 0; }
+  .draft::before,
+  .draft::after,
+  .draft fieldset::before,
+  .note::before,
+  .photo::after,
+  .truth::before { display: none; }
+  .draft fieldset { padding-top: 5px; }
+  .draft fieldset > p { margin-top: 2px; line-height: 1.3; }
+  .tags { margin-top: 4px; }
+  .tags button { padding-inline: 10px; line-height: 1.2; }
+  .note { margin-top: 4px; }
+  .photo { margin-top: 4px; }
+  .photo > div small { max-width: 132px; white-space: normal; }
+  .truth { margin-top: 4px; padding-block: 7px; }
+  .truth { grid-template-columns: 20px minmax(0, 1fr); gap: 6px; }
+  .truth small,
+  .personBoundary { max-height: none; overflow: visible; }
+  .personBoundary { margin-top: 3px; padding-block: 0; }
+  .actions { margin-top: 4px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {

@@ -25,8 +25,8 @@ const COPY = {
 
 test.describe.configure({ timeout: 180_000, mode: "serial" })
 
-async function seed(page: Page, locale: Locale = "en", receipts: "none" | "paid" | "refunded" = "none") {
-  await page.addInitScript(({ key, language, venueId, receiptState }) => {
+async function seed(page: Page, locale: Locale = "en", receipts: "none" | "paid" | "refunded" = "none", paymentAxesReady = false) {
+  await page.addInitScript(({ key, language, venueId, receiptState, axesReady }) => {
     if (localStorage.getItem(key) !== null) return
     localStorage.setItem(key, JSON.stringify({
       locale: language,
@@ -52,7 +52,19 @@ async function seed(page: Page, locale: Locale = "en", receipts: "none" | "paid"
         balanceOOKRW: receiptState === "paid" ? 41 : 60,
       }],
     }))
-  }, { key: DEVICE_KEY, language: locale, venueId: VENUE_ID, receiptState: receipts })
+    if (axesReady) {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+      sessionStorage.setItem("ondo-b.account.v1", JSON.stringify({ account: "ACC-ACTIVE", returnTo: null }))
+      sessionStorage.setItem("ondo-b.action-gates.v1", JSON.stringify({
+        version: 1,
+        person: { status: "unverified", expiresAt: null },
+        payment: { status: "eligible", expiresAt },
+        pending: null,
+        lastConsumed: null,
+        outcome: null,
+      }))
+    }
+  }, { key: DEVICE_KEY, language: locale, venueId: VENUE_ID, receiptState: receipts, axesReady: paymentAxesReady })
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
 }
 
@@ -76,7 +88,7 @@ async function openTravelPass(page: Page, locale: Locale = "en", receipts: "none
 }
 
 async function openOffer(page: Page, locale: Locale = "en", qa?: { wallet?: "failure"; payment?: "failure" | "insufficient"; benefit?: BenefitQa }) {
-  await seed(page, locale)
+  await seed(page, locale, "none", true)
   if (qa) await page.addInitScript((injected) => { (window as Window & { __ONDO_B_QA__?: Flow8Qa }).__ONDO_B_QA__ = injected }, qa)
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
@@ -438,32 +450,35 @@ test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and 
   await expect(account).toHaveAttribute("data-status", "guest")
   await expect(person).toHaveAttribute("data-status", "none")
   await expect(age).toHaveAttribute("data-status", "none")
-  await expect(payment).toHaveAttribute("data-status", "disconnected")
+  await expect(payment).toHaveAttribute("data-status", "none")
 
   await person.getByRole("button").click()
   let gate = page.getByTestId("ondo-b-local-check-walkthrough")
   await gate.getByTestId("local-check-boundary-continue").click()
   await expect(person).toHaveAttribute("data-status", "success")
   await expect(age).toHaveAttribute("data-status", "none")
-  await expect(payment).toHaveAttribute("data-status", "disconnected")
+  await expect(payment).toHaveAttribute("data-status", "none")
 
   await age.getByRole("button").click()
   gate = page.getByTestId("ondo-b-local-check-walkthrough")
   await gate.getByTestId("local-check-boundary-continue").click()
   await expect(person).toHaveAttribute("data-status", "success")
   await expect(age).toHaveAttribute("data-status", "success")
-  await expect(payment).toHaveAttribute("data-status", "disconnected")
+  await expect(payment).toHaveAttribute("data-status", "none")
 
   await page.getByTestId("wallet-link-open").click()
   await connectWallet(page, "en")
   await expect(person).toHaveAttribute("data-status", "success")
   await expect(age).toHaveAttribute("data-status", "success")
-  await expect(payment).toHaveAttribute("data-status", "ready")
+  await expect(payment).toHaveAttribute("data-status", "none")
 
   const { offer, place } = await navigateToOfferFromExplore(page)
   await offer.getByTestId("benefit-accept").click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").click()
+  const paymentGate = page.getByTestId("ondo-b-action-gate")
+  await paymentGate.getByTestId("action-gate-confirm").click()
+  await paymentGate.getByTestId("action-gate-confirm").click()
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt).toBeVisible()
   await receipt.locator("details summary").click()
@@ -473,19 +488,19 @@ test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and 
   await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
   await place.locator("header button").last().click()
   await page.getByTestId("nav-id").click()
-  await expect(page.getByTestId("traveler-id-account")).toHaveAttribute("data-status", "guest")
-  await expect(page.getByTestId("traveler-id-person")).toHaveAttribute("data-status", "none")
-  await expect(page.getByTestId("traveler-id-age")).toHaveAttribute("data-status", "none")
-  await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "ready")
+  await expect(page.getByTestId("traveler-id-account")).toHaveAttribute("data-status", "active")
+  await expect(page.getByTestId("traveler-id-person")).toHaveAttribute("data-status", "success")
+  await expect(page.getByTestId("traveler-id-age")).toHaveAttribute("data-status", "success")
+  await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "success")
   await expect(page.getByTestId("wallet-activity-receipt")).toContainText("ONDO-LOCAL-REFUND-20260825-001")
 
   await page.reload({ waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await page.getByTestId("nav-id").click()
-  await expect(page.getByTestId("traveler-id-account")).toHaveAttribute("data-status", "guest")
-  await expect(page.getByTestId("traveler-id-person")).toHaveAttribute("data-status", "none")
-  await expect(page.getByTestId("traveler-id-age")).toHaveAttribute("data-status", "none")
-  await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "disconnected")
+  await expect(page.getByTestId("traveler-id-account")).toHaveAttribute("data-status", "active")
+  await expect(page.getByTestId("traveler-id-person")).toHaveAttribute("data-status", "success")
+  await expect(page.getByTestId("traveler-id-age")).toHaveAttribute("data-status", "success")
+  await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "success")
 })
 
 test("FLOW8-TRUTH-010 every locale keeps non-live truth visible and commerce actions contact no external service", async ({ browser }) => {
@@ -513,6 +528,9 @@ test("FLOW8-TRUTH-010 every locale keeps non-live truth visible and commerce act
     await offer.getByTestId("benefit-accept").click()
     await offer.getByTestId("payment-minimum-consent").locator("input").check()
     await offer.getByTestId("payment-confirm").click()
+    const paymentGate = page.getByTestId("ondo-b-action-gate")
+    await paymentGate.getByTestId("action-gate-confirm").click()
+    await paymentGate.getByTestId("action-gate-confirm").click()
     const receipt = offer.getByTestId("payment-receipt")
     await expect(receipt).toBeVisible()
     await receipt.locator("details summary").click()

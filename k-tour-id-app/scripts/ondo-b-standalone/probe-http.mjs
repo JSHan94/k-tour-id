@@ -6,6 +6,7 @@ import {
   APP_ROOT,
   BLOCKED_HTTP_PATHS,
   LEGACY_ARTIFACT_TEXT,
+  PUBLIC_FILES,
   STAGE_ROOT,
 } from "./policy.mjs"
 
@@ -79,8 +80,11 @@ export async function probeStandaloneHttp(baseUrl) {
     assertNoLegacyText(await response.text(), path)
   }
 
-  const og = await request(baseUrl, "/og-ondo-directory.png", 200)
-  assert(og.headers.get("content-type")?.startsWith("image/png"), "ONDO social card has the wrong content type")
+  for (const publicFile of PUBLIC_FILES) {
+    const path = `/${publicFile.replace(/^public\//, "")}`
+    const asset = await request(baseUrl, path, 200)
+    assert(asset.headers.get("content-type")?.startsWith("image/"), `${path}: expected an image content type`)
+  }
   await request(baseUrl, "/icon.svg", 200)
 
   const assets = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
@@ -93,7 +97,7 @@ export async function probeStandaloneHttp(baseUrl) {
     if (/javascript|css|json|text/.test(contentType)) assertNoLegacyText(await response.text(), path)
   }
 
-  const result = { baseUrl, redirect: root.status, page: page.status, blocked: BLOCKED_HTTP_PATHS.length, assets: new Set(assets).size }
+  const result = { baseUrl, redirect: root.status, page: page.status, blocked: BLOCKED_HTTP_PATHS.length, assets: new Set(assets).size, publicAssets: PUBLIC_FILES.length }
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)
   return result
 }

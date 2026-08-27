@@ -4,6 +4,7 @@ import { resolve } from "node:path"
 import {
   JAPAN_FIRST_LAUNCH_CONTENT,
   JAPAN_FIRST_FEATURED_CONTENT_IDS,
+  JEJU_EDITORIAL_PLACES,
   JEJU_EDITORIAL_SEEDS,
   UNIFIED_PULSE_WEIGHTS,
   composeUnifiedPulseB,
@@ -148,7 +149,8 @@ test("JP-PULSE-003 launch research is bounded and Jeju cannot impersonate offici
   expect(JAPAN_FIRST_LAUNCH_CONTENT.flatMap((item) => item.sourceReferences).every((sourceRef) => sourceRef.verificationState === "report-linked" && sourceRef.importedAt === "2026-08-26" && sourceRef.liveCheckedAt === null)).toBe(true)
   expect(JAPAN_FIRST_LAUNCH_CONTENT.flatMap((item) => item.sourceReferences).every((sourceRef) => sourceRef.rightsMode === "link-only" && ["organic-official", "unknown"].includes(sourceRef.sponsorship))).toBe(true)
   expect(JAPAN_FIRST_LAUNCH_CONTENT.every((item) => item.sourceVerification === "report-linked")).toBe(true)
-  expect(JAPAN_FIRST_LAUNCH_CONTENT.every((item) => item.placeEdgeVerification === "pending")).toBe(true)
+  expect(JAPAN_FIRST_LAUNCH_CONTENT.filter((item) => item.placeEdgeVerification === "verified").map((item) => item.id)).toEqual(["C18", "C20"])
+  expect(JAPAN_FIRST_LAUNCH_CONTENT.filter((item) => item.placeEdgeVerification === "pending").map((item) => item.id)).toEqual(["C01", "C02", "C03", "C06", "C08", "C12", "C22"])
   expect(JAPAN_FIRST_LAUNCH_CONTENT.every((item) => item.pulseEligible === false)).toBe(true)
   expect(JAPAN_FIRST_LAUNCH_CONTENT.every((item) => item.rightsMode === "link-only")).toBe(true)
 
@@ -159,8 +161,12 @@ test("JP-PULSE-003 launch research is bounded and Jeju cannot impersonate offici
   expect(JEJU_EDITORIAL_SEEDS.every((item) => /^https:\/\//.test(item.sourceUrl))).toBe(true)
   expect(new Set(JEJU_EDITORIAL_SEEDS.map((item) => item.sourceUrl)).size).toBe(4)
   expect(new Set(JEJU_EDITORIAL_SEEDS.map((item) => item.sourceCollection.en)).size).toBe(4)
-  expect(JEJU_EDITORIAL_SEEDS.every((item) => item.sourceVerification === "report-linked" && item.importedAt === "2026-08-26" && item.liveCheckedAt === null)).toBe(true)
-  expect(JEJU_EDITORIAL_SEEDS.every((item) => item.placeEdgeVerification === "pending")).toBe(true)
+  expect(JEJU_EDITORIAL_PLACES).toHaveLength(8)
+  expect(JEJU_EDITORIAL_PLACES.every((item) => item.sourceVerification === "place-page-verified" && item.importedAt === "2026-08-26" && item.liveCheckedAt === "2026-08-28")).toBe(true)
+  expect(JEJU_EDITORIAL_PLACES.every((item) => item.placeEdgeVerification === "verified" && item.officialRecord === false && item.pulseEligible === false)).toBe(true)
+  const pendingPlaces = JEJU_EDITORIAL_SEEDS.filter((item) => item.kind === "editorial-place-candidate")
+  expect(pendingPlaces.map((item) => item.id)).toEqual(["jeju-tamura", "jeju-sogil-byeolha"])
+  expect(pendingPlaces.every((item) => item.sourceVerification === "report-linked" && item.liveCheckedAt === null && item.placeEdgeVerification === "pending")).toBe(true)
   expect(JEJU_EDITORIAL_SEEDS.every((item) => item.canonicalVenueId === null)).toBe(true)
   expect(JEJU_EDITORIAL_SEEDS.every((item) => item.officialRecordCount === null)).toBe(true)
 })

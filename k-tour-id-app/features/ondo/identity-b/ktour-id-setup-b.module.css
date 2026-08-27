@@ -9,10 +9,10 @@
 .iconButton { cursor: pointer; }
 .iconButton:focus-visible { outline: 3px solid rgb(17 17 17 / 28%); outline-offset: 2px; }
 .progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 12px 18px 4px; }
-.progress > div { display: flex; min-width: 0; align-items: center; gap: 6px; color: #8a8a8a; }
+.progress > div { display: flex; min-width: 0; align-items: center; gap: 6px; color: #666; }
 .progress > div::after { height: 1px; min-width: 4px; flex: 1; background: #e8e8e8; content: ""; }
 .progress > div:last-child::after { display: none; }
-.progress span { display: grid; width: 21px; height: 21px; flex: 0 0 auto; place-items: center; border: 1px solid #d9d9d9; border-radius: 50%; font-size: 11px; font-weight: 800; }
+.progress span { display: grid; width: 21px; height: 21px; flex: 0 0 auto; place-items: center; border: 1px solid #d9d9d9; border-radius: 50%; font-size: 12px; font-weight: 800; }
 .progress small { overflow: hidden; font-size: 12px; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .progress [data-current="true"] { color: #111; }
 .progress [data-current="true"] span { border-color: #111; background: #111; color: #fff; }
@@ -20,6 +20,7 @@
 .progress [data-complete="true"] span { border-color: #bdbdbd; background: #f2f2f2; }
 .body { padding: 24px 20px 18px; }
 .body h1 { max-width: 540px; margin: 8px 0 0; font-size: clamp(30px, 8.5vw, 48px); font-weight: 820; line-height: 1.02; letter-spacing: -.055em; }
+.nowrap { white-space: nowrap; }
 .eyebrow { margin: 0; color: #5d263f; font-size: 12px; font-weight: 850; letter-spacing: .11em; line-height: 1.4; text-transform: uppercase; }
 .lead { max-width: 570px; margin: 13px 0 0; color: #5c5c5c; font-size: 14px; line-height: 1.6; }
 .routes { display: grid; gap: 8px; margin-top: 22px; }

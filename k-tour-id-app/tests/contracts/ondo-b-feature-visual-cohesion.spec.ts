@@ -88,6 +88,8 @@ test("B-VISUAL-FEATURE-006 owned feature CSS never renders visible product copy 
     "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
     "features/ondo/identity-b/local-check-walkthrough-b.module.css",
     "features/ondo/identity-b/traveler-id-entry-b.module.css",
+    "features/ondo/identity-b/ktour-id-setup-b.module.css",
+    "features/ondo/labs/labs.module.css",
     "features/ondo/shared/ui/production-local.module.css",
   ].map(source).join("\n")
 

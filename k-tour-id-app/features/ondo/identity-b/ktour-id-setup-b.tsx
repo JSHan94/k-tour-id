@@ -48,7 +48,7 @@ const COPY = {
     lead: "Choose the route that applies to you. Guest Explore stays open without it. K-Tour ID does not complete Person, 19+, Account, or Payment.",
     mobile: "Korean Mobile ID", mobileNote: "Korean national · OmniOne CX",
     residence: "Mobile Residence Card", residenceNote: "Registered foreign resident · OmniOne CX",
-    passport: "Passport eKYC", passportNote: "Short-term traveler · separate NFC / OCR, face and liveness provider",
+    passport: "Passport eKYC", passportNote: "Short-term traveler · separate NFC / OCR, face and liveness provider", notConfigured: "not configured",
     separate: "Passport eKYC uses a separate provider — not OmniOne CX.", review: "Review consent", later: "Not now — keep exploring",
     consentTitle: "Review this simulated request", consentBody: "Nothing starts until you agree. No camera, NFC reader, file picker or provider connection will open.",
     requester: "Requester", requesterValue: "ONDO K-Tour ID demo", purpose: "Purpose", purposeValue: "Create a minimum travel-eligibility result for a private service credential",
@@ -86,7 +86,7 @@ const COPY = {
     lead: "나에게 맞는 경로를 직접 선택하세요. 없어도 탐색할 수 있고 계정·본인·19+·결제 상태와는 각각 별개입니다.",
     mobile: "한국인 모바일 신분증", mobileNote: "한국 국적자 · OmniOne CX",
     residence: "모바일 외국인등록증", residenceNote: "외국인등록을 마친 거주자 · OmniOne CX",
-    passport: "여권 eKYC", passportNote: "단기 여행자 · 별도 NFC / OCR, 얼굴·라이브니스 제공자",
+    passport: "여권 eKYC", passportNote: "단기 여행자 · 별도 NFC / OCR, 얼굴·라이브니스 제공자", notConfigured: "구성되지 않음",
     separate: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자입니다.", review: "동의 내용 보기", later: "나중에 — 게스트로 계속",
     consentTitle: "시뮬레이션 요청 확인", consentBody: "동의 전에는 아무것도 시작하지 않습니다. 카메라·NFC·파일 선택·기관 연결을 열지 않습니다.",
     requester: "요청자", requesterValue: "ONDO K-Tour ID 데모", purpose: "목적", purposeValue: "민간 서비스 자격증명을 위한 최소 여행 자격 결과 만들기",
@@ -124,7 +124,7 @@ const COPY = {
     lead: "該当する方法を自分で選びます。設定なしでも探せて、アカウント、本人、19歳以上、決済とは別です。",
     mobile: "韓国人向けモバイル身分証", mobileNote: "韓国籍の方 · OmniOne CX",
     residence: "モバイル在留カード", residenceNote: "外国人登録済みの居住者 · OmniOne CX",
-    passport: "パスポートeKYC", passportNote: "短期旅行者 · 別のNFC / OCR、顔・ライブネス事業者",
+    passport: "パスポートeKYC", passportNote: "短期旅行者 · 別のNFC / OCR、顔・ライブネス事業者", notConfigured: "未設定",
     separate: "パスポートeKYCはOmniOne CXではなく別の事業者です。", review: "同意内容を確認", later: "今はしない — ゲスト利用を続ける",
     consentTitle: "シミュレーション依頼を確認", consentBody: "同意前には何も始まりません。カメラ、NFC、ファイル選択、事業者接続は開きません。",
     requester: "依頼者", requesterValue: "ONDO K-Tour IDデモ", purpose: "目的", purposeValue: "民間サービス資格情報のための最小限の旅行資格結果を作成",
@@ -163,7 +163,7 @@ const CREDENTIAL_TYPE = "KTourVisitorCredential"
 function methodDetails(method: OndoBIdentityMethod, copy: typeof COPY.en) {
   if (method === "mobile_id") return { title: copy.mobile, note: copy.mobileNote, provider: "OmniOne CX", evidence: copy.mobile }
   if (method === "mobile_residence_card") return { title: copy.residence, note: copy.residenceNote, provider: "OmniOne CX", evidence: copy.residence }
-  return { title: copy.passport, note: copy.passportNote, provider: `${copy.separate} · not configured`, evidence: copy.passportNote }
+  return { title: copy.passport, note: copy.passportNote, provider: `${copy.separate} · ${copy.notConfigured}`, evidence: copy.passportNote }
 }
 
 function progressStep(phase: Phase) {
@@ -310,7 +310,7 @@ export function KTourIdSetupB() {
         <div className={styles.actions}><button type="button" className={styles.primary} onClick={() => setPhase("consent")}>{copy.review}<ArrowRight size={17} aria-hidden="true" /></button><button type="button" className={styles.secondary} onClick={actions.closeIdentitySetup}>{copy.later}</button></div>
       </div> : null}
 
-      {phase === "consent" ? <div className={styles.body} data-testid="k-tour-id-consent"><p className={styles.eyebrow}>{details.title}</p><h1>{copy.consentTitle}</h1><p className={styles.lead}>{copy.consentBody}</p>
+      {phase === "consent" ? <div className={styles.body} data-testid="k-tour-id-consent"><p className={styles.eyebrow}>{details.title}</p><h1>{state.locale === "ja" ? <>シミュレーション依頼を<span className={styles.nowrap}>確認</span></> : copy.consentTitle}</h1><p className={styles.lead}>{copy.consentBody}</p>
         <Disclosure rows={[[copy.requester, copy.requesterValue, "identity-consent-requester"], [copy.purpose, copy.purposeValue, "identity-consent-purpose"], [copy.provider, details.provider, "identity-consent-provider"], [copy.evidence, details.evidence, "identity-consent-evidence"], [copy.retention, copy.retentionValue, "identity-consent-retention"]]} />
         <div className={styles.actions}><button type="button" data-identity-initial-focus data-testid="k-tour-id-consent-approve" className={styles.primary} onClick={acceptConsent}>{copy.accept}</button><button type="button" className={styles.secondary} onClick={actions.closeIdentitySetup}>{copy.decline}</button></div>
       </div> : null}

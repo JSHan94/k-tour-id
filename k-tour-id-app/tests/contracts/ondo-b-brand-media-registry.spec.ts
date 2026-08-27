@@ -47,7 +47,8 @@ test("BRAND-MEDIA-002 ONDO mark is a flat vector brand object, not an official s
   const primary = readFileSync(resolve(root, "public/brand/ondo-mark.svg"), "utf8")
   expect(primary).toContain("#191817")
   expect(primary).not.toContain("<circle")
-  expect(primary.match(/<path\b/g)).toHaveLength(1)
+  expect(primary.match(/<path\b/g)).toHaveLength(3)
+  expect(primary).toContain('fill-rule="evenodd"')
   expect(registry).toContain("not a government, identity or payment seal")
 })
 

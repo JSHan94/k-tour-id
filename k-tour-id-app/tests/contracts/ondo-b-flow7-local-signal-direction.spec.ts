@@ -84,34 +84,41 @@ test("FLOW7-PERSIST-003 only canonical tag IDs and post time enter device histor
 
 test("FLOW7-RETURN-004 nested Person checks preserve exact draft/place and own modal isolation", () => {
   const signal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
-  const walkthrough = source("features/ondo/identity-b/local-check-walkthrough-b.tsx")
+  const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const contract = source("features/ondo/identity-b/action-gate-contract-b.ts")
   const isolation = source("features/ondo/shared/ui/use-modal-isolation.ts")
 
   expect(signal).toContain("useModalIsolation(open, layerRef)")
-  expect(walkthrough).toContain("useModalIsolation(true, layerRef)")
+  expect(coordinator).toContain("useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId), layerRef)")
   expect(isolation).toContain('element.setAttribute("inert", "")')
-  expect(signal).toContain("onReturn={handleGateReturn}")
+  expect(signal).toContain("B_ACTION_GATE_READY_EVENT")
+  expect(signal).toContain("createBLocalSignalActionReturn")
+  expect(contract).toContain('cta: "SUBMIT_LOCAL_SIGNAL"')
   expect(signal).toContain("activeDraft.note")
   expect(signal).toContain("activeDraft.tags")
   expect(signal).toContain("activeVenue.id")
   expect(signal).toContain('event.key === "Escape"')
 })
 
-test("FLOW7-SESSION-005 Person results are exact, expiring, component-only envelopes", () => {
+test("FLOW7-SESSION-005 Person results are exact, expiring, session-only common envelopes", () => {
   const signal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
+  const contract = source("features/ondo/identity-b/action-gate-contract-b.ts")
+  const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
   const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
 
-  for (const field of ["origin", "venueId", "draftNonce", "issuedAt", "expiresAt", "outcome"]) {
-    expect(signal).toContain(field)
+  for (const field of ["venueId", "draftNonce", "tags", "note", "createdAt", "expiresAt", "consumedAt"]) {
+    expect(contract).toContain(field)
   }
-  expect(signal).toContain("LOCAL_SIGNAL_PERSON_RESULT_TTL_MS")
-  expect(signal).toContain("Date.now()")
-  expect(signal).toMatch(/expiresAt\s*<=\s*Date\.now\(\)/)
-  expect(signal).toContain("setGateSession(null)")
-  expect(signal).toContain("setWalkthroughOpen(false)")
+  expect(contract).toContain("B_ACTION_AXIS_TTL_MS")
+  expect(contract).toContain("B_ACTION_GATE_SESSION_KEY")
+  expect(contract).toContain("isBActionReturnPending")
+  expect(contract).toContain("hasExactKeys")
+  expect(coordinator).toContain("restoreBActionGateSession(window.sessionStorage)")
+  expect(signal).toContain("restoreBActionGateSession(window.sessionStorage)")
+  expect(signal).toMatch(/exactGateSession\.expiresAt\s*<=\s*Date\.now\(\)/)
 
   const deviceType = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
-  expect(deviceType).not.toMatch(/draftNonce|issuedAt|expiresAt|gateSession|personReady/)
+  expect(deviceType).not.toMatch(/draftNonce|createdAt|expiresAt|gateSession|personReady|paymentKyc/)
 })
 
 test("FLOW7-MEDIA-006 invalid replacement never destroys a prepared local preview", () => {

@@ -13,16 +13,16 @@ donate unsupported product claims.
 
 | # | Connected flow | Pattern references | Status |
 |---|---|---|---|
-| 1 | Guest onboarding | Arc | Peer-sealed · user review |
-| 2 | Korea overview and city selection | Polarsteps | Peer-sealed · user review |
-| 3 | City map, Pulse, filters and list | Mapstr + Beli | Peer-sealed · user review |
-| 4 | Japanese story to source/place | The Infatuation + Apple Guides | Peer-sealed · user review |
-| 5 | Place peek and full detail | Apple Place Card + Airbnb | Peer-sealed · user review |
-| 6 | Tables, 19+, join and chat | Timeleft | Peer-sealed · user review |
-| 7 | Local Signal contribution | Apple contribution + Strava | Peer-sealed · user review |
-| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Peer-sealed · user review |
-| 9 | My Korea trip memory | Polarsteps | Pending |
-| 10 | Settings and device controls | Apple Settings + Arc | Pending |
+| 1 | Guest onboarding | Arc | Implemented · candidate revalidation pending |
+| 2 | Korea overview and city selection | Polarsteps | Implemented · candidate revalidation pending |
+| 3 | City map, Pulse, filters and list | Mapstr + Beli | Implemented · candidate revalidation pending |
+| 4 | Japanese story to source/place | The Infatuation + Apple Guides | Implemented · candidate revalidation pending |
+| 5 | Place peek and full detail | Apple Place Card + Airbnb | Implemented · candidate revalidation pending |
+| 6 | Tables, 19+, join and chat | Timeleft | Implemented · candidate revalidation pending |
+| 7 | Local Signal contribution | Apple contribution + Strava | Implemented · candidate revalidation pending |
+| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Implemented · candidate revalidation pending |
+| 9 | My Korea trip memory | Polarsteps | Implemented · candidate revalidation pending |
+| 10 | Settings and device controls | Apple Settings + Arc | Implemented · candidate revalidation pending |
 
 ## Definition of done for every flow
 
@@ -83,8 +83,9 @@ The Explore journey is one connected product experience:
 - [ ] Seoul, Busan and Jeju read as geographic anchors with clear relative
       placement and distinct official/editorial truth.
 - [ ] Seoul and Busan keep their official 200-record facts and Pulse status.
-- [ ] Jeju remains editorial, has no official count and exposes no invented
-      place point.
+- [ ] Jeju remains editorial and has no official count. Only eight exact
+      VISITKOREA place-page/embedded-map verified points are mapped; the two
+      pending candidates remain source links with no pin or place action.
 - [ ] City selection feels like entering a journey, with camera/atlas continuity
       into the selected city.
 - [ ] Source methodology is progressive and never outranks city choice.
@@ -123,8 +124,8 @@ filtered/empty/reset, location states, tile error/retry and return from Place.
       only as story sources.
 - [ ] Pending place edges clearly lead to the original source only. Directions,
       Save, Table and payment are absent until exact place verification.
-- [ ] A verified future edge reuses the existing Place surface rather than adding
-      another pin or route.
+- [ ] Verified Jeju edges use one internal editorial Place surface and remain
+      separate from official records, Pulse, Table, Local Signal and commerce.
 - [ ] Open/close makes the underlying map inert and restores focus/context.
 
 Required states: city marker collapsed/open, featured story, multi-source story,
@@ -238,20 +239,25 @@ refund, My Korea paid/refunded and exact Place return for EN/KO/JA at 320x720,
 
 ### 9. My Korea — Polarsteps
 
-- [ ] The newest active trip artifact leads; empty history does not outrank it.
-- [ ] Plans, signals, places and receipts form a coherent journey timeline.
-- [ ] Exact Place/Table/receipt return feels continuous and preserves state.
+- [x] The newest active trip artifact leads; empty history does not outrank it.
+- [x] A Korea memory map visualizes unique saved/recent/planned/contributed/
+      receipt place evidence without inventing routes or synced travel history.
+- [x] Plans, signals, official places, editorial places and receipts form a
+      coherent device-local journey timeline with explicit truth boundaries.
+- [x] Exact official Place, editorial Place, Table and receipt return preserves
+      state across reload.
 
 ### 10. Settings — Apple Settings + Arc
 
-- [ ] Current language and preferences are immediately understandable.
-- [ ] Editing is progressive and tactile rather than a wall of controls.
-- [ ] Device data scope and destructive clear action are transparent and calm.
-- [ ] Settings retains ONDO material and type while using familiar native patterns.
+- [x] Current EN/KO/JA language and preference count are immediately understandable.
+- [x] Editing is progressive and tactile rather than a wall of controls.
+- [x] Device data scope and destructive clear action are transparent and calm.
+- [x] Settings retains ONDO material and type while using familiar native patterns.
 
 ## Release record
 
-- Active flow: paused for user review and global simplification planning
+- Current candidate: implementation integrated; production-fixed focused
+  verification is green, while the full visual census and CLEAN 2/2 remain open.
 - Peer-sealed flow: Guest onboarding at `7555b133` (72 required state frames,
   all >=8.5, P0=P1=P2=P3=0, Arc 13/13, restoration/geometry 8/8,
   contracts 174/174)
@@ -267,6 +273,6 @@ refund, My Korea paid/refunded and exact Place return for EN/KO/JA at 320x720,
 - Peer-sealed flow: Travel Pass/Wallet/offer/receipt at `7f92ecd` (288 required
   state frames, all >=8.5, P0=P1=P2=P3=0, focused 14/14, contracts 205/205,
   optimized build GREEN)
-- User-approved flows: pending the next visual checkpoint
-- Next user checkpoint: stable ONDO link with the sealed Flow 8 journey plus a
-  product-wide white/black simplification and OpenDID/eKYC restoration plan.
+- Historical peer seals above remain evidence for their exact listed SHAs only;
+  they do not count as CLEAN review of the current candidate.
+- User approval of the final connected candidate: pending a stable private URL.

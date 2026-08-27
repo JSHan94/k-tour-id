@@ -417,8 +417,8 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-016", "ENTRY/DECISION/ERROR"), async () => {
       await openCanonicalVenue(page, { query: "qa=1" })
       const detail = page.getByTestId("canonical-place-overlay")
-      await expect(detail).toContainText("Not confirmed by this source")
-      await expect(detail).not.toContainText(/safe|guaranteed/i)
+      await expect(detail).toContainText("Not provided by this source")
+      await expect(detail).not.toContainText(/(?:is|are) safe|safety guaranteed|guaranteed (?:entry|access|admission)/i)
     })
     await test.step(evidence("FL-016", "CANCEL/RETURN"), async () => {
       await page.getByTestId("canonical-place-overlay").getByRole("button", { name: "Back to place summary" }).last().click()
@@ -503,7 +503,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       for (let index = 0; index < 3; index += 1) await page.getByTestId("labs-bridge-advance").click()
       await expect(page.getByTestId("labs-bridge-receipt")).toContainText("Actual balances and transactions were not changed.")
       await page.getByRole("button", { name: "Return to My Korea" }).click()
-      await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
+      await expect(page.getByTestId("ondo-b-my-korea-entry")).toBeVisible()
     })
   })
 })

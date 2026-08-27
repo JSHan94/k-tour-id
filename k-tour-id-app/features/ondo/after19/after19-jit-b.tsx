@@ -12,7 +12,7 @@ import styles from "./after19-jit-b.module.css"
 
 declare global {
   interface Window {
-    __ONDO_B_QA__?: { after19?: "failure" | "unavailable" | "expired"; tableMessage?: "failure"; localSignalPhoto?: "failure" }
+    __ONDO_B_QA__?: { account?: "failure"; after19?: "failure" | "unavailable" | "expired"; tableMessage?: "failure"; localSignalPhoto?: "failure" }
     __ONDO_B_TABLE_INTENT__?: { tableId: string; venueId: string; mode: "view" }
   }
 }

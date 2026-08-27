@@ -26,6 +26,16 @@ import {
 } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
+import {
+  B_ACTION_GATE_CANCEL_EVENT,
+  B_ACTION_GATE_COMPLETE_EVENT,
+  B_ACTION_GATE_READY_EVENT,
+  consumePendingBActionAtMutation,
+  createBCheckoutActionReturn,
+  requestBActionGate,
+  restoreBActionGateSession,
+  type BCheckoutActionReturn,
+} from "../identity-b/action-gate-contract-b"
 import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
 import { useOndoB, type OndoBCommerceWalletStatus } from "../shared/state/ondo-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
@@ -41,6 +51,7 @@ import {
   stableCommerceBreakdownB,
   stableCommerceQuoteDebitB,
 } from "./stable-commerce-model-b"
+import { VisitStampReceiptB } from "./visit-stamp-receipt-b"
 import styles from "./id-wallet-commerce-b.module.css"
 
 type Locale = OndoBLocale
@@ -222,6 +233,7 @@ const OFFER_COPY = {
     insufficient: "Not enough test balance",
     insufficientBody: "No debit was made. The test condition is cleared before you retry, or you can choose another way at the venue.",
     paymentStorageError: "Could not save this test payment on this device. Nothing was completed — try again.",
+    gateStorageError: "Could not open the local Payment check. The offer and test balance are unchanged — try again.",
     refundStorageError: "Could not save this test refund on this device. The original test payment is unchanged — try again.",
     retry: "Try again",
     receipt: "Test payment complete",
@@ -281,6 +293,7 @@ const OFFER_COPY = {
     insufficient: "테스트 잔액이 부족해요",
     insufficientBody: "차감된 잔액은 없습니다. 재시도 전에 테스트 조건이 해제되며, 매장에서 다른 방법을 선택할 수도 있어요.",
     paymentStorageError: "이 기기에 테스트 결제를 저장하지 못했어요. 완료된 내용은 없습니다. 다시 시도하세요.",
+    gateStorageError: "로컬 결제 확인을 열지 못했어요. 오퍼와 테스트 잔액은 그대로입니다. 다시 시도하세요.",
     refundStorageError: "이 기기에 테스트 환불을 저장하지 못했어요. 원 테스트 결제는 그대로입니다. 다시 시도하세요.",
     retry: "다시 시도",
     receipt: "테스트 결제 완료",
@@ -340,6 +353,7 @@ const OFFER_COPY = {
     insufficient: "テスト残高が不足しています",
     insufficientBody: "残高は引かれていません。再試行の前にテスト条件を解除します。お店で別の方法を選ぶこともできます。",
     paymentStorageError: "この端末にテスト決済を保存できませんでした。完了した処理はありません。もう一度お試しください。",
+    gateStorageError: "ローカルの決済確認を開けませんでした。オファーとテスト残高は変わっていません。もう一度お試しください。",
     refundStorageError: "この端末にテスト返金を保存できませんでした。元のテスト決済は変わっていません。もう一度お試しください。",
     retry: "もう一度試す",
     receipt: "テスト決済が完了しました",
@@ -455,7 +469,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   const [view, setView] = useState<PaymentView>(() => commerce.status === "paid" ? "receipt" : commerce.status === "refunded" ? "refunded" : "review")
   const [consent, setConsent] = useState(false)
   const [benefitQa, setBenefitQa] = useState<QaBenefit | undefined>()
-  const [storageError, setStorageError] = useState<"payment" | "refund" | null>(null)
+  const [storageError, setStorageError] = useState<"gate" | "payment" | "refund" | null>(null)
   const returnTo = JSON.stringify({ cta: "START_MEAL_PAYMENT", venueId, offerId: "meal-offer-gukbap" })
   const balance = stableCommerceBalanceB(commerce)
   const breakdown = stableCommerceBreakdownB(commerce)
@@ -492,6 +506,44 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   useEffect(() => {
     setBenefitQa((window as QaWindow).__ONDO_B_QA__?.benefit)
   }, [])
+
+  useEffect(() => {
+    function returnFromPaymentGate(event: Event, completed: boolean) {
+      const detail = event instanceof CustomEvent ? event.detail as BCheckoutActionReturn : null
+      if (!detail || detail.cta !== "START_CHECKOUT" || detail.venueId !== venueId || detail.offerId !== "meal-offer-gukbap") return
+      if (!completed) {
+        window.requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>("[data-testid='payment-confirm']")?.focus({ preventScroll: true }))
+        return
+      }
+      if (!consent || walletStatus !== "ready" || pendingRef.current || commerce.status !== "idle") return
+      const latest = restoreBActionGateSession(window.sessionStorage)
+      const satisfied = new Set<"account" | "payment_kyc">()
+      if (state.account === "ACC-ACTIVE") satisfied.add("account")
+      if (latest.payment.status === "eligible" && latest.payment.expiresAt && Date.parse(latest.payment.expiresAt) > Date.now()) satisfied.add("payment_kyc")
+      const consumed = consumePendingBActionAtMutation(window.sessionStorage, detail, satisfied)
+      if (!consumed) {
+        setStorageError("gate")
+        return
+      }
+      pendingRef.current = true
+      setStorageError(null)
+      if (!actions.dispatchCommerce({ type: "CONFIRM" })) {
+        pendingRef.current = false
+        setStorageError("payment")
+        return
+      }
+      setView("processing")
+      window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
+    }
+    const complete = (event: Event) => returnFromPaymentGate(event, true)
+    const cancel = (event: Event) => returnFromPaymentGate(event, false)
+    window.addEventListener(B_ACTION_GATE_READY_EVENT, complete)
+    window.addEventListener(B_ACTION_GATE_CANCEL_EVENT, cancel)
+    return () => {
+      window.removeEventListener(B_ACTION_GATE_READY_EVENT, complete)
+      window.removeEventListener(B_ACTION_GATE_CANCEL_EVENT, cancel)
+    }
+  }, [actions, commerce.status, consent, state.account, venueId, walletStatus])
 
   useEffect(() => {
     if (view !== "processing") return
@@ -532,10 +584,13 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
 
   function pay() {
     if (!consent || pendingRef.current || commerce.status !== "idle") return
-    pendingRef.current = true
     setStorageError(null)
-    actions.dispatchCommerce({ type: "CONFIRM" })
-    setView("processing")
+    const latest = restoreBActionGateSession(window.sessionStorage)
+    if (latest.pending?.cta === "START_CHECKOUT" && latest.pending.venueId === venueId && latest.pending.offerId === "meal-offer-gukbap") {
+      window.dispatchEvent(new CustomEvent(B_ACTION_GATE_READY_EVENT, { detail: latest.pending }))
+      return
+    }
+    if (!requestBActionGate(createBCheckoutActionReturn({ venueId }))) setStorageError("gate")
   }
 
   function retry() {
@@ -559,13 +614,26 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
     onClose()
   }
 
+  const offerDialogLabel = view === "processing"
+    ? copy.processing
+    : view === "failure"
+      ? copy.failed
+      : view === "insufficient"
+        ? copy.insufficient
+        : view === "refunded"
+          ? copy.refunded
+          : view === "receipt"
+            ? copy.receipt
+            : undefined
+
   return (
     <section
       ref={rootRef}
       className={styles.offerOverlay}
       role="dialog"
       aria-modal="true"
-      aria-labelledby="canonical-commerce-title"
+      aria-labelledby={view === "review" ? "canonical-commerce-title" : undefined}
+      aria-label={offerDialogLabel}
       data-testid="ondo-b-id-wallet-commerce"
       data-origin-venue-id={venueId}
       data-return-to={returnTo}
@@ -622,6 +690,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
           </section>
 
           <details className={styles.testDetails}><summary>{copy.testMode}</summary><p>{copy.testTruth}</p></details>
+          {storageError === "gate" ? <p className={styles.storageError} data-testid="payment-gate-storage-error" role="alert">{copy.gateStorageError}</p> : null}
           <div className={styles.offerDecision} data-flow8-decision="payment">
             <button type="button" className={styles.payButton} data-testid="payment-confirm" disabled={walletStatus === "ready" && !consent} onClick={walletStatus === "ready" ? pay : onConnect}><CircleDollarSign size={19} aria-hidden="true" />{walletStatus === "ready" ? copy.pay : copy.connectToPay}</button>
             <button type="button" className={styles.quietButton} data-testid="payment-cancel" onClick={closeOffer}>{copy.back}</button>
@@ -669,6 +738,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
             <div><span>{view === "refunded" ? copy.paymentReceipt : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
             {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
           </section>
+          {view === "receipt" ? <VisitStampReceiptB locale={locale} venueId={venueId} /> : null}
           {storageError === "refund" ? <p className={styles.storageError} data-testid="commerce-storage-error" role="alert">{copy.refundStorageError}</p> : null}
           {view === "receipt" ? (
             <details className={styles.refundDetails}><summary>{copy.support}</summary><p>{copy.supportBody}</p><button type="button" data-testid="payment-refund" onClick={refund}><RotateCcw size={17} aria-hidden="true" />{copy.refund}</button></details>

@@ -40,10 +40,36 @@ import {
   type OndoBIdentitySetupOrigin,
   type OndoBSimulatedCredential,
 } from "../../identity-b/ktour-id-setup-model-b"
+import {
+  B_ACTION_AXIS_SESSION_EVENT,
+  B_ACTION_GATE_SESSION_KEY,
+  DEFAULT_B_ACTION_GATE_SESSION,
+} from "../../identity-b/action-gate-contract-b"
+import {
+  DEFAULT_GLOBAL_AFTER19_PREFERENCE,
+  DEFAULT_GLOBAL_AFTER19_SESSION,
+  GLOBAL_AFTER19_PREFERENCE_KEY,
+  GLOBAL_AFTER19_SESSION_EVENT,
+  GLOBAL_AFTER19_SESSION_KEY,
+} from "../../after19/after19-global-b-model"
+import {
+  B_ACTIVITY_PROFILE_CLEAR_EVENT,
+  B_ACTIVITY_PROFILE_SESSION_KEY,
+  restoreBActivityProfile,
+} from "../../identity-b/activity-profile-b-provider"
+import { isEditorialPlaceId, sanitizeEditorialPlaceIds, type EditorialPlaceB } from "../../pulse-b/japan-first-pulse-model-b"
+import {
+  consumeBAccountReturnTo,
+  createBAccountReturnTo,
+  isBAccountReturnToUsable,
+  type BAccountReturnToEnvelope,
+} from "../../contracts/return-to-b"
+import { readQaScenario } from "../ui/use-qa-controls"
 
 export type OndoBTab = "ondo" | "my" | "tables" | "id" | "settings"
-export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string }
+export type OndoBSurface = { kind: "map" } | { kind: "venue"; venueId: string } | { kind: "editorial_place"; editorialPlaceId: EditorialPlaceB["id"] } | { kind: "labs" }
 export type OndoBSaveStatus = "SAV-IDLE" | "SAV-SAVED" | "SAV-FAILED"
+export type OndoBAccountStatus = "ACC-GUEST" | "ACC-ACTIVE"
 export type OndoBLocalSignalTag = PulseLocalSignalTagB
 export type OndoBLocalSignalDraft = {
   venueId: string
@@ -69,12 +95,16 @@ export type OndoBState = {
   tab: OndoBTab
   surface: OndoBSurface
   onboarding: "ONB-NEW" | "ONB-IN-PROGRESS" | "ONB-COMPLETE"
+  account: OndoBAccountStatus
+  accountReturnTo: BAccountReturnToEnvelope | null
   persona: OndoBPersona | null
   discoveryPreferences: OndoBDiscoveryPreference[]
   savedVenueIds: string[]
+  savedEditorialPlaceIds: EditorialPlaceB["id"][]
   saveStatusByVenue: Record<string, OndoBSaveStatus>
   privateNotesByVenue: Record<string, string>
   recentVenueIds: string[]
+  recentEditorialPlaceIds: EditorialPlaceB["id"][]
   plannedTableRefs: OndoBPlannedTableRef[]
   localSignalPostedVenueIds: string[]
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
@@ -102,13 +132,19 @@ export type OndoBActions = {
   completeOnboarding(preferences: OndoBDiscoveryPreference[]): boolean
   skipOnboarding(): boolean
   resetOnboarding(): boolean
+  beginAccountSave(venueId: string): boolean
+  cancelAccountSave(): boolean
+  activateAccount(): boolean
+  completeAccountSave(): "saved" | "save_failed" | "account_failed"
   saveVenue(venueId: string): void
   toggleSavedVenue(venueId: string): void
+  toggleSavedEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]): boolean
   setPrivateNote(venueId: string, note: string): boolean
   openLocalSignal(venueId: string): void
   updateLocalSignalDraft(update: Pick<OndoBLocalSignalDraft, "tags" | "note">): void
   closeLocalSignal(): void
   recordRecentVenue(venueId: string): boolean
+  recordRecentEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]): boolean
   recordPlannedTable(tableId: string, venueId: string): boolean
   removePlannedTable(tableId: string): boolean
   markLocalSignalPosted(venueId: string): boolean
@@ -132,8 +168,10 @@ type OndoBDeviceState = {
   persona: OndoBPersona | null
   discoveryPreferences: OndoBDiscoveryPreference[]
   savedVenueIds: string[]
+  savedEditorialPlaceIds: EditorialPlaceB["id"][]
   privateNotesByVenue: Record<string, string>
   recentVenueIds: string[]
+  recentEditorialPlaceIds: EditorialPlaceB["id"][]
   plannedTableRefs: OndoBPlannedTableRef[]
   localSignalPostedVenueIds: string[]
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
@@ -143,6 +181,8 @@ type OndoBDeviceState = {
 }
 
 const B_DEVICE_KEY = "ondo-b.device.v1"
+export const B_ACCOUNT_SESSION_KEY = "ondo-b.account.v1"
+const LEGACY_SESSION_KEY = "ondo.session.v3"
 const B_PREFERENCES = new Set(ONDO_B_DISCOVERY_PREFERENCES.map((preference) => preference.id))
 const ONDO_B_PERSONAS = new Set(ONDO_B_PERSONA_IDS)
 const B_LOCAL_SIGNAL_TAGS = new Set<OndoBLocalSignalTag>(["calm_now", "lively_now", "quick_stop", "welcoming"])
@@ -244,12 +284,16 @@ function initialState(): OndoBState {
     tab: "ondo",
     surface: { kind: "map" },
     onboarding: "ONB-NEW",
+    account: "ACC-GUEST",
+    accountReturnTo: null,
     persona: null,
     discoveryPreferences: [],
     savedVenueIds: [],
+    savedEditorialPlaceIds: [],
     saveStatusByVenue: {},
     privateNotesByVenue: {},
     recentVenueIds: [],
+    recentEditorialPlaceIds: [],
     plannedTableRefs: [],
     localSignalPostedVenueIds: [],
     localPulseEvidenceByVenue: {},
@@ -279,6 +323,7 @@ const DEVICE_MESSAGE = {
   clearChoices: { en: "Choices could not be cleared.", ko: "선택을 초기화하지 못했어요.", ja: "選択内容をリセットできませんでした。" },
   setup: { en: "Setup could not be saved.", ko: "시작 설정을 저장하지 못했어요.", ja: "初期設定を保存できませんでした。" },
   guest: { en: "Guest setup could not be saved.", ko: "게스트 시작 설정을 저장하지 못했어요.", ja: "ゲスト設定を保存できませんでした。" },
+  account: { en: "The account step could not start in this tab.", ko: "이 탭에서 계정 절차를 시작하지 못했어요.", ja: "このタブでアカウント手続きを開始できませんでした。" },
 } satisfies Record<string, Record<OndoBLocale, string>>
 
 function isProductionPath() {
@@ -314,8 +359,10 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
       ? [...new Set(record.discoveryPreferences.filter((item): item is OndoBDiscoveryPreference => B_PREFERENCES.has(item as OndoBDiscoveryPreference)))]
       : [],
     savedVenueIds,
+    savedEditorialPlaceIds: sanitizeEditorialPlaceIds(record.savedEditorialPlaceIds),
     privateNotesByVenue: sanitizeCanonicalVenueNotes(record.privateNotesByVenue, savedVenueIds),
     recentVenueIds: sanitizeRecentVenueIds(record.recentVenueIds),
+    recentEditorialPlaceIds: sanitizeEditorialPlaceIds(record.recentEditorialPlaceIds).slice(0, 8),
     plannedTableRefs: sanitizePlannedTableRefs(record.plannedTableRefs),
     localSignalPostedVenueIds,
     localPulseEvidenceByVenue: boundedLocalPulseEvidenceByVenue,
@@ -332,8 +379,10 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     persona: state.persona,
     discoveryPreferences: state.discoveryPreferences,
     savedVenueIds: state.savedVenueIds,
+    savedEditorialPlaceIds: state.savedEditorialPlaceIds,
     privateNotesByVenue: state.privateNotesByVenue,
     recentVenueIds: state.recentVenueIds,
+    recentEditorialPlaceIds: state.recentEditorialPlaceIds,
     plannedTableRefs: state.plannedTableRefs,
     localSignalPostedVenueIds: state.localSignalPostedVenueIds,
     localPulseEvidenceByVenue: state.localPulseEvidenceByVenue,
@@ -353,11 +402,61 @@ function persistBDeviceState(state: OndoBState) {
   }
 }
 
+export type BAccountSessionState = {
+  account: OndoBAccountStatus
+  returnTo: BAccountReturnToEnvelope | null
+}
+
+export function restoreBAccountSession(value: unknown): BAccountSessionState {
+  const record = value && typeof value === "object" ? value as Record<string, unknown> : {}
+  const account = record.account === "ACC-ACTIVE" ? "ACC-ACTIVE" : "ACC-GUEST"
+  const candidate = record.returnTo && typeof record.returnTo === "object"
+    ? record.returnTo as BAccountReturnToEnvelope
+    : null
+  return {
+    account,
+    returnTo: account === "ACC-GUEST" && isBAccountReturnToUsable(candidate) ? candidate : null,
+  }
+}
+
+function persistBAccountSession(session: BAccountSessionState) {
+  if (!isProductionPath()) return false
+  try {
+    // Persist an explicit Guest value too. It prevents a deliberate B reset or
+    // cancelled migration from re-importing an older A-owned Account record on
+    // the next reload, while the legacy bytes remain untouched.
+    window.sessionStorage.setItem(B_ACCOUNT_SESSION_KEY, JSON.stringify(session))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function readBAccountSession(): BAccountSessionState {
+  try {
+    const stored = window.sessionStorage.getItem(B_ACCOUNT_SESSION_KEY)
+    if (stored !== null) return restoreBAccountSession(JSON.parse(stored))
+
+    // One-way compatibility for the documented pre-B session seam. Only the
+    // Account axis is admitted; B never imports the legacy provider and never
+    // reads or migrates Person, age, payment, profile, gate, or reputation.
+    // The legacy record remains byte-for-byte owned by its original surface.
+    const legacyStored = window.sessionStorage.getItem(LEGACY_SESSION_KEY)
+    const legacy = legacyStored === null ? null : JSON.parse(legacyStored) as Record<string, unknown>
+    const migrated = restoreBAccountSession({ account: legacy?.account })
+    if (migrated.account === "ACC-ACTIVE") persistBAccountSession(migrated)
+    return migrated
+  } catch {
+    return { account: "ACC-GUEST", returnTo: null }
+  }
+}
+
 const OndoBContext = createContext<{ state: OndoBState; actions: OndoBActions } | null>(null)
 
 export function OndoBProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState(initialState)
   const stateRef = useRef(state)
+  const failedSaveQaVenueIdsRef = useRef(new Set<string>())
   stateRef.current = state
 
   useEffect(() => {
@@ -371,9 +470,12 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     try {
       const stored = window.localStorage.getItem(B_DEVICE_KEY)
       const restored = stored === null ? restoreBDeviceState({ locale: preferredBrowserLocale() }) : restoreBDeviceState(JSON.parse(stored))
-        const next: OndoBState = {
+      const accountSession = readBAccountSession()
+      const next: OndoBState = {
         ...blank,
         ...restored,
+        account: accountSession.account,
+        accountReturnTo: accountSession.returnTo,
         saveStatusByVenue: Object.fromEntries(restored.savedVenueIds.map((venueId) => [venueId, "SAV-SAVED" as const])),
           commerceOrigin: null,
           commerceWalletStatus: "disconnected",
@@ -412,12 +514,22 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
 
   const persistCanonicalSavedVenue = useCallback((venueId: string, toggle: boolean) => {
     if (!isCanonicalVenueId(venueId) || !isProductionPath()) {
-      setState((current) => ({ ...current, saveStatusByVenue: { ...current.saveStatusByVenue, [venueId]: "SAV-FAILED" } }))
+      const failed = { ...stateRef.current, saveStatusByVenue: { ...stateRef.current.saveStatusByVenue, [venueId]: "SAV-FAILED" as const } }
+      stateRef.current = failed
+      setState(failed)
       return false
     }
     const current = stateRef.current
     const alreadySaved = current.savedVenueIds.includes(venueId)
     const shouldSave = toggle ? !alreadySaved : true
+    if (shouldSave && current.account !== "ACC-ACTIVE") return false
+    if (shouldSave && readQaScenario() === "save-failed" && !failedSaveQaVenueIdsRef.current.has(venueId)) {
+      failedSaveQaVenueIdsRef.current.add(venueId)
+      const failed: OndoBState = { ...current, saveStatusByVenue: { ...current.saveStatusByVenue, [venueId]: "SAV-FAILED" } }
+      stateRef.current = failed
+      setState(failed)
+      return false
+    }
     const privateNotesByVenue = { ...current.privateNotesByVenue }
     if (!shouldSave) delete privateNotesByVenue[venueId]
     const next: OndoBState = {
@@ -439,21 +551,56 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     return true
   }, [])
 
+  const beginAccountSave = useCallback((venueId: string) => {
+    if (!isCanonicalVenueId(venueId) || stateRef.current.account === "ACC-ACTIVE") return false
+    const returnTo = createBAccountReturnTo(venueId)
+    const session = { account: stateRef.current.account, returnTo } satisfies BAccountSessionState
+    if (!persistBAccountSession(session)) return false
+    commitEphemeral((current) => ({ ...current, accountReturnTo: returnTo }))
+    return true
+  }, [commitEphemeral])
+
+  const cancelAccountSave = useCallback(() => {
+    const current = stateRef.current
+    const cleared = persistBAccountSession({ account: current.account, returnTo: null })
+    commitEphemeral((value) => ({ ...value, accountReturnTo: null }))
+    return cleared
+  }, [commitEphemeral])
+
+  const activateAccount = useCallback(() => {
+    if (!persistBAccountSession({ account: "ACC-ACTIVE", returnTo: null })) return false
+    commitEphemeral((current) => ({ ...current, account: "ACC-ACTIVE", accountReturnTo: null }))
+    return true
+  }, [commitEphemeral])
+
+  const completeAccountSave = useCallback((): "saved" | "save_failed" | "account_failed" => {
+    const returnTo = stateRef.current.accountReturnTo
+    const consumed = returnTo ? consumeBAccountReturnTo(returnTo) : null
+    if (!consumed || !activateAccount()) return "account_failed"
+    return persistCanonicalSavedVenue(consumed.venueId, false) ? "saved" : "save_failed"
+  }, [activateAccount, persistCanonicalSavedVenue])
+
   const actions = useMemo<OndoBActions>(() => ({
     setLocale: (locale) => {
       const saved = commit((current) => ({ ...current, locale }))
       if (!saved) notify(DEVICE_MESSAGE.locale[stateRef.current.locale])
       return saved
     },
-    setTab: (tab) => setState((current) => ({
+    setTab: (tab) => commitEphemeral((current) => ({
       ...current,
       tab,
       surface: tab === "ondo" ? current.surface : { kind: "map" },
       commerceOrigin: tab === "id" ? current.commerceOrigin : null,
     })),
-    setSurface: (surface) => setState((current) => ({
+    setSurface: (surface) => commitEphemeral((current) => ({
       ...current,
-      surface: surface.kind === "map" || isCanonicalVenueId(surface.venueId) ? surface : { kind: "map" },
+      surface: surface.kind === "map" || surface.kind === "labs"
+        ? surface
+        : surface.kind === "venue" && isCanonicalVenueId(surface.venueId)
+          ? surface
+          : surface.kind === "editorial_place" && isEditorialPlaceId(surface.editorialPlaceId)
+            ? surface
+            : { kind: "map" },
     })),
     setPersona: (persona) => {
       const saved = commit((current) => ({ ...current, persona }))
@@ -503,11 +650,27 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       }))
       return saved
     },
+    beginAccountSave,
+    cancelAccountSave,
+    activateAccount,
+    completeAccountSave,
     saveVenue: (venueId) => {
-      persistCanonicalSavedVenue(venueId, false)
+      if (stateRef.current.account === "ACC-ACTIVE") persistCanonicalSavedVenue(venueId, false)
+      else if (!beginAccountSave(venueId)) notify(DEVICE_MESSAGE.account[stateRef.current.locale])
     },
     toggleSavedVenue: (venueId) => {
-      persistCanonicalSavedVenue(venueId, true)
+      if (stateRef.current.savedVenueIds.includes(venueId)) persistCanonicalSavedVenue(venueId, true)
+      else if (stateRef.current.account === "ACC-ACTIVE") persistCanonicalSavedVenue(venueId, true)
+      else if (!beginAccountSave(venueId)) notify(DEVICE_MESSAGE.account[stateRef.current.locale])
+    },
+    toggleSavedEditorialPlace: (editorialPlaceId) => {
+      if (!isEditorialPlaceId(editorialPlaceId)) return false
+      return commit((current) => ({
+        ...current,
+        savedEditorialPlaceIds: current.savedEditorialPlaceIds.includes(editorialPlaceId)
+          ? current.savedEditorialPlaceIds.filter((id) => id !== editorialPlaceId)
+          : [...current.savedEditorialPlaceIds, editorialPlaceId],
+      }))
     },
     setPrivateNote: (venueId, note) => {
       if (!isCanonicalVenueId(venueId) || !stateRef.current.savedVenueIds.includes(venueId)) return false
@@ -542,6 +705,13 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     recordRecentVenue: (venueId) => {
       if (!isCanonicalVenueId(venueId)) return false
       return commit((current) => ({ ...current, recentVenueIds: recordRecentVenue(current.recentVenueIds, venueId) }))
+    },
+    recordRecentEditorialPlace: (editorialPlaceId) => {
+      if (!isEditorialPlaceId(editorialPlaceId)) return false
+      return commit((current) => ({
+        ...current,
+        recentEditorialPlaceIds: [editorialPlaceId, ...current.recentEditorialPlaceIds.filter((id) => id !== editorialPlaceId)].slice(0, 8),
+      }))
     },
     recordPlannedTable: (tableId, venueId) => {
       const nextRefs = recordPlannedTable(stateRef.current.plannedTableRefs, tableId, venueId)
@@ -640,30 +810,82 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
       })
       return true
     },
-    clearBDeviceContent: () => commit((current) => ({
-      ...current,
-      discoveryPreferences: [],
-      savedVenueIds: [],
-      saveStatusByVenue: {},
-      privateNotesByVenue: {},
-      recentVenueIds: [],
-      plannedTableRefs: [],
-      localSignalPostedVenueIds: [],
-      localPulseEvidenceByVenue: {},
-      localInteractionBoundarySeen: false,
-      identitySetupOrigin: null,
-      identityCredential: null,
-      commerceLocalBoundarySeen: false,
-      commerceOrigin: null,
-      commerceWalletStatus: "disconnected",
-      commerceSession: createStableCommerceBState(),
-      commerceReceiptVenueId: null,
-      commerceReceipts: [],
-      localSignalDraft: null,
-      surface: { kind: "map" },
-    })),
+    clearBDeviceContent: () => {
+      let previousLabsSession: string | null
+      let previousAccountSession: string | null
+      let previousActionGateSession: string | null
+      let previousAfter19Preference: string | null
+      let previousAfter19Session: string | null
+      let previousActivityProfile: string | null
+      try {
+        previousLabsSession = window.sessionStorage.getItem("ondo-b.labs.v1")
+        previousAccountSession = window.sessionStorage.getItem(B_ACCOUNT_SESSION_KEY)
+        previousActionGateSession = window.sessionStorage.getItem(B_ACTION_GATE_SESSION_KEY)
+        previousAfter19Preference = window.localStorage.getItem(GLOBAL_AFTER19_PREFERENCE_KEY)
+        previousAfter19Session = window.sessionStorage.getItem(GLOBAL_AFTER19_SESSION_KEY)
+        previousActivityProfile = window.sessionStorage.getItem(B_ACTIVITY_PROFILE_SESSION_KEY)
+        window.sessionStorage.removeItem("ondo-b.labs.v1")
+        window.sessionStorage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify(DEFAULT_B_ACTION_GATE_SESSION))
+        window.sessionStorage.setItem(B_ACCOUNT_SESSION_KEY, JSON.stringify({ account: "ACC-GUEST", returnTo: null } satisfies BAccountSessionState))
+        window.localStorage.setItem(GLOBAL_AFTER19_PREFERENCE_KEY, JSON.stringify(DEFAULT_GLOBAL_AFTER19_PREFERENCE))
+        window.sessionStorage.setItem(GLOBAL_AFTER19_SESSION_KEY, JSON.stringify(DEFAULT_GLOBAL_AFTER19_SESSION))
+        window.sessionStorage.setItem(B_ACTIVITY_PROFILE_SESSION_KEY, JSON.stringify(restoreBActivityProfile(null)))
+      } catch {
+        return false
+      }
+      const cleared = commit((current) => ({
+        ...current,
+        account: "ACC-GUEST",
+        accountReturnTo: null,
+        discoveryPreferences: [],
+        savedVenueIds: [],
+        savedEditorialPlaceIds: [],
+        saveStatusByVenue: {},
+        privateNotesByVenue: {},
+        recentVenueIds: [],
+        recentEditorialPlaceIds: [],
+        plannedTableRefs: [],
+        localSignalPostedVenueIds: [],
+        localPulseEvidenceByVenue: {},
+        localInteractionBoundarySeen: false,
+        identitySetupOrigin: null,
+        identityCredential: null,
+        commerceLocalBoundarySeen: false,
+        commerceOrigin: null,
+        commerceWalletStatus: "disconnected",
+        commerceSession: createStableCommerceBState(),
+        commerceReceiptVenueId: null,
+        commerceReceipts: [],
+        localSignalDraft: null,
+        surface: { kind: "map" },
+      }))
+      if (!cleared) {
+        try {
+          if (previousLabsSession == null) window.sessionStorage.removeItem("ondo-b.labs.v1")
+          else window.sessionStorage.setItem("ondo-b.labs.v1", previousLabsSession)
+          if (previousAccountSession == null) window.sessionStorage.removeItem(B_ACCOUNT_SESSION_KEY)
+          else window.sessionStorage.setItem(B_ACCOUNT_SESSION_KEY, previousAccountSession)
+          if (previousActionGateSession == null) window.sessionStorage.removeItem(B_ACTION_GATE_SESSION_KEY)
+          else window.sessionStorage.setItem(B_ACTION_GATE_SESSION_KEY, previousActionGateSession)
+          if (previousAfter19Preference == null) window.localStorage.removeItem(GLOBAL_AFTER19_PREFERENCE_KEY)
+          else window.localStorage.setItem(GLOBAL_AFTER19_PREFERENCE_KEY, previousAfter19Preference)
+          if (previousAfter19Session == null) window.sessionStorage.removeItem(GLOBAL_AFTER19_SESSION_KEY)
+          else window.sessionStorage.setItem(GLOBAL_AFTER19_SESSION_KEY, previousAfter19Session)
+          if (previousActivityProfile == null) window.sessionStorage.removeItem(B_ACTIVITY_PROFILE_SESSION_KEY)
+          else window.sessionStorage.setItem(B_ACTIVITY_PROFILE_SESSION_KEY, previousActivityProfile)
+        } catch {
+          // Device content was not committed; keep the operation failed even if
+          // a storage-disabled browser also prevents session rollback.
+        }
+      } else {
+        window.dispatchEvent(new CustomEvent(B_ACTION_AXIS_SESSION_EVENT, { detail: DEFAULT_B_ACTION_GATE_SESSION }))
+        window.dispatchEvent(new CustomEvent(GLOBAL_AFTER19_SESSION_EVENT, { detail: DEFAULT_GLOBAL_AFTER19_SESSION }))
+        window.dispatchEvent(new CustomEvent(B_ACTIVITY_PROFILE_CLEAR_EVENT))
+      }
+      return cleared
+    },
     notify,
-  }), [commit, commitEphemeral, notify, persistCanonicalSavedVenue])
+  }), [activateAccount, beginAccountSave, cancelAccountSave, commit, commitEphemeral, completeAccountSave, notify, persistCanonicalSavedVenue])
 
   const value = useMemo(() => ({ state, actions }), [actions, state])
   return <OndoBContext.Provider value={value}>{children}</OndoBContext.Provider>

@@ -13,6 +13,7 @@ const FEATURE_SESSION_KEYS = [
   "ondo.chat.v2",
   "ondo.table-outcomes.v2",
   "ondo.labs.v2",
+  "ondo-b.labs.v1",
   "ondo.accepted-visits.v2",
 ] as const
 
@@ -212,7 +213,7 @@ for (const locale of ["en", "ko"] as const) {
     expect(resetSession.onboarding).toBe(SESSION_SEED.onboarding)
     expect(resetSession.persona).toBe(SESSION_SEED.persona)
     for (const path of CLEARED_SENSITIVE_SESSION_PATHS) expect(resetSession, `cleared sensitive path: ${path}`).not.toHaveProperty(path)
-    await expect.poll(() => page.evaluate((keys) => keys.map((key) => sessionStorage.getItem(key)), FEATURE_SESSION_KEYS)).toEqual([null, null, null, null])
+    await expect.poll(() => page.evaluate((keys) => keys.map((key) => sessionStorage.getItem(key)), FEATURE_SESSION_KEYS)).toEqual(Array(FEATURE_SESSION_KEYS.length).fill(null))
     expect(await page.evaluate(() => localStorage.getItem("ondo.preferences.v3"))).toBe(localBefore)
     expect(await page.evaluate(() => localStorage.getItem("unrelated.local.fixture"))).toBe("preserve-local-byte")
     expect(await page.evaluate(() => sessionStorage.getItem("unrelated.session.fixture"))).toBe("preserve-session-byte")
@@ -222,7 +223,7 @@ for (const locale of ["en", "ko"] as const) {
     await expect(page.getByTestId("ondo-identity-entry")).toBeVisible()
     await expect(page.getByTestId("ondo-identity-entry")).toContainText(locale === "ko" ? "계정 없이 둘러보는 중" : "Exploring without an account")
     await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}"))).toEqual(RESET_SESSION_EXPECTED)
-    await expect.poll(() => page.evaluate((keys) => keys.map((key) => sessionStorage.getItem(key)), FEATURE_SESSION_KEYS)).toEqual([null, null, null, null])
+    await expect.poll(() => page.evaluate((keys) => keys.map((key) => sessionStorage.getItem(key)), FEATURE_SESSION_KEYS)).toEqual(Array(FEATURE_SESSION_KEYS.length).fill(null))
     expect(await page.evaluate(() => localStorage.getItem("ondo.preferences.v3"))).toBe(localBefore)
   })
 

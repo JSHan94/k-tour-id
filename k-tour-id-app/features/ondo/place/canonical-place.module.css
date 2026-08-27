@@ -964,3 +964,104 @@
   .pulsePeek,
   .pulsePanel { animation: none !important; transition: none !important; }
 }
+
+/* Pulse intensity is read from shape, position and glow at a glance. Exact
+   evidence remains available after opening the disclosure and to assistive
+   technology, without printing a score/buzzword in every decision surface. */
+.srOnly {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+.pulsePeek,
+.pulsePanel { --pulse-position: 8%; }
+.pulsePeek[data-pulse-level="low"],
+.pulsePanel[data-pulse-level="low"] { --pulse-position: 18%; }
+.pulsePeek[data-pulse-level="warming"],
+.pulsePanel[data-pulse-level="warming"] { --pulse-position: 39%; }
+.pulsePeek[data-pulse-level="rising"],
+.pulsePanel[data-pulse-level="rising"] { --pulse-position: 61%; }
+.pulsePeek[data-pulse-level="hot"],
+.pulsePanel[data-pulse-level="hot"] { --pulse-position: 80%; }
+.pulsePeek[data-pulse-level="peak"],
+.pulsePanel[data-pulse-level="peak"] { --pulse-position: 94%; }
+
+.pulseVisualLabel {
+  color: #5d5550;
+  font-size: 12px;
+  font-weight: 820;
+  letter-spacing: .11em;
+}
+.pulseVisualMeter {
+  position: relative;
+  display: block;
+  width: min(220px, 72vw);
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ddd 0%, #d9bf73 35%, #e57a3a 61%, #c94832 80%, #7a2048 100%);
+  box-shadow: inset 0 0 0 1px rgb(23 23 23 / 8%);
+}
+.pulseVisualMeter > i {
+  position: absolute;
+  top: 50%;
+  left: var(--pulse-position);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--pulse-level);
+  box-shadow: 0 0 0 1px rgb(23 23 23 / 16%), 0 0 18px color-mix(in srgb, var(--pulse-level) 56%, transparent);
+  transform: translate(-50%, -50%);
+}
+.pulsePeek {
+  min-height: 54px;
+  align-content: center;
+  gap: 8px;
+  margin: 2px 0 10px;
+  padding: 11px 13px;
+  border: 1px solid rgb(23 23 23 / 10%);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 5%);
+}
+.pulsePanel {
+  border-color: rgb(23 23 23 / 10%);
+  background: #fff;
+}
+.pulsePanel > summary { min-height: 72px; }
+.pulsePanel > summary > div { width: 100%; }
+.pulsePanel > summary > svg { flex: 0 0 auto; color: #555; transition: transform 180ms ease; }
+.pulsePanel[open] > summary > svg { transform: rotate(90deg); }
+.pulsePanel .pulseVisualMeter { width: min(260px, 58vw); margin-top: 5px; }
+
+.tableEmpty {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid rgb(23 23 23 / 10%);
+  border-radius: 15px;
+  background: #fff;
+}
+.tableEmpty > strong { color: #242424; font-size: 14px; }
+.tableEmpty > p { margin: 0; color: #666; font-size: 12px; line-height: 1.45; }
+.tableEmpty > div { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 5px; }
+.tableActions .tableEmpty > div > button {
+  display: inline-flex;
+  width: auto;
+  min-height: 44px;
+  grid-template-columns: none;
+  justify-content: center;
+  padding: 0 12px;
+  border-color: rgb(23 23 23 / 13%);
+  background: #fff;
+  color: #242424;
+  font-size: 12px;
+  font-weight: 750;
+}
+.tableActions .tableEmpty > div > button:last-child { border-color: #171717; background: #171717; color: #fff; }

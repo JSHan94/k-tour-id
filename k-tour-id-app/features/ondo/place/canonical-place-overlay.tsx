@@ -70,6 +70,11 @@ const COPY = {
     pulseLocalEvidence: "On this device",
     table: "View Table",
     tableBody: "Fri, Aug 28 · 20:30 KST · Korean + English · 1 seat left",
+    tablesAtPlace: "Tables at this place",
+    noTables: "No open Table here yet",
+    noTablesBody: "Keep this exact place open, or browse all local Tables.",
+    backToPlace: "Back to this place",
+    browseTables: "Browse all Tables",
     after19: "19+ required",
     after19Body: "You’ll verify after choosing Join.",
     pulseBoundary: "Curated visit signals · not live crowding or official venue facts.",
@@ -128,6 +133,11 @@ const COPY = {
     pulseLocalEvidence: "이 기기에서",
     table: "테이블 보기",
     tableBody: "8월 28일 금요일 · 20:30 KST · 한국어 + 영어 · 1자리 남음",
+    tablesAtPlace: "이 장소의 테이블",
+    noTables: "아직 열린 테이블이 없어요",
+    noTablesBody: "이 장소를 그대로 보거나 전체 로컬 테이블을 둘러보세요.",
+    backToPlace: "이 장소로 돌아가기",
+    browseTables: "전체 테이블 보기",
     after19: "19+ 필수",
     after19Body: "참여를 누른 뒤 확인해요.",
     pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
@@ -186,6 +196,11 @@ const COPY = {
     pulseLocalEvidence: "この端末",
     table: "テーブルを見る",
     tableBody: "8月28日（金）・20:30 KST・韓国語＋英語・残り1席",
+    tablesAtPlace: "この場所のテーブル",
+    noTables: "現在募集中のテーブルはありません",
+    noTablesBody: "この場所に戻るか、すべてのローカルテーブルを見られます。",
+    backToPlace: "この場所に戻る",
+    browseTables: "すべてのテーブルを見る",
     after19: "19歳以上の確認が必要",
     after19Body: "参加を選んだ後に確認します。",
     pulseBoundary: "選定した訪問シグナルに基づく参考値です。リアルタイムの混雑状況でも、公式の場所情報でもありません。",
@@ -230,6 +245,7 @@ export function CanonicalPlaceOverlay() {
   const [detail, setDetail] = useState<CanonicalVenueDetail | null>(null)
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [detailAttempt, setDetailAttempt] = useState(0)
+  const [tableScopeOpen, setTableScopeOpen] = useState(false)
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
@@ -245,6 +261,7 @@ export function CanonicalPlaceOverlay() {
     setDetail(null)
     setDetailState("idle")
     setDetailAttempt(0)
+    setTableScopeOpen(false)
     if (!venueId) {
       setExpanded(false)
       return
@@ -393,6 +410,11 @@ export function CanonicalPlaceOverlay() {
     })), 0)
   }
 
+  function browseAllTables() {
+    setTableScopeOpen(false)
+    actions.setTab("tables")
+  }
+
   if (!expanded) return (
     <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} tabIndex={-1} data-testid="canonical-place-peek" data-venue-id={venue.id} onKeyDown={handlePeekKeyDown}>
       <div className={styles.grabber} />
@@ -403,11 +425,11 @@ export function CanonicalPlaceOverlay() {
         <h2>{name.officialName}</h2>
         <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
       </section>
-      <section className={styles.pulsePeek} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
-        <strong>{pulseTitle}</strong>
-        <small>{pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot}</small>
-        <p>{copy.pulseBoundary}</p>
-        {pulse.localEvidence ? <em data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</em> : null}
+      <section className={styles.pulsePeek} role="group" aria-label={pulseTitle} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
+        <span className={styles.pulseVisualLabel} aria-hidden="true">ONDO PULSE</span>
+        <span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span>
+        <span className={styles.srOnly}>{pulseTitle} · {pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot} · {copy.pulseBoundary}</span>
+        {pulse.localEvidence ? <span className={styles.srOnly} data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</span> : null}
       </section>
       <details className={styles.recordSummary} data-testid="canonical-place-source-summary" data-source-presentation="compact-ribbon">
         <summary><span><strong>{copy.source}</strong><small>{copy.activeLicence}</small></span><ChevronRight size={16} /></summary>
@@ -445,10 +467,10 @@ export function CanonicalPlaceOverlay() {
             )}
           </section>
 
-          <details className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric={pulse.score == null ? "hidden" : "shown"}>
-            <summary>
-              <div><span>ONDO PULSE</span><h3>{pulseTitle}</h3></div>
-              <i data-level={pulse.level}>{pulseLevelLabel(pulse.level, locale)}</i>
+          <details className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
+            <summary aria-label={pulseTitle}>
+              <div><span>ONDO PULSE</span><h3 className={styles.srOnly}>{pulseTitle}</h3><span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span></div>
+              <ChevronRight size={18} aria-hidden="true" />
             </summary>
             <div className={styles.pulsePanelBody}>
             <p className={styles.pulseBoundary}>{copy.pulseBoundary}</p>
@@ -495,7 +517,19 @@ export function CanonicalPlaceOverlay() {
                 <span><strong>{copy.after19}</strong><small>{copy.after19Body}</small></span>
               </aside>
             </section>
-          ) : null}
+          ) : (
+            <section className={styles.tableActions} aria-label={copy.tablesAtPlace} data-testid="venue-table-scope" data-empty-state={tableScopeOpen ? "open" : "closed"}>
+              <button type="button" className={styles.tablePrimary} data-testid="canonical-venue-tables" aria-expanded={tableScopeOpen} onClick={() => setTableScopeOpen((open) => !open)}>
+                <UsersRound size={18} aria-hidden="true" />
+                <span><strong>{copy.tablesAtPlace}</strong><small>{copy.noTables}</small></span>
+                <ChevronRight size={17} aria-hidden="true" />
+              </button>
+              {tableScopeOpen ? <div className={styles.tableEmpty} data-testid="venue-tables-empty">
+                <strong role="status">{copy.noTables}</strong><p>{copy.noTablesBody}</p>
+                <div><button type="button" data-testid="tables-back-to-venue" onClick={() => setTableScopeOpen(false)}>{copy.backToPlace}</button><button type="button" data-testid="tables-browse-all" onClick={browseAllTables}>{copy.browseTables}</button></div>
+              </div> : null}
+            </section>
+          )}
 
           <section className={styles.demoOfferAction} aria-label={copy.demoOffer}>
             <button type="button" onClick={() => actions.openMealBenefitFromPlace(currentVenueId)} data-testid="canonical-meal-benefit-open">

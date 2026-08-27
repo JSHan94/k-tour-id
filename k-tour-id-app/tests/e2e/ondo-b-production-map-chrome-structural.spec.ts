@@ -50,7 +50,7 @@ type LocationCase = "idle" | "ready" | "denied" | "offline"
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
 
 function expectedLayout(width: number, height: number) {
-  if (height < 240 || (width < 480 && height < 360)) return "ultra-short"
+  if (height < 260 || (width < 480 && height < 360)) return "ultra-short"
   if (width <= 430 || (width > height && height <= 568)) return "compact-map"
   return "spacious-map"
 }

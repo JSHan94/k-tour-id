@@ -2,7 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 
-async function seed(page: Page, locale: "en" | "ko") {
+async function seed(page: Page, locale: "en" | "ko" | "ja") {
   await page.addInitScript(({ key, nextLocale }) => {
     localStorage.setItem(key, JSON.stringify({
       locale: nextLocale,
@@ -10,8 +10,10 @@ async function seed(page: Page, locale: "en" | "ko") {
       persona: "short_term",
       discoveryPreferences: [],
       savedVenueIds: [],
+      savedEditorialPlaceIds: [],
       privateNotesByVenue: {},
       recentVenueIds: [],
+      recentEditorialPlaceIds: [],
       plannedTableRefs: [],
       localSignalPostedVenueIds: [],
       localPulseEvidenceByVenue: {},
@@ -35,7 +37,7 @@ function intersects(a: { x: number; y: number; width: number; height: number }, 
 test.describe("map-first Korea and Jeju integration", () => {
   test.describe.configure({ timeout: 120_000 })
 
-  for (const locale of ["en", "ko"] as const) {
+  for (const locale of ["en", "ko", "ja"] as const) {
     test(`${locale.toUpperCase()} keeps one map skeleton across the responsive matrix`, async ({ page }) => {
       for (const viewport of [
         { width: 320, height: 720 },
@@ -81,15 +83,15 @@ test.describe("map-first Korea and Jeju integration", () => {
         const cityRoot = page.getByTestId("ondo-b-map-entry")
         await expect(cityRoot).toHaveAttribute("data-requested-view", "map")
         await expect(cityRoot).toHaveAttribute("data-effective-view", "map")
-        await expect(cityRoot).toHaveAttribute("data-editorial-point-count", "0")
+        await expect(cityRoot).toHaveAttribute("data-editorial-point-count", "8")
         await expect(cityRoot).not.toHaveAttribute("data-city-record-count", /.+/)
         await expect(page.getByTestId("maplibre-map")).toBeVisible()
 
         const layer = page.getByTestId("ondo-b-japan-first-discovery")
         await expect(layer).toBeVisible()
         await expect(layer).toHaveAttribute("data-city-context", "jeju")
-        await expect(layer).toHaveAttribute("data-geometry-basis", "region")
-        await expect(layer).toHaveAttribute("data-place-point-count", "0")
+        await expect(layer).toHaveAttribute("data-geometry-basis", "verified-points")
+        await expect(layer).toHaveAttribute("data-place-point-count", "8")
         await expect(page.getByTestId("ondo-b-editorial-collection-marker")).toBeVisible()
         await page.goBack()
         await expect(atlas.locator("[data-city='jeju']")).toBeFocused()

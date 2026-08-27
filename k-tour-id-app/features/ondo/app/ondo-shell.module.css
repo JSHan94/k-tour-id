@@ -8,7 +8,7 @@
   --ondo-line: rgb(23 23 23 / 11%);
   --ondo-heat-warm: #c84936;
   --ondo-night: #5d2947;
-  --ondo-focus: var(--focus, #1d66d1);
+  --ondo-focus: #171717;
   --ondo-phone-edge: 16px;
   --ondo-motion-fast: 180ms;
   --ondo-motion-medium: 240ms;
@@ -147,6 +147,7 @@
   border-radius: 11px;
   transition: background-color var(--ondo-motion-fast) ease, color var(--ondo-motion-fast) ease, transform var(--ondo-motion-medium) var(--ondo-ease-out);
 }
+.navIcon img { display: block; width: 23px; height: 23px; object-fit: contain; }
 
 .navLabel {
   display: grid;
@@ -174,6 +175,7 @@
 }
 .navActive::after { width: 22px !important; background: #fff !important; }
 .navActive .navIcon { background: transparent; color: #fff; transform: translateY(-1px); }
+.navActive .navIcon img { filter: invert(1) grayscale(1) brightness(1.08); }
 .nav button[data-state="selected"] { color: #fff; }
 .nav button:focus-visible {
   z-index: 2;
@@ -216,6 +218,23 @@
 
 @media (max-width: 800px) {
   .canvas { width: 100vw; border: 0; }
+
+  .nav {
+    min-height: 64px;
+    margin-top: 7px;
+    padding: 5px;
+    border-radius: 20px;
+  }
+  .nav button { min-height: 52px; padding: 3px 2px; }
+  .navLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
 }
 
 @media (min-width: 370px) {

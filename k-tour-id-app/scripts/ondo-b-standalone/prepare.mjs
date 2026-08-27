@@ -2,6 +2,7 @@ import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { dirname, resolve } from "node:path"
 import {
   APP_ROOT,
+  HISTORICAL_B_PROJECT_ID,
   LOCAL_ONLY_PROJECT_ID,
   PUBLIC_FILES,
   SOURCE_FILES,
@@ -117,6 +118,8 @@ const securityHeaders = {
   "X-Frame-Options": "DENY",
 }
 
+const allowedPublicAssetPaths = new Set(${JSON.stringify(PUBLIC_FILES.map((path) => `/${path.replace(/^public\//, "")}`))})
+
 function secure(response: Response) {
   const headers = new Headers(response.headers)
   for (const [key, value] of Object.entries(securityHeaders)) headers.set(key, value)
@@ -129,7 +132,7 @@ function isAllowed(pathname: string) {
     || /^\\/api\\/ondo\\/venues\\/[^/]+$/.test(pathname)
     || pathname === "/_vinext/image"
     || pathname === "/icon.svg"
-    || pathname === "/og-ondo-directory.png"
+    || allowedPublicAssetPaths.has(pathname)
     || pathname.startsWith("/_next/")
     || pathname.startsWith("/assets/")
 }
@@ -208,8 +211,8 @@ async function copyFile(relativePath) {
 
 async function assertProjectIsolation(projectId) {
   const protectedHosting = JSON.parse(await readFile(resolve(APP_ROOT, ".openai/hosting.json"), "utf8"))
-  if (projectId === protectedHosting.project_id) {
-    throw new Error("Refusing to package ONDO B with the checked-in protected project identity")
+  if (projectId === protectedHosting.project_id || projectId === HISTORICAL_B_PROJECT_ID) {
+    throw new Error("Refusing to package ONDO B with an existing protected project identity")
   }
 }
 
@@ -246,7 +249,6 @@ export async function prepareStandaloneSource({ projectId = process.env.ONDO_B_S
   await rm(STAGE_ROOT, { recursive: true, force: true })
   await Promise.all([...SOURCE_FILES, ...PUBLIC_FILES].map(copyFile))
   await writeProductionVenueDetails()
-
   const generated = new Map([
     ["app/layout.tsx", ROOT_LAYOUT],
     ["app/page.tsx", ROOT_PAGE],

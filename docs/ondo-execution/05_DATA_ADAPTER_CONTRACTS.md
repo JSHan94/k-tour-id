@@ -873,10 +873,12 @@ export interface SouvenirBadgeMint {
 | 상태 | 기본 저장 | Reset |
 |---|---|---|
 | `ondo.preferences.v3`: locale, guideSeen, autoNight, savedVenueIds, discoveryPreferences | localStorage | Settings 또는 QA reset |
+| `ondo-b.device.v1`: B locale/onboarding/persona/preferences, canonical saved/recent venue IDs, 별도 allowlisted saved/recent editorial place IDs, device-local activity | localStorage | Settings의 B device-content reset |
 | `ondo.session.v3`: onboarding, persona, account, person, age, ageExpiresAt, paymentKyc, after19, gate, gateState, tableMembershipById, reputation, acceptedActivityEventKeys, stamps, profile | sessionStorage, 비민감 demo session + one active allowlisted gate envelope | expiry / Sign out / tab close / QA reset; gate는 success/cancel/invalid/expiry 때 `null` |
 | `ondo.chat.v2` | sessionStorage, preview URL을 제거한 chat simulation item | session end / QA reset |
 | `ondo.table-outcomes.v2` | sessionStorage, Table simulation outcome/receipt | session end / QA reset |
 | `ondo.labs.v2` | sessionStorage, 비민감 Labs acknowledgement와 simulation state | session end / QA reset |
+| `ondo-b.labs.v1` | sessionStorage, B 전용 비민감 Labs acknowledgement와 simulation state | session end / B device-content reset |
 | `ondo.accepted-visits.v2` | sessionStorage, 중복 방지용 공개 evidence ID | session end / QA reset |
 | raw photo/blob/object URL | memory only | remove / route unmount / session end |
 | reputation, stamp | sessionStorage의 비민감 fixture scenario; future server는 event/receipt | session end / QA reset |
@@ -884,6 +886,8 @@ export interface SouvenirBadgeMint {
 | bridge/mint simulation | session/scenario store, 실제 잔고와 분리 | QA reset |
 
 실제 credential, 생년월일, 국적 원문, passport image, face image, 사진/blob, payment instrument, raw provider response, private key, access token을 browser storage에 넣지 않는다. URL에는 city/neighborhood/venue/filter 같은 공개 discovery context만 둔다.
+
+Jeju editorial place adapter는 `kind: "editorial-place"`, `officialRecord: false`, `pulseEligible: false`를 함께 내보낸다. `place-page-verified`이며 `VISITKOREA_EMBEDDED_MAP` 좌표를 가진 항목만 지도 point와 `editorialPlaceId` URL에 들어간다. pending link-only 후보는 source collection 안에만 남고, canonical venue/Pulse/Table/checkout/Local Signal adapter로 전달하지 않는다.
 
 ---
 

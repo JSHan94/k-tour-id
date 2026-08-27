@@ -3,7 +3,6 @@ import { expect, type Locator, type Page, type TestInfo } from "@playwright/test
 import { readFile } from "node:fs/promises"
 import {
   CANONICAL_VENUE_ID,
-  TABLE_ID,
   expectBRuntimeClean,
   finishAgeGate,
   getBRuntimeEvidence,
@@ -21,6 +20,9 @@ import {
   type BLocale,
   type BSessionSeed,
 } from "./ondo-b-qa"
+
+const CURRENT_TABLE_ID = "table-seoul-night-bites"
+const B_DEVICE_KEY = "ondo-b.device.v1"
 
 export type BVisualStateId =
   | "ONBOARDING-VALUE"
@@ -108,8 +110,12 @@ export type BMapPaintProbe = {
 }
 
 export const B_MAP_PAINT_MIN_EXPOSED_RATIO = 0.12
-export const B_MAP_PAINT_MIN_COMPONENT_PIXELS = 64
-export const B_MAP_PAINT_MIN_HEAT_PIXELS = 96
+// The current map's smallest 4.5 CSS-px Pulse core produces roughly twelve
+// fully saturated pixels after WebGL antialiasing. Requiring one connected
+// core plus its aura proves real canvas paint without silently demanding the
+// larger pre-redesign marker geometry.
+export const B_MAP_PAINT_MIN_COMPONENT_PIXELS = 12
+export const B_MAP_PAINT_MIN_HEAT_PIXELS = 24
 export const B_MAP_PAINT_EDGE_BAND_CSS_PIXELS = 8
 export const B_MAP_PAINT_EDGE_MIN_COMPONENT_PIXELS = 4
 export const B_MAP_PAINT_EDGE_MIN_HEAT_PIXELS = 3
@@ -118,10 +124,6 @@ export const B_MAP_PAINT_MAX_RECOVERY_ATTEMPTS = 3
 // A case outside the registry uses the ordinary full-frame snapshot matcher;
 // DOM geometry must not silently opt a case into or out of paint recovery.
 export const B_MAP_PAINT_CANVAS_RECEIPTS = [
-  "B-PX-AFTER19-PROMPT-EN:1440x1000",
-  "B-PX-AFTER19-PROMPT-EN:430x932",
-  "B-PX-AFTER19-PROMPT-EN:768x1024",
-  "B-PX-AFTER19-PROMPT-EN:801x1000",
   "B-PX-CITY-LIVE-EN:1440x1000",
   "B-PX-CITY-LIVE-EN:360x800",
   "B-PX-CITY-LIVE-EN:390x844",
@@ -141,49 +143,27 @@ export const B_MAP_PAINT_CANVAS_RECEIPTS = [
   "B-PX-CITY-FILTERED-MAP-EN:768x1024",
   "B-PX-CITY-FILTERED-MAP-EN:801x1000",
   "B-PX-GATE-ACCOUNT-FAIL-KO:1440x1000",
-  "B-PX-GATE-ACCOUNT-FAIL-KO:360x800",
-  "B-PX-GATE-ACCOUNT-FAIL-KO:390x844",
-  "B-PX-GATE-ACCOUNT-FAIL-KO:430x932",
   "B-PX-GATE-ACCOUNT-FAIL-KO:768x1024",
-  "B-PX-GATE-ACCOUNT-FAIL-KO:801x1000",
-  "B-PX-GATE-AGE-FAIL-KO:1440x1000",
-  "B-PX-GATE-AGE-FAIL-KO:430x932",
-  "B-PX-GATE-AGE-FAIL-KO:768x1024",
-  "B-PX-GATE-AGE-FAIL-KO:801x1000",
-  "B-PX-GATE-PAYMENT-EN:1440x1000",
-  "B-PX-GATE-PAYMENT-EN:390x844",
-  "B-PX-GATE-PAYMENT-EN:430x932",
-  "B-PX-GATE-PAYMENT-EN:768x1024",
-  "B-PX-GATE-PAYMENT-EN:801x1000",
-  "B-PX-GATE-PAYMENT-FAIL-KO:1440x1000",
-  "B-PX-GATE-PAYMENT-FAIL-KO:390x844",
-  "B-PX-GATE-PAYMENT-FAIL-KO:430x932",
-  "B-PX-GATE-PAYMENT-FAIL-KO:768x1024",
-  "B-PX-GATE-PAYMENT-FAIL-KO:801x1000",
   "B-PX-GATE-PERSON-CX-KO:1440x1000",
-  "B-PX-GATE-PERSON-CX-KO:390x844",
-  "B-PX-GATE-PERSON-CX-KO:430x932",
   "B-PX-GATE-PERSON-CX-KO:768x1024",
   "B-PX-GATE-PERSON-CX-KO:801x1000",
   "B-PX-GATE-PERSON-PASSPORT-EN:1440x1000",
-  "B-PX-GATE-PERSON-PASSPORT-EN:390x844",
-  "B-PX-GATE-PERSON-PASSPORT-EN:430x932",
-  "B-PX-GATE-PERSON-PASSPORT-EN:768x1024",
-  "B-PX-GATE-PERSON-PASSPORT-EN:801x1000",
+  // At 768/801px the Local Signal layer and the nested eligibility dialog
+  // cover every visible Pulse core even though MapLibre and its rendered
+  // feature receipt remain ready. Those two occluded frames use the ordinary
+  // full-screen matcher; map-only states still own paint recovery at every
+  // responsive viewport.
   "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:1440x1000",
-  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:390x844",
-  "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:430x932",
   "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:768x1024",
   "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN:801x1000",
   "B-PX-PLACE-PEEK-EN:1440x1000",
+  "B-PX-PLACE-PEEK-EN:360x800",
   "B-PX-PLACE-PEEK-EN:390x844",
   "B-PX-PLACE-PEEK-EN:430x932",
   "B-PX-PLACE-PEEK-EN:768x1024",
   "B-PX-PLACE-PEEK-EN:801x1000",
 ] as const
-export const B_MAP_PAINT_EDGE_RECEIPTS = [
-  "B-PX-PLACE-PEEK-EN:360x800",
-] as const
+export const B_MAP_PAINT_EDGE_RECEIPTS = [] as const
 
 /**
  * Reachable, layout-distinct B surfaces. Every case runs at both 390×844 and
@@ -203,19 +183,19 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-CITY-FALLBACK-KO", state: "CITY-FALLBACK", flows: ["FL-001"], locale: "ko", description: "tile failure list and retry" },
   { id: "B-PX-PLACE-PEEK-EN", state: "PLACE-PEEK", flows: ["FL-001"], locale: "en", description: "canonical selected place peek" },
   { id: "B-PX-PLACE-DETAIL-EN", state: "PLACE-DETAIL", flows: ["FL-001", "FL-010", "FL-011", "FL-012", "FL-016"], locale: "en", description: "canonical place facts and actions" },
-  { id: "B-PX-AFTER19-PROMPT-EN", state: "AFTER19-PROMPT", flows: ["FL-013"], locale: "en", description: "manual After19 decision with an isolated background" },
-  { id: "B-PX-AFTER19-EXPIRED-REASON-EN", state: "AFTER19-EXPIRED-REASON", flows: ["FL-014"], locale: "en", description: "expired 19+ reason and recovery action" },
-  { id: "B-PX-SAVE-RECOVERED-KO", state: "SAVE-RECOVERED", flows: ["FL-011"], locale: "ko", description: "save fail, dismiss, retry, and persisted saved state" },
+  { id: "B-PX-AFTER19-PROMPT-EN", state: "AFTER19-PROMPT", flows: ["FL-013"], locale: "en", description: "Table-scoped After19 decision with an isolated background" },
+  { id: "B-PX-AFTER19-EXPIRED-REASON-EN", state: "AFTER19-EXPIRED-REASON", flows: ["FL-014"], locale: "en", description: "expired Table eligibility reason and exact-return recovery" },
+  { id: "B-PX-SAVE-RECOVERED-KO", state: "SAVE-RECOVERED", flows: ["FL-011"], locale: "ko", description: "save failure, reload, retry, and persisted saved state" },
   { id: "B-PX-SAVE-FAILURE-EN", state: "SAVE-FAILURE", flows: ["FL-011"], locale: "en", description: "local save failure preserves exact venue and recovery actions" },
-  { id: "B-PX-GATE-ACCOUNT-FAIL-KO", state: "GATE-ACCOUNT-FAIL", flows: ["FL-010"], locale: "ko", description: "account retry and unchanged return" },
+  { id: "B-PX-GATE-ACCOUNT-FAIL-KO", state: "GATE-ACCOUNT-FAIL", flows: ["FL-010"], locale: "ko", description: "account preview failure and exact-place retry" },
   { id: "B-PX-GATE-PERSON-PASSPORT-EN", state: "GATE-PERSON-PASSPORT", flows: ["FL-006", "FL-012"], locale: "en", description: "provider-neutral visitor person check" },
-  { id: "B-PX-GATE-PERSON-CX-KO", state: "GATE-PERSON-CX", flows: ["FL-005"], locale: "ko", description: "Korean OmniOne CX simulation route" },
-  { id: "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN", state: "GATE-PERSON-RESIDENCE-UNSUPPORTED", flows: ["FL-006"], locale: "en", description: "Residence Card unsupported and alternate" },
-  { id: "B-PX-AFTER19-VENUE-LOCKED-EN", state: "AFTER19-VENUE-LOCKED", flows: ["FL-002"], locale: "en", description: "locked After19-only venue without blocking ordinary place facts" },
+  { id: "B-PX-GATE-PERSON-CX-KO", state: "GATE-PERSON-CX", flows: ["FL-005"], locale: "ko", description: "provider-neutral Korean local-action check" },
+  { id: "B-PX-GATE-RESIDENCE-UNSUPPORTED-EN", state: "GATE-PERSON-RESIDENCE-UNSUPPORTED", flows: ["FL-006"], locale: "en", description: "session-only check unavailable with exact-draft return" },
+  { id: "B-PX-AFTER19-VENUE-LOCKED-EN", state: "AFTER19-VENUE-LOCKED", flows: ["FL-002"], locale: "en", description: "19+ Table requirement without blocking official place facts" },
   { id: "B-PX-GATE-AGE-FAIL-KO", state: "GATE-AGE-FAIL", flows: ["FL-002", "FL-013"], locale: "ko", description: "age proof retry" },
-  { id: "B-PX-GATE-PAYMENT-EN", state: "GATE-PAYMENT", flows: ["FL-017"], locale: "en", description: "Payment KYC isolated gate" },
-  { id: "B-PX-GATE-PAYMENT-FAIL-KO", state: "GATE-PAYMENT-FAIL", flows: ["FL-017"], locale: "ko", description: "Payment KYC failure and retry" },
-  { id: "B-PX-AFTER19-VENUE-RETURN-EN", state: "AFTER19-VENUE-RETURN", flows: ["FL-002", "FL-013", "FL-014"], locale: "en", description: "age proof returns to the exact venue with After19 enabled" },
+  { id: "B-PX-GATE-PAYMENT-EN", state: "GATE-PAYMENT", flows: ["FL-017"], locale: "en", description: "isolated local test-wallet preparation" },
+  { id: "B-PX-GATE-PAYMENT-FAIL-KO", state: "GATE-PAYMENT-FAIL", flows: ["FL-017"], locale: "ko", description: "test-wallet preparation failure and retry" },
+  { id: "B-PX-AFTER19-VENUE-RETURN-EN", state: "AFTER19-VENUE-RETURN", flows: ["FL-002", "FL-013", "FL-014"], locale: "en", description: "eligibility returns to the exact Table, venue, and note" },
   { id: "B-PX-TABLES-LIST-EN", state: "TABLES-LIST", flows: ["FL-003"], locale: "en", description: "Tables index" },
   { id: "B-PX-TABLES-VENUE-EMPTY-EN", state: "TABLES-VENUE-EMPTY", flows: ["FL-003"], locale: "en", description: "venue-scoped zero-Table state with exact-place and global recovery" },
   { id: "B-PX-TABLE-DETAIL-KO", state: "TABLE-DETAIL", flows: ["FL-003"], locale: "ko", description: "Table detail and trust boundary" },
@@ -227,16 +207,16 @@ export const B_VISUAL_CASES: readonly BVisualCase[] = [
   { id: "B-PX-LOCAL-SIGNAL-EMPTY-EN", state: "LOCAL-SIGNAL-EMPTY", flows: ["FL-012"], locale: "en", description: "required note-or-photo empty state" },
   { id: "B-PX-LOCAL-SIGNAL-FAIL-KO", state: "LOCAL-SIGNAL-FAIL", flows: ["FL-012"], locale: "ko", description: "draft-preserving submit failure" },
   { id: "B-PX-LOCAL-SIGNAL-SUCCESS-EN", state: "LOCAL-SIGNAL-SUCCESS", flows: ["FL-012", "FL-015"], locale: "en", description: "simulated contribution boundary" },
-  { id: "B-PX-CHECKOUT-IDLE-EN", state: "CHECKOUT-IDLE", flows: ["FL-004", "FL-017"], locale: "en", description: "KRW price and OOKRW read-only settlement" },
-  { id: "B-PX-CHECKOUT-CANCEL-KO", state: "CHECKOUT-CANCEL", flows: ["FL-004"], locale: "ko", description: "cancel with no receipt or stamp" },
-  { id: "B-PX-CHECKOUT-FAIL-EN", state: "CHECKOUT-FAIL", flows: ["FL-004"], locale: "en", description: "decline with invariants" },
-  { id: "B-PX-CHECKOUT-RECEIPT-EN", state: "CHECKOUT-RECEIPT", flows: ["FL-004"], locale: "en", description: "simulated receipt before visit proof" },
-  { id: "B-PX-CHECKOUT-STAMP-KO", state: "CHECKOUT-STAMP", flows: ["FL-004"], locale: "ko", description: "separate unique visit creates stamp ten" },
-  { id: "B-PX-MY-EN", state: "MY", flows: ["FL-004", "FL-011", "FL-015"], locale: "en", description: "saved canonical venue and stamp milestone" },
-  { id: "B-PX-SESSION-RESET-CONFIRM-KO", state: "SESSION-RESET-CONFIRM", flows: ["FL-010", "FL-015"], locale: "ko", description: "session-clear scope and preserved-data confirmation" },
-  { id: "B-PX-DISCOVERY-RESET-CONFIRM-EN", state: "DISCOVERY-RESET-CONFIRM", flows: ["FL-007", "FL-008", "FL-009"], locale: "en", description: "discovery-only reset and preserved-data confirmation" },
-  { id: "B-PX-PROFILE-KO", state: "PROFILE", flows: ["FL-015"], locale: "ko", description: "optional public profile controls" },
-  { id: "B-PX-TRUST-FOUR-AXES-EN", state: "TRUST-FOUR-AXES", flows: ["FL-003", "FL-012", "FL-015"], locale: "en", description: "separate reputation axes" },
+  { id: "B-PX-CHECKOUT-IDLE-EN", state: "CHECKOUT-IDLE", flows: ["FL-004", "FL-017"], locale: "en", description: "KRW price and local OOKRW Test quote" },
+  { id: "B-PX-CHECKOUT-CANCEL-KO", state: "CHECKOUT-CANCEL", flows: ["FL-004"], locale: "ko", description: "cancel with no local test receipt" },
+  { id: "B-PX-CHECKOUT-FAIL-EN", state: "CHECKOUT-FAIL", flows: ["FL-004"], locale: "en", description: "test-payment failure with exact-return invariants" },
+  { id: "B-PX-CHECKOUT-RECEIPT-EN", state: "CHECKOUT-RECEIPT", flows: ["FL-004"], locale: "en", description: "device-local test-payment receipt" },
+  { id: "B-PX-CHECKOUT-STAMP-KO", state: "CHECKOUT-STAMP", flows: ["FL-004"], locale: "ko", description: "Korean device-local test-payment receipt" },
+  { id: "B-PX-MY-EN", state: "MY", flows: ["FL-004", "FL-011", "FL-015"], locale: "en", description: "saved canonical venue and planned Table" },
+  { id: "B-PX-SESSION-RESET-CONFIRM-KO", state: "SESSION-RESET-CONFIRM", flows: ["FL-010", "FL-015"], locale: "ko", description: "device-data clear scope and confirmation" },
+  { id: "B-PX-DISCOVERY-RESET-CONFIRM-EN", state: "DISCOVERY-RESET-CONFIRM", flows: ["FL-007", "FL-008", "FL-009"], locale: "en", description: "discovery choices and onboarding reset action" },
+  { id: "B-PX-PROFILE-KO", state: "PROFILE", flows: ["FL-015"], locale: "ko", description: "Korean Travel Pass and wallet readiness" },
+  { id: "B-PX-TRUST-FOUR-AXES-EN", state: "TRUST-FOUR-AXES", flows: ["FL-003", "FL-012", "FL-015"], locale: "en", description: "separate account, Person, 19+, credential, and wallet states" },
   { id: "B-PX-LABS-EN", state: "LABS", flows: ["FL-004", "FL-016", "FL-018"], locale: "en", description: "Labs truth and signer boundary" },
   { id: "B-PX-LABS-TRAIT-FAIL-KO", state: "LABS-TRAIT-FAIL", flows: ["FL-016"], locale: "ko", description: "merchant trait negative contract" },
   { id: "B-PX-LABS-BRIDGE-FAIL-EN", state: "LABS-BRIDGE-FAIL", flows: ["FL-018"], locale: "en", description: "ordered bridge failure with assets unchanged" },
@@ -384,8 +364,6 @@ export const B_CHECKPOINT_VISUAL_EVIDENCE: readonly BCheckpointVisualEvidence[] 
   }),
 )
 
-const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
-
 const DETERMINISTIC_TILEJSON = {
   tilejson: "3.0.0",
   name: "ONDO visual evidence blank basemap",
@@ -399,6 +377,12 @@ export async function prepareBVisualPage(page: Page, { mapFailure = false }: { m
   installBRuntimeGuard(page)
   await prepareBPage(page)
   await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" })
+  await page.addInitScript(() => {
+    // The legacy pixel census owns a deterministic online browser. Tile
+    // delivery failure is injected by the routes below; host Wi-Fi state must
+    // never silently turn an unrelated reviewed frame into the Offline UI.
+    Object.defineProperty(Navigator.prototype, "onLine", { configurable: true, get: () => true })
+  })
   await page.route("https://tiles.openfreemap.org/planet", async (route) => {
     if (mapFailure) await route.abort("internetdisconnected")
     else await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(DETERMINISTIC_TILEJSON) })
@@ -440,9 +424,28 @@ async function settle(page: Page) {
 async function stabilizeMobileEvidenceScroll(
   page: Page,
   target: Locator,
-  position: { kind: "bottom" } | { kind: "scrollTop", value: number, desktopValue?: number },
+  position: { kind: "bottom" } | { kind: "top", offset: number } | { kind: "scrollTop", value: number, desktopValue?: number },
 ) {
   if ((page.viewportSize()?.width ?? 0) > 430) {
+    if (position.kind === "top") {
+      const expectedTop = await target.evaluate((element, offset) => {
+        let scroller = element.parentElement
+        while (scroller) {
+          const overflowY = getComputedStyle(scroller).overflowY
+          if (["auto", "scroll"].includes(overflowY) && scroller.scrollHeight > scroller.clientHeight) break
+          scroller = scroller.parentElement
+        }
+        if (!scroller) throw new Error("Visual evidence scroll container was not found")
+        const targetRect = element.getBoundingClientRect()
+        const scrollerRect = scroller.getBoundingClientRect()
+        scroller.scrollTop += targetRect.top - Math.max(scrollerRect.top, 0) - offset
+        scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
+        return Math.round(element.getBoundingClientRect().top)
+      }, position.offset)
+      await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
+      await expect.poll(() => target.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(expectedTop)
+      return
+    }
     if (position.kind === "scrollTop") {
       const expectedScrollTop = position.desktopValue ?? position.value
       await target.evaluate((element, scrollTop) => {
@@ -509,7 +512,11 @@ async function stabilizeMobileEvidenceScroll(
     }
     if (!scroller) throw new Error("Visual evidence scroll container was not found")
     if (nextPosition.kind === "scrollTop") scroller.scrollTop = nextPosition.value
-    else {
+    else if (nextPosition.kind === "top") {
+      const targetRect = element.getBoundingClientRect()
+      const scrollerRect = scroller.getBoundingClientRect()
+      scroller.scrollTop += targetRect.top - Math.max(scrollerRect.top, 0) - nextPosition.offset
+    } else {
       const targetRect = element.getBoundingClientRect()
       const scrollerRect = scroller.getBoundingClientRect()
       scroller.scrollTop += targetRect.bottom - Math.min(scrollerRect.bottom, window.innerHeight)
@@ -517,6 +524,8 @@ async function stabilizeMobileEvidenceScroll(
     scroller.dataset.evidenceScrollTop = String(scroller.scrollTop)
     return nextPosition.kind === "scrollTop"
       ? { kind: nextPosition.kind, value: scroller.scrollTop }
+      : nextPosition.kind === "top"
+        ? { kind: nextPosition.kind, value: Math.round(element.getBoundingClientRect().top) }
       : { kind: nextPosition.kind, value: Math.round(Math.min(scroller.getBoundingClientRect().bottom, window.innerHeight)) }
   }, position)
   await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
@@ -530,6 +539,8 @@ async function stabilizeMobileEvidenceScroll(
       }
       return -1
     })).toBe(expected.value)
+  } else if (expected.kind === "top") {
+    await expect.poll(() => target.evaluate((element) => Math.round(element.getBoundingClientRect().top))).toBe(expected.value)
   } else {
     await expect.poll(() => target.evaluate((element) => Math.round(element.getBoundingClientRect().bottom))).toBe(expected.value)
   }
@@ -547,32 +558,43 @@ async function openCity(page: Page, query = "") {
 
 async function openLocalSignal(page: Page, query = "") {
   await openCanonicalVenue(page, { query })
-  await page.getByTestId("canonical-venue-signal").click()
-  await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
+  await page.getByTestId("canonical-local-signal-open").click()
+  await expect(page.getByTestId("ondo-b-local-signal")).toBeVisible()
 }
 
 async function triggerPersonGate(page: Page, locale: BLocale, persona: NonNullable<BSessionSeed["persona"]>, qa = false) {
   await seedB(page, { locale, session: { persona, account: "ACC-ACTIVE", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
   await openLocalSignal(page, qa ? "qa=1" : "")
-  await page.getByTestId("local-signal-overlay").locator("textarea").fill(locale === "ko" ? "주문은 입구에서 해요." : "Order beside the entrance.")
-  await page.getByTestId("local-signal-submit").click()
-  await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
+  const signal = page.getByTestId("ondo-b-local-signal")
+  await signal.locator("fieldset button").first().click()
+  await signal.locator("textarea").fill(locale === "ko" ? "주문은 입구에서 해요." : "Order beside the entrance.")
+  await signal.getByTestId("local-signal-person-check").click()
+  await expect(page.getByTestId("ondo-b-local-check-walkthrough")).toBeVisible()
 }
 
 async function triggerAgeGate(page: Page, locale: BLocale, qa = false) {
   await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-  await openCity(page, qa ? "?qa=1" : "")
-  await page.getByRole("button", { name: "After 19", exact: true }).click()
-  await page.getByRole("button", { name: /Confirm 19\+|19\+ 확인/ }).click()
-  await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
+  if (qa) await page.addInitScript(() => { window.__ONDO_B_QA__ = { ...(window.__ONDO_B_QA__ ?? {}), after19: "failure" } })
+  await openTableDetail(page, locale)
+  await page.getByTestId("table-join-draft").fill(locale === "ko" ? "이 메모와 장소를 유지해 주세요." : "Keep this note and exact place.")
+  await page.getByTestId("table-join").click()
+  await expect(page.getByTestId("after19-walkthrough")).toBeVisible()
 }
 
 async function triggerPaymentGate(page: Page, locale: BLocale, qa = false) {
   await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-  await openCanonicalVenue(page, { query: qa ? "qa=1" : "" })
-  await page.getByTestId("canonical-venue-checkout").click()
-  await page.getByTestId("checkout-start").click()
-  await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
+  if (qa) await page.addInitScript(() => {
+    const target = window as Window & { __ONDO_B_QA__?: Record<string, unknown> }
+    target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), wallet: "failure" }
+  })
+  await openCommerceOffer(page)
+  await page.getByTestId("payment-confirm").click()
+  const connect = page.getByTestId("wallet-connect-sheet")
+  await expect(connect).toBeVisible()
+  if (qa) {
+    await connect.locator("button").filter({ hasText: locale === "ko" ? "테스트 지갑 준비" : "Prepare test wallet" }).click()
+    await expect(connect).toHaveAttribute("data-phase", "failed")
+  }
 }
 
 async function openTablesIndex(page: Page, locale: BLocale, query = "") {
@@ -583,37 +605,73 @@ async function openTablesIndex(page: Page, locale: BLocale, query = "") {
 
 async function openTableDetail(page: Page, locale: BLocale, query = "") {
   await openTablesIndex(page, locale, query)
-  await page.locator(`[data-table-id='${TABLE_ID}']`).first().click()
-  await expect(page.locator("[data-table-membership]")).toBeVisible()
+  await page.getByTestId(`table-open-${CURRENT_TABLE_ID}`).click()
+  await expect(page.getByTestId("table-detail")).toHaveAttribute("data-table-id", CURRENT_TABLE_ID)
+}
+
+async function extendBDeviceSeed(page: Page, next: Record<string, unknown>) {
+  await page.addInitScript(({ key, patch }) => {
+    const current = JSON.parse(localStorage.getItem(key) ?? "{}") as Record<string, unknown>
+    localStorage.setItem(key, JSON.stringify({ ...current, ...patch }))
+  }, { key: B_DEVICE_KEY, patch: next })
 }
 
 async function openChat(page: Page, locale: BLocale, query = "") {
   await seedB(page, {
     locale,
-    session: {
-      account: "ACC-ACTIVE",
-      person: "PER-VERIFIED",
-      age: "AGE-VERIFIED",
-      ageExpiresAt: "2026-08-20T20:30:00+09:00",
-      paymentKyc: "PKY-VERIFIED",
-      tableMembershipById: { [TABLE_ID]: "confirmed" },
-    },
+    local: { plannedTableRefs: [{ tableId: CURRENT_TABLE_ID, venueId: CANONICAL_VENUE_ID }] },
+    session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" },
   })
-  await openTablesIndex(page, locale, query)
-  const joined = page.getByRole("region", { name: locale === "ko" ? "참여 중" : "Joined" })
-  await joined.locator(`[data-table-id='${TABLE_ID}']`).click()
-  const openedDirectly = await page.getByTestId("table-chat").waitFor({ state: "visible", timeout: 1_500 }).then(() => true).catch(() => false)
-  if (!openedDirectly) {
-    await page.getByRole("button", { name: locale === "ko" ? "대화 열기" : "Open chat" }).click()
-  }
+  await extendBDeviceSeed(page, { plannedTableRefs: [{ tableId: CURRENT_TABLE_ID, venueId: CANONICAL_VENUE_ID }] })
+  await openTableDetail(page, locale, query)
+  await page.getByTestId("table-open-chat").click()
   await expect(page.getByTestId("table-chat")).toBeVisible()
+}
+
+async function openCommerceOffer(page: Page, query = "") {
+  await openCanonicalVenue(page, { query })
+  const entry = page.getByTestId("canonical-meal-benefit-open")
+  await entry.scrollIntoViewIfNeeded()
+  await entry.click()
+  await expect(page.getByTestId("ondo-b-id-wallet-commerce")).toHaveAttribute("data-origin-venue-id", CANONICAL_VENUE_ID)
 }
 
 async function openCheckout(page: Page, locale: BLocale, query = "") {
   await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED", stamps: 9 } })
-  await openCanonicalVenue(page, { query })
-  await page.getByTestId("canonical-venue-checkout").click()
-  await expect(page.getByTestId("checkout-overlay")).toBeVisible()
+  await openCommerceOffer(page, query)
+}
+
+async function prepareCommerceWallet(page: Page, locale: BLocale) {
+  const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+  await offer.getByTestId("payment-confirm").click()
+  const sheet = page.getByTestId("wallet-connect-sheet")
+  await expect(sheet).toBeVisible()
+  await sheet.locator("button").filter({ hasText: locale === "ko" ? "테스트 지갑 준비" : "Prepare test wallet" }).click()
+  await expect(sheet).toBeHidden()
+  await expect(offer).toHaveAttribute("data-wallet-status", "ready")
+}
+
+async function completeCommercePayment(page: Page, locale: BLocale) {
+  const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+  await offer.getByTestId("benefit-accept").click()
+  await prepareCommerceWallet(page, locale)
+  await offer.getByTestId("payment-minimum-consent").locator("input").check()
+  await offer.getByTestId("payment-confirm").click()
+}
+
+async function installOneShotDeviceWriteFailure(page: Page) {
+  await page.evaluate((key) => {
+    const original = Storage.prototype.setItem
+    let pending = true
+    Storage.prototype.setItem = function (name: string, value: string) {
+      if (this === localStorage && name === key && pending) {
+        pending = false
+        Storage.prototype.setItem = original
+        throw new DOMException("Quota exceeded", "QuotaExceededError")
+      }
+      return original.call(this, name, value)
+    }
+  }, B_DEVICE_KEY)
 }
 
 async function openPreparedLabs(page: Page, locale: BLocale, query = "") {
@@ -654,12 +712,14 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await page.getByRole("search").getByRole("textbox").fill("느린마을 양조장")
       const list = page.getByTestId("ondo-b-venue-list")
       await expect(list.locator("li")).toHaveCount(1)
-      await expect(list.locator("[data-venue-opener='mois-18939eecb43c15ab4305']")).toContainText("Simulated score 59/100")
+      const result = list.locator("[data-venue-opener='mois-18939eecb43c15ab4305']")
+      await expect(result.getByTestId("ondo-b-list-pulse")).toHaveAttribute("data-pulse-level", "hot")
+      await expect(result).toContainText(locale === "ko" ? "공식 한국어 출처명" : "Official Korean source name")
       await page.getByTestId("ondo-b-view-toggle").click()
       const mapEntry = page.getByTestId("ondo-b-map-entry")
-      await expect(mapEntry).toHaveAttribute("data-signal-source-count", "1")
-      await expect.poll(async () => Number(await mapEntry.getAttribute("data-rendered-signal-count"))).toBe(1)
-      await expect(page.getByTestId("ondo-b-map-key")).toHaveAttribute("data-score", "59")
+      await expect(mapEntry).toHaveAttribute("data-result-count", "1")
+      await expect(mapEntry).toHaveAttribute("data-curated-pulse-count", "1")
+      await expect(page.getByTestId("ondo-b-map-key")).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
     }
   } else if (state === "CITY-FALLBACK") {
     await seedB(page, { locale })
@@ -676,60 +736,66 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await seedB(page, { locale })
     await openCanonicalVenue(page)
   } else if (state === "AFTER19-PROMPT") {
-    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED" } })
-    await openCity(page)
-    await page.getByRole("button", { name: "After 19", exact: true }).click()
-    await expect(page.getByTestId("after19-prompt-layer")).toBeVisible()
+    await triggerAgeGate(page, locale)
+    await expect(page.getByTestId("ondo-b-action-gate")).toHaveAttribute("data-gate-view", "intro")
   } else if (state === "AFTER19-EXPIRED-REASON") {
-    await seedB(page, {
-      locale,
-      session: { age: "AGE-VERIFIED", ageExpiresAt: "2020-08-19T20:30:00+09:00", after19: "A19-ON" },
-    })
-    await gotoB(page, "?city=seoul&view=list")
-    const notice = page.getByTestId("after19-expiry-notice")
-    await expect(notice).toBeVisible()
-    await expect(notice.getByRole("status")).toContainText(locale === "ko" ? "19+ 확인이 만료되어 기본 지도로 돌아왔어요." : "Your 19+ check expired, so the main map is shown.")
-    await expect(notice.getByRole("button", { name: locale === "ko" ? "19+ 다시 확인" : "Check 19+ again", exact: true })).toBeVisible()
-    await expect(page.getByTestId("after19-toggle")).toHaveText("After 19")
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+    await page.addInitScript(() => { window.__ONDO_B_QA__ = { ...(window.__ONDO_B_QA__ ?? {}), after19: "expired" } })
+    await openTableDetail(page, locale)
+    await page.getByTestId("table-join-draft").fill(locale === "ko" ? "만료 후에도 이 메모를 유지해 주세요." : "Keep this exact note through expiry.")
+    await page.getByTestId("table-join").click()
+    await page.getByTestId("after19-start").click()
+    const gate = page.getByTestId("ondo-b-action-gate")
+    await expect(gate).toHaveAttribute("data-gate-view", "expired")
+    await expect(gate).toContainText(locale === "ko" ? "만료" : "expired")
+    await expect(gate.getByTestId("action-gate-retry")).toBeVisible()
+    await expect(gate.getByTestId("action-gate-cancel")).toBeVisible()
   } else if (state === "AFTER19-VENUE-LOCKED" || state === "AFTER19-VENUE-RETURN") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
     await openCanonicalVenue(page)
     await expectCanonicalDetailReady(page)
-    const access = page.getByTestId("canonical-after19-access")
-    await expect(access).toHaveAttribute("data-after19-venue-status", "locked")
-    await expect(page.getByTestId("canonical-place-overlay")).toContainText(locale === "ko" ? "공식 장소 출처" : "Official place source")
+    const place = page.getByTestId("canonical-place-overlay")
+    const access = page.getByTestId("canonical-after19-required")
+    await expect(access).toBeVisible()
+    await expect(place.locator("[data-detail-state='ready']")).toBeVisible()
     if (state === "AFTER19-VENUE-RETURN") {
-      await page.getByTestId("canonical-after19-unlock").click()
-      await expect(page.getByTestId("ondo-gate-overlay")).toBeVisible()
-      await finishAgeGate(page)
-      await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
-      await expect(access).toHaveAttribute("data-after19-venue-status", "unlocked")
-      await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
-      await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
-      await expect(page).not.toHaveURL(/after19Return=/)
-    }
-    if (state === "AFTER19-VENUE-LOCKED") {
-      await access.scrollIntoViewIfNeeded()
-      await expect(access).toBeVisible()
+      await page.getByTestId("canonical-place-table").click()
+      const table = page.getByTestId("table-detail")
+      await expect(table).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
+      const draft = locale === "ko" ? "같은 장소와 메모로 돌아가 주세요." : "Return to this exact place and note."
+      await table.getByTestId("table-join-draft").fill(draft)
+      await table.getByTestId("table-join").click()
+      await page.getByTestId("after19-start").click()
+      const confirmation = table.getByTestId("table-join-confirmation")
+      await expect(confirmation).toHaveAttribute("data-return-table", CURRENT_TABLE_ID)
+      await expect(confirmation).toHaveAttribute("data-return-venue", CANONICAL_VENUE_ID)
+      await expect(confirmation.getByTestId("after19-return")).toContainText(draft)
     }
     else await access.scrollIntoViewIfNeeded()
   } else if (state === "SAVE-FAILURE" || state === "SAVE-RECOVERED") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE" } })
-    await openCanonicalVenue(page, { query: "scenario=save-failed" })
+    await openCanonicalVenue(page)
     await expectCanonicalDetailReady(page)
+    await page.evaluate(() => {
+      const url = new URL(window.location.href)
+      url.searchParams.set("scenario", "save-failed")
+      window.history.replaceState(window.history.state, "", url)
+    })
+    await expect(page).toHaveURL(/scenario=save-failed/)
+    await installOneShotDeviceWriteFailure(page)
     await page.getByTestId("canonical-venue-save").click()
     await expect(page.getByTestId("canonical-save-error")).toBeVisible()
     if (state === "SAVE-RECOVERED") {
-      await page.getByTestId("canonical-save-dismiss").click()
-      await expect(page.getByTestId("canonical-save-error")).toHaveCount(0)
       await page.reload({ waitUntil: "domcontentloaded" })
+      await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
+      await expect(page).toHaveURL(/detail=1/)
       await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
       await expectCanonicalDetailReady(page)
+      await installOneShotDeviceWriteFailure(page)
       await page.getByTestId("canonical-venue-save").click()
       await expect(page.getByTestId("canonical-save-error")).toBeVisible()
       await page.getByTestId("canonical-save-retry").click()
-      await expect(page.getByTestId("canonical-venue-save")).toHaveText(locale === "ko" ? "저장됨" : "Saved")
-      await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+      await expect(page.getByTestId("canonical-venue-save")).toHaveAttribute("aria-pressed", "true")
       await page.getByTestId("canonical-venue-save").scrollIntoViewIfNeeded()
     } else {
       const saveError = page.getByTestId("canonical-save-error")
@@ -738,84 +804,126 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     }
   } else if (state === "GATE-ACCOUNT-FAIL") {
     await seedB(page, { locale, session: { account: "ACC-GUEST", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
-    await openCanonicalVenue(page, { query: "qa=1" })
+    await openCanonicalVenue(page)
+    await page.evaluate(() => {
+      const target = window as Window & { __ONDO_B_QA__?: Record<string, unknown> }
+      target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), account: "failure" }
+    })
     await page.getByTestId("canonical-venue-save").click()
-    if (state === "GATE-ACCOUNT-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
+    const gate = page.getByTestId("account-save-gate")
+    await expect(gate).toHaveAttribute("data-account-return-venue", CANONICAL_VENUE_ID)
+    await gate.getByTestId("account-start").click()
+    await expect(gate.getByTestId("gate-failure")).toBeVisible()
   } else if (state === "GATE-PERSON-PASSPORT") {
     await triggerPersonGate(page, locale, "short_term")
   } else if (state === "GATE-PERSON-CX") {
     await triggerPersonGate(page, locale, "korean_local")
   } else if (state === "GATE-PERSON-RESIDENCE-UNSUPPORTED") {
     await triggerPersonGate(page, locale, "long_term_resident")
-    await page.getByRole("button", { name: locale === "ko" ? "본인 확인 시작" : "Start check" }).click()
-    await expect(page.getByTestId("gate-unsupported")).toBeVisible()
+    await page.evaluate(() => {
+      const target = window as Window & { __ONDO_B_QA__?: Record<string, unknown> }
+      target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), eligibility: "unavailable" }
+    })
+    await page.getByTestId("local-check-boundary-continue").click()
+    await expect(page.getByTestId("local-check-result")).toHaveAttribute("data-result", "unavailable")
   } else if (state === "GATE-AGE-FAIL") {
     await triggerAgeGate(page, locale, true)
-    await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
+    await page.getByTestId("after19-start").click()
+    await expect(page.getByTestId("ondo-b-action-gate")).toHaveAttribute("data-gate-view", "failure")
   } else if (state === "GATE-PAYMENT" || state === "GATE-PAYMENT-FAIL") {
     await triggerPaymentGate(page, locale, state === "GATE-PAYMENT-FAIL")
-    if (state === "GATE-PAYMENT-FAIL") await page.getByRole("button", { name: locale === "ko" ? "실패 상태 보기" : "Simulate failure" }).click()
   } else if (state === "TABLES-VENUE-EMPTY") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
-    await openCanonicalVenue(page)
-    await page.getByTestId("canonical-venue-tables").click()
-    await expect(page.getByTestId("venue-table-scope")).toBeVisible()
-    await expect(page.getByTestId("venue-tables-empty")).toBeVisible()
-    await expect(page.getByTestId("tables-back-to-venue")).toBeVisible()
-    await expect(page.getByTestId("tables-browse-all")).toBeVisible()
+    await gotoB(page, "?venueId=mois-18939eecb43c15ab4305")
+    await page.getByTestId("canonical-place-details").click()
+    await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", "mois-18939eecb43c15ab4305")
+    await expect(page.getByTestId("canonical-place-table")).toHaveCount(0)
+    await expect(page.getByTestId("canonical-place-overlay").getByRole("button", { name: locale === "ko" ? "장소 닫기" : "Close place" })).toBeVisible()
+    await expect(page.getByTestId("nav-tables")).toBeAttached()
   } else if (state === "TABLES-LIST") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await openTablesIndex(page, locale)
   } else if (state === "TABLE-DETAIL") {
-    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T20:30:00+09:00" } })
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2099-08-20T20:30:00+09:00" } })
     await openTableDetail(page, locale)
   } else if (state === "TABLE-JOIN-FAIL") {
-    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T20:30:00+09:00" } })
-    await openTableDetail(page, locale, "?scenario=table-network")
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2099-08-20T20:30:00+09:00" } })
+    await openTableDetail(page, locale)
     await page.getByTestId("table-join").click()
-    await expect(page.locator("[data-table-membership='TMB-FAILED']")).toBeVisible()
+    await expect(page.getByTestId("table-join-confirmation")).toBeVisible()
+    await installOneShotDeviceWriteFailure(page)
+    await page.getByTestId("table-join-confirm").click()
+    await expect(page.getByTestId("table-join-save-error")).toBeVisible()
   } else if (["CHAT", "CHAT-IMAGE-FAIL", "FEEDBACK", "REPORT"].includes(state)) {
     await openChat(page, locale, state === "CHAT-IMAGE-FAIL" ? "?scenario=media-failed" : "")
     if (state === "CHAT-IMAGE-FAIL") {
-      await page.locator("input[type='file']").setInputFiles({ name: "table-photo.png", mimeType: "image/png", buffer: PNG })
-      await page.getByRole("button", { name: locale === "ko" ? "사진 보내기" : "Send photo" }).click()
-      await expect(page.locator("[data-message-status='MSG-FAILED']")).toBeVisible()
+      await page.getByTestId("table-chat-image").setInputFiles({ name: "table-note.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") })
+      await expect(page.getByTestId("table-chat-image-error")).toBeVisible()
     } else if (state === "FEEDBACK") {
       await page.getByTestId("table-check-in").click()
-      await page.getByTestId("table-finish-meal").click()
-      await expect(page.getByTestId("table-feedback")).toBeVisible()
-      await expect(page.getByRole("status").filter({ hasText: /체크인했어요|Checked in/ })).toHaveCount(0, { timeout: 3_000 })
+      await page.getByRole("button", { name: locale === "ko" ? "도움이 된 테이블" : "Helpful table", exact: true }).click()
+      await page.getByTestId("table-feedback-submit").click()
+      await expect(page.getByTestId("table-reputation-receipt")).toBeVisible()
     } else if (state === "REPORT") {
       await page.getByTestId("table-report").click()
       await expect(page.getByRole("alertdialog")).toBeVisible()
     }
   } else if (state === "LOCAL-SIGNAL-EMPTY" || state === "LOCAL-SIGNAL-FAIL" || state === "LOCAL-SIGNAL-SUCCESS") {
-    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
-    await openLocalSignal(page, state === "LOCAL-SIGNAL-FAIL" ? "view=list&scenario=local-signal-fail" : "view=list")
+    // These states intentionally exercise the Person gate before returning to
+    // the exact draft. Seeding legacy PER-VERIFIED would migrate a ready Person
+    // axis and correctly bypass the gate, making the fixture timing-dependent.
+    await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-UNVERIFIED" } })
+    await openLocalSignal(page, "view=list")
+    const signal = page.getByTestId("ondo-b-local-signal")
     if (state !== "LOCAL-SIGNAL-EMPTY") {
-      await page.getByTestId("local-signal-overlay").locator("textarea").fill(locale === "ko" ? "입구 옆 카운터에서 주문해요." : "Order at the counter beside the entrance.")
-      await page.getByTestId("local-signal-submit").click()
-      await expect(page.getByTestId("local-signal-overlay")).toHaveAttribute("data-signal-status", state === "LOCAL-SIGNAL-FAIL" ? "failed" : "submitted")
+      await signal.locator("fieldset button").first().click()
+      await signal.locator("textarea").fill(locale === "ko" ? "입구 옆 카운터에서 주문해요." : "Order at the counter beside the entrance.")
+      await signal.getByTestId("local-signal-person-check").click()
+      const gate = page.getByTestId("ondo-b-action-gate")
+      await expect(gate).toHaveAttribute("data-active-gate", "person")
+      // The successful gate transition intentionally unmounts this coordinator
+      // in the same React commit. Schedule the semantic activation and return
+      // before that commit so the visual-fixture setup does not retry a pointer
+      // sequence against the already-completed, detached button; real pointer
+      // behavior is covered by the Local Signal end-to-end journey.
+      await page.evaluate(() => {
+        window.setTimeout(() => document.querySelector<HTMLElement>("[data-testid='local-check-boundary-continue']")?.click(), 0)
+      })
+      await expect(gate).toHaveCount(0)
+      await expect(signal.getByTestId("local-signal-draft")).toHaveAttribute("data-gate-return", "success")
+      if (state === "LOCAL-SIGNAL-FAIL") {
+        await installOneShotDeviceWriteFailure(page)
+        await signal.getByTestId("local-signal-post").click()
+        await expect(signal.getByTestId("local-signal-post-error")).toBeVisible()
+      }
+    } else {
+      await expect(signal.getByTestId("local-signal-person-check")).toBeDisabled()
     }
   } else if (state.startsWith("CHECKOUT-")) {
+    if (state === "CHECKOUT-FAIL") await page.addInitScript(() => {
+      const target = window as Window & { __ONDO_B_QA__?: Record<string, unknown> }
+      target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), payment: "failure" }
+    })
     await openCheckout(page, locale, state === "CHECKOUT-FAIL" ? "scenario=payment-declined" : "")
     if (state !== "CHECKOUT-IDLE") {
-      await page.getByTestId("checkout-start").click()
-      if (state === "CHECKOUT-CANCEL") await page.getByTestId("checkout-cancel").click()
+      if (state === "CHECKOUT-CANCEL") {
+        await page.getByTestId("payment-cancel").click()
+        await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+      }
       else {
-        await page.getByTestId("checkout-confirm").click()
-        await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", state === "CHECKOUT-FAIL" ? "PAY-FAILED" : "PAY-SIMULATED-SUCCESS")
-        if (state === "CHECKOUT-STAMP") {
-          await page.getByTestId("visit-proof-check").click()
-          await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "10")
-        }
+        await completeCommercePayment(page, locale)
+        await expect(page.getByTestId(state === "CHECKOUT-FAIL" ? "payment-recovery" : "payment-receipt")).toBeVisible()
       }
     }
   } else if (state === "MY") {
     await seedB(page, { locale, local: { savedVenueIds: [CANONICAL_VENUE_ID] }, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", stamps: 10 } })
+    await extendBDeviceSeed(page, {
+      savedVenueIds: [CANONICAL_VENUE_ID],
+      plannedTableRefs: [{ tableId: CURRENT_TABLE_ID, venueId: CANONICAL_VENUE_ID }],
+    })
     await gotoB(page)
     await page.getByRole("navigation").locator("button").nth(1).click()
-    await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-my-korea-entry")).toBeVisible()
   } else if (state === "SESSION-RESET-CONFIRM") {
     await seedB(page, {
       locale,
@@ -832,34 +940,34 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       },
     })
     await gotoB(page)
-    await page.getByTestId("nav-id").click()
-    const opener = page.getByTestId("session-reset-open")
+    await page.getByTestId("nav-settings").click()
+    const disclosure = page.getByTestId("ondo-b-device-data-settings")
+    await disclosure.evaluate((element: HTMLDetailsElement) => { element.open = true })
+    const opener = page.getByTestId("ondo-b-clear-device-open")
     await opener.scrollIntoViewIfNeeded()
     await opener.click()
-    const confirm = page.getByTestId("session-reset-confirm")
+    const confirm = page.getByTestId("ondo-b-clear-device-confirm")
     await expect(confirm).toBeVisible()
-    await expect(page.getByRole("dialog", { name: "로그아웃하고 이 세션을 지울까요?" })).toBeVisible()
-    await expect(confirm.getByRole("button", { name: "이 세션 유지", exact: true })).toBeFocused()
+    await expect(confirm.getByRole("button").first()).toBeFocused()
   } else if (state === "DISCOVERY-RESET-CONFIRM") {
     await seedB(page, {
       locale,
       local: { savedVenueIds: [CANONICAL_VENUE_ID], discoveryPreferences: ["vegan", "late"] },
       session: { persona: "long_term_resident", account: "ACC-ACTIVE", person: "PER-VERIFIED" },
     })
-    await gotoB(page, "?city=seoul&query=tteokbokki")
-    await page.getByTestId("nav-my").click()
-    const opener = page.getByTestId("discovery-reset-open")
+    await gotoB(page)
+    await page.getByTestId("nav-settings").click()
+    const disclosure = page.getByTestId("ondo-b-discovery-settings")
+    await disclosure.evaluate((element: HTMLDetailsElement) => { element.open = true })
+    const opener = page.getByTestId("ondo-b-onboarding-reset")
     await opener.scrollIntoViewIfNeeded()
-    await opener.click()
-    const confirm = page.getByTestId("discovery-reset-confirm")
-    await expect(confirm).toBeVisible()
-    await expect(page.getByRole("dialog", { name: "Reset discovery choices?" })).toBeVisible()
-    await expect(confirm.getByRole("button", { name: "Keep choices", exact: true })).toBeFocused()
+    await expect(opener).toBeVisible()
+    await opener.focus()
   } else if (state === "PROFILE" || state === "TRUST-FOUR-AXES") {
     await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", reputation: { identity: "verified", visit: "repeat", contribution: "established", meetup: "reliable" } } })
     await gotoB(page)
     await page.getByRole("navigation").locator("button").nth(3).click()
-    const target = page.getByTestId(state === "PROFILE" ? "ondo-profile-panel" : "ondo-trust-panel")
+    const target = page.getByTestId(state === "PROFILE" ? "ondo-b-traveler-id" : "travel-pass-status")
     if (state !== "TRUST-FOUR-AXES") await target.scrollIntoViewIfNeeded()
   } else {
     const query = state === "LABS-TRAIT-FAIL"
@@ -896,13 +1004,18 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
 
   await settle(page)
   if (state === "CITY-FILTERED-MAP") {
-    await expect(page.getByText("1 sourced food place", { exact: true })).toHaveCount(1)
+    await expect(page.getByTestId("ondo-b-result-bar")).toContainText(locale === "ko" ? "공식 기록 1개" : "1 official record")
   }
   if (state === "LABS-TRAIT-FAIL") {
-    await expect(page.getByTestId("labs-overlay").getByText("Target network: Sui Testnet · Simulated", { exact: true })).toHaveCount(1)
+    const targetNetwork = locale === "ko"
+      ? "대상 네트워크: Sui Testnet · 시뮬레이션"
+      : locale === "ja"
+        ? "対象ネットワーク：Sui Testnet · シミュレーション"
+        : "Target network: Sui Testnet · Simulated"
+    await expect(page.getByTestId("labs-overlay").getByText(targetNetwork, { exact: true })).toHaveCount(1)
   }
   if (state === "TRUST-FOUR-AXES") {
-    const target = page.getByTestId("ondo-trust-panel")
+    const target = page.getByTestId("travel-pass-status")
     const expectedScrollTop = await target.evaluate((element) => {
       let scroller = element.parentElement
       while (scroller) {
@@ -972,7 +1085,10 @@ export async function collectBGeometryIssues(page: Page) {
     const accessibleName = (element: HTMLElement) => {
       const labelledBy = element.getAttribute("aria-labelledby")?.split(/\s+/).map((id) => document.getElementById(id)?.textContent?.trim() ?? "").join(" ").trim()
       const wrappingLabel = element.closest("label")?.textContent?.trim()
-      return (element.getAttribute("aria-label") ?? labelledBy ?? wrappingLabel ?? element.textContent?.trim() ?? element.getAttribute("title") ?? "").replace(/\s+/g, " ").trim()
+      const associatedLabels = element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement
+        ? Array.from(element.labels ?? []).map((labelElement) => labelElement.textContent?.trim() ?? "").join(" ").trim()
+        : ""
+      return (element.getAttribute("aria-label") ?? labelledBy ?? wrappingLabel ?? (associatedLabels || undefined) ?? element.textContent?.trim() ?? element.getAttribute("title") ?? "").replace(/\s+/g, " ").trim()
     }
     const explicitDialogName = (element: HTMLElement) => {
       const labelledBy = element.getAttribute("aria-labelledby")?.split(/\s+/).map((id) => document.getElementById(id)?.textContent?.trim() ?? "").join(" ").trim()
@@ -1111,9 +1227,27 @@ export async function expectBVisualGuards(page: Page, scope: Locator, testInfo: 
 }
 
 export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
+  if (["CHAT", "CHAT-IMAGE-FAIL", "FEEDBACK", "REPORT"].includes(item.state)) {
+    // File selection, focus restoration, and feedback submission can each
+    // auto-scroll the Table sheet by a different amount. Pin the chat surface
+    // below the sticky detail header so serial and isolated pixel runs capture
+    // the same intentional state instead of inheriting incidental focus scroll.
+    const chat = page.getByTestId("table-chat")
+    if ((page.viewportSize()?.width ?? 0) <= 801) {
+      await stabilizeMobileEvidenceScroll(page, chat, { kind: "top", offset: 80 })
+    } else if (item.state === "FEEDBACK") {
+      await stabilizeMobileEvidenceScroll(page, chat, { kind: "scrollTop", value: 0 })
+    } else if (item.state === "REPORT") {
+      // The report confirmation is ten pixels taller than the desktop sheet's
+      // visible content area. Reveal its complete final row intentionally.
+      await stabilizeMobileEvidenceScroll(page, chat, { kind: "scrollTop", value: 10 })
+    }
+  }
   if (item.state.startsWith("LOCAL-SIGNAL")) {
-    const title = page.getByTestId("local-signal-overlay").locator("h2").first()
-    await expect(title).toBeVisible()
+    const foreground = item.state === "LOCAL-SIGNAL-FAIL"
+      ? page.getByTestId("local-signal-post-error")
+      : page.getByTestId("ondo-b-local-signal").locator("h2").first()
+    await expect(foreground).toBeVisible()
 
     // Chromium can occasionally return a compositor frame containing the
     // Sheet surface and grabber while dropping the scroll viewport's
@@ -1121,8 +1255,8 @@ export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
     // so they cannot keep an empty pixel baseline from being approved. Probe
     // the title pixels in a full viewport capture; locator screenshots can
     // themselves trigger the blank follow-up frame that this guard rejects.
-    const titleBox = await title.boundingBox()
-    expect(titleBox, `${item.id} title has no painted bounding box`).not.toBeNull()
+    const titleBox = await foreground.boundingBox()
+    expect(titleBox, `${item.id} foreground receipt has no painted bounding box`).not.toBeNull()
     await expect.poll(async () => {
       await settle(page)
       const viewport = page.viewportSize()
@@ -1167,15 +1301,12 @@ export async function stabilizeBVisualSnapshot(page: Page, item: BVisualCase) {
     }).toBeGreaterThan(16)
   }
   if (item.state === "PROFILE") {
-    await stabilizeMobileEvidenceScroll(page, page.getByTestId("ondo-profile-panel"), { kind: "bottom" })
+    await stabilizeMobileEvidenceScroll(page, page.getByTestId("ondo-b-traveler-id"), { kind: "bottom" })
   }
-  if (item.state.startsWith("LABS")) {
-    // Opening Labs can race sheet mount and initial-focus work against click
-    // auto-scroll. The translucent scrim makes the otherwise irrelevant My
-    // Korea offset part of the pixel contract, so normalize it for every Labs
-    // state after geometry/a11y probes (not only the base Labs case).
-    await stabilizeMobileEvidenceScroll(page, page.getByTestId("open-labs-milestone"), { kind: "scrollTop", value: 828, desktopValue: 726 })
-  }
+  // Labs now owns a full B-native surface instead of retaining the My Korea
+  // milestone node underneath the modal. Its boundary is shorter than the
+  // sheet viewport and therefore has no scroll container to normalize;
+  // bridge and trait cases stabilize on their state-specific targets in setup.
 }
 
 export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe | null> {
@@ -1186,8 +1317,12 @@ export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe 
     const viewport = { width: window.innerWidth, height: window.innerHeight }
     const canvas = root.querySelector<HTMLCanvasElement>("canvas.maplibregl-canvas")
     const mapKey = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")
-    const renderedSignalCount = Number(root.dataset.renderedSignalCount ?? 0)
-    const signalSourceCount = Number(root.dataset.signalSourceCount ?? 0)
+    // The redesigned map exposes its curated marker source through the
+    // current Pulse count and mirrors every intended marker into a hidden,
+    // keyboard-readable list. The independent pixel receipt below still
+    // proves those source records reached the MapLibre canvas.
+    const renderedSignalCount = root.querySelectorAll("[data-testid='ondo-b-pulse-marker-accessible-detail'] li").length
+    const signalSourceCount = Number(root.dataset.curatedPulseCount ?? 0)
     if (!canvas || !mapKey || root.dataset.mapState !== "ready" || signalSourceCount <= 0) return null
 
     const canvasStyle = getComputedStyle(canvas)
@@ -1237,11 +1372,9 @@ export async function collectBMapPaintProbe(page: Page): Promise<BMapPaintProbe 
       }
       return clipped.right > clipped.left && clipped.bottom > clipped.top ? [clipped] : []
     })]
-    // A narrow place peek can expose only a seven-pixel marker sliver. Its
-    // reliable receipt lives immediately outside the opaque sheet, while all
-    // plum modal controls are inside the blocked rect. Keep this fallback ROI
-    // separate from the global heat analysis so ordinary page chrome cannot
-    // make a blank MapLibre frame pass.
+    // Keep an explicit edge ROI available for future narrow overlays. The
+    // current compact Place peek leaves enough canvas exposed for the stronger
+    // full-canvas receipt, so no reviewed row depends on this fallback.
     const band = edgeBand
     const edgeReceiptRegions: BVisualRect[] = []
     for (const rect of overlayBlockers) {
@@ -1286,11 +1419,11 @@ type BMapRecoveryInvariant = {
   locationState: string
   mapAttempt: string
   mapState: string
-  minimumSignalDistance: string
-  neutralSourceCount: string
-  renderedSignalCount: string
-  signalSourceCount: string
-  signalZoomTier: string
+  curatedPulseCount: string
+  pulseMapGrammar: string
+  pulseVisualGrammar: string
+  resultCount: string
+  selectedVenueId: string
   storage: {
     local: [string, string][]
     session: [string, string][]
@@ -1318,11 +1451,11 @@ async function collectBMapRecoveryInvariant(page: Page): Promise<BMapRecoveryInv
       locationState: root.dataset.locationState ?? "",
       mapAttempt: root.dataset.mapAttempt ?? "",
       mapState: root.dataset.mapState ?? "",
-      minimumSignalDistance: root.dataset.minSignalDistancePx ?? "",
-      neutralSourceCount: root.dataset.neutralSourceCount ?? "",
-      renderedSignalCount: root.dataset.renderedSignalCount ?? "",
-      signalSourceCount: root.dataset.signalSourceCount ?? "",
-      signalZoomTier: root.dataset.signalZoomTier ?? "",
+      curatedPulseCount: root.dataset.curatedPulseCount ?? "",
+      pulseMapGrammar: root.dataset.pulseMapGrammar ?? "",
+      pulseVisualGrammar: root.dataset.pulseVisualGrammar ?? "",
+      resultCount: root.dataset.resultCount ?? "",
+      selectedVenueId: root.dataset.selectedVenueId ?? "",
       storage: {
         local: storageEntries(localStorage),
         session: storageEntries(sessionStorage),
@@ -1367,6 +1500,7 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
     const bottom = Math.min(canvas.height, Math.ceil(evidence.canvas.bottom * scaleY))
     const receiptRegions = receiptMode === "overlay-edge" ? evidence.edgeReceiptRegions : [evidence.canvas]
     const candidates = new Set<number>()
+    const coreCandidates = new Set<number>()
     for (let y = top; y < bottom; y += 1) {
       const cssY = (y + 0.5) / scaleY
       for (let x = left; x < right; x += 1) {
@@ -1378,10 +1512,26 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
         const green = pixels[offset + 1]
         const blue = pixels[offset + 2]
         const peak = red >= 70 && red <= 130 && green >= 30 && green <= 75 && blue >= 50 && blue <= 100
-        const hot = red >= 130 && red <= 190 && green >= 60 && green <= 115 && blue >= 50 && blue <= 105
+        const hot = red >= 185 && red <= 225 && green >= 45 && green <= 105 && blue >= 35 && blue <= 90
         const rising = red >= 195 && red <= 245 && green >= 105 && green <= 160 && blue >= 40 && blue <= 90
         const warming = red >= 200 && red <= 250 && green >= 165 && green <= 220 && blue >= 70 && blue <= 165
-        if (peak || hot || rising || warming) candidates.add(y * canvas.width + x)
+        const core = peak || hot || rising || warming
+        // The current Pulse grammar deliberately couples a small saturated
+        // point with a much larger translucent aura. Count the aura only when
+        // it is physically connected to a qualifying saturated core; a warm
+        // basemap or other pale canvas color can never satisfy the receipt on
+        // its own.
+        const aura = red >= 230 && red <= 252
+          && green >= 195 && green <= 240
+          && blue >= 185 && blue <= 232
+          && red - green >= 10
+          && green - blue >= 3
+          && green - blue <= 12
+        if (core || aura) {
+          const candidate = y * canvas.width + x
+          candidates.add(candidate)
+          if (core) coreCandidates.add(candidate)
+        }
       }
     }
     let markerPixels = 0
@@ -1390,9 +1540,11 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
       candidates.delete(first)
       const stack = [first]
       let componentPixels = 0
+      let componentCorePixels = 0
       while (stack.length) {
         const current = stack.pop()!
         componentPixels += 1
+        if (coreCandidates.has(current)) componentCorePixels += 1
         const x = current % canvas.width
         const y = Math.floor(current / canvas.width)
         for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
@@ -1406,7 +1558,7 @@ export async function countBMapPaintPixels(page: Page, frame: Buffer, probe: BMa
           }
         }
       }
-      if (componentPixels >= minimumComponentPixels) markerPixels += componentPixels
+      if (componentCorePixels >= minimumComponentPixels) markerPixels += componentPixels
     }
     return markerPixels
   }, {

@@ -38,7 +38,7 @@ async function seedD3(page: Page, locale: "en" | "ko", { labs = false } = {}) {
     sessionStorage.removeItem("ondo.table-outcomes.v2")
     sessionStorage.removeItem("ondo.accepted-visits.v2")
     if (withLabs) {
-      sessionStorage.setItem("ondo.labs.v2", JSON.stringify({
+      sessionStorage.setItem("ondo-b.labs.v1", JSON.stringify({
         acknowledged: true,
         wallet: "WAL-DISCONNECTED",
         bridge: "BRG-IDLE",
@@ -49,7 +49,7 @@ async function seedD3(page: Page, locale: "en" | "ko", { labs = false } = {}) {
         traitStates: {},
       }))
     } else {
-      sessionStorage.removeItem("ondo.labs.v2")
+      sessionStorage.removeItem("ondo-b.labs.v1")
     }
   }, { nextLocale: locale, nextSession: READY_SESSION, withLabs: labs })
 }
@@ -217,7 +217,10 @@ for (const locale of ["en", "ko"] as const) {
     await expect(retry).toBeFocused()
     await expectControlDescription(retry, outcome)
 
-    await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?venueId=${new URLSearchParams(location.search).get("venueId")}&qa=1`))
+    await page.evaluate(() => {
+      sessionStorage.removeItem("ondo.qa.scenario.v1")
+      history.replaceState({}, "", `${location.pathname}?venueId=${new URLSearchParams(location.search).get("venueId")}&qa=1`)
+    })
     await retry.click()
     await expect(signal.locator("[role='alert']")).toHaveCount(0)
     outcome = page.getByTestId("local-signal-outcome")
@@ -263,7 +266,10 @@ for (const locale of ["en", "ko"] as const) {
     await expectControlDescription(retry, outcome)
     await expectNoSeriousAxe(page, "[data-testid='labs-overlay']")
 
-    await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?qa=1`))
+    await page.evaluate(() => {
+      sessionStorage.removeItem("ondo.qa.scenario.v1")
+      history.replaceState({}, "", `${location.pathname}?qa=1`)
+    })
     await retry.click()
     await expect(page.getByTestId("labs-wallet-outcome")).toHaveCount(0)
     await expect(labs.locator("[role='alert']")).toHaveCount(0)

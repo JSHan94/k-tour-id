@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from "react"
 import { useMemo, useEffect, useRef, useState } from "react"
-import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, KeyRound, NotebookPen } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, Info, KeyRound, NotebookPen } from "lucide-react"
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "../shared/state/ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -143,6 +143,10 @@ const EDITORIAL = {
   ko: { alt: "밝은 이동 통로에서 대화하는 가상의 여행자 세 명", caption: "에디토리얼 이미지 · 가상의 여행자" },
   ja: { alt: "明るい通路で話す架空の旅行者3人", caption: "編集イメージ · 架空の旅行者" },
 } satisfies Record<OndoBLocale, { alt: string; caption: string }>
+
+function JapaneseHeading({ phrases }: { phrases: readonly string[] }) {
+  return <>{phrases.map((phrase) => <span className={styles.jaPhrase} key={phrase}>{phrase}</span>)}</>
+}
 
 export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
@@ -305,7 +309,9 @@ export function OfficialDirectoryOnboardingLayer() {
           <div className={styles.value} data-testid="onboarding-step-value" data-stage="value">
             <div className={styles.brandLockup}><img src="/brand/ondo-lockup.svg" alt="ONDO" /></div>
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
-            <h1>{copy.title}</h1>
+            <h1>{state.locale === "ja"
+              ? <JapaneseHeading phrases={["韓国で", "自分に合う一食を、", "公的な記録から", "探そう。"]} />
+              : copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
             <figure className={styles.valueEditorial} data-testid="onboarding-editorial-image">
               <img src="/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg" alt={EDITORIAL[state.locale].alt} />
@@ -339,7 +345,7 @@ export function OfficialDirectoryOnboardingLayer() {
               <ChevronRight size={18} aria-hidden="true" />
             </button>
             <details className={styles.sourceIntro} data-testid="onboarding-source-boundary">
-              <summary>{copy.sourceSummary}<ChevronRight size={16} aria-hidden="true" /></summary>
+              <summary aria-label={copy.sourceSummary}><span className={styles.srOnly}>{copy.sourceSummary}</span><Info size={16} aria-hidden="true" /></summary>
               <div className={styles.sourceBody}>
                 <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
                 <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
@@ -393,7 +399,9 @@ export function OfficialDirectoryOnboardingLayer() {
           <div className={styles.panel} data-testid="onboarding-step-preferences" data-stage="preferences">
             <div className={styles.heading}>
               <span>03</span>
-              <h1>{copy.preferenceTitle}</h1>
+              <h1>{state.locale === "ja"
+                ? <JapaneseHeading phrases={["どんな食事や", "食の希望・制限が", "ありますか？"]} />
+                : copy.preferenceTitle}</h1>
               <p>{copy.preferenceBody}</p>
             </div>
             <div className={styles.preferenceGroups}>

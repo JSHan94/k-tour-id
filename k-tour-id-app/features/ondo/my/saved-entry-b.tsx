@@ -1,13 +1,15 @@
 "use client"
 
-import { Bookmark, CalendarDays, ChevronRight, History, MapPin, MessageSquareText, ReceiptText, Trash2 } from "lucide-react"
+import { Bookmark, CalendarDays, ChevronRight, FlaskConical, History, MapPin, MessageSquareText, ReceiptText, Trash2 } from "lucide-react"
 import { venueNamePresentation, venueDistrictLabel } from "@/lib/ondo/venues/display"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
-import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
+import { openBDiscoveryEditorialDetail, openSavedBDiscoveryEditorialPlace, openSavedBDiscoveryVenue } from "../map/b-discovery-history"
+import { editorialPlaceById, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import styles from "../shared/ui/production-local.module.css"
 import { MY_KOREA_TABLE_CATALOG } from "./my-korea-model"
+import { KoreaMemoryMapB } from "./korea-memory-map-b"
 import { PrivateNote } from "./private-note"
 import { STABLE_B_RECEIPT_ID, STABLE_B_REFUND_RECEIPT_ID } from "../commerce-b/stable-commerce-model-b"
 
@@ -19,13 +21,15 @@ const COPY = {
     title: "My Korea",
     boundary: "Saved places, recent views, joined Tables, and Local Signals stay in this browser. They are not reservations or synced activity.",
     savedTitle: "Saved places",
-    savedBody: "Official place records you chose to keep, with optional private notes.",
+    savedBody: "Official food records and verified VISITKOREA editorial places you chose to keep.",
     savedEmpty: "Nothing saved yet",
     savedEmptyBody: "Save a place from Explore and it will appear here.",
     explore: "Explore places",
     remove: "Remove saved place and private note",
-    recentTitle: "Recently viewed official places",
-    recentBody: "Only places you explicitly opened on this device appear here.",
+    removeEditorial: "Remove saved editorial place",
+    editorialBoundary: "VISITKOREA editorial · not an official food record",
+    recentTitle: "Recently viewed places",
+    recentBody: "Official records and editorial places stay visibly separate here.",
     recentEmpty: "No recently viewed places",
     recentEmptyBody: "Opening an official place from Explore starts this list.",
     viewed: "Viewed on this device",
@@ -49,19 +53,23 @@ const COPY = {
     refundReference: "Test refund reference",
     openWallet: "Open wallet",
     openReceiptPlace: "Open exact place",
+    labsBody: "Optional wallet and bridge previews",
+    openLabs: "Open Labs",
   },
   ko: {
     eyebrow: "이 기기",
     title: "내 한국",
     boundary: "저장한 장소, 최근 조회, 참여한 테이블과 로컬 시그널은 이 브라우저에만 남습니다. 예약이나 동기화된 활동 기록이 아닙니다.",
     savedTitle: "저장한 장소",
-    savedBody: "직접 저장한 공식 장소 기록과 선택 사항인 개인 메모입니다.",
+    savedBody: "직접 저장한 공식 음식점 기록과 검증된 VISITKOREA 편집 장소입니다.",
     savedEmpty: "아직 저장한 장소가 없어요",
     savedEmptyBody: "탐색에서 다시 보고 싶은 장소를 저장하면 여기에 나타나요.",
     explore: "장소 탐색하기",
     remove: "저장한 장소와 개인 메모 삭제",
-    recentTitle: "최근 본 공식 장소",
-    recentBody: "이 기기에서 직접 연 장소만 여기에 나타납니다.",
+    removeEditorial: "저장한 편집 장소 삭제",
+    editorialBoundary: "VISITKOREA 편집 · 공식 음식점 기록 아님",
+    recentTitle: "최근 본 장소",
+    recentBody: "공식 기록과 편집 장소를 구분해 보여줍니다.",
     recentEmpty: "최근 본 장소가 없어요",
     recentEmptyBody: "탐색에서 공식 장소를 열면 이 목록이 시작됩니다.",
     viewed: "이 기기에서 조회함",
@@ -85,19 +93,23 @@ const COPY = {
     refundReference: "테스트 환불 참조",
     openWallet: "지갑 열기",
     openReceiptPlace: "이 장소 열기",
+    labsBody: "선택형 지갑·체인 연결 미리보기",
+    openLabs: "Labs 열기",
   },
   ja: {
     eyebrow: "この端末",
     title: "マイ韓国",
     boundary: "保存した場所、最近見た場所、参加したテーブル、ローカルシグナルはこのブラウザにのみ保存されます。予約や同期されたアクティビティではありません。",
     savedTitle: "保存した場所",
-    savedBody: "保存した公式の場所情報と、任意のプライベートメモです。",
+    savedBody: "保存した公式飲食店記録と、確認済みのVISITKOREA編集スポットです。",
     savedEmpty: "まだ保存した場所はありません",
     savedEmptyBody: "Exploreで気になる場所を保存すると、ここに表示されます。",
     explore: "場所を探す",
     remove: "保存した場所とプライベートメモを削除",
-    recentTitle: "最近見た公式の場所",
-    recentBody: "この端末で実際に開いた場所だけが表示されます。",
+    removeEditorial: "保存した編集スポットを削除",
+    editorialBoundary: "VISITKOREA編集・公式飲食店記録ではありません",
+    recentTitle: "最近見た場所",
+    recentBody: "公式記録と編集スポットを区別して表示します。",
     recentEmpty: "最近見た場所はありません",
     recentEmptyBody: "Exploreで公式の場所を開くと、ここに追加されます。",
     viewed: "この端末で閲覧",
@@ -121,6 +133,8 @@ const COPY = {
     refundReference: "テスト返金参照",
     openWallet: "ウォレットを開く",
     openReceiptPlace: "このお店を開く",
+    labsBody: "任意のウォレット・ブリッジ機能プレビュー",
+    openLabs: "Labsを開く",
   },
 } as const
 
@@ -169,6 +183,14 @@ export function SavedEntryB() {
     const venue = canonicalMapVenueById(venueId)
     return venue ? [venue] : []
   })
+  const savedEditorial = state.savedEditorialPlaceIds.flatMap((placeId) => {
+    const place = editorialPlaceById(placeId)
+    return place ? [place] : []
+  })
+  const recentEditorial = state.recentEditorialPlaceIds.flatMap((placeId) => {
+    const place = editorialPlaceById(placeId)
+    return place ? [place] : []
+  })
   const planned = state.plannedTableRefs.flatMap((reference) => {
     const table = MY_KOREA_TABLE_CATALOG[reference.tableId]
     const venue = canonicalMapVenueById(reference.venueId)
@@ -179,8 +201,22 @@ export function SavedEntryB() {
     return venue ? [venue] : []
   })
   const receiptVenue = state.commerceReceiptVenueId ? canonicalMapVenueById(state.commerceReceiptVenueId) : undefined
+  const mappedOfficialVenues = [
+    ...saved,
+    ...recent,
+    ...planned.map(({ venue }) => venue),
+    ...contributions,
+    ...(receiptVenue && (state.commerceSession.status === "paid" || state.commerceSession.status === "refunded") ? [receiptVenue] : []),
+  ]
+  const memoryCityCounts = {
+    seoul: new Set(mappedOfficialVenues.filter((venue) => venue.cityId === "seoul").map((venue) => venue.id)).size,
+    busan: new Set(mappedOfficialVenues.filter((venue) => venue.cityId === "busan").map((venue) => venue.id)).size,
+    jeju: new Set([...savedEditorial, ...recentEditorial].map((place) => place.id)).size,
+  } as const
   const isEmptyJourney = saved.length === 0
+    && savedEditorial.length === 0
     && recent.length === 0
+    && recentEditorial.length === 0
     && planned.length === 0
     && contributions.length === 0
     && state.commerceSession.status !== "paid"
@@ -190,6 +226,14 @@ export function SavedEntryB() {
     if (!openSavedBDiscoveryVenue(venueId, cityId)) return
     if (!actions.recordRecentVenue(venueId)) actions.notify(copy.recentSaveFailed)
     actions.setSurface({ kind: "map" })
+    actions.setTab("ondo")
+  }
+
+  function openEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]) {
+    if (!openSavedBDiscoveryEditorialPlace(editorialPlaceId)) return
+    if (!openBDiscoveryEditorialDetail(editorialPlaceId)) return
+    if (!actions.recordRecentEditorialPlace(editorialPlaceId)) actions.notify(copy.recentSaveFailed)
+    actions.setSurface({ kind: "editorial_place", editorialPlaceId })
     actions.setTab("ondo")
   }
 
@@ -224,14 +268,14 @@ export function SavedEntryB() {
   const savedSection = (
     <section key="saved" className={styles.activitySection} data-testid="ondo-b-saved-entry" aria-labelledby="my-korea-saved-heading">
       <div className={styles.activityHeading}><Bookmark size={19} aria-hidden="true" /><span><h2 id="my-korea-saved-heading">{copy.savedTitle}</h2><p>{copy.savedBody}</p></span></div>
-      {saved.length === 0 ? (
+      {saved.length === 0 && savedEditorial.length === 0 ? (
         <div className={styles.compactEmpty} aria-label={SAVED_EMPTY_LABEL[locale]}>
           <h3>{copy.savedEmpty}</h3>
           <p>{copy.savedEmptyBody}</p>
           <button type="button" onClick={openExplore}>{copy.explore}</button>
         </div>
       ) : (
-        <div className={styles.savedList} aria-label={savedListLabel(locale, saved.length)}>
+        <div className={styles.savedList} aria-label={savedListLabel(locale, saved.length + savedEditorial.length)}>
           {saved.map((venue) => {
             const name = personalVenueName(venue.name.ko, locale)
             return (
@@ -254,6 +298,23 @@ export function SavedEntryB() {
               </article>
             )
           })}
+          {savedEditorial.map((place) => (
+            <article className={styles.savedCard} key={place.id} data-testid={`saved-editorial-card-${place.id}`} data-truth-kind="editorial-place">
+              <button className={styles.savedOpen} type="button" onClick={() => openEditorialPlace(place.id)} data-testid={`saved-editorial-${place.id}`}>
+                <MapPin size={18} aria-hidden="true" />
+                <span>
+                  <strong>{place.name[locale]}</strong>
+                  <small>{copy.editorialBoundary}</small>
+                  <small>{locale === "en" ? place.address.en : place.address.ko}</small>
+                </span>
+                <ChevronRight size={18} aria-hidden="true" />
+              </button>
+              <button className={styles.remove} type="button" onClick={() => actions.toggleSavedEditorialPlace(place.id)}>
+                <Trash2 size={16} aria-hidden="true" />
+                {copy.removeEditorial}
+              </button>
+            </article>
+          ))}
         </div>
       )}
     </section>
@@ -266,6 +327,8 @@ export function SavedEntryB() {
         <h1>{copy.title}</h1>
         <span>{copy.boundary}</span>
       </header>
+
+      {!isEmptyJourney ? <KoreaMemoryMapB locale={locale} cityCounts={memoryCityCounts} /> : null}
 
       {isEmptyJourney ? (
         <figure className={styles.journeyInspiration} data-testid="my-korea-empty-inspiration">
@@ -280,12 +343,19 @@ export function SavedEntryB() {
 
         <section className={styles.activitySection} data-testid="my-korea-recent" aria-labelledby="my-korea-recent-heading">
           <div className={styles.activityHeading}><History size={19} aria-hidden="true" /><span><h2 id="my-korea-recent-heading">{copy.recentTitle}</h2><p>{copy.recentBody}</p></span></div>
-          {recent.length === 0 ? <ActivityEmpty testId="my-korea-recent-empty" title={copy.recentEmpty} body={copy.recentEmptyBody} /> : (
+          {recent.length === 0 && recentEditorial.length === 0 ? <ActivityEmpty testId="my-korea-recent-empty" title={copy.recentEmpty} body={copy.recentEmptyBody} /> : (
             <div className={styles.referenceList}>
               {recent.map((venue) => {
                 const name = personalVenueName(venue.name.ko, locale)
                 return <button key={venue.id} type="button" className={styles.referenceCard} data-testid={`recent-venue-${venue.id}`} onClick={() => openVenue(venue.id, venue.cityId)}><MapPin size={18} aria-hidden="true" /><span><strong>{name.officialName}</strong><small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)} · {copy.viewed}</small></span><ChevronRight size={18} aria-hidden="true" /></button>
               })}
+              {recentEditorial.map((place) => (
+                <button key={place.id} type="button" className={styles.referenceCard} data-testid={`recent-editorial-${place.id}`} data-truth-kind="editorial-place" onClick={() => openEditorialPlace(place.id)}>
+                  <MapPin size={18} aria-hidden="true" />
+                  <span><strong>{place.name[locale]}</strong><small>{copy.editorialBoundary} · {copy.viewed}</small></span>
+                  <ChevronRight size={18} aria-hidden="true" />
+                </button>
+              ))}
             </div>
           )}
         </section>
@@ -318,6 +388,13 @@ export function SavedEntryB() {
           )}
         </section>
       </div>
+
+      <button className={styles.labsEntry} type="button" data-testid="open-labs" onClick={() => actions.setSurface({ kind: "labs" })}>
+        <FlaskConical size={18} aria-hidden="true" />
+        <span><strong>Labs</strong><small>{copy.labsBody}</small></span>
+        <ChevronRight size={17} aria-hidden="true" />
+        <span className={styles.srOnly}>{copy.openLabs}</span>
+      </button>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { expect, test } from "@playwright/test"
 
 const APP_ROOT = process.cwd()
 const PROTECTED_A_PROJECT = "appgprj_6a69e0a4fff48191892ff4022ebf08b2"
+const PROTECTED_HISTORICAL_B_PROJECT = "appgprj_6a85de65d6148191aa042ae9c2787dd2"
 const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 
 function filesBelow(root: string, prefix = ""): string[] {
@@ -21,15 +22,22 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
 
   test("B-STANDALONE-001 declares a deterministic build, scan, and probe lane", () => {
     const manifest = JSON.parse(readFileSync(resolve(APP_ROOT, "package.json"), "utf8")) as { scripts?: Record<string, string> }
+    const buildRunner = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/build.mjs"), "utf8")
     expect(manifest.scripts).toMatchObject({
       "prepare:sites:ondo-b": "node scripts/ondo-b-standalone/prepare.mjs",
       "build:sites:ondo-b": "node scripts/ondo-b-standalone/build.mjs",
       "scan:sites:ondo-b": "node scripts/ondo-b-standalone/scan-artifact.mjs",
       "probe:sites:ondo-b": "node scripts/ondo-b-standalone/probe-http.mjs",
     })
+    expect(manifest.scripts?.["test:visual:b"]).toContain("test:visual:b:current && pnpm test:visual:b:production && pnpm test:visual:b:legacy")
+    expect(manifest.scripts?.["test:visual:b:production"]).toContain("playwright.production-visual.config.ts")
+    expect(manifest.scripts?.["qa:b"]).toContain("test:e2e:a-regression")
+    expect(manifest.scripts?.["qa:b"]).toContain("probe:sites:ondo-b")
+    expect(buildRunner).toContain('child.once("close"')
+    expect(buildRunner).not.toContain('child.once("exit"')
   })
 
-  test("B-STANDALONE-002 keeps the checked-in A hosting identity protected", () => {
+  test("B-STANDALONE-002 keeps both existing hosting identities protected", async () => {
     const hosting = JSON.parse(readFileSync(resolve(APP_ROOT, ".openai/hosting.json"), "utf8"))
     expect(hosting).toEqual({ project_id: PROTECTED_A_PROJECT, d1: null, r2: null })
     const scripts = ["prepare.mjs", "build.mjs", "scan-artifact.mjs", "probe-http.mjs", "policy.mjs"]
@@ -37,6 +45,11 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       .join("\n")
     expect(scripts).toContain("ONDO_B_SITE_PROJECT_ID")
     expect(scripts).not.toContain(PROTECTED_A_PROJECT)
+    expect(scripts).toContain(PROTECTED_HISTORICAL_B_PROJECT)
+
+    const { prepareStandaloneSource } = await import("../../scripts/ondo-b-standalone/prepare.mjs")
+    await expect(prepareStandaloneSource({ projectId: PROTECTED_A_PROJECT })).rejects.toThrow("existing protected project identity")
+    await expect(prepareStandaloneSource({ projectId: PROTECTED_HISTORICAL_B_PROJECT })).rejects.toThrow("existing protected project identity")
   })
 
   test("B-STANDALONE-003 prepared source contains the complete current /ondo-b closure", async () => {
@@ -58,6 +71,9 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
       "public/brand/ondo-lockup.svg",
+      "public/brand/ondo-mark-inverse.svg",
+      "public/brand/ondo-mark-micro-24.svg",
+      "public/brand/ondo-mark.svg",
       "public/editorial/japan-first-c01-sesame-oil.jpg",
       "public/editorial/japan-first-c03-seoul-eight-hours.jpg",
       "public/editorial/japan-first-c06-beauty-research.jpg",
@@ -72,10 +88,27 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
     expect(files).toContain("features/ondo/local-signal-b/local-signal-layer-b.tsx")
     for (const file of [
+      "features/ondo/after19/after19-global-b-model.ts",
+      "features/ondo/after19/after19-global-b.tsx",
+      "features/ondo/after19/after19-global-b.module.css",
+      "features/ondo/identity-b/action-gate-contract-b.ts",
+      "features/ondo/identity-b/action-gate-coordinator-b.tsx",
+      "features/ondo/identity-b/action-gate-coordinator-b.module.css",
+      "features/ondo/identity-b/activity-profile-b-provider.tsx",
+      "features/ondo/identity-b/profile-reputation-b.tsx",
+      "features/ondo/identity-b/profile-reputation-b.module.css",
       "features/ondo/pulse-b/pulse-model-b.ts",
       "features/ondo/commerce-b/stable-commerce-model-b.ts",
       "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
       "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
+      "features/ondo/commerce-b/visit-stamp-receipt-b.tsx",
+      "features/ondo/commerce-b/visit-stamp-receipt-b.module.css",
+      "features/ondo/labs/labs-entry.tsx",
+      "features/ondo/labs/labs-model.ts",
+      "features/ondo/labs/labs.module.css",
+      "features/ondo/place/editorial-place-mount-b.tsx",
+      "features/ondo/place/editorial-place-overlay-b.tsx",
+      "features/ondo/place/editorial-place-overlay-b.module.css",
     ]) expect(files, `${file} is required positive standalone content`).toContain(file)
   })
 
@@ -91,7 +124,11 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       .map((file) => readFileSync(resolve(STAGE_ROOT, file), "utf8"))
       .join("\n")
 
-    expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|demo-journey|mock-data|features\/ondo\/(?:commerce\/|identity\/|labs\/|rewards\/|trust\/|fixtures\/)/i)
+    expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|useOndo\b|ondo-provider|demo-journey|mock-data|features\/ondo\/(?:commerce\/|identity\/|rewards\/|trust\/|fixtures\/)/i)
+    expect(source).toContain("export function LabsEntryB()")
+    expect(source).not.toContain("export function LabsEntry()")
+    expect(source).toContain("export function SheetB(")
+    expect(source).not.toContain("export function Sheet(")
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
     expect(visibleSource).toContain("OOKRW Test is a non-live product balance")
     expect(visibleSource).toContain("This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money")
@@ -150,6 +187,8 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/after19/after19-layer.tsx",
       "features/ondo/connect/tables-entry.tsx",
       "features/ondo/identity/identity-entry.tsx",
+      "features/ondo/identity-b/profile-reputation-b.tsx",
+      "features/ondo/identity-b/profile-reputation-b.module.css",
       "features/ondo/pulse-b/pulse-model-b.ts",
       "features/ondo/commerce-b/stable-commerce-model-b.ts",
     ]) {
@@ -197,6 +236,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/identity-b/traveler-id-entry-b.module.css",
       "features/ondo/local-signal-b/local-signal-layer-b.tsx",
       "features/ondo/local-signal-b/local-signal-layer-b.module.css",
+      "features/ondo/after19/after19-global-b-model.ts",
+      "features/ondo/after19/after19-global-b.tsx",
+      "features/ondo/after19/after19-global-b.module.css",
+      "features/ondo/identity-b/action-gate-contract-b.ts",
+      "features/ondo/identity-b/action-gate-coordinator-b.tsx",
+      "features/ondo/identity-b/action-gate-coordinator-b.module.css",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })
 
@@ -219,9 +264,42 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
     for (const path of [
       "public/brand/ondo-lockup.svg",
+      "public/brand/ondo-mark.svg",
+      "public/brand/ondo-mark-inverse.svg",
+      "public/brand/ondo-mark-micro-24.svg",
       "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
       "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
       "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
     ]) expect(PUBLIC_FILES, `${path} is referenced by the shipped UI`).toContain(path)
+  })
+
+  test("B-STANDALONE-012 positively ships B Labs while exact legacy Labs symbols remain denied", async () => {
+    const { LEGACY_ARTIFACT_PATH, LEGACY_ARTIFACT_TEXT, REQUIRED_B_NATIVE_LABS_FILES, SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    const required = [
+      "features/ondo/contracts/commerce.ts",
+      "features/ondo/contracts/domain.ts",
+      "features/ondo/contracts/evidence.ts",
+      "features/ondo/labs/labs-entry.tsx",
+      "features/ondo/labs/labs-model.ts",
+      "features/ondo/labs/labs.module.css",
+      "features/ondo/shared/ui/sheet-b.tsx",
+      "features/ondo/shared/ui/ui.module.css",
+      "features/ondo/shared/ui/use-qa-controls.ts",
+    ]
+    expect(REQUIRED_B_NATIVE_LABS_FILES).toEqual(required)
+    for (const path of required) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+    for (const path of required) expect(LEGACY_ARTIFACT_PATH.test(path), `${path} is positive closure, not a retired path`).toBe(false)
+    for (const validProductTerm of ["Labs", "LabsEntryB", "LABS · SIMULATED"]) {
+      expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(validProductTerm)), validProductTerm).toBe(false)
+    }
+    expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test("LabsEntry"))).toBe(true)
+  })
+
+  test("B-STANDALONE-013 ships the My Korea cartographic memory without a parallel data source", async () => {
+    const { SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    for (const path of [
+      "features/ondo/my/korea-memory-map-b.tsx",
+      "features/ondo/my/korea-memory-map-b.module.css",
+    ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })
 })

@@ -8,7 +8,9 @@ function run(command, args, options) {
   return new Promise((resolvePromise, reject) => {
     const child = spawn(command, args, { ...options, stdio: "inherit" })
     child.once("error", reject)
-    child.once("exit", (code, signal) => {
+    // `exit` may fire before inherited stdio closes and before vinext's final
+    // artifact publication is observable. `close` owns the complete build.
+    child.once("close", (code, signal) => {
       if (code === 0) resolvePromise()
       else reject(new Error(`${command} exited with ${signal ?? code}`))
     })

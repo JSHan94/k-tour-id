@@ -14,9 +14,13 @@ test("B-PROD-LOCAL-001 B composes the complete B-native local-device product wit
     "TravelerIdEntryB",
     "SettingsEntryB",
     "CanonicalPlaceMount",
+    "EditorialPlaceMountB",
+    "AccountSaveGateMountB",
     "LocalSignalLayerB",
+    "KTourIdSetupB",
+    "LabsEntryB",
   ]) expect(product).toContain(component)
-  expect(product).not.toMatch(/ConnectOverlays|GateOverlay|IdentityEntry|Labs|PlaceOverlay|OndoProvider/)
+  expect(product).not.toMatch(/ConnectOverlays|GateOverlay|IdentityEntry|PlaceOverlay|OndoProvider/)
 })
 
 test("B-PROD-LOCAL-002 navigation keeps Tables, ID · Wallet, and Settings as separate top-level destinations", () => {
@@ -45,7 +49,7 @@ test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlis
 
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "privateNotesByVenue", "recentVenueIds", "plannedTableRefs", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
+  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "savedEditorialPlaceIds", "privateNotesByVenue", "recentVenueIds", "recentEditorialPlaceIds", "plannedTableRefs", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
     expect(deviceType).toContain(field)
   }
   for (const forbidden of ["account:", "person:", "age:", "paymentKyc:", "gate:", "tableMembershipById:", "reputation:", "stamps:", "profile:"]) {
@@ -53,27 +57,35 @@ test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlis
   }
 })
 
-test("B-PROD-LOCAL-004 canonical local saves are real device behavior", () => {
+test("B-PROD-LOCAL-004 canonical local saves require a separate session Account and remain real device behavior", () => {
   const provider = appFile("features/ondo/shared/state/ondo-b-provider.tsx")
   const actionsType = provider.slice(provider.indexOf("type OndoBActions"), provider.indexOf("type OndoBDeviceState"))
   const actionsBody = provider.slice(provider.indexOf("const actions ="), provider.indexOf("const value ="))
   expect(actionsType).toContain("saveVenue(venueId: string): void")
   expect(actionsType).toContain("toggleSavedVenue(venueId: string): void")
+  expect(actionsType).toContain("beginAccountSave(venueId: string): boolean")
+  expect(actionsType).toContain("completeAccountSave()")
   expect(actionsBody).toContain("persistCanonicalSavedVenue")
+  expect(provider).toContain('B_ACCOUNT_SESSION_KEY = "ondo-b.account.v1"')
+  expect(provider).toContain('current.account !== "ACC-ACTIVE"')
   const saveAction = actionsBody.slice(actionsBody.indexOf("saveVenue"), actionsBody.indexOf("toggleSavedVenue"))
   expect(saveAction).not.toContain("beginAction(")
   expect(saveAction).not.toContain("setTimeout")
   expect(saveAction).not.toContain("URLSearchParams")
+  expect(saveAction).toContain("beginAccountSave(venueId)")
 })
 
 test("B-PROD-LOCAL-005 private notes and reset retain their explicit device boundary", () => {
   const saved = appFile("features/ondo/my/saved-entry-b.tsx")
   const settings = appFile("features/ondo/settings/settings-entry-b.tsx")
   const note = appFile("features/ondo/my/private-note.tsx")
-  const productCopy = `${saved}\n${settings}\n${note}`
-  expect(productCopy).not.toMatch(/demo|simulation|simulated|fixture|KYC|Labs|stamp|trust/i)
+  expect(note).not.toMatch(/demo|simulation|simulated|fixture|KYC|stamp|trust/i)
   expect(saved).toContain("Saved on this device · no reservation")
   expect(note).toContain("actions.setPrivateNote")
   expect(note).toContain("stays only in this browser")
+  expect(settings).toContain("visit stamps")
+  expect(settings).toContain("방문 스탬프")
+  expect(settings).toContain("訪問スタンプ")
+  expect(settings).not.toMatch(/verified visit|official trust|public reputation|identity provider connected/i)
   expect(settings).toContain("actions.clearBDeviceContent")
 })

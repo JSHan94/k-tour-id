@@ -2,6 +2,18 @@ import { isCanonicalVenueId } from "@/lib/ondo/venues/canonical-allowlist"
 
 export const B_RETURN_TO_TTL_MS = 10 * 60 * 1000
 
+export type BAccountReturnToEnvelope = {
+  tokenId: string
+  action: "SAVE_VENUE"
+  activeGate: "account"
+  venueId: string
+  returnLevel: "detail"
+  draft: null
+  createdAt: string
+  expiresAt: string
+  consumedAt: string | null
+}
+
 export type BReturnToEnvelope = {
   tokenId: string
   action: "JOIN_TABLE"
@@ -15,6 +27,44 @@ export type BReturnToEnvelope = {
 }
 
 const TABLE_ID = /^table-[a-z0-9-]{1,80}$/
+
+export function createBAccountReturnTo(venueId: string, now = new Date()): BAccountReturnToEnvelope {
+  if (!isCanonicalVenueId(venueId)) throw new Error("Invalid canonical venue return context")
+  const createdAt = now.toISOString()
+  return {
+    tokenId: `RT-B-SAVE_VENUE-${now.getTime()}`,
+    action: "SAVE_VENUE",
+    activeGate: "account",
+    venueId,
+    returnLevel: "detail",
+    draft: null,
+    createdAt,
+    expiresAt: new Date(now.getTime() + B_RETURN_TO_TTL_MS).toISOString(),
+    consumedAt: null,
+  }
+}
+
+export function isBAccountReturnToUsable(returnTo: BAccountReturnToEnvelope | null, now = new Date()) {
+  if (!returnTo) return false
+  const createdAt = new Date(returnTo.createdAt).getTime()
+  const expiresAt = new Date(returnTo.expiresAt).getTime()
+  return returnTo.action === "SAVE_VENUE"
+    && returnTo.activeGate === "account"
+    && returnTo.consumedAt === null
+    && returnTo.tokenId === `RT-B-SAVE_VENUE-${createdAt}`
+    && isCanonicalVenueId(returnTo.venueId)
+    && returnTo.returnLevel === "detail"
+    && returnTo.draft === null
+    && Number.isFinite(createdAt)
+    && Number.isFinite(expiresAt)
+    && expiresAt - createdAt === B_RETURN_TO_TTL_MS
+    && expiresAt > now.getTime()
+}
+
+export function consumeBAccountReturnTo(returnTo: BAccountReturnToEnvelope, now = new Date()): BAccountReturnToEnvelope | null {
+  if (!isBAccountReturnToUsable(returnTo, now)) return null
+  return { ...returnTo, consumedAt: now.toISOString() }
+}
 
 export function createBReturnTo(input: {
   tableId: string

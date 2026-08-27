@@ -16,15 +16,7 @@ const FOCUSABLE = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",")
 
-export function Sheet({
-  children,
-  label,
-  onClose,
-  showClose = true,
-  size = "medium",
-  suspended = false,
-  initialFocusSelector,
-}: {
+type SheetFrameProps = {
   children: ReactNode
   label: string
   onClose(): void
@@ -34,12 +26,33 @@ export function Sheet({
   suspended?: boolean
   /** Prefer a task-local action over the generic Close control on entry. */
   initialFocusSelector?: string
-}) {
+}
+
+export function Sheet(props: SheetFrameProps) {
   const { state } = useOndo()
+  return <SheetFrame {...props} closeLabel={state.locale === "ko" ? "닫기" : "Close"} />
+}
+
+/** Provider-neutral sheet for Variant B surfaces that reuse an established
+ * modal flow without mounting the legacy OndoProvider beside OndoBProvider. */
+export function SheetB({ locale, ...props }: SheetFrameProps & { locale: "en" | "ko" | "ja" }) {
+  const closeLabel = locale === "ko" ? "닫기" : locale === "ja" ? "閉じる" : "Close"
+  return <SheetFrame {...props} closeLabel={closeLabel} />
+}
+
+function SheetFrame({
+  children,
+  label,
+  onClose,
+  showClose = true,
+  size = "medium",
+  suspended = false,
+  initialFocusSelector,
+  closeLabel,
+}: SheetFrameProps & { closeLabel: string }) {
   const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
-  const closeLabel = state.locale === "ko" ? "닫기" : "Close"
   useModalIsolation(true, layerRef)
 
   useEffect(() => {

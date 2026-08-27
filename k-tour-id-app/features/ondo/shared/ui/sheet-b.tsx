@@ -1,0 +1,141 @@
+"use client"
+
+import type { KeyboardEvent, ReactNode } from "react"
+import { useEffect, useRef } from "react"
+import { X } from "lucide-react"
+import { useModalIsolation } from "./use-modal-isolation"
+import styles from "./ui.module.css"
+
+const FOCUSABLE = [
+  "a[href]",
+  "button:not([disabled])",
+  "input:not([disabled]):not([type='hidden'])",
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "[tabindex]:not([tabindex='-1'])",
+].join(",")
+
+type SheetBProps = {
+  children: ReactNode
+  label: string
+  locale: "en" | "ko" | "ja"
+  onClose(): void
+  showClose?: boolean
+  size?: "peek" | "medium" | "full"
+  suspended?: boolean
+  initialFocusSelector?: string
+}
+
+/** Variant B owns this provider-neutral frame so its production graph cannot
+ * pull the legacy OndoProvider in through a shared wrapper. */
+export function SheetB({ locale, ...props }: SheetBProps) {
+  const closeLabel = locale === "ko" ? "닫기" : locale === "ja" ? "閉じる" : "Close"
+  return <SheetBFrame {...props} closeLabel={closeLabel} />
+}
+
+function SheetBFrame({
+  children,
+  label,
+  onClose,
+  showClose = true,
+  size = "medium",
+  suspended = false,
+  initialFocusSelector,
+  closeLabel,
+}: Omit<SheetBProps, "locale"> & { closeLabel: string }) {
+  const layerRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLElement>(null)
+  const returnFocusRef = useRef<HTMLElement | null>(null)
+  useModalIsolation(true, layerRef)
+
+  useEffect(() => {
+    const activeElement = document.activeElement
+    returnFocusRef.current = activeElement instanceof HTMLElement && activeElement !== document.body ? activeElement : null
+    const dialog = dialogRef.current
+    const preferred = (initialFocusSelector ? dialog?.querySelector<HTMLElement>(initialFocusSelector) : null)
+      ?? dialog?.querySelector<HTMLElement>("[data-sheet-initial-focus]")
+    const first = preferred ?? dialog?.querySelector<HTMLElement>(FOCUSABLE) ?? dialog
+    const focusInitial = () => {
+      if (dialog?.contains(document.activeElement)) return
+      first?.focus({ preventScroll: true })
+    }
+    window.requestAnimationFrame(() => window.requestAnimationFrame(focusInitial))
+    const focusRecoveryTimer = window.setTimeout(() => {
+      if (dialogRef.current && !dialogRef.current.contains(document.activeElement)) focusInitial()
+    }, 160)
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const interceptEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || !dialogRef.current?.contains(document.activeElement)) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      onClose()
+    }
+    document.addEventListener("keydown", interceptEscape, true)
+    return () => {
+      document.removeEventListener("keydown", interceptEscape, true)
+      window.clearTimeout(focusRecoveryTimer)
+      document.body.style.overflow = previousOverflow
+      window.setTimeout(() => {
+        if (document.querySelector("[role='dialog'][aria-modal='true'], [role='alertdialog'][aria-modal='true']")) return
+        const active = document.activeElement
+        if (active && active !== document.body && active !== document.documentElement && active.isConnected) return
+        const previous = returnFocusRef.current
+        if (previous?.isConnected) previous.focus({ preventScroll: true })
+        else document.querySelector<HTMLElement>("[data-sheet-return-focus], [data-testid='canonical-place-details'], [data-testid='place-details'], [aria-current='page']")?.focus({ preventScroll: true })
+      }, 80)
+    }
+  }, [initialFocusSelector, showClose])
+
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      event.stopPropagation()
+      onClose()
+      return
+    }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
+      .filter((element) => element.offsetParent !== null)
+    if (!focusable.length) {
+      event.preventDefault()
+      dialogRef.current?.focus()
+      return
+    }
+    const first = focusable[0]
+    const last = focusable.at(-1)!
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
+
+  return (
+    <div ref={layerRef} className={styles.layer}>
+      <button type="button" tabIndex={-1} className={styles.backdrop} onClick={onClose} aria-hidden="true" />
+      <section
+        ref={dialogRef}
+        className={`${styles.sheet} ${styles[size]}`}
+        data-testid="ondo-sheet"
+        data-sheet-size={size}
+        role={suspended ? undefined : "dialog"}
+        aria-modal={suspended ? undefined : "true"}
+        aria-label={label}
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+      >
+        <div className={styles.grabber} aria-hidden="true" />
+        {showClose ? <button type="button" data-sheet-initial-focus className={styles.close} onClick={onClose} aria-label={closeLabel}><X size={19} /></button> : null}
+        <div className={styles.viewport}>{children}</div>
+      </section>
+    </div>
+  )
+}
+
+export function InlineNotice({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "warm" | "danger" | "success" }) {
+  return <div className={`${styles.notice} ${styles[`notice_${tone}`]}`}>{children}</div>
+}

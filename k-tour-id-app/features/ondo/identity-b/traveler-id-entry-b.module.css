@@ -1,5 +1,6 @@
 .root { min-height: 100%; }
 .walletPane { min-width: 0; container-type: inline-size; }
+.profilePane { min-width: 0; }
 .screen {
   --paper: #f3ede7;
   --ink: #231f20;
@@ -103,7 +104,8 @@
   .pass { grid-column: 1; grid-row: 2; }
   .walletPane { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
   .readiness { grid-column: 1 / -1; grid-row: 3; }
-  .footer { grid-column: 1 / -1; grid-row: 4; }
+  .profilePane { grid-column: 1 / -1; grid-row: 4; }
+  .footer { grid-column: 1 / -1; grid-row: 5; }
   .statusGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
 
@@ -154,7 +156,8 @@
   .pass > p { margin-top: 8px; }
   .walletPane { grid-column: 2; grid-row: 1; margin-top: 0; }
   .readiness { grid-column: 1 / -1; grid-row: 2; }
-  .footer { grid-column: 1 / -1; grid-row: 3; }
+  .profilePane { grid-column: 1 / -1; grid-row: 3; }
+  .footer { grid-column: 1 / -1; grid-row: 4; }
 }
 
 @keyframes passReveal { from { opacity: 0; transform: translateY(10px) scale(.99); } }

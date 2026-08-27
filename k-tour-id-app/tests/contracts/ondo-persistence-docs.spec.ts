@@ -24,7 +24,7 @@ const RETURN_TO_CTAS = [
 ] as const satisfies readonly ReturnToCta[]
 
 const GATES = ["account", "person", "age", "payment_kyc"] as const satisfies readonly GateKind[]
-const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.labs.v2", "ondo.accepted-visits.v2"] as const
+const FEATURE_SESSION_KEYS = ["ondo.chat.v2", "ondo.table-outcomes.v2", "ondo.labs.v2", "ondo-b.labs.v1", "ondo.accepted-visits.v2"] as const
 
 test("CONTRACT-DATA-017 v3 persistence keys and stored field allowlists stay canonical", () => {
   const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")

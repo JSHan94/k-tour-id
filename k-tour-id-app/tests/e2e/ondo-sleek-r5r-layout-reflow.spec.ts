@@ -7,7 +7,6 @@ import {
   installBRuntimeGuard,
   prepareBPage,
   seedB,
-  type BLocale,
 } from "../helpers/ondo-b-qa"
 
 const REFLOW_VIEWPORTS = [
@@ -62,28 +61,27 @@ async function expectIndependentControls(page: Page, controls: Locator[]) {
   }
 }
 
-async function cityControls(page: Page, locale: BLocale, view: "map" | "list") {
-  const rail = page.getByLabel(locale === "ko" ? "장소 신호 필터" : "Place signal filters")
+async function cityControls(page: Page, view: "map" | "list") {
+  const rail = page.getByTestId("ondo-b-category-rail")
   const nav = page.getByTestId("ondo-main-nav")
+  const navButtons = await nav.getByRole("button").all()
   const controls = [
-    page.getByRole("textbox", { name: locale === "ko" ? "가게 이름, 지역, 음식 검색" : "Food place or neighborhood" }),
+    page.getByTestId("ondo-b-search"),
     rail.getByRole("button").nth(0),
     rail.getByRole("button").nth(1),
     rail.getByRole("button").nth(2),
-    page.getByTestId("ondo-b-preference-summary"),
-    page.getByTestId("after19-toggle"),
     page.getByTestId("ondo-b-view-toggle"),
-    ...Array.from({ length: 4 }, (_, index) => nav.getByRole("button").nth(index)),
+    ...navButtons,
   ]
 
   if (view === "map") {
     const mapControls = page.locator(".maplibregl-ctrl-group button")
     await expect(mapControls).toHaveCount(2)
+    await expect(mapControls.nth(0)).toBeHidden()
+    await expect(mapControls.nth(1)).toBeHidden()
     controls.push(
       page.getByTestId("ondo-b-locate"),
-      mapControls.nth(0),
-      mapControls.nth(1),
-      page.getByRole("link", { name: /OpenFreeMap/ }),
+      page.getByTestId("ondo-b-attribution").locator("summary"),
     )
   } else {
     controls.push(page.getByTestId("ondo-b-venue-list").getByRole("button").first())
@@ -170,14 +168,14 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
         await page.setViewportSize(viewport)
         await gotoB(page, "?city=seoul&view=map")
         await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
-        const mapControls = await cityControls(page, locale, "map")
+        const mapControls = await cityControls(page, "map")
         await expectIndependentControls(page, mapControls)
         await expectNoMapChromeCollision(page, mapControls)
         await expectNoHorizontalOverflow(page)
 
         await gotoB(page, "?city=seoul&view=list")
         await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
-        await expectIndependentControls(page, await cityControls(page, locale, "list"))
+        await expectIndependentControls(page, await cityControls(page, "list"))
         await expectNoHorizontalOverflow(page)
 
         const axe = await new AxeBuilder({ page })

@@ -6,6 +6,7 @@ import {
   LEGACY_ARTIFACT_PATH,
   LEGACY_ARTIFACT_TEXT,
   EXPECTED_ROUTE_FILES,
+  HISTORICAL_B_PROJECT_ID,
   PUBLIC_FILES,
   STAGE_DIST,
   STAGE_ROOT,
@@ -85,8 +86,8 @@ export async function scanStandaloneArtifact() {
 
   const protectedHosting = JSON.parse(await readFile(resolve(APP_ROOT, ".openai/hosting.json"), "utf8"))
   const artifactHosting = JSON.parse(await readFile(hostingEntry, "utf8"))
-  if (!artifactHosting.project_id || artifactHosting.project_id === protectedHosting.project_id) {
-    fail("Artifact hosting identity is absent or aliases the protected checked-in project")
+  if (!artifactHosting.project_id || artifactHosting.project_id === protectedHosting.project_id || artifactHosting.project_id === HISTORICAL_B_PROJECT_ID) {
+    fail("Artifact hosting identity is absent or aliases an existing protected project")
   }
 
   const records = await Promise.all(artifactFiles.map(async (file) => ({

@@ -1,9 +1,10 @@
 # ONDO Product-wide Visual Reset Plan
 
-Status: planning only. This document does not authorize product edits.
+Status: approved direction implemented in the current Sleek B candidate;
+full automatic gates and two independent CLEAN review rounds remain pending.
 
-The next implementation checkpoint must be approved separately. Flow 9 and
-Flow 10 remain paused while this plan is reviewed.
+This document preserves the approved plan and records the decisions used during
+implementation. It is not evidence of release approval by itself.
 
 ## 1. Why this reset exists
 
@@ -279,7 +280,7 @@ OpenDID is the issuance, holder, status and presentation infrastructure. It is
 not the Passport eKYC provider, a government ID issuer, a visa or a residence
 permit.
 
-### Proposed onboarding structure
+### Implemented simulated onboarding structure
 
 1. **Explore as a guest** remains the fastest default and never invokes eKYC.
 2. **Set up K-Tour ID** is an optional branch with a visible environment label.
@@ -309,15 +310,17 @@ permit.
 - credential ready, expired, suspended/revoked and reissue
 - browser reload, back/forward and exact return
 
-### Environment decision required before implementation
+### Environment decision and current boundary
 
-- **Actual adapter:** requires selected Passport eKYC provider, OpenDID issuer,
+- **Actual adapter (deferred):** requires selected Passport eKYC provider, OpenDID issuer,
   holder/verifier/status environment, callback security and retention policy.
-- **SIMULATED walkthrough:** may ship sooner, but every step and result must say
-  `SIMULATED`; it may not display a real provider, verified identity or live VC.
+- **SIMULATED walkthrough (selected for this candidate):** every step and result
+  says `SIMULATED`; it displays no real provider, verified identity or live VC.
+  Guest Explore stays ungated and the walkthrough stores no document, face,
+  provider result or credential in device persistence.
 
-No implementation begins until the available environment is confirmed. The
-UI will not silently substitute OmniOne CX for Passport eKYC.
+The current UI does not silently substitute OmniOne CX for Passport eKYC. A
+future real-adapter change requires a separate environment and privacy decision.
 
 ## 8. Logo, icon and human-image asset plan
 
@@ -348,7 +351,7 @@ credential surfaces or anything that could imply a real verified person.
 Maintain the existing synthetic-asset disclosure and do not infer nationality,
 identity or eligibility from appearance.
 
-## 9. Proposed execution order
+## 9. Execution record and remaining order
 
 1. Freeze a current 320/390/844/1440 screenshot census for all 10 flows.
 2. Produce a white/black direction board and logo/icon/people concept board.
@@ -363,8 +366,10 @@ identity or eligibility from appearance.
 9. Finish My Korea and Settings in the approved white/black system.
 10. Run the full functional and visual matrix before release.
 
-The work proceeds one connected flow at a time with a user checkpoint after
-each. No next flow starts automatically.
+Items 1–9 have been implemented in the current candidate without deleting the
+underlying PRD states. Item 10 remains the release boundary: exact automated
+gates, a frozen evidence tuple, two independent CLEAN review rounds, and only
+then a new personal private deployment.
 
 ## 10. Acceptance gates
 

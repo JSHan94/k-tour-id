@@ -28,8 +28,10 @@ test("B-MY-001 My Korea keeps Saved and adds recent, planned, and contribution l
     "my-korea-contributions",
     "PrivateNote",
   ]) expect(my).toContain(evidence)
-  expect(my).toContain("Recently viewed official places")
-  expect(my).toContain("최근 본 공식 장소")
+  expect(my).toContain("Recently viewed places")
+  expect(my).toContain("최근 본 장소")
+  expect(my).toContain("VISITKOREA editorial · not an official food record")
+  expect(my).toContain("VISITKOREA 편집 · 공식 음식점 기록 아님")
   expect(my).toContain("Planned meals")
   expect(my).toContain("식사 계획")
 })
@@ -37,6 +39,8 @@ test("B-MY-001 My Korea keeps Saved and adds recent, planned, and contribution l
 test("B-MY-002 device history accepts only canonical IDs and bounded local references", () => {
   const model = source("features/ondo/my/my-korea-model.ts")
   const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const persistenceStart = provider.indexOf("function restoreBDeviceState")
+  const devicePersistence = provider.slice(persistenceStart, provider.indexOf("export type BAccountSessionState", persistenceStart))
 
   for (const evidence of [
     "MY_KOREA_HISTORY_LIMIT",
@@ -46,10 +50,10 @@ test("B-MY-002 device history accepts only canonical IDs and bounded local refer
     "recordRecentVenue",
     "recordPlannedTable",
   ]) expect(model).toContain(evidence)
-  for (const evidence of ["recentVenueIds", "plannedTableRefs", "localSignalPostedVenueIds"]) {
+  for (const evidence of ["recentVenueIds", "savedEditorialPlaceIds", "recentEditorialPlaceIds", "sanitizeEditorialPlaceIds", "plannedTableRefs", "localSignalPostedVenueIds"]) {
     expect(provider).toContain(evidence)
   }
-  expect(`${model}\n${provider}`).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|EventSource|sessionStorage/)
+  expect(`${model}\n${devicePersistence}`).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|EventSource|sessionStorage/)
   expect(model).not.toMatch(/draft|note|message|account|person|dateOfBirth|passport/i)
 })
 
@@ -57,12 +61,20 @@ test("B-MY-003 activity is created only by explicit place-open and final join ac
   const map = source("features/ondo/map/map-entry-b.tsx")
   const my = source("features/ondo/my/saved-entry-b.tsx")
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
+  const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
 
   expect(map).toContain("actions.recordRecentVenue(venue.id)")
+  expect(map).toContain("actions.recordRecentEditorialPlace(place.id)")
   expect(my).toContain("actions.recordRecentVenue(venueId)")
-  expect(functionBody(tables, "confirmJoin", "confirmLeave")).toContain("actions.recordPlannedTable")
-  expect(functionBody(tables, "beginJoin", "cancelGate")).not.toContain("recordPlannedTable")
-  expect(functionBody(tables, "completeGate", "confirmJoin")).not.toContain("recordPlannedTable")
+  expect(my).toContain("actions.recordRecentEditorialPlace(editorialPlaceId)")
+  const beginJoin = functionBody(tables, "beginJoin", "confirmJoin")
+  const confirmJoin = functionBody(tables, "confirmJoin", "saveFeedback")
+  expect(beginJoin).toContain("createBTableActionReturn")
+  expect(beginJoin).not.toContain("recordPlannedTable")
+  expect(confirmJoin).toContain("consumePendingBActionAtMutation")
+  expect(confirmJoin).toContain("actions.recordPlannedTable")
+  expect(confirmJoin.indexOf("consumePendingBActionAtMutation")).toBeLessThan(confirmJoin.indexOf("actions.recordPlannedTable"))
+  expect(coordinator).not.toContain("recordPlannedTable")
   expect(functionBody(tables, "confirmLeave", "handleDetailKeyDown")).toContain("actions.removePlannedTable")
 })
 
@@ -90,6 +102,8 @@ test("B-MY-005 reset, reload persistence, EN/KO, privacy, and responsive contrac
   const policy = source("scripts/ondo-b-standalone/policy.mjs")
 
   expect(provider).toContain("recentVenueIds: []")
+  expect(provider).toContain("savedEditorialPlaceIds: []")
+  expect(provider).toContain("recentEditorialPlaceIds: []")
   expect(provider).toContain("plannedTableRefs: []")
   expect(provider).toContain("localSignalPostedVenueIds: []")
   expect(settings).toContain("recent views")
@@ -100,4 +114,26 @@ test("B-MY-005 reset, reload persistence, EN/KO, privacy, and responsive contrac
   expect(css).toContain(".activitySections")
   expect(css).toContain("@media (min-width: 700px)")
   expect(policy).toContain('"features/ondo/my/my-korea-model.ts"')
+})
+
+test("B-MY-006 the trip memory map visualizes only unique device-local place evidence", () => {
+  const my = source("features/ondo/my/saved-entry-b.tsx")
+  const memory = source("features/ondo/my/korea-memory-map-b.tsx")
+  const css = source("features/ondo/my/korea-memory-map-b.module.css")
+  const policy = source("scripts/ondo-b-standalone/policy.mjs")
+
+  expect(my).toContain('import { KoreaMemoryMapB } from "./korea-memory-map-b"')
+  expect(my).toContain("mappedOfficialVenues")
+  expect(my).toContain("new Set(mappedOfficialVenues.filter")
+  expect(my).toContain("new Set([...savedEditorial, ...recentEditorial]")
+  expect(my).toContain("!isEmptyJourney ? <KoreaMemoryMapB")
+  expect(memory).toContain('data-testid="my-korea-map-memory"')
+  expect(memory).toContain("KOREA_OUTLINE_COORDINATES")
+  expect(memory).not.toMatch(/route|polyline|itinerary/i)
+  expect(css).toContain(".outline")
+  expect(css).toContain("prefers-reduced-motion")
+  for (const path of [
+    "features/ondo/my/korea-memory-map-b.tsx",
+    "features/ondo/my/korea-memory-map-b.module.css",
+  ]) expect(policy).toContain(`"${path}"`)
 })

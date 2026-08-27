@@ -185,6 +185,25 @@
 .sourceDisclosure > summary { color: #5f5750; font-size: 12px; font-weight: 760; }
 .sourceDisclosure nav { margin-top: 5px; }
 
+.mapCta {
+  box-sizing: border-box;
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid #171717;
+  border-radius: 12px;
+  background: #171717;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 780;
+  text-align: left;
+}
+.mapCta:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
+
 .moreStories { border-top: 1px solid rgb(54 43 36 / 10%); }
 .moreStories > div { display: grid; gap: 8px; padding-top: 4px; }
 .compactStory { grid-template-columns: minmax(0, 1fr); }
@@ -491,8 +510,17 @@
 }
 
 .contentRail article[data-editorial-role="lead"] .storyCopy > strong {
+  display: block;
+  overflow: visible;
   font-size: 19px;
   line-height: 1.24;
+  -webkit-line-clamp: unset;
+}
+
+.contentRail article[data-editorial-role="lead"] .storyCopy > p {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .contentRail article[data-editorial-role="supporting"] {

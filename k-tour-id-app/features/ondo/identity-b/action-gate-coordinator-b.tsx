@@ -1,0 +1,443 @@
+"use client"
+
+import type { KeyboardEvent } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { AlertTriangle, BadgeCheck, ChevronRight, CircleUserRound, CreditCard, RotateCcw, ShieldCheck, UserRoundCheck, X } from "lucide-react"
+import {
+  GLOBAL_AFTER19_SESSION_EVENT,
+  GLOBAL_AFTER19_SESSION_KEY,
+  isGlobalAfter19AgeCurrent,
+  recordGlobalAfter19AgeEligibilityB,
+  restoreGlobalAfter19B,
+  type GlobalAfter19SessionB,
+} from "../after19/after19-global-b-model"
+import { ONDO_OPEN_TABLE_EVENT } from "../connect/tables-entry-b"
+import { useOndoB } from "../shared/state/ondo-b-provider"
+import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import {
+  B_ACTION_GATE_CANCEL_EVENT,
+  B_ACTION_AXIS_SESSION_EVENT,
+  B_ACTION_AXIS_TTL_MS,
+  B_ACTION_GATE_COMPLETE_EVENT,
+  B_ACTION_GATE_READY_EVENT,
+  B_ACTION_GATE_REQUEST_EVENT,
+  DEFAULT_B_ACTION_GATE_SESSION,
+  isBActionReturnPending,
+  persistBActionGateSession,
+  renewBActionReturnTo,
+  restoreBActionGateSession,
+  type BActionAxis,
+  type BActionGateKind,
+  type BActionGateOutcome,
+  type BActionGateSession,
+  type BActionReturnTo,
+} from "./action-gate-contract-b"
+import styles from "./action-gate-coordinator-b.module.css"
+
+const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex='-1'])"
+
+type GateView = "intro" | "failure" | "unavailable" | "expired"
+type GateQaOutcome = Exclude<GateView, "intro">
+type QaWindow = Window & {
+  __ONDO_B_QA__?: {
+    actionGate?: Partial<Record<BActionGateKind, GateQaOutcome>>
+    eligibility?: "success" | "cancel" | "failure" | "unavailable" | "expired"
+    after19?: GateQaOutcome
+    paymentKyc?: GateQaOutcome
+  }
+  __ONDO_B_TABLE_INTENT__?: { tableId: string; venueId: string; mode: string; draft?: string }
+}
+
+const COPY = {
+  en: {
+    header: "Minimum check · this tab only",
+    accountTitle: "Create a local account preview",
+    accountBody: "Account comes first. It does not complete Person, 19+, identity, or Payment checks.",
+    personTitle: "Confirm Person for this action",
+    personBody: "Only a session result is used to return to your exact Local Signal draft. No identity provider is connected.",
+    ageTitle: "Confirm 19+ for this Table",
+    ageBody: "Only an eligibility result and expiry are kept in this tab. No birth date or official venue restriction is claimed.",
+    paymentTitle: "Prepare Payment eligibility",
+    paymentBody: "Payment eligibility is independent from Account, Person, and 19+. No payment or KYC provider is connected.",
+    accountAction: "Create local account and continue",
+    personAction: "Confirm Person and continue",
+    ageAction: "Confirm 19+ and continue",
+    paymentAction: "Prepare Payment check and continue",
+    returnLabel: "Return to",
+    table: "Table and host note",
+    signal: "Local Signal draft",
+    checkout: "Meal offer checkout",
+    truth: "SIMULATED LOCAL CHECK · no external provider, credential, document, or raw identity data",
+    cancel: "Not now — return without changing the action",
+    failureTitle: "This check did not complete",
+    failureBody: "The exact action context is unchanged. Nothing was submitted, joined, or paid.",
+    unavailableTitle: "This check is unavailable",
+    unavailableBody: "Keep the pending action and retry later, or return without changing it.",
+    expiredTitle: "The check or return path expired",
+    expiredBody: "Refresh the same return path to continue without losing its registered context.",
+    retry: "Try again",
+    renew: "Refresh return path",
+    consentRequester: "Requested by",
+    consentRequesterValue: "ONDO Travel Pass",
+    consentPurpose: "Used for",
+    consentPurposeValue: "Post your Local Signal and return to the note you were writing.",
+    consentMinimum: "Answer shared",
+    consentMinimumValue: "Person — separate from age or legal identity",
+    consentRetention: "Kept for",
+    consentRetentionValue: "No name, document, birth date, profile, or credential is saved.",
+  },
+  ko: {
+    header: "최소 확인 · 이 탭에서만",
+    accountTitle: "로컬 계정 미리보기 만들기",
+    accountBody: "계정을 먼저 준비합니다. 본인·19+·신원·결제 확인은 완료되지 않습니다.",
+    personTitle: "이 작업의 본인 여부 확인",
+    personBody: "세션 결과만 사용해 작성 중이던 로컬 시그널로 돌아갑니다. 연결된 신원 공급자는 없습니다.",
+    ageTitle: "이 테이블의 19+ 확인",
+    ageBody: "충족 결과와 만료 시각만 이 탭에 남습니다. 생년월일이나 장소의 공식 제한을 주장하지 않습니다.",
+    paymentTitle: "결제 자격 준비",
+    paymentBody: "결제 자격은 계정·본인·19+와 별개입니다. 연결된 결제 또는 KYC 공급자는 없습니다.",
+    accountAction: "로컬 계정 만들고 계속",
+    personAction: "본인 확인하고 계속",
+    ageAction: "19+ 확인하고 계속",
+    paymentAction: "결제 확인 준비하고 계속",
+    returnLabel: "돌아갈 곳",
+    table: "테이블과 호스트 메모",
+    signal: "로컬 시그널 초안",
+    checkout: "식사 혜택 결제",
+    truth: "로컬 시뮬레이션 확인 · 외부 공급자·자격증명·문서·원본 신원 정보 없음",
+    cancel: "나중에 — 작업을 바꾸지 않고 돌아가기",
+    failureTitle: "확인을 완료하지 못했어요",
+    failureBody: "정확한 작업 맥락은 그대로입니다. 게시·참여·결제된 내용은 없습니다.",
+    unavailableTitle: "지금은 확인할 수 없어요",
+    unavailableBody: "진행 중인 작업을 유지해 나중에 다시 시도하거나, 바꾸지 않고 돌아갈 수 있습니다.",
+    expiredTitle: "확인 또는 복귀 경로가 만료됐어요",
+    expiredBody: "등록된 맥락을 잃지 않고 같은 복귀 경로를 새로 만들어 계속하세요.",
+    retry: "다시 시도",
+    renew: "복귀 경로 새로 만들기",
+    consentRequester: "요청자",
+    consentRequesterValue: "ONDO 여행 패스",
+    consentPurpose: "사용 목적",
+    consentPurposeValue: "로컬 시그널을 게시하고 작성 중이던 메모로 정확히 돌아갑니다.",
+    consentMinimum: "공유되는 답변",
+    consentMinimumValue: "본인 여부만 · 나이 또는 법적 신원과 별개",
+    consentRetention: "저장 범위",
+    consentRetentionValue: "이름·문서·생년월일·프로필·자격증명을 저장하지 않습니다.",
+  },
+  ja: {
+    header: "必要最小限の確認 · このタブのみ",
+    accountTitle: "ローカルアカウントのプレビューを作成",
+    accountBody: "最初にアカウントを準備します。本人、19歳以上、身元、決済の確認は完了しません。",
+    personTitle: "この操作の本人確認",
+    personBody: "セッション結果だけを使い、編集中のLocal Signalに戻ります。外部の本人確認サービスには接続しません。",
+    ageTitle: "このテーブルの19歳以上確認",
+    ageBody: "適格結果と有効期限だけをこのタブに保持します。生年月日や店舗の公式制限は示しません。",
+    paymentTitle: "決済利用条件を準備",
+    paymentBody: "決済利用条件はアカウント、本人、19歳以上とは独立しています。決済・KYCサービスには接続しません。",
+    accountAction: "ローカルアカウントを作成して続ける",
+    personAction: "本人確認をして続ける",
+    ageAction: "19歳以上を確認して続ける",
+    paymentAction: "決済確認を準備して続ける",
+    returnLabel: "戻る場所",
+    table: "テーブルとホストへのメモ",
+    signal: "Local Signalの下書き",
+    checkout: "食事特典のテスト決済",
+    truth: "ローカル・シミュレーション確認 · 外部サービス、資格情報、書類、元の本人情報は使用しません",
+    cancel: "今回はしない — 操作を変えずに戻る",
+    failureTitle: "確認を完了できませんでした",
+    failureBody: "操作の正確なコンテキストは変わりません。投稿、参加、決済は行われていません。",
+    unavailableTitle: "現在この確認を利用できません",
+    unavailableBody: "保留中の操作を維持して後で再試行するか、変更せずに戻れます。",
+    expiredTitle: "確認または戻り先の有効期限が切れました",
+    expiredBody: "登録済みのコンテキストを失わず、同じ戻り先を更新して続けてください。",
+    retry: "もう一度試す",
+    renew: "戻り先を更新",
+    consentRequester: "リクエスト元",
+    consentRequesterValue: "ONDOトラベルパス",
+    consentPurpose: "使用目的",
+    consentPurposeValue: "Local Signalを投稿し、編集中のメモへ正確に戻ります。",
+    consentMinimum: "共有する回答",
+    consentMinimumValue: "本人かどうかのみ · 年齢や法的身元とは別です",
+    consentRetention: "保存範囲",
+    consentRetentionValue: "氏名、書類、生年月日、プロフィール、資格情報は保存しません。",
+  },
+} as const
+
+function writeGlobalAge(session: GlobalAfter19SessionB) {
+  try {
+    window.sessionStorage.setItem(GLOBAL_AFTER19_SESSION_KEY, JSON.stringify(session))
+    window.dispatchEvent(new CustomEvent(GLOBAL_AFTER19_SESSION_EVENT, { detail: session }))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function axisReady(axis: BActionAxis, now: Date) {
+  return axis.status === "eligible" && axis.expiresAt !== null && Date.parse(axis.expiresAt) > now.getTime()
+}
+
+function readyAxis(now = new Date()): BActionAxis {
+  return { status: "eligible", expiresAt: new Date(now.getTime() + B_ACTION_AXIS_TTL_MS).toISOString() }
+}
+
+function returnLabel(returnTo: BActionReturnTo, copy: (typeof COPY)[keyof typeof COPY]) {
+  if (returnTo.cta === "JOIN_TABLE") return copy.table
+  if (returnTo.cta === "SUBMIT_LOCAL_SIGNAL") return copy.signal
+  return copy.checkout
+}
+
+export function BActionGateCoordinator() {
+  const { state, actions } = useOndoB()
+  const [session, setSession] = useState<BActionGateSession>(DEFAULT_B_ACTION_GATE_SESSION)
+  const [ageSession, setAgeSession] = useState<GlobalAfter19SessionB | null>(null)
+  const [hydrated, setHydrated] = useState(false)
+  const [clock, setClock] = useState(() => new Date())
+  const [view, setView] = useState<GateView>("intro")
+  const [readyTokenId, setReadyTokenId] = useState<string | null>(null)
+  const layerRef = useRef<HTMLDivElement | null>(null)
+  const dialogRef = useRef<HTMLElement | null>(null)
+  const primaryRef = useRef<HTMLButtonElement | null>(null)
+  const pending = session.pending
+  const copy = COPY[state.locale]
+
+  useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId), layerRef)
+
+  const restoreContext = useCallback((returnTo: BActionReturnTo) => {
+    if (returnTo.cta === "JOIN_TABLE") {
+      actions.setTab("tables")
+      ;(window as QaWindow).__ONDO_B_TABLE_INTENT__ = { tableId: returnTo.tableId, venueId: returnTo.venueId, mode: "view", draft: returnTo.draft }
+      window.setTimeout(() => window.dispatchEvent(new CustomEvent(ONDO_OPEN_TABLE_EVENT, { detail: { tableId: returnTo.tableId, venueId: returnTo.venueId, mode: "view", draft: returnTo.draft } })), 0)
+      return
+    }
+    if (returnTo.cta === "SUBMIT_LOCAL_SIGNAL") {
+      actions.setTab("ondo")
+      actions.setSurface({ kind: "venue", venueId: returnTo.venueId })
+      actions.openLocalSignal(returnTo.venueId)
+      actions.updateLocalSignalDraft({ tags: returnTo.tags, note: returnTo.note })
+      return
+    }
+    actions.openMealBenefitFromPlace(returnTo.venueId)
+  }, [actions])
+
+  useEffect(() => {
+    if (!state.hydrated || hydrated) return
+    const restored = restoreBActionGateSession(window.sessionStorage)
+    const restoredAge = restoreGlobalAfter19B(window.localStorage, window.sessionStorage).session
+    persistBActionGateSession(window.sessionStorage, restored)
+    setSession(restored)
+    setAgeSession(restoredAge)
+    setView(restored.outcome?.status ?? (restored.pending && !isBActionReturnPending(restored.pending) ? "expired" : "intro"))
+    setHydrated(true)
+    if (restored.pending) restoreContext(restored.pending)
+  }, [hydrated, restoreContext, state.hydrated])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(new Date()), 15_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    function requested(event: Event) {
+      const detail = event instanceof CustomEvent ? event.detail : null
+      const restored = restoreBActionGateSession(window.sessionStorage)
+      if (!detail || restored.pending?.tokenId !== detail.tokenId) return
+      setSession(restored)
+      setReadyTokenId(null)
+      setView("intro")
+    }
+    function syncAge() { setAgeSession(restoreGlobalAfter19B(window.localStorage, window.sessionStorage).session) }
+    function syncActionAxes() { setSession(restoreBActionGateSession(window.sessionStorage)) }
+    function completed() {
+      setSession(restoreBActionGateSession(window.sessionStorage))
+      setReadyTokenId(null)
+    }
+    window.addEventListener(B_ACTION_GATE_REQUEST_EVENT, requested)
+    window.addEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncAge)
+    window.addEventListener(B_ACTION_AXIS_SESSION_EVENT, syncActionAxes)
+    window.addEventListener(B_ACTION_GATE_COMPLETE_EVENT, completed)
+    return () => {
+      window.removeEventListener(B_ACTION_GATE_REQUEST_EVENT, requested)
+      window.removeEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncAge)
+      window.removeEventListener(B_ACTION_AXIS_SESSION_EVENT, syncActionAxes)
+      window.removeEventListener(B_ACTION_GATE_COMPLETE_EVENT, completed)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!pending) return
+    const frame = window.requestAnimationFrame(() => primaryRef.current?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [pending, view])
+
+  const satisfied = useMemo(() => {
+    const result = new Set<BActionGateKind>()
+    if (state.account === "ACC-ACTIVE") result.add("account")
+    if (axisReady(session.person, clock)) result.add("person")
+    if (ageSession && isGlobalAfter19AgeCurrent(ageSession, clock)) result.add("age")
+    if (axisReady(session.payment, clock)) result.add("payment_kyc")
+    return result
+  }, [ageSession, clock, session.payment, session.person, state.account])
+
+  const activeGate = pending?.gatePlan.find((gate) => !satisfied.has(gate)) ?? null
+
+  useEffect(() => {
+    if (!pending || !isBActionReturnPending(pending, clock) || activeGate) return
+    releaseReady(pending)
+  // releaseReady is deliberately reached only after a state/axis transition makes the full plan true.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeGate, clock, pending, satisfied])
+
+  function commit(next: BActionGateSession) {
+    if (!persistBActionGateSession(window.sessionStorage, next)) return false
+    setSession(next)
+    return true
+  }
+
+  function gateOutcome(gate: BActionGateKind): GateQaOutcome | null {
+    const qa = (window as QaWindow).__ONDO_B_QA__
+    const explicit = qa?.actionGate?.[gate]
+    if (explicit) { delete qa?.actionGate?.[gate]; return explicit }
+    if (gate === "age" && qa?.after19) { const outcome = qa.after19; delete qa.after19; return outcome }
+    if ((gate === "person" || gate === "age") && qa?.eligibility && qa.eligibility !== "success" && qa.eligibility !== "cancel") {
+      const outcome = qa.eligibility
+      delete qa.eligibility
+      return outcome
+    }
+    if (gate === "payment_kyc" && qa?.paymentKyc) { const outcome = qa.paymentKyc; delete qa.paymentKyc; return outcome }
+    return null
+  }
+
+  function fail(gate: BActionGateKind, status: GateQaOutcome) {
+    if (!pending) return
+    const outcome: BActionGateOutcome = { tokenId: pending.tokenId, gate, status }
+    const axisStatus: BActionAxis["status"] = status === "failure" ? "failed" : status
+    const next: BActionGateSession = {
+      ...session,
+      person: gate === "person" ? { status: axisStatus, expiresAt: null } : session.person,
+      payment: gate === "payment_kyc" ? { status: axisStatus, expiresAt: null } : session.payment,
+      outcome,
+    }
+    commit(next)
+    setView(status)
+  }
+
+  function confirm() {
+    if (!pending || !activeGate || !isBActionReturnPending(pending, clock)) { setView("expired"); return }
+    const injected = gateOutcome(activeGate)
+    if (injected) { fail(activeGate, injected); return }
+
+    if (activeGate === "account") {
+      if (!actions.activateAccount()) { fail(activeGate, "failure"); return }
+      commit({ ...session, outcome: null })
+      setView("intro")
+      return
+    }
+    if (activeGate === "person") {
+      if (!commit({ ...session, person: readyAxis(clock), outcome: null })) { fail(activeGate, "failure"); return }
+      setView("intro")
+      return
+    }
+    if (activeGate === "age") {
+      const eligible = recordGlobalAfter19AgeEligibilityB(clock)
+      const nextAge = ageSession?.mode === "manual-off" ? { ...eligible, mode: "manual-off" as const } : eligible
+      if (!writeGlobalAge(nextAge)) { fail(activeGate, "failure"); return }
+      setAgeSession(nextAge)
+      commit({ ...session, outcome: null })
+      setView("intro")
+      return
+    }
+    if (!commit({ ...session, payment: readyAxis(clock), outcome: null })) { fail(activeGate, "failure"); return }
+    setView("intro")
+  }
+
+  function releaseReady(returnTo: BActionReturnTo) {
+    if (readyTokenId === returnTo.tokenId) return
+    const latest = restoreBActionGateSession(window.sessionStorage, clock)
+    if (latest.pending?.tokenId !== returnTo.tokenId) return
+    setReadyTokenId(returnTo.tokenId)
+    restoreContext(returnTo)
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent(B_ACTION_GATE_READY_EVENT, { detail: returnTo })), 0)
+  }
+
+  function cancel() {
+    if (!pending) return
+    const latest = restoreBActionGateSession(window.sessionStorage, clock)
+    if (latest.pending?.tokenId !== pending.tokenId) return
+    const returning = latest.pending
+    if (!persistBActionGateSession(window.sessionStorage, { ...latest, pending: null, outcome: null })) { setView("failure"); return }
+    setSession({ ...latest, pending: null, outcome: null })
+    setReadyTokenId(null)
+    restoreContext(returning)
+    const gateOutcome = latest.outcome?.tokenId === returning.tokenId ? latest.outcome.status : "cancel"
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent(B_ACTION_GATE_CANCEL_EVENT, { detail: { ...returning, gateOutcome } })), 0)
+  }
+
+  function retry() {
+    if (!pending) return
+    if (!isBActionReturnPending(pending, clock)) {
+      const renewed = renewBActionReturnTo(pending, clock)
+      commit({ ...session, pending: renewed, outcome: null })
+      restoreContext(renewed)
+    } else {
+      commit({ ...session, outcome: null })
+    }
+    setView("intro")
+  }
+
+  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); cancel(); return }
+    if (event.key !== "Tab") return
+    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((node) => node.offsetParent !== null)
+    const first = focusable[0]
+    const last = focusable.at(-1)
+    if (!first || !last) return
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus({ preventScroll: true }) }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus({ preventScroll: true }) }
+  }
+
+  if (!hydrated || !pending || readyTokenId === pending.tokenId) return null
+  const expiredReturn = !isBActionReturnPending(pending, clock)
+  const resolvedView: GateView = expiredReturn ? "expired" : view
+  const gate = activeGate ?? pending.gatePlan.at(-1) ?? "account"
+  const title = resolvedView === "failure" ? copy.failureTitle
+    : resolvedView === "unavailable" ? copy.unavailableTitle
+      : resolvedView === "expired" ? copy.expiredTitle
+        : gate === "account" ? copy.accountTitle : gate === "person" ? copy.personTitle : gate === "age" ? copy.ageTitle : copy.paymentTitle
+  const body = resolvedView === "failure" ? copy.failureBody
+    : resolvedView === "unavailable" ? copy.unavailableBody
+      : resolvedView === "expired" ? copy.expiredBody
+        : gate === "account" ? copy.accountBody : gate === "person" ? copy.personBody : gate === "age" ? copy.ageBody : copy.paymentBody
+  const action = gate === "account" ? copy.accountAction : gate === "person" ? copy.personAction : gate === "age" ? copy.ageAction : copy.paymentAction
+  const GateIcon = gate === "account" ? CircleUserRound : gate === "person" ? UserRoundCheck : gate === "age" ? BadgeCheck : CreditCard
+
+  return (
+    <div ref={layerRef} className={styles.layer} data-testid="ondo-b-action-gate" data-modal-layer-priority="100" data-active-gate={gate} data-gate-view={resolvedView} data-return-cta={pending.cta}>
+      <div className={styles.backdrop} aria-hidden="true" />
+      <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined} data-check-kind={gate} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"} onKeyDown={handleKeyDown}>
+        <header><span><ShieldCheck size={18} aria-hidden="true" />{copy.header}</span><button type="button" aria-label={copy.cancel} onClick={cancel}><X size={18} aria-hidden="true" /></button></header>
+        <div className={styles.body}>
+          <div className={resolvedView === "intro" ? styles.hero : styles.heroError}>{resolvedView === "intro" ? <GateIcon size={31} aria-hidden="true" /> : <AlertTriangle size={31} aria-hidden="true" />}</div>
+          <h2 id="b-action-gate-title">{title}</h2>
+          <p className={styles.lead}>{body}</p>
+          <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{copy.truth}</p>
+          {gate === "person" && resolvedView === "intro" ? <section className={styles.consent} data-testid="local-check-consent">
+            <p data-testid="consent-requester"><small>{copy.consentRequester}</small><strong>{copy.consentRequesterValue}</strong></p>
+            <p data-testid="consent-purpose"><small>{copy.consentPurpose}</small><strong>{copy.consentPurposeValue}</strong></p>
+            <p data-testid="consent-minimum"><small>{copy.consentMinimum}</small><strong>{copy.consentMinimumValue}</strong></p>
+            <p data-testid="consent-retention"><small>{copy.consentRetention}</small><strong>{copy.consentRetentionValue}</strong></p>
+          </section> : null}
+          <section className={styles.returnContext} data-testid="action-gate-return-context" data-return-venue={pending.venueId} data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"} data-return-nonce={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? pending.draftNonce : "none"}>
+            <small>{copy.returnLabel}</small><strong>{returnLabel(pending, copy)}</strong>
+            {pending.cta === "JOIN_TABLE" && pending.draft ? <blockquote>{pending.draft}</blockquote> : null}
+            {pending.cta === "SUBMIT_LOCAL_SIGNAL" && pending.note ? <blockquote>{pending.note}</blockquote> : null}
+          </section>
+          <ol className={styles.plan} aria-label="Gate plan">{pending.gatePlan.map((item) => <li key={item} data-state={satisfied.has(item) ? "complete" : item === activeGate ? "active" : "upcoming"}>{satisfied.has(item) ? <BadgeCheck size={15} aria-hidden="true" /> : <i aria-hidden="true" />}{item === "payment_kyc" ? "Payment" : item === "person" ? "Person" : item === "age" ? "19+" : "Account"}</li>)}</ol>
+          <div className={styles.actions} data-testid={resolvedView === "intro" ? undefined : "local-check-result"} data-result={resolvedView === "intro" ? undefined : resolvedView}>
+            {resolvedView === "intro" ? <button ref={primaryRef} type="button" className={styles.primary} data-testid={gate === "person" ? "local-check-boundary-continue" : gate === "age" ? "after19-start" : "action-gate-confirm"} onClick={confirm}>{action}<ChevronRight size={17} aria-hidden="true" /></button> : <button ref={primaryRef} type="button" className={styles.primary} data-testid="action-gate-retry" onClick={retry}><RotateCcw size={17} aria-hidden="true" />{resolvedView === "expired" ? copy.renew : copy.retry}</button>}
+            <button type="button" className={styles.secondary} data-testid="action-gate-cancel" onClick={cancel}>{copy.cancel}</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}

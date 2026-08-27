@@ -5,9 +5,17 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { AlertTriangle, ArrowLeft, CalendarClock, Camera, Check, ChevronRight, CircleDollarSign, Flag, ImagePlus, Languages, MapPin, MessageCircle, RotateCcw, Send, ShieldCheck, Star, UserRoundX, UsersRound, Utensils, X } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
-import { After19JitB } from "../after19/after19-jit-b"
-import type { BReturnToEnvelope } from "../contracts/return-to-b"
-import { createBReturnTo } from "../contracts/return-to-b"
+import {
+  B_ACTION_GATE_CANCEL_EVENT,
+  B_ACTION_GATE_COMPLETE_EVENT,
+  B_ACTION_GATE_READY_EVENT,
+  consumePendingBActionAtMutation,
+  createBTableActionReturn,
+  requestBActionGate,
+  type BTableActionReturn,
+} from "../identity-b/action-gate-contract-b"
+import { isGlobalAfter19AgeCurrent, restoreGlobalAfter19B } from "../after19/after19-global-b-model"
+import { useBActivityProfile } from "../identity-b/activity-profile-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
@@ -289,14 +297,14 @@ const TABLE_EDITORIAL = {
 
 export function PulseTablesEntryB() {
   const { state, actions } = useOndoB()
+  const { actions: activityActions } = useBActivityProfile()
   const locale = state.locale
   const socialLocale: SocialLocale = locale
   const t = COPY[socialLocale]
   const venue = canonicalMapVenueById(TABLE_VENUE_ID)
   const [selected, setSelected] = useState(false)
   const [draft, setDraft] = useState("")
-  const [returnTo, setReturnTo] = useState<BReturnToEnvelope | null>(null)
-  const [gateOpen, setGateOpen] = useState(false)
+  const [returnTo, setReturnTo] = useState<BTableActionReturn | null>(null)
   const [joinStage, setJoinStage] = useState<JoinStage>(() => state.plannedTableRefs.some(({ tableId, venueId }) => tableId === ACTIVE_TABLE_ID && venueId === TABLE_VENUE_ID) ? "joined" : "idle")
   const [reportOpen, setReportOpen] = useState(false)
   const [reported, setReported] = useState(false)
@@ -354,16 +362,43 @@ export function PulseTablesEntryB() {
 
   useEffect(() => {
     function openFromPlace(event?: Event) {
-      const detail = event instanceof CustomEvent ? event.detail as { tableId?: string; venueId?: string; mode?: string } : null
-      const pending = window.__ONDO_B_TABLE_INTENT__
+      const detail = event instanceof CustomEvent ? event.detail as { tableId?: string; venueId?: string; mode?: string; draft?: string } : null
+      const pending = window.__ONDO_B_TABLE_INTENT__ as (typeof window.__ONDO_B_TABLE_INTENT__ & { draft?: string })
       if (detail && (detail.tableId !== ACTIVE_TABLE_ID || detail.venueId !== TABLE_VENUE_ID)) return
       if (!detail && !pending) return
       window.__ONDO_B_TABLE_INTENT__ = undefined
+      if (detail?.draft != null) setDraft(detail.draft.slice(0, 280))
+      else if (pending?.draft != null) setDraft(pending.draft.slice(0, 280))
       setSelected(true)
     }
     openFromPlace()
     window.addEventListener(ONDO_OPEN_TABLE_EVENT, openFromPlace)
     return () => window.removeEventListener(ONDO_OPEN_TABLE_EVENT, openFromPlace)
+  }, [])
+
+  useEffect(() => {
+    function gateComplete(event: Event) {
+      const detail = event instanceof CustomEvent ? event.detail as BTableActionReturn : null
+      if (!detail || detail.cta !== "JOIN_TABLE" || detail.tableId !== ACTIVE_TABLE_ID || detail.venueId !== TABLE_VENUE_ID || detail.consumedAt !== null) return
+      setDraft(detail.draft)
+      setReturnTo(detail)
+      setJoinStage("confirm")
+      window.requestAnimationFrame(() => focusFirstAvailableDestination(["[data-testid='table-join-confirm']"]))
+    }
+    function gateCancel(event: Event) {
+      const detail = event instanceof CustomEvent ? event.detail as BTableActionReturn : null
+      if (!detail || detail.cta !== "JOIN_TABLE" || detail.tableId !== ACTIVE_TABLE_ID || detail.venueId !== TABLE_VENUE_ID) return
+      setDraft(detail.draft)
+      setReturnTo(null)
+      setJoinStage("idle")
+      window.requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-testid='table-join']")?.focus({ preventScroll: true }))
+    }
+    window.addEventListener(B_ACTION_GATE_READY_EVENT, gateComplete)
+    window.addEventListener(B_ACTION_GATE_CANCEL_EVENT, gateCancel)
+    return () => {
+      window.removeEventListener(B_ACTION_GATE_READY_EVENT, gateComplete)
+      window.removeEventListener(B_ACTION_GATE_CANCEL_EVENT, gateCancel)
+    }
   }, [])
 
   useEffect(() => () => {
@@ -377,45 +412,63 @@ export function PulseTablesEntryB() {
     return () => window.cancelAnimationFrame(frame)
   }, [selected])
 
+  useEffect(() => {
+    if (!selected || safetyOpen) return
+    function closeDetailOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") return
+      if (document.querySelector("[data-testid='ondo-b-action-gate']")) return
+      event.preventDefault()
+      event.stopPropagation()
+      closeTable()
+    }
+    window.addEventListener("keydown", closeDetailOnEscape, true)
+    return () => window.removeEventListener("keydown", closeDetailOnEscape, true)
+  }, [safetyOpen, selected])
+
   if (!venue || !venuePresentation) return <section className={styles.entry} data-testid="tables-entry" role="alert">{t.venueUnavailable}</section>
 
   function openActiveTable() { setSelected(true) }
 
   function closeTable() {
-    setGateOpen(false)
     setReturnTo(null)
     setSelected(false)
     window.requestAnimationFrame(() => openerRef.current?.focus({ preventScroll: true }))
   }
 
   function beginJoin() {
-    const envelope = createBReturnTo({ tableId: ACTIVE_TABLE_ID, venueId: TABLE_VENUE_ID, draft })
-    setReturnTo(envelope)
-    setGateOpen(true)
-  }
-
-  function cancelGate() { setGateOpen(false); setReturnTo(null) }
-
-  function completeGate(consumed: BReturnToEnvelope) {
-    setReturnTo(consumed)
-    setGateOpen(false)
-    setJoinStage("confirm")
-  }
-
-  function retryExpiredGate() {
-    if (!returnTo) return
-    setReturnTo(createBReturnTo({ tableId: returnTo.tableId, venueId: returnTo.venueId, draft: returnTo.draft }))
+    requestBActionGate(createBTableActionReturn({ tableId: ACTIVE_TABLE_ID, venueId: TABLE_VENUE_ID, draft }))
   }
 
   function confirmJoin() {
+    if (!returnTo) {
+      setJoinPersistError(true)
+      return
+    }
+    const satisfied = new Set<"account" | "age">()
+    if (state.account === "ACC-ACTIVE") satisfied.add("account")
+    const age = restoreGlobalAfter19B(window.localStorage, window.sessionStorage).session
+    if (isGlobalAfter19AgeCurrent(age)) satisfied.add("age")
+    const consumed = consumePendingBActionAtMutation(window.sessionStorage, returnTo, satisfied)
+    if (!consumed) {
+      setJoinPersistError(true)
+      return
+    }
     const recorded = actions.recordPlannedTable(ACTIVE_TABLE_ID, TABLE_VENUE_ID)
     if (!recorded) {
       setJoinPersistError(true)
       return
     }
     setJoinPersistError(false)
+    setReturnTo(consumed as BTableActionReturn)
     setJoinStage("joined")
+    window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
     focusFirstAvailableDestination(["[data-testid='table-open-chat']"])
+  }
+
+  function saveFeedback() {
+    if (!feedback) return
+    const result = activityActions.recordMeetup(`meetup:${ACTIVE_TABLE_ID}:feedback`)
+    if (result === "accepted" || result === "duplicate") setFeedbackSaved(true)
   }
 
   function openChat() {
@@ -493,7 +546,7 @@ export function PulseTablesEntryB() {
   }
 
   function handleDetailKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (gateOpen) return
+    if (document.querySelector("[data-testid='ondo-b-action-gate']")) return
     if (event.key === "Escape" && safetyOpen) {
       event.preventDefault()
       if (reportOpen) cancelReport()
@@ -534,7 +587,7 @@ export function PulseTablesEntryB() {
         </article>
       </div>
 
-      {selected ? (
+      {selected ? (<>
         <div ref={layerRef} className={styles.layer} role="dialog" aria-modal="true" aria-labelledby="table-b-title" data-testid="table-detail" data-table-id={ACTIVE_TABLE_ID} data-venue-id={TABLE_VENUE_ID} data-join-stage={joinStage}>
           <button type="button" className={styles.backdrop} tabIndex={-1} aria-label={t.close} disabled={safetyOpen} onClick={closeTable} />
           <article ref={detailRef} className={styles.detail} data-join-stage={joinStage} onKeyDown={handleDetailKeyDown}>
@@ -594,7 +647,7 @@ export function PulseTablesEntryB() {
                 </div>
                 {checkedIn ? <section className={styles.feedback} inert={safetyOpen} aria-hidden={safetyOpen || undefined}>
                   <h3>{t.feedbackTitle}</h3><div><button type="button" aria-pressed={feedback === "helpful"} onClick={() => setFeedback("helpful")}><Star size={16} aria-hidden="true" />{t.helpful}</button><button type="button" aria-pressed={feedback === "welcoming"} onClick={() => setFeedback("welcoming")}><UsersRound size={16} aria-hidden="true" />{t.welcoming}</button></div>
-                  <button type="button" className={styles.primary} data-testid="table-feedback-submit" disabled={!feedback} onClick={() => setFeedbackSaved(true)}>{t.feedback}</button>
+                  <button type="button" className={styles.primary} data-testid="table-feedback-submit" disabled={!feedback} onClick={saveFeedback}>{t.feedback}</button>
                   {feedbackSaved ? <aside className={styles.reputationReceipt} data-testid="table-reputation-receipt"><strong>{t.feedbackSaved}</strong><dl><div><dt>{t.meetup}</dt><dd>{t.meetupValue}</dd></div><div><dt>{t.contribution}</dt><dd>{t.contributionValue}</dd></div></dl></aside> : null}
                 </section> : null}
                 {reported ? <p className={styles.status} role="status" inert={safetyOpen} aria-hidden={safetyOpen || undefined}>{t.reportDone}</p> : null}
@@ -606,9 +659,8 @@ export function PulseTablesEntryB() {
               </section> : null}
             </div>
           </article>
-          <After19JitB open={gateOpen} locale={socialLocale} returnTo={returnTo} tableTitle={t.tableTitle} venueLabel={venuePresentation.officialName} onCancel={cancelGate} onEligible={completeGate} onExpiredRetry={retryExpiredGate} />
         </div>
-      ) : null}
+      </>) : null}
     </section>
   )
 }

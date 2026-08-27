@@ -20,9 +20,11 @@
   --arc-motion-enter: 320ms;
   --arc-ease: cubic-bezier(.2, .72, .24, 1);
   position: absolute;
+  box-sizing: border-box;
   isolation: isolate;
   inset: 0;
-  min-height: 100%;
+  min-height: 0;
+  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -264,6 +266,8 @@
   overflow-wrap: anywhere;
   word-break: normal;
 }
+
+.jaPhrase { display: inline-block; }
 
 .value h1 {
   max-width: 350px;
@@ -752,6 +756,8 @@
   .chipSelected { min-height: 45px; padding: 5px 7px; }
   .preferenceNote { margin-top: 6px; font-size: 12px; line-height: 1.25; }
 
+  :global(html[lang="ja"]) .preferenceGroup:first-child .chips { grid-template-columns: 1fr; }
+
   .panel > .actions {
     grid-column: 2;
     grid-row: 2;
@@ -800,6 +806,50 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Source provenance remains one tap away without reading as another primary
+   onboarding decision. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.value .sourceIntro {
+  position: relative;
+  width: 44px;
+  max-width: 44px;
+  justify-self: end;
+  overflow: visible;
+  border-color: rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: #fff;
+}
+.value .sourceIntro > summary {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  padding: 0;
+  color: #4b4b4b;
+}
+.value .sourceIntro[open] > summary svg { transform: none; }
+.value .sourceBody {
+  position: absolute;
+  z-index: 8;
+  right: 0;
+  bottom: calc(100% + 8px);
+  box-sizing: border-box;
+  width: min(340px, calc(100vw - 32px));
+  max-height: min(320px, 58dvh);
+  overflow-y: auto;
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 13%);
 }
 
 /* Modern white editorial layer: product warmth comes from travel imagery, not

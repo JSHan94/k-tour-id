@@ -867,6 +867,8 @@
   background: rgb(255 255 255 / 86%);
   box-shadow: 0 1px 0 rgb(255 255 255 / 90%) inset;
 }
+.joinPanel textarea::placeholder,
+.composer textarea::placeholder { color: #5f5a56; opacity: 1; }
 
 .persistError {
   display: flex;
@@ -1111,20 +1113,20 @@
   to { transform: none; }
 }
 @keyframes tableSheetIn {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateY(18px); }
+  to { transform: none; }
 }
 @keyframes tableSheetFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { transform: translateY(6px); }
+  to { transform: none; }
 }
 @keyframes tableStateIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateY(8px); }
+  to { transform: none; }
 }
 @keyframes tableStateFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { transform: translateY(4px); }
+  to { transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,47 @@
+.root {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgb(23 23 23 / 10%);
+  border-radius: 20px;
+  padding: 15px;
+  background: linear-gradient(145deg, #fff, #f6f5f3);
+  color: #171717;
+}
+.root[data-stamp-count="10"] { border-color: rgb(112 43 76 / 22%); background: linear-gradient(145deg, #fff, #fff5fa); }
+.heading { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.heading > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 13px; background: #eceae7; }
+.heading h3,
+.heading p { margin: 0; }
+.heading h3 { font-size: 15px; font-weight: 830; letter-spacing: -.025em; }
+.heading p { margin-top: 3px; color: #6d6965; font-size: 12px; line-height: 1.4; }
+.heading > strong { font-size: 23px; font-variant-numeric: tabular-nums; letter-spacing: -.05em; }
+.heading > strong small { color: #6f6963; font-size: 12px; letter-spacing: 0; }
+.track { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.track i { display: grid; max-width: 25px; aspect-ratio: 1; place-items: center; border: 1px solid rgb(23 23 23 / 14%); border-radius: 50%; color: transparent; }
+.track i[data-filled="true"] { border-color: #171717; background: #171717; color: #fff; }
+.primary {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 14px;
+  background: #171717;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 820;
+}
+.primary:focus-visible { outline: 3px solid rgb(23 23 23 / 24%); outline-offset: 2px; }
+.status { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 7px; margin: 0; border-radius: 13px; background: #edf5f0; color: #2f674f; font-size: 12px; font-weight: 780; }
+.error { margin: 0; border-radius: 12px; padding: 10px 11px; background: #fff0ee; color: #8b3129; font-size: 12px; }
+.boundary { color: #77736f; font-size: 12px; line-height: 1.4; text-align: center; }
+@media (max-width: 350px) {
+  .root { padding: 12px; }
+  .heading { align-items: start; }
+  .heading > span { width: 34px; height: 34px; }
+  .heading p { font-size: 12px; }
+  .track { gap: 2px; }
+}

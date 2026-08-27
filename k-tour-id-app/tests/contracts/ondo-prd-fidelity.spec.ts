@@ -127,12 +127,17 @@ test("FID-G0-004 every existing and restored golden surface is reachable from /o
     "features/ondo/my/my-korea-model.ts",
     "features/ondo/local-signal-b/local-signal-layer-b.tsx",
     "features/ondo/connect/tables-entry-b.tsx",
-    "features/ondo/after19/after19-jit-b.tsx",
+    "features/ondo/after19/after19-global-b.tsx",
+    "features/ondo/identity-b/action-gate-coordinator-b.tsx",
+    "features/ondo/identity-b/activity-profile-b-provider.tsx",
+    "features/ondo/identity-b/profile-reputation-b.tsx",
     "features/ondo/identity-b/traveler-id-entry-b.tsx",
     "features/ondo/contracts/return-to-b.ts",
     "features/ondo/pulse-b/pulse-model-b.ts",
     "features/ondo/commerce-b/stable-commerce-model-b.ts",
     "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
+    "features/ondo/commerce-b/visit-stamp-receipt-b.tsx",
+    "features/ondo/labs/labs-entry.tsx",
   ]) expectReachable(path)
 })
 
@@ -288,7 +293,10 @@ test("FID-P0-013 commerce boundary and persistence rules cannot be weakened", ()
   expect(commerce).toContain("OOKRW Test는 실제로 작동하지 않는 제품용 잔액")
   expect(commerce).toContain("스테이블코인이나 온체인 자산이 아닙니다")
   expect(commerce).toContain("<details className={styles.testDetails}>")
-  expect(commerce).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|sessionStorage|localStorage|URLSearchParams/)
+  expect(commerce).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|localStorage|URLSearchParams/)
+  expect(commerce).toContain("restoreBActionGateSession(window.sessionStorage)")
+  expect(commerce).toContain("consumePendingBActionAtMutation(window.sessionStorage")
+  expect(commerce).not.toMatch(/sessionStorage\.(?:setItem|removeItem)|dateOfBirth|passport|documentNumber/i)
   expect(commerce).not.toContain('data-testid="payment-outcomes"')
   expect(commerce).not.toContain('data-testid="payment-ledgers"')
   expect(deviceType).toContain("commerceReceipts: OndoBCommerceReceipt[]")

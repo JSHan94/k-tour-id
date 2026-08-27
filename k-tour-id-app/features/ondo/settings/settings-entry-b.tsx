@@ -24,10 +24,10 @@ const COPY = {
     data: "Data in this browser",
     stored: "Stored on this device",
     reviewData: "Review storage and clear content",
-    dataBoundary: "Saved places, recent views, joined Tables, discovery choices, private notes, posted Local Signals, and OOKRW Test receipts stay in this browser. Identity results and wallet connection readiness reset on reload and are not sent outside the app.",
+    dataBoundary: "Saved places and trip activity stay in this browser. Account, Person, 19+, Payment, profile, activity signals, visit stamps, test receipts, and Labs are local previews and are not sent outside the app.",
     clear: "Clear saved content",
     confirmTitle: "Clear saved content from this browser?",
-    confirmBody: "This removes saved places, recent views, joined Tables, Local Signal history, discovery choices, private notes, and OOKRW Test receipts.",
+    confirmBody: "This removes saved places, recent views, joined Tables, Local Signals, discovery choices, private notes, Account, Person, 19+, Payment, profile, activity signals, visit stamps, OOKRW Test receipts, After 19 preferences, and Labs preview state.",
     confirmBoundary: "Language and initial setup stay unchanged.",
     keep: "Keep content",
     cleared: "Saved content cleared from this browser.",
@@ -48,10 +48,10 @@ const COPY = {
     data: "이 브라우저의 데이터",
     stored: "이 기기에만 저장",
     reviewData: "저장 범위와 삭제 관리",
-    dataBoundary: "저장한 장소, 최근 조회, 참여한 테이블, 탐색 선택, 개인 메모, 게시한 로컬 시그널과 OOKRW Test 영수증은 이 브라우저에 남습니다. 신원 확인 결과와 지갑 연결 상태는 새로고침하면 초기화되며 외부로 전송되지 않습니다.",
+    dataBoundary: "저장한 장소와 여행 활동은 이 브라우저에 남습니다. 계정·본인·19+·결제·프로필·활동 신호·방문 스탬프·테스트 영수증·Labs는 로컬 미리보기이며 앱 밖으로 전송되지 않습니다.",
     clear: "저장한 내용 지우기",
     confirmTitle: "이 브라우저의 저장 내용을 지울까요?",
-    confirmBody: "저장한 장소, 최근 본 장소, 참여한 테이블, 로컬 시그널 기록, 탐색 선택, 개인 메모와 OOKRW Test 영수증을 삭제합니다.",
+    confirmBody: "저장한 장소, 최근 본 장소, 참여한 테이블, 로컬 시그널, 탐색 선택, 개인 메모, 계정·본인·19+·결제 상태, 프로필·활동 신호·방문 스탬프, OOKRW Test 영수증, After 19 설정과 Labs 미리보기를 삭제합니다.",
     confirmBoundary: "언어와 시작 설정은 유지됩니다.",
     keep: "내용 유지",
     cleared: "이 브라우저의 저장 내용을 지웠어요.",
@@ -72,10 +72,10 @@ const COPY = {
     data: "このブラウザのデータ",
     stored: "この端末にのみ保存",
     reviewData: "保存範囲の確認と削除",
-    dataBoundary: "保存した場所、最近見た場所、参加したテーブル、探索の設定、プライベートメモ、投稿したローカルシグナル、OOKRW Testのレシートはこのブラウザに保存されます。本人確認の結果とウォレットの接続状態は再読み込みするとリセットされ、外部には送信されません。",
+    dataBoundary: "保存した場所と旅のアクティビティはこのブラウザに残ります。アカウント、本人、19歳以上、決済、プロフィール、活動シグナル、訪問スタンプ、テストレシート、Labsはローカルプレビューで、アプリの外には送信されません。",
     clear: "保存内容を削除",
     confirmTitle: "このブラウザの保存内容を削除しますか？",
-    confirmBody: "保存した場所、最近見た場所、参加したテーブル、ローカルシグナル履歴、探索の設定、プライベートメモ、OOKRW Testのレシートを削除します。",
+    confirmBody: "保存した場所、最近見た場所、参加したTable、ローカルシグナル、探索設定、プライベートメモ、アカウント・本人・19歳以上・決済の状態、プロフィール・活動シグナル・訪問スタンプ、OOKRW Testのレシート、After 19設定、Labsプレビューを削除します。",
     confirmBoundary: "言語と初期設定はそのまま残ります。",
     keep: "内容を残す",
     cleared: "このブラウザの保存内容を削除しました。",
@@ -149,9 +149,12 @@ export function SettingsEntryB() {
 
   return (
     <div className={styles.screen} data-testid="ondo-b-settings-entry" data-visual-direction="warm-living-atlas">
-      <header className={styles.header}>
-        <p>{copy.eyebrow}</p>
-        <h1>{copy.title}</h1>
+      <header className={`${styles.header} ${styles.settingsHeader}`}>
+        <img className={styles.settingsMark} src="/brand/ondo-mark-micro-24.svg" alt="" aria-hidden="true" />
+        <div className={styles.settingsTitle}>
+          <p>{copy.eyebrow}</p>
+          <h1>{copy.title}</h1>
+        </div>
         <span>{copy.lead}</span>
       </header>
 

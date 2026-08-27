@@ -390,14 +390,15 @@ Age와 Payment KYC는 독립 상태 축이다. 한 축의 시작·성공·실패
 
 | 저장소 | 허용 | 금지 | 수명 |
 |---|---|---|---|
-| URL | city, neighborhood, venueId, 공개 filters, list/map mode | 계정·신원·연령·국적·KYC·사진·잔고 | 공유 가능한 공개 context |
+| URL | city, neighborhood, venueId, 검증된 editorialPlaceId, 공개 filters, list/map mode | 계정·신원·연령·국적·KYC·사진·잔고 | 공유 가능한 공개 context |
 | `localStorage` | `ondo.preferences.v3`: locale, guideSeen, autoNight, savedVenueIds, discoveryPreferences | raw proof, credential, PII, 생년월일, 국적, 사진, payment instrument, private key, access token, raw provider response | 사용자가 reset할 때까지 |
 | `sessionStorage` | `ondo.session.v3`: onboarding, persona, account, person, age, ageExpiresAt, paymentKyc, after19, gate, gateState, tableMembershipById, reputation, acceptedActivityEventKeys, stamps, profile | 신분증 원문·credential·생년월일·국적 원문·payment instrument·사진/blob·private key·access token·raw provider response | tab/session; gate는 terminal success/cancel 또는 invalidation 때 `null` |
 | memory | modal, toast, pending request, object URL, raw 선택 사진 | 페이지 종료 뒤 보존 | route/app lifetime |
 | future server | Account, consented public profile, chat, reputation event, evidence receipt | 최소화되지 않은 raw KYC·불필요한 PII | 별도 retention 정책 필요 |
 
 - main key는 `ondo.preferences.v3`, `ondo.session.v3`다. 별도 `ondo.returnTo.*` key는 없고 allowlisted active `gate` envelope 하나만 `ondo.session.v3` 안에 둔다.
-- feature session key는 `ondo.chat.v2`, `ondo.table-outcomes.v2`, `ondo.labs.v2`, `ondo.accepted-visits.v2`다. 각각 preview URL을 뺀 session chat item, Table outcome/receipt, 비민감 Labs simulation state, 중복 방지용 공개 evidence ID만 보관한다.
+- standalone B의 `ondo-b.device.v1`은 `savedVenueIds`/`recentVenueIds`와 별개로 allowlist 검증된 `savedEditorialPlaceIds`/`recentEditorialPlaceIds`를 보관한다. editorial ID는 LOCALDATA official record, Pulse evidence, Table/checkout/Local Signal ID로 승격하지 않는다.
+- feature session key는 `ondo.chat.v2`, `ondo.table-outcomes.v2`, `ondo.labs.v2`, `ondo-b.labs.v1`, `ondo.accepted-visits.v2`다. 각각 preview URL을 뺀 session chat item, Table outcome/receipt, 레거시 A와 B가 서로 격리한 비민감 Labs simulation state, 중복 방지용 공개 evidence ID만 보관한다.
 - `gate`는 아래 CTA별 v3 matrix와 [Flow Catalog의 v3 shape](./03_FLOW_CATALOG.md#0-id와-표기-규칙)가 모두 맞을 때만 복원한다. token은 정확히 `RT-${cta}-${Date.parse(createdAt)}`여야 하고 unknown field를 버린다. `cta`, token, 공개 context는 유지하고 중간 success마다 완료된 `gateQueue` head를 제거해 `activeGate`를 첫 remaining gate로 갱신한다. 중간 success에서는 소비하지 않으며 모든 guard가 충족된 뒤 최종 mutation 직전에 `consumedAt`을 기록하고 원 CTA를 한 번 재개한다. cancel은 직전 공개 context 복구 뒤 `gate=null`로 만들고 retry만 미소비 envelope를 유지한다.
 
 | CTA | Full required gate plan | `venueId` | `tableId` |

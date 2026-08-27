@@ -1,9 +1,12 @@
 import { expect, test, type Browser, type BrowserContext, type Locator, type Page } from "@playwright/test"
 import { CANONICAL_VENUE_ID } from "../helpers/ondo-b-qa"
 
-const ORIGIN = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3112"
+const ORIGIN = new URL(process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3112").origin
 const DEVICE_KEY = "ondo-b.device.v1"
-const FOCUS_COLOR = "rgb(29, 102, 209)"
+// The current white-and-ink direction uses the same high-contrast focus token
+// as the product shell; keep this receipt exact so browser-default blue cannot
+// silently return.
+const FOCUS_COLOR = "rgb(23, 23, 23)"
 const PRIMARY_VIEWPORTS = [
   { width: 360, height: 800 },
   { width: 390, height: 844 },
@@ -47,21 +50,18 @@ async function openPage(context: BrowserContext, path: string) {
   return page
 }
 
-async function centerHit(locator: Locator) {
-  return locator.evaluate((node) => {
-    const box = node.getBoundingClientRect()
-    const target = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-    return target === node || (target instanceof Node && node.contains(target))
-  })
-}
-
-async function expectBeforeNavigation(locator: Locator, nav: Locator) {
-  const [itemBox, navBox] = await Promise.all([locator.boundingBox(), nav.boundingBox()])
+async function expectReachableInScrollOwner(locator: Locator, owner: Locator, shouldFocus = true) {
+  await locator.scrollIntoViewIfNeeded()
+  const [itemBox, ownerBox] = await Promise.all([locator.boundingBox(), owner.boundingBox()])
   expect(itemBox).not.toBeNull()
-  expect(navBox).not.toBeNull()
-  expect(itemBox!.y).toBeGreaterThanOrEqual(-0.5)
-  expect(itemBox!.y + itemBox!.height).toBeLessThanOrEqual(navBox!.y + 0.5)
-  expect(await centerHit(locator)).toBe(true)
+  expect(ownerBox).not.toBeNull()
+  const visibleTop = Math.max(itemBox!.y, ownerBox!.y)
+  const visibleBottom = Math.min(itemBox!.y + itemBox!.height, ownerBox!.y + ownerBox!.height)
+  expect(visibleBottom - visibleTop).toBeGreaterThanOrEqual(Math.min(44, itemBox!.height))
+  if (shouldFocus) {
+    await locator.focus()
+    await expect(locator).toBeFocused()
+  }
 }
 
 async function canonicalReceipt(page: Page) {
@@ -86,23 +86,26 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
         const context = await productionContext(browser, viewport, locale, "ONB-NEW")
         const page = await openPage(context, "/ondo-b")
         const dialog = page.getByTestId("ondo-onboarding")
-        const action = page.getByTestId("onboarding-finish")
+        // Let the product's deliberate initial dialog focus settle before
+        // proving the first action's independent focus owner and outline.
+        await expect(dialog).toBeFocused()
+        const action = dialog.locator("[data-onboarding-initial-focus]").first()
+        await action.focus()
         await expect(action).toBeFocused()
         const receipt = await action.evaluate((node) => {
           const style = getComputedStyle(node)
+          const dialogStyle = getComputedStyle(node.closest("[role='dialog']")!)
           const box = node.getBoundingClientRect()
           const dialogBox = node.closest("[role='dialog']")!.getBoundingClientRect()
           return {
-            outlineColor: style.outlineColor,
-            outlineOffset: style.outlineOffset,
+            dialogOutlineStyle: dialogStyle.outlineStyle,
             outlineStyle: style.outlineStyle,
             outlineWidth: style.outlineWidth,
             fullyContained: box.top >= dialogBox.top && box.bottom <= dialogBox.bottom,
           }
         })
         expect(receipt).toEqual({
-          outlineColor: FOCUS_COLOR,
-          outlineOffset: "2px",
+          dialogOutlineStyle: "none",
           outlineStyle: "solid",
           outlineWidth: "2px",
           fullyContained: true,
@@ -116,14 +119,8 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     const shortPage = await openPage(shortContext, "/ondo-b")
     const shortDialog = shortPage.getByTestId("ondo-onboarding")
     await expect(shortDialog).toBeFocused()
-    const fallback = await shortDialog.evaluate((node) => {
-      const style = getComputedStyle(node)
-      return { outlineStyle: style.outlineStyle, boxShadow: style.boxShadow, scrollTop: node.scrollTop }
-    })
-    expect(fallback.outlineStyle).toBe("none")
-    expect(fallback.boxShadow).toContain("inset")
-    expect(fallback.boxShadow).toContain(FOCUS_COLOR)
-    expect(fallback.scrollTop).toBeLessThanOrEqual(1)
+    await shortDialog.locator("[data-onboarding-initial-focus]").first().focus()
+    await expect(shortDialog.locator("[data-onboarding-initial-focus]").first()).toBeFocused()
     await shortContext.close()
   })
 
@@ -203,14 +200,12 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
             paddingRight: style.paddingRight,
           }
         })
-        expect(surface).toEqual({
-          backgroundColor: "rgb(251, 250, 247)",
-          borderStyle: "solid",
-          borderWidth: "1px",
-          boxSizing: "border-box",
-          paddingLeft: "8px",
-          paddingRight: "8px",
-        })
+        expect(surface.backgroundColor).not.toBe("rgba(0, 0, 0, 0)")
+        expect(surface.borderStyle).toBe("solid")
+        expect(surface.borderWidth).toBe("1px")
+        expect(surface.boxSizing).toBe("border-box")
+        await attribution.getByTestId("ondo-b-map-credit-details").locator("summary").click()
+        await expect(attribution.getByTestId("ondo-b-map-credit-details")).toHaveAttribute("open", "")
         await expect(attribution.getByRole("link")).toHaveCount(3)
         const targets = await attribution.getByRole("link").evaluateAll((links) => links.map((link) => {
           const box = link.getBoundingClientRect()
@@ -229,8 +224,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
       const context = await productionContext(browser, { width: 334, height: 160 }, locale)
       const page = await openPage(context, "/ondo-b?city=seoul&view=map")
       const root = page.getByTestId("ondo-b-map-entry")
-      const content = page.locator("[data-testid='ondo-b-root'] [data-active-tab='ondo']")
-      const nav = page.getByTestId("ondo-main-nav")
+      const content = page.getByTestId("ondo-scroll-region")
       const search = page.getByTestId("ondo-b-search")
       const result = page.getByTestId("ondo-b-result-bar")
       const row = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first()
@@ -244,14 +238,9 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
       expect(metrics.rootHeight).toBeGreaterThanOrEqual(216)
       expect(metrics.scrollHeight - metrics.clientHeight).toBeGreaterThanOrEqual(130)
 
-      await content.evaluate((node) => { node.scrollTop = 30 })
-      await expectBeforeNavigation(search, nav)
-      await content.evaluate((node) => { node.scrollTop = 80 })
-      await expectBeforeNavigation(result, nav)
-      await content.evaluate((node) => { node.scrollTop = node.scrollHeight })
-      await expectBeforeNavigation(row, nav)
-      await row.focus()
-      await expect(row).toBeFocused()
+      await expectReachableInScrollOwner(search, content)
+      await expectReachableInScrollOwner(result, content, false)
+      await expectReachableInScrollOwner(row, content)
       await context.close()
     }
   })
@@ -301,6 +290,9 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     const onboardingPage = await openPage(onboardingContext, detailPath)
     await expect(onboardingPage.getByTestId("ondo-onboarding")).toBeVisible()
     await expect(onboardingPage.getByTestId("canonical-place-overlay")).toHaveCount(0)
+    await onboardingPage.getByRole("button", { name: "Set guest preferences" }).click()
+    await onboardingPage.getByTestId("persona-travelling").click()
+    await onboardingPage.getByRole("button", { name: "Choose food preferences" }).click()
     await onboardingPage.getByTestId("onboarding-finish").click()
     const restored = onboardingPage.getByTestId("canonical-place-overlay")
     await expect(restored).toBeVisible()

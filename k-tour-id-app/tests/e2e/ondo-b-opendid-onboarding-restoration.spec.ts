@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
@@ -350,6 +351,16 @@ test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation deci
   }
 })
 
+test("OPENDID-E2E-003C Japanese consent and progress have no serious accessibility violations", async ({ page }) => {
+  const { setup } = await openTravelerSetup(page, "ja")
+  await selectMethod(setup, "passport_ekyc")
+  const result = await new AxeBuilder({ page })
+    .include("[data-testid='k-tour-id-setup']")
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze()
+  expect(result.violations.filter(({ impact }) => impact === "serious" || impact === "critical")).toEqual([])
+})
+
 test("OPENDID-E2E-004 passport completes evidence, issuance, holder and presentation with zero network/storage and independent axes", async ({ page }) => {
   const { traveler, credential, setup } = await openTravelerSetup(page)
   const originalAxes = Object.fromEntries(await Promise.all(EXISTING_AXIS_TEST_IDS.map(async (testId) => [
@@ -460,7 +471,7 @@ for (const status of ["expired", "suspended", "revoked"] as const) {
     await expect(ready).toHaveAttribute("data-code", code)
     await expect(setup.getByTestId("k-tour-id-presentation-open")).toBeDisabled()
     for (const testId of EXISTING_AXIS_TEST_IDS) {
-      const expected = testId === "traveler-id-account" ? "guest" : testId === "traveler-id-payment" ? "disconnected" : "none"
+      const expected = testId === "traveler-id-account" ? "guest" : "none"
       await expect(traveler.getByTestId(testId)).toHaveAttribute("data-status", expected)
     }
   })

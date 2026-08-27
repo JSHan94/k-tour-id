@@ -116,19 +116,20 @@ Night mode에서도 ONDO heat fill은 그대로 유지하되 white 2px keyline�
 
 ### Bottom navigation
 
-4개만 사용한다.
+현재 canonical shell은 5개 icon-first tab을 사용한다. 이 5개가 제품의 유일한 primary navigation이며, 기능을 줄이기 위해 합치거나 Labs를 새 tab으로 추가하지 않는다.
 
 | Tab | KO | EN | 목적 |
 |---|---|---|---|
-| ONDO | `ONDO` | `ONDO` | map/discovery |
-| My Korea | `My Korea` | `My Korea` | save/stamps/activity |
-| Tables | `Tables` | `Tables` | joined/nearby Pulse Tables |
-| ID | `ID` | `ID` | account/checks/settings |
+| Explore | `탐색` | `Explore` | 서울·부산 공식 기록과 제주 editorial을 잇는 map/discovery |
+| My Korea | `내 한국` | `My Korea` | save/recent/stamps/activity |
+| Tables | `테이블` | `Tables` | joined/nearby Pulse Tables |
+| ID · Wallet | `ID · 지갑` | `ID · Wallet` | OpenDID/eKYC checks, account, wallet activity |
+| Settings | `설정` | `Settings` | 언어와 탐색 선택, 이 기기 데이터 관리 |
 
 - 높이 66px + safe area, 좌우 10px, bottom 10px.
 - item hit area 최소 54×54px.
-- selected 상태는 배경+icon+text로 표시한다.
-- `Labs`는 primary tab이 아니다. `ID > Labs` 또는 10 stamp milestone에서만 진입한다.
+- icon이 첫 인지 단서이며 selected 상태는 배경+icon으로 즉시 구분한다. label은 접근 가능한 이름으로 항상 남기되, 작은 mobile 폭에서는 시각적으로 숨길 수 있다. desktop rail에서는 동일한 accessible name을 tooltip으로 보조한다.
+- `Labs`는 primary tab이 아니다. My Korea 또는 ID · Wallet 안의 subordinate row와 10 stamp milestone의 contextual deep link로만 진입한다. 10 stamp는 badge eligibility를 여는 조건이지 Labs 자체의 discoverability gate가 아니다.
 - badge는 unread/joined count만 사용하며 99 초과는 `99+`.
 
 ---

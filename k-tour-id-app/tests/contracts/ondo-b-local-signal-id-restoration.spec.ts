@@ -54,13 +54,15 @@ test("B-P0-DATA-001 only coarse posted-signal/device fields cross the device per
   const myKoreaModel = source("features/ondo/my/my-korea-model.ts")
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
+  const persistenceStart = provider.indexOf("function restoreBDeviceState")
+  const devicePersistence = provider.slice(persistenceStart, provider.indexOf("export type BAccountSessionState", persistenceStart))
 
   expect(deviceType).toContain("localSignalPostedVenueIds: string[]")
   expect(deviceType).toContain("localInteractionBoundarySeen: boolean")
   expect(deviceType).not.toMatch(/localSignalDraft|personCheck|ageCheck|claim|credential|did|profile|raw|outcome/i)
   expect(provider).toContain("sanitizeLocalSignalVenueIds(record.localSignalPostedVenueIds)")
   expect(myKoreaModel).toContain("return sanitizeCanonicalVenueIds(value).slice(0, MY_KOREA_HISTORY_LIMIT)")
-  expect(provider).not.toMatch(/sessionStorage|URLSearchParams/)
+  expect(devicePersistence).not.toMatch(/sessionStorage|URLSearchParams/)
 })
 
 test("B-P0-PACKAGE-001 standalone policy positively includes required B-native journeys and still bans legacy providers", () => {

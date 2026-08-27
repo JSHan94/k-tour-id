@@ -28,11 +28,13 @@ export default defineConfig({
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined
     : {
-        command: "pnpm exec next dev -H 127.0.0.1 -p 3112",
-        url: baseURL,
-        reuseExistingServer: true,
-        timeout: 120_000,
-      },
+      command: "pnpm exec next dev --webpack -H 127.0.0.1 -p 3112",
+      url: baseURL,
+      // Never silently accept a server owned by another worktree. Opt-in reuse
+      // remains available for a deliberately managed local preview.
+      reuseExistingServer: process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === "1",
+      timeout: 120_000,
+    },
   projects: [
     {
       name: "mobile-chromium",

@@ -172,8 +172,10 @@ export function composeUnifiedPulseB(targetVenueId: string, input: UnifiedPulseI
   }
 }
 
+export type JapanFirstContentIdB = "C01" | "C02" | "C03" | "C06" | "C08" | "C12" | "C18" | "C20" | "C22"
+
 export type JapanFirstLaunchContentB = {
-  id: "C01" | "C02" | "C03" | "C06" | "C08" | "C12" | "C18" | "C20" | "C22"
+  id: JapanFirstContentIdB
   title: { en: string; ko: string; ja: string }
   jaHook: string
   cityIds: readonly ("seoul" | "busan" | "jeju")[]
@@ -189,7 +191,7 @@ export type JapanFirstLaunchContentB = {
     rightsMode: "link-only"
   }[]
   sourceVerification: "report-linked"
-  placeEdgeVerification: "pending"
+  placeEdgeVerification: "pending" | "verified"
   sponsorship: "organic-official" | "unknown"
   rightsMode: "link-only"
   researchRecordedAt: "2026-08-24"
@@ -308,7 +310,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     },
     cityIds: ["jeju"],
     sourceReferences: [{ label: "VISITKOREA Japanese", url: "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=222180", type: "official-tourism", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" }],
-    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+    sourceVerification: "report-linked", placeEdgeVerification: "verified", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
   },
   {
     id: "C20",
@@ -326,7 +328,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
     },
     cityIds: ["jeju"],
     sourceReferences: [{ label: "VISITKOREA Japanese", url: "https://japanese.visitkorea.or.kr/svc/whereToGo/hdrdslt/hdrdsltView.do?crsSn=372386", type: "official-tourism", publishedOrObservedAt: null, importedAt: "2026-08-26", liveCheckedAt: null, verificationState: "report-linked", sponsorship: "organic-official", rightsMode: "link-only" }],
-    sourceVerification: "report-linked", placeEdgeVerification: "pending", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
+    sourceVerification: "report-linked", placeEdgeVerification: "verified", sponsorship: "organic-official", rightsMode: "link-only", researchRecordedAt: "2026-08-24", pulseEligible: false,
   },
   {
     id: "C22",
@@ -342,8 +344,8 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
   },
 ])
 
-export type JejuEditorialSeedB = {
-  id: string
+type JejuEditorialSeedBaseB = {
+  id: `jeju-${string}`
   cityId: "jeju"
   name: { en: string; ko: string; ja: string }
   category: "screen-location" | "food" | "market" | "culture-shopping"
@@ -354,31 +356,101 @@ export type JejuEditorialSeedB = {
   sourceUrl: string
   publishedOrObservedAt: string | null
   importedAt: "2026-08-26"
-  liveCheckedAt: null
-  sourceVerification: "report-linked"
+  liveCheckedAt: string | null
+  sourceVerification: "report-linked" | "place-page-verified"
   researchRecordedAt: "2026-08-24"
-  placeEdgeVerification: "pending"
   sponsorship: "organic-official"
   rightsMode: "link-only"
   canonicalVenueId: null
   officialRecordCount: null
 }
 
+export type EditorialPlaceB = JejuEditorialSeedBaseB & {
+  kind: "editorial-place"
+  placeEdgeVerification: "verified"
+  sourceVerification: "place-page-verified"
+  liveCheckedAt: "2026-08-28"
+  placeSourceUrl: string
+  placeSourceLabel: "VISITKOREA"
+  address: { en: string; ko: string }
+  location: {
+    latitude: number
+    longitude: number
+    crs: "EPSG:4326"
+    coordinateSource: "VISITKOREA_EMBEDDED_MAP"
+    verifiedAt: "2026-08-28"
+  }
+  storyIds: readonly Extract<JapanFirstContentIdB, "C18" | "C20">[]
+  officialRecord: false
+  pulseEligible: false
+}
+
+export type JejuEditorialSeedB = EditorialPlaceB | (JejuEditorialSeedBaseB & {
+  kind: "editorial-place-candidate"
+  placeEdgeVerification: "pending"
+})
+
 const JEJU_SCREEN_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=222180"
 const JEJU_STAR_SOURCE = "https://japanese.visitkorea.or.kr/svc/whereToGo/hdrdslt/hdrdsltView.do?crsSn=372386"
 const JEJU_CULTURE_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=1592039"
 const JEJU_HAENYEO_SOURCE = "https://japanese.visitkorea.or.kr/svc/contents/contentsView.do?menuSn=352&vcontsId=187785"
-const jejuTruth = (sourceUrl: string, sourceCollection: { en: string; ko: string; ja: string }) => ({ sourceType: "editorial-research" as const, sourceLabel: "VISITKOREA Japanese" as const, sourceCollection, sourceUrl, publishedOrObservedAt: null, importedAt: "2026-08-26" as const, liveCheckedAt: null, sourceVerification: "report-linked" as const, researchRecordedAt: "2026-08-24" as const, placeEdgeVerification: "pending" as const, sponsorship: "organic-official" as const, rightsMode: "link-only" as const, canonicalVenueId: null, officialRecordCount: null })
+const jejuTruth = (sourceUrl: string, sourceCollection: { en: string; ko: string; ja: string }) => ({ sourceType: "editorial-research" as const, sourceLabel: "VISITKOREA Japanese" as const, sourceCollection, sourceUrl, publishedOrObservedAt: null, importedAt: "2026-08-26" as const, researchRecordedAt: "2026-08-24" as const, sponsorship: "organic-official" as const, rightsMode: "link-only" as const, canonicalVenueId: null, officialRecordCount: null })
+
+const verifiedJejuPlace = (input: Omit<EditorialPlaceB, keyof ReturnType<typeof jejuTruth> | "kind" | "cityId" | "sourceVerification" | "liveCheckedAt" | "placeEdgeVerification" | "placeSourceLabel" | "officialRecord" | "pulseEligible"> & { sourceUrl: string; sourceCollection: { en: string; ko: string; ja: string } }): EditorialPlaceB => ({
+  kind: "editorial-place",
+  cityId: "jeju",
+  ...jejuTruth(input.sourceUrl, input.sourceCollection),
+  ...input,
+  sourceVerification: "place-page-verified",
+  liveCheckedAt: "2026-08-28",
+  placeEdgeVerification: "verified",
+  placeSourceLabel: "VISITKOREA",
+  officialRecord: false,
+  pulseEligible: false,
+})
+
+const pendingJejuPlace = (input: Pick<JejuEditorialSeedBaseB, "id" | "name" | "category" | "priority"> & { sourceUrl: string; sourceCollection: { en: string; ko: string; ja: string } }): JejuEditorialSeedB => ({
+  kind: "editorial-place-candidate",
+  cityId: "jeju",
+  ...input,
+  ...jejuTruth(input.sourceUrl, input.sourceCollection),
+  liveCheckedAt: null,
+  sourceVerification: "report-linked",
+  placeEdgeVerification: "pending",
+})
 
 export const JEJU_EDITORIAL_SEEDS: readonly JejuEditorialSeedB[] = Object.freeze([
-  { id: "jeju-seongsan-ilchulbong", cityId: "jeju", name: { en: "Seongsan Ilchulbong", ko: "성산일출봉", ja: "城山日出峰" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }) },
-  { id: "jeju-gwangchigi-beach", cityId: "jeju", name: { en: "Gwangchigi Beach", ko: "광치기해변", ja: "クァンチギ海岸" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }) },
-  { id: "jeju-gwaneumsa", cityId: "jeju", name: { en: "Gwaneumsa Temple", ko: "관음사", ja: "観音寺" }, category: "screen-location", priority: "P0", ...jejuTruth(JEJU_SCREEN_SOURCE, { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }) },
-  { id: "jeju-donsadon", cityId: "jeju", name: { en: "Donsadon main restaurant", ko: "돈사돈 본점", ja: "トンサドン本店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
-  { id: "jeju-oneunjeong-gimbap", cityId: "jeju", name: { en: "Oneunjeong Gimbap", ko: "오는정김밥", ja: "オヌンジョンキンパ" }, category: "food", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
-  { id: "jeju-tamura", cityId: "jeju", name: { en: "TaMuRa", ko: "TaMuRa", ja: "TaMuRa" }, category: "food", priority: "P1", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
-  { id: "jeju-sogil-byeolha", cityId: "jeju", name: { en: "Sogil Byeolha", ko: "소길별하", ja: "ソギルビョルハ" }, category: "culture-shopping", priority: "P0", ...jejuTruth(JEJU_STAR_SOURCE, { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }) },
-  { id: "jeju-haenyeo-kitchen-bukchon", cityId: "jeju", name: { en: "Haenyeo's Kitchen Bukchon", ko: "해녀의부엌 북촌점", ja: "海女の台所 北村店" }, category: "food", priority: "P0", ...jejuTruth(JEJU_HAENYEO_SOURCE, { en: "Jeju haenyeo culture", ko: "제주 해녀 문화", ja: "済州の海女文化" }) },
-  { id: "jeju-dongmun-market", cityId: "jeju", name: { en: "Jeju Dongmun Market", ko: "제주동문시장", ja: "済州東門市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장", ja: "済州の文化と市場" }) },
-  { id: "jeju-seogwipo-olle-market", cityId: "jeju", name: { en: "Seogwipo Maeil Olle Market", ko: "서귀포매일올레시장", ja: "西帰浦毎日オルレ市場" }, category: "market", priority: "P1", ...jejuTruth(JEJU_CULTURE_SOURCE, { en: "Jeju culture and markets", ko: "제주 문화와 시장", ja: "済州の文化と市場" }) },
+  verifiedJejuPlace({ id: "jeju-seongsan-ilchulbong", name: { en: "Seongsan Ilchulbong Tuff Cone", ko: "성산일출봉", ja: "城山日出峰" }, category: "screen-location", priority: "P0", sourceUrl: JEJU_SCREEN_SOURCE, sourceCollection: { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=110731", address: { en: "284-12 Ilchul-ro, Seogwipo-si, Jeju-do", ko: "제주특별자치도 서귀포시 성산읍 일출로 284-12" }, location: { latitude: 33.4580801942424, longitude: 126.941500386507, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: ["C18"] }),
+  verifiedJejuPlace({ id: "jeju-gwangchigi-beach", name: { en: "Gwangchigi Beach", ko: "광치기해변", ja: "クァンチギ海岸" }, category: "screen-location", priority: "P0", sourceUrl: JEJU_SCREEN_SOURCE, sourceCollection: { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/contents/contentsView.do?menuSn=351&vcontsId=222094", address: { en: "Goseong-ri, Seongsan-eup, Seogwipo-si, Jeju-do", ko: "제주특별자치도 서귀포시 성산읍 고성리 224-33" }, location: { latitude: 33.452277804193, longitude: 126.923932706058, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: ["C18"] }),
+  verifiedJejuPlace({ id: "jeju-gwaneumsa", name: { en: "Gwaneumsa Temple (Jeju)", ko: "관음사(제주)", ja: "観音寺（済州）" }, category: "screen-location", priority: "P0", sourceUrl: JEJU_SCREEN_SOURCE, sourceCollection: { en: "Jeju screen locations", ko: "제주 촬영지 모음", ja: "済州ロケ地コレクション" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=90109", address: { en: "660 Sallokbuk-ro, Jeju-si, Jeju-do", ko: "제주특별자치도 제주시 산록북로 660" }, location: { latitude: 33.4237307637202, longitude: 126.558131212009, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: ["C18"] }),
+  verifiedJejuPlace({ id: "jeju-donsadon", name: { en: "Donsadon Main Store", ko: "돈사돈 본점", ja: "トンサドン本店" }, category: "food", priority: "P0", sourceUrl: JEJU_STAR_SOURCE, sourceCollection: { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=53559", address: { en: "19 Upyeong-ro, Jeju-si, Jeju-do", ko: "제주특별자치도 제주시 우평로 19" }, location: { latitude: 33.4788811707717, longitude: 126.464058148407, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: ["C20"] }),
+  verifiedJejuPlace({ id: "jeju-oneunjeong-gimbap", name: { en: "Oneunjeong Gimbap", ko: "오는정김밥", ja: "オヌンジョンキンパ" }, category: "food", priority: "P0", sourceUrl: JEJU_STAR_SOURCE, sourceCollection: { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=199581", address: { en: "2 Dongmundong-ro, Seogwipo-si, Jeju-do", ko: "제주특별자치도 서귀포시 동문동로 2" }, location: { latitude: 33.249619622742216, longitude: 126.56757861250604, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: ["C20"] }),
+  pendingJejuPlace({ id: "jeju-tamura", name: { en: "TaMuRa", ko: "TaMuRa", ja: "TaMuRa" }, category: "food", priority: "P1", sourceUrl: JEJU_STAR_SOURCE, sourceCollection: { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" } }),
+  pendingJejuPlace({ id: "jeju-sogil-byeolha", name: { en: "Sogil Byeolha", ko: "소길별하", ja: "ソギルビョルハ" }, category: "culture-shopping", priority: "P0", sourceUrl: JEJU_STAR_SOURCE, sourceCollection: { en: "Jeju K-pop route", ko: "제주 K-pop 여행 코스", ja: "済州K-popルート" } }),
+  verifiedJejuPlace({ id: "jeju-haenyeo-kitchen-bukchon", name: { en: "Haenyeo’s Kitchen Bukchon Branch", ko: "해녀의부엌 북촌점", ja: "海女の台所 北村店" }, category: "food", priority: "P0", sourceUrl: JEJU_HAENYEO_SOURCE, sourceCollection: { en: "Jeju haenyeo culture", ko: "제주 해녀 문화", ja: "済州の海女文化" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=187159", address: { en: "31 Bukchon 9-gil, Jocheon-eup, Jeju-si, Jeju-do", ko: "제주특별자치도 제주시 북촌9길 31 북촌리어촌계" }, location: { latitude: 33.5498765904388, longitude: 126.693440739934, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: [] }),
+  verifiedJejuPlace({ id: "jeju-dongmun-market", name: { en: "Dongmun Traditional Market", ko: "동문재래시장", ja: "済州東門市場" }, category: "market", priority: "P1", sourceUrl: JEJU_CULTURE_SOURCE, sourceCollection: { en: "Jeju culture and markets", ko: "제주 문화와 시장", ja: "済州の文化と市場" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=91650", address: { en: "20 Gwandeok-ro 14-gil, Jeju-si, Jeju-do", ko: "제주특별자치도 제주시 관덕로14길 20" }, location: { latitude: 33.5115311377898, longitude: 126.526046080257, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: [] }),
+  verifiedJejuPlace({ id: "jeju-seogwipo-olle-market", name: { en: "Seogwipo Maeil Olle Market", ko: "서귀포매일올레시장", ja: "西帰浦毎日オルレ市場" }, category: "market", priority: "P1", sourceUrl: JEJU_CULTURE_SOURCE, sourceCollection: { en: "Jeju culture and markets", ko: "제주 문화와 시장", ja: "済州の文化と市場" }, placeSourceUrl: "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=90960", address: { en: "18 Jungang-ro 62beon-gil, Seogwipo-si, Jeju-do", ko: "제주특별자치도 서귀포시 서귀동 340" }, location: { latitude: 33.2501482431274, longitude: 126.563223568437, crs: "EPSG:4326", coordinateSource: "VISITKOREA_EMBEDDED_MAP", verifiedAt: "2026-08-28" }, storyIds: [] }),
 ])
+
+export const JEJU_EDITORIAL_PLACES: readonly EditorialPlaceB[] = Object.freeze(
+  JEJU_EDITORIAL_SEEDS.filter((item): item is EditorialPlaceB => item.kind === "editorial-place"),
+)
+
+const editorialPlaceIds = new Set<string>(JEJU_EDITORIAL_PLACES.map((place) => place.id))
+
+export function isEditorialPlaceId(value: unknown): value is EditorialPlaceB["id"] {
+  return typeof value === "string" && editorialPlaceIds.has(value)
+}
+
+export function editorialPlaceById(value: unknown) {
+  return isEditorialPlaceId(value) ? JEJU_EDITORIAL_PLACES.find((place) => place.id === value) : undefined
+}
+
+export function sanitizeEditorialPlaceIds(value: unknown): EditorialPlaceB["id"][] {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter(isEditorialPlaceId))]
+}
+
+export function editorialPlacesForStory(storyId: JapanFirstContentIdB) {
+  return JEJU_EDITORIAL_PLACES.filter((place) => place.storyIds.includes(storyId as Extract<JapanFirstContentIdB, "C18" | "C20">))
+}

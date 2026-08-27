@@ -559,3 +559,136 @@
 .screen[data-testid="ondo-b-settings-entry"] .settingsSection,
 .screen[data-testid="ondo-b-settings-entry"] .segmented,
 .screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg { background: #f7f7f5; }
+
+/* Settings is an ONDO control surface, not a generic administration page. */
+.settingsHeader {
+  max-width: none;
+  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+}
+.settingsMark {
+  box-sizing: border-box;
+  display: block;
+  width: 46px;
+  height: 46px;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  border: 1px solid rgb(25 25 25 / 10%);
+  border-radius: 15px;
+  padding: 10px;
+  background: #f4f4f2;
+}
+.settingsTitle { display: grid; min-width: 0; gap: 2px; }
+.settingsTitle p,
+.settingsTitle h1 { margin: 0; }
+.settingsTitle h1 { font-size: clamp(30px, 8vw, 42px); }
+.settingsHeader > span {
+  grid-column: 2;
+  max-width: 650px;
+  margin: 0;
+  color: #686865;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.screen[data-testid="ondo-b-settings-entry"] .settingsSection {
+  border-color: rgb(25 25 25 / 9%);
+  background: #fafaf8;
+}
+.screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg {
+  background: #ececea;
+  color: #292927;
+}
+.screen[data-testid="ondo-b-settings-entry"] .segmented {
+  border: 1px solid rgb(25 25 25 / 7%);
+  background: #efefed;
+  box-shadow: none;
+}
+.screen[data-testid="ondo-b-settings-entry"] .segmented button[aria-pressed="true"] {
+  background: #1f1f1e;
+  color: #fff;
+  box-shadow: 0 5px 14px rgb(25 25 25 / 14%);
+}
+
+@media (min-width: 700px) {
+  .settingsHeader {
+    grid-template-columns: 54px minmax(190px, .65fr) minmax(300px, 1.35fr);
+    grid-template-rows: auto;
+    column-gap: 16px;
+  }
+  .settingsMark { width: 54px; height: 54px; grid-row: 1; border-radius: 17px; padding: 12px; }
+  .settingsHeader > span { grid-column: 3; align-self: center; font-size: 14px; }
+}
+
+@media (min-width: 900px) {
+  .screen[data-testid="ondo-b-settings-entry"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 14px;
+  }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsHeader { grid-column: 1 / -1; }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(1),
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(2),
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(3) {
+    grid-row: 2;
+    margin-top: 28px;
+  }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(1) { grid-column: 1; }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(2) { grid-column: 2; }
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(3) { grid-column: 3; }
+  .screen[data-testid="ondo-b-settings-entry"] .settingsSection:nth-of-type(3) .settingsDisclosureBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .settingsHeader {
+    grid-template-columns: 42px minmax(160px, .55fr) minmax(300px, 1.45fr);
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 12px;
+  }
+  .settingsMark { width: 42px; height: 42px; grid-column: 1; grid-row: 1; padding: 9px; }
+  .settingsTitle { grid-column: 2; grid-row: 1; }
+  .settingsTitle p,
+  .settingsTitle h1 { grid-column: auto; }
+  .settingsTitle h1 { font-size: 30px; }
+  .settingsHeader > span { grid-column: 3; grid-row: 1; }
+}
+
+.labsEntry {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  min-height: 52px;
+  grid-template-columns: 30px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  border: 1px solid rgb(25 25 25 / 10%);
+  border-radius: 16px;
+  padding: 8px 12px;
+  background: #fafaf8;
+  color: #2b2927;
+  font: inherit;
+  text-align: left;
+}
+.labsEntry > svg:first-child {
+  box-sizing: border-box;
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 10px;
+  background: #efefec;
+}
+.labsEntry > span:not(.srOnly) { display: grid; min-width: 0; gap: 1px; }
+.labsEntry strong { font-size: 13px; }
+.labsEntry small { overflow: hidden; color: #6c6864; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
