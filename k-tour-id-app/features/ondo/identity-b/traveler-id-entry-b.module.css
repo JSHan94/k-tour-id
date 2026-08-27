@@ -348,3 +348,14 @@
   .pass::before,
   .statusCard { animation: none; transition: none; }
 }
+
+/* Final white product canvas; the pass and balance remain the memorable
+   objects instead of tinting the entire ID · Wallet journey. */
+.screen { --paper: #fff; background: #fff; }
+.header p { color: #555; }
+.readiness { border-top-color: rgb(25 25 25 / 10%); }
+.statusCard {
+  border-color: rgb(25 25 25 / 10%);
+  background: #fff;
+  box-shadow: 0 14px 38px rgb(25 25 25 / 6%);
+}

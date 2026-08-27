@@ -665,7 +665,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
             <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div>
             {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div> : null}
             <div><span>{copy.benefit}</span><strong>{breakdown.benefit} {copy.asset}</strong></div>
-            <div><span>{copy.remaining}</span><strong>{balance} {copy.asset}</strong></div>
+            <div><span>{copy.remaining}</span><strong>{balance.toLocaleString("en-US")} {copy.asset}</strong></div>
             <div><span>{view === "refunded" ? copy.paymentReceipt : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
             {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
           </section>
@@ -732,7 +732,7 @@ export function IdWalletCommerceB() {
 
       <section className={styles.balanceCard} data-testid="wallet-balance" data-flow8-object="wallet">
         <div className={styles.balanceTop}><span>{copy.balance}</span><small data-status={walletStatus}>{walletStatus === "ready" ? copy.balanceReady : copy.balanceOff}</small></div>
-        <strong>{balance}<span>{copy.testAsset}</span></strong>
+        <strong>{balance.toLocaleString("en-US")}<span>{copy.testAsset}</span></strong>
         {walletStatus === "ready" ? (
           <button type="button" className={styles.balanceAction} onClick={() => actions.setCommerceWalletStatus("disconnected")}>{copy.disconnect}</button>
         ) : (
