@@ -12,6 +12,9 @@ const marks = [
   "public/brand/ondo-mark.svg",
   "public/brand/ondo-mark-inverse.svg",
   "public/brand/ondo-lockup.svg",
+  "public/brand/ondo-mark-micro-16.svg",
+  "public/brand/ondo-mark-micro-20.svg",
+  "public/brand/ondo-mark-micro-24.svg",
 ] as const
 
 test("BRAND-MEDIA-001 generated people are bounded, registered editorial assets", () => {
@@ -39,8 +42,41 @@ test("BRAND-MEDIA-002 ONDO mark is a flat vector brand object, not an official s
     expect(registry).toContain(path)
   }
 
-  expect(readFileSync(resolve(root, "public/brand/ondo-mark.svg"), "utf8")).toContain("#722044")
+  const primary = readFileSync(resolve(root, "public/brand/ondo-mark.svg"), "utf8")
+  expect(primary).toContain("#191817")
+  expect(primary).not.toContain("<circle")
+  expect(primary.match(/<path\b/g)).toHaveLength(1)
   expect(registry).toContain("not a government, identity or payment seal")
+})
+
+test("BRAND-MEDIA-004 ONDO ships optically tuned micro marks and written usage guards", () => {
+  const guide = readFileSync(resolve(root, "public/brand/README.md"), "utf8")
+  const expected = [16, 20, 24] as const
+
+  for (const size of expected) {
+    const path = resolve(root, `public/brand/ondo-mark-micro-${size}.svg`)
+    const source = readFileSync(path, "utf8")
+    expect(existsSync(path)).toBe(true)
+    expect(source).toContain(`width="${size}"`)
+    expect(source).toContain(`height="${size}"`)
+    expect(source).toContain('shape-rendering="geometricPrecision"')
+    expect(source).not.toMatch(/<(?:circle|filter|linearGradient|radialGradient|text)\b/)
+  }
+
+  expect(guide).toContain("Clear space")
+  expect(guide).toContain("16–24 px")
+  expect(guide).toContain("32 px and above")
+  expect(guide).toContain("Never use the ONDO mark as")
+  expect(guide).toMatch(/favicon|app icon/i)
+  expect(guide).toMatch(/identity|eKYC|credential/i)
+})
+
+test("BRAND-MEDIA-005 lockup is path-native and has a wider optical field", () => {
+  const source = readFileSync(resolve(root, "public/brand/ondo-lockup.svg"), "utf8")
+  expect(source).toContain('viewBox="0 0 288 64"')
+  expect(source).not.toContain("<circle")
+  expect(source).not.toContain("#722044")
+  expect(source).toContain('data-part="wordmark"')
 })
 
 test("BRAND-MEDIA-003 fictional people never enter identity or evidence source code", () => {
