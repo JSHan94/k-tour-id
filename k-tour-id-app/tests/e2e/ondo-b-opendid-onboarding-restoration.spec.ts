@@ -1,0 +1,408 @@
+import { expect, test, type Browser, type Locator, type Page } from "@playwright/test"
+
+const DEVICE_KEY = "ondo-b.device.v1"
+
+type Locale = "en" | "ko" | "ja"
+type IdentityMethod = "mobile_id" | "mobile_residence_card" | "passport_ekyc"
+type CredentialFixture = "expired" | "suspended" | "revoked"
+type PresentationFixture = "PRESENTATION_DENIED" | "PRESENTATION_REQUEST_EXPIRED" | "PRESENTATION_REPLAY"
+type IdentityQa = {
+  identity?: {
+    outcome?: "IDENTITY_METHOD_UNAVAILABLE"
+    credentialStatus?: CredentialFixture
+    presentationOutcome?: PresentationFixture
+  }
+}
+
+const COPY = {
+  en: {
+    guest: "Explore without setup",
+    environment: "SIMULATED · No identity provider or OpenDID service is contacted.",
+    privateCredential: "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
+    passportProvider: "Passport eKYC uses a separate provider — not OmniOne CX",
+    assuranceChange: "Passport eKYC does not verify registered-resident status. Continuing changes the assurance method to private passport eKYC.",
+  },
+  ko: {
+    guest: "설정 없이 탐색",
+    environment: "시뮬레이션 · 신원확인 기관이나 OpenDID 서비스에 요청을 보내지 않습니다.",
+    privateCredential: "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
+    passportProvider: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
+    assuranceChange: "여권 eKYC는 등록외국인 체류자격을 확인하지 않습니다. 계속하면 민간 여권 eKYC 방식으로 확인 근거가 바뀝니다.",
+  },
+  ja: {
+    guest: "設定せずに見る",
+    environment: "シミュレーション · 本人確認事業者やOpenDIDサービスには送信しません。",
+    privateCredential: "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
+    passportProvider: "パスポートeKYCはOmniOne CXではなく別の事業者",
+    assuranceChange: "パスポートeKYCでは登録外国人の在留資格を確認できません。続行すると確認根拠は民間のパスポートeKYCに変わります。",
+  },
+} as const
+
+const METHOD_TEST_IDS: Record<IdentityMethod, string> = {
+  mobile_id: "k-tour-id-method-mobile-id",
+  mobile_residence_card: "k-tour-id-method-mobile-residence-card",
+  passport_ekyc: "k-tour-id-method-passport-ekyc",
+}
+
+const METHOD_EVIDENCE = {
+  en: {
+    mobile_id: /Mobile ID/i,
+    mobile_residence_card: /Mobile Residence Card/i,
+    passport_ekyc: /NFC\s*\/\s*OCR.*face.*liveness/i,
+  },
+  ko: {
+    mobile_id: /모바일 신분증/,
+    mobile_residence_card: /모바일 외국인등록증/,
+    passport_ekyc: /NFC\s*\/\s*OCR.*얼굴.*라이브니스/,
+  },
+  ja: {
+    mobile_id: /モバイル身分証/,
+    mobile_residence_card: /モバイル在留カード/,
+    passport_ekyc: /NFC\s*\/\s*OCR.*顔.*ライブネス/,
+  },
+} as const
+
+const EXISTING_AXIS_TEST_IDS = [
+  "traveler-id-account",
+  "traveler-id-person",
+  "traveler-id-age",
+  "traveler-id-payment",
+] as const
+
+test.describe.configure({ timeout: 120_000 })
+
+async function seedB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-COMPLETE", qa?: IdentityQa) {
+  await page.addInitScript(({ key, language, onboardingState, injected }) => {
+    localStorage.setItem(key, JSON.stringify({
+      locale: language,
+      onboarding: onboardingState,
+      persona: null,
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
+    if (injected) (window as Window & { __ONDO_B_QA__?: IdentityQa }).__ONDO_B_QA__ = injected
+  }, { key: DEVICE_KEY, language: locale, onboardingState: onboarding, injected: qa })
+  await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
+}
+
+async function openB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-COMPLETE", qa?: IdentityQa) {
+  await seedB(page, locale, onboarding, qa)
+  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await expect(page.locator("html")).toHaveAttribute("lang", locale)
+  await expect(page.getByTestId("ondo-b-root")).toBeVisible()
+}
+
+async function openOnboardingSetup(page: Page, locale: Locale = "en") {
+  await openB(page, locale, "ONB-NEW")
+  const onboarding = page.getByTestId("ondo-onboarding")
+  const opener = onboarding.getByTestId("k-tour-id-setup-open")
+  await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
+  await expect(opener).toBeVisible()
+  await opener.click()
+  const setup = page.getByTestId("k-tour-id-setup")
+  await expect(setup).toBeVisible()
+  return { onboarding, opener, setup }
+}
+
+async function openTravelerSetup(page: Page, locale: Locale = "en", qa?: IdentityQa) {
+  await openB(page, locale, "ONB-COMPLETE", qa)
+  await page.getByTestId("nav-id").click()
+  const traveler = page.getByTestId("ondo-b-traveler-id")
+  await expect(traveler).toBeVisible()
+  for (const testId of EXISTING_AXIS_TEST_IDS) await expect(traveler.getByTestId(testId)).toBeVisible()
+  const credential = traveler.getByTestId("traveler-id-credential")
+  const opener = traveler.getByTestId("traveler-id-ktour-id-open")
+  await expect(credential).toHaveAttribute("data-status", "none")
+  await expect(opener).toBeVisible()
+  await opener.click()
+  const setup = page.getByTestId("k-tour-id-setup")
+  await expect(setup).toBeVisible()
+  return { traveler, credential, opener, setup }
+}
+
+async function selectMethod(setup: Locator, method: IdentityMethod) {
+  await setup.getByTestId(METHOD_TEST_IDS[method]).click()
+  const consent = setup.getByTestId("k-tour-id-consent")
+  await expect(consent).toBeVisible()
+  for (const testId of [
+    "identity-consent-requester",
+    "identity-consent-purpose",
+    "identity-consent-provider",
+    "identity-consent-evidence",
+    "identity-consent-retention",
+  ]) await expect(consent.getByTestId(testId)).not.toBeEmpty()
+  return consent
+}
+
+async function advanceUntil(setup: Locator, testId: string, limit = 14) {
+  const target = setup.getByTestId(testId)
+  for (let attempt = 0; attempt < limit; attempt += 1) {
+    if (await target.isVisible().catch(() => false)) return target
+    const advance = setup.getByTestId("k-tour-id-continue")
+    await expect(advance, `no continuation action before ${testId}`).toBeVisible()
+    await advance.click()
+  }
+  await expect(target, `journey did not reach ${testId}`).toBeVisible()
+  return target
+}
+
+async function approveConsent(setup: Locator) {
+  await setup.getByTestId("k-tour-id-consent-approve").click()
+}
+
+async function reachPassportEvidence(setup: Locator) {
+  const consent = await selectMethod(setup, "passport_ekyc")
+  await expect(consent.getByTestId("identity-consent-provider")).toContainText(/separate provider|별도 제공자|別の事業者/i)
+  await approveConsent(setup)
+  await advanceUntil(setup, "k-tour-id-passport-document")
+  await advanceUntil(setup, "k-tour-id-passport-face")
+  return advanceUntil(setup, "k-tour-id-evidence-preview")
+}
+
+async function reachCredential(setup: Locator, rapidIssue = false) {
+  await reachPassportEvidence(setup)
+  const issuance = await advanceUntil(setup, "k-tour-id-issuance-preview")
+  await expect(issuance).toBeVisible()
+  if (rapidIssue) {
+    const issue = setup.getByTestId("k-tour-id-continue")
+    await expect(issue).toBeVisible()
+    await issue.evaluate((button) => {
+      for (let attempt = 0; attempt < 10; attempt += 1) (button as HTMLButtonElement).click()
+    })
+  }
+  const holder = await advanceUntil(setup, "k-tour-id-holder-delivery")
+  await expect(holder).toBeVisible()
+  return advanceUntil(setup, "k-tour-id-credential")
+}
+
+async function setIdentityQa(page: Page, qa: NonNullable<IdentityQa["identity"]>) {
+  await page.evaluate((identity) => {
+    const target = window as Window & { __ONDO_B_QA__?: IdentityQa }
+    target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), identity }
+  }, qa)
+}
+
+async function storageSnapshot(page: Page) {
+  return page.evaluate(async () => ({
+    local: Object.fromEntries(Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index))
+      .filter((key): key is string => key !== null)
+      .map((key) => [key, localStorage.getItem(key)])),
+    session: Object.fromEntries(Array.from({ length: sessionStorage.length }, (_, index) => sessionStorage.key(index))
+      .filter((key): key is string => key !== null)
+      .map((key) => [key, sessionStorage.getItem(key)])),
+    databases: (await indexedDB.databases()).map(({ name, version }) => ({ name, version })),
+    caches: await caches.keys(),
+  }))
+}
+
+async function installStorageWriteProbe(page: Page) {
+  await page.evaluate(() => {
+    const target = window as Window & { __KTOUR_ID_STORAGE_WRITES__?: string[] }
+    target.__KTOUR_ID_STORAGE_WRITES__ = []
+    const original = Storage.prototype.setItem
+    Storage.prototype.setItem = function (key: string, value: string) {
+      if (this === localStorage || this === sessionStorage) {
+        target.__KTOUR_ID_STORAGE_WRITES__?.push(`${this === localStorage ? "local" : "session"}:${key}:${value}`)
+      }
+      return original.call(this, key, value)
+    }
+  })
+}
+
+async function storageWrites(page: Page) {
+  return page.evaluate(() => (window as Window & { __KTOUR_ID_STORAGE_WRITES__?: string[] }).__KTOUR_ID_STORAGE_WRITES__ ?? [])
+}
+
+async function newSeededPage(browser: Browser, locale: Locale, qa?: IdentityQa) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const page = await context.newPage()
+  await openB(page, locale, "ONB-COMPLETE", qa)
+  return { context, page }
+}
+
+test("OPENDID-E2E-001 guest skip remains ungated and preserves the existing onboarding contract", async ({ page }) => {
+  await openB(page, "en", "ONB-NEW")
+  await expect(page.getByTestId("ondo-onboarding")).toBeVisible()
+  await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
+  await page.getByRole("button", { name: COPY.en.guest, exact: true }).click()
+
+  await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+  await expect(page.getByTestId("k-tour-id-setup")).toHaveCount(0)
+  await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
+  await expect(page.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
+  const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
+  expect(stored).toMatchObject({ onboarding: "ONB-COMPLETE", persona: null, discoveryPreferences: [] })
+})
+
+test("OPENDID-E2E-002 both optional entries open the same simulated setup without replacing frozen testids", async ({ browser }) => {
+  const onboardingContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const onboardingPage = await onboardingContext.newPage()
+  const onboardingEntry = await openOnboardingSetup(onboardingPage)
+  await expect(onboardingEntry.setup.getByTestId("k-tour-id-environment")).toHaveText(COPY.en.environment)
+  await expect(onboardingEntry.setup.getByTestId("k-tour-id-private-boundary")).toHaveText(COPY.en.privateCredential)
+  await onboardingEntry.setup.getByTestId("k-tour-id-cancel").click()
+  await expect(onboardingEntry.setup).toHaveCount(0)
+  await expect(onboardingEntry.opener).toBeFocused()
+  await onboardingContext.close()
+
+  const travelerContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const travelerPage = await travelerContext.newPage()
+  const travelerEntry = await openTravelerSetup(travelerPage)
+  await expect(travelerEntry.setup.getByTestId("k-tour-id-environment")).toHaveText(COPY.en.environment)
+  await expect(travelerEntry.setup.getByTestId("k-tour-id-private-boundary")).toHaveText(COPY.en.privateCredential)
+  await travelerEntry.setup.getByTestId("k-tour-id-cancel").click()
+  await expect(travelerEntry.setup).toHaveCount(0)
+  await expect(travelerEntry.opener).toBeFocused()
+  await travelerContext.close()
+})
+
+test("OPENDID-E2E-003 EN KO JA expose all three consent/provider truths", async ({ browser }) => {
+  for (const locale of ["en", "ko", "ja"] as const) {
+    for (const method of ["mobile_id", "mobile_residence_card", "passport_ekyc"] as const) {
+      const { context, page } = await newSeededPage(browser, locale)
+      await page.getByTestId("nav-id").click()
+      await page.getByTestId("traveler-id-ktour-id-open").click()
+      const setup = page.getByTestId("k-tour-id-setup")
+      await expect(setup.getByTestId("k-tour-id-environment")).toHaveText(COPY[locale].environment)
+      await expect(setup.getByTestId("k-tour-id-private-boundary")).toHaveText(COPY[locale].privateCredential)
+      const consent = await selectMethod(setup, method)
+      const provider = consent.getByTestId("identity-consent-provider")
+      const evidence = consent.getByTestId("identity-consent-evidence")
+      if (method === "passport_ekyc") await expect(provider).toContainText(COPY[locale].passportProvider)
+      else await expect(provider).toContainText("OmniOne CX")
+      await expect(evidence).toContainText(METHOD_EVIDENCE[locale][method])
+      await context.close()
+    }
+  }
+})
+
+test("OPENDID-E2E-004 passport completes evidence, issuance, holder and presentation with zero network/storage and independent axes", async ({ page }) => {
+  const { traveler, credential, setup } = await openTravelerSetup(page)
+  const originalAxes = Object.fromEntries(await Promise.all(EXISTING_AXIS_TEST_IDS.map(async (testId) => [
+    testId,
+    await traveler.getByTestId(testId).getAttribute("data-status"),
+  ])))
+  const beforeStorage = await storageSnapshot(page)
+  await installStorageWriteProbe(page)
+
+  const identityRequests: string[] = []
+  const origin = new URL(page.url()).origin
+  page.on("request", (request) => {
+    if (!["fetch", "xhr", "websocket"].includes(request.resourceType())) return
+    const url = request.url()
+    const parsed = new URL(url)
+    const identityNamed = /identity|passport|opendid|credential|presentation|ekyc|omnione|callback/i.test(`${parsed.pathname}${parsed.search}`)
+    if (parsed.origin !== origin || identityNamed) identityRequests.push(url)
+  })
+
+  await reachPassportEvidence(setup)
+  const issuance = await advanceUntil(setup, "k-tour-id-issuance-preview")
+  await expect(issuance).toBeVisible()
+  const issue = setup.getByTestId("k-tour-id-continue")
+  await expect(issue).toBeVisible()
+  await issue.evaluate((button) => {
+    for (let attempt = 0; attempt < 10; attempt += 1) (button as HTMLButtonElement).click()
+  })
+  await advanceUntil(setup, "k-tour-id-holder-delivery")
+  const ready = await advanceUntil(setup, "k-tour-id-credential")
+  await expect(ready).toHaveAttribute("data-status", "simulated_ready")
+  await expect(ready).toHaveAttribute("data-issuance-count", "1")
+  await expect(setup.getByTestId("k-tour-id-credential")).toHaveCount(1)
+
+  for (const [testId, status] of Object.entries(originalAxes)) {
+    await expect(traveler.getByTestId(testId)).toHaveAttribute("data-status", status ?? "")
+  }
+  await expect(credential).toHaveAttribute("data-status", "simulated_ready")
+
+  await setup.getByTestId("k-tour-id-presentation-open").click()
+  await expect(setup.getByTestId("k-tour-id-presentation-request")).toBeVisible()
+  await advanceUntil(setup, "k-tour-id-presentation-consent")
+  await setup.getByTestId("k-tour-id-presentation-approve").click()
+  await expect(setup.getByTestId("k-tour-id-presentation-result")).toHaveAttribute("data-result", "success")
+
+  expect(identityRequests).toEqual([])
+  expect(await storageWrites(page)).toEqual([])
+  expect(await storageSnapshot(page)).toEqual(beforeStorage)
+  const persisted = JSON.stringify(await storageSnapshot(page))
+  expect(persisted).not.toMatch(/passport|credential|presentation|issuerDid|holderDid|liveness|faceImage|documentNumber/i)
+})
+
+test("OPENDID-E2E-005 residence unavailable changes to passport only with the assurance-change warning", async ({ browser }) => {
+  for (const locale of ["en", "ko", "ja"] as const) {
+    const qa: IdentityQa = { identity: { outcome: "IDENTITY_METHOD_UNAVAILABLE" } }
+    const { context, page } = await newSeededPage(browser, locale, qa)
+    await page.getByTestId("nav-id").click()
+    await page.getByTestId("traveler-id-ktour-id-open").click()
+    const setup = page.getByTestId("k-tour-id-setup")
+    await selectMethod(setup, "mobile_residence_card")
+    await approveConsent(setup)
+    const unavailable = await advanceUntil(setup, "k-tour-id-unavailable")
+    await expect(unavailable).toHaveAttribute("data-code", "IDENTITY_METHOD_UNAVAILABLE")
+    await expect(unavailable).toContainText(COPY[locale].assuranceChange)
+    await unavailable.getByTestId("k-tour-id-alternate-passport").click()
+    const passportConsent = setup.getByTestId("k-tour-id-consent")
+    await expect(passportConsent.getByTestId("identity-consent-provider")).toContainText(COPY[locale].passportProvider)
+    await context.close()
+  }
+})
+
+test("OPENDID-E2E-006 cancel and Escape restore focus to each exact optional entry", async ({ browser }) => {
+  const onboardingContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const onboardingPage = await onboardingContext.newPage()
+  const onboardingEntry = await openOnboardingSetup(onboardingPage)
+  await onboardingEntry.setup.getByTestId("k-tour-id-cancel").click()
+  await expect(onboardingEntry.opener).toBeFocused()
+  await onboardingEntry.opener.click()
+  await onboardingPage.keyboard.press("Escape")
+  await expect(onboardingEntry.opener).toBeFocused()
+  await onboardingContext.close()
+
+  const travelerContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const travelerPage = await travelerContext.newPage()
+  const travelerEntry = await openTravelerSetup(travelerPage)
+  await travelerPage.keyboard.press("Escape")
+  await expect(travelerEntry.setup).toHaveCount(0)
+  await expect(travelerEntry.opener).toBeFocused()
+  await travelerContext.close()
+})
+
+for (const status of ["expired", "suspended", "revoked"] as const) {
+  const code = `CREDENTIAL_${status.toUpperCase()}`
+  test(`OPENDID-E2E-007 credential ${status} fixture remains separate and blocks presentation`, async ({ page }) => {
+    const qa: IdentityQa = { identity: { credentialStatus: status } }
+    const { traveler, setup } = await openTravelerSetup(page, "en", qa)
+    const ready = await reachCredential(setup)
+    await expect(ready).toHaveAttribute("data-status", status)
+    await expect(ready).toHaveAttribute("data-code", code)
+    await expect(setup.getByTestId("k-tour-id-presentation-open")).toBeDisabled()
+    for (const testId of EXISTING_AXIS_TEST_IDS) {
+      const expected = testId === "traveler-id-account" ? "guest" : testId === "traveler-id-payment" ? "disconnected" : "none"
+      await expect(traveler.getByTestId(testId)).toHaveAttribute("data-status", expected)
+    }
+  })
+}
+
+for (const outcome of ["PRESENTATION_DENIED", "PRESENTATION_REQUEST_EXPIRED", "PRESENTATION_REPLAY"] as const) {
+  const result = outcome === "PRESENTATION_DENIED" ? "denied" : outcome === "PRESENTATION_REQUEST_EXPIRED" ? "expired" : "replay"
+  test(`OPENDID-E2E-008 presentation ${result} fixture is explicit and retry-safe`, async ({ page }) => {
+    const { setup } = await openTravelerSetup(page)
+    await reachCredential(setup)
+    await setIdentityQa(page, { presentationOutcome: outcome })
+    await setup.getByTestId("k-tour-id-presentation-open").click()
+    await expect(setup.getByTestId("k-tour-id-presentation-request")).toBeVisible()
+    await advanceUntil(setup, "k-tour-id-presentation-consent")
+    await setup.getByTestId("k-tour-id-presentation-approve").click()
+    const presentation = setup.getByTestId("k-tour-id-presentation-result")
+    await expect(presentation).toHaveAttribute("data-result", result)
+    await expect(presentation).toHaveAttribute("data-code", outcome)
+    await expect(setup.getByTestId("k-tour-id-credential")).toHaveAttribute("data-issuance-count", "1")
+  })
+}
