@@ -2,11 +2,11 @@
 
 import { useRef, useState } from "react"
 import {
-  BadgeCheck,
   CalendarClock,
   ChevronRight,
   CircleUserRound,
-  Fingerprint,
+  Compass,
+  MapPinned,
   Settings,
   ShieldCheck,
   UserRoundCheck,
@@ -26,6 +26,7 @@ const COPY = {
     passLabel: "ONDO · KOREA TRAVEL PASS",
     passState: "Guest pass",
     passBody: "Explore first. Activate only when saving, joining or paying needs it.",
+    passBoundary: "Local travel aid only · not an ID, credential or verification",
     readiness: "Trip readiness",
     readinessBody: "Each item stands on its own. Complete only the one an action asks for.",
     accountTitle: "Account",
@@ -38,12 +39,12 @@ const COPY = {
     paymentTitle: "Payment",
     paymentBody: "A separate test wallet for ONDO benefits.",
     notChecked: "Not checked",
-    success: "Ready this session",
+    success: "Local result · this session",
     cancel: "Not completed",
     failure: "Try again",
     unavailable: "Unavailable",
     expired: "Expired",
-    walletReady: "Ready",
+    walletReady: "Test wallet ready",
     walletNotReady: "Set up",
     checkPerson: "Check Person",
     checkAge: "Check 19+",
@@ -58,6 +59,7 @@ const COPY = {
     passLabel: "ONDO · KOREA TRAVEL PASS",
     passState: "게스트 패스",
     passBody: "먼저 둘러보세요. 저장·참여·결제에 필요할 때만 활성화합니다.",
+    passBoundary: "이 기기의 여행 도구 · 신분증·자격증명·공식 인증이 아님",
     readiness: "여행 준비 상태",
     readinessBody: "각 항목은 서로 독립적이에요. 작업이 요청하는 한 가지만 완료하세요.",
     accountTitle: "계정",
@@ -70,12 +72,12 @@ const COPY = {
     paymentTitle: "결제",
     paymentBody: "ONDO 혜택용 별도 테스트 지갑입니다.",
     notChecked: "확인 전",
-    success: "이 세션에서 준비됨",
+    success: "이 세션의 로컬 결과",
     cancel: "완료 전",
     failure: "다시 시도",
     unavailable: "이용 불가",
     expired: "만료됨",
-    walletReady: "준비됨",
+    walletReady: "테스트 지갑 준비됨",
     walletNotReady: "설정 필요",
     checkPerson: "본인 확인",
     checkAge: "19+ 확인",
@@ -90,6 +92,7 @@ const COPY = {
     passLabel: "ONDO · KOREA TRAVEL PASS",
     passState: "ゲストパス",
     passBody: "まずは自由に探せます。保存・参加・支払いで必要になったときだけ準備します。",
+    passBoundary: "この端末だけの旅の補助 · 身分証、資格情報、公的な確認ではありません",
     readiness: "旅の準備状況",
     readinessBody: "各項目は互いに独立しています。操作で求められた項目だけを完了してください。",
     accountTitle: "アカウント",
@@ -102,12 +105,12 @@ const COPY = {
     paymentTitle: "決済",
     paymentBody: "ONDO特典専用の、独立したテストウォレットです。",
     notChecked: "未確認",
-    success: "このセッションで利用可能",
+    success: "このセッションだけのローカル結果",
     cancel: "未完了",
     failure: "再試行が必要",
     unavailable: "利用不可",
     expired: "期限切れ",
-    walletReady: "準備済み",
+    walletReady: "テストウォレット準備済み",
     walletNotReady: "設定が必要",
     checkPerson: "本人であることを確認",
     checkAge: "19歳以上を確認",
@@ -146,24 +149,27 @@ export function TravelerIdEntryB() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.screen} data-testid="ondo-b-traveler-id" data-visual-direction="warm-living-wallet">
+      <div className={styles.screen} data-testid="ondo-b-traveler-id" data-visual-direction="apple-wallet-flow8">
         <header className={styles.header}>
           <p>{copy.eyebrow}</p>
           <h1>{copy.title}</h1>
           <span>{copy.body}</span>
         </header>
 
-        <section className={styles.pass} aria-label={copy.passState}>
+        <section className={styles.pass} aria-label={copy.passState} data-testid="travel-pass-card" data-flow8-object="pass">
           <div className={styles.passGlow} aria-hidden="true" />
-          <div className={styles.passTop}><span>{copy.passLabel}</span><Fingerprint size={28} strokeWidth={1.5} aria-hidden="true" /></div>
+          <div className={styles.passTop}><span>{copy.passLabel}</span><MapPinned size={27} strokeWidth={1.55} aria-hidden="true" /></div>
           <div className={styles.passMain}>
-            <div><small>{copy.passState}</small><strong>SEOUL — BUSAN</strong></div>
-            <BadgeCheck size={23} aria-hidden="true" />
+            <div><small>{copy.passState}</small><strong>SEOUL — BUSAN — JEJU</strong></div>
+            <Compass size={23} aria-hidden="true" />
           </div>
           <p>{copy.passBody}</p>
+          <small className={styles.passBoundary} data-testid="travel-pass-local-boundary">{copy.passBoundary}</small>
         </section>
 
-        <IdWalletCommerceB />
+        <div className={styles.walletPane}>
+          <IdWalletCommerceB />
+        </div>
 
         <section className={styles.readiness} data-testid="travel-pass-status" aria-labelledby="travel-readiness-title">
           <div className={styles.sectionHeading}>

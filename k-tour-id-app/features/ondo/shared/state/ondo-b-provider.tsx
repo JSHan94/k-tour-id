@@ -24,7 +24,9 @@ import {
   createStableCommerceBState,
   STABLE_B_OPENING_BALANCE,
   STABLE_B_OOKRW_PRICE,
+  STABLE_B_PAYMENT_OPERATION_ID,
   STABLE_B_RECEIPT_ID,
+  STABLE_B_REFUND_OPERATION_ID,
   STABLE_B_REFUND_RECEIPT_ID,
   STABLE_B_VOUCHER_VALUE,
   stableCommerceBalanceB,
@@ -105,7 +107,7 @@ export type OndoBActions = {
   acknowledgeLocalInteractionBoundary(): boolean
   acknowledgeCommerceLocalBoundary(): boolean
   setCommerceWalletStatus(status: OndoBCommerceWalletStatus): void
-  dispatchCommerce(action: StableCommerceBAction): void
+  dispatchCommerce(action: StableCommerceBAction): boolean
   recordCommerceReceipt(receipt: OndoBCommerceReceipt): boolean
   openMealBenefitFromPlace(venueId: string): boolean
   returnFromCommerceOrigin(): boolean
@@ -143,6 +145,7 @@ export function sanitizeCommerceReceipts(value: unknown): OndoBCommerceReceipt[]
     const receipt = item as Record<string, unknown>
     if (receipt.receiptId !== STABLE_B_RECEIPT_ID || receipt.offerId !== "meal-offer-gukbap" || !isCanonicalVenueId(receipt.venueId)) return []
     if (receipt.status !== "paid" && receipt.status !== "refunded") return []
+    if (receipt.status === "paid" ? receipt.refundReceiptId !== null : receipt.refundReceiptId !== STABLE_B_REFUND_RECEIPT_ID) return []
     const benefitOOKRW = receipt.benefitOOKRW === STABLE_B_VOUCHER_VALUE
       ? STABLE_B_VOUCHER_VALUE
       : receipt.benefitOOKRW === 0 ? 0 : null
@@ -170,15 +173,48 @@ export function sanitizeCommerceReceipts(value: unknown): OndoBCommerceReceipt[]
     .slice(0, B_COMMERCE_RECEIPT_LIMIT)
 }
 
-function commerceSessionFromReceipts(receipts: readonly OndoBCommerceReceipt[]): StableCommerceBState {
+export function commerceSessionFromReceipts(receipts: readonly OndoBCommerceReceipt[]): StableCommerceBState {
   const receipt = receipts[0]
   const initial = createStableCommerceBState()
   if (!receipt) return initial
+  const paymentLedger: StableCommerceBState["ledger"] = [
+    {
+      operationId: STABLE_B_PAYMENT_OPERATION_ID,
+      receiptId: STABLE_B_RECEIPT_ID,
+      side: "holder",
+      amount: -receipt.paidOOKRW,
+      kind: "PAYMENT",
+    },
+    {
+      operationId: STABLE_B_PAYMENT_OPERATION_ID,
+      receiptId: STABLE_B_RECEIPT_ID,
+      side: "merchant",
+      amount: receipt.paidOOKRW,
+      kind: "PAYMENT",
+    },
+  ]
+  const refundLedger: StableCommerceBState["ledger"] = receipt.status === "refunded" ? [
+    {
+      operationId: STABLE_B_REFUND_OPERATION_ID,
+      receiptId: STABLE_B_REFUND_RECEIPT_ID,
+      side: "holder",
+      amount: receipt.paidOOKRW,
+      kind: "REFUND",
+    },
+    {
+      operationId: STABLE_B_REFUND_OPERATION_ID,
+      receiptId: STABLE_B_REFUND_RECEIPT_ID,
+      side: "merchant",
+      amount: -receipt.paidOOKRW,
+      kind: "REFUND",
+    },
+  ] : []
   return {
     ...initial,
     status: receipt.status,
     voucher: receipt.status === "paid" && receipt.benefitOOKRW > 0 ? "consumed" : "available",
     benefitRecommendation: receipt.benefitOOKRW > 0 ? "accepted" : "declined",
+    confirmationCount: 1,
     receiptCount: 1,
     refundCount: receipt.status === "refunded" ? 1 : 0,
     chargedDebit: receipt.paidOOKRW,
@@ -186,6 +222,7 @@ function commerceSessionFromReceipts(receipts: readonly OndoBCommerceReceipt[]):
     redemptionCount: receipt.status === "paid" && receipt.benefitOOKRW > 0 ? 1 : 0,
     receiptId: receipt.receiptId,
     lastOutcome: "success",
+    ledger: paymentLedger.concat(refundLedger),
   }
 }
 
@@ -525,7 +562,8 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     acknowledgeLocalInteractionBoundary: () => commit((current) => ({ ...current, localInteractionBoundarySeen: true })),
     acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
     setCommerceWalletStatus: (commerceWalletStatus) => commitEphemeral((current) => ({ ...current, commerceWalletStatus })),
-    dispatchCommerce: (action) => commitEphemeral((current) => {
+    dispatchCommerce: (action) => {
+      const current = stateRef.current
       const commerceSession = stableCommerceBReducer(current.commerceSession, action)
       const paidNow = action.type === "PAYMENT_RETURN" && action.outcome === "success" && commerceSession.status === "paid"
       const refundedNow = action.type === "REFUND" && commerceSession.status === "refunded"
@@ -550,9 +588,11 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         commerceReceiptVenueId: venueId,
         commerceReceipts,
       }
-      if (paidNow || refundedNow) persistBDeviceState(next)
-      return next
-    }),
+      if ((paidNow || refundedNow) && !persistBDeviceState(next)) return false
+      stateRef.current = next
+      setState(next)
+      return true
+    },
     recordCommerceReceipt: (receipt) => commit((current) => ({ ...current, commerceReceipts: sanitizeCommerceReceipts([receipt, ...current.commerceReceipts]) })),
     openMealBenefitFromPlace: (venueId) => {
       if (!isCanonicalVenueId(venueId)) return false

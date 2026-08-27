@@ -42,6 +42,7 @@ export type StableCommerceBAction =
   | { type: "ACCEPT_BENEFIT" }
   | { type: "DECLINE_BENEFIT" }
   | { type: "CONFIRM" }
+  | { type: "CANCEL_CONFIRMATION" }
   | { type: "PAYMENT_RETURN"; outcome: StableCommerceBOutcome }
   | { type: "REFUND" }
 
@@ -129,6 +130,9 @@ export function stableCommerceBReducer(state: StableCommerceBState, action: Stab
     case "CONFIRM":
       if (state.status !== "idle" || state.confirmationPending) return state
       return { ...state, confirmationPending: true, confirmationCount: state.confirmationCount + 1, lastOutcome: null }
+    case "CANCEL_CONFIRMATION":
+      if (state.status !== "idle" || !state.confirmationPending) return state
+      return { ...state, confirmationPending: false, lastOutcome: null }
     case "PAYMENT_RETURN":
       if (state.status !== "idle" || !state.confirmationPending) return state
       if (action.outcome !== "success") {

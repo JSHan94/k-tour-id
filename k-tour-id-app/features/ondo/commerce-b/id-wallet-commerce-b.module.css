@@ -527,3 +527,487 @@
   .balanceTop small { max-width: 126px; }
   .balanceCard > strong { margin-top: 4px; }
 }
+
+/* Flow 8 — Apple Wallet interaction/material with ONDO's warm living-atlas
+   palette. Every object remains explicitly local and non-live. */
+.root,
+.offerOverlay,
+.sheet {
+  --flow8-object-radius: 28px;
+  --flow8-object-shadow: 0 24px 64px rgb(47 31 25 / 16%), inset 0 1px 0 rgb(255 255 255 / 72%);
+  --flow8-desktop-rail: minmax(320px, .84fr);
+  --flow8-motion-fast: 180ms;
+  --flow8-motion-base: 240ms;
+  --flow8-motion-emphasis: 320ms;
+  --flow8-ink: #211c19;
+  --flow8-copper: #b9523d;
+  --flow8-apricot: #ef9d68;
+  --flow8-plum: #694055;
+  --flow8-paper: #fffaf4;
+}
+
+.root {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+.root button,
+.root summary { min-height: 45px; }
+
+.heading { gap: 5px; padding-inline: 2px; }
+.heading > p { color: #9b4434; letter-spacing: .17em; }
+.heading h2 { font-size: clamp(30px, 9vw, 42px); font-weight: 805; letter-spacing: -.055em; }
+.heading > span { max-width: 540px; color: #6d625d; font-size: 13px; line-height: 1.48; }
+
+.nonLiveBoundary {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 8px;
+  margin: -2px 0 0;
+  border: 1px solid rgb(73 51 42 / 9%);
+  border-radius: 14px;
+  padding: 8px 11px;
+  background: rgb(255 252 247 / 74%);
+  color: #665851;
+  font-size: 12px;
+  font-weight: 690;
+  line-height: 1.35;
+}
+.nonLiveBoundary svg { flex: 0 0 auto; color: #a14c39; }
+
+.balanceCard {
+  isolation: isolate;
+  min-height: 184px;
+  margin-top: 0;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: var(--flow8-object-radius);
+  padding: 20px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 88% 2%, rgb(244 164 105 / 28%), transparent 31%),
+    radial-gradient(circle at 8% 110%, rgb(157 76 91 / 38%), transparent 43%),
+    linear-gradient(145deg, #1f1a19 0%, #39251f 52%, #704032 100%);
+  color: #fffaf5;
+  box-shadow: 0 25px 65px rgb(50 29 23 / 26%), inset 0 1px 0 rgb(255 255 255 / 13%);
+  animation: flow8ObjectIn var(--flow8-motion-emphasis) cubic-bezier(.2, .8, .2, 1) both;
+}
+.balanceCard::before {
+  opacity: .62;
+  background: linear-gradient(108deg, transparent 15%, rgb(255 255 255 / 19%) 42%, transparent 65%);
+  animation: flow8Glint var(--flow8-motion-emphasis) 100ms cubic-bezier(.2, .8, .2, 1) both;
+}
+.balanceCard::after {
+  right: -52px;
+  bottom: -80px;
+  width: 210px;
+  height: 210px;
+  border: 1px solid rgb(255 255 255 / 9%);
+  background: transparent;
+  box-shadow: 0 0 0 36px rgb(255 255 255 / 2%), 0 0 0 72px rgb(255 255 255 / 1.5%);
+}
+.balanceTop > span { color: #f7d4c4; letter-spacing: .08em; text-transform: uppercase; }
+.balanceTop small,
+.balanceTop small[data-status="ready"] { max-width: 170px; color: rgb(255 247 241 / 72%); }
+.balanceCard > strong { margin-top: 20px; color: #fffaf5; font-size: clamp(40px, 12vw, 54px); font-variant-numeric: tabular-nums; letter-spacing: -.055em; }
+.balanceCard > strong span { color: #f0c2ad; }
+.balanceAction {
+  min-height: 44px;
+  margin-top: 8px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  background: rgb(255 255 255 / 10%);
+  color: #fffaf5;
+  backdrop-filter: blur(12px);
+  transition: transform var(--flow8-motion-fast), background var(--flow8-motion-fast);
+}
+.balanceAction:active { transform: scale(.985); background: rgb(255 255 255 / 16%); }
+
+.dashboardGrid { gap: 12px; }
+.benefitCard,
+.activityCard {
+  border: 1px solid rgb(72 49 39 / 9%);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 16px 42px rgb(62 42 31 / 7%), inset 0 1px 0 rgb(255 255 255 / 82%);
+  animation: flow8ObjectIn var(--flow8-motion-base) 70ms cubic-bezier(.2, .8, .2, 1) both;
+}
+.benefitCard {
+  background:
+    radial-gradient(circle at 98% 0, rgb(235 158 73 / 27%), transparent 39%),
+    linear-gradient(145deg, #fff9ea, #f5dfbd);
+}
+.activityCard { background: linear-gradient(150deg, #fffefa, #f4ede6); }
+.cardHeading small { border-radius: 999px; padding: 4px 8px; background: rgb(255 255 255 / 58%); }
+.benefitCard > button,
+.activityReceipt > button { min-height: 45px; }
+.activityReceipt button + button { margin-top: 7px; }
+.activityReceipt code { overflow-wrap: anywhere; }
+.storageError {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 10px 0 0;
+  border: 1px solid rgb(163 69 55 / 18%);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #fff0ea;
+  color: #8f3f33;
+  font-size: 12px;
+  font-weight: 690;
+  line-height: 1.45;
+}
+
+.privacy { margin-top: 0; }
+
+.sheetBackdrop { background: rgb(27 23 21 / 42%); backdrop-filter: blur(16px) saturate(.84); }
+.sheet {
+  border: 1px solid rgb(255 255 255 / 64%);
+  border-radius: 31px 31px 0 0;
+  background:
+    radial-gradient(circle at 90% 0, rgb(235 137 87 / 14%), transparent 34%),
+    linear-gradient(180deg, #fffdfa, #f3eae3);
+  box-shadow: 0 -24px 72px rgb(40 28 23 / 22%);
+}
+.sheetIcon {
+  border-radius: 22px;
+  background: linear-gradient(145deg, #2b211e, #7b4133);
+  color: #fff9f4;
+  box-shadow: 0 16px 36px rgb(66 38 29 / 20%);
+}
+
+.offerOverlay {
+  --flow8-offer-header: 58px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(230 132 76 / 14%), transparent 29%),
+    radial-gradient(circle at 0 94%, rgb(105 60 82 / 9%), transparent 31%),
+    linear-gradient(180deg, #fffaf6 0%, #f0e7df 100%);
+}
+.offerHeader { min-height: var(--flow8-offer-header); background: rgb(255 251 247 / 88%); backdrop-filter: blur(20px) saturate(1.08); }
+.offerHeader button { min-width: 44px; min-height: 44px; }
+.offerTruth {
+  position: relative;
+  z-index: 4;
+  box-sizing: border-box;
+  min-height: 38px;
+  margin: 0;
+  border-bottom: 1px solid rgb(129 77 62 / 12%);
+  padding: 8px 16px;
+  background: linear-gradient(90deg, #f8e7d9, #fff1df);
+  color: #765548;
+  font-size: 12px;
+  font-weight: 680;
+  line-height: 1.35;
+  text-align: center;
+}
+.offerTruth strong { color: #4e342b; }
+.offerBody { gap: 14px; padding: 24px 16px 130px; }
+.offerHero { padding: 2px 2px 4px; }
+.offerHero h2 { max-width: 540px; font-size: clamp(36px, 10.4vw, 56px); line-height: .95; text-wrap: balance; }
+.offerHero > span { max-width: 100%; }
+.offerMark { width: 48px; height: 48px; border-radius: 17px; }
+
+.quote {
+  position: relative;
+  z-index: 1;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: var(--flow8-object-radius);
+  padding: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 92% 0, rgb(237 155 101 / 28%), transparent 34%),
+    linear-gradient(145deg, #231d1a, #4b2e27 66%, #744235);
+  color: #fffaf5;
+  box-shadow: 0 24px 58px rgb(53 31 24 / 23%), inset 0 1px 0 rgb(255 255 255 / 11%);
+  animation: flow8ObjectIn var(--flow8-motion-emphasis) cubic-bezier(.2, .8, .2, 1) both;
+}
+.quote > div { border-color: rgb(255 255 255 / 9%); color: rgb(255 250 245 / 70%); }
+.quote > div strong { color: #fffaf5; font-variant-numeric: tabular-nums; }
+.quote .discount { color: #ffd5b8; }
+.quote .discount strong { color: #ffd6b7; }
+.quote .quoteTotal { border-top-color: rgb(255 255 255 / 14%); color: #fffaf5; }
+.quoteTotal strong { font-size: 34px; }
+.quote .quoteTotal small { color: rgb(255 250 245 / 72%); }
+.fixedQuote {
+  margin: 12px 0 0;
+  border-top: 1px solid rgb(255 255 255 / 10%);
+  padding-top: 10px;
+  color: rgb(255 250 245 / 66%);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.offerBenefit {
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 100% 0, rgb(242 174 83 / 25%), transparent 34%),
+    linear-gradient(145deg, #fff9ea, #f4dfbd);
+}
+.benefitActions button { min-height: 44px; }
+.discount[data-flow8-benefit-delta="applied"] strong { color: #ffe2c7; text-shadow: 0 0 22px rgb(255 180 118 / 24%); }
+
+.offerDecision {
+  position: sticky;
+  z-index: 5;
+  bottom: 0;
+  display: grid;
+  gap: 10px;
+  margin: 0 -16px;
+  border-top: 1px solid rgb(73 49 40 / 9%);
+  padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgb(248 241 235 / 91%), rgb(248 241 235 / 99%) 26%);
+  box-shadow: 0 -20px 42px rgb(55 38 29 / 9%);
+  backdrop-filter: blur(20px) saturate(1.08);
+}
+.offerDecision .payButton {
+  position: static;
+  inset: auto;
+  grid-column: auto;
+  grid-row: auto;
+  width: 100%;
+  min-height: 50px;
+  margin: 0;
+  border-radius: 17px;
+  box-shadow: 0 14px 32px rgb(58 37 29 / 19%);
+}
+.offerDecision > .quietButton { min-height: 44px; margin: 0; }
+
+.paymentStatus,
+.benefitRecovery {
+  min-height: min(680px, calc(100dvh - var(--flow8-offer-header)));
+  padding: 40px 22px calc(48px + env(safe-area-inset-bottom));
+}
+.benefitRecovery { min-height: clamp(230px, 34dvh, 360px); align-content: center; margin: 0 auto; }
+.paymentStatus .primary,
+.benefitRecovery .primary { min-height: 48px; border-radius: 16px; }
+
+.receiptWrap {
+  min-height: calc(100dvh - var(--flow8-offer-header));
+  align-content: start;
+  padding: 34px 18px calc(52px + env(safe-area-inset-bottom));
+}
+.receiptWrap::before { top: 2%; opacity: .85; }
+.receiptWrap[data-refunded="false"] .receiptMark {
+  background: linear-gradient(145deg, #e4f4e8, #cce6d4);
+  color: #2f7457;
+}
+.receiptWrap[data-refunded="true"] .receiptMark {
+  background: linear-gradient(145deg, #f6e3da, #eacbc0);
+  color: #9a493a;
+}
+.receiptWrap h2 { font-size: clamp(36px, 10vw, 54px); line-height: .97; letter-spacing: -.055em; text-wrap: balance; }
+.receiptCard {
+  border-radius: 24px;
+  font-variant-numeric: tabular-nums;
+}
+.receiptCard div { grid-template-columns: minmax(88px, .8fr) minmax(0, 1.2fr); gap: 14px; }
+.receiptCard code { min-width: 0; }
+.refundDetails { border-radius: 18px; }
+.refundDetails summary { min-height: 44px; }
+.refundDetails button { min-height: 46px; }
+.receiptWrap > .primary { min-height: 50px; border-radius: 17px; }
+
+@media (max-width: 699px) {
+  .offerTruth {
+    min-height: 0;
+    padding: 5px 12px 6px;
+    font-size: 12px;
+    font-weight: 590;
+    line-height: 1.28;
+    letter-spacing: -.006em;
+    text-align: left;
+    text-wrap: pretty;
+  }
+  .offerTruth strong { font-weight: 760; }
+  .root[data-wallet="disconnected"] .balanceAction,
+  .root[data-wallet="failed"] .balanceAction {
+    position: fixed;
+    z-index: 24;
+    right: 16px;
+    bottom: calc(102px + env(safe-area-inset-bottom));
+    left: 16px;
+    width: auto;
+    min-height: 50px;
+    justify-content: center;
+    margin: 0;
+    border: 1px solid rgb(255 255 255 / 20%);
+    border-radius: 17px;
+    background: linear-gradient(135deg, #2a201d, #713d30);
+    box-shadow: 0 16px 38px rgb(46 28 23 / 24%);
+  }
+  .offerBody { display: grid; gap: 10px; padding-top: 14px; }
+  .offerHero {
+    display: grid;
+    grid-row: 1;
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: center;
+    gap: 3px 11px;
+    padding: 0 2px 3px;
+  }
+  .offerMark { grid-column: 1; grid-row: 1 / span 3; width: 44px; height: 44px; margin: 0; border-radius: 15px; }
+  .offerHero > p,
+  .offerHero h2,
+  .offerHero > span { grid-column: 2; }
+  .offerHero h2 { margin-top: 1px; font-size: clamp(27px, 8.7vw, 35px); line-height: .98; }
+  .offerHero > span { margin-top: 3px; font-size: 12px; }
+  .offerBenefit { grid-row: 2; margin-top: 0; }
+  .quote { grid-row: 3; margin-top: 0; }
+  .consentCard { grid-row: 4; margin-top: 0; }
+  .testDetails { grid-row: 5; margin-top: 0; }
+  .offerDecision { grid-row: 6; }
+  .benefitRecovery { grid-row: 2; width: 100%; min-height: 220px; margin-top: 0; }
+
+  .receiptWrap[data-storage-error="refund"] { padding-top: 14px; }
+  .receiptWrap[data-storage-error="refund"] .receiptMark { width: 46px; height: 46px; border-radius: 16px; }
+  .receiptWrap[data-storage-error="refund"] .receiptEyebrow { margin-top: 8px; }
+  .receiptWrap[data-storage-error="refund"] h2 { margin-top: 7px; font-size: clamp(29px, 8vw, 36px); }
+  .receiptWrap[data-storage-error="refund"] .receiptLead { margin-top: 7px; line-height: 1.42; }
+  .receiptWrap[data-storage-error="refund"] .receiptCard { margin-top: 13px; padding-block: 7px; }
+  .receiptWrap[data-storage-error="refund"] .receiptCard div { min-height: 39px; padding-block: 7px; }
+  .receiptWrap[data-storage-error="refund"] > .storageError { margin-top: 8px; }
+  .receiptWrap[data-storage-error="refund"] .refundDetails { margin-top: 8px; }
+  .receiptWrap[data-storage-error="refund"] > .primary { margin-top: 10px; }
+}
+
+@media (max-width: 350px) {
+  .root { gap: 10px; margin-top: 12px; }
+  .heading h2 { font-size: 28px; }
+  .heading > span { line-height: 1.38; }
+  .nonLiveBoundary { padding-block: 7px; }
+  .balanceCard { min-height: 156px; padding: 15px; }
+  .balanceCard > strong { margin-top: 8px; font-size: 38px; }
+  .balanceAction { margin-top: 2px; }
+  .offerBody { padding-inline: 12px; }
+  .offerDecision { margin-inline: -12px; padding-inline: 12px; }
+  .quote { padding: 15px; }
+  .receiptWrap { padding-inline: 12px; }
+  .receiptCard div { grid-template-columns: minmax(92px, .82fr) minmax(0, 1.18fr); }
+  .receiptCard div > span { word-break: keep-all; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .root { grid-template-columns: minmax(250px, .78fr) minmax(320px, 1.22fr); align-items: start; gap: 10px 16px; margin-top: 0; }
+  .heading { grid-column: 1; }
+  .nonLiveBoundary { grid-column: 1; }
+  .balanceCard { grid-column: 1; min-height: 168px; }
+  .dashboardGrid { grid-column: 2; grid-row: 1 / span 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .privacy { grid-column: 1 / -1; }
+  .offerBody { display: grid; grid-template-columns: minmax(260px, .86fr) minmax(0, 1.14fr); min-height: calc(100dvh - var(--flow8-offer-header)); gap: 10px 18px; padding: 16px 22px 88px; }
+  .offerHero { grid-column: 1; grid-row: 1; }
+  .offerHero h2 { font-size: 35px; }
+  .quote { grid-column: 1; grid-row: 2 / span 2; padding: 14px; }
+  .quote > div { padding-block: 5px; }
+  .quoteTotal strong { font-size: 28px; }
+  .fixedQuote { margin-top: 7px; padding-top: 7px; }
+  .offerBenefit { grid-column: 2; grid-row: 1; margin: 0; padding: 13px; }
+  .consentCard { grid-column: 2; grid-row: 2; margin: 0; padding: 11px; }
+  .consentCard > div p { display: none; }
+  .testDetails { display: none; }
+  .offerDecision {
+    position: fixed;
+    z-index: 8;
+    right: 22px;
+    bottom: 12px;
+    width: min(420px, calc(52vw - 22px));
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+    margin: 0;
+    border: 1px solid rgb(72 50 41 / 10%);
+    border-radius: 22px;
+    padding: 9px;
+    background: rgb(255 252 247 / 94%);
+    box-shadow: 0 16px 38px rgb(54 37 29 / 13%);
+  }
+  .offerDecision .payButton { min-height: 44px; }
+  .offerDecision > .quietButton { min-width: 112px; padding-inline: 12px; }
+  .receiptWrap { grid-template-columns: minmax(220px, .76fr) minmax(340px, 1.24fr); max-width: 900px; min-height: calc(100dvh - var(--flow8-offer-header)); align-content: center; column-gap: 28px; padding: 18px 28px; }
+  .receiptMark,
+  .receiptEyebrow,
+  .receiptWrap > h2,
+  .receiptLead { grid-column: 1; }
+  .receiptCard { grid-column: 2; grid-row: 1 / span 4; margin: 0; }
+  .refundDetails,
+  .receiptWrap > .storageError,
+  .receiptWrap > .primary { grid-column: 2; }
+  .paymentStatus,
+  .benefitRecovery { min-height: calc(100dvh - var(--flow8-offer-header)); padding-block: 18px; }
+}
+
+@media (min-width: 1100px) {
+  .root {
+    grid-template-columns: var(--flow8-desktop-rail) minmax(0, 1.16fr);
+    grid-template-rows: auto auto minmax(210px, auto) auto;
+    align-items: start;
+    gap: 14px 24px;
+    margin-top: 0;
+  }
+  .heading,
+  .nonLiveBoundary,
+  .balanceCard { grid-column: 1; }
+  .dashboardGrid { grid-column: 2; grid-row: 1 / span 3; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+  .benefitCard,
+  .activityCard { min-height: 240px; }
+  .privacy { grid-column: 1 / -1; }
+  .offerBody {
+    width: min(100%, 1160px);
+    max-width: 1160px;
+    min-height: calc(100dvh - var(--flow8-offer-header));
+    grid-template-columns: minmax(0, .92fr) minmax(420px, 1.08fr);
+    gap: 18px 38px;
+    padding: 60px 40px 72px;
+  }
+  .offerHero { grid-column: 1; grid-row: 1; }
+  .quote { grid-column: 1; grid-row: 2 / span 2; margin-top: 8px; }
+  .offerBenefit { grid-column: 2; grid-row: 1; }
+  .consentCard { grid-column: 2; grid-row: 2; }
+  .testDetails { grid-column: 2; grid-row: 3; }
+  .offerDecision { position: static; grid-column: 2; grid-row: 4; margin: 0; border: 1px solid rgb(72 50 41 / 9%); border-radius: 26px; padding: 18px; background: rgb(255 253 249 / 82%); box-shadow: 0 19px 46px rgb(57 39 30 / 7%); }
+  .paymentStatus,
+  .benefitRecovery { max-width: 760px; }
+  .receiptWrap { width: min(100%, 980px); max-width: 980px; grid-template-columns: minmax(270px, .78fr) minmax(420px, 1.22fr); align-content: center; gap: 12px 44px; padding-inline: 38px; }
+  .receiptMark,
+  .receiptEyebrow,
+  .receiptWrap > h2,
+  .receiptLead { grid-column: 1; }
+  .receiptCard { grid-column: 2; grid-row: 1 / span 4; margin: 0; }
+  .refundDetails,
+  .receiptWrap > .storageError,
+  .receiptWrap > .primary { grid-column: 2; }
+}
+
+/* This dashboard is nested inside the Travel Pass composition.  Container
+   sizing prevents viewport-wide desktop rules from creating clipped internal
+   columns when the parent grants the Wallet only one half of the canvas. */
+@container (max-width: 760px) {
+  .root {
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    gap: 10px;
+  }
+  .heading,
+  .nonLiveBoundary,
+  .balanceCard,
+  .dashboardGrid,
+  .privacy {
+    min-width: 0;
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .dashboardGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 460px) {
+  .dashboardGrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@keyframes flow8ObjectIn { from { opacity: 0; transform: translateY(10px) scale(.992); } }
+@keyframes flow8Glint { from { transform: translateX(-72%); } to { transform: translateX(72%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .balanceCard,
+  .balanceCard::before,
+  .benefitCard,
+  .activityCard,
+  .quote { animation: none; transition: none; }
+}

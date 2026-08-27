@@ -42,12 +42,13 @@ const COPY = {
     contributed: "Local Signal added on this device",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
     receiptsTitle: "Wallet activity",
-    receiptsBody: "Payments and refunds completed on this device.",
-    paid: "Paid",
-    refunded: "Refunded",
-    originalPayment: "Original payment",
-    refundReference: "Refund reference",
+    receiptsBody: "Local test payment and refund records saved on this device. No money moved.",
+    paid: "Test payment recorded",
+    refunded: "Test refund recorded",
+    originalPayment: "Original test payment",
+    refundReference: "Test refund reference",
     openWallet: "Open wallet",
+    openReceiptPlace: "Open exact place",
   },
   ko: {
     eyebrow: "이 기기",
@@ -77,12 +78,13 @@ const COPY = {
     contributed: "이 기기에서 남긴 로컬 시그널",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
     receiptsTitle: "지갑 활동",
-    receiptsBody: "이 기기에서 완료한 결제와 환불입니다.",
-    paid: "결제",
-    refunded: "환불됨",
-    originalPayment: "원 결제",
-    refundReference: "환불 참조",
+    receiptsBody: "이 기기에 저장한 로컬 테스트 결제·환불 기록입니다. 돈은 이동하지 않았습니다.",
+    paid: "테스트 결제 기록",
+    refunded: "테스트 환불 기록",
+    originalPayment: "원 테스트 결제",
+    refundReference: "테스트 환불 참조",
     openWallet: "지갑 열기",
+    openReceiptPlace: "이 장소 열기",
   },
   ja: {
     eyebrow: "この端末",
@@ -112,12 +114,13 @@ const COPY = {
     contributed: "この端末で追加したローカルシグナル",
     recentSaveFailed: "場所は開きましたが、この端末の「最近見た場所」を更新できませんでした。",
     receiptsTitle: "ウォレット履歴",
-    receiptsBody: "この端末で完了した支払いと返金です。",
-    paid: "支払い済み",
-    refunded: "返金済み",
-    originalPayment: "元の支払い",
-    refundReference: "返金参照",
+    receiptsBody: "この端末に保存したローカルテスト決済・返金の記録です。実際のお金は動いていません。",
+    paid: "テスト決済の記録",
+    refunded: "テスト返金の記録",
+    originalPayment: "元のテスト決済",
+    refundReference: "テスト返金参照",
     openWallet: "ウォレットを開く",
+    openReceiptPlace: "このお店を開く",
   },
 } as const
 
@@ -264,6 +267,7 @@ export function SavedEntryB() {
                 <h3>{receiptVenue ? personalVenueName(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
                 <p>{state.commerceSession.status === "refunded" ? `${copy.originalPayment}: ${STABLE_B_RECEIPT_ID}` : STABLE_B_RECEIPT_ID}</p>
                 {state.commerceSession.status === "refunded" ? <p>{copy.refundReference}: {STABLE_B_REFUND_RECEIPT_ID}</p> : null}
+                {receiptVenue ? <button type="button" data-testid="my-korea-receipt-place" onClick={() => openVenue(receiptVenue.id, receiptVenue.cityId)}>{copy.openReceiptPlace}<ChevronRight size={16} aria-hidden="true" /></button> : null}
                 <button type="button" onClick={() => actions.setTab("id")}>{copy.openWallet}<ChevronRight size={16} aria-hidden="true" /></button>
               </article>
             </div>
