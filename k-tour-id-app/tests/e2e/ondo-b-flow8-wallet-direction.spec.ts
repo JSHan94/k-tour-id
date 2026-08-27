@@ -18,9 +18,9 @@ const VIEWPORTS: readonly Viewport[] = [
 ]
 
 const COPY = {
-  en: { connect: "Prepare test wallet", retry: "Try connection again", refund: "Request test refund" },
-  ko: { connect: "테스트 지갑 준비", retry: "다시 연결", refund: "테스트 환불 요청" },
-  ja: { connect: "テストウォレットを準備", retry: "もう一度接続", refund: "テスト返金をリクエスト" },
+  en: { connect: "Prepare test wallet", retry: "Try preparation again", refund: "Request test refund" },
+  ko: { connect: "테스트 지갑 준비", retry: "다시 준비", refund: "테스트 환불 요청" },
+  ja: { connect: "テストウォレットを準備", retry: "もう一度準備", refund: "テスト返金をリクエスト" },
 } as const
 
 test.describe.configure({ timeout: 180_000, mode: "serial" })
@@ -136,6 +136,24 @@ async function quietCapture(page: Page, name: string) {
     caret: "hide",
     scale: (page.viewportSize()?.width ?? 0) >= 1200 ? "css" : "device",
   })
+}
+
+async function processingCapture(page: Page, name: string) {
+  mkdirSync(ARTIFACT_DIR, { recursive: true })
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
+  await page.evaluate(async () => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+    await document.fonts.ready
+  })
+  const root = page.getByTestId("ondo-b-root")
+  await expectNoHorizontalOverflow(root)
+  await root.screenshot({
+    path: `${ARTIFACT_DIR}/${name}.png`,
+    animations: "allow",
+    caret: "hide",
+    scale: (page.viewportSize()?.width ?? 0) >= 1200 ? "css" : "device",
+  })
+  await expect(page.getByTestId("payment-processing")).toBeVisible()
 }
 
 async function navigateToOfferFromExplore(page: Page) {
@@ -613,7 +631,6 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await quietCapture(page, `${locale}-${viewport.label}-offer-benefit-accepted`)
       const consentInput = offer.getByTestId("payment-minimum-consent").locator("input")
       await consentInput.check()
-      if (viewport.height <= 500) await consentInput.evaluate((input) => input.scrollIntoView({ block: "center" }))
       await quietCapture(page, `${locale}-${viewport.label}-offer-consented`)
 
       await setCaptureQa(page, { payment: "failure" })
@@ -652,7 +669,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await offer.getByTestId("payment-minimum-consent").locator("input").check()
       await offer.getByTestId("payment-confirm").click()
       await expect(offer.getByTestId("payment-processing")).toBeVisible()
-      await quietCapture(page, `${locale}-${viewport.label}-payment-processing`)
+      await processingCapture(page, `${locale}-${viewport.label}-payment-processing`)
       await expect(offer.getByTestId("payment-receipt")).toBeVisible()
       await quietCapture(page, `${locale}-${viewport.label}-receipt`)
 
@@ -675,6 +692,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
       await place.locator("header button").last().click()
       await page.getByTestId("nav-id").click()
+      await page.getByTestId("wallet-activity").scrollIntoViewIfNeeded()
       await quietCapture(page, `${locale}-${viewport.label}-wallet-activity-reload`)
       await page.getByTestId("nav-my").click()
       await page.getByTestId("my-korea-receipts").scrollIntoViewIfNeeded()
