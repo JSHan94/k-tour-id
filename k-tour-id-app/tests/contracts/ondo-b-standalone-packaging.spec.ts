@@ -57,11 +57,15 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.tsx")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
+      "public/brand/ondo-lockup.svg",
       "public/editorial/japan-first-c01-sesame-oil.jpg",
       "public/editorial/japan-first-c03-seoul-eight-hours.jpg",
       "public/editorial/japan-first-c06-beauty-research.jpg",
       "public/editorial/japan-first-c18-jeju-screen-route.jpg",
       "public/editorial/japan-first-c20-jeju-kpop-route.jpg",
+      "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
+      "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
+      "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
       "public/og-ondo-directory.png",
     ])
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
@@ -108,6 +112,9 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     ]
     for (const sample of blocked) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(sample)), sample).toBe(true)
+    }
+    for (const requiredTruth of ["Simulated K-Tour ID ready", "Passport eKYC"]) {
+      expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(requiredTruth)), requiredTruth).toBe(false)
     }
 
     const contracts = readFileSync(resolve(APP_ROOT, "lib/ondo/venues/contracts.ts"), "utf8")
@@ -201,5 +208,20 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
       "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+  })
+
+  test("B-STANDALONE-011 ships optional OpenDID setup and every referenced editorial brand asset", async () => {
+    const { PUBLIC_FILES, SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    for (const path of [
+      "features/ondo/identity-b/ktour-id-setup-b.tsx",
+      "features/ondo/identity-b/ktour-id-setup-b.module.css",
+      "features/ondo/identity-b/ktour-id-setup-model-b.ts",
+    ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+    for (const path of [
+      "public/brand/ondo-lockup.svg",
+      "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
+      "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
+      "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
+    ]) expect(PUBLIC_FILES, `${path} is referenced by the shipped UI`).toContain(path)
   })
 })

@@ -13,6 +13,9 @@ export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
   "features/ondo/identity-b/local-check-walkthrough-b.module.css",
   "features/ondo/identity-b/traveler-id-entry-b.tsx",
   "features/ondo/identity-b/traveler-id-entry-b.module.css",
+  "features/ondo/identity-b/ktour-id-setup-b.tsx",
+  "features/ondo/identity-b/ktour-id-setup-b.module.css",
+  "features/ondo/identity-b/ktour-id-setup-model-b.ts",
   "features/ondo/local-signal-b/local-signal-layer-b.tsx",
   "features/ondo/local-signal-b/local-signal-layer-b.module.css",
 ])
@@ -77,6 +80,10 @@ export const SOURCE_FILES = Object.freeze([
 
 export const PUBLIC_FILES = Object.freeze([
   "public/og-ondo-directory.png",
+  "public/brand/ondo-lockup.svg",
+  "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
+  "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
+  "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
   "public/editorial/japan-first-c01-sesame-oil.jpg",
   "public/editorial/japan-first-c03-seoul-eight-hours.jpg",
   "public/editorial/japan-first-c06-beauty-research.jpg",
@@ -121,12 +128,13 @@ export const BLOCKED_HTTP_PATHS = Object.freeze([
 ])
 
 // Keep retired prototype clusters out of the standalone artifact without
-// treating required P0 journey names (After19, Connect, Identity) as failures.
+// treating required journey truth (including simulated OpenDID/eKYC) as a
+// failure. Unsafe legacy payment-KYC and checkout phrases stay blocked below.
 export const LEGACY_ARTIFACT_PATH = /(^|\/)(?:demo|fixtures?|labs|mock|partner|profile|rewards|trust|wallet)(?:[./_-]|\/|$)/i
 
 export const LEGACY_ARTIFACT_TEXT = Object.freeze([
   /"simulation"\s*:\s*null/i,
-  /\b(?:simulation|simulated|KYC|reward|rewards|Labs)\b/i,
+  /\b(?:reward|rewards|Labs)\b/i,
   /demo-journey/i,
   /mock-data/i,
   /WalletProvider|chainProvider|blockchain/i,
