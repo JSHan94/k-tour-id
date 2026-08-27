@@ -159,6 +159,9 @@ test("visible direct feature text stays at least 12px in EN and KO across phone 
           savedVenueIds: [],
           privateNotesByVenue: {},
         }))
+        sessionStorage.removeItem("ondo-b.account.v1")
+        sessionStorage.removeItem("ondo-b.action-gates.v1")
+        sessionStorage.removeItem("ondo-b.after19.session.v1")
       }, { key: DEVICE_KEY, nextLocale: locale })
       await page.reload({ waitUntil: "domcontentloaded" })
 
@@ -167,11 +170,15 @@ test("visible direct feature text stays at least 12px in EN and KO across phone 
       await page.getByTestId(`table-open-${TABLE_ID}`).click()
       await expectVisibleDirectTextAtLeast12(page.getByTestId("table-detail"))
       await page.getByTestId("table-join").click()
+      const accountGate = page.getByTestId("ondo-b-action-gate")
+      await expect(accountGate).toHaveAttribute("data-active-gate", "account")
+      await expectVisibleDirectTextAtLeast12(accountGate)
+      await accountGate.getByTestId("action-gate-confirm").click()
       await expectVisibleDirectTextAtLeast12(page.getByTestId("after19-walkthrough"))
-      await page.getByTestId("gate-cancel").click()
+      await page.getByTestId("after19-walkthrough").getByTestId("action-gate-cancel").click()
       await expect(page.getByTestId("after19-walkthrough")).toBeHidden()
-      await page.getByTestId("table-join").focus()
-      await page.keyboard.press("Escape")
+      await expect(page.getByTestId("ondo-b-action-gate")).toBeHidden()
+      await page.getByTestId("table-detail").locator("header").getByRole("button", { name: locale === "ko" ? "테이블 닫기" : "Close Table" }).first().click()
       await expect(page.getByTestId("table-detail")).toBeHidden()
 
       for (const [nav, root] of [
