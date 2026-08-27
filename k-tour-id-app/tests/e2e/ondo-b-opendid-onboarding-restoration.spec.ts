@@ -20,21 +20,21 @@ const COPY = {
     environment: "SIMULATED · No identity provider or OpenDID service is contacted.",
     privateCredential: "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
     passportProvider: "Passport eKYC uses a separate provider — not OmniOne CX",
-    assuranceChange: "Passport eKYC does not verify registered-resident status. Continuing changes the assurance method to private passport eKYC.",
+    assuranceChange: "Passport eKYC does not verify registered-resident status and is not an equivalent residence-card check.",
   },
   ko: {
     guest: "설정 없이 탐색",
     environment: "시뮬레이션 · 신원확인 기관이나 OpenDID 서비스에 요청을 보내지 않습니다.",
     privateCredential: "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
     passportProvider: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
-    assuranceChange: "여권 eKYC는 등록외국인 체류자격을 확인하지 않습니다. 계속하면 민간 여권 eKYC 방식으로 확인 근거가 바뀝니다.",
+    assuranceChange: "여권 eKYC는 등록외국인 체류 자격을 확인하지 않으며 외국인등록증 확인과 동등하지 않습니다.",
   },
   ja: {
     guest: "設定せずに見る",
     environment: "シミュレーション · 本人確認事業者やOpenDIDサービスには送信しません。",
     privateCredential: "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
     passportProvider: "パスポートeKYCはOmniOne CXではなく別の事業者",
-    assuranceChange: "パスポートeKYCでは登録外国人の在留資格を確認できません。続行すると確認根拠は民間のパスポートeKYCに変わります。",
+    assuranceChange: "パスポートeKYCは登録居住者の在留資格を確認せず、在留カード確認と同等ではありません。",
   },
 } as const
 
