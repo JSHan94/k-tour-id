@@ -27,16 +27,16 @@ test("OPENDID-B-001 restores the three truthful identity routes without provider
   expect(setup).toContain("KTourVisitorCredential")
 
   expect(setup).toContain("Passport eKYC uses a separate provider — not OmniOne CX")
-  expect(setup).toContain("K-Tour ID is a private service credential — not a government ID, visa, or residence permit")
+  expect(setup).toContain("Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status")
   expect(setup).not.toContain("Issuer: OmniOne")
   expect(setup).not.toContain("Recorded on OmniOne")
 })
 
 test("OPENDID-B-002 every route is visibly simulated and never performs identity network or sensitive storage", () => {
   expect(setup).toContain("SIMULATED")
-  expect(setup).toContain("No request is sent to an identity provider")
+  expect(setup).toContain("No identity provider or OpenDID service is contacted")
   expect(setup).toContain("K-Tour ID Demo Issuer")
-  expect(setup).toContain("No passport image, NFC data, face image, name, document number, or credential is saved")
+  expect(setup).toContain("No document, face, provider result or credential is saved; this tab only")
 
   expect(setup).not.toMatch(/\b(?:fetch|XMLHttpRequest|sendBeacon|WebSocket|FormData)\s*\(/)
   expect(setup).not.toMatch(/(?:localStorage|sessionStorage)\.(?:setItem|getItem)/)
@@ -61,18 +61,18 @@ test("OPENDID-B-003 guest Explore remains primary and setup is an optional branc
 
 test("OPENDID-B-004 setup owns explicit progress, recovery, return and focus states", () => {
   for (const contract of [
-    'data-testid="ondo-b-ktour-id-setup"',
-    'data-testid="ktour-id-route-mobile-id"',
-    'data-testid="ktour-id-route-residence-card"',
-    'data-testid="ktour-id-route-passport"',
-    'data-testid="ktour-id-mobile-handoff"',
-    'data-testid="ktour-id-passport-document"',
-    'data-testid="ktour-id-passport-face"',
-    'data-testid="ktour-id-opendid-issue"',
-    'data-testid="ktour-id-setup-failure"',
-    'data-testid="ktour-id-setup-unavailable"',
-    'data-testid="ktour-id-setup-expired"',
-    'data-testid="ktour-id-result"',
+    "ondo-b-ktour-id-setup",
+    "ktour-id-route-mobile-id",
+    "ktour-id-route-residence-card",
+    "ktour-id-route-passport",
+    "ktour-id-mobile-handoff",
+    "ktour-id-passport-document",
+    "ktour-id-passport-face",
+    "ktour-id-opendid-issue",
+    "ktour-id-setup-failure",
+    "ktour-id-setup-unavailable",
+    "ktour-id-setup-expired",
+    "ktour-id-result",
     'aria-modal="true"',
     "useModalIsolation",
     "Escape",
@@ -94,15 +94,16 @@ test("OPENDID-B-005 Account, Person, 19+, identity credential and Payment remain
   expect(traveler).toContain('data-testid="traveler-id-credential"')
   expect(traveler).toContain('data-testid="traveler-id-payment"')
   expect(setup).toContain("does not complete Person, 19+, Account, or Payment")
-  expect(provider).not.toMatch(/completeIdentitySetup[\s\S]{0,500}(?:personOutcome|ageOutcome|commerceWalletStatus)/)
+  const completion = provider.slice(provider.indexOf("completeIdentitySetup:"), provider.indexOf("acknowledgeCommerceLocalBoundary:"))
+  expect(completion).not.toMatch(/personOutcome|ageOutcome|commerceWalletStatus|account/)
 })
 
 test("OPENDID-B-006 EN, KO and JA carry equivalent provider and private-credential boundaries", () => {
   expect(setup).toMatch(/const COPY\s*=\s*\{[\s\S]*?en:\s*\{[\s\S]*?ko:\s*\{[\s\S]*?ja:\s*\{/)
   for (const truth of [
-    "정부 신분증·비자·체류 허가가 아닌 민간 서비스 자격증명",
+    "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다",
     "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
-    "政府の身分証明書、ビザ、在留許可ではない民間サービスの資格情報",
+    "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません",
     "パスポートeKYCはOmniOne CXではなく別の事業者",
   ]) expect(setup).toContain(truth)
 })
@@ -150,33 +151,33 @@ test("OPENDID-B-008 freezes the complete consent-to-presentation state machine",
   ]) expect(setup).toContain(phase)
 
   for (const testId of [
-    'data-testid="k-tour-id-setup"',
-    'data-testid="k-tour-id-environment"',
-    'data-testid="k-tour-id-private-boundary"',
-    'data-testid="k-tour-id-methods"',
-    'data-testid="k-tour-id-method-mobile-id"',
-    'data-testid="k-tour-id-method-mobile-residence-card"',
-    'data-testid="k-tour-id-method-passport-ekyc"',
-    'data-testid="k-tour-id-consent"',
-    'data-testid="identity-consent-requester"',
-    'data-testid="identity-consent-purpose"',
-    'data-testid="identity-consent-provider"',
-    'data-testid="identity-consent-evidence"',
-    'data-testid="identity-consent-retention"',
-    'data-testid="k-tour-id-route-step"',
-    'data-testid="k-tour-id-evidence-preview"',
-    'data-testid="k-tour-id-issuance-preview"',
-    'data-testid="k-tour-id-holder-delivery"',
-    'data-testid="k-tour-id-credential"',
-    'data-testid="k-tour-id-presentation-request"',
-    'data-testid="k-tour-id-presentation-consent"',
-    'data-testid="k-tour-id-presentation-result"',
-    'data-testid="k-tour-id-failure"',
-    'data-testid="k-tour-id-unavailable"',
-    'data-testid="k-tour-id-expired"',
-    'data-testid="k-tour-id-retry"',
-    'data-testid="k-tour-id-cancel"',
-    'data-testid="k-tour-id-return"',
+    "k-tour-id-setup",
+    "k-tour-id-environment",
+    "k-tour-id-private-boundary",
+    "k-tour-id-methods",
+    "k-tour-id-method-mobile-id",
+    "k-tour-id-method-mobile-residence-card",
+    "k-tour-id-method-passport-ekyc",
+    "k-tour-id-consent",
+    "identity-consent-requester",
+    "identity-consent-purpose",
+    "identity-consent-provider",
+    "identity-consent-evidence",
+    "identity-consent-retention",
+    "k-tour-id-route-step",
+    "k-tour-id-evidence-preview",
+    "k-tour-id-issuance-preview",
+    "k-tour-id-holder-delivery",
+    "k-tour-id-credential",
+    "k-tour-id-presentation-request",
+    "k-tour-id-presentation-consent",
+    "k-tour-id-presentation-result",
+    "k-tour-id-failure",
+    "k-tour-id-unavailable",
+    "k-tour-id-expired",
+    "k-tour-id-retry",
+    "k-tour-id-cancel",
+    "k-tour-id-return",
   ]) expect(setup).toContain(testId)
 })
 
