@@ -310,6 +310,13 @@
   .journeyInspiration img { object-position: 62% 52%; }
 }
 
+@media (min-width: 1100px) {
+  .journeyInspiration {
+    height: 240px;
+    aspect-ratio: auto;
+  }
+}
+
 /* A short landscape viewport is a task surface, not an image viewer. Keep
    the empty-journey meaning and Explore decision visible together while the
    remaining preserved sections continue below. */

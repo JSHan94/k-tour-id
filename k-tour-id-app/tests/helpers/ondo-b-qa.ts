@@ -238,13 +238,36 @@ export async function seedB(
   } = {},
 ) {
   await page.addInitScript(({ nextLocale, nextSession, nextLocal, shouldClear }) => {
+    const legacySession = {
+      onboarding: "ONB-COMPLETE", persona: "short_term", account: "ACC-GUEST", person: "PER-UNVERIFIED",
+      age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED", after19: "A19-OFF", stamps: 9, ...nextSession,
+    }
     if (!localStorage.getItem("ondo.preferences.v3")) localStorage.setItem("ondo.preferences.v3", JSON.stringify({
       locale: nextLocale, guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [], ...nextLocal,
     }))
-    if (!sessionStorage.getItem("ondo.session.v3")) sessionStorage.setItem("ondo.session.v3", JSON.stringify({
-      onboarding: "ONB-COMPLETE", persona: "short_term", account: "ACC-GUEST", person: "PER-UNVERIFIED",
-      age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED", after19: "A19-OFF", stamps: 9, ...nextSession,
-    }))
+    if (!sessionStorage.getItem("ondo.session.v3")) sessionStorage.setItem("ondo.session.v3", JSON.stringify(legacySession))
+    if (!localStorage.getItem("ondo-b.device.v1")) {
+      const persona = legacySession.persona === "korean_local"
+        ? "local_contributor"
+        : legacySession.persona === "long_term_resident"
+          ? "preparing"
+          : "travelling"
+      localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+        locale: nextLocale,
+        onboarding: legacySession.onboarding === "ONB-NEW" ? "ONB-NEW" : "ONB-COMPLETE",
+        persona,
+        discoveryPreferences: [],
+        savedVenueIds: [],
+        privateNotesByVenue: {},
+        recentVenueIds: [],
+        plannedTableRefs: [],
+        localSignalPostedVenueIds: [],
+        localPulseEvidenceByVenue: {},
+        localInteractionBoundarySeen: false,
+        commerceLocalBoundarySeen: false,
+        commerceReceipts: [],
+      }))
+    }
     if (shouldClear && sessionStorage.getItem("ondo.qa.b-seed-cleared") !== "1") {
       sessionStorage.removeItem("ondo.chat.v2")
       sessionStorage.removeItem("ondo.table-outcomes.v2")
@@ -258,6 +281,7 @@ export async function seedB(
 export async function seedFreshOnboarding(page: Page, locale: BLocale = "en") {
   await page.addInitScript((nextLocale) => {
     localStorage.removeItem("ondo.preferences.v3")
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({ locale: nextLocale, onboarding: "ONB-NEW" }))
     sessionStorage.removeItem("ondo.session.v3")
     sessionStorage.removeItem("ondo.chat.v2")
     sessionStorage.removeItem("ondo.table-outcomes.v2")

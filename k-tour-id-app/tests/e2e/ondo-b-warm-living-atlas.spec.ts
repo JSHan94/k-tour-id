@@ -208,6 +208,17 @@ test.describe("Warm Living Atlas personal journey", () => {
     await shot(desktop, "ja-1440-tables-first-decision")
     await desktopContext.close()
 
+    const desktopEmptyContext = await browser.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" })
+    const desktopEmpty = await desktopEmptyContext.newPage()
+    await seed(desktopEmpty, "ja")
+    await desktopEmpty.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await desktopEmpty.getByTestId("nav-my").click()
+    await expect(desktopEmpty.getByTestId("my-korea-empty-inspiration")).toBeInViewport()
+    await expect(desktopEmpty.getByTestId("ondo-b-saved-entry").locator("button")).toBeInViewport()
+    await noHorizontalOverflow(desktopEmpty)
+    await shot(desktopEmpty, "ja-1440-my-empty-first-decision")
+    await desktopEmptyContext.close()
+
     const landscapeContext = await browser.newContext({ viewport: { width: 844, height: 390 }, reducedMotion: "reduce" })
     const landscape = await landscapeContext.newPage()
     await seed(landscape, "ja")

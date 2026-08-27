@@ -27,6 +27,8 @@ const COPY = {
     presentationRetention: "One request · nonce and expiry semantics · no VP stored",
     presentationApproved: "SIMULATED · APPROVED ONCE",
     unchanged: "unchanged",
+    backToKTourId: "Back to K-Tour ID",
+    returnTraveler: "Return to Travel Pass",
   },
   ko: {
     guest: "설정 없이 탐색",
@@ -40,6 +42,8 @@ const COPY = {
     presentationRetention: "한 번의 요청 · nonce와 만료 의미 적용 · VP 저장 안 함",
     presentationApproved: "시뮬레이션 · 한 번 승인됨",
     unchanged: "상태 변경 없음",
+    backToKTourId: "K-Tour ID로 돌아가기",
+    returnTraveler: "여행 패스로 돌아가기",
   },
   ja: {
     guest: "設定せずに見る",
@@ -53,6 +57,8 @@ const COPY = {
     presentationRetention: "一回の依頼 · nonceと有効期限を適用 · VPは保存しない",
     presentationApproved: "シミュレーション · 一回のみ承認",
     unchanged: "状態変更なし",
+    backToKTourId: "K-Tour IDに戻る",
+    returnTraveler: "トラベルパスに戻る",
   },
 } as const
 
@@ -324,6 +330,12 @@ test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation deci
     await setup.getByTestId("k-tour-id-presentation-approve").click()
     await expect(setup.getByTestId("identity-presentation-result-status")).toHaveText(COPY[locale].presentationApproved)
     await expect(setup.getByTestId("identity-presentation-credential-state")).toContainText(COPY[locale].unchanged)
+    await expect(setup.getByTestId("k-tour-id-result-back")).toHaveText(COPY[locale].backToKTourId)
+    await expect(setup.getByTestId("k-tour-id-return")).toHaveText(COPY[locale].returnTraveler)
+    await setup.getByTestId("k-tour-id-result-back").click()
+    await expect(setup.getByTestId("k-tour-id-credential")).toHaveAttribute("data-status", "simulated_ready")
+    await setup.getByTestId("k-tour-id-return").click()
+    await expect(setup).toHaveCount(0)
     await context.close()
   }
 })
