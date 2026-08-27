@@ -43,7 +43,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     test(`${locale} mobile Pulse is non-temperature and leaves a contiguous map field`, async ({ page }) => {
       const root = await openSeoul(page, locale, { width: 390, height: 844 })
 
-      await expect.soft(root).toHaveAttribute("data-pulse-visual-grammar", "borderless-aura-core-label")
+      await expect.soft(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
       await expect.soft(root).toHaveAttribute("data-pulse-motion", "one-shot-bloom-reduced-safe")
       await expect.soft(page.getByTestId("ondo-b-pulse-marker-accessible-detail")).not.toContainText("°")
       await expect.soft(page.getByTestId("ondo-b-map-key")).not.toContainText("°")
@@ -67,7 +67,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
       const touchTargets = [
         page.getByTestId("ondo-b-locate"),
         page.getByTestId("ondo-b-view-toggle"),
-        page.getByTestId("ondo-b-map-key-details").locator("summary"),
+        page.getByTestId("ondo-b-map-key-details").locator(":scope > summary"),
         page.getByTestId("ondo-b-map-credit-details").locator("summary"),
       ]
       for (const target of touchTargets) {
@@ -129,7 +129,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     expect(buttonBoxes).toHaveLength(5)
     for (const bounds of buttonBoxes) expect(Math.min(bounds.width, bounds.height)).toBeGreaterThanOrEqual(44)
 
-    await expect(root).toHaveAttribute("data-pulse-visual-grammar", "borderless-aura-core-label")
+    await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
   })
 
   test("844x390 opens on the compact map and an explicit List remains scrollable", async ({ page }) => {
@@ -139,6 +139,19 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-effective-view", "map")
     await expect(page.getByTestId("maplibre-map")).toBeVisible()
+    const landscapeMapReceipt = await root.evaluate((node) => {
+      const rootBox = node.getBoundingClientRect()
+      const header = node.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
+      const lowerChrome = ["ondo-b-map-key", "ondo-b-result-bar", "ondo-b-attribution"]
+        .map((id) => node.querySelector<HTMLElement>(`[data-testid='${id}']`)?.getBoundingClientRect())
+        .filter((box): box is DOMRect => box != null)
+      return {
+        ratio: (Math.min(...lowerChrome.map((box) => box.top)) - (header?.bottom ?? rootBox.top)) / rootBox.height,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      }
+    })
+    expect(landscapeMapReceipt.ratio).toBeGreaterThanOrEqual(.55)
+    expect(landscapeMapReceipt.overflow).toBeLessThanOrEqual(1)
     await page.getByTestId("ondo-b-view-toggle").click()
     await expect(root).toHaveAttribute("data-requested-view", "list")
     await expect(root).toHaveAttribute("data-effective-view", "list")
@@ -152,7 +165,8 @@ test.describe("premium Pulse map and responsive shell lane", () => {
   test("desktop selection preserves the place flow and exposes the selected capsule grammar", async ({ page }) => {
     const root = await openSeoul(page, "en", { width: 1440, height: 1000 })
     await expect(root).toHaveAttribute("data-selected-pulse-grammar", "one-shot-halo-place-capsule")
-    await page.getByTestId("ondo-b-map-key-details").locator("summary").click()
+    await page.getByTestId("ondo-b-map-key-details").locator(":scope > summary").click()
+    await page.getByTestId("ondo-b-pulse-methodology").locator(":scope > summary").click()
     const hottest = page.getByTestId("ondo-b-map-pulse-places").getByRole("button").first()
     await expect(hottest).toContainText("91 · PEAK")
     await hottest.click()
@@ -167,7 +181,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     const root = await openSeoul(page, "ko", { width: 390, height: 844 })
     await expect(root).toHaveAttribute("data-pulse-motion-applied", "static")
     await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(6)
-    await page.getByTestId("ondo-b-map-key-details").locator("summary").click()
+    await page.getByTestId("ondo-b-map-key-details").locator(":scope > summary").click()
     const peakSwatch = page.getByTestId("ondo-b-pulse-legend").locator("[data-level='peak'] i")
     expect(await peakSwatch.evaluate((node) => getComputedStyle(node).animationName)).toBe("none")
   })

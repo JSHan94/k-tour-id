@@ -19,7 +19,7 @@ test("B-EXPLORE-V3-001 Korea overview is a geographic living atlas rather than a
 })
 
 test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and official-record grammars", () => {
-  expect(map).toContain('data-pulse-visual-grammar={city === "jeju" ? undefined : "borderless-aura-core-label"}')
+  expect(map).toContain('data-pulse-visual-grammar={city === "jeju" ? undefined : "aura-scale-selection-label"}')
   expect(map).toContain('data-cluster-grammar={city === "jeju" ? undefined : "official-record-count"}')
   expect(map).toContain('data-testid="ondo-b-view-toggle"')
   expect(map).toContain('data-testid="ondo-b-map-key"')

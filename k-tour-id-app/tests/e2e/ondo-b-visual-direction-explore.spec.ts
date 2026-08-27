@@ -89,11 +89,11 @@ test.describe("ONDO Explore approved visual direction", () => {
         const style = getComputedStyle(element)
         return { radius: Number.parseFloat(style.borderRadius), shadow: style.boxShadow, background: style.backgroundImage }
       })
-      expect(atlasStyle.radius).toBeGreaterThanOrEqual(profile.width >= 801 && profile.height > 500 ? 36 : 28)
+      expect(atlasStyle.radius).toBeGreaterThanOrEqual(profile.width >= 801 && profile.height > 500 ? 36 : 24)
       expect(atlasStyle.shadow).not.toBe("none")
       expect(atlasStyle.background).toContain("radial-gradient")
       if (profile.width === 320) {
-        const truthMetrics = await atlas.locator("[data-city] small, [data-city] em, p").evaluateAll((elements) => elements.map((element) => {
+        const truthMetrics = await atlas.locator("[data-city] em, p").evaluateAll((elements) => elements.map((element) => {
           const node = element as HTMLElement
           const style = getComputedStyle(node)
           return {
@@ -106,7 +106,7 @@ test.describe("ONDO Explore approved visual direction", () => {
         expect(truthMetrics.every((item) => item.textOverflow !== "ellipsis" && item.horizontalOverflow <= 1 && item.verticalOverflow <= 1)).toBe(true)
       }
       if (profile.width === 844) {
-        const cityTruthMetrics = await atlas.locator("[data-city='seoul'] small, [data-city='seoul'] em, [data-city='busan'] small, [data-city='busan'] em").evaluateAll((elements) => elements.map((element) => {
+        const cityTruthMetrics = await atlas.locator("[data-city='seoul'] em, [data-city='busan'] em").evaluateAll((elements) => elements.map((element) => {
           const node = element as HTMLElement
           return {
             textOverflow: getComputedStyle(node).textOverflow,
@@ -122,12 +122,12 @@ test.describe("ONDO Explore approved visual direction", () => {
     }
   })
 
-  test("Mapstr plus Beli city canvas keeps a warm basemap, compact controls, Pulse truth, and tactile list rows", async ({ browser }) => {
+  test("Mapstr plus Beli city canvas keeps a neutral basemap, compact controls, Pulse truth, and tactile list rows", async ({ browser }) => {
     for (const profile of MATRIX) {
       const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/ondo-b?city=seoul")
 
       const root = page.getByTestId("ondo-b-map-entry")
-      await expect(root).toHaveAttribute("data-pulse-visual-grammar", "borderless-aura-core-label")
+      await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
       await expect(root).toHaveAttribute("data-cluster-grammar", "official-record-count")
       await expect(root).toHaveAttribute("data-effective-view", "map")
       await expect(root).toHaveAttribute("data-map-state", /ready|error/, { timeout: 45_000 })
@@ -149,8 +149,8 @@ test.describe("ONDO Explore approved visual direction", () => {
       }
       const searchRadius = await page.getByTestId("ondo-b-search-shell").evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
       const resultRadius = await page.getByTestId("ondo-b-result-bar").evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
-      expect(searchRadius).toBeGreaterThanOrEqual(18)
-      expect(resultRadius).toBeGreaterThanOrEqual(18)
+      expect(searchRadius).toBeGreaterThanOrEqual(14)
+      expect(resultRadius).toBeGreaterThanOrEqual(14)
       await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveAttribute("data-city-context", "seoul")
       if (profile.width === 844) {
         const searchBox = await box(page.getByTestId("ondo-b-search-shell"))
@@ -167,7 +167,9 @@ test.describe("ONDO Explore approved visual direction", () => {
       const rowButton = firstRow.getByRole("button")
       await expect(firstRow).toHaveAttribute("data-pulse-priority", /peak|hot|rising|warming|low|limited/)
       expect((await box(rowButton)).height).toBeGreaterThanOrEqual(44)
-      expect(await firstRow.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(20)
+      const rowRadius = await firstRow.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
+      expect(rowRadius).toBeGreaterThanOrEqual(16)
+      expect(rowRadius).toBeLessThanOrEqual(20)
       const storyMarker = page.getByTestId("ondo-b-editorial-collection-marker")
       const storyBox = await box(storyMarker)
       const visibleButtons = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] > button:visible")
@@ -188,7 +190,7 @@ test.describe("ONDO Explore approved visual direction", () => {
   })
 
   for (const locale of ["en", "ko", "ja"] as const) {
-    test(`Infatuation and Guides editorial plus Apple and Airbnb place sheets retain truth and actions in ${locale}`, async ({ browser }) => {
+    test(`Modern editorial and Place sheets retain truth and actions in ${locale}`, async ({ browser }) => {
       const { context, page } = await openSeededPage(browser, locale, 390, 844, "/ondo-b?city=seoul")
 
       const discovery = page.getByTestId("ondo-b-japan-first-discovery")
@@ -206,8 +208,12 @@ test.describe("ONDO Explore approved visual direction", () => {
       const panel = discovery.locator(":scope > div")
       const firstStory = discovery.locator("[data-content-id]").first()
       const firstMedia = firstStory.locator("figure")
-      expect(await panel.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(24)
-      expect(await firstStory.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(20)
+      const panelRadius = await panel.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
+      const storyRadius = await firstStory.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
+      expect(panelRadius).toBeGreaterThanOrEqual(16)
+      expect(panelRadius).toBeLessThanOrEqual(20)
+      expect(storyRadius).toBeGreaterThanOrEqual(15)
+      expect(storyRadius).toBeLessThanOrEqual(18)
       expect((await box(firstMedia)).height / (await box(firstStory)).height).toBeGreaterThan(.38)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial.png` })
       const sourceDisclosure = firstStory.locator("details")
@@ -243,7 +249,9 @@ test.describe("ONDO Explore approved visual direction", () => {
       const peek = page.getByTestId("canonical-place-peek")
       await expect(peek).toBeVisible()
       await page.waitForTimeout(360)
-      expect(await peek.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(30)
+      const peekRadius = await peek.evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
+      expect(peekRadius).toBeGreaterThanOrEqual(20)
+      expect(peekRadius).toBeLessThanOrEqual(24)
       await expect(peek.getByTestId("canonical-venue-directions")).toHaveAttribute("data-visual-priority", "primary")
       await expect(peek.getByTestId("canonical-place-details")).toHaveAttribute("data-visual-priority", "secondary")
       await expect(peek.getByTestId("canonical-place-pulse")).toHaveAttribute("data-pulse-numeric", /shown|hidden/)
@@ -253,7 +261,9 @@ test.describe("ONDO Explore approved visual direction", () => {
       const detail = page.getByTestId("canonical-place-overlay")
       await expect(detail).toBeVisible()
       await page.waitForTimeout(420)
-      expect(await detail.getByTestId("canonical-place-pulse").evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))).toBeGreaterThanOrEqual(24)
+      const pulseRadius = await detail.getByTestId("canonical-place-pulse").evaluate((element) => Number.parseFloat(getComputedStyle(element).borderRadius))
+      expect(pulseRadius).toBeGreaterThanOrEqual(18)
+      expect(pulseRadius).toBeLessThanOrEqual(22)
       await expect(detail.getByTestId("canonical-place-decisions")).toBeVisible()
       await expect(detail.getByTestId("canonical-meal-benefit-open")).toBeVisible()
       await expect(detail.getByTestId("canonical-local-signal-open")).toBeVisible()
@@ -264,7 +274,7 @@ test.describe("ONDO Explore approved visual direction", () => {
     })
   }
 
-  test("Apple and Airbnb desktop Place keeps the cartographic identity stage in the first viewport", async ({ browser }) => {
+  test("modern desktop Place keeps the cartographic identity stage in the first viewport", async ({ browser }) => {
     const { context, page } = await openSeededPage(browser, "en", 1440, 1000, "/ondo-b?city=seoul&view=list")
     await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
     await page.getByTestId("canonical-place-peek").getByTestId("canonical-place-details").click()
