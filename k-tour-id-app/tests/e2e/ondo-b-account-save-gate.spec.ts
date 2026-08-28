@@ -4,6 +4,7 @@ const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 const DEVICE_KEY = "ondo-b.device.v1"
 const ACCOUNT_KEY = "ondo-b.account.v1"
 const LEGACY_KEY = "ondo.session.v3"
+const SEED_KEY = "ondo-b.test.account-save.seeded"
 
 const COPY = {
   en: { saved: "Remove from Saved", close: "Close place" },
@@ -14,7 +15,8 @@ const COPY = {
 type Locale = keyof typeof COPY
 
 async function seed(page: Page, locale: Locale, account: "guest" | "active" = "guest") {
-  await page.addInitScript(({ deviceKey, accountKey, legacyKey, nextLocale, nextAccount }) => {
+  await page.addInitScript(({ deviceKey, accountKey, legacyKey, seedKey, nextLocale, nextAccount }) => {
+    if (sessionStorage.getItem(seedKey) === "1") return
     localStorage.setItem(deviceKey, JSON.stringify({
       locale: nextLocale,
       onboarding: "ONB-COMPLETE",
@@ -26,7 +28,8 @@ async function seed(page: Page, locale: Locale, account: "guest" | "active" = "g
     sessionStorage.removeItem(legacyKey)
     if (nextAccount === "active") sessionStorage.setItem(accountKey, JSON.stringify({ account: "ACC-ACTIVE", returnTo: null }))
     else sessionStorage.removeItem(accountKey)
-  }, { deviceKey: DEVICE_KEY, accountKey: ACCOUNT_KEY, legacyKey: LEGACY_KEY, nextLocale: locale, nextAccount: account })
+    sessionStorage.setItem(seedKey, "1")
+  }, { deviceKey: DEVICE_KEY, accountKey: ACCOUNT_KEY, legacyKey: LEGACY_KEY, seedKey: SEED_KEY, nextLocale: locale, nextAccount: account })
 }
 
 async function openVenue(page: Page, query = "") {
@@ -89,10 +92,9 @@ for (const locale of ["en", "ko", "ja"] as const) {
     expect(stored.account).toEqual({ account: "ACC-ACTIVE", returnTo: null })
 
     await page.reload({ waitUntil: "domcontentloaded" })
-    await expect(page.getByTestId("canonical-place-peek")).toBeVisible({ timeout: 15_000 })
-    await page.getByTestId("canonical-place-details").click()
     const restoredDetail = page.getByTestId("canonical-place-overlay")
-    await expect(restoredDetail).toBeVisible()
+    await expect(restoredDetail).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
     await expect(restoredDetail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", /ready|error/)
     await expect(page.getByTestId("canonical-venue-save")).toContainText(COPY[locale].saved)
     await page.getByRole("button", { name: COPY[locale].close, exact: true }).click()
