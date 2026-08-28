@@ -1312,7 +1312,7 @@ export function MapEntryB() {
           ) : null}
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
-            <aside className={styles.mapKey} data-testid="ondo-b-map-key" data-pulse-key-presentation="compact-gradient" aria-label={`${copy.mapKey}. ${copy.mapKeyBody}. ${PULSE_DISCLOSURE[locale]}`}>
+            <aside className={styles.mapKey} data-testid="ondo-b-map-key" data-pulse-key-presentation="compact-gradient" aria-label={`${copy.mapKey}. ${copy.mapKeyBody} ${PULSE_DISCLOSURE[locale]}`}>
               <div className={styles.pulseScale} data-testid="ondo-b-pulse-scale" aria-hidden="true">
                 <i /><b>Pulse</b><small>{MAP_UI[locale].pulseRange}</small>
               </div>
