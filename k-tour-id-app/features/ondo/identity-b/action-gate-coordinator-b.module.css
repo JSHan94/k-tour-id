@@ -2,6 +2,7 @@
 .backdrop { position: absolute; inset: 0; background: rgb(18 18 18 / .46); backdrop-filter: blur(8px); }
 .dialog { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(100%, 520px); max-height: min(88dvh, 720px); overflow: hidden; border: 1px solid #dedbd7; border-radius: 30px; outline: none; background: #fff; color: #211f1d; box-shadow: 0 28px 90px rgb(0 0 0 / .24); }
 .dialog > header { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; min-height: 58px; padding: 10px 14px 10px 20px; border-bottom: 1px solid #e8e5e2; background: rgb(255 255 255 / .96); backdrop-filter: blur(14px); }
+.dialog[data-visual-direction="timeleft-checkpoint"] > header::after { position: absolute; right: 22px; bottom: 0; left: 22px; height: 4px; border-radius: 999px; background: linear-gradient(90deg, #832b46 0 30%, rgb(131 43 70 / 18%) 30% 35%, #c34e3b 35% 65%, rgb(195 78 59 / 18%) 65% 70%, #e5ad5b 70% 100%); box-shadow: 0 5px 14px rgb(133 51 53 / 12%); content: ""; opacity: .9; pointer-events: none; }
 .dialog > header span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 760; letter-spacing: .02em; }
 .dialog button,.disclosure summary { min-width: 44px; min-height: 44px; }
 .dialog button { border: 0; font: inherit; cursor: pointer; }
@@ -57,6 +58,7 @@
   .layer { padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
   .dialog { max-height: calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); border-radius: 24px; }
   .dialog > header { min-height: 52px; padding: 4px 8px 4px 14px; }
+  .dialog[data-visual-direction="timeleft-checkpoint"] > header::after { right: 14px; left: 14px; }
   .content { padding: 12px 12px 10px; }
   .hero { display: none; }
   .heroError { width: 44px; height: 44px; margin-bottom: 9px; border-radius: 14px; }
@@ -111,7 +113,7 @@
   .dialog[data-check-kind="person"] .content:has(> .personRoute) > .routeChoices { grid-row: 2; }
   .dialog[data-check-kind="person"] .content:has(> .personRoute) > .personRoute { grid-row: 3; }
   .dialog[data-check-kind="person"] .content:has(> .personRoute) > .disclosure { grid-row: 4; }
-  .dialog[data-check-kind="person"] .content:has(> .personRoute) > .lead { grid-column: 2; grid-row: 3; margin-top: 6px; font-size: 11.5px; line-height: 1.32; }
+  .dialog[data-check-kind="person"] .content:has(> .personRoute) > .lead { grid-column: 2; grid-row: 3; margin-top: 6px; font-size: 12px; line-height: 1.32; }
   .dialog[data-check-kind="person"] .content:has(> .personRoute) > .plan { grid-row: 4; }
 }
 @media (prefers-reduced-motion: reduce) { .dialog,.backdrop { scroll-behavior: auto; backdrop-filter: none; } .disclosure summary svg { transition: none; } }

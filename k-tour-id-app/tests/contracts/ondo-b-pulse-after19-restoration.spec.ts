@@ -42,42 +42,66 @@ test("B-PULSE-003 joining confirms before Table chat and exposes message, check-
   expect(tables).not.toMatch(/\bopenDm\b|\bdirectMessage\b|\bmatchmaking\b|["']\/connect\/chat|chat-message-input/)
 })
 
-test("B-AFTER19-001 JIT eligibility returns only the 19+ predicate and never claims an official venue restriction", () => {
-  const gate = source("features/ondo/after19/after19-jit-b.tsx")
+test("B-AFTER19-001 Table action eligibility returns only the 19+ predicate and never claims an official venue restriction", () => {
+  const gate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const ageModel = source("features/ondo/after19/after19-global-b-model.ts")
   for (const evidence of [
     "after19-walkthrough",
-    "The age check belongs to the Table, not the venue record",
-    "Only an eligible 19+ result returns to this Table",
-    "Date of birth is never requested or stored",
-    "No provider is connected",
+    "Confirm 19+ for this Table",
+    "Only an eligibility result and expiry are kept in this tab",
+    "No birth date or official venue restriction is claimed",
+    "SIMULATED LOCAL CHECK · no external provider, credential, document, or raw identity data",
   ]) expect(gate).toContain(evidence)
-  expect(gate).not.toMatch(/dateOfBirth|birthDate|passportNumber|credentialPayload|verifyAge\(|providerResponse/i)
+  for (const evidence of [
+    'age: "unverified" | "eligible"',
+    "ageExpiresAt: string | null",
+    "GLOBAL_AFTER19_AGE_TTL_MS",
+    "recordGlobalAfter19AgeEligibilityB",
+  ]) expect(ageModel).toContain(evidence)
+  expect(`${gate}\n${ageModel}`).not.toMatch(/dateOfBirth|birthDate|passportNumber|credentialPayload|verifyAge\(|providerResponse/i)
 })
 
 test("B-AFTER19-002 normal controls are single-path while fixture-driven recovery retains exact context", () => {
-  const gate = source("features/ondo/after19/after19-jit-b.tsx")
-  const returnTo = source("features/ondo/contracts/return-to-b.ts")
-  for (const evidence of ["gate-success", "gate-cancel", "gate-failure", "gate-retry", "gate-unsupported", "after19-expiry-notice", "after19-return"]) {
+  const tables = source("features/ondo/connect/tables-entry-b.tsx")
+  const gate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const returnTo = source("features/ondo/identity-b/action-gate-contract-b.ts")
+  const ageModel = source("features/ondo/after19/after19-global-b-model.ts")
+  for (const evidence of ["after19-start", "action-gate-cancel", "action-gate-retry", "local-check-result", 'type GateView = "intro" | "failure" | "unavailable" | "expired"', "data-gate-view={resolvedView}", "data-result={resolvedView === \"intro\" ? undefined : resolvedView}", "renewBActionReturnTo", "action-gate-return-context"]) {
     expect(gate).toContain(evidence)
   }
   for (const hiddenControl of ["gate-failure-choice", "gate-unsupported-choice", "gate-expired-choice"]) expect(gate).not.toContain(hiddenControl)
-  expect(gate).toContain("window.__ONDO_B_QA__?.after19")
-  for (const evidence of ["BReturnToEnvelope", 'action: "JOIN_TABLE"', "tableId", "venueId", "draft", "activeGate", "expiresAt", "consumedAt", "consumeBReturnTo"]) {
+  expect(gate).toContain("(window as QaWindow).__ONDO_B_QA__")
+  expect(gate).toContain('if (gate === "age" && qa?.after19)')
+  expect(returnTo).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
+  expect(returnTo).toContain('return hasExactKeys(candidate, ["tableId", "draft"])')
+  for (const evidence of ["BTableActionReturn", 'cta: "JOIN_TABLE"', "tableId", "venueId", "draft", "gatePlan", "B_ACTION_GATE_TTL_MS", "expiresAt", "consumedAt", "createBTableActionReturn", "renewBActionReturnTo", "consumeBActionReturnTo", "consumePendingBActionAtMutation"]) {
     expect(returnTo).toContain(evidence)
   }
-  expect(`${gate}\n${returnTo}`).not.toMatch(/setTimeout|fetch\(|XMLHttpRequest|WebSocket|EventSource|payment|receipt/i)
+  expect(gate).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
+  expect(gate).toContain('data-return-venue={pending.venueId}')
+  expect(gate).toContain("recordGlobalAfter19AgeEligibilityB(clock)")
+  expect(tables).toContain("requestBActionGate(createBTableActionReturn({ tableId: ACTIVE_TABLE_ID, venueId: TABLE_VENUE_ID, draft }))")
+  expect(tables).toContain('detail.cta !== "JOIN_TABLE" || detail.tableId !== ACTIVE_TABLE_ID || detail.venueId !== TABLE_VENUE_ID || detail.consumedAt !== null')
+  expect(tables).toContain("consumePendingBActionAtMutation(window.sessionStorage, returnTo, satisfied)")
+  expect(`${gate}\n${returnTo}\n${ageModel}`).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|EventSource/)
+  expect(ageModel).not.toMatch(/setTimeout|payment|receipt|providerResponse/i)
 })
 
 test("B-PULSE-004 the slice keeps concise truth plus EN/KO/JA, modal, keyboard, and responsive contracts", () => {
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
-  const gate = source("features/ondo/after19/after19-jit-b.tsx")
-  const css = `${source("features/ondo/connect/pulse-table-b.module.css")}\n${source("features/ondo/after19/after19-jit-b.module.css")}`
+  const gate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const css = `${source("features/ondo/connect/pulse-table-b.module.css")}\n${source("features/ondo/identity-b/action-gate-coordinator-b.module.css")}`
   const productSource = `${tables}\n${gate}`
-  expect(productSource).toContain("How this check works")
+  expect(productSource).toContain("Minimum check · this tab only")
+  expect(productSource).toContain("Only an eligibility result and expiry are kept in this tab")
+  expect(productSource).toContain("Nothing is booked, sent to the venue, or charged")
   for (const locale of ["en", "ko", "ja"]) expect(productSource).toContain(`${locale}: {`)
   expect(productSource).toContain("useModalIsolation")
   expect(productSource).toContain("onKeyDown")
   expect(productSource).toContain("focusFirstAvailableDestination")
+  expect(gate).toContain('data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"}')
+  expect(gate).toContain('data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined}')
   expect(css).toContain("@media")
   expect(css).toContain("min-height: 44px")
+  expect(css).toContain('.dialog[data-visual-direction="timeleft-checkpoint"] > header::after')
 })

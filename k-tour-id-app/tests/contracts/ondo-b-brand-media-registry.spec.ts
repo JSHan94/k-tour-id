@@ -87,7 +87,8 @@ test("BRAND-MEDIA-003 fictional people never enter identity or evidence source c
     "features/ondo/identity-b/local-check-walkthrough-b.tsx",
     "features/ondo/identity-b/traveler-id-entry-b.tsx",
     "features/ondo/identity-b/ktour-id-setup-b.tsx",
-    "features/ondo/after19/after19-jit-b.tsx",
+    "features/ondo/after19/after19-global-b.tsx",
+    "features/ondo/identity-b/action-gate-coordinator-b.tsx",
     "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
     "features/ondo/pulse-b/japan-first-pulse-model-b.ts",
   ]

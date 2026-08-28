@@ -69,8 +69,6 @@ export const SOURCE_FILES = Object.freeze([
   "features/ondo/app/ondo-app-b.tsx",
   "features/ondo/app/ondo-product-b.tsx",
   "features/ondo/app/ondo-shell.module.css",
-  "features/ondo/after19/after19-jit-b.tsx",
-  "features/ondo/after19/after19-jit-b.module.css",
   "features/ondo/connect/tables-entry-b.tsx",
   "features/ondo/connect/pulse-table-b.module.css",
   "features/ondo/contracts/return-to-b.ts",

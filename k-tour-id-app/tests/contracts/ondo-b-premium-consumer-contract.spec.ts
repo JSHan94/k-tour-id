@@ -11,7 +11,9 @@ function source(path: string) {
 const mapSource = source("features/ondo/map/map-entry-b.tsx")
 const placeSource = source("features/ondo/place/canonical-place-overlay.tsx")
 const tableSource = source("features/ondo/connect/tables-entry-b.tsx")
-const after19Source = source("features/ondo/after19/after19-jit-b.tsx")
+const after19Source = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+const actionGateContractSource = source("features/ondo/identity-b/action-gate-contract-b.ts")
+const ageModelSource = source("features/ondo/after19/after19-global-b-model.ts")
 const localSignalSource = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
 const travelerSource = source("features/ondo/identity-b/traveler-id-entry-b.tsx")
 const commerceSource = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
@@ -46,8 +48,16 @@ test("PREMIUM-004 normal eligibility UI cannot expose a QA outcome picker", () =
   for (const hiddenControl of ["gate-failure-choice", "gate-unsupported-choice", "gate-expired-choice"]) {
     expect(after19Source, `${hiddenControl} must be fixture-driven, not a consumer control`).not.toContain(`data-testid=\"${hiddenControl}\"`)
   }
+  expect(after19Source).toContain('if (gate === "age" && qa?.after19)')
   expect(after19Source).toContain("after19-start")
-  expect(after19Source).toContain("gate-cancel")
+  expect(after19Source).toContain("action-gate-cancel")
+  expect(after19Source).toContain("Confirm 19+ for this Table")
+  expect(after19Source).toContain("Only an eligibility result and expiry are kept in this tab")
+  expect(after19Source).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
+  expect(actionGateContractSource).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
+  expect(actionGateContractSource).toContain("consumePendingBActionAtMutation")
+  expect(ageModelSource).toContain("recordGlobalAfter19AgeEligibilityB")
+  expect(`${after19Source}\n${ageModelSource}`).not.toMatch(/dateOfBirth|passportNumber|credentialPayload|providerResponse/i)
 })
 
 test("PREMIUM-005 Travel Pass and Wallet are a consumer dashboard, not an operator console", () => {

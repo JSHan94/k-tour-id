@@ -76,7 +76,12 @@ export const ONDO_FIDELITY_INVENTORY: readonly OndoFidelityItem[] = [
     tier: "GOLDEN_MUST_LIVE",
     journey: "After19",
     acceptance: ["success", "cancel", "failure/retry", "unavailable", "expiry", "minimum exact return"],
-    requiredModules: ["features/ondo/after19/after19-jit-b.tsx"],
+    requiredModules: [
+      "features/ondo/after19/after19-global-b-model.ts",
+      "features/ondo/after19/after19-global-b.tsx",
+      "features/ondo/identity-b/action-gate-contract-b.ts",
+      "features/ondo/identity-b/action-gate-coordinator-b.tsx",
+    ],
     providerBoundary: "DETERMINISTIC_LOCAL_PREVIEW",
     removalPolicy: "FAIL_RELEASE",
   },

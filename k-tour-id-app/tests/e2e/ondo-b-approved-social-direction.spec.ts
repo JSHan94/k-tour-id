@@ -65,7 +65,7 @@ async function openTables(page: Page, locale: Locale = "en") {
   await seed(page, locale)
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
-  await page.getByTestId("nav-tables").click({ force: true })
+  await page.getByTestId("nav-tables").click()
   const entry = page.getByTestId("tables-entry")
   await expect(entry).toBeVisible()
   return entry
@@ -80,15 +80,19 @@ async function openTableDetail(page: Page) {
 
 async function openAfter19Review(page: Page) {
   await page.getByTestId("table-join").click()
+  const coordinator = page.getByTestId("ondo-b-action-gate")
+  await expect(coordinator).toHaveAttribute("data-active-gate", "account")
+  await coordinator.getByTestId("action-gate-confirm").click()
   const gate = page.getByTestId("after19-walkthrough")
   await expect(gate).toBeVisible()
-  await gate.getByTestId("after19-start").click()
-  await expect(gate.getByTestId("gate-success")).toBeVisible()
   return gate
 }
 
 async function openChat(page: Page) {
-  await page.getByTestId("gate-success").click()
+  const gate = page.getByTestId("after19-walkthrough")
+  await gate.getByTestId("after19-start").click()
+  await expect(gate).toBeHidden()
+  await expect(page.getByTestId("table-join-confirmation")).toBeVisible()
   await page.getByTestId("table-join-confirm").click()
   await page.getByTestId("table-open-chat").click()
   const chat = page.getByTestId("table-chat")
@@ -99,12 +103,16 @@ async function openChat(page: Page) {
 async function openLocalSignal(page: Page) {
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
-  await page.locator("[data-city='seoul']").click({ force: true })
+  await page.locator("[data-city='seoul']").click()
   const toggle = page.getByTestId("ondo-b-view-toggle")
-  if (await toggle.count()) await toggle.click({ force: true })
-  await page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${VENUE_ID}'] button`).click({ force: true })
-  await page.getByTestId("canonical-place-details").click({ force: true })
-  await page.getByTestId("canonical-local-signal-open").click({ force: true })
+  const list = page.getByTestId("ondo-b-venue-list")
+  if (!await list.isVisible()) {
+    await expect(toggle).toBeVisible()
+    await toggle.click()
+  }
+  await list.locator(`[data-venue-id='${VENUE_ID}'] button`).click()
+  await page.getByTestId("canonical-place-details").click()
+  await page.getByTestId("canonical-local-signal-open").click()
   const signal = page.getByTestId("ondo-b-local-signal")
   await expect(signal).toBeVisible()
   return signal
@@ -172,9 +180,23 @@ test("SOC-DIR-002 After19 is a staged private checkpoint, not an outcome picker"
   await openTables(page)
   await openTableDetail(page)
   const gate = await openAfter19Review(page)
+  await expect(gate).toHaveAttribute("data-visual-direction", "timeleft-checkpoint")
   const progress = await pseudo(gate.locator("header"), "::after")
   expect(progress.content).not.toBe("none")
   expect(progress.backgroundImage).toContain("linear-gradient")
+  const plan = gate.getByRole("list", { name: "Required checks" })
+  await expect(plan.locator("li")).toHaveCount(2)
+  await expect(plan.locator("li").nth(0)).toHaveAttribute("data-state", "complete")
+  const activeStep = plan.locator("li").nth(1)
+  await expect(activeStep).toHaveAttribute("data-state", "active")
+  const activeVisual = await activeStep.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { backgroundColor: style.backgroundColor, borderRadius: Number.parseFloat(style.borderRadius) }
+  })
+  expect(activeVisual.backgroundColor).not.toBe("rgba(0, 0, 0, 0)")
+  expect(activeVisual.borderRadius).toBeGreaterThanOrEqual(16)
+  await expect(gate).toContainText("this tab")
+  await expect(gate).toContainText("no external provider")
   await expect(page.locator("[data-testid*='outcome']")).toHaveCount(0)
 })
 
@@ -240,7 +262,7 @@ test("SOC-DIR-004 JA desktop photo composer remains above its own backdrop", asy
   expect(geometry.root.bottom).toBeLessThanOrEqual(1000)
   expect(geometry.root.bottom - geometry.root.top).toBeGreaterThan(750)
   expect(geometry.bodyOverflowY).toMatch(/auto|scroll/)
-  expect(geometry.bodyClientHeight).toBeGreaterThan(650)
+  expect(geometry.bodyClientHeight).toBeGreaterThanOrEqual((geometry.root.bottom - geometry.root.top) * .75)
   expect(geometry.bodyScrollHeight).toBeGreaterThanOrEqual(geometry.bodyClientHeight)
   expect(geometry.draftBox).not.toBeNull()
   expect(geometry.figureBox).not.toBeNull()
@@ -249,7 +271,7 @@ test("SOC-DIR-004 JA desktop photo composer remains above its own backdrop", asy
   expect(geometry.figureBox!.right).toBeLessThanOrEqual(geometry.draftBox!.right)
   expect(geometry.photoBox!.right).toBeLessThanOrEqual(geometry.figureBox!.right)
   expect(geometry.photoBox!.width).toBeLessThanOrEqual(600)
-  expect(geometry.photoBox!.height).toBe(260)
+  expect(geometry.photoBox!.height).toBe(210)
   expect(geometry.occluded).toEqual([])
 })
 

@@ -227,8 +227,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     for (const path of [
       "features/ondo/connect/tables-entry-b.tsx",
       "features/ondo/connect/pulse-table-b.module.css",
-      "features/ondo/after19/after19-jit-b.tsx",
-      "features/ondo/after19/after19-jit-b.module.css",
+      "features/ondo/after19/after19-global-b-model.ts",
+      "features/ondo/after19/after19-global-b.tsx",
+      "features/ondo/after19/after19-place-return-b-model.ts",
+      "features/ondo/identity-b/action-gate-contract-b.ts",
+      "features/ondo/identity-b/action-gate-coordinator-b.tsx",
+      "features/ondo/identity-b/action-gate-coordinator-b.module.css",
       "features/ondo/contracts/return-to-b.ts",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })

@@ -27,11 +27,14 @@ test("JA-B-001 Japanese is a complete persisted locale, not a partial visual tog
 })
 
 test("JA-B-002 every reachable B journey owns Japanese truth copy without changing actions", () => {
+  const actionGate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const actionGateContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
+  const ageModel = source("features/ondo/after19/after19-global-b-model.ts")
   const sources = [
     "features/ondo/map/map-entry-b.tsx",
     "features/ondo/place/canonical-place-overlay.tsx",
     "features/ondo/connect/tables-entry-b.tsx",
-    "features/ondo/after19/after19-jit-b.tsx",
+    "features/ondo/identity-b/action-gate-coordinator-b.tsx",
     "features/ondo/local-signal-b/local-signal-layer-b.tsx",
     "features/ondo/identity-b/local-check-walkthrough-b.tsx",
     "features/ondo/identity-b/traveler-id-entry-b.tsx",
@@ -44,6 +47,17 @@ test("JA-B-002 every reachable B journey owns Japanese truth copy without changi
   expect(sources.join("\n")).toContain("ステーブルコインやオンチェーン資産")
   expect(sources.join("\n")).toContain("生年月日")
   expect(sources.join("\n")).toContain("公式")
+  for (const truth of [
+    "最初にアカウントを準備します。本人、19歳以上、身元、決済の確認は完了しません。",
+    "このテーブルの19歳以上確認",
+    "適格結果と有効期限だけをこのタブに保持します。生年月日や店舗の公式制限は示しません。",
+    "ローカル・シミュレーション確認 · 外部サービス、資格情報、書類、元の本人情報は使用しません",
+    "テーブルとホストへのメモ",
+    "今回はしない — 操作を変えずに戻る",
+  ]) expect(actionGate).toContain(truth)
+  expect(actionGate).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
+  expect(actionGateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
+  expect(ageModel).toContain("recordGlobalAfter19AgeEligibilityB")
 })
 
 test("JA-B-003 Korean official facts remain Korean while Japanese labels explain their boundary", () => {

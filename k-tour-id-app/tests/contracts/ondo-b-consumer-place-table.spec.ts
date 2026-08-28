@@ -18,15 +18,23 @@ test("consumer Place exposes the contextual Table, 19+, Local Signal, and benefi
 })
 
 test("normal After19 is a single eligibility path and outcome authoring is QA-only", () => {
-  const after19 = source("features/ondo/after19/after19-jit-b.tsx")
+  const after19 = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const actionGateContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
+  const ageModel = source("features/ondo/after19/after19-global-b-model.ts")
 
-  expect(after19).toContain("window.__ONDO_B_QA__?.after19")
-  expect(after19).toContain("Verify and continue")
-  expect(after19).toContain("Not now")
+  expect(after19).toContain("(window as QaWindow).__ONDO_B_QA__")
+  expect(after19).toContain('if (gate === "age" && qa?.after19)')
+  expect(after19).toContain("Confirm 19+ and continue")
+  expect(after19).toContain("Not now — return without changing the action")
+  expect(after19).toContain('data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined}')
+  expect(after19).toContain('data-testid={gate === "person" ? "local-check-boundary-continue" : gate === "age" ? "after19-start" : "action-gate-confirm"}')
+  expect(actionGateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
+  expect(ageModel).toContain("recordGlobalAfter19AgeEligibilityB")
   expect(after19).not.toContain('choices: "Choose an example outcome"')
   expect(after19).not.toContain('data-testid="gate-failure-choice"')
   expect(after19).not.toContain('data-testid="gate-unsupported-choice"')
   expect(after19).not.toContain('data-testid="gate-expired-choice"')
+  expect(`${after19}\n${ageModel}`).not.toMatch(/dateOfBirth|passportNumber|credentialPayload|providerResponse/i)
 })
 
 test("Tables and Local Signal own photo, retry, chat, check-in, and feedback states", () => {
@@ -74,7 +82,7 @@ test("consumer copy removes internal scenario-runner vocabulary", () => {
   const paths = [
     "features/ondo/place/canonical-place-overlay.tsx",
     "features/ondo/connect/tables-entry-b.tsx",
-    "features/ondo/after19/after19-jit-b.tsx",
+    "features/ondo/identity-b/action-gate-coordinator-b.tsx",
     "features/ondo/local-signal-b/local-signal-layer-b.tsx",
   ]
   const consumerCopy = paths.map(source).join("\n")

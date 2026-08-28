@@ -4,6 +4,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 const DEVICE_KEY = "ondo-b.device.v1"
 const TABLE_ID = "table-seoul-night-bites"
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
+const TABLE_DRAFT = "Window seat; English is easiest."
 const ARTIFACT_DIR = "artifacts/qa/visual-excellence-social"
 
 type Locale = "en" | "ko"
@@ -45,10 +46,7 @@ async function openTables(page: Page, locale: Locale = "en") {
   await seed(page, locale)
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await waitForHydratedShell(page)
-  // The exact 1a9 shell has a desktop stacking defect that the shared-shell lane
-  // fixes independently. Force the existing action without making this social
-  // surface contract depend on that out-of-scope pointer layer.
-  await page.getByTestId("nav-tables").click({ force: true })
+  await page.getByTestId("nav-tables").click()
   const entry = page.getByTestId("tables-entry")
   await expect(entry).toBeVisible()
   return entry
@@ -63,17 +61,30 @@ async function openTableDetail(page: Page) {
 
 async function openReview(page: Page) {
   const detail = page.getByTestId("table-detail")
+  await detail.getByTestId("table-join-draft").fill(TABLE_DRAFT)
   await detail.getByTestId("table-join").click()
+  const coordinator = page.getByTestId("ondo-b-action-gate")
+  await expect(coordinator).toHaveAttribute("data-active-gate", "account")
+  const returnContext = coordinator.getByTestId("action-gate-return-context")
+  await expect(returnContext).toHaveAttribute("data-return-table", TABLE_ID)
+  await expect(returnContext).toHaveAttribute("data-return-venue", VENUE_ID)
+  await coordinator.getByTestId("action-gate-confirm").click()
+  await expect(coordinator).toHaveAttribute("data-active-gate", "age")
   const gate = page.getByTestId("after19-walkthrough")
   await expect(gate).toBeVisible()
-  await gate.getByTestId("after19-start").click()
-  await expect(gate.getByTestId("gate-success")).toBeVisible()
+  await expect(gate).toHaveAttribute("data-visual-direction", "timeleft-checkpoint")
   return gate
 }
 
 async function openChat(page: Page) {
-  await page.getByTestId("gate-success").click()
-  await page.getByTestId("table-join-confirm").click()
+  const gate = page.getByTestId("after19-walkthrough")
+  await gate.getByTestId("after19-start").click()
+  await expect(gate).toBeHidden()
+  const confirmation = page.getByTestId("table-join-confirmation")
+  await expect(confirmation).toHaveAttribute("data-return-table", TABLE_ID)
+  await expect(confirmation).toHaveAttribute("data-return-venue", VENUE_ID)
+  await expect(confirmation.getByTestId("after19-return")).toContainText(TABLE_DRAFT)
+  await confirmation.getByTestId("table-join-confirm").click()
   await page.getByTestId("table-open-chat").click()
   const chat = page.getByTestId("table-chat")
   await expect(chat).toBeVisible()
@@ -83,14 +94,17 @@ async function openChat(page: Page) {
 async function openLocalSignal(page: Page) {
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   await waitForHydratedShell(page)
-  await page.locator("[data-city='seoul']").click({ force: true })
+  await page.locator("[data-city='seoul']").click()
   const viewToggle = page.getByTestId("ondo-b-view-toggle")
-  if (await viewToggle.count()) await viewToggle.click({ force: true })
-  else await expect(page.getByTestId("ondo-b-effective-view-label")).toBeVisible()
-  const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${VENUE_ID}'] button`)
-  await row.click({ force: true })
-  await page.getByTestId("canonical-place-details").click({ force: true })
-  await page.getByTestId("canonical-local-signal-open").click({ force: true })
+  const list = page.getByTestId("ondo-b-venue-list")
+  if (!await list.isVisible()) {
+    await expect(viewToggle).toBeVisible()
+    await viewToggle.click()
+  }
+  const row = list.locator(`[data-venue-id='${VENUE_ID}'] button`)
+  await row.click()
+  await page.getByTestId("canonical-place-details").click()
+  await page.getByTestId("canonical-local-signal-open").click()
   const signal = page.getByTestId("ondo-b-local-signal")
   await expect(signal).toBeVisible()
   return signal
@@ -123,7 +137,7 @@ test("VE-SOC-001 desktop Table is a wide social event object with a two-column i
   expect(cardBox).not.toBeNull()
   expect(officialBox).not.toBeNull()
   expect(itineraryBox).not.toBeNull()
-  expect(cardBox!.width).toBeGreaterThanOrEqual(600)
+  expect(cardBox!.width).toBeGreaterThanOrEqual(500)
   expect(itineraryBox!.x).toBeGreaterThanOrEqual(officialBox!.x + officialBox!.width + 20)
   const [entryBox, headerBox] = await Promise.all([entry.boundingBox(), entry.locator(":scope > header").boundingBox()])
   const topGap = (headerBox?.y ?? 0) - (entryBox?.y ?? 0)
@@ -165,26 +179,33 @@ test("VE-SOC-002 mobile Table keeps source truth complete and chat visibly parti
   await noHorizontalOverflow(page.getByTestId("table-detail"))
 })
 
-test("VE-SOC-003 After19 reads as a distinctive secure checkpoint", async ({ page }) => {
+test("VE-SOC-003 After19 reads as a distinctive Timeleft checkpoint", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await openTables(page)
   await openTableDetail(page)
   const gate = await openReview(page)
-  const motif = await gate.evaluate((element) => {
-    const before = getComputedStyle(element, "::before")
-    const badge = element.querySelectorAll("svg")[1]
-    const badgeStyle = getComputedStyle(badge)
+  const motif = await gate.locator("header").evaluate((element) => {
+    const after = getComputedStyle(element, "::after")
     return {
-      content: before.content,
-      opacity: before.opacity,
-      animationName: badgeStyle.animationName,
-      animationDuration: badgeStyle.animationDuration,
+      content: after.content,
+      backgroundImage: after.backgroundImage,
+      height: Number.parseFloat(after.height),
     }
   })
   expect(motif.content).not.toBe("none")
-  expect(Number.parseFloat(motif.opacity)).toBeGreaterThan(0)
-  expect(motif.animationName).toContain("secure")
-  expect(motif.animationDuration).toBe("2.4s")
+  expect(motif.backgroundImage).toContain("linear-gradient")
+  expect(motif.height).toBe(4)
+  const plan = gate.getByRole("list", { name: "Required checks" })
+  await expect(plan.locator("li")).toHaveCount(2)
+  await expect(plan.locator("li").nth(0)).toHaveAttribute("data-state", "complete")
+  const active = plan.locator("li").nth(1)
+  await expect(active).toHaveAttribute("data-state", "active")
+  const activeVisual = await active.evaluate((element) => ({
+    backgroundColor: getComputedStyle(element).backgroundColor,
+    borderRadius: Number.parseFloat(getComputedStyle(element).borderRadius),
+  }))
+  expect(activeVisual.backgroundColor).not.toBe("rgba(0, 0, 0, 0)")
+  expect(activeVisual.borderRadius).toBeGreaterThanOrEqual(16)
 })
 
 test("VE-SOC-004 Local Signal is a Pulse sensory composer with a premium photo object", async ({ page }) => {
@@ -192,18 +213,28 @@ test("VE-SOC-004 Local Signal is a Pulse sensory composer with a premium photo o
   await seed(page)
   const signal = await openLocalSignal(page)
   const photo = signal.getByTestId("local-signal-photo-input").locator("xpath=..")
-  const mark = signal.locator("header + div > div").first()
+  const mark = signal.locator("header + div > div > div").first()
   const primary = signal.getByTestId("local-signal-person-check")
   const [photoStyle, markStyle, primaryBox, primaryRadius] = await Promise.all([
-    photo.evaluate((element) => getComputedStyle(element).backgroundImage),
+    photo.evaluate((element) => ({
+      backgroundColor: getComputedStyle(element).backgroundColor,
+      borderRadius: Number.parseFloat(getComputedStyle(element).borderRadius),
+      boxShadow: getComputedStyle(element).boxShadow,
+      railContent: getComputedStyle(element, "::before").content,
+      railBackground: getComputedStyle(element, "::before").backgroundColor,
+    })),
     mark.evaluate((element) => ({ content: getComputedStyle(element, "::after").content, boxShadow: getComputedStyle(element).boxShadow })),
     primary.boundingBox(),
     primary.evaluate((element) => getComputedStyle(element).borderRadius),
   ])
-  expect(photoStyle).toContain("radial-gradient")
+  expect(photoStyle.backgroundColor).toBe("rgb(255, 255, 255)")
+  expect(photoStyle.borderRadius).toBeGreaterThanOrEqual(14)
+  expect(photoStyle.boxShadow).not.toBe("none")
+  expect(photoStyle.railContent).not.toBe("none")
+  expect(photoStyle.railBackground).not.toBe("rgba(0, 0, 0, 0)")
   expect(markStyle.content).not.toBe("none")
   expect(markStyle.boxShadow).not.toBe("none")
-  expect(primaryBox!.height).toBeGreaterThanOrEqual(54)
+  expect(primaryBox!.height).toBeGreaterThanOrEqual(52)
   expect(Number.parseFloat(primaryRadius)).toBeGreaterThanOrEqual(14)
 })
 

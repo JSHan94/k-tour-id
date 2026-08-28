@@ -542,7 +542,7 @@ export function BActionGateCoordinator() {
   return (
     <div ref={layerRef} className={styles.layer} data-testid="ondo-b-action-gate" data-modal-layer-priority="100" data-active-gate={gate} data-person-route={gate === "person" ? personRoute ?? "unselected" : undefined} data-gate-view={resolvedView} data-return-cta={pending.cta}>
       <div className={styles.backdrop} aria-hidden="true" />
-      <section ref={dialogRef} className={styles.dialog} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined} data-check-kind={gate} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"} onKeyDown={handleKeyDown}>
+      <section ref={dialogRef} className={styles.dialog} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined} data-check-kind={gate} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"} data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined} onKeyDown={handleKeyDown}>
         <header><span><ShieldCheck size={18} aria-hidden="true" />{copy.header}</span><button type="button" aria-label={copy.cancel} onClick={cancel}><X size={18} aria-hidden="true" /></button></header>
         <div className={styles.body}>
           <div className={styles.content}>

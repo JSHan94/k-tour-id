@@ -89,7 +89,7 @@ test("FLOW7-RETURN-004 nested Person checks preserve exact draft/place and own m
   const isolation = source("features/ondo/shared/ui/use-modal-isolation.ts")
 
   expect(signal).toContain("useModalIsolation(open, layerRef)")
-  expect(coordinator).toContain("useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId), layerRef)")
+  expect(coordinator).toContain("useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId && (activeGate || expiredReturn)), layerRef)")
   expect(isolation).toContain('element.setAttribute("inert", "")')
   expect(signal).toContain("B_ACTION_GATE_READY_EVENT")
   expect(signal).toContain("createBLocalSignalActionReturn")

@@ -6,17 +6,20 @@ const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf
 
 test("FLOW6-DIR-001 Tables, detail, and 19+ expose one stateful Timeleft direction without changing product truth", () => {
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
-  const gate = source("features/ondo/after19/after19-jit-b.tsx")
+  const gate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const gateContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
 
   expect(tables).toContain('data-visual-direction="timeleft-warm-atlas"')
   expect(tables).toContain("data-join-stage={joinStage}")
-  expect(gate).toContain('data-visual-direction="timeleft-checkpoint"')
-  expect(gate).toContain("data-gate-view={view}")
+  expect(gate).toContain('data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined}')
+  expect(gate).toContain("data-gate-view={resolvedView}")
+  expect(gate).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
+  expect(gateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
 
   for (const truth of [
     "Nothing is booked, sent to the venue, or charged.",
-    "No provider is connected and no credential is created.",
-    "The age check belongs to the Table, not the venue record.",
+    "No identity provider is connected and no credential is created.",
+    "Only an eligibility result and expiry are kept in this tab.",
     "Messages and photos remain in this tab.",
   ]) expect(`${tables}\n${gate}`).toContain(truth)
 
@@ -25,7 +28,7 @@ test("FLOW6-DIR-001 Tables, detail, and 19+ expose one stateful Timeleft directi
 
 test("FLOW6-DIR-002 the social visual system has an explicit warm-atlas palette, staged motion, and reduced-motion closure", () => {
   const tableCss = source("features/ondo/connect/pulse-table-b.module.css")
-  const gateCss = source("features/ondo/after19/after19-jit-b.module.css")
+  const gateCss = source("features/ondo/identity-b/action-gate-coordinator-b.module.css")
   const css = `${tableCss}\n${gateCss}`
 
   for (const token of [
@@ -41,6 +44,8 @@ test("FLOW6-DIR-002 the social visual system has an explicit warm-atlas palette,
   expect(tableCss).toContain('@media (orientation: landscape) and (max-height: 500px)')
   expect(tableCss).toContain('@media (prefers-reduced-motion: reduce)')
   expect(gateCss).toContain('@media (prefers-reduced-motion: reduce)')
+  expect(gateCss).toContain('.dialog[data-visual-direction="timeleft-checkpoint"] > header::after')
+  expect(gateCss).toMatch(/linear-gradient\(90deg,\s*#832b46[\s\S]*#c34e3b[\s\S]*#e5ad5b/)
   expect(css).toMatch(/min-height:\s*(?:4[4-9]|[5-9]\d)px/)
 })
 
@@ -62,11 +67,11 @@ test("FLOW6-SAFE-003 storage failures and destructive actions remain recoverable
 
 test("FLOW6-RETURN-004 expired 19+ retry owns a fresh exact return path", () => {
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
-  const gate = source("features/ondo/after19/after19-jit-b.tsx")
-  const returnContract = source("features/ondo/contracts/return-to-b.ts")
+  const gate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const returnContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
 
-  expect(`${tables}\n${gate}`).toMatch(/retryExpired|refreshReturn|renewReturn|onExpiredRetry/)
-  for (const evidence of ["tableId", "venueId", "draft", "B_RETURN_TO_TTL_MS", "consumeBReturnTo"]) {
+  expect(gate).toContain("renewBActionReturnTo")
+  for (const evidence of ["tableId", "venueId", "draft", "B_ACTION_GATE_TTL_MS", "consumeBActionReturnTo"]) {
     expect(`${tables}\n${gate}\n${returnContract}`).toContain(evidence)
   }
 })
