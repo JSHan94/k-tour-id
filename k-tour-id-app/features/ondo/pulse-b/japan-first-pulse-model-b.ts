@@ -37,9 +37,9 @@ export type UnifiedPulseResultB = {
 }
 
 export const PULSE_COMPOSITION_DISCLOSURE = Object.freeze({
-  en: "Fixed walkthrough snapshots — not live crowding or official LOCALDATA facts. Production Pulse will use only verified Japan-interest, Korea-local and ONDO evidence; paid placements never count.",
-  ko: "실시간 혼잡도나 공식 LOCALDATA 사실이 아닌 고정 워크스루 스냅샷입니다. 실제 Pulse는 검증된 일본 관심도·한국 로컬·ONDO 근거만 합산하며, 유료 노출은 제외합니다.",
-  ja: "固定された参考スナップショットであり、リアルタイムの混雑状況やLOCALDATAの公式情報ではありません。実運用のPulseでは、検証済みの日本での関心、韓国ローカル、ONDOの根拠のみを使用し、広告・有料掲載は算定に含めません。",
+  en: "Fixed walkthrough snapshots — not weather, live crowding or official LOCALDATA facts. Production ONDO temperature will use only verified Japan-interest, Korea-local and ONDO evidence; paid placements never count.",
+  ko: "날씨·실시간 혼잡도·공식 LOCALDATA 사실이 아닌 고정 워크스루 스냅샷입니다. 실제 온도는 검증된 일본 관심도·한국 로컬·ONDO 근거만 합산하며, 유료 노출은 제외합니다.",
+  ja: "気温・リアルタイムの混雑状況・LOCALDATAの公式情報ではない固定スナップショットです。実運用のONDO温度では、検証済みの日本での関心、韓国ローカル、ONDOの根拠のみを使用し、広告・有料掲載は算定に含めません。",
 })
 
 export const PULSE_PRODUCTION_DRIVER_DISCLOSURE = Object.freeze({

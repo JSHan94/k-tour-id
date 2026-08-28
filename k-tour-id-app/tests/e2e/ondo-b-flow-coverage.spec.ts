@@ -73,7 +73,7 @@ async function preparePayment(page: Page) {
   if (await offer.getAttribute("data-wallet-status") !== "ready") {
     await offer.getByTestId("payment-confirm").click()
     const sheet = page.getByTestId("wallet-connect-sheet")
-    await sheet.getByRole("button", { name: "Prepare test wallet", exact: true }).click()
+    await sheet.getByRole("button", { name: "Set up local test balance", exact: true }).click()
     await expect(sheet).toBeHidden()
   }
   await offer.getByTestId("benefit-accept").click()

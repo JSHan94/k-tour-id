@@ -471,10 +471,10 @@
   }
 }
 
-/* Short landscape needs its vertical pixels for the task. Reuse the desktop
-   rail grammar at tablet width so the dock never consumes a sixth of the
-   viewport or hides the current decision. */
-@media (min-width: 801px) and (max-width: 1023px) and (max-height: 500px) {
+/* Short landscape needs its vertical pixels for the task. Reuse the compact
+   rail grammar at every wide-screen width so five desktop actions never
+   overflow the available block size or hide the current decision. */
+@media (min-width: 801px) and (max-height: 500px) {
   .stage[data-variant="B"] .canvas {
     grid-template-columns: 74px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
@@ -519,3 +519,31 @@
   .stage[data-variant="B"] .navIcon { width: 24px; height: 24px; }
   .stage[data-variant="B"] .navLabel { display: none; }
 }
+
+/* After 19 is a complete browse presentation, including the app frame. The
+   eligibility result remains scoped to the map feature; this selector only
+   mirrors its current visual state into the surrounding navigation chrome. */
+.stage[data-variant="B"]:has([data-after19-active="true"]) {
+  --ondo-canvas: #0b0b0e;
+  --ondo-ink: #f7f7f8;
+  --ondo-line: rgb(255 255 255 / 13%);
+  --ondo-focus: #ff8fc7;
+  background: #050507;
+}
+.stage[data-variant="B"]:has([data-after19-active="true"]) .canvas,
+.stage[data-variant="B"]:has([data-after19-active="true"]) .content {
+  background: #0b0b0e;
+}
+.stage[data-variant="B"]:has([data-after19-active="true"]) .nav {
+  border-color: rgb(255 255 255 / 14%);
+  background: rgb(20 20 24 / 96%);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 34%), inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+.stage[data-variant="B"]:has([data-after19-active="true"]) .nav button { color: #a9a9b1; }
+.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive {
+  border-color: rgb(255 255 255 / 16%);
+  background: #f7f7f8;
+  color: #111115;
+  box-shadow: 0 0 24px rgb(255 77 155 / 18%);
+}
+.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive::after { background: #ff4d9b; }

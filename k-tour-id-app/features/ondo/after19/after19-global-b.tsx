@@ -476,7 +476,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
         <section className={styles.banner} data-testid="global-after19-banner" data-activation={session.activation ?? "manual"}>
           <MoonStar size={19} aria-hidden="true" />
           <span role="status"><strong>{t.active}</strong><small>{session.activation === "auto" ? t.activeAuto : t.activeManual} · {context.cityLabel}</small></span>
-          <button ref={activeOffRef} type="button" onClick={turnOff} aria-label={t.turnOff}><X size={17} aria-hidden="true" /></button>
+          <button ref={activeOffRef} type="button" onClick={turnOff} aria-label={t.turnOff}><MoonStar size={17} aria-hidden="true" /></button>
         </section>
       )}
 

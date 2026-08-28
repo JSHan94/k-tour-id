@@ -171,7 +171,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     await expect(hottest).toContainText("91 · PEAK")
     await hottest.click()
     await expect(root).toHaveAttribute("data-selected-venue-id", "mois-0021cd596bc5b2a922ad")
-    await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("Pulse 91 · PEAK")
+    await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("ONDO temperature 91 · PEAK")
     await expect(page.getByTestId("ondo-b-selected-marker-status")).not.toContainText("°")
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
   })

@@ -65,6 +65,29 @@ type QaBenefit = "ineligible" | "below_minimum" | "expired"
 type QaWindow = Window & { __ONDO_B_QA__?: { wallet?: "failure"; payment?: QaPayment; benefit?: QaBenefit; holdProcessing?: boolean } }
 
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),[href],summary,[tabindex]:not([tabindex='-1'])"
+const NUMBER_LOCALE: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP" }
+const TEST_DISPLAY_KRW_PER_OOKRW = 1_000
+
+function formatNumber(value: number, locale: Locale) {
+  return new Intl.NumberFormat(NUMBER_LOCALE[locale], { maximumFractionDigits: 0 }).format(value)
+}
+
+function formatKrw(value: number, locale: Locale) {
+  return new Intl.NumberFormat(NUMBER_LOCALE[locale], {
+    style: "currency",
+    currency: "KRW",
+    currencyDisplay: "narrowSymbol",
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function formatTestAmount(value: number, locale: Locale) {
+  return `${formatNumber(value, locale)} OOKRW Test`
+}
+
+function formatTestDisplayKrw(value: number, locale: Locale) {
+  return formatKrw(value * TEST_DISPLAY_KRW_PER_OOKRW, locale)
+}
 
 const COPY = {
   en: {
@@ -72,15 +95,17 @@ const COPY = {
     title: "Wallet",
     body: "Your travel balance, meal benefits and receipts — ready when you choose to use them.",
     nonLive: "Local test wallet · no money, account, provider or network is connected",
-    balance: "Travel balance",
+    balance: "Local test balance",
     testAsset: "OOKRW Test",
-    balanceReady: "Ready for ONDO test offers",
-    balanceOff: "Prepare for an ONDO test offer",
-    connect: "Prepare test wallet",
-    reconnect: "Try preparation again",
+    balanceReady: "Ready on this device",
+    balanceOff: "Preview · not set up",
+    balanceFailed: "Setup needs another try",
+    balanceEquivalent: "Fixed test-display equivalent · not cash or an exchange rate",
+    connect: "Set up local test balance",
+    reconnect: "Try setup again",
     disconnect: "Reset local test wallet",
     benefits: "Available benefits",
-    benefitTitle: "₩3,000 meal benefit",
+    benefitTitle: (amount: string) => `${amount} meal benefit`,
     benefitBody: "Shown automatically at eligible ONDO meal offers.",
     benefitState: "1 available",
     explore: "Browse places",
@@ -98,12 +123,12 @@ const COPY = {
     privacy: "Payment privacy",
     privacyBody: "Only wallet readiness and your benefit choice are used for an offer. Your name, age, identity and address are not shared.",
     testTruth: "OOKRW Test is a non-live product balance. It does not move money and is not a stablecoin or on-chain asset.",
-    linkDialog: "Prepare test wallet",
-    linkTitle: "Ready for trip benefits",
-    linkBody: "Prepare your OOKRW Test balance for ONDO offers on this device.",
-    linking: "Preparing locally…",
+    linkDialog: "Set up local test balance",
+    linkTitle: "Set up on this device",
+    linkBody: "Turn on a non-live OOKRW Test balance for ONDO offers on this device.",
+    linking: "Setting up locally…",
     linkingBody: "No wallet app, account or payment provider is contacted.",
-    linkFailed: "Preparation didn’t complete",
+    linkFailed: "Local setup didn’t complete",
     linkFailedBody: "Nothing changed. Try again without losing your place.",
     noticeError: "Nothing was sent. Please try again.",
     benefitUsed: "Used",
@@ -115,15 +140,17 @@ const COPY = {
     title: "지갑",
     body: "여행 잔액과 식사 혜택, 영수증을 한곳에서 확인하고 원할 때만 사용하세요.",
     nonLive: "이 기기의 테스트 지갑 · 돈·계정·공급자·네트워크에 연결하지 않음",
-    balance: "여행 잔액",
+    balance: "로컬 테스트 잔액",
     testAsset: "OOKRW Test",
-    balanceReady: "ONDO 테스트 오퍼 사용 가능",
-    balanceOff: "ONDO 테스트 오퍼를 준비하세요",
-    connect: "테스트 지갑 준비",
-    reconnect: "다시 준비",
+    balanceReady: "이 기기에서 사용 가능",
+    balanceOff: "미리보기 · 아직 설정 안 됨",
+    balanceFailed: "설정을 다시 시도해 주세요",
+    balanceEquivalent: "고정 테스트 표시 환산 · 현금이나 환율이 아님",
+    connect: "로컬 테스트 잔액 설정",
+    reconnect: "설정 다시 시도",
     disconnect: "로컬 테스트 지갑 초기화",
     benefits: "사용 가능한 혜택",
-    benefitTitle: "식사 ₩3,000 혜택",
+    benefitTitle: (amount: string) => `식사 ${amount} 혜택`,
     benefitBody: "대상 ONDO 식사 오퍼에서 자동으로 보여드려요.",
     benefitState: "1개 사용 가능",
     explore: "장소 둘러보기",
@@ -141,12 +168,12 @@ const COPY = {
     privacy: "결제 개인정보",
     privacyBody: "오퍼에는 지갑 준비 상태와 혜택 선택만 사용합니다. 이름·나이·신원·주소는 공유하지 않아요.",
     testTruth: "OOKRW Test는 실제로 작동하지 않는 제품용 잔액입니다. 돈을 이동하지 않으며 스테이블코인이나 온체인 자산이 아닙니다.",
-    linkDialog: "테스트 지갑 준비",
-    linkTitle: "여행 혜택을 준비해요",
-    linkBody: "이 기기에서 ONDO 오퍼용 OOKRW Test 잔액을 준비합니다.",
-    linking: "이 기기에서 준비 중…",
+    linkDialog: "로컬 테스트 잔액 설정",
+    linkTitle: "이 기기에서 설정",
+    linkBody: "실제 지갑 연결 없이 이 기기에 ONDO 오퍼용 OOKRW Test 잔액을 설정합니다.",
+    linking: "로컬에서 설정 중…",
     linkingBody: "지갑 앱·계정·결제 공급자에는 연결하지 않습니다.",
-    linkFailed: "준비를 완료하지 못했어요",
+    linkFailed: "로컬 설정을 완료하지 못했어요",
     linkFailedBody: "변경된 내용이 없습니다. 현재 위치에서 다시 시도하세요.",
     noticeError: "전송된 정보는 없습니다. 다시 시도해 주세요.",
     benefitUsed: "사용됨",
@@ -158,15 +185,17 @@ const COPY = {
     title: "ウォレット",
     body: "旅のテスト残高、食事特典、レシートをまとめて確認し、使うときだけ準備できます。",
     nonLive: "この端末だけのテストウォレット · お金、口座、事業者、ネットワークには接続しません",
-    balance: "旅のテスト残高",
+    balance: "ローカルテスト残高",
     testAsset: "OOKRW Test",
-    balanceReady: "ONDOのテストオファーに利用可能",
-    balanceOff: "ONDOのテストオファーを準備",
-    connect: "テストウォレットを準備",
-    reconnect: "もう一度準備",
+    balanceReady: "この端末で利用可能",
+    balanceOff: "プレビュー · 未設定",
+    balanceFailed: "設定をもう一度お試しください",
+    balanceEquivalent: "固定テスト表示換算 · 現金・為替レートではありません",
+    connect: "ローカルテスト残高を設定",
+    reconnect: "設定をもう一度試す",
     disconnect: "ローカルテストウォレットをリセット",
     benefits: "利用できる特典",
-    benefitTitle: "食事が₩3,000お得",
+    benefitTitle: (amount: string) => `食事が${amount}お得`,
     benefitBody: "対象のONDO食事オファーで自動的にご案内します。",
     benefitState: "1件利用可能",
     explore: "お店を見る",
@@ -184,12 +213,12 @@ const COPY = {
     privacy: "決済時のプライバシー",
     privacyBody: "オファーには、ウォレットの準備状況と特典の選択だけを使用します。名前、年齢、本人情報、住所は共有しません。",
     testTruth: "OOKRW Testはテスト用の残高です。実際のお金を動かさず、ステーブルコインやオンチェーン資産ではありません。",
-    linkDialog: "テストウォレットを準備",
-    linkTitle: "旅の特典を使う準備",
-    linkBody: "このブラウザで、ONDOオファー用のOOKRW Test残高を準備します。",
-    linking: "この端末で準備しています…",
+    linkDialog: "ローカルテスト残高を設定",
+    linkTitle: "この端末で設定",
+    linkBody: "実際のウォレット接続なしで、この端末にONDOオファー用のOOKRW Test残高を設定します。",
+    linking: "ローカルで設定しています…",
     linkingBody: "ウォレットアプリ、アカウント、決済事業者には接続しません。",
-    linkFailed: "準備を完了できませんでした",
+    linkFailed: "ローカル設定を完了できませんでした",
     linkFailedBody: "変更はありません。今の画面からもう一度お試しください。",
     noticeError: "情報は送信されていません。もう一度お試しください。",
     benefitUsed: "使用済み",
@@ -211,7 +240,7 @@ const OFFER_COPY = {
     total: "You pay",
     asset: "OOKRW Test",
     voucher: "Your meal benefit",
-    voucherBody: "Eligible for this test offer · ₩22,000 minimum met · valid through Aug 28",
+    voucherBody: (minimum: string) => `Eligible for this test offer · ${minimum} minimum met · valid through Aug 28`,
     fixedQuote: "Fixed product quote · not an exchange rate or 1:1 value guarantee",
     recommendation: "Recommended for this meal",
     applied: "Applied",
@@ -226,7 +255,7 @@ const OFFER_COPY = {
     consentBody: "This local walkthrough uses only wallet-ready and benefit-selected. No name, identity, age, address or raw claim leaves this screen.",
     consent: "I agree to use this test balance for this offer",
     pay: "Pay with OOKRW Test",
-    connectToPay: "Prepare test wallet to continue",
+    connectToPay: "Set up local test balance to continue",
     back: "Back to place",
     close: "Close and return to place",
     processing: "Recording the test payment…",
@@ -271,7 +300,7 @@ const OFFER_COPY = {
     total: "결제 금액",
     asset: "OOKRW Test",
     voucher: "나의 식사 혜택",
-    voucherBody: "이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족 · 8월 28일까지",
+    voucherBody: (minimum: string) => `이 테스트 오퍼 사용 가능 · ${minimum} 최소 금액 충족 · 8월 28일까지`,
     fixedQuote: "제품용 고정 견적 · 환율이나 1:1 가치 보장이 아님",
     recommendation: "이번 식사 추천 혜택",
     applied: "적용됨",
@@ -286,7 +315,7 @@ const OFFER_COPY = {
     consentBody: "이 로컬 동작은 지갑 준비·혜택 선택 여부만 사용합니다. 이름·신원·나이·주소·원본 정보는 이 화면 밖으로 나가지 않아요.",
     consent: "이 오퍼에 테스트 잔액을 사용하는 데 동의합니다",
     pay: "OOKRW Test로 결제",
-    connectToPay: "테스트 지갑을 준비하고 계속",
+    connectToPay: "로컬 테스트 잔액을 설정하고 계속",
     back: "장소로 돌아가기",
     close: "닫고 장소로 돌아가기",
     processing: "테스트 결제를 기록하는 중…",
@@ -331,7 +360,7 @@ const OFFER_COPY = {
     total: "使用する残高",
     asset: "OOKRW Test",
     voucher: "食事特典",
-    voucherBody: "このテストオファーの対象 · 最低金額₩22,000を達成 · 8月28日まで有効",
+    voucherBody: (minimum: string) => `このテストオファーの対象 · 最低金額${minimum}を達成 · 8月28日まで有効`,
     fixedQuote: "製品内の固定テスト換算 · 為替レートでも1:1の価値保証でもありません",
     recommendation: "この食事におすすめ",
     applied: "適用済み",
@@ -346,7 +375,7 @@ const OFFER_COPY = {
     consentBody: "このローカル操作で使うのは、ウォレットの準備状況と特典の選択だけです。名前、本人情報、年齢、住所、元データはこの画面の外へ出ません。",
     consent: "このオファーにテスト残高を使うことに同意します",
     pay: "OOKRW Testでテスト決済",
-    connectToPay: "テストウォレットを準備して続ける",
+    connectToPay: "ローカルテスト残高を設定して続ける",
     back: "お店の画面に戻る",
     close: "閉じてお店の画面に戻る",
     processing: "テスト決済を処理しています…",
@@ -442,7 +471,7 @@ function WalletConnectSheet({ locale, boundarySeen, onAcknowledge, onClose, onRe
 
   return createPortal(
     <div className={styles.sheetBackdrop}>
-      <div ref={rootRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={copy.linkDialog} data-testid="wallet-connect-sheet" data-modal-layer-priority="200" data-phase={phase} onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}>
+      <div ref={rootRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={copy.linkDialog} aria-busy={phase === "linking"} data-testid="wallet-connect-sheet" data-modal-layer-priority="200" data-phase={phase} onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}>
         <div className={styles.grabber} aria-hidden="true" />
         <header><span>{copy.linkDialog}</span><button type="button" data-wallet-focus aria-label={copy.close} onClick={onClose}><X size={20} aria-hidden="true" /></button></header>
         {phase === "info" ? (
@@ -455,8 +484,8 @@ function WalletConnectSheet({ locale, boundarySeen, onAcknowledge, onClose, onRe
             <button type="button" className={styles.quietButton} onClick={onClose}>{copy.cancel}</button>
           </div>
         ) : null}
-        {phase === "linking" ? <div className={`${styles.sheetBody} ${styles.sheetStatus}`} aria-live="polite"><LoaderCircle className={styles.spinner} size={32} aria-hidden="true" /><h2>{copy.linking}</h2><p>{copy.linkingBody}</p></div> : null}
-        {phase === "failed" ? <div className={`${styles.sheetBody} ${styles.sheetStatus}`} aria-live="polite"><RefreshCcw size={32} aria-hidden="true" /><h2>{copy.linkFailed}</h2><p>{copy.linkFailedBody}</p><button type="button" className={styles.primary} data-wallet-focus data-testid="wallet-link-retry" onClick={() => setPhase("linking")}>{copy.reconnect}</button><button type="button" className={styles.quietButton} onClick={() => { onReturn("failed"); onClose() }}>{copy.cancel}</button></div> : null}
+        {phase === "linking" ? <div className={`${styles.sheetBody} ${styles.sheetStatus}`} role="status" aria-live="polite"><LoaderCircle className={styles.spinner} size={32} aria-hidden="true" /><h2>{copy.linking}</h2><p>{copy.linkingBody}</p></div> : null}
+        {phase === "failed" ? <div className={`${styles.sheetBody} ${styles.sheetStatus}`} role="alert"><RefreshCcw size={32} aria-hidden="true" /><h2>{copy.linkFailed}</h2><p>{copy.linkFailedBody}</p><button type="button" className={styles.primary} data-wallet-focus data-testid="wallet-link-retry" onClick={() => setPhase("linking")}>{copy.reconnect}</button><button type="button" className={styles.quietButton} onClick={() => { onReturn("failed"); onClose() }}>{copy.cancel}</button></div> : null}
       </div>
     </div>,
     document.body,
@@ -697,16 +726,16 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
 
           {benefitPolicy.status === "recommended" ? <>
           <section className={styles.quote} aria-label={copy.total} data-flow8-object="quote">
-            <div><span>{copy.price}</span><strong>{STABLE_B_KRW_PRICE.toLocaleString("en-US")} KRW</strong></div>
-            <div><span>{copy.testQuote}</span><strong>{STABLE_B_OOKRW_PRICE} {copy.asset}</strong></div>
-            <div className={styles.discount} data-flow8-benefit-delta={benefitSelected ? "applied" : "available"}><span>{copy.benefit}</span><strong>{benefitSelected ? `−${STABLE_B_VOUCHER_VALUE} ${copy.asset}` : copy.available}</strong></div>
-            <div className={styles.quoteTotal}><span>{copy.total}</span><strong>{debit} <small>{copy.asset}</small></strong></div>
+            <div><span>{copy.price}</span><strong>{formatKrw(STABLE_B_KRW_PRICE, locale)}</strong></div>
+            <div><span>{copy.testQuote}</span><strong>{formatTestAmount(STABLE_B_OOKRW_PRICE, locale)}</strong></div>
+            <div className={styles.discount} data-flow8-benefit-delta={benefitSelected ? "applied" : "available"}><span>{copy.benefit}</span><strong>{benefitSelected ? `−${formatTestAmount(STABLE_B_VOUCHER_VALUE, locale)}` : copy.available}</strong></div>
+            <div className={styles.quoteTotal}><span>{copy.total}</span><strong>{formatNumber(debit, locale)} <small>{copy.asset}</small></strong></div>
             <p className={styles.fixedQuote} data-testid="commerce-fixed-quote-boundary">{copy.fixedQuote}</p>
           </section>
 
           <section className={styles.offerBenefit} data-testid="commerce-voucher" data-voucher-state={commerce.voucher} data-benefit-recommendation={commerce.benefitRecommendation}>
             <div className={styles.benefitIcon}><TicketCheck size={22} aria-hidden="true" /></div>
-            <div><h3>{commerce.benefitRecommendation === "recommended" ? copy.recommendation : copy.voucher}</h3><p data-testid="commerce-benefit-eligibility">{copy.voucherBody}</p></div>
+            <div><h3>{commerce.benefitRecommendation === "recommended" ? copy.recommendation : copy.voucher}</h3><p data-testid="commerce-benefit-eligibility">{copy.voucherBody(formatKrw(STABLE_B_KRW_PRICE, locale))}</p></div>
             <div className={styles.benefitActions}>
               <button type="button" data-testid="benefit-accept" aria-pressed={commerce.benefitRecommendation === "accepted"} onClick={() => actions.dispatchCommerce({ type: "ACCEPT_BENEFIT" })}>
                 {commerce.benefitRecommendation === "accepted" ? copy.applied : copy.apply}
@@ -762,10 +791,10 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
             ? commerce.voucherApplied ? copy.refundedBody : copy.refundedWithoutBenefit
             : commerce.voucherApplied ? copy.receiptBody : copy.receiptWithoutBenefit}</p>
           <section className={styles.receiptCard}>
-            <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div>
-            {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{commerce.chargedDebit} {copy.asset}</strong></div> : null}
-            <div><span>{copy.benefit}</span><strong>{breakdown.benefit} {copy.asset}</strong></div>
-            <div><span>{copy.remaining}</span><strong>{balance.toLocaleString("en-US")} {copy.asset}</strong></div>
+            <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{formatTestAmount(commerce.chargedDebit, locale)}</strong></div>
+            {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{formatTestAmount(commerce.chargedDebit, locale)}</strong></div> : null}
+            <div><span>{copy.benefit}</span><strong>{formatTestAmount(breakdown.benefit, locale)}</strong></div>
+            <div><span>{copy.remaining}</span><strong>{formatTestAmount(balance, locale)}</strong></div>
             <div><span>{view === "refunded" ? copy.paymentReceipt : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
             {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
           </section>
@@ -831,20 +860,26 @@ export function IdWalletCommerceB() {
 
       <p className={styles.nonLiveBoundary} data-testid="wallet-non-live-boundary"><Info size={15} aria-hidden="true" />{copy.nonLive}</p>
 
-      <section className={styles.balanceCard} data-testid="wallet-balance" data-flow8-object="wallet">
-        <div className={styles.balanceTop}><span>{copy.balance}</span><small data-status={walletStatus}>{walletStatus === "ready" ? copy.balanceReady : copy.balanceOff}</small></div>
-        <strong>{balance.toLocaleString("en-US")}<span>{copy.testAsset}</span></strong>
-        {walletStatus === "ready" ? (
-          <button type="button" className={styles.balanceAction} onClick={() => actions.setCommerceWalletStatus("disconnected")}>{copy.disconnect}</button>
-        ) : (
-          <button ref={linkButtonRef} type="button" className={styles.balanceAction} data-testid="wallet-link-open" onClick={() => setLinkOpen(true)}><Link2 size={17} aria-hidden="true" />{walletStatus === "failed" ? copy.reconnect : copy.connect}</button>
-        )}
+      <section className={styles.balanceCard} data-testid="wallet-balance" data-flow8-object="wallet" data-wallet-state={walletStatus}>
+        <div className={styles.balanceTop}><span>{copy.balance}</span><small data-status={walletStatus}>{walletStatus === "ready" ? copy.balanceReady : walletStatus === "failed" ? copy.balanceFailed : copy.balanceOff}</small></div>
+        <div className={styles.balanceAmount}>
+          <strong data-testid="wallet-display-equivalent">{formatTestDisplayKrw(balance, locale)}</strong>
+          <span data-testid="wallet-test-balance">{formatTestAmount(balance, locale)}</span>
+        </div>
+        <div className={styles.balanceFooter}>
+          <p>{copy.balanceEquivalent}</p>
+          {walletStatus === "ready" ? (
+            <button type="button" className={styles.balanceAction} onClick={() => actions.setCommerceWalletStatus("disconnected")}>{copy.disconnect}</button>
+          ) : (
+            <button ref={linkButtonRef} type="button" className={styles.balanceAction} data-testid="wallet-link-open" onClick={() => setLinkOpen(true)}><Link2 size={17} aria-hidden="true" />{walletStatus === "failed" ? copy.reconnect : copy.connect}</button>
+          )}
+        </div>
       </section>
 
       <div className={styles.dashboardGrid}>
         <section className={styles.benefitCard} data-testid="wallet-benefit">
           <div className={styles.cardHeading}><Gift size={20} aria-hidden="true" /><span>{copy.benefits}</span><small>{commerce.status === "paid" && commerce.voucherApplied ? copy.benefitUsed : copy.benefitState}</small></div>
-          <h3>{copy.benefitTitle}</h3><p>{copy.benefitBody}</p>
+          <h3>{copy.benefitTitle(formatTestDisplayKrw(STABLE_B_VOUCHER_VALUE, locale))}</h3><p>{copy.benefitBody}</p>
           <button type="button" onClick={() => actions.setTab("ondo")}><MapPin size={16} aria-hidden="true" />{copy.explore}<ChevronRight size={16} aria-hidden="true" /></button>
         </section>
 
@@ -852,7 +887,7 @@ export function IdWalletCommerceB() {
           <div className={styles.cardHeading}><Clock3 size={20} aria-hidden="true" /><span>{copy.activity}</span></div>
           {commerce.status === "paid" || commerce.status === "refunded" ? (
             <details className={styles.activityReceipt} data-testid="wallet-activity-receipt">
-              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? `${copy.refundedActivity} ${commerce.chargedDebit} ${copy.testAsset}` : `${copy.paidActivity} ${commerce.chargedDebit} ${copy.testAsset}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
+              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? `${copy.refundedActivity} ${formatTestAmount(commerce.chargedDebit, locale)}` : `${copy.paidActivity} ${formatTestAmount(commerce.chargedDebit, locale)}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
               <div><span>{commerce.status === "refunded" ? copy.originalPayment : copy.activityReceipt}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
               {commerce.status === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
               {commerce.status === "paid" ? <button type="button" data-testid="wallet-activity-refund" onClick={refundFromActivity}><RotateCcw size={16} aria-hidden="true" />{OFFER_COPY[locale].refund}</button> : null}

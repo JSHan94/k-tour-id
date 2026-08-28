@@ -93,7 +93,7 @@ test("B-PREMIUM-PAY-002 wallet readiness, balance, receipts, and refunds share o
     expect(provider, `missing shared session action ${action}`).toContain(action)
   }
   expect(commerce).not.toContain("useReducer")
-  expect(commerce).toContain("Prepare test wallet to continue")
+  expect(commerce).toContain("Set up local test balance to continue")
   expect(commerce).toContain("Test quote")
   expect(commerce).toContain('data-testid="wallet-activity-receipt"')
   expect(commerce).toContain('data-testid="wallet-activity-refund"')
@@ -107,8 +107,9 @@ test("B-PREMIUM-POLISH-001 consumer copy matches device persistence and the fixe
   const place = source("features/ondo/place/canonical-place-overlay.tsx")
   const myKorea = source("features/ondo/my/my-korea-model.ts")
 
-  expect(commerce).toContain("Eligible for this test offer · ₩22,000 minimum met")
-  expect(commerce).toContain("이 테스트 오퍼 사용 가능 · ₩22,000 최소 금액 충족")
+  expect(commerce).toContain("Eligible for this test offer · ${minimum} minimum met")
+  expect(commerce).toContain("이 테스트 오퍼 사용 가능 · ${minimum} 최소 금액 충족")
+  expect(commerce).toContain("copy.voucherBody(formatKrw(STABLE_B_KRW_PRICE, locale))")
   expect(commerce).toContain("Test payments and test refunds recorded on this device appear here.")
   expect(commerce).toContain("이 기기에 기록한 테스트 결제와 테스트 환불이 여기에 표시됩니다.")
   expect(commerce).toContain("Original payment")

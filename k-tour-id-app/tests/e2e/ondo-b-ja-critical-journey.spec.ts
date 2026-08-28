@@ -64,7 +64,7 @@ test.describe("ONDO B Japanese critical journey", () => {
     await place.getByRole("button", { name: "場所を閉じる" }).click()
 
     await page.getByTestId("nav-tables").click()
-    await expect(page.getByRole("heading", { name: "Pulse Tables" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "ONDOテーブル" })).toBeVisible()
     await expect(page.getByRole("button", { name: "Tableを見る" })).toBeVisible()
 
     await page.getByTestId("nav-id").click()

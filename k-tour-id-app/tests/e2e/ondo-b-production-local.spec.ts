@@ -163,7 +163,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
       const response = await request.get("/ondo-b", { headers: { host } })
       expect(response.ok()).toBeTruthy()
       const html = await response.text()
-      expect(html).toContain("ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju")
+      expect(html).toContain("ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju")
       expect(html).toContain('<link rel="canonical"')
       expect(html).not.toContain("NEXT_HTTP_ERROR_FALLBACK")
       expect(html).not.toContain("attacker.example")

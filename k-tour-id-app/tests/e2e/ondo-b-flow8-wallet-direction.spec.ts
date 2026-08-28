@@ -19,9 +19,9 @@ const VIEWPORTS: readonly Viewport[] = [
 ]
 
 const COPY = {
-  en: { connect: "Prepare test wallet", retry: "Try preparation again", refund: "Request test refund" },
-  ko: { connect: "테스트 지갑 준비", retry: "다시 준비", refund: "테스트 환불 요청" },
-  ja: { connect: "テストウォレットを準備", retry: "もう一度準備", refund: "テスト返金をリクエスト" },
+  en: { connect: "Set up local test balance", retry: "Try setup again", refund: "Request test refund" },
+  ko: { connect: "로컬 테스트 잔액 설정", retry: "설정 다시 시도", refund: "테스트 환불 요청" },
+  ja: { connect: "ローカルテスト残高を設定", retry: "設定をもう一度試す", refund: "テスト返金をリクエスト" },
 } as const
 
 test.describe.configure({ timeout: 180_000, mode: "serial" })
@@ -246,10 +246,48 @@ test("FLOW8-VIS-001 Pass and Wallet read as two tactile objects in the first use
   await expect(travelObject).toBeVisible()
   await expect(walletObject).toBeVisible()
   await expect(walletObject).toHaveAttribute("data-flow8-object", "wallet")
+  await expect(walletObject).toHaveAttribute("data-wallet-state", "disconnected")
+  await expect(walletObject.getByTestId("wallet-display-equivalent")).toHaveText("₩60,000")
+  await expect(walletObject.getByTestId("wallet-test-balance")).toHaveText("60 OOKRW Test")
   await expect(pass.getByTestId("travel-pass-local-boundary")).toBeVisible()
   await expect(page.getByTestId("wallet-non-live-boundary")).toBeVisible()
   await expectNoHorizontalOverflow(pass)
-  await expectControls(pass)
+  await expectControls(walletObject)
+})
+
+test("FLOW8-VIS-001B 320 and 390 keep preview and ready wallet decisions inside their cards", async ({ browser }) => {
+  for (const viewport of [{ width: 320, height: 720 }, { width: 390, height: 844 }]) {
+    const context = await browser.newContext({ viewport })
+    const page = await context.newPage()
+    await openTravelPass(page)
+    const wallet = page.getByTestId("wallet-balance")
+    const amount = wallet.getByTestId("wallet-display-equivalent")
+    const setup = wallet.getByTestId("wallet-link-open")
+    await expect(wallet).toHaveAttribute("data-wallet-state", "disconnected")
+    await expect(amount).toHaveText("₩60,000")
+    await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("60 OOKRW Test")
+    const [cardBox, amountBox, setupBox] = await Promise.all([wallet.boundingBox(), amount.boundingBox(), setup.boundingBox()])
+    expect(cardBox).not.toBeNull()
+    expect(amountBox).not.toBeNull()
+    expect(setupBox).not.toBeNull()
+    expect(setupBox!.y).toBeGreaterThanOrEqual(amountBox!.y + amountBox!.height)
+    expect(setupBox!.y + setupBox!.height).toBeLessThanOrEqual(cardBox!.y + cardBox!.height + 1)
+    await expectNoHorizontalOverflow(wallet)
+
+    await setup.click()
+    await connectWallet(page, "en")
+    await expect(wallet).toHaveAttribute("data-wallet-state", "ready")
+    await expect(amount).toHaveText("₩60,000")
+    const readyStyle = await wallet.evaluate((element) => getComputedStyle(element).backgroundImage)
+    expect(readyStyle).toContain("rgb(16, 16, 18)")
+    const readyAction = wallet.getByRole("button", { name: "Reset local test wallet", exact: true })
+    const [readyAmountBox, readyActionBox] = await Promise.all([amount.boundingBox(), readyAction.boundingBox()])
+    expect(readyAmountBox).not.toBeNull()
+    expect(readyActionBox).not.toBeNull()
+    expect(readyActionBox!.y).toBeGreaterThanOrEqual(readyAmountBox!.y + readyAmountBox!.height)
+    await expectNoHorizontalOverflow(wallet)
+    await context.close()
+  }
 })
 
 test("FLOW8-WALLET-002 disconnected, linking, failure, retry, and ready preserve one modal decision", async ({ page }) => {
@@ -259,7 +297,10 @@ test("FLOW8-WALLET-002 disconnected, linking, failure, retry, and ready preserve
   let sheet = page.getByTestId("wallet-connect-sheet")
   await expect(sheet).toHaveAttribute("data-phase", "info")
   await sheet.getByRole("button", { name: COPY.en.connect, exact: true }).click()
+  await expect(sheet).toHaveAttribute("data-phase", "linking")
+  await expect(sheet).toHaveAttribute("aria-busy", "true")
   await expect(sheet).toHaveAttribute("data-phase", "failed")
+  await expect(sheet.getByRole("alert")).toContainText("Local setup didn’t complete")
   await expect(sheet.getByTestId("wallet-link-retry")).toHaveText(COPY.en.retry)
   await page.evaluate(() => { delete (window as Window & { __ONDO_B_QA__?: Flow8Qa }).__ONDO_B_QA__ })
   await sheet.getByTestId("wallet-link-retry").click()
@@ -621,11 +662,16 @@ test("FLOW8-FIRSTVIEW-013 compact Wallet, offer choice, venue truth, and recover
   const mobile = await browser.newContext({ viewport: { width: 320, height: 720 } })
   const page = await mobile.newPage()
   await openTravelPass(page)
+  const wallet = page.getByTestId("wallet-balance")
+  await wallet.scrollIntoViewIfNeeded()
   const prepare = page.getByTestId("wallet-link-open")
   const dock = page.getByTestId("ondo-main-nav")
-  const [prepareBox, dockBox] = await Promise.all([prepare.boundingBox(), dock.boundingBox()])
+  const [walletBox, prepareBox, dockBox] = await Promise.all([wallet.boundingBox(), prepare.boundingBox(), dock.boundingBox()])
+  expect(walletBox).not.toBeNull()
   expect(prepareBox).not.toBeNull()
   expect(dockBox).not.toBeNull()
+  expect(prepareBox!.y).toBeGreaterThanOrEqual(walletBox!.y)
+  expect(prepareBox!.y + prepareBox!.height).toBeLessThanOrEqual(walletBox!.y + walletBox!.height + 1)
   expect(prepareBox!.y + prepareBox!.height).toBeLessThanOrEqual(dockBox!.y - 8)
   expect(await prepare.evaluate((button) => {
     const rect = button.getBoundingClientRect()

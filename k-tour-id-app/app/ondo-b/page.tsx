@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
-const title = "ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju"
+const title = "ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju"
 const description = "Browse 400 licensed Seoul and Busan food-service records alongside a source-linked Jeju editorial collection; pending places remain separate from official records."
 
 function configuredOrigin() {

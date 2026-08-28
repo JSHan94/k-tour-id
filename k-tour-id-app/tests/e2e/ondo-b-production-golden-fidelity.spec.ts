@@ -51,7 +51,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   const listPulse = curatedRow.getByTestId("ondo-b-list-pulse")
   await expect(listPulse).toHaveAttribute("data-pulse-level", "peak")
   await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
-  await expect(listPulse).toHaveAttribute("aria-label", /Pulse 91 · PEAK/)
+  await expect(listPulse).toHaveAttribute("aria-label", /ONDO temperature 91 · PEAK/)
   await curatedRow.locator("button").click()
   await page.getByTestId("canonical-place-details").click()
 
@@ -72,7 +72,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
     await koPage.locator("[data-city='seoul']").click()
     await koPage.getByTestId("ondo-b-view-toggle").click()
     const koCuratedRow = koPage.locator(`[data-venue-id='${VENUE_ID}']`)
-    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", /Pulse 91 · 피크/)
+    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", /온도 91 · 피크/)
   } finally {
     await koContext.close()
   }
@@ -87,7 +87,7 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
   await offer.getByTestId("benefit-accept").click()
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
   await offer.getByTestId("payment-confirm").click()
-  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Prepare test wallet" }).click()
+  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up local test balance" }).click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").click()
   await completePaymentGate(page)
@@ -133,7 +133,7 @@ test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-o
     await expect(opened.offer).toHaveAttribute("data-return-to", expectedReturn)
     await opened.offer.getByTestId("benefit-accept").click()
     await opened.offer.getByTestId("payment-confirm").click()
-    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Prepare test wallet" }).click()
+    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up local test balance" }).click()
     await opened.offer.getByTestId("payment-minimum-consent").locator("input").check()
     await opened.offer.getByTestId("payment-confirm").click()
     await completePaymentGate(page)

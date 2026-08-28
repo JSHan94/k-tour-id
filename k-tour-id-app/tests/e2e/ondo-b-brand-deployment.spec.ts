@@ -7,7 +7,7 @@ test.describe("ONDO deployment brand", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" })
 
     await expect(page).toHaveURL(/\/ondo-b$/)
-    await expect(page).toHaveTitle("ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju")
+    await expect(page).toHaveTitle("ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju")
     await expect(page.locator('meta[name="application-name"]')).toHaveAttribute("content", "ONDO")
     await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "ONDO")
     await expect(page.locator('link[rel="icon"][href*="ondo-mark-micro-16.svg"]')).toHaveCount(1)

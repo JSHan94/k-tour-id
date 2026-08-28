@@ -385,7 +385,7 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
       await page.getByTestId("ondo-b-view-toggle").click()
       await expect(resultBar).toHaveAttribute("data-effective-view", "map")
       await expect(resultBar.locator("b")).toHaveText("1 official record")
-      await expect(page.getByTestId("ondo-b-map-key")).toHaveAttribute("aria-label", /Pulse map · official groups/)
+      await expect(page.getByTestId("ondo-b-map-key")).toHaveAttribute("aria-label", /ONDO temperature · official groups/)
       await expectNoHorizontalOverflow(page, root)
       await expectMinimumControlTargets(root)
     }

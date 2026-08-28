@@ -29,6 +29,8 @@ export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
   "features/ondo/identity-b/ktour-id-setup-b.tsx",
   "features/ondo/identity-b/ktour-id-setup-b.module.css",
   "features/ondo/identity-b/ktour-id-setup-model-b.ts",
+  "features/ondo/identity-b/passport-ocr-step-b.tsx",
+  "features/ondo/identity-b/passport-ocr-step-b.module.css",
   "features/ondo/local-signal-b/local-signal-layer-b.tsx",
   "features/ondo/local-signal-b/local-signal-layer-b.module.css",
 ])

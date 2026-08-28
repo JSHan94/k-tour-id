@@ -157,7 +157,7 @@ test("payment alone never adds a stamp; a unique visit reaches 10 once and opens
   await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
   const offer = await openOffer(page)
   await offer.getByTestId("payment-confirm").click()
-  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Prepare test wallet", exact: true }).click()
+  await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up local test balance", exact: true }).click()
   await offer.getByTestId("benefit-accept").click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").click()

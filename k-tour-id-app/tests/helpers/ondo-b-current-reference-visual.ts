@@ -1,5 +1,11 @@
 import { expect, type Locator, type Page } from "@playwright/test"
 
+const SYNTHETIC_PASSPORT_IMAGE = {
+  name: "passport-visual-audit.png",
+  mimeType: "image/png",
+  buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
+}
+
 export type CurrentReferenceLocale = "en" | "ko" | "ja"
 export type CurrentReferenceViewport = {
   width: 320 | 390 | 844 | 1440
@@ -131,7 +137,7 @@ const KEY_COPY_BY_CASE_ID: Readonly<Record<string, string>> = {
   "CR-PX-020-ID-WALLET": "Travel Pass",
   "CR-PX-021-SETTINGS-JA": "設定",
   "CR-PX-022-OPENDID-CONSENT-JA": "シミュレーション依頼を確認",
-  "CR-PX-023-OPENDID-DOCUMENT-EN": "Preview passport document checks",
+  "CR-PX-023-OPENDID-DOCUMENT-EN": "Choose one passport image",
   "CR-PX-024-OPENDID-FACE-KO": "얼굴·라이브니스 미리보기",
   "CR-PX-025-OPENDID-EVIDENCE-JA": "最小限の証拠を確認",
   "CR-PX-026-OPENDID-ISSUANCE-EN": "Preview OpenDID issuance",
@@ -303,6 +309,15 @@ async function advanceIdentityUntil(setup: Locator, testId: string, limit = 14) 
   const target = setup.getByTestId(testId)
   for (let attempt = 0; attempt < limit; attempt += 1) {
     if (await target.isVisible().catch(() => false)) return target
+    const passportDocument = setup.getByTestId("k-tour-id-passport-document")
+    if (await passportDocument.isVisible().catch(() => false)) {
+      await passportDocument.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+      await expect(passportDocument).toHaveAttribute("data-ocr-stage", "preview")
+      await passportDocument.getByTestId("passport-ocr-start").click()
+      await expect(passportDocument).toHaveAttribute("data-ocr-stage", "review")
+      await passportDocument.getByTestId("k-tour-id-continue").click()
+      continue
+    }
     const advance = setup.getByTestId("k-tour-id-continue")
     await expect(advance, `no continuation action before ${testId}`).toBeVisible()
     await advance.click()
@@ -603,7 +618,7 @@ async function expectNoOverflowOrClipping(page: Page) {
 
 async function expectMinimumTargets(page: Page) {
   const undersized = await page.getByTestId("ondo-b-root")
-    .locator("button:visible,a[href]:visible,input:visible,textarea:visible,select:visible,summary:visible,[role='button']:visible")
+    .locator("button:visible,a[href]:visible,input:visible:not([tabindex='-1']),textarea:visible,select:visible,summary:visible,[role='button']:visible")
     .evaluateAll((nodes) => nodes.flatMap((node) => {
       const element = node as HTMLElement
       if (element.closest("[aria-hidden='true'],[inert],.maplibregl-control-container")) return []

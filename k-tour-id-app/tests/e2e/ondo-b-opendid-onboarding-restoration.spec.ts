@@ -2,6 +2,11 @@ import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
+const SYNTHETIC_PASSPORT_IMAGE = {
+  name: "synthetic-passport-placeholder.png",
+  mimeType: "image/png",
+  buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
+}
 
 type Locale = "en" | "ko" | "ja"
 type IdentityMethod = "mobile_id" | "mobile_residence_card" | "passport_ekyc"
@@ -30,6 +35,9 @@ const COPY = {
     unchanged: "unchanged",
     backToKTourId: "Back to K-Tour ID",
     returnTraveler: "Return to Travel Pass",
+    ocrTitle: "Choose one passport image",
+    ocrReviewTitle: "Review the minimum result",
+    ocrResult: "SIMULATED · no provider decision",
   },
   ko: {
     guest: "설정 없이 탐색",
@@ -45,6 +53,9 @@ const COPY = {
     unchanged: "상태 변경 없음",
     backToKTourId: "K-Tour ID로 돌아가기",
     returnTraveler: "여행 패스로 돌아가기",
+    ocrTitle: "여권 이미지 한 장 선택",
+    ocrReviewTitle: "최소 결과 확인",
+    ocrResult: "시뮬레이션 · 제공자 판정 없음",
   },
   ja: {
     guest: "設定せずに見る",
@@ -60,6 +71,9 @@ const COPY = {
     unchanged: "状態変更なし",
     backToKTourId: "K-Tour IDに戻る",
     returnTraveler: "トラベルパスに戻る",
+    ocrTitle: "パスポート画像を1枚選択",
+    ocrReviewTitle: "最小限の結果を確認",
+    ocrResult: "シミュレーション · 事業者の判定なし",
   },
 } as const
 
@@ -183,12 +197,29 @@ async function approveConsent(setup: Locator) {
   await setup.getByTestId("k-tour-id-consent-approve").click()
 }
 
-async function reachPassportEvidence(setup: Locator) {
+async function reachPassportDocument(setup: Locator) {
   const consent = await selectMethod(setup, "passport_ekyc")
   await expect(consent.getByTestId("identity-consent-provider")).toContainText(/separate provider|별도 제공자|別の事業者/i)
   await approveConsent(setup)
-  await advanceUntil(setup, "k-tour-id-passport-document")
-  await advanceUntil(setup, "k-tour-id-passport-face")
+  return advanceUntil(setup, "k-tour-id-passport-document")
+}
+
+async function completeSimulatedPassportOcr(setup: Locator) {
+  const document = setup.getByTestId("k-tour-id-passport-document")
+  await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await expect(document.getByTestId("passport-ocr-preview")).toBeVisible()
+  await document.getByTestId("passport-ocr-start").click()
+  await expect(document.getByTestId("passport-ocr-processing")).toBeVisible()
+  await expect(document).toHaveAttribute("data-ocr-stage", "review")
+  await expect(document.getByTestId("passport-ocr-review")).toBeVisible()
+  await document.getByTestId("k-tour-id-continue").click()
+}
+
+async function reachPassportEvidence(setup: Locator) {
+  await reachPassportDocument(setup)
+  await completeSimulatedPassportOcr(setup)
+  await expect(setup.getByTestId("k-tour-id-passport-face")).toBeVisible()
   return advanceUntil(setup, "k-tour-id-evidence-preview")
 }
 
@@ -359,6 +390,123 @@ test("OPENDID-E2E-003C Japanese consent and progress have no serious accessibili
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
     .analyze()
   expect(result.violations.filter(({ impact }) => impact === "serious" || impact === "critical")).toEqual([])
+})
+
+test("OPENDID-E2E-003F EN KO JA keep the local OCR boundary and masked review explicit", async ({ browser }) => {
+  for (const locale of ["en", "ko", "ja"] as const) {
+    const { context, page } = await newSeededPage(browser, locale)
+    await page.getByTestId("nav-id").click()
+    await page.getByTestId("traveler-id-ktour-id-open").click()
+    const setup = page.getByTestId("k-tour-id-setup")
+    const document = await reachPassportDocument(setup)
+    await expect(document.getByText("SIMULATED OCR · LOCAL PREVIEW", { exact: true })).toBeVisible()
+    await expect(document.getByRole("heading", { name: COPY[locale].ocrTitle, exact: true })).toBeVisible()
+    await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+    await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+    await document.getByTestId("passport-ocr-start").click()
+    await expect(document).toHaveAttribute("data-ocr-stage", "review")
+    await expect(document.getByRole("heading", { name: COPY[locale].ocrReviewTitle, exact: true })).toBeVisible()
+    await expect(document.getByTestId("passport-ocr-review")).toContainText(COPY[locale].ocrResult)
+    await context.close()
+  }
+})
+
+test("OPENDID-E2E-003D passport OCR requires a decodable bounded image and exposes a masked local-only review", async ({ page }) => {
+  const { setup } = await openTravelerSetup(page)
+  const document = await reachPassportDocument(setup)
+  const input = document.getByTestId("passport-ocr-input")
+  await expect(input).toHaveAttribute("type", "file")
+  await expect(input).toHaveAttribute("accept", "image/jpeg,image/png,image/webp")
+  await expect(input).toHaveAttribute("capture", "environment")
+  await expect(document.getByTestId("passport-ocr-start")).toBeDisabled()
+  await expect(setup.getByTestId("k-tour-id-passport-face")).toHaveCount(0)
+
+  await input.setInputFiles({ name: "not-an-image.pdf", mimeType: "application/pdf", buffer: Buffer.from("not an image") })
+  await expect(document).toHaveAttribute("data-ocr-error", "type")
+  await expect(document.getByTestId("passport-ocr-error")).toHaveText("Choose a JPEG, PNG or WebP image.")
+  await expect(document.getByTestId("passport-ocr-retry")).toBeFocused()
+
+  await input.setInputFiles({ name: "too-large.png", mimeType: "image/png", buffer: Buffer.alloc(12 * 1024 * 1024 + 1) })
+  await expect(document).toHaveAttribute("data-ocr-error", "size")
+  await expect(document.getByTestId("passport-ocr-error")).toContainText("larger than 12 MB")
+
+  await input.setInputFiles({ name: "cannot-decode.png", mimeType: "image/png", buffer: Buffer.from("invalid png bytes") })
+  await expect(document).toHaveAttribute("data-ocr-error", "decode")
+  await expect(document.getByTestId("passport-ocr-error")).toContainText("could not be decoded")
+
+  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await expect(document.getByTestId("passport-ocr-preview").locator("img")).toBeVisible()
+  await expect(document).not.toContainText(SYNTHETIC_PASSPORT_IMAGE.name)
+  await document.getByTestId("passport-ocr-start").click()
+  const processing = document.getByTestId("passport-ocr-processing")
+  await expect(processing).toBeVisible()
+  await expect(processing).not.toContainText("%")
+  await expect(document).toHaveAttribute("data-ocr-stage", "review")
+  const review = document.getByTestId("passport-ocr-review")
+  await expect(review).toContainText("•••••••• · demo mask only")
+  await expect(review).toContainText("Not extracted or retained")
+  await expect(review).toContainText("SIMULATED · no provider decision")
+  await expect(document.getByTestId("k-tour-id-continue")).toBeFocused()
+  await document.getByTestId("k-tour-id-continue").click()
+  await expect(setup.getByTestId("k-tour-id-passport-face")).toBeVisible()
+})
+
+test("OPENDID-E2E-003E passport previews revoke every object URL on replace, remove, close and continue", async ({ page }) => {
+  await page.addInitScript(() => {
+    const target = window as Window & { __PASSPORT_OBJECT_URLS__?: { created: string[]; revoked: string[] } }
+    target.__PASSPORT_OBJECT_URLS__ = { created: [], revoked: [] }
+    const create = URL.createObjectURL.bind(URL)
+    const revoke = URL.revokeObjectURL.bind(URL)
+    URL.createObjectURL = (object: Blob | MediaSource) => {
+      const url = create(object)
+      target.__PASSPORT_OBJECT_URLS__?.created.push(url)
+      return url
+    }
+    URL.revokeObjectURL = (url: string) => {
+      target.__PASSPORT_OBJECT_URLS__?.revoked.push(url)
+      revoke(url)
+    }
+  })
+
+  const firstEntry = await openTravelerSetup(page)
+  let document = await reachPassportDocument(firstEntry.setup)
+  let input = document.getByTestId("passport-ocr-input")
+
+  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await document.getByTestId("passport-ocr-replace").click()
+  await expect(document).toHaveAttribute("data-ocr-stage", "select")
+
+  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await document.getByTestId("passport-ocr-remove").click()
+  await expect(document).toHaveAttribute("data-ocr-stage", "select")
+
+  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await firstEntry.setup.getByTestId("k-tour-id-cancel").click()
+  await expect(firstEntry.setup).toHaveCount(0)
+  await expect(firstEntry.opener).toBeFocused()
+
+  await firstEntry.opener.click()
+  const secondSetup = page.getByTestId("k-tour-id-setup")
+  await expect(secondSetup).toBeVisible()
+  document = await reachPassportDocument(secondSetup)
+  input = document.getByTestId("passport-ocr-input")
+  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await document.getByTestId("passport-ocr-start").click()
+  await expect(document.getByTestId("passport-ocr-processing")).toBeVisible()
+
+  const objectUrls = await page.evaluate(() => (window as Window & {
+    __PASSPORT_OBJECT_URLS__?: { created: string[]; revoked: string[] }
+  }).__PASSPORT_OBJECT_URLS__)
+  expect(objectUrls?.created).toHaveLength(4)
+  expect(objectUrls?.revoked).toHaveLength(4)
+  expect(objectUrls?.revoked.sort()).toEqual(objectUrls?.created.sort())
+  const storedText = await page.evaluate(() => `${JSON.stringify(localStorage)} ${JSON.stringify(sessionStorage)}`)
+  expect(storedText).not.toContain(SYNTHETIC_PASSPORT_IMAGE.name)
 })
 
 test("OPENDID-E2E-004 passport completes evidence, issuance, holder and presentation with zero network/storage and independent axes", async ({ page }) => {

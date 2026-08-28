@@ -9,6 +9,7 @@ const source = (path: string) => {
 }
 
 const setup = source("features/ondo/identity-b/ktour-id-setup-b.tsx")
+const passportOcr = source("features/ondo/identity-b/passport-ocr-step-b.tsx")
 const model = source("features/ondo/identity-b/ktour-id-setup-model-b.ts")
 const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
 const onboarding = source("features/ondo/onboarding/official-directory-onboarding.tsx")
@@ -33,13 +34,14 @@ test("OPENDID-B-001 restores the three truthful identity routes without provider
 })
 
 test("OPENDID-B-002 every route is visibly simulated and never performs identity network or sensitive storage", () => {
-  expect(setup).toContain("SIMULATED")
+  expect(`${setup}\n${passportOcr}`).toContain("SIMULATED")
   expect(setup).toContain("No identity provider or OpenDID service is contacted")
   expect(setup).toContain("K-Tour ID Demo Issuer")
-  expect(setup).toContain("No document, face, provider result or credential is saved; this tab only")
+  expect(setup).toContain("no document, face, provider result or credential is saved")
+  expect(passportOcr).toContain("No filename, image or metadata is saved or sent")
 
-  expect(setup).not.toMatch(/\b(?:fetch|XMLHttpRequest|sendBeacon|WebSocket|FormData)\s*\(/)
-  expect(setup).not.toMatch(/(?:localStorage|sessionStorage)\.(?:setItem|getItem)/)
+  expect(`${setup}\n${passportOcr}`).not.toMatch(/\b(?:fetch|XMLHttpRequest|sendBeacon|WebSocket|FormData)\s*\(/)
+  expect(`${setup}\n${passportOcr}`).not.toMatch(/(?:localStorage|sessionStorage)\.(?:setItem|getItem)/)
   expect(model).not.toMatch(/passport(?:Number|Image)|face(?:Image|Template)|birthDate|residentNumber/i)
 
   const deviceState = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
@@ -77,7 +79,7 @@ test("OPENDID-B-004 setup owns explicit progress, recovery, return and focus sta
     "useModalIsolation",
     "Escape",
     "requestAnimationFrame",
-  ]) expect(setup).toContain(contract)
+  ]) expect(`${setup}\n${passportOcr}`).toContain(contract)
 
   expect(model).toContain("expiresAt")
   expect(model).toContain("issuedAt")
@@ -178,7 +180,11 @@ test("OPENDID-B-008 freezes the complete consent-to-presentation state machine",
     "k-tour-id-retry",
     "k-tour-id-cancel",
     "k-tour-id-return",
-  ]) expect(setup).toContain(testId)
+    "passport-ocr-input",
+    "passport-ocr-start",
+    "passport-ocr-processing",
+    "passport-ocr-review",
+  ]) expect(`${setup}\n${passportOcr}`).toContain(testId)
 })
 
 test("OPENDID-B-009 fixes the release environment to simulation and preserves exact truth in three locales", () => {
@@ -193,8 +199,10 @@ test("OPENDID-B-009 fixes the release environment to simulation and preserves ex
 
   expect(setup).toContain('data-environment="simulated"')
   expect(setup).toContain('data-integration-status="not_configured"')
-  expect(setup).not.toMatch(/navigator\.(?:mediaDevices|credentials)|NDEFReader|showOpenFilePicker/)
-  expect(setup).not.toMatch(/<input[^>]+type=["']file["']/)
+  expect(`${setup}\n${passportOcr}`).not.toMatch(/navigator\.(?:mediaDevices|credentials)|NDEFReader|showOpenFilePicker/)
+  expect(passportOcr).toContain('type="file"')
+  expect(passportOcr).toContain('accept="image/jpeg,image/png,image/webp"')
+  expect(passportOcr).toContain('capture="environment"')
 })
 
 test("OPENDID-B-010 freezes deterministic recovery, credential status, and one-shot guards", () => {
@@ -242,7 +250,24 @@ test("OPENDID-B-011 keeps the five axes independent and identity data out of dev
   const deviceState = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
   expect(deviceState).not.toMatch(/identity|passport|credential|did|presentation/i)
   expect(provider).toContain('const B_DEVICE_KEY = "ondo-b.device.v1"')
-  expect(setup).not.toMatch(/(?:localStorage|sessionStorage|indexedDB|caches)\./)
+  expect(`${setup}\n${passportOcr}`).not.toMatch(/(?:localStorage|sessionStorage|indexedDB|caches)\./)
+})
+
+test("OPENDID-B-013 keeps passport OCR local, bounded, masked and cleanup-owned", () => {
+  expect(passportOcr).toContain("12 * 1024 * 1024")
+  expect(passportOcr).toContain('new Set(["image/jpeg", "image/png", "image/webp"])')
+  expect(passportOcr).toContain("URL.createObjectURL")
+  expect(passportOcr).toContain("URL.revokeObjectURL")
+  expect(passportOcr).toContain('role="alert"')
+  expect(passportOcr).toContain('role="status"')
+  expect(passportOcr).toContain('aria-live="polite"')
+  expect(passportOcr).toContain('aria-busy={stage === "decoding" || stage === "processing"}')
+  expect(passportOcr.match(/SIMULATED OCR · LOCAL PREVIEW/g) ?? []).toHaveLength(3)
+  expect(passportOcr).toContain("•••••••• · demo mask only")
+  expect(passportOcr).toContain("Not extracted or retained")
+  expect(passportOcr).toContain("SIMULATED · no provider decision")
+  expect(passportOcr).toContain("No name, passport number, MRZ, birth date, image or metadata continues to the next step")
+  expect(passportOcr).not.toMatch(/console\.|FileReader|readAsDataURL|FormData|fetch\s*\(/)
 })
 
 test("OPENDID-B-012 keeps onboarding guest-primary and places one compact optional entry", () => {

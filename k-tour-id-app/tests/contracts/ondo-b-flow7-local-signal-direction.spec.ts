@@ -48,7 +48,7 @@ test("FLOW7-TRUTH-002 every Local Signal action and recovery state remains reach
 
   for (const truth of [
     "nothing is uploaded",
-    "public Pulse score, count, level, and ranking do not change",
+    "public ONDO temperature score, count, level, and ranking do not change",
     "Your exact draft and place remain open",
     "note and photo are discarded",
     "failure",

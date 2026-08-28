@@ -599,7 +599,10 @@ async function triggerPaymentGate(page: Page, locale: BLocale, qa = false) {
   const connect = page.getByTestId("wallet-connect-sheet")
   await expect(connect).toBeVisible()
   if (qa) {
-    await connect.locator("button").filter({ hasText: locale === "ko" ? "테스트 지갑 준비" : "Prepare test wallet" }).click()
+    await connect.getByRole("button", {
+      name: locale === "ko" ? "로컬 테스트 잔액 설정" : "Set up local test balance",
+      exact: true,
+    }).click()
     await expect(connect).toHaveAttribute("data-phase", "failed")
   }
 }
@@ -653,7 +656,10 @@ async function prepareCommerceWallet(page: Page, locale: BLocale) {
   await offer.getByTestId("payment-confirm").click()
   const sheet = page.getByTestId("wallet-connect-sheet")
   await expect(sheet).toBeVisible()
-  await sheet.locator("button").filter({ hasText: locale === "ko" ? "테스트 지갑 준비" : "Prepare test wallet" }).click()
+  await sheet.getByRole("button", {
+    name: locale === "ko" ? "로컬 테스트 잔액 설정" : "Set up local test balance",
+    exact: true,
+  }).click()
   await expect(sheet).toBeHidden()
   await expect(offer).toHaveAttribute("data-wallet-status", "ready")
 }

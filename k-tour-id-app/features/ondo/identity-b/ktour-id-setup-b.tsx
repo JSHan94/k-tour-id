@@ -4,7 +4,7 @@ import type { KeyboardEvent, ReactNode } from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
   ArrowRight, BadgeCheck, Camera, Check, ChevronLeft, FileCheck2, FileKey2, IdCard,
-  BookOpenCheck, Nfc, RefreshCw, ScanFace, ShieldCheck, Smartphone, TriangleAlert, WalletCards, X,
+  BookOpenCheck, RefreshCw, ScanFace, ShieldCheck, Smartphone, TriangleAlert, WalletCards, X,
 } from "lucide-react"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
@@ -18,6 +18,7 @@ import {
   type OndoBIdentityRecoveryCode,
   type OndoBIdentitySetupSession,
 } from "./ktour-id-setup-model-b"
+import { PassportOcrStepB } from "./passport-ocr-step-b"
 import styles from "./ktour-id-setup-b.module.css"
 
 type Phase =
@@ -50,12 +51,12 @@ const COPY = {
     residence: "Mobile Residence Card", residenceNote: "Registered foreign resident · OmniOne CX",
     passport: "Passport eKYC", passportNote: "Short-term traveler · separate NFC / OCR, face and liveness provider", notConfigured: "not configured",
     separate: "Passport eKYC uses a separate provider — not OmniOne CX.", review: "Review consent", later: "Not now — keep exploring",
-    consentTitle: "Review this simulated request", consentBody: "Nothing starts until you agree. No camera, NFC reader, file picker or provider connection will open.",
+    consentTitle: "Review this simulated request", consentBody: "Nothing starts until you agree. File selection opens only when you choose it; no camera capture, NFC reader or provider connection starts automatically.",
     requester: "Requester", requesterValue: "ONDO K-Tour ID demo", purpose: "Purpose", purposeValue: "Create a minimum travel-eligibility result for a private service credential",
-    provider: "Proofing route", evidence: "Requested evidence", retention: "Retention", retentionValue: "No document, face, provider result or credential is saved; this tab only",
+    provider: "Proofing route", evidence: "Requested evidence", retention: "Retention", retentionValue: "A selected image stays in memory only until replace, remove, continue or close; no document, face, provider result or credential is saved",
     accept: "Agree and preview", decline: "Decline and return", prepare: "Prepare the route", prepareBody: "This is a UI walkthrough. It creates no provider request, signed callback or official verification.", next: "Continue preview",
     cx: "Preview the OmniOne CX handoff", cxBody: "A configured environment would open a Mobile ID request and validate a signed callback. This demo sends nothing.",
-    document: "Preview passport document checks", documentBody: "A separate provider would use NFC / OCR and authenticity checks. No passport image, MRZ or chip data is captured.",
+    document: "Choose a passport image for local preview", documentBody: "This tab decodes one selected image locally for simulated OCR. It does not extract or retain passport data.",
     face: "Preview face and liveness", faceBody: "A separate provider would return only a normalized result and risk flags. This demo never opens the camera.",
     processing: "Preview provider processing", processingBody: "This models a normalized response. There is no live receipt, callback or transaction.",
     evidenceTitle: "Review the minimum evidence", evidenceBody: "Demo result: the selected method completed. No name, document number, image, biometric or provider token is exposed.",
@@ -88,12 +89,12 @@ const COPY = {
     residence: "모바일 외국인등록증", residenceNote: "외국인등록을 마친 거주자 · OmniOne CX",
     passport: "여권 eKYC", passportNote: "단기 여행자 · 별도 NFC / OCR, 얼굴·라이브니스 제공자", notConfigured: "구성되지 않음",
     separate: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자입니다.", review: "동의 내용 보기", later: "나중에 — 게스트로 계속",
-    consentTitle: "시뮬레이션 요청 확인", consentBody: "동의 전에는 아무것도 시작하지 않습니다. 카메라·NFC·파일 선택·기관 연결을 열지 않습니다.",
+    consentTitle: "시뮬레이션 요청 확인", consentBody: "동의 전에는 아무것도 시작하지 않습니다. 직접 선택할 때만 파일 선택을 열고 카메라 촬영·NFC·기관 연결은 자동으로 시작하지 않습니다.",
     requester: "요청자", requesterValue: "ONDO K-Tour ID 데모", purpose: "목적", purposeValue: "민간 서비스 자격증명을 위한 최소 여행 자격 결과 만들기",
-    provider: "확인 경로", evidence: "요청 증빙", retention: "보관", retentionValue: "문서·얼굴·기관 결과·자격증명은 저장하지 않으며 이 탭에서만 유지",
+    provider: "확인 경로", evidence: "요청 증빙", retention: "보관", retentionValue: "선택 이미지는 교체·삭제·계속·닫기 전까지만 메모리에 있고 문서·얼굴·기관 결과·자격증명은 저장하지 않음",
     accept: "동의하고 미리보기", decline: "거절하고 돌아가기", prepare: "경로 준비", prepareBody: "화면 흐름만 보여주는 시뮬레이션입니다. 기관 요청·서명 콜백·공식 인증을 만들지 않습니다.", next: "미리보기 계속",
     cx: "OmniOne CX 전달 미리보기", cxBody: "실제 구성 환경은 모바일 신분증 요청을 열고 서명 콜백을 검증합니다. 이 데모는 아무것도 보내지 않습니다.",
-    document: "여권 문서 확인 미리보기", documentBody: "별도 제공자가 NFC / OCR과 진위 검사를 수행합니다. 여권 이미지·MRZ·칩 데이터는 수집하지 않습니다.",
+    document: "로컬 미리보기용 여권 이미지 선택", documentBody: "이 탭에서 선택 이미지 한 장을 해석해 OCR 흐름을 재현하며 여권 데이터를 추출하거나 보관하지 않습니다.",
     face: "얼굴·라이브니스 미리보기", faceBody: "별도 제공자는 정규화 결과와 위험 플래그만 반환합니다. 이 데모는 카메라를 열지 않습니다.",
     processing: "기관 처리 미리보기", processingBody: "정규화 응답 화면만 재현합니다. 실제 영수증·콜백·거래는 없습니다.",
     evidenceTitle: "최소 증빙 결과 확인", evidenceBody: "데모 결과: 선택한 경로 완료. 이름·문서번호·이미지·생체정보·기관 토큰을 노출하지 않습니다.",
@@ -126,12 +127,12 @@ const COPY = {
     residence: "モバイル在留カード", residenceNote: "外国人登録済みの居住者 · OmniOne CX",
     passport: "パスポートeKYC", passportNote: "短期旅行者 · 別のNFC / OCR、顔・ライブネス事業者", notConfigured: "未設定",
     separate: "パスポートeKYCはOmniOne CXではなく別の事業者です。", review: "同意内容を確認", later: "今はしない — ゲスト利用を続ける",
-    consentTitle: "シミュレーション依頼を確認", consentBody: "同意前には何も始まりません。カメラ、NFC、ファイル選択、事業者接続は開きません。",
+    consentTitle: "シミュレーション依頼を確認", consentBody: "同意前には何も始まりません。自分で選んだ時だけファイル選択を開き、カメラ撮影、NFC、事業者接続は自動で始まりません。",
     requester: "依頼者", requesterValue: "ONDO K-Tour IDデモ", purpose: "目的", purposeValue: "民間サービス資格情報のための最小限の旅行資格結果を作成",
-    provider: "確認ルート", evidence: "依頼する証拠", retention: "保持", retentionValue: "文書、顔、事業者結果、資格情報は保存せず、このタブのみ",
+    provider: "確認ルート", evidence: "依頼する証拠", retention: "保持", retentionValue: "選択画像は差し替え、削除、続行、終了までメモリ内だけにあり、文書、顔、事業者結果、資格情報は保存しない",
     accept: "同意してプレビュー", decline: "拒否して戻る", prepare: "ルートを準備", prepareBody: "画面遷移だけのシミュレーションです。事業者依頼、署名コールバック、公的確認は作りません。", next: "プレビューを続ける",
     cx: "OmniOne CX連携プレビュー", cxBody: "実環境ではMobile ID依頼を開き署名済みコールバックを検証します。このデモは何も送信しません。",
-    document: "パスポート文書確認のプレビュー", documentBody: "別事業者がNFC / OCRと真正性確認を行います。画像、MRZ、チップ情報は取得しません。",
+    document: "ローカルプレビュー用のパスポート画像を選択", documentBody: "選択画像1枚をこのタブ内で読み取りOCRの流れを再現します。パスポート情報は抽出・保持しません。",
     face: "顔・ライブネスのプレビュー", faceBody: "別事業者は正規化した結果とリスクフラグだけを返します。このデモはカメラを開きません。",
     processing: "事業者処理のプレビュー", processingBody: "正規化した応答画面だけを再現します。実際のレシート、コールバック、取引はありません。",
     evidenceTitle: "最小限の証拠を確認", evidenceBody: "デモ結果：選択ルート完了。氏名、文書番号、画像、生体情報、事業者トークンは表示しません。",
@@ -156,7 +157,7 @@ const COPY = {
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
-const FOCUSABLE = "button:not([disabled]),summary,[href],[tabindex]:not([tabindex='-1'])"
+const FOCUSABLE = "button:not([disabled]),input:not([disabled]):not([tabindex='-1']),summary,[href],[tabindex]:not([tabindex='-1'])"
 const ISSUER = "K-Tour ID Demo Issuer"
 const CREDENTIAL_TYPE = "KTourVisitorCredential"
 
@@ -317,7 +318,7 @@ export function KTourIdSetupB() {
 
       {phase === "route_prepare" ? <Panel testId="k-tour-id-route-step" icon={<ShieldCheck />} eyebrow={details.title} title={copy.prepare} body={copy.prepareBody} action={copy.next} onAction={beginRoute} /> : null}
       {phase === "cx_handoff_preview" ? <Panel testId="k-tour-id-route-step" aliases={["ktour-id-mobile-handoff"]} icon={<Smartphone />} eyebrow="OmniOne CX · SIMULATED" title={copy.cx} body={copy.cxBody} action={copy.next} onAction={() => advance("provider_processing_preview", "cx_handoff_preview")} visual="phone" /> : null}
-      {phase === "document_preview" ? <Panel testId="k-tour-id-passport-document" aliases={["ktour-id-passport-document", "k-tour-id-route-step"]} icon={<BookOpenCheck />} eyebrow="Passport eKYC · SIMULATED" title={copy.document} body={copy.documentBody} action={copy.next} onAction={() => advance("face_liveness_preview", "document_preview")} visual="document" /> : null}
+      {phase === "document_preview" ? <div className={styles.body}><PassportOcrStepB locale={state.locale} onComplete={() => advance("face_liveness_preview", "document_preview")} /></div> : null}
       {phase === "face_liveness_preview" ? <Panel testId="k-tour-id-passport-face" aliases={["ktour-id-passport-face", "k-tour-id-route-step"]} icon={<ScanFace />} eyebrow="FACE + LIVENESS · SIMULATED" title={copy.face} body={copy.faceBody} action={copy.next} onAction={() => advance("provider_processing_preview", "face_liveness_preview")} visual="face" /> : null}
       {phase === "provider_processing_preview" ? <Panel testId="k-tour-id-route-step" icon={<RefreshCw />} eyebrow={`${details.provider} · SIMULATED`} title={copy.processing} body={copy.processingBody} action={copy.next} onAction={() => advance("evidence_preview", "provider_processing_preview")} visual="processing" /> : null}
       {phase === "evidence_preview" ? <Panel testId="k-tour-id-evidence-preview" icon={<FileCheck2 />} eyebrow="MINIMUM RESULT · SIMULATED" title={copy.evidenceTitle} body={copy.evidenceBody} action={copy.next} onAction={() => advance("issuance_preview", "evidence_preview")} visual="evidence" /> : null}
@@ -344,8 +345,8 @@ function Disclosure({ rows }: { rows: Array<[string, string, string?]> }) {
   return <dl className={styles.disclosure}>{rows.map(([term, value, testId]) => <div key={`${term}:${value}`} data-testid={testId}><dt>{term}</dt><dd>{value}</dd></div>)}</dl>
 }
 
-function Panel({ testId, aliases = [], icon, eyebrow, title, body, action, onAction, visual, meta }: { testId: string; aliases?: string[]; icon: ReactNode; eyebrow: string; title: string; body: string; action: string; onAction: () => void; visual?: "phone" | "document" | "face" | "processing" | "evidence"; meta?: [string, string] }) {
-  return <div className={`${styles.body} ${styles.centered}`} data-testid={testId}><span data-testid={aliases[0]} className={styles.heroIcon}><span data-testid={aliases[1]}>{icon}</span></span><p className={styles.eyebrow}>{eyebrow}</p><h1>{title}</h1><p className={styles.lead}>{body}</p>{visual ? <div className={styles.visual} data-visual={visual} aria-hidden="true">{visual === "document" ? <><BookOpenCheck /><Nfc /></> : visual === "face" ? <><Camera /><ScanFace /></> : visual === "phone" ? <><Smartphone /><BadgeCheck /></> : visual === "processing" ? <><RefreshCw /><i /></> : <><FileCheck2 /><Check /></>}</div> : null}{meta ? <div className={styles.meta}><strong>{meta[0]}</strong><span>{meta[1]}</span></div> : null}<div className={styles.actions}><button type="button" data-identity-initial-focus data-testid="k-tour-id-continue" className={styles.primary} onClick={onAction}>{action}<ArrowRight size={17} aria-hidden="true" /></button></div></div>
+function Panel({ testId, aliases = [], icon, eyebrow, title, body, action, onAction, visual, meta }: { testId: string; aliases?: string[]; icon: ReactNode; eyebrow: string; title: string; body: string; action: string; onAction: () => void; visual?: "phone" | "face" | "processing" | "evidence"; meta?: [string, string] }) {
+  return <div className={`${styles.body} ${styles.centered}`} data-testid={testId}><span data-testid={aliases[0]} className={styles.heroIcon}><span data-testid={aliases[1]}>{icon}</span></span><p className={styles.eyebrow}>{eyebrow}</p><h1>{title}</h1><p className={styles.lead}>{body}</p>{visual ? <div className={styles.visual} data-visual={visual} aria-hidden="true">{visual === "face" ? <><Camera /><ScanFace /></> : visual === "phone" ? <><Smartphone /><BadgeCheck /></> : visual === "processing" ? <><RefreshCw /><i /></> : <><FileCheck2 /><Check /></>}</div> : null}{meta ? <div className={styles.meta}><strong>{meta[0]}</strong><span>{meta[1]}</span></div> : null}<div className={styles.actions}><button type="button" data-identity-initial-focus data-testid="k-tour-id-continue" className={styles.primary} onClick={onAction}>{action}<ArrowRight size={17} aria-hidden="true" /></button></div></div>
 }
 
 function StatusPanel({ testId, alias, code, title, body, extra, primary, onPrimary, primaryTestId, secondary, onSecondary }: { testId: string; alias: string; code: string; title: string; body: string; extra?: string; primary: string; onPrimary: () => void; primaryTestId?: string; secondary: string; onSecondary: () => void }) {

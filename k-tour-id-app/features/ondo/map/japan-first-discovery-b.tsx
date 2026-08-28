@@ -1,8 +1,8 @@
 "use client"
 
 import Image from "next/image"
-import { useRef } from "react"
-import { ArrowUpRight, BookOpenText, ChevronRight, CircleDashed, MapPin, MapPinned, Sparkles } from "lucide-react"
+import { useEffect, useRef } from "react"
+import { ArrowUpRight, BookOpenText, ChevronRight, CircleDashed, MapPin, MapPinned, X } from "lucide-react"
 import {
   editorialPlacesForStory,
   JAPAN_FIRST_LAUNCH_CONTENT,
@@ -23,8 +23,8 @@ const COPY = {
     jejuTitle: "2 stories · 10 Jeju ideas",
     seoulSummary: "Editorial collection · exact places pending",
     jejuSummary: "8 verified places · 2 still checking",
-    summary: "One Pulse · places verified before linking",
-    body: "Original sources and exact place links are checked before a story can affect Pulse or open a place.",
+    summary: "One ONDO temperature · places verified before linking",
+    body: "Original sources and exact place links are checked before a story can affect ONDO temperature or open a place.",
     content: "Top stories",
     jeju: "Jeju · Growing",
     jejuBody: "10 editorial ideas · not official directory records",
@@ -39,6 +39,7 @@ const COPY = {
     language: "App guidance is available in English and Korean.",
     sourceBoundary: "Eight place pages and map coordinates were verified on Aug 28, 2026. Two ideas remain link-only.",
     newTab: "opens in a new tab",
+    close: "Close Stories",
   },
   ko: {
     eyebrow: "일본 여행 출처의 이야기",
@@ -47,8 +48,8 @@ const COPY = {
     jejuTitle: "제주 이야기 2개 · 아이디어 10곳",
     seoulSummary: "편집 컬렉션 · 정확한 장소 확인 중",
     jejuSummary: "검증된 장소 8곳 · 2곳 확인 중",
-    summary: "하나의 Pulse · 장소 검증 후 연결",
-    body: "원본 출처와 정확한 장소 연결을 확인한 뒤에만 Pulse에 반영하거나 장소를 엽니다.",
+    summary: "하나의 온도 · 장소 검증 후 연결",
+    body: "원본 출처와 정확한 장소 연결을 확인한 뒤에만 온도에 반영하거나 장소를 엽니다.",
     content: "주요 콘텐츠",
     jeju: "제주 · 성장 중",
     jejuBody: "편집 아이디어 10곳 · 공식 디렉터리 기록 아님",
@@ -63,6 +64,7 @@ const COPY = {
     language: "앱 안내는 영어와 한국어로 제공합니다.",
     sourceBoundary: "장소 페이지와 지도 좌표 8곳을 2026년 8월 28일 확인했습니다. 2곳은 출처 링크만 제공합니다.",
     newTab: "새 탭에서 열림",
+    close: "여행 이야기 닫기",
   },
   ja: {
     eyebrow: "日本の旅行メディアから見つけた物語",
@@ -71,8 +73,8 @@ const COPY = {
     jejuTitle: "済州の物語2件・アイデア10件",
     seoulSummary: "編集コレクション・正確な場所は確認中",
     jejuSummary: "確認済み8か所・確認中2か所",
-    summary: "Pulseはひとつ・場所確認後にリンク",
-    body: "元の情報源と正確な場所の対応を確認した後にのみ、Pulseへの反映や場所ページへのリンクを行います。",
+    summary: "ONDO温度はひとつ・場所確認後にリンク",
+    body: "元の情報源と正確な場所の対応を確認した後にのみ、ONDO温度への反映や場所ページへのリンクを行います。",
     content: "注目のストーリー",
     jeju: "済州・成長中",
     jejuBody: "編集アイデア10件・公式ディレクトリ記録ではありません",
@@ -87,6 +89,7 @@ const COPY = {
     language: "アプリの案内は日本語・英語・韓国語に対応しています。",
     sourceBoundary: "8か所の公式ページと地図座標を2026年8月28日に確認しました。2件は情報源リンクのみです。",
     newTab: "新しいタブで開きます",
+    close: "ストーリーを閉じる",
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
@@ -143,6 +146,7 @@ function Story({ item, copy, locale, compact = false, visualRole = compact ? "co
 
 export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpenChange, onSelectEditorialPlace }: { locale: OndoBLocale; city: "seoul" | "jeju"; presentation?: "map" | "list"; onOpenChange?(open: boolean): void; onSelectEditorialPlace?(place: EditorialPlaceB): void }) {
   const rootRef = useRef<HTMLDetailsElement>(null)
+  const summaryRef = useRef<HTMLElement>(null)
   const copy = COPY[locale]
   const cityItems = JAPAN_FIRST_LAUNCH_CONTENT.filter((item) => item.cityIds.includes(city))
   const featured = city === "seoul"
@@ -152,10 +156,27 @@ export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpe
   const jejuSources = [...new Map(JEJU_EDITORIAL_SEEDS.map((item) => [item.sourceUrl, item])).values()]
   const title = city === "seoul" ? copy.seoulTitle : copy.jejuTitle
   const summary = city === "seoul" ? copy.seoulSummary : copy.jejuSummary
+  const closePanel = () => {
+    if (rootRef.current) rootRef.current.open = false
+    onOpenChange?.(false)
+    window.requestAnimationFrame(() => summaryRef.current?.focus({ preventScroll: true }))
+  }
+
+  useEffect(() => {
+    const closeOnEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || !rootRef.current?.open) return
+      event.preventDefault()
+      event.stopPropagation()
+      closePanel()
+    }
+    document.addEventListener("keydown", closeOnEscape, true)
+    return () => document.removeEventListener("keydown", closeOnEscape, true)
+  })
+
   return (
-    <details ref={rootRef} className={styles.root} data-testid="ondo-b-japan-first-discovery" data-city-context={city} data-presentation={presentation} data-truth-kind="editorial-collection" data-geometry-basis={city === "jeju" ? "verified-points" : "region"} data-place-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : 0} onToggle={(event) => onOpenChange?.(event.currentTarget.open)}>
-      <summary data-testid="ondo-b-editorial-collection-marker" aria-label={`${title}. ${summary}`}>
-        <span className={styles.mark}><Sparkles aria-hidden="true" size={20} /><b>{copy.marker}</b></span>
+    <details ref={rootRef} className={styles.root} name="ondo-map-disclosure" data-testid="ondo-b-japan-first-discovery" data-city-context={city} data-presentation={presentation} data-truth-kind="editorial-collection" data-geometry-basis={city === "jeju" ? "verified-points" : "region"} data-place-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : 0} onToggle={(event) => onOpenChange?.(event.currentTarget.open)}>
+      <summary ref={summaryRef} data-testid="ondo-b-editorial-collection-marker" aria-label={`${title}. ${summary}`}>
+        <span className={styles.mark}><BookOpenText aria-hidden="true" size={20} /><b>{copy.marker}</b></span>
         <span>
           <small>{copy.eyebrow}</small>
           <strong>{title}</strong>
@@ -166,6 +187,7 @@ export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpe
       <div className={styles.panel}>
         <header>
           <span><BookOpenText aria-hidden="true" size={18} /><strong>{copy.content}</strong></span>
+          <button type="button" className={styles.closePanel} aria-label={copy.close} onClick={closePanel}><X aria-hidden="true" size={18} /></button>
           <details className={styles.method}>
             <summary>{copy.method}<ChevronRight aria-hidden="true" size={15} /></summary>
             <p>{copy.body}</p>

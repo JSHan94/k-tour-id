@@ -294,9 +294,9 @@ test("FLOW8-COPY-014 every locale names the local test and venue boundary withou
     "venue neither offers nor accepts it",
     "장소는 이 테스트를 제공하거나 받지 않음",
     "お店はこのテストを提供も受け付けもしません",
-    "Preparing locally",
-    "이 기기에서 준비 중",
-    "この端末で準備しています",
+    "Setting up locally…",
+    "로컬에서 설정 중…",
+    "ローカルで設定しています…",
   ]) expect(commerce).toContain(truth)
   for (const stale of [
     "Connect travel wallet", "Connecting…", "Connect test wallet to pay", "Disconnect",

@@ -577,50 +577,101 @@
 .nonLiveBoundary svg { flex: 0 0 auto; color: #a14c39; }
 
 .balanceCard {
+  position: relative;
+  display: grid;
   isolation: isolate;
-  min-height: 184px;
+  min-height: 218px;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 12px;
   margin-top: 0;
-  border: 1px solid rgb(255 255 255 / 10%);
+  border: 1px solid #d9d9d6;
   border-radius: var(--flow8-object-radius);
   padding: 20px;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 88% 2%, rgb(244 164 105 / 28%), transparent 31%),
-    radial-gradient(circle at 8% 110%, rgb(157 76 91 / 38%), transparent 43%),
-    linear-gradient(145deg, #1f1a19 0%, #39251f 52%, #704032 100%);
-  color: #fffaf5;
-  box-shadow: 0 25px 65px rgb(50 29 23 / 26%), inset 0 1px 0 rgb(255 255 255 / 13%);
+  background: linear-gradient(145deg, #fff 0%, #f5f5f3 100%);
+  color: #171717;
+  box-shadow: 0 18px 44px rgb(23 23 23 / 8%), inset 0 1px 0 rgb(255 255 255 / 90%);
   animation: flow8ObjectIn var(--flow8-motion-emphasis) cubic-bezier(.2, .8, .2, 1) both;
 }
 .balanceCard::before {
-  opacity: .62;
-  background: linear-gradient(108deg, transparent 15%, rgb(255 255 255 / 19%) 42%, transparent 65%);
-  animation: flow8Glint var(--flow8-motion-emphasis) 100ms cubic-bezier(.2, .8, .2, 1) both;
+  opacity: 0;
+  animation: none;
 }
 .balanceCard::after {
-  right: -52px;
-  bottom: -80px;
-  width: 210px;
-  height: 210px;
-  border: 1px solid rgb(255 255 255 / 9%);
+  top: auto;
+  right: 0;
+  bottom: 0;
+  width: 132px;
+  height: 132px;
+  border: 1px solid rgb(23 23 23 / 5%);
   background: transparent;
+  box-shadow: 0 0 0 36px rgb(23 23 23 / 1.8%), 0 0 0 72px rgb(23 23 23 / 1%);
+}
+.balanceCard[data-wallet-state="failed"] { border-color: #d5b4ae; background: linear-gradient(145deg, #fff 0%, #faf3f1 100%); }
+.balanceCard[data-wallet-state="ready"] {
+  border-color: rgb(255 255 255 / 12%);
+  background:
+    radial-gradient(circle at 92% 0, rgb(126 43 91 / 23%), transparent 34%),
+    linear-gradient(145deg, #101012 0%, #19191d 58%, #27272c 100%);
+  color: #fff;
+  box-shadow: 0 24px 58px rgb(10 10 12 / 25%), inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+.balanceCard[data-wallet-state="ready"]::before {
+  opacity: .42;
+  background: linear-gradient(108deg, transparent 15%, rgb(255 255 255 / 14%) 42%, transparent 65%);
+  animation: flow8Glint var(--flow8-motion-emphasis) 100ms cubic-bezier(.2, .8, .2, 1) both;
+}
+.balanceCard[data-wallet-state="ready"]::after {
+  border-color: rgb(255 255 255 / 9%);
   box-shadow: 0 0 0 36px rgb(255 255 255 / 2%), 0 0 0 72px rgb(255 255 255 / 1.5%);
 }
-.balanceTop > span { color: #f7d4c4; letter-spacing: .08em; text-transform: uppercase; }
-.balanceTop small,
-.balanceTop small[data-status="ready"] { max-width: 170px; color: rgb(255 247 241 / 72%); }
-.balanceCard > strong { margin-top: 20px; color: #fffaf5; font-size: clamp(40px, 12vw, 54px); font-variant-numeric: tabular-nums; letter-spacing: -.055em; }
-.balanceCard > strong span { color: #f0c2ad; }
+.balanceTop > span { color: #4f4f4c; letter-spacing: .08em; text-transform: uppercase; }
+.balanceTop small {
+  max-width: 175px;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: #ececea;
+  color: #555552;
+  font-weight: 760;
+}
+.balanceTop small[data-status="failed"] { background: #f1dfdc; color: #813d34; }
+.balanceTop small[data-status="ready"] { background: rgb(255 255 255 / 11%); color: #e8e8eb; }
+.balanceCard[data-wallet-state="ready"] .balanceTop > span { color: #d0d0d5; }
+.balanceAmount { display: grid; align-content: center; gap: 3px; min-width: 0; }
+.balanceAmount strong {
+  color: #171717;
+  font-size: clamp(40px, 12vw, 54px);
+  font-variant-numeric: tabular-nums;
+  font-weight: 790;
+  line-height: .95;
+  letter-spacing: -.055em;
+  white-space: nowrap;
+}
+.balanceAmount span { color: #62625f; font-size: 12px; font-variant-numeric: tabular-nums; font-weight: 760; letter-spacing: .02em; }
+.balanceCard[data-wallet-state="ready"] .balanceAmount strong { color: #fff; }
+.balanceCard[data-wallet-state="ready"] .balanceAmount span { color: #c9c9ce; }
+.balanceFooter { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+.balanceFooter p { max-width: 220px; margin: 0; color: #686865; font-size: 12px; font-weight: 650; line-height: 1.35; }
+.balanceCard[data-wallet-state="ready"] .balanceFooter p { color: #bcbcc2; }
 .balanceAction {
-  min-height: 44px;
-  margin-top: 8px;
-  border: 1px solid rgb(255 255 255 / 14%);
-  background: rgb(255 255 255 / 10%);
-  color: #fffaf5;
-  backdrop-filter: blur(12px);
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0;
+  border: 1px solid #171717;
+  border-radius: 14px;
+  padding: 0 14px;
+  background: #171717;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
   transition: transform var(--flow8-motion-fast), background var(--flow8-motion-fast);
 }
-.balanceAction:active { transform: scale(.985); background: rgb(255 255 255 / 16%); }
+.balanceCard[data-wallet-state="ready"] .balanceAction { border-color: rgb(255 255 255 / 17%); background: rgb(255 255 255 / 9%); color: #f7f7f8; }
+.balanceAction:active { transform: scale(.985); }
 
 .dashboardGrid { gap: 12px; }
 .benefitCard,
@@ -658,21 +709,23 @@
 
 .privacy { margin-top: 0; }
 
-.sheetBackdrop { background: rgb(27 23 21 / 42%); backdrop-filter: blur(16px) saturate(.84); }
+.sheetBackdrop { background: rgb(16 16 18 / 48%); backdrop-filter: blur(16px) saturate(.72); }
 .sheet {
   border: 1px solid rgb(255 255 255 / 64%);
   border-radius: 31px 31px 0 0;
-  background:
-    radial-gradient(circle at 90% 0, rgb(235 137 87 / 14%), transparent 34%),
-    linear-gradient(180deg, #fffdfa, #f3eae3);
-  box-shadow: 0 -24px 72px rgb(40 28 23 / 22%);
+  background: linear-gradient(180deg, #fff, #f5f5f3);
+  color: #171717;
+  box-shadow: 0 -24px 72px rgb(16 16 18 / 24%);
 }
 .sheetIcon {
   border-radius: 22px;
-  background: linear-gradient(145deg, #2b211e, #7b4133);
-  color: #fff9f4;
-  box-shadow: 0 16px 36px rgb(66 38 29 / 20%);
+  background: #171717;
+  color: #fff;
+  box-shadow: 0 14px 34px rgb(23 23 23 / 17%);
 }
+.sheet .primary { border-color: #171717; background: #171717; box-shadow: 0 12px 28px rgb(23 23 23 / 15%); }
+.sheet[data-phase="linking"] .sheetStatus > svg { color: #171717; }
+.sheet[data-phase="failed"] .sheetStatus > svg { color: #963d34; }
 
 .offerOverlay {
   --flow8-offer-header: 58px;
@@ -820,19 +873,15 @@
   .offerTruth strong { font-weight: 760; }
   .root[data-wallet="disconnected"] .balanceAction,
   .root[data-wallet="failed"] .balanceAction {
-    position: fixed;
-    z-index: 24;
-    right: 16px;
-    bottom: calc(102px + env(safe-area-inset-bottom));
-    left: 16px;
-    width: auto;
-    min-height: 50px;
+    position: static;
+    width: 100%;
+    min-height: 46px;
     justify-content: center;
     margin: 0;
-    border: 1px solid rgb(255 255 255 / 20%);
-    border-radius: 17px;
-    background: linear-gradient(135deg, #2a201d, #713d30);
-    box-shadow: 0 16px 38px rgb(46 28 23 / 24%);
+    border: 1px solid #171717;
+    border-radius: 14px;
+    background: #171717;
+    box-shadow: none;
   }
   .offerBody { display: grid; gap: 10px; padding-top: 14px; }
   .offerHero {
@@ -873,9 +922,12 @@
   .heading h2 { font-size: 28px; }
   .heading > span { line-height: 1.38; }
   .nonLiveBoundary { padding-block: 7px; }
-  .balanceCard { min-height: 156px; padding: 15px; }
-  .balanceCard > strong { margin-top: 8px; font-size: 38px; }
-  .balanceAction { margin-top: 2px; }
+  .balanceCard { min-height: 224px; gap: 10px; padding: 15px; }
+  .balanceTop { gap: 8px; }
+  .balanceTop small { max-width: 145px; }
+  .balanceAmount strong { font-size: 39px; }
+  .balanceFooter { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .balanceFooter p { max-width: none; }
   .offerBody { padding-inline: 12px; }
   .offerDecision { margin-inline: -12px; padding-inline: 12px; }
   .quote { padding: 15px; }

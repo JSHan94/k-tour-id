@@ -57,7 +57,7 @@ async function expectFilteredMap(page: Page, locale: BLocale) {
   await expect(key).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
   await expect(key).toHaveAccessibleName(locale === "ko"
     ? /Pulse 지도 · 공식 기록 묶음.*실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다/
-    : /Pulse map · official groups.*not live crowding or official LOCALDATA facts/)
+    : /ONDO temperature · official groups.*not live crowding or official LOCALDATA facts/)
   await expect(key.getByTestId("ondo-b-pulse-scale")).toBeVisible()
   await expect(key).not.toContainText(/Simulated score|시뮬레이션 점수/)
   await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText(locale === "ko" ? "공식 기록 1개" : "1 official record")

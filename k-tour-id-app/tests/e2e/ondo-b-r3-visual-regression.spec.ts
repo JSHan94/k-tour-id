@@ -167,7 +167,7 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await checkout.getByTestId("benefit-accept").click()
     await checkout.getByTestId("payment-confirm").click()
     const wallet = page.getByTestId("wallet-connect-sheet")
-    await wallet.getByRole("button", { name: "Prepare test wallet", exact: true }).click()
+    await wallet.getByRole("button", { name: "Set up local test balance", exact: true }).click()
     await expect(wallet).toBeHidden()
     await checkout.getByTestId("payment-minimum-consent").getByRole("checkbox").check()
     await checkout.getByTestId("payment-confirm").click()

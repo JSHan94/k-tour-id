@@ -74,7 +74,7 @@ test.describe("ONDO B official-record discovery and external-map boundary", () =
     const pulse = detail.getByTestId("canonical-place-pulse")
     await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
     await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
-    await expect(pulse.locator("summary")).toHaveAccessibleName("Pulse 91 · PEAK")
+    await expect(pulse.locator("summary")).toHaveAccessibleName("ONDO temperature 91 · PEAK")
     await pulse.locator("summary").click()
     await expect(pulse).toContainText("Curated visit signals · not live crowding or official venue facts.")
     await expect(detail).not.toContainText(/Open now|Foreign-issued cards accepted|English menu available/)

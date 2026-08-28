@@ -139,7 +139,7 @@ test("After19 fixture-driven failure retries without exposing outcome authoring 
 test("Korean short-landscape Table and After19 remain keyboard-contained and accessible", async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await openTables(page, "ko")
-  await expect(page.getByRole("heading", { name: "펄스 테이블" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "온도 테이블" })).toBeVisible()
   const detail = await openActiveTable(page)
   await detail.getByTestId("table-join").click()
   const gate = await advanceAccountToAge(page)

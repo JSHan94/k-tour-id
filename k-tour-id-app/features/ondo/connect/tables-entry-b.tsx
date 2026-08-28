@@ -42,7 +42,7 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:
 const COPY = {
   en: {
     eyebrow: "Upcoming in Seoul",
-    title: "Pulse Tables",
+    title: "ONDO Tables",
     intro: "Small plans anchored to a real place, with the details you need before choosing a seat.",
     truth: "Messages and photos stay in this tab. A confirmed plan is saved to My Korea on this device. Nothing is booked, sent to the venue, or charged.",
     official: "Place record",
@@ -112,7 +112,7 @@ const COPY = {
     leaveTarget: "Night bites, one shared table",
     undo: "Undo",
     checkInBoundary: "Marks this device only. It does not verify your location or attendance.",
-    tableHeader: "Pulse Table",
+    tableHeader: "ONDO Table",
     tableOpen: "1 seat left",
     tableTitle: "Night bites, one shared table",
     tableSubtitle: "A relaxed Friday meal in Gangnam",
@@ -125,7 +125,7 @@ const COPY = {
   },
   ko: {
     eyebrow: "서울의 다음 모임",
-    title: "펄스 테이블",
+    title: "온도 테이블",
     intro: "실제 장소에 연결된 작은 약속을 보고, 참여에 필요한 정보를 한눈에 확인하세요.",
     truth: "메시지와 사진은 이 탭에만 남고, 확정한 계획만 이 기기의 My Korea에 저장돼요. 예약·장소 전송·결제는 일어나지 않습니다.",
     official: "장소 기록",
@@ -195,7 +195,7 @@ const COPY = {
     leaveTarget: "야식 한 상, 함께 앉는 테이블",
     undo: "실행 취소",
     checkInBoundary: "이 기기에만 표시됩니다. 위치나 실제 참석을 확인하지 않습니다.",
-    tableHeader: "펄스 테이블",
+    tableHeader: "온도 테이블",
     tableOpen: "1자리 남음",
     tableTitle: "야식 한 상, 함께 앉는 테이블",
     tableSubtitle: "강남에서 가볍게 나누는 금요일 저녁",
@@ -208,7 +208,7 @@ const COPY = {
   },
   ja: {
     eyebrow: "ソウルで開催予定",
-    title: "Pulse Tables",
+    title: "ONDOテーブル",
     intro: "実在する場所を起点にした少人数の予定です。席を選ぶ前に必要な情報を確認できます。",
     truth: "メッセージと写真はこのタブだけに残り、確定した予定だけがこの端末のマイ韓国に保存されます。予約、店舗への送信、決済は行われません。",
     official: "場所の記録",
@@ -278,7 +278,7 @@ const COPY = {
     leaveTarget: "夜のひと皿を囲むTable",
     undo: "元に戻す",
     checkInBoundary: "この端末にだけ記録します。位置や実際の参加を確認するものではありません。",
-    tableHeader: "Pulse Table",
+    tableHeader: "ONDOテーブル",
     tableOpen: "残り1席",
     tableTitle: "夜のひと皿を囲むTable",
     tableSubtitle: "江南で気軽に楽しむ金曜の夕食",

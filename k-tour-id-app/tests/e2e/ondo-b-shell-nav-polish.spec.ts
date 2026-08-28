@@ -10,6 +10,12 @@ import {
 
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
 
+const NAV_ACCESSIBLE_NAMES: Record<BLocale, readonly string[]> = {
+  en: ["Explore", "My Korea", "Tables", "ID · Wallet", "Settings"],
+  ko: ["탐색", "내 한국", "테이블", "ID · 지갑", "설정"],
+  ja: ["探す", "マイ韓国", "テーブル", "ID・ウォレット", "設定"],
+}
+
 async function box(locator: Locator) {
   const value = await locator.boundingBox()
   expect(value).not.toBeNull()
@@ -48,7 +54,7 @@ async function seedPolishB(page: Page, locale: BLocale) {
   }, locale)
 }
 
-async function expectPolishedFiveTabDock(page: Page, screenshotName?: string, testInfo?: TestInfo, interactive = true) {
+async function expectPolishedFiveTabDock(page: Page, locale: BLocale, screenshotName?: string, testInfo?: TestInfo, interactive = true) {
   const nav = page.getByTestId("ondo-main-nav")
   const canvasBox = await box(page.getByTestId("ondo-canvas"))
   const navBox = await box(nav)
@@ -56,28 +62,40 @@ async function expectPolishedFiveTabDock(page: Page, screenshotName?: string, te
   await expect(buttons).toHaveCount(5)
 
   const buttonBoxes: Box[] = []
-  const labelBoxes: Box[] = []
   for (let index = 0; index < 5; index += 1) {
     const button = buttons.nth(index)
-    const label = button.locator("small")
-    await expect(label).toBeVisible()
+    const icon = button.locator("span[aria-hidden='true']").first()
+    const label = button.locator("small[aria-hidden='true']")
+    await expect(button).toHaveAccessibleName(NAV_ACCESSIBLE_NAMES[locale][index])
+    await expect(icon).toBeVisible()
+    await expect(icon.locator("img, svg")).toHaveCount(1)
+    await expect(label).toHaveCount(1)
     const buttonBox = await box(button)
-    const labelBox = await box(label)
-    const labelFontSize = await label.evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))
+    const iconBox = await box(icon)
+    const mobileContract = await button.evaluate((element) => {
+      const buttonStyle = getComputedStyle(element)
+      const labelStyle = getComputedStyle(element.querySelector("small")!)
+      return {
+        minHeight: Number.parseFloat(buttonStyle.minHeight),
+        labelPosition: labelStyle.position,
+        labelWidth: Number.parseFloat(labelStyle.width),
+        labelHeight: Number.parseFloat(labelStyle.height),
+        labelOverflow: labelStyle.overflow,
+        labelClip: labelStyle.clip,
+      }
+    })
     expect(buttonBox.width).toBeGreaterThanOrEqual(44)
-    expect(buttonBox.height).toBeGreaterThanOrEqual(56)
-    expect(labelFontSize).toBeGreaterThanOrEqual(12)
-    expect(labelBox.x).toBeGreaterThanOrEqual(buttonBox.x - .5)
-    expect(labelBox.x + labelBox.width).toBeLessThanOrEqual(buttonBox.x + buttonBox.width + .5)
-    expect(labelBox.y).toBeGreaterThanOrEqual(buttonBox.y - .5)
-    expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(buttonBox.y + buttonBox.height + .5)
+    expect(buttonBox.height).toBeGreaterThanOrEqual(44)
+    expect(mobileContract.minHeight).toBeGreaterThanOrEqual(52)
+    expect(iconBox.width).toBeGreaterThanOrEqual(24)
+    expect(iconBox.height).toBeGreaterThanOrEqual(24)
+    expect(mobileContract).toMatchObject({ labelPosition: "absolute", labelHeight: 1, labelOverflow: "hidden", labelClip: "rect(0px, 0px, 0px, 0px)" })
+    expect(mobileContract.labelWidth).toBeLessThanOrEqual(2)
     buttonBoxes.push(buttonBox)
-    labelBoxes.push(labelBox)
   }
 
   for (let index = 1; index < buttonBoxes.length; index += 1) {
     expect(intersectionArea(buttonBoxes[index - 1], buttonBoxes[index])).toBeLessThanOrEqual(.5)
-    expect(intersectionArea(labelBoxes[index - 1], labelBoxes[index])).toBeLessThanOrEqual(.5)
   }
 
   expect(navBox.x).toBeGreaterThanOrEqual(canvasBox.x + 7)
@@ -112,7 +130,7 @@ async function expectPolishedFiveTabDock(page: Page, screenshotName?: string, te
       return { outlineColor: style.outlineColor, outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth, outlineOffset: style.outlineOffset }
     })
     expect(focus.outlineStyle).not.toBe("none")
-    expect(focus.outlineColor).toBe("rgb(29, 102, 209)")
+    expect(focus.outlineColor).toBe("rgb(23, 23, 23)")
     expect(Number.parseFloat(focus.outlineWidth)).toBeGreaterThanOrEqual(2)
     expect(Number.parseFloat(focus.outlineOffset)).toBeLessThanOrEqual(0)
   }
@@ -190,13 +208,13 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
       ]) {
         await page.setViewportSize(viewport)
         await gotoB(page)
-        await expectPolishedFiveTabDock(page, `${locale}-${viewport.width}-dock`, testInfo)
+        await expectPolishedFiveTabDock(page, locale, `${locale}-${viewport.width}-dock`, testInfo)
       }
     })
   }
 
   for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
-    test(`${locale.toUpperCase()} reaches every 12px dock label by keyboard in a 200 percent layout equivalent`, async ({ page }, testInfo) => {
+    test(`${locale.toUpperCase()} reaches every icon-led dock destination by keyboard in a 200 percent layout equivalent`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width: 215, height: 700 })
       await seedPolishB(page, locale)
       await gotoB(page)
@@ -211,10 +229,13 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
         await expect(button).toBeFocused()
         await button.press("Enter")
         await expect(button).toHaveAttribute("aria-current", "page")
+        await expect(button).toHaveAccessibleName(NAV_ACCESSIBLE_NAMES[locale][index])
+        await expect(button.locator("span[aria-hidden='true']").first()).toBeVisible()
         const [buttonBox, navBox] = await Promise.all([box(button), box(nav)])
         expect(buttonBox.x).toBeGreaterThanOrEqual(navBox.x - .5)
         expect(buttonBox.x + buttonBox.width).toBeLessThanOrEqual(navBox.x + navBox.width + .5)
-        expect(await button.locator("small").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(12)
+        expect(buttonBox.height).toBeGreaterThanOrEqual(44)
+        expect(await button.evaluate((element) => Number.parseFloat(getComputedStyle(element).minHeight))).toBeGreaterThanOrEqual(52)
         furthestScroll = Math.max(furthestScroll, await nav.evaluate((element) => element.scrollLeft))
         if (index < 4) await page.keyboard.press("Tab")
       }
@@ -228,14 +249,14 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
   }
 
   for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
-    test(`${locale.toUpperCase()} keeps all visible dock labels at 200 percent zoom`, async ({ page }, testInfo) => {
+    test(`${locale.toUpperCase()} keeps all five icon-led dock targets usable at 200 percent zoom`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width: 430, height: 932 })
       await seedPolishB(page, locale)
       await gotoB(page)
       const cdp = await page.context().newCDPSession(page)
       await cdp.send("Emulation.setPageScaleFactor", { pageScaleFactor: 2 })
       await expect.poll(() => page.evaluate(() => window.visualViewport?.scale ?? 1)).toBe(2)
-      await expectPolishedFiveTabDock(page, `${locale}-430-200pct-dock`, testInfo, false)
+      await expectPolishedFiveTabDock(page, locale, `${locale}-430-200pct-dock`, testInfo, false)
       await cdp.send("Emulation.setPageScaleFactor", { pageScaleFactor: 1 })
     })
   }
@@ -244,12 +265,16 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
     await page.setViewportSize({ width: 390, height: 700 })
     await seedPolishB(page, "en")
     await gotoB(page)
+    await page.addStyleTag({ content: `
+      [data-testid="ondo-b-settings-entry"],
+      [data-testid="tables-entry"] { min-height: calc(var(--ondo-scroll-viewport) + 720px) !important; }
+    ` })
 
     const scroll = page.getByTestId("ondo-scroll-region")
     await expect(scroll).toHaveAttribute("data-scroll-owner", "true")
     await page.getByTestId("nav-settings").click()
     await expect(scroll).toHaveAttribute("data-active-tab", "settings")
-    expect(await scroll.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(100)
+    expect(await scroll.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeGreaterThan(600)
 
     await scroll.evaluate((element) => { element.scrollTop = 260 })
     await expect.poll(() => scroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(200)
@@ -342,6 +367,9 @@ test.describe("ONDO B shell navigation and scroll polish", () => {
     await gotoB(page)
     await page.getByTestId("nav-settings").click()
     const scroll = page.getByTestId("ondo-scroll-region")
+    const discovery = page.getByTestId("ondo-b-discovery-settings")
+    await discovery.locator(":scope > summary").click()
+    await expect(discovery).toHaveAttribute("open", "")
     const reset = page.getByTestId("ondo-b-onboarding-reset")
     await reset.scrollIntoViewIfNeeded()
     expect(await scroll.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)

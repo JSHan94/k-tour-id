@@ -72,7 +72,8 @@ const COPY = {
     pulseLimited: "Explore · limited signals",
     pulseConfidence: "Confidence",
     pulseFreshness: "Freshness",
-    pulseEvidence: "Why this Pulse",
+    pulseEvidence: "Why this ONDO temperature",
+    temperature: "ONDO temperature",
     pulseHigh: "High",
     pulseMedium: "Medium",
     pulseLow: "Low",
@@ -140,7 +141,8 @@ const COPY = {
     pulseLimited: "탐색 · 신호 부족",
     pulseConfidence: "신뢰도",
     pulseFreshness: "최신성",
-    pulseEvidence: "이 Pulse의 근거",
+    pulseEvidence: "이 온도의 근거",
+    temperature: "온도",
     pulseHigh: "높음",
     pulseMedium: "보통",
     pulseLow: "낮음",
@@ -208,7 +210,8 @@ const COPY = {
     pulseLimited: "探索中・シグナル不足",
     pulseConfidence: "確度",
     pulseFreshness: "更新状況",
-    pulseEvidence: "このPulseの根拠",
+    pulseEvidence: "このONDO温度の根拠",
+    temperature: "ONDO温度",
     pulseHigh: "高い",
     pulseMedium: "中程度",
     pulseLow: "低い",
@@ -432,8 +435,8 @@ export function CanonicalPlaceOverlay() {
   const pulse = pulseForVenue(venue.id, state.localPulseEvidenceByVenue[venue.id] ?? null)
   const pulseAlternatives = pulseAlternativesForVenue(venue.id)
   const pulseTitle = pulse.score == null
-    ? `Pulse · ${pulseLevelLabel(pulse.level, locale)}`
-    : `Pulse ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)}`
+    ? `${copy.temperature} · ${pulseLevelLabel(pulse.level, locale)}`
+    : `${copy.temperature} ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)}`
   const confidence = ({ high: copy.pulseHigh, medium: copy.pulseMedium, low: copy.pulseLow, limited: copy.pulseLimitedConfidence } as const)[pulse.confidence]
   const fixedSnapshot = pulse.updatedAt
     ? `${pulse.freshness === "growing" ? copy.pulseGrowingSnapshot : copy.pulseFixedSnapshot} · ${pulse.updatedAt.slice(0, 16).replace("T", " ")} UTC`
@@ -552,7 +555,7 @@ export function CanonicalPlaceOverlay() {
         <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
       </section>
       <section className={styles.pulsePeek} role="group" aria-label={pulseTitle} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
-        <span className={styles.pulseVisualLabel} aria-hidden="true">ONDO PULSE</span>
+        <span className={styles.pulseVisualLabel} aria-hidden="true">{copy.temperature}</span>
         <span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span>
         <span className={styles.srOnly}>{pulseTitle} · {pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot} · {copy.pulseBoundary}</span>
         {pulse.localEvidence ? <span className={styles.srOnly} data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</span> : null}
@@ -595,13 +598,13 @@ export function CanonicalPlaceOverlay() {
 
           <details className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
             <summary aria-label={pulseTitle}>
-              <div><span>ONDO PULSE</span><h3 className={styles.srOnly}>{pulseTitle}</h3><span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span></div>
+              <div><span>{copy.temperature}</span><h3 className={styles.srOnly}>{pulseTitle}</h3><span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span></div>
               <ChevronRight size={18} aria-hidden="true" />
             </summary>
             <div className={styles.pulsePanelBody}>
             <p className={styles.pulseBoundary}>{copy.pulseBoundary}</p>
             <dl>
-              {pulse.score == null ? null : <div data-testid="pulse-score"><dt>Pulse</dt><dd>{pulse.score}</dd></div>}
+              {pulse.score == null ? null : <div data-testid="pulse-score"><dt>{copy.temperature}</dt><dd>{pulse.score}</dd></div>}
               {pulse.signalCount == null ? null : <div data-testid="pulse-signal-count"><dt>{copy.pulseSignals}</dt><dd>{pulse.signalCount}</dd></div>}
               <div data-testid="pulse-confidence"><dt>{copy.pulseConfidence}</dt><dd>{confidence}</dd></div>
               <div><dt>{copy.pulseFreshness}</dt><dd>{fixedSnapshot}</dd></div>
@@ -619,7 +622,7 @@ export function CanonicalPlaceOverlay() {
                   const alternativeVenue = canonicalMapVenueById(alternative.venueId)
                   if (!alternativeVenue) return null
                   const alternativeName = venueNamePresentation(alternativeVenue.name.ko, locale).officialName
-                  return <button key={alternative.venueId} type="button" data-testid="pulse-alternative" data-venue-id={alternative.venueId} aria-label={`${copy.pulseAlternative}: ${alternativeName}, Pulse ${alternative.score}, ${pulseLevelLabel(alternative.level, locale)}`} onClick={() => openPulseAlternative(alternative.venueId)}><span><strong>{alternativeName}</strong><small>Pulse {alternative.score} · {pulseLevelLabel(alternative.level, locale)}</small></span><ChevronRight size={17} aria-hidden="true" /></button>
+                  return <button key={alternative.venueId} type="button" data-testid="pulse-alternative" data-venue-id={alternative.venueId} aria-label={`${copy.pulseAlternative}: ${alternativeName}, ${copy.temperature} ${alternative.score}, ${pulseLevelLabel(alternative.level, locale)}`} onClick={() => openPulseAlternative(alternative.venueId)}><span><strong>{alternativeName}</strong><small>{copy.temperature} {alternative.score} · {pulseLevelLabel(alternative.level, locale)}</small></span><ChevronRight size={17} aria-hidden="true" /></button>
                 })}</div>
               </section>
             ) : null}

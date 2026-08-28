@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   applicationName: "ONDO",
   title: "ONDO 溫圖 — Korea food & travel map",
   description:
-    "Official Seoul and Busan food-service records, Jeju editorial travel ideas, and a source-bounded Korea Pulse map.",
+    "Official Seoul and Busan food-service records, Jeju editorial travel ideas, and a source-bounded ONDO temperature map.",
   generator: "ONDO",
   icons: { icon: "/brand/ondo-mark-micro-16.svg" },
   openGraph: {

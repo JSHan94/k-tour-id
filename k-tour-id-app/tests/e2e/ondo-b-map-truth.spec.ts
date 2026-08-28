@@ -59,7 +59,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
     })
   })
 
-  test("city cards and the compact Pulse key keep official records separate from curated signals", async ({ page }) => {
+  test("city cards and the compact ONDO temperature key keep official records separate from curated signals", async ({ page }) => {
     await seed(page)
     await stubDeterministicBasemap(page)
     await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
@@ -98,10 +98,10 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(6)
     const key = page.getByTestId("ondo-b-map-key")
     await expect(key).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
-    await expect(key).toHaveAttribute("aria-label", "Pulse map · official groups. Outlined numbers are official record groups. Small dots are individual records. Curated visit signals, not live crowding or official LOCALDATA facts.")
+    await expect(key).toHaveAttribute("aria-label", "ONDO temperature · official groups. Outlined numbers are official record groups. Small dots are individual records. Curated visit signals, not live crowding or official LOCALDATA facts.")
     await key.getByTestId("ondo-b-map-key-details").locator(":scope > summary").click()
     await expect(key.getByTestId("ondo-b-pulse-legend").locator("[data-level]")).toHaveCount(6)
-    await expect(key.getByTestId("ondo-b-pulse-composition-disclosure")).toContainText("Fixed walkthrough snapshots — not live crowding or official LOCALDATA facts")
+    await expect(key.getByTestId("ondo-b-pulse-composition-disclosure")).toContainText("Fixed walkthrough snapshots — not weather, live crowding or official LOCALDATA facts")
   })
 
   test("all onboarding interests remain visible and editable without unsupported filtering", async ({ page }) => {
@@ -124,7 +124,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("200 official records")
   })
 
-  test("After19 changes ONDO presentation without filtering the official directory", async ({ page }) => {
+  test("After19 highlights the official pub/café type without changing directory truth", async ({ page }) => {
     await seed(page, [], {
       account: "ACC-ACTIVE",
       person: "PER-VERIFIED",
@@ -137,14 +137,17 @@ test.describe("ONDO B map truth and failure boundary", () => {
       await page.goto(`/ondo-b?city=${city}&view=list`, { waitUntil: "domcontentloaded" })
       const root = page.getByTestId("ondo-b-map-entry")
       await expect(root).toHaveAttribute("data-after19-active", "true")
-      await expect(root).toHaveAttribute("data-result-count", "200")
+      await expect(root).toHaveAttribute("data-city-record-count", "200")
+      await expect(root).toHaveAttribute("data-result-count", "30")
+      await expect(page.getByRole("button", { name: "Pub & café licence types", exact: true })).toHaveAttribute("aria-pressed", "true")
       const after19 = page.getByTestId("ondo-b-after19-global")
       await expect(after19).toHaveAttribute("data-after19-mode", "on")
       await expect(after19).toHaveAttribute("data-after19-age", "eligible")
-      await expect(after19.getByText("After 19 on", { exact: true })).toBeVisible()
-      await expect(after19.getByText(`Opened for this tab · ${label}`, { exact: true })).toBeVisible()
-      await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("200 official records")
-      await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(31)
+      const after19Status = after19.getByRole("status")
+      await expect(after19Status).toContainText("After 19 on")
+      await expect(after19Status).toContainText(`Opened for this tab · ${label}`)
+      await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("30 official records")
+      await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(30)
     }
 
     await page.getByRole("button", { name: "Turn off After 19 now" }).click()

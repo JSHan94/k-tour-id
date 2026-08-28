@@ -1286,6 +1286,570 @@
 }
 .koreaAtlas .atlasTruthBody { background: rgb(255 255 255 / 99%); }
 
+/* Map R2: neutral light canvas, visible result state, one quiet utility
+   capsule, and an actual After 19 product mode. The internal Pulse contract
+   stays intact; the user-facing visual is ONDO temperature. */
+.map :global(.maplibregl-canvas) {
+  filter: saturate(.78) contrast(1.035) brightness(1.015);
+}
+
+.topline h1 { color: #171717; }
+.rail button[aria-pressed="true"] {
+  background: #171717;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 15%);
+}
+
+.after19ModeChip {
+  display: inline-flex;
+  min-height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  border: 1px solid rgb(23 23 23 / 12%);
+  border-radius: 12px;
+  padding: 0 11px;
+  background: #f2f2f2;
+  color: #242424;
+  font-size: 12px;
+  font-weight: 820;
+  white-space: nowrap;
+}
+
+.mapUtilityCluster:not([data-editorial-open="true"]) {
+  box-sizing: border-box;
+  height: 50px;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgb(23 23 23 / 10%);
+  border-radius: 17px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 7px 20px rgb(0 0 0 / 8%);
+  /* A filtered ancestor becomes the containing block for the fixed 19+
+     dialog. The surface is already opaque enough, so keep the modal
+     viewport-owned and avoid that compositing trap. */
+  backdrop-filter: none;
+}
+
+.mapUtilityCluster:not([data-editorial-open="true"]) .locationMessage,
+.mapUtilityCluster:not([data-editorial-open="true"]) .locate,
+.mapUtilityCluster:not([data-editorial-open="true"]) :global([data-testid="global-after19-toggle"]),
+.mapUtilityCluster:not([data-editorial-open="true"]) > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mapUtilityCluster:not([data-editorial-open="true"]) > :global([data-testid="ondo-b-after19-global"]),
+.mapUtilityCluster:not([data-editorial-open="true"]) > :global([data-testid="ondo-b-japan-first-discovery"]) {
+  min-width: 44px;
+}
+
+.root:not(.ultraShort) > .mapChrome {
+  grid-template-columns: 126px minmax(0, 1fr) minmax(96px, auto) 44px;
+}
+
+.root:not(.ultraShort) > .mapChrome > .resultBar,
+.resultBar[data-effective-view="map"],
+.resultBar[data-effective-view="list"] {
+  width: auto;
+  min-width: 96px;
+  padding: 2px 3px 2px 10px;
+}
+
+.resultBar[data-effective-view="map"] > span,
+.resultBar[data-effective-view="list"] > span:not(.forcedListLabel) {
+  position: static;
+  display: grid;
+  width: auto;
+  height: auto;
+  min-width: 22px;
+  overflow: visible;
+  clip: auto;
+  white-space: nowrap;
+}
+
+.resultBar b[data-compact-count] {
+  font-size: 0;
+  font-variant-numeric: tabular-nums;
+}
+.resultBar b[data-compact-count]::after {
+  content: attr(data-compact-count);
+  font-size: 13px;
+}
+.resultBar small { display: none; }
+
+.pulseScale > i {
+  width: 46px;
+  background: linear-gradient(90deg, #d7d4d0 0%, #f3b861 30%, #e97943 57%, #ce493a 78%, #7a2048 100%);
+  box-shadow: 0 0 0 1px rgb(23 23 23 / 8%) inset;
+}
+.pulseScale b { color: #242424; }
+
+.root[data-after19-active="true"] {
+  background: #0b0b0e;
+  color: #fafafa;
+}
+.root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
+  filter: grayscale(.2) saturate(.82) contrast(1.28) brightness(.43);
+}
+.root[data-after19-active="true"] .topline,
+.root[data-after19-active="true"] .search,
+.root[data-after19-active="true"] .rail,
+.root[data-after19-active="true"] .mapUtilityCluster:not([data-editorial-open="true"]),
+.root[data-after19-active="true"] .mapKey,
+.root[data-after19-active="true"] .resultBar,
+.root[data-after19-active="true"] .attribution,
+.root[data-after19-active="true"] .locationMessage,
+.root[data-after19-active="true"] .locate {
+  border-color: rgb(255 255 255 / 14%);
+  background: rgb(23 23 27 / 94%);
+  color: #fafafa;
+  box-shadow: 0 9px 26px rgb(0 0 0 / 30%);
+}
+.root[data-after19-active="true"] .topline h1,
+.root[data-after19-active="true"] .back,
+.root[data-after19-active="true"] .language,
+.root[data-after19-active="true"] .search,
+.root[data-after19-active="true"] .search input,
+.root[data-after19-active="true"] .rail button,
+.root[data-after19-active="true"] .mapKey,
+.root[data-after19-active="true"] .resultBar,
+.root[data-after19-active="true"] .resultBar b,
+.root[data-after19-active="true"] .attribution,
+.root[data-after19-active="true"] .locationMessage > summary,
+.root[data-after19-active="true"] .locate {
+  color: #fafafa;
+}
+.root[data-after19-active="true"] .search input::placeholder { color: #a9a9b1; }
+.root[data-after19-active="true"] .rail button[aria-pressed="true"] {
+  background: #fafafa;
+  color: #111115;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 30%), 0 0 22px rgb(255 77 155 / 18%);
+}
+.root[data-after19-active="true"] .after19ModeChip {
+  border-color: rgb(255 77 155 / 42%);
+  background: rgb(255 77 155 / 12%);
+  color: #ff9bcb;
+}
+.root[data-after19-active="true"] .mapUtilityCluster :global([data-testid="global-after19-banner"]),
+.root[data-after19-active="true"] .mapUtilityCluster :global([data-testid="global-after19-banner"] > button) {
+  background: #fafafa;
+  color: #0b0b0e;
+  box-shadow: 0 0 26px rgb(255 77 155 / 24%);
+}
+.root[data-after19-active="true"] .pulseScale b { color: #fafafa; }
+.root[data-after19-active="true"] .pulseScale > i {
+  background: linear-gradient(90deg, #6f7078 0%, #ffc857 28%, #ff634a 55%, #ff4d9b 78%, #a82c78 100%);
+  box-shadow: 0 0 18px rgb(255 77 155 / 22%);
+}
+.root[data-after19-active="true"] .listPanel {
+  background: linear-gradient(180deg, #101014, #0b0b0e);
+}
+.root[data-after19-active="true"] .venueList li[data-venue-id] {
+  border-color: rgb(255 255 255 / 12%);
+  background: #17171b;
+  color: #fafafa;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 28%);
+}
+.root[data-after19-active="true"] .venueList strong,
+.root[data-after19-active="true"] .venueList small,
+.root[data-after19-active="true"] .venueList em,
+.root[data-after19-active="true"] .pulseDisclosure { color: #d2d2d8; }
+.root[data-after19-active="true"] :global([data-testid="ondo-b-japan-first-discovery"]) {
+  --night-surface: #17171b;
+  color: #fafafa;
+}
+
+@media (max-width: 430px) {
+  .root:not(.ultraShort) > .mapChrome {
+    grid-template-columns: 118px minmax(0, 1fr) minmax(92px, auto) 44px;
+  }
+  .after19ModeChip { max-width: 176px; overflow: hidden; text-overflow: ellipsis; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root[data-after19-active="true"] *,
+  .root[data-after19-active="true"] *::before,
+  .root[data-after19-active="true"] *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Map utility composition -------------------------------------------------
+   Location, locate, After 19 and Stories used to position themselves as four
+   unrelated overlays. The map now owns one compact lane for those existing
+   controls. Nothing is removed: explanatory copy, age gating, editorial
+   media and source links remain available through their native disclosures. */
+.mapUtilityCluster {
+  position: absolute;
+  z-index: 18;
+  top: calc(166px + env(safe-area-inset-top));
+  right: var(--map-edge, 14px);
+  display: grid;
+  height: 44px;
+  grid-auto-columns: 44px;
+  grid-auto-flow: column;
+  align-items: start;
+  justify-content: end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.mapUtilityCluster > * { min-width: 0; pointer-events: auto; }
+
+.mapUtilityCluster .locationMessage {
+  position: static;
+  inset: auto;
+  width: 44px;
+  max-width: 44px;
+  min-height: 44px;
+  max-height: 44px;
+  grid-area: auto;
+  justify-self: auto;
+  overflow: visible;
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 8%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.mapUtilityCluster .locationMessage > summary {
+  box-sizing: border-box;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+  color: #282828;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.mapUtilityCluster .locationMessage > summary > span,
+.mapUtilityCluster .locationMessage > summary > svg:last-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.mapUtilityCluster .locationMessage[open] > summary > svg:first-child { transform: none; }
+
+.mapUtilityCluster .locationMessage > p {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  left: auto;
+  width: min(320px, calc(100cqw - (2 * var(--map-edge, 14px))));
+  max-width: none;
+}
+
+.mapUtilityCluster .locate {
+  position: static;
+  inset: auto;
+  width: 44px;
+  height: 44px;
+  grid-area: auto;
+  justify-self: auto;
+  border-radius: 14px;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-after19-global"]) {
+  position: static !important;
+  inset: auto !important;
+  display: block !important;
+  width: 44px !important;
+  min-width: 44px;
+  height: 44px;
+  justify-items: stretch !important;
+  gap: 0 !important;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-toggle"]) {
+  box-sizing: border-box;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  gap: 0;
+  padding: 0;
+  border-radius: 14px;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-toggle"]) > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-toggle"]) > svg { display: none; }
+.mapUtilityCluster :global([data-testid="global-after19-toggle"])::after {
+  color: #232323;
+  content: "19+";
+  font-size: 12px;
+  font-weight: 860;
+  letter-spacing: -.02em;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-banner"]) {
+  position: relative;
+  box-sizing: border-box;
+  display: block;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #191919;
+  color: #fff;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-banner"]) > svg { display: none; }
+
+.mapUtilityCluster :global([data-testid="global-after19-banner"]) > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-banner"]) > button {
+  position: absolute;
+  inset: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #191919;
+  color: #fff;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-banner"]) > button > svg { display: none; }
+.mapUtilityCluster :global([data-testid="global-after19-banner"]) > button::after {
+  content: "19+";
+  font-size: 12px;
+  font-weight: 860;
+  letter-spacing: -.02em;
+}
+
+.mapUtilityCluster :global([data-testid="global-after19-off-notice"]),
+.mapUtilityCluster :global([data-testid="global-after19-expiry-notice"]) {
+  position: absolute;
+  top: 148px;
+  right: 0;
+  width: min(318px, calc(100cqw - (2 * var(--map-edge, 14px))));
+  max-width: none;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]) {
+  position: static !important;
+  inset: auto !important;
+  width: 44px !important;
+  min-width: 44px;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary {
+  box-sizing: border-box;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 2px;
+  border-radius: 14px;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary > span:first-child {
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  grid-template-columns: 1fr;
+  gap: 0;
+  padding: 0;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary > span:first-child b,
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary > span:nth-child(2),
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary > svg { display: none; }
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"][open]) {
+  position: absolute !important;
+  top: 52px !important;
+  right: 0 !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: min(440px, calc(100cqw - (2 * var(--map-edge, 14px)))) !important;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"][open]) > summary {
+  min-height: 64px;
+  border-radius: 18px;
+}
+
+.mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"][open]) > div {
+  max-height: min(54cqh, 470px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.root:has(> .mapUtilityCluster[data-editorial-open="true"]) .search,
+.root:has(> .mapUtilityCluster[data-editorial-open="true"]) .rail,
+.root:has(> .mapUtilityCluster[data-editorial-open="true"]) > .mapChrome,
+.root:has(> .mapUtilityCluster[data-editorial-open="true"]) > .listPanel {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.root:has(> .mapUtilityCluster[data-editorial-open="true"]) .search,
+.root:has(> .mapUtilityCluster[data-editorial-open="true"]) .rail { display: none; }
+
+.root[data-directory-source]:not(.ultraShort):has(> .mapUtilityCluster[data-editorial-open="true"]) > .cityHeader {
+  grid-template-rows: 44px;
+}
+
+.mapUtilityCluster[data-editorial-open="true"] > :not(:global([data-testid="ondo-b-japan-first-discovery"])) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Header hierarchy: phones keep the familiar three reading rows. Wider maps
+   reuse the same controls in two rows, cap their visual span and return the
+   remaining canvas to the map. */
+.root[data-directory-source]:not(.ultraShort) > .cityHeader {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 44px 44px 48px;
+}
+
+.root[data-directory-source]:not(.ultraShort) > .cityHeader > .topline,
+.root[data-directory-source]:not(.ultraShort) > .cityHeader > .search,
+.root[data-directory-source]:not(.ultraShort) > .cityHeader > .rail {
+  grid-column: 1;
+}
+
+.root[data-directory-source]:not(.ultraShort) > .cityHeader > .topline { grid-row: 1; }
+.root[data-directory-source]:not(.ultraShort) > .cityHeader > .search { grid-row: 2; }
+.root[data-directory-source]:not(.ultraShort) > .cityHeader > .rail { grid-row: 3; }
+
+@container ondo-map-root (min-width: 600px) {
+  .root[data-directory-source]:not(.ultraShort) > .cityHeader {
+    grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
+    grid-template-rows: 44px 48px;
+    column-gap: 8px;
+    row-gap: 6px;
+  }
+
+  .root[data-directory-source]:not(.ultraShort) > .cityHeader > .topline {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+
+  .root[data-directory-source]:not(.ultraShort) > .cityHeader > .search {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .root[data-directory-source]:not(.ultraShort) > .cityHeader > .rail {
+    grid-row: 2;
+    grid-column: 2;
+    width: min(100%, 980px);
+    max-width: 980px;
+    justify-self: start;
+  }
+
+  .root[data-directory-source]:not(.ultraShort) > .mapUtilityCluster {
+    top: calc(118px + env(safe-area-inset-top));
+  }
+}
+
+@container ondo-map-root (min-width: 600px) and (max-height: 500px) {
+  .mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"][open]) {
+    top: -60px !important;
+  }
+
+  .mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"][open]) > div {
+    max-height: calc(100cqh - 140px) !important;
+  }
+
+  .mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"][open]) > div > header {
+    display: grid;
+    min-height: 44px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mapUtilityCluster :global([data-testid="global-after19-off-notice"]),
+  .mapUtilityCluster :global([data-testid="global-after19-expiry-notice"]) {
+    top: 52px;
+    right: auto;
+    left: calc(-100cqw + 200px + (2 * var(--map-edge, 14px)));
+  }
+}
+
+.root[data-editorial-point-count] > .mapUtilityCluster {
+  top: calc(64px + env(safe-area-inset-top));
+}
+
+/* Bottom chrome has one quiet legal/status lane. Expanded truth stays one
+   action away while the central map remains the dominant surface. */
+.root:not(.ultraShort) > .mapChrome {
+  top: auto;
+  right: var(--map-edge, 14px);
+  bottom: 8px;
+  left: var(--map-edge, 14px);
+  height: 48px;
+  grid-template-columns: 126px minmax(0, 1fr) 48px 44px;
+  grid-template-rows: 48px;
+  grid-template-areas: "key . result attribution";
+  gap: 8px;
+}
+
+.root:not(.ultraShort) > .mapChrome > .mapKey,
+.root:not(.ultraShort) > .mapChrome > .resultBar,
+.root:not(.ultraShort) > .mapChrome > .attribution { align-self: stretch; }
+
+.root:not(.ultraShort) > .mapChrome > .resultBar {
+  width: 48px;
+  height: 48px;
+}
+
+.root:not(.ultraShort) > .map :global(.maplibregl-ctrl-bottom-right) {
+  top: auto;
+  right: var(--map-edge, 14px);
+  bottom: 72px;
+}
+
+.root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .listPanel {
+  top: calc(218px + env(safe-area-inset-top));
+  bottom: 64px;
+  padding-top: 0;
+}
+
+@container ondo-map-root (min-width: 600px) {
+  .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .listPanel {
+    top: calc(170px + env(safe-area-inset-top));
+  }
+}
+
+.ultraShort > .mapUtilityCluster {
+  top: calc(104px + env(safe-area-inset-top));
+  right: 10px;
+}
+
+@container ondo-map-root (max-width: 350px) {
+  .mapUtilityCluster { right: 10px; }
+}
+
 /* Global After 19 is an ONDO presentation layer, not venue truth. Keep its
    trigger in an owned map lane and use a neutral night treatment only while
    the session-scoped layer is active. */
@@ -1874,7 +2438,7 @@
     background: rgb(255 253 249 / 76%);
     color: #81685b;
     box-shadow: 0 12px 30px rgb(57 37 27 / 7%);
-    content: "SEOUL  ·  PULSE  ·  BUSAN";
+    content: "SEOUL  ·  ONDO  ·  BUSAN";
     font-size: 12px;
     font-weight: 820;
     letter-spacing: .13em;
@@ -2778,3 +3342,40 @@
   color: #444;
 }
 .koreaAtlas .atlasTruthBody { background: rgb(255 255 255 / 99%); }
+
+/* Keep the final rendered browse surface neutral after the older reference
+   composition layers above. Night mode owns its own higher-contrast palette. */
+.root:not([data-after19-active="true"]) .map :global(.maplibregl-canvas) {
+  filter: saturate(.78) contrast(1.035) brightness(1.015);
+}
+.root:not([data-after19-active="true"]) .rail button[aria-pressed="true"] {
+  background: #171717;
+  color: #fff;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 15%);
+}
+
+/* Short landscape List uses the open utility row for its compact count/view
+   control. Keeping that control in the map-only bottom lane clips the first
+   venue inside the already-short scroll viewport and makes its centre
+   untappable. The list therefore owns the full remaining height. */
+@container ondo-map-root (min-width: 600px) and (max-height: 500px) {
+  .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .listPanel {
+    top: calc(170px + env(safe-area-inset-top));
+    bottom: 0;
+  }
+
+  .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .mapChrome {
+    top: calc(116px + env(safe-area-inset-top));
+    right: auto;
+    bottom: auto;
+    left: 10px;
+    display: block;
+    width: 104px;
+    height: 48px;
+  }
+
+  .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .mapChrome > .resultBar {
+    width: 104px;
+    height: 48px;
+  }
+}

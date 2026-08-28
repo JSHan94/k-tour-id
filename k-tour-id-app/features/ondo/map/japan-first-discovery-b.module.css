@@ -65,9 +65,22 @@
   box-shadow: 0 16px 42px rgb(49 36 28 / 9%);
 }
 
-.panel header { display: grid; gap: 8px; }
+.panel header { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 8px; }
 .panel header > span { display: flex; align-items: center; gap: 7px; color: #7a2048; }
 .panel header strong { font-size: 14px; }
+.closePanel {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  justify-self: end;
+  border: 1px solid rgb(23 23 23 / 10%);
+  border-radius: 13px;
+  background: #fff;
+  color: #262626;
+}
+.closePanel:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: 2px; }
+.method { grid-column: 1 / -1; }
 
 .method > summary,
 .moreStories > summary,

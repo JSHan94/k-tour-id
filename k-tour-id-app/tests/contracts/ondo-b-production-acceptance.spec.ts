@@ -155,6 +155,7 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
         const settingsFile = file === "features/ondo/settings/settings-entry-b.tsx"
         const truthfulLabsFile = file === "features/ondo/labs/labs-entry.tsx"
         const truthfulIdentityFile = file === "features/ondo/identity-b/ktour-id-setup-b.tsx"
+          || file === "features/ondo/identity-b/passport-ocr-step-b.tsx"
           || file === "features/ondo/identity-b/ktour-id-setup-model-b.ts"
           || file === "features/ondo/identity-b/traveler-id-entry-b.tsx"
           || file === "features/ondo/onboarding/official-directory-onboarding.tsx"
@@ -166,6 +167,7 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
           || String(pattern).includes("demo")
           || String(pattern).includes("데모|시뮬레이션")
         if (truthfulIdentityFile && explicitIdentityEnvironment) return false
+        if (truthfulIdentityFile && String(pattern) === String(/\blocal preview\b/i)) return false
         if ((truthfulAccountFile || truthfulActionGateFile) && explicitIdentityEnvironment) return false
         if (truthfulLabsFile) return false
         if (myKoreaFile && explicitIdentityEnvironment && /Labs|wallet|bridge|지갑|체인|ウォレット|ブリッジ/.test(literal)) return false

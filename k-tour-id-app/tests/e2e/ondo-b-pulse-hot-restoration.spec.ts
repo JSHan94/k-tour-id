@@ -40,7 +40,7 @@ test("Pulse is reachable from city list to selected confidence and Too Hot alter
 
   await activate(curatedRow.locator("button"))
   await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-selected-venue-id", "mois-0021cd596bc5b2a922ad")
-  await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("Pulse 91 · PEAK")
+  await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("ONDO temperature 91 · PEAK")
   const selectedPeek = page.getByTestId("canonical-place-peek")
   await expect(selectedPeek).toHaveAttribute("role", "dialog")
   await expect(selectedPeek).toHaveAttribute("aria-label", /로바/)
