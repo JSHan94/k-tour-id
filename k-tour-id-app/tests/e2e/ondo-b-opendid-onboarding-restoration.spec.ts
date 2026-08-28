@@ -411,6 +411,25 @@ test("OPENDID-E2E-003F EN KO JA keep the local OCR boundary and masked review ex
   }
 })
 
+for (const viewport of [{ width: 320, height: 720 }, { width: 844, height: 390 }] as const) {
+  test(`OPENDID-E2E-003G ${viewport.width}x${viewport.height} keeps selected passport and simulated OCR action usable together`, async ({ page }) => {
+    await page.setViewportSize(viewport)
+    const { setup } = await openTravelerSetup(page)
+    const document = await reachPassportDocument(setup)
+    await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+    await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+    const action = document.getByTestId("passport-ocr-start")
+    const preview = document.getByTestId("passport-ocr-preview")
+    await expect(preview).toBeVisible()
+    await expect(action).toBeVisible()
+    await expect(action).toBeFocused()
+    const actionBox = await action.boundingBox()
+    expect(actionBox).not.toBeNull()
+    expect(actionBox!.y).toBeGreaterThanOrEqual(0)
+    expect(actionBox!.y + actionBox!.height).toBeLessThanOrEqual(viewport.height)
+  })
+}
+
 test("OPENDID-E2E-003D passport OCR requires a decodable bounded image and exposes a masked local-only review", async ({ page }) => {
   const { setup } = await openTravelerSetup(page)
   const document = await reachPassportDocument(setup)

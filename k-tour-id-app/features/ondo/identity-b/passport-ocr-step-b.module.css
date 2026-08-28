@@ -54,7 +54,18 @@
   .root { min-height: 350px; }
   .root h1 { font-size: 29px; }
   .lead { font-size: 13px; line-height: 1.5; }
+  .root[data-ocr-stage="preview"] .heroIcon { width: 48px; height: 48px; margin-bottom: 10px; border-radius: 15px; }
+  .root[data-ocr-stage="preview"] .preview { margin-top: 12px; }
+  .root[data-ocr-stage="preview"] .preview img { max-height: 150px; }
+  .root[data-ocr-stage="preview"] .actions { margin-top: 12px; }
   .review div { grid-template-columns: 92px minmax(0, 1fr); padding-inline: 11px; }
+}
+
+@media (min-width: 351px) and (max-width: 430px) {
+  .root[data-ocr-stage="preview"] .heroIcon { width: 52px; height: 52px; margin-bottom: 12px; border-radius: 16px; }
+  .root[data-ocr-stage="preview"] .preview { margin-top: 14px; }
+  .root[data-ocr-stage="preview"] .preview img { max-height: 180px; }
+  .root[data-ocr-stage="preview"] .actions { margin-top: 14px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -68,6 +79,22 @@
   .processing { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 14px; }
   .processing li { min-height: 82px; grid-template-columns: 32px minmax(0, 1fr); align-content: center; }
   .processing li small { grid-column: 2; }
+
+  .root[data-ocr-stage="preview"] {
+    display: grid;
+    grid-template-columns: minmax(220px, .84fr) minmax(320px, 1.16fr);
+    grid-template-rows: auto auto 1fr;
+    align-items: start;
+    gap: 8px 16px;
+    text-align: left;
+  }
+  .root[data-ocr-stage="preview"] .heroIcon,
+  .root[data-ocr-stage="preview"] .eyebrow { display: none; }
+  .root[data-ocr-stage="preview"] h1 { grid-column: 1; grid-row: 1; margin: 0; font-size: 26px; }
+  .root[data-ocr-stage="preview"] .preview { grid-column: 1; grid-row: 2 / span 2; width: 100%; margin-top: 0; }
+  .root[data-ocr-stage="preview"] .preview img { max-height: 146px; }
+  .root[data-ocr-stage="preview"] .actions { grid-column: 2; grid-row: 1; width: 100%; margin-top: 0; }
+  .root[data-ocr-stage="preview"] .truth { grid-column: 2; grid-row: 2; width: 100%; margin-top: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {

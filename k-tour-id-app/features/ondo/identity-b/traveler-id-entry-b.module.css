@@ -298,11 +298,17 @@
 .statusCard button:active { transform: scale(.985); background: rgb(100 61 79 / 6%); }
 
 @media (max-width: 430px) {
-  .screen { padding-top: max(22px, env(safe-area-inset-top)); }
-  .pass { min-height: 196px; margin-top: 15px; padding: 17px; }
-  .passMain { margin-top: 22px; }
-  .pass > p { margin-top: 10px; }
-  .passBoundary { margin-top: 8px; }
+  .screen { padding-top: max(14px, env(safe-area-inset-top)); }
+  .header span {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .pass { min-height: 160px; margin-top: 8px; padding: 14px; }
+  .passMain { margin-top: 14px; }
+  .pass > p { display: none; }
+  .passBoundary { margin-top: 6px; }
 }
 
 @media (max-width: 350px) {

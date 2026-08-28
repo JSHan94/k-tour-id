@@ -275,6 +275,33 @@ const PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
   1, "#EFE1B7",
   "#CFCAC0",
 ]
+const AFTER19_PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
+  "match", ["get", "pulseRank"],
+  5, "#FF3FA4",
+  4, "#FF604D",
+  3, "#FF9A3D",
+  2, "#FFD45A",
+  1, "#E7F26D",
+  "#8A8D98",
+]
+const PULSE_HEAT_COLOR: ExpressionSpecification = [
+  "interpolate", ["linear"], ["heatmap-density"],
+  0, "rgba(255,217,138,0)",
+  0.16, "rgba(255,217,138,.24)",
+  0.36, "rgba(255,155,85,.48)",
+  0.6, "rgba(239,89,71,.64)",
+  0.8, "rgba(206,73,58,.76)",
+  1, "rgba(122,32,72,.88)",
+]
+const AFTER19_HEAT_COLOR: ExpressionSpecification = [
+  "interpolate", ["linear"], ["heatmap-density"],
+  0, "rgba(255,200,70,0)",
+  0.12, "rgba(255,212,90,.30)",
+  0.34, "rgba(255,154,61,.62)",
+  0.58, "rgba(255,96,77,.82)",
+  0.8, "rgba(255,63,164,.92)",
+  1, "rgba(255,112,215,1)",
+]
 
 const SELECTED_CAPSULE_IMAGE_ID = "ondo-selected-pulse-capsule"
 
@@ -939,12 +966,24 @@ export function MapEntryB() {
           })
           instance.addSource("ondo-user-location", { type: "geojson", data: toUserLocationFeatureCollection(userLocationRef.current) })
           instance.addSource("ondo-editorial-places", { type: "geojson", data: toEditorialPlaceFeatureCollection(locale, selectedEditorialPlaceId, city === "jeju") })
+          instance.addSource("ondo-night-dim", {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [{
+                type: "Feature",
+                properties: {},
+                geometry: { type: "Polygon", coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]]] },
+              }],
+            },
+          })
           instance.addImage(SELECTED_CAPSULE_IMAGE_ID, selectedCapsuleImage(), {
             pixelRatio: 2,
             stretchX: [[20, 44]],
             stretchY: [[20, 28]],
             content: [16, 12, 48, 36],
           })
+          instance.addLayer({ id: "ondo-night-dim", type: "fill", source: "ondo-night-dim", paint: { "fill-color": "#080810", "fill-opacity": 0 } })
           instance.addLayer({ id: "ondo-clusters", type: "circle", source: "ondo-directory", filter: ["has", "point_count"], paint: { "circle-color": "rgba(255,253,249,0.9)", "circle-radius": ["step", ["get", "point_count"], 15, 15, 18, 50, 21], "circle-stroke-color": "rgba(66,62,57,.34)", "circle-stroke-width": 1, "circle-opacity": 0.94, "circle-blur": 0.02 } })
           instance.addLayer({ id: "ondo-cluster-count", type: "symbol", source: "ondo-directory", filter: ["has", "point_count"], layout: { "text-field": ["to-string", ["get", "point_count_abbreviated"]], "text-font": ["Noto Sans Bold"], "text-size": 11.5 }, paint: { "text-color": "#4a4641", "text-halo-color": "rgba(255,253,249,.78)", "text-halo-width": 0.8 } })
           instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "curatedSignal"], false]], paint: { "circle-color": "#716d67", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.6, 15, 4.2], "circle-opacity": 0.66, "circle-stroke-width": 0 } })
@@ -1004,15 +1043,7 @@ export function MapEntryB() {
               "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 8, 0.9, 12, 1.3, 15, 0.8],
               "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 8, 34, 12, 60, 15, 78],
               "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 12, 0.68, 15, 0.32],
-              "heatmap-color": [
-                "interpolate", ["linear"], ["heatmap-density"],
-                0, "rgba(255,217,138,0)",
-                0.16, "rgba(255,217,138,.24)",
-                0.36, "rgba(255,155,85,.48)",
-                0.6, "rgba(239,89,71,.64)",
-                0.8, "rgba(206,73,58,.76)",
-                1, "rgba(122,32,72,.88)",
-              ],
+              "heatmap-color": PULSE_HEAT_COLOR,
             },
           })
           instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
@@ -1213,6 +1244,27 @@ export function MapEntryB() {
       mapRef.current = null
     }
   }, [actions, city, effectiveView, locale, retryToken])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !map.getLayer("ondo-night-dim")) return
+    const color = after19Active ? AFTER19_PULSE_LEVEL_EXPRESSION : PULSE_LEVEL_EXPRESSION
+    map.setPaintProperty("ondo-night-dim", "fill-opacity", after19Active ? 0.62 : 0)
+    if (map.getLayer("ondo-temperature-field")) {
+      map.setPaintProperty("ondo-temperature-field", "heatmap-color", after19Active ? AFTER19_HEAT_COLOR : PULSE_HEAT_COLOR)
+      map.setPaintProperty("ondo-temperature-field", "heatmap-opacity", after19Active
+        ? ["interpolate", ["linear"], ["zoom"], 8, 0.62, 12, 0.82, 15, 0.46]
+        : ["interpolate", ["linear"], ["zoom"], 8, 0.5, 12, 0.68, 15, 0.32])
+    }
+    for (const layerId of [
+      "ondo-pulse-halo", "ondo-pulse-halo-rising", "ondo-pulse-halo-warming",
+      "ondo-pulse-points", "ondo-pulse-points-rising", "ondo-pulse-points-warming",
+      "ondo-selected-pulse-outer", "ondo-selected-pulse-outer-rising", "ondo-selected-pulse-outer-warming",
+      "ondo-selected-pulse", "ondo-selected-pulse-rising", "ondo-selected-pulse-warming",
+    ]) {
+      if (map.getLayer(layerId)) map.setPaintProperty(layerId, "circle-color", color)
+    }
+  }, [after19Active, mapState])
 
   useEffect(() => {
     const directorySource = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined

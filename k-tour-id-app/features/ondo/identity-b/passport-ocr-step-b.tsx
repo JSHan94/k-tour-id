@@ -172,7 +172,10 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (error) initialActionRef.current?.focus({ preventScroll: true })
-      else if (stage === "preview") previewActionRef.current?.focus({ preventScroll: true })
+      else if (stage === "preview") {
+        previewActionRef.current?.focus()
+        previewActionRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
+      }
       else if (stage === "review") reviewActionRef.current?.focus({ preventScroll: true })
     })
     return () => window.cancelAnimationFrame(frame)
@@ -316,12 +319,12 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
     {stage === "preview" && previewUrl ? <>
       <h1>{copy.previewTitle}</h1>
       <div className={styles.preview} data-testid="passport-ocr-preview"><img src={previewUrl} alt={copy.previewAlt as string} /></div>
-      <p className={styles.truth}><ShieldCheck aria-hidden="true" />{copy.privacy}</p>
       <div className={styles.actions}>
         <button ref={previewActionRef} type="button" data-identity-initial-focus data-testid="passport-ocr-start" className={styles.primary} onClick={beginProcessing}>{copy.start}<ArrowRight aria-hidden="true" /></button>
         <button type="button" data-testid="passport-ocr-replace" className={styles.secondary} onClick={() => openPicker(true)}><RefreshCw aria-hidden="true" />{copy.replace}</button>
         <button type="button" data-testid="passport-ocr-remove" className={styles.danger} onClick={removeImage}><Trash2 aria-hidden="true" />{copy.remove}</button>
       </div>
+      <p className={styles.truth}><ShieldCheck aria-hidden="true" />{copy.privacy}</p>
     </> : null}
 
     {stage === "processing" ? <>

@@ -860,6 +860,8 @@
 .receiptWrap > .primary { min-height: 50px; border-radius: 17px; }
 
 @media (max-width: 699px) {
+  .root { margin-top: 10px; }
+  .heading > span { display: none; }
   .offerTruth {
     min-height: 0;
     padding: 5px 12px 6px;
@@ -918,16 +920,29 @@
 }
 
 @media (max-width: 350px) {
-  .root { gap: 10px; margin-top: 12px; }
+  .root { gap: 7px; margin-top: 4px; }
   .heading h2 { font-size: 28px; }
-  .heading > span { line-height: 1.38; }
-  .nonLiveBoundary { padding-block: 7px; }
-  .balanceCard { min-height: 224px; gap: 10px; padding: 15px; }
+  .heading > span {
+    display: -webkit-box;
+    overflow: hidden;
+    line-height: 1.34;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .nonLiveBoundary { min-height: 34px; padding-block: 5px; }
+  .balanceCard { min-height: 164px; gap: 7px; padding: 13px 15px; }
   .balanceTop { gap: 8px; }
   .balanceTop small { max-width: 145px; }
   .balanceAmount strong { font-size: 39px; }
-  .balanceFooter { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .balanceFooter p { max-width: none; }
+  .balanceFooter { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .balanceFooter p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
   .offerBody { padding-inline: 12px; }
   .offerDecision { margin-inline: -12px; padding-inline: 12px; }
   .quote { padding: 15px; }

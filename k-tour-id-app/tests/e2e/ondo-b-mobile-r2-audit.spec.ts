@@ -106,6 +106,32 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     })
   }
 
+  for (const viewport of MOBILE_VIEWPORTS.slice(0, 2)) {
+    test(`${viewport.width}px: Wallet setup action clears the fixed navigation and owns its hit target`, async ({ page }) => {
+      await page.setViewportSize(viewport)
+      await seedB(page, { locale: "en", local: { autoNight: false } })
+      await gotoB(page)
+      await page.getByTestId("nav-id").click()
+
+      const action = page.getByTestId("wallet-link-open")
+      const navigation = page.getByTestId("ondo-main-nav")
+      await expect(action).toBeVisible()
+      const receipt = await action.evaluate((button, navTestId) => {
+        const actionBox = button.getBoundingClientRect()
+        const navigationBox = document.querySelector<HTMLElement>(`[data-testid='${navTestId}']`)!.getBoundingClientRect()
+        const owner = document.elementFromPoint(actionBox.left + actionBox.width / 2, actionBox.top + actionBox.height / 2)
+        return {
+          actionBottom: actionBox.bottom,
+          navigationTop: navigationBox.top,
+          hitOwned: owner === button || button.contains(owner),
+        }
+      }, "ondo-main-nav")
+      await expect(navigation).toBeVisible()
+      expect(receipt.actionBottom).toBeLessThanOrEqual(receipt.navigationTop - 12)
+      expect(receipt.hitOwned).toBe(true)
+    })
+  }
+
   for (const locale of ["en", "ko", "ja"] as const) {
     test(`${locale.toUpperCase()}: rendered and accessible product copy has no retired signal name`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })
@@ -165,6 +191,8 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     await expect(banner).toBeVisible()
     await expect(map).toHaveAttribute("data-after19-active", "true")
     await expect(map).toHaveCSS("background-color", "rgb(11, 11, 14)")
+    const resultToggle = page.getByTestId("ondo-b-view-toggle")
+    await expect(resultToggle).toHaveCSS("color", "rgb(255, 255, 255)")
     await expect(nightCategory).toHaveAttribute("aria-pressed", "true")
     await expect(search).toHaveValue("mapo")
     await expect(map).toHaveAttribute("data-requested-view", "list")

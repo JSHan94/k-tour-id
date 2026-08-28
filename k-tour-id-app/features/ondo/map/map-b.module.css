@@ -1854,7 +1854,15 @@
    trigger in an owned map lane and use a neutral night treatment only while
    the session-scoped layer is active. */
 .root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
-  filter: grayscale(.2) saturate(.66) contrast(1.04) brightness(.78);
+  filter: saturate(.96) contrast(1.08) brightness(.96);
+}
+
+.root[data-after19-active="true"] .resultBar button,
+.root[data-after19-active="true"] .resultBar button svg,
+.root[data-after19-active="true"] .resultBar > .forcedListLabel,
+.root[data-after19-active="true"] .resultBar > .forcedListLabel svg {
+  color: #fff;
+  stroke: currentColor;
 }
 
 .root:has(:global([data-testid="global-after19-prompt-layer"])) .map :global(.maplibregl-cooperative-gesture-screen),

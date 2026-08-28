@@ -570,9 +570,9 @@ test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and 
 
 test("FLOW8-TRUTH-010 every locale keeps non-live truth visible and commerce actions contact no external service", async ({ browser }) => {
   const boundaries = {
-    en: /Local test wallet.*no money.*provider|Local travel aid only/i,
-    ko: /테스트 지갑.*돈.*공급자|이 기기의 여행 도구/,
-    ja: /テストウォレット.*お金.*事業者|この端末だけの旅の補助/,
+    en: /Local test (?:wallet|only).*no money.*provider|Local travel aid only/i,
+    ko: /테스트 지갑.*돈.*공급자|로컬 테스트 전용.*실제 자금.*지갑 제공자|이 기기의 여행 도구/,
+    ja: /テストウォレット.*お金.*事業者|ローカルテスト専用.*実資金.*ウォレット事業者|この端末だけの旅の補助/,
   } as const
   for (const locale of ["en", "ko", "ja"] as const) {
     const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
