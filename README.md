@@ -1,12 +1,12 @@
-# K-Tour ID
+# ONDO 溫圖
 
-K-Tour ID is a privacy-preserving tourist trust wallet prototype for the 2026 Blockchain & AI Hackathon. It turns a verified identity source into a private travel-service credential, lets the holder present only the eligibility a merchant needs, then connects that proof to a benefit, payment, voucher lifecycle and partner settlement evidence.
+ONDO 溫圖 is a map-first Korea food and travel product. It combines 400 official Seoul and Busan food-service records with a clearly separated Jeju editorial collection, then connects discovery to saved places, Tables and an optional privacy-preserving K-Tour ID travel credential flow.
 
-> This repository is currently a clickable mock. Every integration is labelled `LIVE`, `SANDBOX` or `SIMULATED`; the current credential, payment and chain receipts are simulations unless a screen explicitly says otherwise.
+`溫` means warmth and `圖` means map. ONDO remains the international product name; `溫圖` is its Hanja signature. This repository is currently a clickable mock. Every identity, payment and chain integration is labelled `LIVE`, `SANDBOX` or `SIMULATED`; those receipts are simulations unless a screen explicitly says otherwise.
 
-## Live mock
+## Review deployment
 
-[Open the K-Tour ID deployment](https://k-tour-id.vercel.app)
+The no-login ONDO Vercel URL is published from the personal `woogieboogie-jl/ondo` repository after the frozen QA commit passes. The existing K-Tour ID deployment remains historical and is not renamed or overwritten.
 
 ## Golden flow
 
@@ -70,7 +70,7 @@ OmniOne CX is the Mobile ID transport/verification layer. OpenDID is the VC, VP 
 
 ## Canonical specifications
 
-Phase 2 has started: the clickable mock remains the usability sample, while the production requirements live in the root `docs/` set.
+Phase 2 has started: the ONDO experience remains the usability sample, while the K-Tour ID identity subsystem's production requirements remain intact in the root `docs/` set.
 
 - [Project scope memory](./docs/PROJECT_SCOPE_MEMORY.md)
 - [Production development specification](./docs/DEVELOPMENT_SPEC.md)
@@ -92,13 +92,13 @@ pnpm check
 pnpm dev
 ```
 
-Set `NEXT_PUBLIC_SITE_URL` to the deployed origin so social-preview URLs resolve to the K-Tour ID deployment.
+Set `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_ONDO_B_ORIGIN` to the deployed ONDO origin so canonical and social-preview URLs resolve correctly.
 
-The current UI uses Next.js 16, React 19, TypeScript, Tailwind CSS v4 and Leaflet. The map-first experiment uses OpenStreetMap raster tiles without an API key for low-traffic prototype validation; this is not the final production provider. Its visual language combines hanji paper, ink, seal red, dancheong navy and gold.
+The current UI uses Next.js 16, React 19, TypeScript and Tailwind CSS v4. ONDO's map-first flow uses MapLibre with a source-attributed OpenFreeMap basemap for prototype validation; this is not a partnership claim. Its visual language is modern white and black with restrained Pulse and editorial accents.
 
 ## Repository boundaries
 
-- `k-tour-id-app/` is the active K-Tour ID product mock.
-- `docs/` contains the canonical v2 product, development, Sui and traceability specifications.
+- `k-tour-id-app/` is the active ONDO product mock; the directory name stays stable to preserve historical evidence and test contracts.
+- `docs/` contains the canonical K-Tour ID identity-subsystem v2 product, development, Sui and traceability specifications. The ONDO rebrand does not delete or weaken these requirements.
 - `legacy-contracts/` contains earlier experimental contracts and is not part of the golden-path production architecture. It must not be deployed or presented as audited product code.
 - Brand logos in the mock are target-integration examples, not evidence of partnership.

@@ -6,29 +6,32 @@ import { AppProviders } from "./app-providers"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://k-tour-id.vercel.app",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://ondo-directory.invalid",
   ),
   alternates: { canonical: "/" },
-  title: "K-Tour Map — 여행할수록 채워지는 대한민국 지도",
+  applicationName: "ONDO",
+  title: "ONDO 溫圖 — Korea food & travel map",
   description:
-    "One K-Tour ID for tailored travel, everyday services, local benefits and privacy-preserving payments in Korea.",
-  generator: "K-Tour ID",
+    "Official Seoul and Busan food-service records, Jeju editorial travel ideas, and a source-bounded Korea Pulse map.",
+  generator: "ONDO",
+  icons: { icon: "/brand/ondo-mark-micro-16.svg" },
   openGraph: {
-    title: "K-Tour Map",
-    description: "여행할수록 채워지는 나만의 대한민국 지도. 장소, 액티비티, 이동과 K-Tour ID 혜택을 한 여정으로 연결합니다.",
+    siteName: "ONDO",
+    title: "ONDO 溫圖 — Korea food & travel map",
+    description: "서울·부산 공식 식음료 기록과 제주 편집 여행 아이디어를 한 지도에서 탐색하세요.",
     type: "website",
-    images: [{ url: "/og-modern-atlas.png", width: 1672, height: 941, alt: "K-Tour Map · 여행할수록 채워지는 나만의 대한민국 지도" }],
+    images: [{ url: "/og-ondo-directory.png", width: 1200, height: 630, alt: "ONDO 溫圖 Korea food and travel map" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "K-Tour Map",
-    description: "여행할수록 채워지는 나만의 대한민국 지도.",
-    images: ["/og-modern-atlas.png"],
+    title: "ONDO 溫圖 — Korea food & travel map",
+    description: "서울·부산 공식 식음료 기록과 제주 편집 여행 아이디어를 한 지도에서 탐색하세요.",
+    images: ["/og-ondo-directory.png"],
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#f7f5f0",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover", // so env(safe-area-inset-*) resolves on notched iOS

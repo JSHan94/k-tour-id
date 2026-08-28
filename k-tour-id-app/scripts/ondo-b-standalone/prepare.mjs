@@ -14,13 +14,15 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "ONDO — Korea Pulse map for Seoul, Busan, and Jeju",
+  applicationName: "ONDO",
+  title: "ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju",
   description: "Browse 400 licensed Seoul and Busan food-service records alongside a separate source-linked Jeju editorial collection.",
+  openGraph: { siteName: "ONDO" },
   robots: { index: false, follow: false },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#fbfaf7",
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",

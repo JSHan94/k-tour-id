@@ -96,6 +96,8 @@ export const SOURCE_FILES = Object.freeze([
   "features/ondo/shared/state/ondo-b-preferences.ts",
   "features/ondo/shared/state/ondo-b-provider.tsx",
   "features/ondo/shared/ui/focus-destination.ts",
+  "features/ondo/shared/ui/ondo-brand-lockup-b.tsx",
+  "features/ondo/shared/ui/ondo-brand-lockup-b.module.css",
   "features/ondo/shared/ui/production-local.module.css",
   "features/ondo/shared/ui/use-modal-isolation.ts",
   "lib/map/korea-atlas-data.ts",

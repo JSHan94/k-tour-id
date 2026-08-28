@@ -41,7 +41,7 @@ test.describe("ONDO B production local-device shell", () => {
   test.beforeEach(async ({ page }) => installBRuntimeGuard(page))
   test.afterEach(async ({ page }) => expectBRuntimeClean(page))
 
-  test("B-PROD-E2E-001 synthetic session and QA query cannot expose external-product surfaces", async ({ page }) => {
+  test("B-PROD-E2E-001 synthetic legacy session and QA query cannot alter B-owned surfaces", async ({ page }) => {
     await seedProductionB(page)
     await page.goto("/ondo-b?qa=1&scenario=bridge-failed&profile=failure", { waitUntil: "domcontentloaded" })
 
@@ -57,7 +57,9 @@ test.describe("ONDO B production local-device shell", () => {
 
     await nav.getByTestId("nav-my").click()
     await expect(page.getByTestId("ondo-b-saved-entry")).toBeVisible()
-    await expect(page.getByText(/stamp|trust|identity|KYC|Labs/i)).toHaveCount(0)
+    await expect(page.getByTestId("open-labs")).toBeVisible()
+    await expect(page.getByTestId("labs-overlay")).toHaveCount(0)
+    await expect(page.getByText(/stamp|trust|identity|KYC/i)).toHaveCount(0)
     await nav.getByTestId("nav-tables").click()
     await expect(page.getByTestId("tables-entry")).toBeVisible()
     await nav.getByTestId("nav-id").click()
@@ -161,7 +163,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
       const response = await request.get("/ondo-b", { headers: { host } })
       expect(response.ok()).toBeTruthy()
       const html = await response.text()
-      expect(html).toContain("ONDO — Korea Pulse map for Seoul, Busan, and Jeju")
+      expect(html).toContain("ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju")
       expect(html).toContain('<link rel="canonical"')
       expect(html).not.toContain("NEXT_HTTP_ERROR_FALLBACK")
       expect(html).not.toContain("attacker.example")

@@ -6,6 +6,7 @@ import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, In
 import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "../shared/state/ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
+import { OndoBrandLockupB } from "../shared/ui/ondo-brand-lockup-b"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import styles from "./official-directory-onboarding.module.css"
 
@@ -307,7 +308,7 @@ export function OfficialDirectoryOnboardingLayer() {
 
         {step === "value" ? (
           <div className={styles.value} data-testid="onboarding-step-value" data-stage="value">
-            <div className={styles.brandLockup}><img src="/brand/ondo-lockup.svg" alt="ONDO" /></div>
+            <div className={styles.brandLockup}><OndoBrandLockupB /></div>
             <p className={styles.eyebrow}>{copy.eyebrow}</p>
             <h1>{state.locale === "ja"
               ? <JapaneseHeading phrases={["韓国で", "自分に合う一食を、", "公的な記録から", "探そう。"]} />

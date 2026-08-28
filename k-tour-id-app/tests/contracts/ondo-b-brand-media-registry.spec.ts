@@ -76,10 +76,16 @@ test("BRAND-MEDIA-004 ONDO ships optically tuned micro marks and written usage g
 
 test("BRAND-MEDIA-005 lockup is path-native and has a wider optical field", () => {
   const source = readFileSync(resolve(root, "public/brand/ondo-lockup.svg"), "utf8")
+  const component = readFileSync(resolve(root, "features/ondo/shared/ui/ondo-brand-lockup-b.tsx"), "utf8")
   expect(source).toContain('viewBox="0 0 288 64"')
   expect(source).not.toContain("<circle")
   expect(source).not.toContain("#722044")
+  expect(source).not.toContain("<text")
   expect(source).toContain('data-part="wordmark"')
+  expect(component).toContain('aria-label="ONDO"')
+  expect(component).toContain('lang="ko-Hani"')
+  expect(component).toContain("溫圖")
+  expect(component).toContain('aria-hidden="true"')
 })
 
 test("BRAND-MEDIA-003 fictional people never enter identity or evidence source code", () => {

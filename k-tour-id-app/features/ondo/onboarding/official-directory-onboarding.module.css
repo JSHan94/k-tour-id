@@ -904,13 +904,13 @@
 
 .brandLockup {
   display: flex;
-  width: 116px;
+  width: 168px;
   min-height: 44px;
   align-items: center;
   margin: 4px 0 15px;
 }
 
-.brandLockup img { display: block; width: 116px; height: auto; }
+.brandLockup > [data-ondo-brand-lockup] { width: 168px; }
 
 .valueEditorial {
   position: relative;
@@ -956,8 +956,8 @@
   .lead,
   .value .actions,
   .identityEntry { grid-column: 1; }
-  .brandLockup { grid-row: 1; width: 140px; margin-bottom: 28px; }
-  .brandLockup img { width: 140px; }
+  .brandLockup { grid-row: 1; width: 168px; margin-bottom: 28px; }
+  .brandLockup > [data-ondo-brand-lockup] { width: 168px; }
   .valueEditorial {
     grid-column: 2;
     grid-row: 1 / 6;

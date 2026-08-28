@@ -20,6 +20,7 @@ import {
 import { editorialPlaceById, JEJU_EDITORIAL_PLACES, PULSE_COMPOSITION_DISCLOSURE, PULSE_PRODUCTION_DRIVER_DISCLOSURE, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
+import { OndoBrandLockupB } from "../shared/ui/ondo-brand-lockup-b"
 import { JapanFirstDiscoveryB } from "./japan-first-discovery-b"
 import {
   B_DISCOVERY_TRAVERSAL_EVENT,
@@ -1198,7 +1199,7 @@ export function MapEntryB() {
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
       <section className={styles.root} data-testid="ondo-b-map-entry">
         <header className={styles.header}>
-          <div className={styles.brand}><img src="/brand/ondo-lockup.svg" alt="ONDO" /><small>{copy.tagline}</small></div>
+          <div className={styles.brand}><OndoBrandLockupB size="compact" /><small>{copy.tagline}</small></div>
           <button type="button" className={styles.language} aria-label={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} title={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} data-language-target={NEXT_LOCALE[locale]} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} aria-hidden="true" />{NEXT_LOCALE_LABEL[locale]}</button>
         </header>
         <NationDirectory locale={locale} onSelect={chooseCity} />

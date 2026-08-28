@@ -1,8 +1,8 @@
-# K-Tour ID 프로젝트 스코프 메모리
+# ONDO 溫圖 — K-Tour ID 기능 스코프 메모리
 
 상태: `v2.0 · 2026-08-04`
 
-이 문서는 제품·디자인·개발·발표 과정에서 다시 논의하지 않아도 되는 결정과, 반드시 다시 결정해야 하는 기술 항목을 구분하는 프로젝트 메모리다. 구현 세부사항은 [개발 명세](./DEVELOPMENT_SPEC.md), 요구사항별 증거는 [추적표](./REQUIREMENTS_TRACEABILITY.md), 미결정 기술 선택은 [개발자 결정 목록](./DEVELOPER_DECISIONS_REQUIRED.md)을 따른다.
+이 문서는 ONDO 溫圖 안의 K-Tour ID 신원·자격 기능에 대해, 다시 논의하지 않아도 되는 결정과 반드시 다시 결정해야 하는 기술 항목을 구분하는 프로젝트 메모리다. 브랜드 통합은 아래 기능 요구를 삭제하거나 축소하지 않는다. 구현 세부사항은 [개발 명세](./DEVELOPMENT_SPEC.md), 요구사항별 증거는 [추적표](./REQUIREMENTS_TRACEABILITY.md), 미결정 기술 선택은 [개발자 결정 목록](./DEVELOPER_DECISIONS_REQUIRED.md)을 따른다.
 
 ## 1. 지금 어느 단계인가
 

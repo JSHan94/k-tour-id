@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
-const title = "ONDO — Korea Pulse map for Seoul, Busan, and Jeju"
+const title = "ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju"
 const description = "Browse 400 licensed Seoul and Busan food-service records alongside a source-linked Jeju editorial collection; pending places remain separate from official records."
 
 function configuredOrigin() {
@@ -38,17 +38,19 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
+    applicationName: "ONDO",
     title,
     description,
     alternates: { canonical: "/ondo-b" },
     openGraph: {
+      siteName: "ONDO",
       title,
       description,
       images: [{
         url: imageUrl,
         width: 1200,
         height: 630,
-        alt: "ONDO Korea map with 400 official Seoul and Busan records and a separate Jeju editorial collection",
+        alt: "ONDO 溫圖 Korea map with 400 official Seoul and Busan records and a separate Jeju editorial collection",
       }],
     },
     twitter: {

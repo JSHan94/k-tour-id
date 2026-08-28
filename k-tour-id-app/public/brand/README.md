@@ -1,4 +1,7 @@
-# ONDO brand marks
+# ONDO 溫圖 brand marks
+
+`溫圖` is the product's Hanja signature: `溫` for warmth and `圖` for map. It
+sits beside the full lockup; `ONDO` remains the international product name.
 
 The ONDO mark is a three-facet open atlas with a waypoint cutout: a calm travel brand object, not a badge or status symbol. Its folded silhouette must remain recognisable without the wordmark and must never collapse into a letterform.
 
@@ -6,7 +9,8 @@ The ONDO mark is a three-facet open atlas with a waypoint cutout: a calm travel 
 
 - Use the dedicated `ondo-mark-micro-16.svg`, `-20.svg`, or `-24.svg` at 16–24 px. Their facet gaps and waypoint cutout are tuned for interface sizes.
 - Use `ondo-mark.svg` at 32 px and above. Use `ondo-mark-inverse.svg` on dark surfaces.
-- Use `ondo-lockup.svg` where the full name has at least 144 CSS px of width.
+- Use `ondo-lockup.svg` inside the code-native `OndoBrandLockupB` where the full
+  `ONDO · 溫圖` name has at least 144 CSS px of width.
 
 ## Clear space
 

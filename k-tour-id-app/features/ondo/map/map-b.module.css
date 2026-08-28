@@ -1193,7 +1193,10 @@
   grid-template-columns: auto;
   gap: 3px;
 }
-.brand > img { display: block; width: 86px; height: auto; }
+.brand > [data-ondo-brand-lockup] {
+  display: inline-flex;
+  width: max-content;
+}
 .brand > small { color: #666; font-size: 12px; line-height: 1.1; }
 
 .resultBar[data-effective-view="map"],
