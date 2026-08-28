@@ -13,6 +13,7 @@ import { prepareBVisualPage } from "../helpers/ondo-b-visual-evidence"
 const FILTER_QUERY = "느린마을 양조장"
 const FILTERED_VENUE_ID = "mois-18939eecb43c15ab4305"
 const FILTERED_VENUE_NAME = "느린마을 양조장(잠실새내점)"
+const FILTERED_VENUE_TRANSLITERATION = "Neurinmaeul Yangjojang(Jamsilsaenaejeom)"
 
 const FROZEN_VIEWPORTS = [
   { width: 360, height: 800 },
@@ -33,7 +34,10 @@ async function openOneResultList(page: Page, locale: BLocale) {
   await expect(list.locator("li")).toHaveCount(1)
   await expect(result).toBeVisible()
   await expect(result).toContainText(FILTERED_VENUE_NAME)
-  await expect(result).toContainText(locale === "ko" ? "시뮬레이션 점수 59/100" : "Simulated score 59/100")
+  const pulse = result.getByTestId("ondo-b-list-pulse")
+  await expect(pulse).toHaveAttribute("data-pulse-level", "hot")
+  await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
+  await expect(pulse).toHaveAttribute("aria-label", new RegExp(`^Pulse 80 · ${locale === "ko" ? "핫" : "HOT"}`))
   await expect(result).toContainText(locale === "ko" ? "공식 출처 한글명" : "Official Korean source name")
   await expect(result).toContainText(locale === "ko" ? "공식 영문명 아님" : "Generated, not an official English name")
   return { result, search }
@@ -42,21 +46,21 @@ async function openOneResultList(page: Page, locale: BLocale) {
 async function expectFilteredMap(page: Page, locale: BLocale) {
   const root = page.getByTestId("ondo-b-map-entry")
   await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-  await expect(root).toHaveAttribute("data-signal-source-count", "1")
-  await expect(root).toHaveAttribute("data-neutral-source-count", "0")
-  await expect.poll(async () => Number(await root.getAttribute("data-rendered-signal-count")), {
-    message: "the only filtered sourced venue must have a rendered in-viewport signal marker",
-    timeout: 20_000,
-  }).toBe(1)
+  await expect(root).toHaveAttribute("data-pulse-markers-readable", "true")
+  await expect(root).toHaveAttribute("data-result-count", "1")
+  await expect(root).toHaveAttribute("data-curated-pulse-count", "1")
+  const accessibleMarker = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
+  await expect(accessibleMarker).toHaveCount(1)
+  await expect(accessibleMarker).toContainText(`${locale === "ko" ? FILTERED_VENUE_NAME : FILTERED_VENUE_TRANSLITERATION} · Pulse 80 · ${locale === "ko" ? "핫" : "HOT"}`)
 
   const key = page.getByTestId("ondo-b-map-key")
-  await expect(key).toHaveAttribute("data-filtered", "true")
-  await expect(key).toHaveAttribute("data-place-count", "1")
-  await expect(key).toHaveAttribute("data-score", "59")
-  await expect(key).toContainText(locale === "ko" ? "1×공식 장소" : "1×Places")
-  await expect(key).toContainText(locale === "ko" ? "59시뮬레이션 점수" : "59Simulated score")
-  await expect(key).toContainText(locale === "ko" ? "검색 결과를 지도에 표시" : "Filtered result shown on the map")
-  await expect(page.getByText(locale === "ko" ? "1곳의 공식 식음료 장소" : "1 sourced food place", { exact: true })).toBeVisible()
+  await expect(key).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
+  await expect(key).toHaveAccessibleName(locale === "ko"
+    ? /Pulse 지도 · 공식 기록 묶음.*실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다/
+    : /Pulse map · official groups.*not live crowding or official LOCALDATA facts/)
+  await expect(key.getByTestId("ondo-b-pulse-scale")).toBeVisible()
+  await expect(key).not.toContainText(/Simulated score|시뮬레이션 점수/)
+  await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText(locale === "ko" ? "공식 기록 1개" : "1 official record")
 }
 
 async function exerciseFilteredRoundTrip(page: Page, locale: BLocale) {
@@ -129,15 +133,18 @@ test.describe("SLEEK R5 filtered List and Map synchronization", () => {
     await expectBRuntimeClean(page)
   })
 
-  test("R5-D5-001 search is intentionally transient across reload while the normal city session remains", async ({ page }, testInfo) => {
+  test("R5-D5-001 search and its one-record result survive reload in the current city context", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name === "desktop-chromium", "Session semantics are project-independent and run once.")
     await page.setViewportSize({ width: 390, height: 844 })
     const { search } = await openOneResultList(page, "en")
     await expect(search).toHaveValue(FILTER_QUERY)
     await page.reload({ waitUntil: "domcontentloaded" })
-    await expect(page.getByRole("search").getByRole("textbox")).toHaveValue("")
-    await expect(page.getByText("200 sourced food places", { exact: true })).toBeVisible()
-    await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(31)
+    await expect(page.getByRole("search").getByRole("textbox")).toHaveValue(FILTER_QUERY)
+    const root = page.getByTestId("ondo-b-map-entry")
+    await expect(root).toHaveAttribute("data-result-count", "1")
+    await expect(root).toHaveAttribute("data-curated-pulse-count", "1")
+    await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("1 official record")
+    await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(1)
     await expectBRuntimeClean(page)
   })
 })

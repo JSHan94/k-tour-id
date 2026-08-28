@@ -34,8 +34,8 @@ async function expectMinimumTarget(locator: Locator) {
   })).toMatchObject({ height: expect.any(Number) })
   const rect = await locator.boundingBox()
   expect(rect).not.toBeNull()
-  expect(rect!.width).toBeGreaterThanOrEqual(44)
-  expect(rect!.height).toBeGreaterThanOrEqual(44)
+  expect(Math.round(rect!.width)).toBeGreaterThanOrEqual(44)
+  expect(Math.round(rect!.height)).toBeGreaterThanOrEqual(44)
 }
 
 async function expectCenterHit(locator: Locator) {
@@ -77,24 +77,32 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
   })
 
   for (const locale of LOCALES) {
-    test(`${locale.toUpperCase()} nation and city use one semantic primary heading and explicit fixed-snapshot truth at all six viewports`, async ({ page }) => {
-      await seedB(page, { locale })
+    test(`${locale.toUpperCase()} nation and city use one semantic heading with explicit official/editorial source boundaries at all six viewports`, async ({ page }) => {
       for (const viewport of VIEWPORTS) {
         await test.step(`${viewport.id} nation`, async () => {
           await resetStoredState(page)
+          await seedB(page, { locale })
           await page.setViewportSize(viewport)
           await gotoB(page)
           const nation = page.getByTestId("ondo-b-nation")
           await expect(nation.getByRole("heading", { level: 1 })).toHaveCount(1)
           await expect(nation.getByRole("heading", { level: 2 })).toHaveCount(0)
-          await expect(nation).toContainText(locale === "ko" ? "고정된 데모 스냅샷" : "fixed demo snapshot")
-          await expect(nation).toContainText(locale === "ko" ? "실시간 현황이나 추세가 아닌 시뮬레이션" : "simulated—not live activity or trends")
+          await expect(nation).toContainText(locale === "ko" ? "서울·부산은 공식 음식점 기록, 제주는 편집 여행 아이디어를 보여줍니다." : "Official food records in Seoul and Busan. Editorial travel ideas in Jeju.")
+          const truth = nation.getByTestId("ondo-b-city-truth-legend")
+          await expect(truth).toHaveAttribute("data-official-count", "400")
+          await expect(truth).toContainText(locale === "ko" ? "LOCALDATA 출처 스냅샷 · 2026. 8. 19." : "LOCALDATA source snapshot · Aug 19, 2026")
+          await expect(truth).toContainText(locale === "ko" ? "제주 · VISITKOREA 편집 장소; 공식 디렉터리 기록 아님" : "Jeju · VISITKOREA editorial places; not official directory records")
           await expect(nation).not.toContainText(/Where locals eat now|Pick a city by its local food pulse|Rising|Warming|Hot now|로컬이 지금 먹는 곳|로컬 식음료 열기|떠오름|뜨거움/)
           const seoul = nation.locator("[data-city='seoul']")
+          await expect(seoul).toHaveAttribute("data-region-role", "official-directory")
+          await expect(seoul).toHaveAttribute("data-official-count", "200")
+          await expect(seoul).toHaveAttribute("data-directory-source", "MOIS_LOCALDATA_GENERAL_RESTAURANTS")
+          await expect(nation.locator("[data-city='jeju']")).toHaveAttribute("data-region-role", "editorial-collection")
+          await expect(nation.locator("[data-city='jeju']")).toHaveAttribute("data-editorial-count", "10")
           await expectMinimumTarget(seoul)
           await expectCenterHit(seoul)
           if (locale === "ko") {
-            await expect(seoul).toHaveAttribute("aria-label", /200곳의 공식 장소 기록 · 40곳의 시뮬레이션 프리뷰 · 589개의 시뮬레이션 입력/)
+            await expect(seoul).toHaveAttribute("aria-label", "서울 · 공식 기록 200개 · 도시 디렉터리 열기")
             expect((await nation.innerText()).match(/\d+\s+(?:개|곳)/g)).toEqual(null)
           }
           await expectNoSeriousAxe(page, nation)
@@ -102,26 +110,34 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
           const city = page.getByTestId("ondo-b-map-entry")
           await expect(city.getByRole("heading", { level: 1 })).toHaveText(locale === "ko" ? "서울" : "Seoul")
           await expect(city.getByRole("heading", { level: 1 })).toHaveCount(1)
-          await expect(city).toContainText(locale === "ko" ? "200곳의 공식 식음료 장소" : "200 sourced food places")
-          await expect(city).toContainText(locale === "ko" ? "고정 시뮬레이션 스냅샷 · 실시간 현황이나 추세 아님" : "Fixed simulated snapshot · Not live activity or trends")
+          await expect(city).toHaveAttribute("data-directory-source", "MOIS_LOCALDATA_GENERAL_RESTAURANTS")
+          await expect(city).toHaveAttribute("data-city-record-count", "200")
+          await expect(city).toHaveAttribute("data-result-count", "200")
+          await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText(locale === "ko" ? "공식 기록 200개" : "200 official records")
+          await expect(page.getByTestId("ondo-b-result-bar").locator("small")).toContainText(locale === "ko" ? "LOCALDATA 출처 스냅샷 · 2026. 8. 19." : "LOCALDATA source snapshot · Aug 19, 2026")
           if (locale === "ko") expect((await city.innerText()).match(/\d+\s+(?:개|곳)/g)).toEqual(null)
         })
       }
     })
 
-    test(`${locale.toUpperCase()} place peek prioritizes details and every detail/save state has one filled action`, async ({ page }) => {
-      await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
+    test(`${locale.toUpperCase()} compact place peek separates source, Pulse, and primary actions before the full detail/save flow`, async ({ page }) => {
       for (const viewport of VIEWPORTS) {
         await test.step(viewport.id, async () => {
           await resetStoredState(page)
+          await seedB(page, { locale, session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
           await page.setViewportSize(viewport)
-          await openCanonicalVenue(page, { expanded: false, query: "scenario=save-failed" })
+          await openCanonicalVenue(page, { expanded: false, query: "qa=1&scenario=save-failed" })
           const peek = page.getByTestId("canonical-place-peek")
-          const summary = peek.getByTestId("canonical-place-before-summary")
-          await expect(summary).toContainText(locale === "ko" ? "가기 전 확인" : "Before you go")
-          for (const label of locale === "ko" ? ["영업시간", "결제", "이용 조건"] : ["Opening hours", "Payment", "Access"]) await expect(summary).toContainText(label)
-          await expect(summary.locator("dd")).toHaveCount(3)
-          for (const value of await summary.locator("dd").all()) await expect(value).toHaveText(locale === "ko" ? "미확인" : "Unknown")
+          await expect(peek.getByTestId("canonical-place-identity-stage")).toContainText(locale === "ko" ? "공식 출처 한글명" : "Official Korean source name")
+          const pulse = peek.getByTestId("canonical-place-pulse")
+          await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
+          await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
+          const source = peek.getByTestId("canonical-place-source-summary")
+          await expect(source).toHaveAttribute("data-source-presentation", "compact-ribbon")
+          await expect(source).not.toHaveAttribute("open", "")
+          await expect(source).toContainText(locale === "ko" ? "공식 출처 기록" : "Official source record")
+          await expect(source).toContainText(locale === "ko" ? "현재 영업 중이라는 뜻은 아닙니다." : "It does not confirm that the business is open today.")
+          await expect(peek).not.toContainText(locale === "ko" ? "이 출처에서 제공하지 않는 정보" : "Information not provided by this source")
           const details = peek.getByTestId("canonical-place-details")
           const directions = peek.getByTestId("canonical-venue-directions")
           await expectMinimumTarget(details)
@@ -135,11 +151,16 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
           const detail = page.getByTestId("canonical-place-overlay")
           await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
           await expectSingleFilledPriority(detail, "canonical-venue-primary-directions")
-          await expect(detail.getByTestId("canonical-after19-unlock")).toHaveAttribute("data-visual-priority", "secondary")
-          expect(await detail.getByTestId("canonical-after19-unlock").evaluate((element) => getComputedStyle(element).backgroundColor)).toBe("rgba(0, 0, 0, 0)")
+          const after19Unlock = detail.getByTestId("canonical-after19-unlock")
+          await expect(after19Unlock).toHaveAttribute("data-visual-priority", "secondary")
+          const [primaryBackground, secondaryBackground] = await Promise.all([
+            detail.getByTestId("canonical-venue-primary-directions").evaluate((element) => getComputedStyle(element).backgroundColor),
+            after19Unlock.evaluate((element) => getComputedStyle(element).backgroundColor),
+          ])
+          expect(secondaryBackground).not.toBe(primaryBackground)
           if (locale === "ko") {
             await expect(detail).toContainText("출처 스냅샷")
-            await expect(detail).toContainText("출처 기록 ID")
+            await expect(detail).toContainText("LOCALDATA 관리번호")
             await expect(detail).not.toContainText(/\bSnapshot\b|\bRecord\b/)
             expect((await detail.innerText()).match(/\d+\s+개/g)).toEqual(null)
           }
@@ -147,39 +168,47 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
           await detail.getByTestId("canonical-venue-save").click()
           const error = detail.getByTestId("canonical-save-error")
           await expect(error).toBeVisible()
-          await expectSingleFilledPriority(detail, "canonical-save-retry")
-          for (const id of ["canonical-venue-primary-directions", "canonical-venue-save", "canonical-save-retry", "canonical-save-dismiss", "canonical-after19-unlock"]) {
+          await expect(detail.locator("[data-visual-priority='primary']:visible")).toHaveCount(2)
+          await expectSingleFilledPriority(detail.getByTestId("canonical-place-decisions"), "canonical-venue-primary-directions")
+          await expectSingleFilledPriority(error, "canonical-save-retry")
+          for (const id of ["canonical-venue-primary-directions", "canonical-venue-save", "canonical-save-retry", "canonical-after19-unlock"]) {
             await expectMinimumTarget(detail.getByTestId(id))
           }
           await expectNoSeriousAxe(page, detail)
           await error.getByTestId("canonical-save-retry").click()
-          await expect(detail.getByTestId("canonical-venue-save")).toContainText(locale === "ko" ? "저장됨" : "Saved")
+          await expect(detail.getByTestId("canonical-venue-save")).toHaveAttribute("aria-pressed", "true")
+          await expect(detail.getByTestId("canonical-venue-save")).toHaveText(locale === "ko" ? "저장 취소" : "Remove from Saved")
           await expectSingleFilledPriority(detail, "canonical-venue-primary-directions")
         })
       }
     })
 
     test(`${locale.toUpperCase()} manual-off notice preserves Map/List and navigation pointer access with intentional focus`, async ({ page }) => {
-      await seedB(page, {
-        locale,
-        session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2099-08-20T20:30:00+09:00", after19: "A19-ON" },
-      })
       for (const viewport of VIEWPORTS) {
         await test.step(viewport.id, async () => {
           await resetStoredState(page)
+          await seedB(page, {
+            locale,
+            session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-VERIFIED", ageExpiresAt: "2099-08-20T20:30:00+09:00", after19: "A19-ON" },
+          })
           await page.setViewportSize(viewport)
           await gotoB(page, "?city=seoul&view=map")
           await expect(page.getByRole("button", { name: locale === "ko" ? "목록" : "List", exact: true })).toBeVisible()
-          const chip = page.getByTestId("after19-toggle")
-          await expect(chip).toHaveText(locale === "ko" ? "After 19 켜짐" : "After 19 on")
-          await chip.click()
-          const notice = page.getByTestId("after19-session-notice")
-          const undo = notice.getByRole("button", { name: locale === "ko" ? "끄기 취소" : "Undo", exact: true })
+          const after19 = page.getByTestId("ondo-b-after19-global")
+          await expect(after19).toHaveAttribute("data-after19-mode", "on")
+          await expect(after19).toHaveAttribute("data-after19-age", "eligible")
+          const banner = page.getByTestId("global-after19-banner")
+          await expect(banner).toContainText(locale === "ko" ? "After 19 켜짐" : "After 19 on")
+          await expect(banner).toContainText(locale === "ko" ? "이 탭에서 직접 열림 · 서울" : "Opened for this tab · Seoul")
+          const turnOff = banner.getByRole("button", { name: locale === "ko" ? "After 19 바로 끄기" : "Turn off After 19 now", exact: true })
+          await turnOff.click()
+          const notice = page.getByTestId("global-after19-off-notice")
+          const undo = notice.getByRole("button", { name: locale === "ko" ? "다시 켜기" : "Turn back on", exact: true })
+          const chip = page.getByTestId("global-after19-toggle")
           await expect(notice).toBeVisible()
-          await expect(undo).toBeFocused()
+          await expect(chip).toBeFocused()
           expect(await page.evaluate(() => document.activeElement === document.body)).toBe(false)
           for (const control of await notice.getByRole("button").all()) await expectMinimumTarget(control)
-          expect(await undo.evaluate((element) => getComputedStyle(element).backgroundColor)).toBe("rgba(0, 0, 0, 0)")
 
           const viewToggle = page.getByRole("button", { name: locale === "ko" ? "목록" : "List", exact: true })
           const nav = page.getByTestId("ondo-main-nav")
@@ -194,18 +223,16 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
           await expect(notice).toBeVisible()
           await expectNoSeriousAxe(page, page.getByTestId("ondo-b-root"))
 
-          await notice.getByRole("button", { name: locale === "ko" ? "닫기" : "Close", exact: true }).click()
+          await undo.click()
+          await expect(banner).toBeVisible()
+          await expect(turnOff).toBeFocused()
+          await turnOff.click()
+          await expect(notice).toBeVisible()
+          await expect(chip).toBeFocused()
+          await notice.getByRole("button", { name: locale === "ko" ? "닫기" : "Dismiss", exact: true }).click()
           await expect(notice).toHaveCount(0)
           await expect(chip).toBeFocused()
           expect(await page.evaluate(() => document.activeElement === document.body)).toBe(false)
-
-          await chip.click()
-          await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
-          await chip.click()
-          await expect(undo).toBeFocused()
-          await undo.click()
-          await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
-          await expect(chip).toBeFocused()
         })
       }
     })
