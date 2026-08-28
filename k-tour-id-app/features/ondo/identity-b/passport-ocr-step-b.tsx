@@ -148,6 +148,7 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
   const inputRef = useRef<HTMLInputElement>(null)
   const initialActionRef = useRef<HTMLButtonElement>(null)
   const previewActionRef = useRef<HTMLButtonElement>(null)
+  const replaceActionRef = useRef<HTMLButtonElement>(null)
   const reviewActionRef = useRef<HTMLButtonElement>(null)
   const previewUrlRef = useRef<string | null>(null)
   const selectionRef = useRef(0)
@@ -171,7 +172,7 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      if (error) initialActionRef.current?.focus({ preventScroll: true })
+      if (error) (stage === "preview" ? replaceActionRef.current : initialActionRef.current)?.focus({ preventScroll: true })
       else if (stage === "preview") {
         previewActionRef.current?.focus()
         previewActionRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
@@ -211,17 +212,18 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
 
     const selection = selectionRef.current + 1
     selectionRef.current = selection
-    clearPreview()
+    const hadPreview = previewUrlRef.current != null
     setError(null)
-    setStage("select")
 
     if (!PASSPORT_IMAGE_TYPES.has(file.type)) {
       setError("type")
+      setStage(hadPreview ? "preview" : "select")
       setAnnouncement(copy.typeError as string)
       return
     }
     if (file.size > MAX_PASSPORT_IMAGE_BYTES) {
       setError("size")
+      setStage(hadPreview ? "preview" : "select")
       setAnnouncement(copy.sizeError as string)
       return
     }
@@ -233,11 +235,10 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
       objectUrl = URL.createObjectURL(file)
     } catch {
       setError("decode")
-      setStage("select")
+      setStage(hadPreview ? "preview" : "select")
       setAnnouncement(copy.decodeError as string)
       return
     }
-    previewUrlRef.current = objectUrl
 
     const decoded = await new Promise<boolean>((resolve) => {
       const image = new window.Image()
@@ -245,29 +246,29 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
       image.onerror = () => resolve(false)
       image.src = objectUrl
     })
-    if (selectionRef.current !== selection) return
+    if (selectionRef.current !== selection) {
+      URL.revokeObjectURL(objectUrl)
+      return
+    }
     if (!decoded) {
-      clearPreview()
+      URL.revokeObjectURL(objectUrl)
       setError("decode")
-      setStage("select")
+      setStage(hadPreview ? "preview" : "select")
       setAnnouncement(copy.decodeError as string)
       return
     }
 
+    revokeObjectUrl()
+    previewUrlRef.current = objectUrl
     setPreviewUrl(objectUrl)
     setStage("preview")
     setAnnouncement(copy.previewTitle as string)
   }
 
-  function openPicker(replacing = false) {
-    if (replacing) {
-      selectionRef.current += 1
-      clearPreview()
-      setError(null)
-      setStage("select")
-      setAnnouncement(copy.required as string)
-    }
-    inputRef.current?.click()
+  function openPicker() {
+    if (!inputRef.current) return
+    inputRef.current.value = ""
+    inputRef.current.click()
   }
 
   function removeImage() {
@@ -297,17 +298,17 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
     aria-busy={stage === "decoding" || stage === "processing"}>
     <span data-testid="ktour-id-passport-document" className={styles.heroIcon}><FileImage aria-hidden="true" /></span>
     <p className={styles.eyebrow}>{stage === "review" ? copy.reviewEyebrow : copy.eyebrow}</p>
+    <input ref={inputRef} className={styles.fileInput} data-testid="passport-ocr-input" type="file"
+      accept="image/jpeg,image/png,image/webp" capture="environment" aria-label={copy.inputLabel as string}
+      tabIndex={-1} onChange={handleSelection} />
 
     {stage === "select" || stage === "decoding" ? <>
       <h1>{copy.title}</h1>
       <p className={styles.lead}>{copy.lead}</p>
-      <input ref={inputRef} className={styles.fileInput} data-testid="passport-ocr-input" type="file"
-        accept="image/jpeg,image/png,image/webp" capture="environment" aria-label={copy.inputLabel as string}
-        tabIndex={-1} onChange={handleSelection} />
       {errorMessage ? <p className={styles.error} data-testid="passport-ocr-error" role="alert">{errorMessage}</p> : null}
       <div className={styles.actions}>
         <button ref={initialActionRef} type="button" data-identity-initial-focus data-testid={error ? "passport-ocr-retry" : "passport-ocr-choose"}
-          className={styles.primary} onClick={() => openPicker(false)} disabled={stage === "decoding"}>
+          className={styles.primary} onClick={openPicker} disabled={stage === "decoding"}>
           {stage === "decoding" ? <RefreshCw className={styles.spin} aria-hidden="true" /> : <Upload aria-hidden="true" />}
           {stage === "decoding" ? copy.checking : error ? copy.retry : copy.choose}
         </button>
@@ -319,9 +320,10 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
     {stage === "preview" && previewUrl ? <>
       <h1>{copy.previewTitle}</h1>
       <div className={styles.preview} data-testid="passport-ocr-preview"><img src={previewUrl} alt={copy.previewAlt as string} /></div>
+      {errorMessage ? <p className={styles.error} data-testid="passport-ocr-error" role="alert">{errorMessage}</p> : null}
       <div className={styles.actions}>
         <button ref={previewActionRef} type="button" data-identity-initial-focus data-testid="passport-ocr-start" className={styles.primary} onClick={beginProcessing}>{copy.start}<ArrowRight aria-hidden="true" /></button>
-        <button type="button" data-testid="passport-ocr-replace" className={styles.secondary} onClick={() => openPicker(true)}><RefreshCw aria-hidden="true" />{copy.replace}</button>
+        <button ref={replaceActionRef} type="button" data-testid="passport-ocr-replace" className={styles.secondary} onClick={openPicker}><RefreshCw aria-hidden="true" />{copy.replace}</button>
         <button type="button" data-testid="passport-ocr-remove" className={styles.danger} onClick={removeImage}><Trash2 aria-hidden="true" />{copy.remove}</button>
       </div>
       <p className={styles.truth}><ShieldCheck aria-hidden="true" />{copy.privacy}</p>

@@ -132,6 +132,25 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     })
   }
 
+  test("844x390: Wallet setup action stays fully inside the landscape viewport", async ({ page }) => {
+    const viewport = { width: 844, height: 390 }
+    await page.setViewportSize(viewport)
+    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await gotoB(page)
+    await page.getByTestId("nav-id").click()
+
+    const action = page.getByTestId("wallet-link-open")
+    await expect(action).toBeVisible()
+    const receipt = await action.evaluate((button) => {
+      const box = button.getBoundingClientRect()
+      const owner = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+      return { top: box.top, bottom: box.bottom, hitOwned: owner === button || button.contains(owner) }
+    })
+    expect(receipt.top).toBeGreaterThanOrEqual(12)
+    expect(receipt.bottom).toBeLessThanOrEqual(viewport.height - 12)
+    expect(receipt.hitOwned).toBe(true)
+  })
+
   for (const locale of ["en", "ko", "ja"] as const) {
     test(`${locale.toUpperCase()}: rendered and accessible product copy has no retired signal name`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })
@@ -204,6 +223,20 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     await expect(search).toHaveValue("mapo")
     await expect(map).toHaveAttribute("data-requested-view", "list")
     await expectDiscoveryContext(page, { view: "list", query: "mapo", category: "korean" })
+  })
+
+  test("844x390: filtered and After 19 maps keep ONDO temperature markers inside the readable canvas", async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await gotoB(page, "?city=seoul&view=map&category=korean")
+
+    const map = page.getByTestId("ondo-b-map-entry")
+    await expect.poll(() => map.getAttribute("data-pulse-markers-readable")).toBe("true")
+
+    await page.getByTestId("global-after19-toggle").click()
+    await page.getByTestId("global-after19-confirm").click()
+    await expect(map).toHaveAttribute("data-after19-active", "true")
+    await expect.poll(() => map.getAttribute("data-pulse-markers-readable")).toBe("true")
   })
 
   test("Stories Escape closes the disclosure and restores its exact trigger focus", async ({ page }) => {

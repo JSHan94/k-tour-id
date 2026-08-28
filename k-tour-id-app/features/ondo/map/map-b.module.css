@@ -895,7 +895,7 @@
 .pulseScale {
   display: grid;
   min-width: 0;
-  grid-template-columns: 30px auto;
+  grid-template-columns: 30px;
   align-items: center;
   gap: 6px;
 }
@@ -906,6 +906,7 @@
   font-weight: 790;
   white-space: nowrap;
 }
+.pulseScale b { display: none; }
 .pulseScale small { display: none; color: #6a625b; font-weight: 680; }
 .pulseScale > i {
   width: 30px;

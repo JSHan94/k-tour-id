@@ -494,8 +494,13 @@ test("OPENDID-E2E-003E passport previews revoke every object URL on replace, rem
 
   await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
   await expect(document).toHaveAttribute("data-ocr-stage", "preview")
-  await document.getByTestId("passport-ocr-replace").click()
-  await expect(document).toHaveAttribute("data-ocr-stage", "select")
+  const replace = document.getByTestId("passport-ocr-replace")
+  const chooserPromise = page.waitForEvent("filechooser")
+  await replace.click()
+  await chooserPromise
+  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await expect(document.getByTestId("passport-ocr-preview")).toBeVisible()
+  await expect(replace).toBeFocused()
 
   await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
   await expect(document).toHaveAttribute("data-ocr-stage", "preview")

@@ -548,12 +548,25 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly CanonicalMapVenu
     map.jumpTo({ center: [venues[0].longitude, venues[0].latitude], zoom: 15 })
     return
   }
+  const container = map.getContainer().getBoundingClientRect()
+  const shortLandscape = container.height <= 500 && container.width > container.height
+  const horizontalPadding = Math.round(Math.max(24, Math.min(72, container.width * 0.08)))
+  const topPadding = shortLandscape
+    ? Math.round(Math.max(144, Math.min(168, container.height * 0.4)))
+    : Math.round(Math.max(150, Math.min(220, container.height * 0.3)))
+  const bottomPadding = shortLandscape
+    ? Math.round(Math.max(52, Math.min(76, container.height * 0.17)))
+    : Math.round(Math.max(104, Math.min(160, container.height * 0.22)))
   const longitudes = venues.map((venue) => venue.longitude)
   const latitudes = venues.map((venue) => venue.latitude)
   map.fitBounds([
     [Math.min(...longitudes), Math.min(...latitudes)],
     [Math.max(...longitudes), Math.max(...latitudes)],
-  ], { duration: 0, maxZoom: 14.5, padding: { top: 220, right: 72, bottom: 160, left: 72 } })
+  ], {
+    duration: 0,
+    maxZoom: 14.5,
+    padding: { top: topPadding, right: horizontalPadding, bottom: bottomPadding, left: horizontalPadding },
+  })
 }
 
 function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId, visibleCount, onClear, onMore, onSelect }: {
@@ -1138,30 +1151,35 @@ export function MapEntryB() {
             const root = cityRootNode.current
             const rootBox = root.getBoundingClientRect()
             const headerBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
-            const locationBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-location-message']")?.getBoundingClientRect()
+            const utilityBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-utility-cluster']")?.getBoundingClientRect()
             const keyBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")?.getBoundingClientRect()
-            const readableTop = Math.max(headerBox?.bottom ?? rootBox.top, locationBox?.bottom ?? rootBox.top) - rootBox.top + 24
-            const readableBottom = (keyBox?.top ?? rootBox.bottom) - rootBox.top - 24
-            const readableLeft = 24
-            const readableRight = rootBox.width - 24
-            const pulseFeatures = toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId).features
-              .filter((feature) => feature.properties.pulseScore >= 0)
+            const resultBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-result-bar']")?.getBoundingClientRect()
+            const overlayBoxes = [headerBox, utilityBox, keyBox, resultBox].filter((box): box is DOMRect => box != null)
+            const pointIsReadable = (pointX: number, pointY: number) => {
+              const clientX = rootBox.left + pointX
+              const clientY = rootBox.top + pointY
+              if (clientX < rootBox.left + 18 || clientX > rootBox.right - 18
+                || clientY < rootBox.top + 18 || clientY > rootBox.bottom - 18) return false
+              return !overlayBoxes.some((box) => clientX >= box.left - 10 && clientX <= box.right + 10
+                && clientY >= box.top - 10 && clientY <= box.bottom + 10)
+            }
+            const pulseFeatures = instance.querySourceFeatures("ondo-pulse")
+              .filter((feature) => feature.geometry.type === "Point" && Number(feature.properties?.pulseScore ?? -1) >= 0)
             const allInside = pulseFeatures.length > 0 && pulseFeatures.every((feature) => {
+              if (feature.geometry.type !== "Point") return true
               const point = instance.project(feature.geometry.coordinates as [number, number])
               const zoom = instance.getZoom()
-              const offset = pulseOffsetForRank(feature.properties.pulseRank, zoom)
-              return point.x + offset.x >= readableLeft
-                && point.x + offset.x <= readableRight
-                && point.y + offset.y >= readableTop
-                && point.y + offset.y <= readableBottom
+              const offset = pulseOffsetForRank(Number(feature.properties?.pulseRank ?? 0), zoom)
+              return pointIsReadable(point.x + offset.x, point.y + offset.y)
             })
             const zoom = instance.getZoom()
             const pulseRadius = 18 + Math.max(0, Math.min(1, (zoom - 9) / 6)) * 2
             const clusterFeatures = instance.queryRenderedFeatures({ layers: ["ondo-clusters"] })
               .filter((feature) => feature.geometry.type === "Point")
             const clustersReadable = clusterFeatures.length > 0 && pulseFeatures.every((feature) => {
+              if (feature.geometry.type !== "Point") return true
               const point = instance.project(feature.geometry.coordinates as [number, number])
-              const offset = pulseOffsetForRank(feature.properties.pulseRank, zoom)
+              const offset = pulseOffsetForRank(Number(feature.properties?.pulseRank ?? 0), zoom)
               return clusterFeatures.every((cluster) => {
                 if (cluster.geometry.type !== "Point") return true
                 const clusterPoint = instance.project(cluster.geometry.coordinates as [number, number])
@@ -1175,6 +1193,7 @@ export function MapEntryB() {
             root.dataset.pulseMarkersReadable = String(allInside)
             root.dataset.pulseOfficialClustersReadable = String(clustersReadable)
           }
+          instance.on("moveend", updatePulseMarkerFit)
           instance.once("idle", updatePulseMarkerFit)
           window.setTimeout(updatePulseMarkerFit, 240)
         } catch {
