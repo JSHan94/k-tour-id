@@ -9,7 +9,8 @@ import {
   setupBSurface,
 } from "../helpers/ondo-b-qa"
 
-const PRODUCT_BOUNDARY = /Simulat|시뮬레이션|demo|데모|official|공식|source|출처|preview|미리보기|local|로컬|signal|신호|private|비공개|not confirmed|확인되지/i
+const PRODUCT_BOUNDARY = /Simulat|시뮬레이션|demo|데모|official|공식|source|출처|preview|미리보기|local|로컬|signal|신호|private|비공개|this tab|이 탭|this device|이 기기|not confirmed|확인되지/i
+const TABLE_ID = "table-seoul-night-bites"
 
 test.describe("ONDO B reachable KO/EN content surfaces", () => {
   test.beforeEach(async ({ page }) => {
@@ -30,8 +31,13 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       const copy = (await surface.innerText()).trim()
       expect(copy.length, "surface must contain user-facing copy").toBeGreaterThan(20)
       if (item.surface === "onboarding") {
-        if (item.locale === "ko") expect(copy).toContain("ONDO는 서울과 부산의 식음료 정보부터 시작해 한국으로 넓혀갑니다.")
-        else expect(copy).toContain("ONDO starts with food and drink coverage in Seoul and Busan, then grows across Korea.")
+        if (item.locale === "ko") {
+          expect(copy).toContain("나에게 맞는 한국의 한 끼를, 공공 기록에서 찾아보세요.")
+          expect(copy).toContain("서울과 부산의 일반음식점 인허가 기록 400개를 살펴보고, 이용 목적과 음식 취향을 이 기기에 저장할 수 있어요.")
+        } else {
+          expect(copy).toContain("Find a meal that fits your Korea—grounded in public records.")
+          expect(copy).toContain("Browse 400 licensed food-service records across Seoul and Busan, then save a starting intent and food preferences on this device.")
+        }
         expect(copy).not.toMatch(/dense food|early coverage|서울의 촘촘|부산의 초기/i)
       }
       if (item.surface === "place") {
@@ -41,35 +47,41 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
           expect(copy).not.toContain("공식 영문명 미제공 · 공식 한글명 표시")
         } else expect(copy).toContain("Transliterated for navigation")
         if (item.locale === "ko") {
-          expect(copy).toContain("ONDO 자체 19+ 정책으로 이 시뮬레이션 야간 프리뷰를 잠가요.")
-          expect(copy).toContain("공식 연령 제한이 아니며")
+          expect(copy).toContain("ONDO 정책 · 이 장소의 공식 이용 제한이 아니에요.")
+          expect(copy).toContain("19+ 프리뷰 열기")
         } else {
-          expect(copy).toContain("ONDO locks this simulated night preview behind its own 19+ policy.")
-          expect(copy).toContain("This is not an official age restriction")
+          expect(copy).toContain("ONDO policy · not an official restriction for this place.")
+          expect(copy).toContain("Open 19+ preview")
         }
       }
-      if (["place", "account-gate", "age-gate", "tables", "table-chat", "local-signal", "checkout", "profile", "labs", "after19"].includes(item.surface)) {
+      if (["place", "account-gate", "age-gate", "tables", "table-chat", "local-signal", "checkout", "profile", "labs"].includes(item.surface)) {
         expect(copy, "sensitive/simulated surfaces must state a truth or privacy boundary").toMatch(PRODUCT_BOUNDARY)
+      }
+      if (item.surface === "after19") {
+        await expect(surface).toContainText(item.locale === "ko" ? "After 19 켜짐" : "After 19 on")
+        await expect(surface).toContainText(item.locale === "ko" ? "한국 시간 19:00 이후 자동으로 열림 · 서울" : "Opened after 19:00 KST · Seoul")
       }
       if (item.surface === "tables") {
         if (item.locale === "ko") {
-          expect(copy).toContain("시뮬레이션 미리보기")
-          expect(copy).toContain("실제 호스트나 예약은 없습니다")
+          expect(copy).toContain("메시지와 사진은 이 탭에만 남고")
+          expect(copy).toContain("확정한 계획만 이 기기의 My Korea에 저장돼요.")
+          expect(copy).toContain("예약·장소 전송·결제는 일어나지 않습니다.")
         } else {
-          expect(copy).toContain("Simulated preview")
-          expect(copy).toContain("No live host or reservation")
+          expect(copy).toContain("Messages and photos stay in this tab.")
+          expect(copy).toContain("A confirmed plan is saved to My Korea on this device.")
+          expect(copy).toContain("Nothing is booked, sent to the venue, or charged.")
         }
 
-        await surface.locator("[data-table-id]").first().click()
-        const detail = page.locator("[data-table-membership]")
+        await surface.getByTestId(`table-open-${TABLE_ID}`).click()
+        const detail = page.getByTestId("table-detail")
         await expect(detail).toBeVisible()
-        await expect(detail).toContainText(item.locale === "ko" ? "실제 호스트나 예약은 없습니다" : "No live host or reservation")
-        await expect(detail.getByTestId("table-join")).toHaveText(item.locale === "ko" ? "참여 미리보기" : "Join preview")
+        await expect(detail).toHaveAttribute("data-table-id", TABLE_ID)
+        await expect(detail).toContainText(item.locale === "ko" ? "19+ 테이블 · 참여할 때만 자격을 확인해요." : "19+ Table · eligibility is checked only when you choose to join.")
+        await expect(detail.getByTestId("table-join")).toHaveText(item.locale === "ko" ? "이 테이블 참여" : "Join this Table")
       }
       if (item.surface === "table-chat") {
-        const fixtureTimestamp = surface.locator("time").first()
-        await expect(fixtureTimestamp).toHaveAttribute("datetime", "2026-08-19T20:12:00+09:00")
-        await expect(fixtureTimestamp).toHaveText(item.locale === "ko" ? "오후 8:12" : "8:12 PM")
+        await expect(surface).toContainText(item.locale === "ko" ? "20:20에 입구 옆에서 만나요." : "Let’s meet by the entrance at 20:20.")
+        await expect(surface).toContainText(item.locale === "ko" ? "이 기기에만 표시됩니다. 위치나 실제 참석을 확인하지 않습니다." : "Marks this device only. It does not verify your location or attendance.")
       }
     })
   }
