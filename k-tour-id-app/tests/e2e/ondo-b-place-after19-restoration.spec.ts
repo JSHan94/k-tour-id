@@ -150,6 +150,90 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
     await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
   })
 
+  test("an expired return renews once and Escape consumes the latest token", async ({ page }) => {
+    await seedPlace(page, "en")
+    await openCanonicalVenue(page)
+    const access = page.getByTestId("canonical-after19-access")
+    await access.getByTestId("canonical-after19-unlock").click()
+    const original = (await placeReturnSession(page)).pending
+    expect(original).toMatchObject({
+      venueId: CANONICAL_VENUE_ID,
+      cityId: "seoul",
+      level: "detail",
+      view: "map",
+      query: "",
+      category: "all",
+      consumedAt: null,
+    })
+
+    expect(original?.expiresAt).toEqual(expect.any(String))
+    await page.clock.setFixedTime(new Date(Date.parse(String(original?.expiresAt)) + 1_000))
+    await page.reload({ waitUntil: "domcontentloaded" })
+    const prompt = page.getByTestId("global-after19-prompt-layer")
+    await expect(prompt.locator("[data-gate-view]")).toHaveAttribute("data-gate-view", "expired")
+    await prompt.getByTestId("global-after19-retry").click()
+    await expect(prompt.locator("[data-gate-view]")).toHaveAttribute("data-gate-view", "intro")
+
+    const renewed = (await placeReturnSession(page)).pending
+    expect(renewed).toMatchObject({
+      venueId: CANONICAL_VENUE_ID,
+      cityId: "seoul",
+      level: "detail",
+      view: "map",
+      query: "",
+      category: "all",
+      consumedAt: null,
+    })
+    expect(renewed?.tokenId).not.toBe(original?.tokenId)
+
+    await page.keyboard.press("Escape")
+    await expect(prompt).toHaveCount(0)
+    await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
+    await expect(access).toBeFocused()
+    await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}.*detail=1`))
+    expect(await placeReturnSession(page)).toMatchObject({
+      pending: null,
+      lastConsumed: { tokenId: renewed?.tokenId, outcome: "cancel" },
+    })
+  })
+
+  test("an expired return whose venue moved cities safely falls back to its stored city", async ({ page }) => {
+    await seedPlace(page, "en")
+    await openCanonicalVenue(page)
+    await page.getByTestId("canonical-after19-unlock").click()
+    await page.evaluate((key) => {
+      const session = JSON.parse(sessionStorage.getItem(key) ?? "{}")
+      session.pending = {
+        ...session.pending,
+        cityId: "busan",
+        view: "list",
+        query: "safe noodles",
+        category: "korean",
+      }
+      sessionStorage.setItem(key, JSON.stringify(session))
+    }, RETURN_KEY)
+
+    const mismatched = (await placeReturnSession(page)).pending
+    expect(mismatched?.expiresAt).toEqual(expect.any(String))
+    await page.clock.setFixedTime(new Date(Date.parse(String(mismatched?.expiresAt)) + 1_000))
+    await page.reload({ waitUntil: "domcontentloaded" })
+    const prompt = page.getByTestId("global-after19-prompt-layer")
+    await expect(prompt.getByTestId("global-after19-return-context")).toHaveAttribute("data-return-city", "busan")
+    await expect(prompt.locator("[data-gate-view]")).toHaveAttribute("data-gate-view", "expired")
+    await prompt.getByTestId("global-after19-retry").click()
+
+    await expect(prompt).toHaveCount(0)
+    await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-requested-view", "list")
+    await expect(page.getByTestId("ondo-b-search")).toHaveValue("safe noodles")
+    await expect(page.getByTestId("ondo-b-search")).toBeFocused()
+    await expect(page).toHaveURL(/\/ondo-b\?city=busan&view=list&q=safe(?:\+|%20)noodles&category=korean$/)
+    expect(await placeReturnSession(page)).toMatchObject({
+      pending: null,
+      lastConsumed: { tokenId: mismatched?.tokenId, outcome: "cancel" },
+    })
+  })
+
   test("a removed venue restores the same sanitized city/list context instead of a dead detail", async ({ page }) => {
     await seedPlace(page, "en")
     await openCanonicalVenue(page)

@@ -21,7 +21,7 @@ import {
   requestPlaceAfter19Return,
   restorePlaceAfter19ReturnSession,
 } from "../after19/after19-place-return-b-model"
-import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, openBDiscoveryVenue, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
+import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryAlternativeVenue, openBDiscoveryDetail, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
 import { pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
@@ -476,9 +476,11 @@ export function CanonicalPlaceOverlay() {
   }
 
   function openPulseAlternative(alternativeVenueId: string) {
-    openBDiscoveryVenue(alternativeVenueId)
-    actions.recordRecentVenue(alternativeVenueId)
-    actions.setSurface({ kind: "venue", venueId: alternativeVenueId })
+    const alternativeVenue = canonicalMapVenueById(alternativeVenueId)
+    if (!alternativeVenue || alternativeVenue.cityId !== currentVenueCity
+      || !openBDiscoveryAlternativeVenue(currentVenueId, alternativeVenue.id)) return
+    actions.recordRecentVenue(alternativeVenue.id)
+    actions.setSurface({ kind: "venue", venueId: alternativeVenue.id })
     setExpanded(false)
   }
 

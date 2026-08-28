@@ -408,6 +408,19 @@ export function openBDiscoveryVenue(venueId: string) {
   return true
 }
 
+export function openBDiscoveryAlternativeVenue(currentVenueId: string, alternativeVenueId: string) {
+  const current = readBDiscoveryHistory()
+  const safeCurrentVenueId = venueValue(currentVenueId)
+  const safeAlternativeVenueId = venueValue(alternativeVenueId)
+  if ((current?.level !== "peek" && current?.level !== "detail")
+    || !safeCurrentVenueId
+    || current.venueId !== safeCurrentVenueId
+    || !safeAlternativeVenueId
+    || safeAlternativeVenueId === safeCurrentVenueId) return false
+  replaceEntry({ ...current, level: "peek", venueId: safeAlternativeVenueId, focus: undefined })
+  return true
+}
+
 export function openBDiscoveryEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]) {
   const current = readBDiscoveryHistory()
   const safeEditorialPlaceId = editorialPlaceValue(editorialPlaceId)

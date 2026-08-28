@@ -1,4 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs"
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
 
@@ -53,8 +55,11 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
   })
 
   test("B-STANDALONE-003 prepared source contains the complete current /ondo-b closure", async () => {
-    const { prepareStandaloneSource } = await import("../../scripts/ondo-b-standalone/prepare.mjs")
+    const { assertStandaloneLocalImportClosure, prepareStandaloneSource } = await import("../../scripts/ondo-b-standalone/prepare.mjs")
     await prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_artifact" })
+    const closure = await assertStandaloneLocalImportClosure()
+    expect(closure.scannedFileCount).toBeGreaterThan(0)
+    expect(closure.localImportCount).toBeGreaterThan(0)
 
     const routeFiles = filesBelow(resolve(STAGE_ROOT, "app"))
       .filter((file) => /(?:page|route|layout)\.(?:ts|tsx)$/.test(file))
@@ -91,6 +96,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/after19/after19-global-b-model.ts",
       "features/ondo/after19/after19-global-b.tsx",
       "features/ondo/after19/after19-global-b.module.css",
+      "features/ondo/after19/after19-place-return-b-model.ts",
       "features/ondo/identity-b/action-gate-contract-b.ts",
       "features/ondo/identity-b/action-gate-coordinator-b.tsx",
       "features/ondo/identity-b/action-gate-coordinator-b.module.css",
@@ -239,6 +245,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/after19/after19-global-b-model.ts",
       "features/ondo/after19/after19-global-b.tsx",
       "features/ondo/after19/after19-global-b.module.css",
+      "features/ondo/after19/after19-place-return-b-model.ts",
       "features/ondo/identity-b/action-gate-contract-b.ts",
       "features/ondo/identity-b/action-gate-coordinator-b.tsx",
       "features/ondo/identity-b/action-gate-coordinator-b.module.css",
@@ -301,5 +308,19 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/my/korea-memory-map-b.tsx",
       "features/ondo/my/korea-memory-map-b.module.css",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
+  })
+
+  test("B-STANDALONE-014 staged local-import closure rejects an unresolved dependency", async () => {
+    const fixtureRoot = await mkdtemp(resolve(tmpdir(), "ondo-b-source-closure-"))
+    try {
+      await mkdir(resolve(fixtureRoot, "feature"))
+      await writeFile(resolve(fixtureRoot, "feature/entry.ts"), 'import "./missing"\n')
+      const { assertStandaloneLocalImportClosure } = await import("../../scripts/ondo-b-standalone/prepare.mjs")
+      await expect(assertStandaloneLocalImportClosure(fixtureRoot)).rejects.toThrow("missing local import ./missing from feature/entry.ts")
+      await writeFile(resolve(fixtureRoot, "feature/missing.ts"), "export const staged = true\n")
+      await expect(assertStandaloneLocalImportClosure(fixtureRoot)).resolves.toMatchObject({ scannedFileCount: 2, localImportCount: 1 })
+    } finally {
+      await rm(fixtureRoot, { recursive: true, force: true })
+    }
   })
 })

@@ -1,5 +1,5 @@
-import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
-import { dirname, resolve } from "node:path"
+import { cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises"
+import { dirname, extname, relative, resolve } from "node:path"
 import {
   APP_ROOT,
   HISTORICAL_B_PROJECT_ID,
@@ -202,6 +202,63 @@ export {
 } from "./canonical-allowlist"
 `
 
+const LOCAL_SOURCE_EXTENSIONS = Object.freeze([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".css"])
+const SCANNED_SOURCE_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"])
+
+async function stagedFilesBelow(root, prefix = "") {
+  const entries = await readdir(resolve(root, prefix), { withFileTypes: true })
+  const files = await Promise.all(entries.map(async (entry) => {
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name
+    return entry.isDirectory() ? stagedFilesBelow(root, path) : [path]
+  }))
+  return files.flat()
+}
+
+function localImportSpecifiers(source) {
+  const specifiers = []
+  const staticPattern = /\b(?:import|export)\s+(?:type\s+)?(?:[^"'`;]*?\s+from\s+)?["']([^"']+)["']/g
+  const dynamicPattern = /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g
+  for (const pattern of [staticPattern, dynamicPattern]) {
+    for (const match of source.matchAll(pattern)) {
+      const specifier = match[1].split(/[?#]/, 1)[0]
+      if (specifier.startsWith(".") || specifier.startsWith("@/")) specifiers.push(specifier)
+    }
+  }
+  return specifiers
+}
+
+function stagedImportCandidates(stageRoot, importer, specifier) {
+  const base = specifier.startsWith("@/")
+    ? resolve(stageRoot, specifier.slice(2))
+    : resolve(dirname(resolve(stageRoot, importer)), specifier)
+  const paths = extname(base)
+    ? [base]
+    : [
+        base,
+        ...LOCAL_SOURCE_EXTENSIONS.map((extension) => `${base}${extension}`),
+        ...LOCAL_SOURCE_EXTENSIONS.map((extension) => resolve(base, `index${extension}`)),
+      ]
+  return paths.map((path) => relative(stageRoot, path).replaceAll("\\", "/"))
+}
+
+export async function assertStandaloneLocalImportClosure(stageRoot = STAGE_ROOT) {
+  const files = await stagedFilesBelow(stageRoot)
+  const staged = new Set(files)
+  const scanned = files.filter((file) => SCANNED_SOURCE_EXTENSIONS.has(extname(file)))
+  let localImportCount = 0
+  for (const importer of scanned) {
+    const source = await readFile(resolve(stageRoot, importer), "utf8")
+    for (const specifier of localImportSpecifiers(source)) {
+      localImportCount += 1
+      const candidates = stagedImportCandidates(stageRoot, importer, specifier)
+      if (!candidates.some((candidate) => staged.has(candidate))) {
+        throw new Error(`Standalone source closure is missing local import ${specifier} from ${importer}`)
+      }
+    }
+  }
+  return { scannedFileCount: scanned.length, localImportCount }
+}
+
 async function copyFile(relativePath) {
   const source = resolve(APP_ROOT, relativePath)
   const target = resolve(STAGE_ROOT, relativePath)
@@ -266,6 +323,7 @@ export async function prepareStandaloneSource({ projectId = process.env.ONDO_B_S
     await mkdir(dirname(target), { recursive: true })
     await writeFile(target, contents)
   }))
+  await assertStandaloneLocalImportClosure(STAGE_ROOT)
   return STAGE_ROOT
 }
 

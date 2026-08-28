@@ -10,6 +10,7 @@ import {
   pulseAlternativesForVenue,
   pulseForVenue,
 } from "../../features/ondo/pulse-b/pulse-model-b"
+import { openBDiscoveryAlternativeVenue, openBDiscoveryVenue } from "../../features/ondo/map/b-discovery-history"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
@@ -104,4 +105,64 @@ test("B-PULSE-HOT-006 the Next client scan allows only curated Pulse ids above c
   expect(scanner).toContain("unexpectedElevatedVenueIds")
   expect(scanner).toContain("minimumVenueIdMultiplicity")
   expect(scanner).not.toContain("client.venueIdOccurrences !== 800")
+})
+
+test("B-PULSE-HOT-007 only an exact current place can canonically transition to an alternative peek", () => {
+  const currentVenueId = "mois-0021cd596bc5b2a922ad"
+  const alternativeVenueId = pulseAlternativesForVenue(currentVenueId)[0].venueId
+  class FixtureHistory {
+    state: Record<string, unknown> = {
+      preserved: "outer-state",
+      __ondoBDiscovery: {
+        v: 3,
+        documentId: "pulse-alternative-contract",
+        level: "detail",
+        city: "seoul",
+        view: "list",
+        query: "late dinner",
+        category: "korean",
+        venueId: currentVenueId,
+      },
+    }
+    url = ""
+    replaceState(state: Record<string, unknown>, _title: string, url: string) {
+      this.state = state
+      this.url = url
+    }
+  }
+  const history = new FixtureHistory()
+  const previousHistory = Object.getOwnPropertyDescriptor(globalThis, "History")
+  const previousWindow = Object.getOwnPropertyDescriptor(globalThis, "window")
+  Object.defineProperty(globalThis, "History", { configurable: true, value: FixtureHistory })
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { history, location: { origin: "https://ondo.test", pathname: "/ondo-b" } },
+  })
+
+  try {
+    expect(openBDiscoveryVenue(alternativeVenueId)).toBe(false)
+    expect(openBDiscoveryAlternativeVenue("not-a-venue", alternativeVenueId)).toBe(false)
+    expect(openBDiscoveryAlternativeVenue("mois-aaaaaaaaaaaaaaaaaaaa", alternativeVenueId)).toBe(false)
+    expect(openBDiscoveryAlternativeVenue(currentVenueId, currentVenueId)).toBe(false)
+    expect(openBDiscoveryAlternativeVenue(currentVenueId, alternativeVenueId)).toBe(true)
+    expect(history.state).toMatchObject({
+      preserved: "outer-state",
+      __ondoBDiscovery: {
+        v: 3,
+        documentId: "pulse-alternative-contract",
+        level: "peek",
+        city: "seoul",
+        view: "list",
+        query: "late dinner",
+        category: "korean",
+        venueId: alternativeVenueId,
+      },
+    })
+    expect(history.url).toBe(`/ondo-b?city=seoul&view=list&q=late+dinner&category=korean&venueId=${alternativeVenueId}`)
+  } finally {
+    if (previousHistory) Object.defineProperty(globalThis, "History", previousHistory)
+    else Reflect.deleteProperty(globalThis, "History")
+    if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow)
+    else Reflect.deleteProperty(globalThis, "window")
+  }
 })

@@ -13,6 +13,7 @@ export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
   "features/ondo/after19/after19-global-b-model.ts",
   "features/ondo/after19/after19-global-b.tsx",
   "features/ondo/after19/after19-global-b.module.css",
+  "features/ondo/after19/after19-place-return-b-model.ts",
   "features/ondo/identity-b/account-save-gate-b.tsx",
   "features/ondo/identity-b/account-save-gate-b.module.css",
   "features/ondo/identity-b/action-gate-contract-b.ts",

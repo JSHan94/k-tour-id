@@ -562,7 +562,13 @@ async function openLocalSignal(page: Page, query = "") {
   await expect(page.getByTestId("ondo-b-local-signal")).toBeVisible()
 }
 
-async function triggerPersonGate(page: Page, locale: BLocale, persona: NonNullable<BSessionSeed["persona"]>, qa = false) {
+async function triggerPersonGate(
+  page: Page,
+  locale: BLocale,
+  persona: NonNullable<BSessionSeed["persona"]>,
+  route: "mobile_id_cx" | "mobile_residence_card" | "passport_ekyc",
+  qa = false,
+) {
   await seedB(page, { locale, session: { persona, account: "ACC-ACTIVE", person: "PER-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" } })
   await openLocalSignal(page, qa ? "qa=1" : "")
   const signal = page.getByTestId("ondo-b-local-signal")
@@ -570,6 +576,7 @@ async function triggerPersonGate(page: Page, locale: BLocale, persona: NonNullab
   await signal.locator("textarea").fill(locale === "ko" ? "주문은 입구에서 해요." : "Order beside the entrance.")
   await signal.getByTestId("local-signal-person-check").click()
   await expect(page.getByTestId("ondo-b-local-check-walkthrough")).toBeVisible()
+  await page.getByTestId(`person-route-choice-${route}`).click()
 }
 
 async function triggerAgeGate(page: Page, locale: BLocale, qa = false) {
@@ -815,11 +822,11 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await gate.getByTestId("account-start").click()
     await expect(gate.getByTestId("gate-failure")).toBeVisible()
   } else if (state === "GATE-PERSON-PASSPORT") {
-    await triggerPersonGate(page, locale, "short_term")
+    await triggerPersonGate(page, locale, "short_term", "passport_ekyc")
   } else if (state === "GATE-PERSON-CX") {
-    await triggerPersonGate(page, locale, "korean_local")
+    await triggerPersonGate(page, locale, "korean_local", "mobile_id_cx")
   } else if (state === "GATE-PERSON-RESIDENCE-UNSUPPORTED") {
-    await triggerPersonGate(page, locale, "long_term_resident")
+    await triggerPersonGate(page, locale, "long_term_resident", "mobile_residence_card")
     await page.evaluate(() => {
       const target = window as Window & { __ONDO_B_QA__?: Record<string, unknown> }
       target.__ONDO_B_QA__ = { ...(target.__ONDO_B_QA__ ?? {}), eligibility: "unavailable" }
@@ -881,6 +888,7 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
       await signal.getByTestId("local-signal-person-check").click()
       const gate = page.getByTestId("ondo-b-action-gate")
       await expect(gate).toHaveAttribute("data-active-gate", "person")
+      await gate.getByTestId("person-route-choice-mobile_id_cx").click()
       // The successful gate transition intentionally unmounts this coordinator
       // in the same React commit. Schedule the semantic activation and return
       // before that commit so the visual-fixture setup does not retry a pointer

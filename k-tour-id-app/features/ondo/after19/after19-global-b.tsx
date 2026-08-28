@@ -270,7 +270,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     }
     document.addEventListener("keydown", ownEscape, true)
     return () => document.removeEventListener("keydown", ownEscape, true)
-  }, [gateOpen])
+  }, [gateOpen, placeReturn])
 
   function commitSession(next: GlobalAfter19SessionB) {
     setSession(next)
@@ -379,7 +379,8 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
 
   function retryExpiredPlaceReturn() {
     if (!placeReturn) return
-    if (!canonicalMapVenueById(placeReturn.venueId)) {
+    const venue = canonicalMapVenueById(placeReturn.venueId)
+    if (!venue || venue.cityId !== placeReturn.cityId) {
       finishPlaceReturn("cancel")
       return
     }

@@ -31,11 +31,81 @@ async function injectPersonFailure(page: Page) {
   })
 }
 
+async function expectSafeViewportTarget(page: Page, testId: string) {
+  const target = page.getByTestId(testId)
+  await expect(target).toBeInViewport()
+  const [box, viewport] = await Promise.all([target.boundingBox(), page.evaluate(() => ({ width: innerWidth, height: innerHeight }))])
+  expect(box, `${testId} has measurable geometry`).not.toBeNull()
+  expect(box!.height, `${testId} keeps a 44px target`).toBeGreaterThanOrEqual(44)
+  expect(box!.x, `${testId} stays inside the left safe edge`).toBeGreaterThanOrEqual(0)
+  expect(box!.y, `${testId} stays inside the top safe edge`).toBeGreaterThanOrEqual(0)
+  expect(box!.x + box!.width, `${testId} stays inside the right safe edge`).toBeLessThanOrEqual(viewport.width)
+  expect(box!.y + box!.height, `${testId} stays inside the bottom safe edge`).toBeLessThanOrEqual(viewport.height)
+  return box!
+}
+
 test.beforeEach(async ({ page }, testInfo) => {
   testInfo.setTimeout(90_000)
   installBRuntimeGuard(page)
   await prepareBPage(page)
 })
+
+for (const locale of ["en", "ko", "ja"] as const) {
+  test(`short landscape ${locale.toUpperCase()} Person gate exposes a keyboard route and both safe footer decisions`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 844, height: 390 })
+    const note = locale === "en" ? "Keep this exact landscape draft." : locale === "ko" ? "이 가로 화면 초안을 그대로 유지해요." : "この横画面の下書きをそのまま保持します。"
+    const { draft, gate } = await openSignalPersonGate(page, "travelling", locale, note)
+    const dialog = page.getByTestId("ondo-b-local-check-walkthrough")
+
+    await expect(dialog).toBeFocused()
+    await expect(gate).toHaveAttribute("data-person-route", "unselected")
+    await expect(gate.getByTestId("local-check-boundary-continue")).toHaveCount(0)
+    for (const route of ["mobile_id_cx", "mobile_residence_card", "passport_ekyc"]) {
+      await expectSafeViewportTarget(page, `person-route-choice-${route}`)
+    }
+    const initialCancel = await expectSafeViewportTarget(page, "action-gate-cancel")
+    const routeBox = await gate.getByTestId("person-route-choices").boundingBox()
+    expect(routeBox!.y + routeBox!.height, "initial route choices are not hidden behind the sticky footer").toBeLessThanOrEqual(initialCancel.y)
+    await expect(gate.getByTestId("action-gate-return-context")).toBeInViewport()
+    await expect(dialog.locator("ol")).toBeInViewport()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(844)
+
+    await page.keyboard.press("Tab")
+    await expect(dialog.locator(":scope > header button")).toBeFocused()
+    await page.keyboard.press("Tab")
+    const mobileRoute = gate.getByTestId("person-route-choice-mobile_id_cx")
+    await expect(mobileRoute).toBeFocused()
+    await page.keyboard.press("Enter")
+    await expect(mobileRoute).toHaveAttribute("aria-pressed", "true")
+    await expect(gate).toHaveAttribute("data-person-route", "mobile_id_cx")
+
+    const forward = await expectSafeViewportTarget(page, "local-check-boundary-continue")
+    const selectedCancel = await expectSafeViewportTarget(page, "action-gate-cancel")
+    expect(Math.abs(forward.y - selectedCancel.y)).toBeLessThanOrEqual(1)
+    const disclosure = gate.getByTestId("person-provider-disclosure")
+    const disclosureSummary = disclosure.locator("summary")
+    await expect(disclosureSummary).toBeInViewport()
+    const disclosureBox = await disclosureSummary.boundingBox()
+    expect(disclosureBox!.height).toBeGreaterThanOrEqual(44)
+    expect(disclosureBox!.y + disclosureBox!.height).toBeLessThanOrEqual(forward.y)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(844)
+    const screenshot = testInfo.outputPath(`person-gate-${locale}-844x390.png`)
+    await page.screenshot({ path: screenshot, animations: "disabled" })
+    await testInfo.attach(`Person gate ${locale} 844x390`, { path: screenshot, contentType: "image/png" })
+
+    await disclosureSummary.click()
+    await disclosure.getByTestId("consent-retention").scrollIntoViewIfNeeded()
+    await expect(disclosure.getByTestId("consent-retention")).toBeVisible()
+    await expectSafeViewportTarget(page, "local-check-boundary-continue")
+    await expectSafeViewportTarget(page, "action-gate-cancel")
+    await gate.getByTestId("local-check-boundary-continue").focus()
+    await expect(gate.getByTestId("local-check-boundary-continue")).toBeFocused()
+    await page.keyboard.press("Enter")
+    await expect(gate).toBeHidden()
+    await expect(draft).toBeVisible()
+    await expect(draft.locator("textarea")).toHaveValue(note)
+  })
+}
 
 test("FL-005 discovery intent does not choose a route; explicit Mobile ID survives failure, reload, and retry", async ({ page }) => {
   const note = "카운터에서 먼저 주문해요."
