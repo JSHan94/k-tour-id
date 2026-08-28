@@ -345,7 +345,14 @@ export function OfficialDirectoryOnboardingLayer() {
               <span>SIMULATED</span>
               <ChevronRight size={18} aria-hidden="true" />
             </button>
-            <details className={styles.sourceIntro} data-testid="onboarding-source-boundary">
+            <details
+              className={styles.sourceIntro}
+              data-testid="onboarding-source-boundary"
+              onBlur={(event) => {
+                if (event.relatedTarget && event.currentTarget.contains(event.relatedTarget)) return
+                event.currentTarget.removeAttribute("open")
+              }}
+            >
               <summary aria-label={copy.sourceSummary}><span className={styles.srOnly}>{copy.sourceSummary}</span><Info size={16} aria-hidden="true" /></summary>
               <div className={styles.sourceBody}>
                 <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
