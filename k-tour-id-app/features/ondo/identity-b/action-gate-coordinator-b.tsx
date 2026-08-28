@@ -275,8 +275,6 @@ export function BActionGateCoordinator() {
   const copy = COPY[state.locale]
   const personRoute = pending && session.personRoute?.tokenId === pending.tokenId ? session.personRoute.route : null
 
-  useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId), layerRef)
-
   const restoreContext = useCallback((returnTo: BActionReturnTo) => {
     if (returnTo.cta === "JOIN_TABLE") {
       actions.setTab("tables")
@@ -348,6 +346,8 @@ export function BActionGateCoordinator() {
   }, [ageSession, clock, session.payment, session.person, state.account])
 
   const activeGate = pending?.gatePlan.find((gate) => !satisfied.has(gate)) ?? null
+  const expiredReturn = pending ? !isBActionReturnPending(pending, clock) : false
+  useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId && (activeGate || expiredReturn)), layerRef)
 
   useEffect(() => {
     if (!pending || !activeGate) return
@@ -510,7 +510,9 @@ export function BActionGateCoordinator() {
   }
 
   if (!hydrated || !pending || readyTokenId === pending.tokenId) return null
-  const expiredReturn = !isBActionReturnPending(pending, clock)
+  // A fully satisfied live plan releases on the effect above. Keep that
+  // handoff visually silent instead of flashing the last gate for one frame.
+  if (!expiredReturn && !activeGate) return null
   const resolvedView: GateView = expiredReturn ? "expired" : view
   const gate = activeGate ?? pending.gatePlan.at(-1) ?? "account"
   const residenceUnavailable = gate === "person" && personRoute === "mobile_residence_card" && resolvedView === "unavailable"

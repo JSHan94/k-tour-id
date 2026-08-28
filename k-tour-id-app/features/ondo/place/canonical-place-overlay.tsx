@@ -21,7 +21,7 @@ import {
   requestPlaceAfter19Return,
   restorePlaceAfter19ReturnSession,
 } from "../after19/after19-place-return-b-model"
-import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryAlternativeVenue, openBDiscoveryDetail, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
+import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, consumeBDiscoveryPeekTraversalFocus, goBackFromBDiscovery, openBDiscoveryAlternativeVenue, openBDiscoveryDetail, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
 import { pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
@@ -283,6 +283,7 @@ export function CanonicalPlaceOverlay() {
   const detailRef = useRef<HTMLElement | null>(null)
   const peekRef = useRef<HTMLDivElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
+  const peekTraversalFocusPendingRef = useRef(false)
   const after19AccessRef = useRef<HTMLElement | null>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
@@ -291,6 +292,7 @@ export function CanonicalPlaceOverlay() {
   const copy = COPY[locale]
 
   useEffect(() => {
+    peekTraversalFocusPendingRef.current = false
     setDetail(null)
     setDetailState("idle")
     setDetailAttempt(0)
@@ -307,6 +309,7 @@ export function CanonicalPlaceOverlay() {
     const syncHistory = (event: Event) => {
       const entry = readBDiscoveryTraversal(event)?.entry
       if (!entry || entry.venueId !== venueId) return
+      peekTraversalFocusPendingRef.current = entry.level === "peek"
       setExpanded(entry.level === "detail")
     }
     window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, syncHistory)
@@ -317,6 +320,24 @@ export function CanonicalPlaceOverlay() {
 
   useEffect(() => {
     if (!venueId || expanded) return
+    const storedTraversalFocus = consumeBDiscoveryPeekTraversalFocus(venueId)
+    if (peekTraversalFocusPendingRef.current || storedTraversalFocus) {
+      let frame: number | null = null
+      const focusDetails = (attempt = 0) => {
+        const target = openRef.current
+        if (target?.isConnected && !target.closest("[inert],[aria-hidden='true']")) {
+          target.focus({ preventScroll: true })
+          if (document.activeElement === target) {
+            peekTraversalFocusPendingRef.current = false
+            return
+          }
+        }
+        if (attempt < 7) frame = window.requestAnimationFrame(() => focusDetails(attempt + 1))
+        else peekTraversalFocusPendingRef.current = false
+      }
+      frame = window.requestAnimationFrame(() => focusDetails())
+      return () => { if (frame != null) window.cancelAnimationFrame(frame) }
+    }
     const active = document.activeElement
     if (!returnFocusRef.current && active instanceof HTMLElement && active !== document.body && active.matches(`[data-venue-opener='${CSS.escape(venueId)}']`)) returnFocusRef.current = active
     const frame = window.requestAnimationFrame(() => peekRef.current?.focus({ preventScroll: true }))
@@ -435,9 +456,9 @@ export function CanonicalPlaceOverlay() {
   }
 
   function closeDetails() {
+    peekTraversalFocusPendingRef.current = true
     if (goBackFromBDiscovery("detail")) return
     setExpanded(false)
-    window.requestAnimationFrame(() => openRef.current?.focus())
   }
 
   function handleDetailKeyDown(event: KeyboardEvent<HTMLElement>) {

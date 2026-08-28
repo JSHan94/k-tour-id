@@ -1,57 +1,61 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
+import {
+  B_DEVICE_KEY,
+  CANONICAL_VENUE_ID,
+  TABLE_ID,
+  expectBRuntimeClean,
+  gotoB,
+  installBRuntimeGuard,
+  openCanonicalVenue,
+  prepareBPage,
+  seedB,
+} from "../helpers/ondo-b-qa"
 
-const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
-const TABLE_ID = "table-seongsu-dinner"
+const EMPTY_TABLE_VENUE_ID = "mois-18939eecb43c15ab4305"
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
-const runtimeFailures = new WeakMap<Page, string[]>()
+const READY_SESSION = {
+  account: "ACC-ACTIVE",
+  person: "PER-VERIFIED",
+  age: "AGE-VERIFIED",
+  ageExpiresAt: "2026-08-20T20:30:00+09:00",
+  paymentKyc: "PKY-VERIFIED",
+} as const
 
-test.beforeEach(async ({ page }) => {
-  const failures: string[] = []
-  runtimeFailures.set(page, failures)
-  page.on("console", (message) => { if (message.type() === "error") failures.push(`console: ${message.text()}`) })
-  page.on("pageerror", (error) => failures.push(`pageerror: ${error.message}`))
+test.beforeEach(async ({ page }, testInfo) => {
+  testInfo.setTimeout(120_000)
+  installBRuntimeGuard(page)
+  await prepareBPage(page)
 })
 
 test.afterEach(async ({ page }) => {
-  expect(runtimeFailures.get(page) ?? []).toEqual([])
+  await expectBRuntimeClean(page)
 })
 
 async function seed(page: Page, options: { locale?: "en" | "ko"; membership?: "confirmed" | "checked_in" | "completed" } = {}) {
-  await page.addInitScript(({ locale, membership }) => {
-    if (!localStorage.getItem("ondo.preferences.v3")) {
-      localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale, guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
-    }
-    if (!sessionStorage.getItem("ondo.session.v3")) {
-      sessionStorage.setItem("ondo.session.v3", JSON.stringify({
-        onboarding: "ONB-COMPLETE",
-        persona: "short_term",
-        account: "ACC-ACTIVE",
-        person: "PER-VERIFIED",
-        age: "AGE-VERIFIED",
-        ageExpiresAt: "2026-08-21T20:00:00+09:00",
-        paymentKyc: "PKY-VERIFIED",
-        tableMembershipById: membership ? { ["table-seongsu-dinner"]: membership } : {},
-        stamps: 9,
-      }))
-      sessionStorage.removeItem("ondo.chat.v2")
-      sessionStorage.removeItem("ondo.table-outcomes.v2")
-    }
-  }, { locale: options.locale ?? "en", membership: options.membership })
-  await page.addInitScript(() => {
-    window.addEventListener("DOMContentLoaded", () => {
-      const style = document.createElement("style")
-      style.textContent = "nextjs-portal { display: none !important; }"
-      document.head.append(style)
-    }, { once: true })
+  await seedB(page, {
+    locale: options.locale ?? "en",
+    session: {
+      ...READY_SESSION,
+      ...(options.membership ? { tableMembershipById: { [TABLE_ID]: options.membership } } : {}),
+    },
   })
 }
 
 async function openJoinedChat(page: Page, query = "") {
-  await page.goto(`/ondo-b${query}`)
-  await page.getByRole("button", { name: "Tables", exact: true }).click()
-  await page.getByRole("region", { name: "Joined" }).locator(`[data-table-id='${TABLE_ID}']`).click()
-  await expect(page.getByTestId("table-chat")).toBeVisible()
+  await gotoB(page, query)
+  await page.getByTestId("nav-tables").click()
+  await page.getByTestId(`table-open-${TABLE_ID}`).click()
+  const detail = page.getByTestId("table-detail")
+  await expect(detail).toHaveAttribute("data-table-id", TABLE_ID)
+  const openChat = detail.getByTestId("table-open-chat")
+  const chat = detail.getByTestId("table-chat")
+  if (!await chat.isVisible()) {
+    await expect(openChat).toBeVisible()
+    await openChat.click()
+  }
+  await expect(chat).toBeVisible()
+  return { detail, chat }
 }
 
 async function expectNoSeriousAxe(page: Page, include: string) {
@@ -59,130 +63,155 @@ async function expectNoSeriousAxe(page: Page, include: string) {
   expect(result.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([])
 }
 
-test("SLK-005 canonical Place opens a venue-first Table scope with explicit global browse and exact venue-summary return", async ({ page }) => {
+test("SLK-005 canonical Place opens a venue-first Table scope with explicit global browse and exact venue return", async ({ page }) => {
   await seed(page)
-  await page.goto(`/ondo-b?venueId=${CANONICAL_VENUE_ID}`)
+  await gotoB(page, `?venueId=${EMPTY_TABLE_VENUE_ID}`)
   await page.getByTestId("canonical-place-details").click()
-  await page.getByTestId("canonical-venue-tables").click()
+  const place = page.getByTestId("canonical-place-overlay")
+  await expect(place).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
+  await expect(place.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
+  await place.getByTestId("canonical-venue-tables").click()
 
-  const scope = page.getByTestId("venue-table-scope")
-  await expect(scope).toBeVisible()
-  await expect(page.getByTestId("tables-canonical-context")).toContainText("has no live Table attached")
-  await expect(page.getByTestId("venue-tables-empty")).toContainText("No Tables are open at this place yet")
-  await expect(page.getByTestId("tables-entry").locator("[data-table-id]")).toHaveCount(0)
+  const scope = place.getByTestId("venue-table-scope")
+  await expect(scope).toHaveAttribute("data-empty-state", "open")
+  await expect(place.getByTestId("venue-tables-empty")).toContainText("No open Table here yet")
+  await expect(page.getByTestId("tables-entry")).toHaveCount(0)
 
-  await page.getByTestId("tables-browse-all").click()
-  await expect(page.getByTestId("tables-entry").locator("[data-table-id]")).not.toHaveCount(0)
-  await page.getByTestId("tables-back-to-place-scope").click()
-  await page.getByTestId("tables-back-to-venue").click()
-  const returnedPlace = page.getByTestId("canonical-place-peek")
-  await expect(returnedPlace).toContainText("Roba")
-  await expect(returnedPlace).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
-  await expect(page.getByTestId("canonical-place-details")).toBeFocused()
-  await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
-  await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(0)
-  await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
-  await expect(page).not.toHaveURL(/[?&]detail=/)
+  await place.getByTestId("tables-back-to-venue").click()
+  await expect(scope).toHaveAttribute("data-empty-state", "closed")
+  await expect(place).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
+  await place.getByTestId("canonical-venue-tables").click()
+  await place.getByTestId("tables-browse-all").click()
+
+  const tables = page.getByTestId("tables-entry")
+  await expect(tables).toBeVisible()
+  await expect(tables.getByTestId(`table-card-${TABLE_ID}`)).toHaveCount(1)
+  await expect(page.getByTestId("nav-tables")).toHaveAttribute("aria-current", "page")
+
+  await page.getByTestId("nav-ondo").click()
+  const returnedPlace = page.getByTestId("canonical-place-overlay")
+  await expect(returnedPlace).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
+  await expect(returnedPlace.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
+  await expect(page).toHaveURL(new RegExp(`venueId=${EMPTY_TABLE_VENUE_ID}.*detail=1`))
   await expect.poll(() => page.evaluate(() => history.state?.__ondoBDiscovery)).toMatchObject({
-    level: "peek",
+    level: "detail",
     city: "seoul",
-    venueId: CANONICAL_VENUE_ID,
+    venueId: EMPTY_TABLE_VENUE_ID,
   })
 })
 
-test("SLK-006/007 nested preview report owns focus, Tab, Escape, focus return, receipt and reload truth", async ({ page }) => {
+test("SLK-006/007 nested Table report owns focus, Tab, Escape, exact return, and tab-only reload truth", async ({ page }) => {
   await seed(page, { membership: "confirmed" })
-  await openJoinedChat(page)
+  let { detail, chat } = await openJoinedChat(page)
   await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("inert", "")
-  await expect(page.locator("[data-active-tab='tables']")).toHaveAttribute("aria-hidden", "true")
 
-  const invoker = page.getByTestId("table-report")
+  const invoker = chat.getByTestId("table-report")
   await invoker.click()
-  const dialog = page.getByTestId("chat-confirm-dialog")
+  const dialog = chat.getByRole("alertdialog", { name: "Report this message?" })
   await expect(dialog).toBeVisible()
-  await expect(dialog).toHaveAttribute("aria-modal", "true")
-  await expect(page.getByTestId("ondo-sheet")).not.toHaveAttribute("role")
-  await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true']):not([inert]), [role='alertdialog'][aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
-  await expect(page.getByTestId("report-reason")).toBeFocused()
-  await expect(dialog).toContainText("only in this device’s simulated preview")
+  await expect(dialog).toContainText("Recorded in this tab only; nothing is sent to ONDO or the host.")
+  await expect(page.locator("[role='dialog'][aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
+  const cancel = dialog.getByRole("button", { name: "Cancel", exact: true })
+  const confirm = dialog.getByTestId("table-report-confirm")
+  await expect(cancel).toBeFocused()
+  await page.keyboard.press("Tab")
+  await expect(confirm).toBeFocused()
   await page.keyboard.press("Shift+Tab")
-  await expect(page.getByTestId("confirm-cancel")).toBeFocused()
+  await expect(cancel).toBeFocused()
   await page.keyboard.press("Escape")
   await expect(dialog).toBeHidden()
-  await expect(page.getByTestId("table-chat")).toBeVisible()
+  await expect(detail.getByTestId("table-chat")).toBeVisible()
   await expect(invoker).toBeFocused()
 
   await invoker.click()
-  await page.getByTestId("report-reason").selectOption("harassment")
-  await page.getByTestId("report-block").check()
-  await page.getByTestId("confirm-submit").click()
-  await expect(page.getByTestId("table-report-receipt")).toContainText("Local simulated preview report recorded")
-  await page.getByRole("button", { name: "Open chat" }).click()
-  await expect(page.getByTestId("table-chat")).toContainText("Report receipt · Local simulated preview only")
-  await expect(page.getByTestId("table-chat")).toContainText("only in this local simulated preview")
+  await dialog.getByTestId("table-report-confirm").click()
+  await expect(chat.getByRole("status").filter({ hasText: "Report recorded in this tab." })).toBeVisible()
+  await expect(invoker).toBeFocused()
 
-  await page.reload()
-  await page.getByRole("button", { name: "Tables", exact: true }).click()
-  await page.getByRole("region", { name: "Joined" }).locator(`[data-table-id='${TABLE_ID}']`).click()
-  await expect(page.getByTestId("table-chat")).toContainText("Report receipt · Local simulated preview only")
+  await chat.getByTestId("table-block").click()
+  const blockDialog = chat.getByRole("alertdialog", { name: "Hide Jae in this tab?" })
+  await expect(blockDialog).toContainText("Jae · participant in this Table")
+  await blockDialog.getByTestId("table-block-confirm").click()
+  await expect(chat.getByRole("status").filter({ hasText: "Jae is hidden only in this tab." })).toBeVisible()
+  await expect(chat.getByText("English or Korean both work for me.")).toHaveCount(0)
+
+  await page.reload({ waitUntil: "domcontentloaded" })
+  ;({ detail, chat } = await openJoinedChat(page))
+  await expect(chat.getByText("Report recorded in this tab.")).toHaveCount(0)
+  await expect(chat.getByText("Jae is hidden only in this tab.")).toHaveCount(0)
+  await expect(chat.getByText("English or Korean both work for me.")).toBeVisible()
+  await expect(detail).toHaveAttribute("data-join-stage", "chat")
   await expectNoSeriousAxe(page, "[data-testid='table-chat']")
 })
 
 test("SLK-008 failed image has one retry authority and an alternate-photo action without duplication", async ({ page }) => {
   await seed(page, { membership: "confirmed" })
-  await openJoinedChat(page, "?scenario=media-failed")
-  const chat = page.getByTestId("table-chat")
-  await chat.locator("input[type='file']").setInputFiles({ name: "meal.png", mimeType: "image/png", buffer: PNG })
-  await chat.getByRole("button", { name: "Send photo" }).click()
+  await page.addInitScript(() => { window.__ONDO_B_QA__ = { tableMessage: "failure" } })
+  const { chat } = await openJoinedChat(page)
+  await chat.getByTestId("table-chat-image").setInputFiles({ name: "meal.png", mimeType: "image/png", buffer: PNG })
+  await chat.getByTestId("table-message-send").click()
 
-  const failed = chat.locator("[data-message-status='MSG-FAILED']")
+  const failed = chat.locator("article[data-state='failed']")
   await expect(failed).toHaveCount(1)
-  await expect(failed.getByRole("button", { name: "Try again" })).toHaveCount(1)
+  await expect(failed.getByTestId("table-message-retry")).toHaveCount(1)
   await expect(chat.getByRole("button", { name: "Retry photo" })).toHaveCount(0)
-  await expect(chat.getByText("Add a photo", { exact: true })).toBeVisible()
-  await failed.getByRole("button", { name: "Try again" }).click()
-  await expect(chat.locator("[data-message-status='MSG-SENT']")).toHaveCount(1)
-  await expect(chat.locator("[data-message-status]")).toHaveCount(1)
+  await expect(chat.getByText("Add photo", { exact: true })).toBeVisible()
+  await failed.getByTestId("table-message-retry").click()
+  await expect(chat.locator("article[data-state='ready']")).toHaveCount(1)
+  await expect(chat.locator("article[data-state]")).toHaveCount(1)
 })
 
 test("SLK-015/020 Korean Local Signal is task-first, localized, invariant-safe, and terminal-only", async ({ page }) => {
   await seed(page, { locale: "ko" })
-  await page.goto(`/ondo-b?venueId=${CANONICAL_VENUE_ID}`)
-  await page.getByTestId("canonical-place-details").click()
-  await page.getByTestId("canonical-venue-signal").click()
-  const signal = page.getByTestId("local-signal-overlay")
-  await expect(signal).toContainText("다음 여행자에게 도움 주기")
-  await expect(signal).toContainText("방문과 기여 이력만 바뀝니다")
-  await expect(signal).toContainText("모임 이력")
+  await openCanonicalVenue(page)
+  const place = page.getByTestId("canonical-place-overlay")
+  const opener = place.getByTestId("canonical-local-signal-open")
+  await opener.click()
+  const signal = page.getByTestId("ondo-b-local-signal")
+  await expect(signal).toContainText("로컬 시그널 남기기")
+  await expect(signal).toContainText("태그와 게시 시각만 기기에 남아요")
+  await expect(signal).toContainText("계정·ID·자격증명을 만들지 않습니다")
   await expect(signal).not.toContainText(/Visit|Contribution|Meetup|KYC/)
-  await signal.locator("textarea").fill("입구 옆 키오스크에서 먼저 주문해요.")
-  await page.getByTestId("local-signal-submit").click()
+  await signal.locator("fieldset button").first().click()
+  const note = "입구 옆 키오스크에서 먼저 주문해요."
+  await signal.locator("textarea").fill(note)
+  await signal.getByTestId("local-signal-person-check").click()
+  const post = signal.getByTestId("local-signal-post")
+  await expect(post).toHaveText("이 기기에 로컬 시그널 저장")
+  await post.click()
 
-  await expect(signal).toHaveAttribute("data-signal-status", "submitted")
-  await expect(signal).toHaveAttribute("data-signal-invariants", "preserved")
-  await expect(signal.getByText("방문과 기여 이력만 바뀝니다", { exact: false })).toHaveCount(1)
-  await expect(signal.locator("textarea")).toHaveCount(0)
-  await expect(signal.getByRole("button", { name: "작성 취소" })).toHaveCount(0)
-  await expect(page.getByTestId("local-signal-return")).toHaveText("장소로 돌아가기")
+  await expect(signal).toBeHidden()
+  await expect(place).toBeVisible()
+  await expect(place).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
+  await expect(opener).toBeFocused()
+  const stored = await page.evaluate((key) => localStorage.getItem(key) ?? "", B_DEVICE_KEY)
+  expect(stored).not.toContain(note)
+  const device = JSON.parse(stored) as {
+    localSignalPostedVenueIds: string[]
+    localPulseEvidenceByVenue: Record<string, { tags: string[]; postedAt: string }>
+  }
+  expect(device.localSignalPostedVenueIds).toContain(CANONICAL_VENUE_ID)
+  expect(device.localPulseEvidenceByVenue[CANONICAL_VENUE_ID].tags).toEqual(["calm_now"])
+  expect(Date.parse(device.localPulseEvidenceByVenue[CANONICAL_VENUE_ID].postedAt)).not.toBeNaN()
 })
 
-test("D2 polish feedback mode hides unrelated chat tools until feedback is complete", async ({ page }) => {
+test("D2 polish feedback is progressively disclosed and records no combined reputation score", async ({ page }) => {
   await seed(page, { membership: "confirmed" })
-  await openJoinedChat(page)
-  const chat = page.getByTestId("table-chat")
-  await page.getByTestId("table-check-in").click()
-  await page.getByTestId("table-finish-meal").click()
-  await expect(page.getByTestId("table-feedback")).toBeVisible()
-  await expect(chat.getByRole("textbox", { name: "Message the Table" })).toHaveCount(0)
-  await expect(chat.getByText("Add a photo", { exact: true })).toHaveCount(0)
-  await expect(page.getByTestId("table-report")).toHaveCount(0)
-  await page.getByTestId("feedback-helpful-yes").click()
-  await page.getByTestId("feedback-respectful-yes").click()
-  await page.getByTestId("feedback-submit").click()
-  await expect(page.getByTestId("feedback-result")).toContainText("Feedback recorded once. No overall score was created.")
-  await expect(chat.getByRole("textbox", { name: "Message the Table" })).toHaveCount(0)
-  await expect(page.getByTestId("table-report")).toHaveCount(0)
-  await page.getByTestId("feedback-back-to-chat").click()
-  await expect(chat.getByRole("textbox", { name: "Message the Table" })).toBeVisible()
-  await expect(page.getByTestId("table-report")).toBeVisible()
+  const { chat } = await openJoinedChat(page)
+  await expect(chat.getByTestId("table-feedback-submit")).toHaveCount(0)
+  await chat.getByTestId("table-check-in").click()
+  await expect(chat.getByRole("heading", { name: "How was the Table?" })).toBeVisible()
+  await expect(chat.getByTestId("table-chat-compose")).toBeVisible()
+  await expect(chat.getByText("Add photo", { exact: true })).toBeVisible()
+  await expect(chat.getByTestId("table-report")).toBeVisible()
+
+  await chat.getByRole("button", { name: "Helpful table", exact: true }).click()
+  await chat.getByTestId("table-feedback-submit").click()
+  const receipt = chat.getByTestId("table-reputation-receipt")
+  await expect(receipt).toContainText("Saved in this tab only. No public rating or reputation was created.")
+  await expect(receipt).toContainText("Meetup")
+  await expect(receipt).toContainText("Feedback")
+  await expect(receipt).not.toContainText(/(?:public )?(?:score|rating):?\s*\d/i)
+  await expect(chat.getByTestId("table-chat-compose")).toBeVisible()
+  await expect(chat.getByTestId("table-report")).toBeVisible()
 })

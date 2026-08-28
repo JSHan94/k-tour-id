@@ -32,6 +32,7 @@ const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
 let traversalGuardReferences = 0
+let pendingPeekTraversalVenueId: string | undefined
 
 export type BDiscoveryTraversalDetail = {
   entry: BDiscoveryHistoryEntry
@@ -146,13 +147,27 @@ function exactCanonicalValue(actual: unknown, expected: unknown): boolean {
 }
 
 function dispatchBDiscoveryTraversal(event: PopStateEvent) {
-  if (window.location.pathname !== "/ondo-b") return
+  if (window.location.pathname !== "/ondo-b") {
+    pendingPeekTraversalVenueId = undefined
+    return
+  }
   const entry = readBDiscoveryHistory(event.state)
-  if (!entry) return
+  if (!entry) {
+    pendingPeekTraversalVenueId = undefined
+    return
+  }
   event.stopImmediatePropagation()
+  pendingPeekTraversalVenueId = entry.level === "peek" ? entry.venueId : undefined
   window.dispatchEvent(new CustomEvent<BDiscoveryTraversalDetail>(B_DISCOVERY_TRAVERSAL_EVENT, {
     detail: { entry, preservedState: event.state },
   }))
+}
+
+export function consumeBDiscoveryPeekTraversalFocus(venueId: string) {
+  const safeVenueId = venueValue(venueId)
+  if (!safeVenueId || pendingPeekTraversalVenueId !== safeVenueId) return false
+  pendingPeekTraversalVenueId = undefined
+  return true
 }
 
 export function installBDiscoveryTraversalGuard() {
@@ -160,7 +175,10 @@ export function installBDiscoveryTraversalGuard() {
   if (traversalGuardReferences === 1) window.addEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
   return () => {
     traversalGuardReferences = Math.max(0, traversalGuardReferences - 1)
-    if (traversalGuardReferences === 0) window.removeEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+    if (traversalGuardReferences === 0) {
+      pendingPeekTraversalVenueId = undefined
+      window.removeEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+    }
   }
 }
 

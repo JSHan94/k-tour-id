@@ -1,18 +1,12 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
-import { prepareBPage } from "../helpers/ondo-b-qa"
+import { gotoB, prepareBPage, seedB } from "../helpers/ondo-b-qa"
 
 const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 
 async function seed(page: Page, options: { ready?: boolean; saved?: string[]; preferences?: string[] } = {}) {
-  await page.addInitScript(({ ready, saved, preferences }) => {
-    localStorage.setItem("ondo.preferences.v3", JSON.stringify({
-      locale: "en",
-      guideSeen: true,
-      autoNight: true,
-      savedVenueIds: saved,
-      discoveryPreferences: preferences,
-    }))
-    sessionStorage.setItem("ondo.session.v3", JSON.stringify({
+  const ready = options.ready ?? false
+  await seedB(page, {
+    session: {
       onboarding: "ONB-COMPLETE",
       persona: "short_term",
       account: ready ? "ACC-ACTIVE" : "ACC-GUEST",
@@ -21,11 +15,11 @@ async function seed(page: Page, options: { ready?: boolean; saved?: string[]; pr
       paymentKyc: "PKY-NOT-STARTED",
       after19: "A19-OFF",
       stamps: 0,
-    }))
-  }, {
-    ready: options.ready ?? false,
-    saved: options.saved ?? [],
-    preferences: options.preferences ?? [],
+    },
+    local: {
+      savedVenueIds: options.saved ?? [],
+      discoveryPreferences: options.preferences ?? [],
+    },
   })
 }
 
@@ -43,16 +37,29 @@ async function expectCenterHit(control: Locator) {
   })).toBe(true)
 }
 
+async function openCanonicalVenueFromList(page: Page) {
+  await gotoB(page)
+  await page.locator("[data-city='seoul']").click()
+  const list = page.getByTestId("ondo-b-venue-list")
+  if (!await list.isVisible()) await page.getByTestId("ondo-b-view-toggle").click()
+  await expect(list).toBeVisible()
+  await list.locator(`[data-venue-id='${CANONICAL_VENUE_ID}'] button`).click()
+  await page.getByTestId("canonical-place-details").click()
+  const detail = page.getByTestId("canonical-place-overlay")
+  await expect(detail).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
+  await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
+}
+
 test.beforeEach(async ({ page }) => {
   await prepareBPage(page)
 })
 
 test("After 19 stays out of the B nation hero and appears after city selection", async ({ page }) => {
   await seed(page)
-  await page.goto("/ondo-b")
+  await gotoB(page)
   await expectHydratedShell(page)
 
-  const after19 = page.getByRole("button", { name: "After 19", exact: true })
+  const after19 = page.getByTestId("global-after19-toggle")
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   await expect(after19).toBeHidden()
 
@@ -62,46 +69,51 @@ test("After 19 stays out of the B nation hero and appears after city selection",
   await expect(after19).toBeVisible()
 })
 
-test("Local Signal requires a note or photo and states the simulated public-score boundary", async ({ page }) => {
+test("Local Signal requires an observation and states the private-draft and public-Pulse boundaries", async ({ page }) => {
   await seed(page, { ready: true })
-  await page.goto("/ondo-b?city=seoul&view=list")
-  await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
-  await page.getByTestId("canonical-place-details").click()
-  await page.getByTestId("canonical-venue-signal").click()
+  await openCanonicalVenueFromList(page)
+  await page.getByTestId("canonical-local-signal-open").click()
 
-  const signal = page.getByTestId("local-signal-overlay")
-  const submit = page.getByTestId("local-signal-submit")
-  await expect(page.getByRole("dialog", { name: "Share a local tip", exact: true })).toBeVisible()
-  await expect(submit).toHaveText("Submit local tip")
-  await expect(signal).toHaveAttribute("data-signal-evidence", "required")
-  await expect(submit).toBeDisabled()
-  await expect(signal).toContainText("simulated contribution only")
-  await expect(signal).toContainText("public ONDO score does not change immediately")
+  const signal = page.getByTestId("ondo-b-local-signal")
+  const confirm = signal.getByTestId("local-signal-person-check")
+  await expect(page.getByRole("dialog", { name: "Add a Local Signal", exact: true })).toBeVisible()
+  await expect(signal).toHaveAttribute("data-signal-stage", "draft")
+  await expect(confirm).toHaveText("Confirm for this action")
+  await expect(confirm).toBeDisabled()
+  await expect(signal).toContainText("Choose one or more. This is your observation, not an official LOCALDATA fact.")
+  await expect(signal).toContainText("Tags and post time stay on this device")
+  await expect(signal).toContainText("Your note and photo are discarded when this screen closes; nothing is uploaded.")
 
-  const note = page.getByLabel("Helpful note · Add a note or photo")
+  const note = signal.getByLabel("Optional local note")
   await note.fill("Order at the counter.")
-  await expect(submit).toBeEnabled()
+  await expect(confirm).toBeDisabled()
   await note.fill("")
-  await expect(submit).toBeDisabled()
+  await expect(confirm).toBeDisabled()
 
-  await page.locator("input[type='file']").setInputFiles({
+  await signal.getByTestId("local-signal-photo-input").setInputFiles({
     name: "meal.png",
     mimeType: "image/png",
     buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
   })
-  await expect(signal).toHaveAttribute("data-signal-evidence", "ready")
+  await expect(signal).toHaveAttribute("data-photo-stage", "ready")
+  await expect(confirm).toBeDisabled()
+
+  await signal.getByRole("button", { name: "Calm right now", exact: true }).click()
+  await expect(confirm).toBeEnabled()
+  await confirm.click()
+  await expect(signal).toHaveAttribute("data-signal-stage", "ready")
+
+  const submit = signal.getByTestId("local-signal-post")
+  await expect(submit).toHaveText("Save Local Signal on this device")
   await submit.click()
-  await expect(signal).toHaveAttribute("data-signal-status", "submitted")
-  await expect(signal).toHaveAttribute("data-signal-invariants", "preserved")
-  await expect(signal).toContainText("updates only visit and contribution histories")
-  await expect(signal).toContainText("saved to this device demo")
-  await expect(signal).toContainText("public ONDO score does not change immediately")
-  await expect(signal.getByRole("button", { name: "Cancel draft" })).toHaveCount(0)
+  await expect(signal).toHaveCount(0)
+  await expect(page.getByTestId("ondo-toast")).toContainText("the public Pulse score, count, level, and ranking do not change")
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}").localSignalPostedVenueIds)).toEqual([CANONICAL_VENUE_ID])
 })
 
-test("My Korea edits persona and preferences and labels an English canonical save bilingually", async ({ page }) => {
+test("My Korea preserves a bilingual save while setup edits persona and preferences and localizes independent ID axes", async ({ page }) => {
   await seed(page, { saved: [CANONICAL_VENUE_ID], preferences: ["classic"] })
-  await page.goto("/ondo-b")
+  await gotoB(page)
   await expectHydratedShell(page)
   const myKorea = page.getByRole("button", { name: "My Korea", exact: true })
   await expectCenterHit(myKorea)
@@ -113,27 +125,53 @@ test("My Korea edits persona and preferences and labels an English canonical sav
   await expect(saved).toContainText("Roba")
   await expect(saved).toContainText("Transliterated for navigation · Generated, not an official English name")
 
-  await page.getByTestId("discovery-persona").selectOption("long_term_resident")
-  await page.getByTestId("discovery-preference-cafe").click()
-  const dietary = page.getByRole("group", { name: "Dietary requirements", exact: true })
-  await expect(dietary).toBeVisible()
-  await page.getByTestId("discovery-preference-vegan").click()
-  await expect(page.getByTestId("discovery-preference-vegan")).toHaveAttribute("aria-pressed", "true")
-  await expect(page.getByTestId("discovery-preference-truth")).toContainText("Saved only as discovery context on this device")
-  await expect(page.getByTestId("discovery-preference-truth")).toContainText("neither hide venues nor label them as supported")
+  await page.getByTestId("nav-settings").click()
+  const discovery = page.getByTestId("ondo-b-discovery-settings")
+  await discovery.locator(":scope > summary").click()
+  await expect(discovery.getByRole("button", { name: "Local classics", exact: true })).toHaveAttribute("aria-pressed", "true")
+  await discovery.getByRole("button", { name: "Cafés and dessert", exact: true }).click()
+  await discovery.getByRole("button", { name: "Vegan", exact: true }).click()
+  await expect(discovery).toContainText("These choices shape discovery context only.")
+  await expect(discovery).toContainText("They never hide places or claim support that official records do not confirm.")
   await expect.poll(() => page.evaluate(() => {
-    const session = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}")
-    const local = JSON.parse(localStorage.getItem("ondo.preferences.v3") ?? "{}")
-    return [session.persona, local.discoveryPreferences]
-  })).toEqual(["long_term_resident", ["classic", "cafe", "vegan"]])
+    const device = JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}")
+    return [device.persona, device.discoveryPreferences]
+  })).toEqual(["travelling", ["classic", "cafe", "vegan"]])
+
+  await page.getByTestId("ondo-b-onboarding-reset").click()
+  const onboarding = page.getByTestId("ondo-onboarding")
+  await onboarding.getByRole("button", { name: "Set guest preferences", exact: true }).click()
+  await onboarding.getByTestId("persona-preparing").click()
+  await onboarding.getByRole("button", { name: "Choose food preferences", exact: true }).click()
+  const dietary = onboarding.getByRole("region", { name: "Dietary needs", exact: true })
+  await expect(dietary).toBeVisible()
+  await onboarding.getByRole("button", { name: "Cafés and dessert", exact: true }).click()
+  await onboarding.getByRole("button", { name: "Vegan", exact: true }).click()
+  await expect(onboarding).toContainText("Official records do not confirm dietary support.")
+  await onboarding.getByTestId("onboarding-finish").click()
+  await expect(onboarding).toHaveCount(0)
+  await expect.poll(() => page.evaluate(() => {
+    const device = JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}")
+    return [device.persona, device.discoveryPreferences, device.savedVenueIds]
+  })).toEqual(["preparing", ["cafe", "vegan"], [CANONICAL_VENUE_ID]])
+
+  await page.getByTestId("nav-my").click()
+  await expect(page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`)).toBeVisible()
 
   await page.getByTestId("nav-id").click()
-  let identity = page.getByTestId("ondo-identity-entry")
-  await expect(identity.getByRole("heading", { name: "Account and identity checks", exact: true })).toBeVisible()
-  await page.getByRole("button", { name: "KO", exact: true }).click()
-  await expect(page.getByTestId("nav-id")).toHaveText("신원")
-  identity = page.getByTestId("ondo-identity-entry")
-  await expect(identity.getByRole("heading", { name: "계정과 신원 확인", exact: true })).toBeVisible()
-  await expect(identity).toContainText("본인 확인 전")
-  await expect(identity).toContainText("계정·본인·19+·결제용 KYC는 서로 분리")
+  let identity = page.getByTestId("ondo-b-traveler-id")
+  await expect(identity.getByRole("heading", { name: "Travel Pass", exact: true })).toBeVisible()
+  await expect(identity.getByTestId("traveler-id-person")).toContainText("Person does not prove 19+.")
+  await expect(identity.getByTestId("traveler-id-age")).toContainText("19+ does not prove identity.")
+
+  await page.getByTestId("nav-settings").click()
+  await page.getByTestId("settings-language-control").getByRole("button", { name: "한국어", exact: true }).click()
+  await expect(page.getByTestId("nav-id")).toHaveAttribute("aria-label", "ID · 지갑")
+  await page.getByTestId("nav-id").click()
+  identity = page.getByTestId("ondo-b-traveler-id")
+  await expect(identity.getByRole("heading", { name: "여행 패스", exact: true })).toBeVisible()
+  await expect(identity.getByTestId("traveler-id-account").getByRole("heading", { name: "계정", exact: true })).toBeVisible()
+  await expect(identity.getByTestId("traveler-id-person")).toContainText("본인 확인은 19+를 증명하지 않습니다.")
+  await expect(identity.getByTestId("traveler-id-age")).toContainText("19+는 본인을 증명하지 않습니다.")
+  await expect(identity.getByTestId("traveler-id-payment").getByRole("heading", { name: "결제", exact: true })).toBeVisible()
 })

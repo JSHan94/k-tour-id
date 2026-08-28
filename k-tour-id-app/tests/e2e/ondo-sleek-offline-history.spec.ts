@@ -67,11 +67,10 @@ function auditLocalRequestsAfterOffline(page: Page) {
   }
 }
 
-async function openFilteredList(page: Page, locale: "en" | "ko") {
+async function openFilteredList(page: Page) {
   await page.getByTestId("ondo-b-view-toggle").click()
   const search = page.getByRole("search").getByRole("textbox")
   await search.fill(FILTER_QUERY)
-  await page.getByRole("button", { name: locale === "ko" ? "ONDO 신호" : "ONDO signal", exact: true }).click()
   const opener = page.locator(`[data-venue-opener='${FILTERED_VENUE_ID}']`)
   await expect(opener).toBeVisible()
   return { search, opener }
@@ -101,10 +100,12 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
           await setOffline(context, page, false)
           await page.setViewportSize(viewport)
           await gotoB(page, "?campaign=offline-history&city=seoul")
-          const { search, opener } = await openFilteredList(page, locale)
+          const { search, opener } = await openFilteredList(page)
           const before = await page.evaluate(() => ({
-            local: localStorage.getItem("ondo.preferences.v3"),
-            session: sessionStorage.getItem("ondo.session.v3"),
+            device: JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}"),
+            account: sessionStorage.getItem("ondo-b.account.v1"),
+            actionGates: sessionStorage.getItem("ondo-b.action-gates.v1"),
+            after19: sessionStorage.getItem("ondo-b.after19.session.v1"),
             historyLength: history.length,
           }))
           const requestAudit = auditLocalRequestsAfterOffline(page)
@@ -114,12 +115,12 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
           await opener.click()
           await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
           await expect(page).toHaveURL(new RegExp(`city=seoul.*view=list.*venueId=${FILTERED_VENUE_ID}`))
-          await expect(page).not.toHaveURL(/[?&](q|heat)=/)
+          expect(new URL(page.url()).searchParams.get("q")).toBe(FILTER_QUERY)
+          await expect(page).not.toHaveURL(/[?&]heat=/)
 
           await traverse(page, "back")
           await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
           await expect(search).toHaveValue(FILTER_QUERY)
-          await expect(page.getByRole("button", { name: locale === "ko" ? "ONDO 신호" : "ONDO signal", exact: true })).toHaveAttribute("aria-pressed", "true")
           await expect(opener).toBeFocused()
 
           await traverse(page, "forward")
@@ -128,17 +129,33 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
           await expect(page.getByTestId("ondo-b-root")).toBeVisible()
           await expect(page.locator("#__next_error__")).toHaveCount(0)
 
-          expect(await page.evaluate(() => ({
-            local: localStorage.getItem("ondo.preferences.v3"),
-            session: sessionStorage.getItem("ondo.session.v3"),
+          const after = await page.evaluate(() => ({
+            device: JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}"),
+            account: sessionStorage.getItem("ondo-b.account.v1"),
+            actionGates: sessionStorage.getItem("ondo-b.action-gates.v1"),
+            after19: sessionStorage.getItem("ondo-b.after19.session.v1"),
             historyLength: history.length,
-            historyState: JSON.stringify(history.state?.__ondoBDiscovery),
-          }))).toMatchObject({
-            local: before.local,
-            session: before.session,
-            historyLength: before.historyLength + 1,
-            historyState: expect.not.stringMatching(/account|person|ageExpiresAt|payment|private-search/i),
+            historyState: history.state?.__ondoBDiscovery,
+          }))
+          expect(after.device).toEqual({
+            ...before.device,
+            recentVenueIds: [FILTERED_VENUE_ID, ...(before.device.recentVenueIds ?? []).filter((venueId: string) => venueId !== FILTERED_VENUE_ID)].slice(0, 12),
           })
+          expect(after.account).toBe(before.account)
+          expect(after.actionGates).toBe(before.actionGates)
+          expect(after.after19).toBe(before.after19)
+          expect(after.historyLength).toBe(before.historyLength + 1)
+          expect(after.historyState).toEqual({
+            v: 3,
+            documentId: expect.any(String),
+            level: "peek",
+            city: "seoul",
+            view: "list",
+            query: FILTER_QUERY,
+            category: "all",
+            venueId: FILTERED_VENUE_ID,
+          })
+          expect(JSON.stringify(after.historyState)).not.toMatch(/account|person|ageExpiresAt|payment|private-search/i)
           requestAudit.expectNone()
           requestAudit.stop()
 
@@ -153,15 +170,15 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
     })
   }
 
-  test("offline map marker opens the canonical peek locally and restores exact map filter focus", async ({ page, context }) => {
+  test("offline map marker opens the canonical peek locally and restores exact map search focus", async ({ page, context }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
     await seedB(page)
     await stubBasemap(page)
     await gotoB(page, "?campaign=offline-marker&city=seoul")
     const search = page.getByRole("search").getByRole("textbox")
     await search.fill(FILTER_QUERY)
-    await page.getByRole("button", { name: "ONDO signal", exact: true }).click()
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
-    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-signal-source-count", "1")
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-result-count", "1")
 
     const requestAudit = auditLocalRequestsAfterOffline(page)
     await setOffline(context, page, true)
@@ -172,13 +189,13 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
     await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2)
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
     await expect(page).toHaveURL(/city=seoul.*venueId=mois-[a-z0-9]{20}/)
+    expect(new URL(page.url()).searchParams.get("q")).toBe(FILTER_QUERY)
     const selectedVenueId = new URL(page.url()).searchParams.get("venueId")
     expect(selectedVenueId).toMatch(/^mois-[a-z0-9]{20}$/)
 
     await traverse(page, "back")
     await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
     await expect(search).toHaveValue(FILTER_QUERY)
-    await expect(page.getByRole("button", { name: "ONDO signal", exact: true })).toHaveAttribute("aria-pressed", "true")
     await expect(page.getByTestId("ondo-b-view-toggle")).toBeFocused()
     await traverse(page, "forward")
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
@@ -193,17 +210,20 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
     await seedB(page, { locale: "ko" })
     await gotoB(page, `?campaign=offline-direct&city=seoul&view=list&venueId=${FILTERED_VENUE_ID}`)
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`city=seoul.*view=list.*venueId=${FILTERED_VENUE_ID}`))
+    await expect(page).not.toHaveURL(/[?&]campaign=/)
     const requestAudit = auditLocalRequestsAfterOffline(page)
     await setOffline(context, page, true)
     requestAudit.start()
 
     await traverse(page, "back")
     await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
-    await expect(page.getByTestId("ondo-b-view-toggle")).toHaveText("지도")
+    await expect(page.getByTestId("ondo-b-view-toggle")).toHaveAttribute("aria-pressed", "true")
+    await expect(page.getByTestId("ondo-b-view-toggle")).toHaveAccessibleName("지도")
     await traverse(page, "forward")
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
-    await expect(page).toHaveURL(/campaign=offline-direct/)
-    await expect(page).not.toHaveURL(/[?&](q|heat)=/)
+    await expect(page).not.toHaveURL(/[?&]campaign=/)
+    await expect(page).not.toHaveURL(/[?&]heat=/)
     requestAudit.expectNone()
     requestAudit.stop()
     expect(getBRuntimeEvidence(page).product).toEqual([])
