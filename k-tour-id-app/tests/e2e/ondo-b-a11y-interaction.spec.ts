@@ -39,10 +39,20 @@ test.describe("ONDO B actual-surface accessibility and interaction", () => {
       expect(actionable).toEqual([])
 
       if (surfaceId === "tables") {
-        await expect(surface.getByTestId("tables-truth-notice")).toContainText("No live host or reservation")
-        await surface.locator("[data-table-id]").first().click()
-        const detail = page.locator("[data-table-membership]")
-        await expect(detail).toContainText("Simulated preview")
+        await expect(surface.getByTestId("tables-truth-notice")).toContainText("Nothing is booked, sent to the venue, or charged.")
+        const firstTableCard = surface.locator("[data-testid^='table-card-']").first()
+        await expect(firstTableCard).toBeVisible()
+        await firstTableCard.getByRole("button", { name: "View Table" }).click()
+        const detail = page.getByTestId("table-detail")
+        await expect(detail).toBeVisible()
+        await expect(detail).toHaveAttribute("data-table-id", /.+/)
+        await detail.evaluate(async (node) => {
+          const finiteAnimations = node.getAnimations({ subtree: true }).filter((animation) => {
+            const endTime = animation.effect?.getComputedTiming().endTime
+            return typeof endTime === "number" && Number.isFinite(endTime)
+          })
+          await Promise.all(finiteAnimations.map((animation) => animation.finished.catch(() => undefined)))
+        })
         await expectMinimumControlTargets(detail)
         const detailResult = await new AxeBuilder({ page }).include(await detail.evaluate((node) => {
           if (!node.id) node.id = `b-a11y-table-detail-${Math.random().toString(36).slice(2)}`

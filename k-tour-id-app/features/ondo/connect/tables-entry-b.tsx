@@ -578,7 +578,7 @@ export function PulseTablesEntryB() {
     <section className={styles.entry} data-testid="tables-entry" data-visual-direction="timeleft-warm-atlas">
       <header className={styles.entryHeader}>
         <p>{t.eyebrow}</p><h1>{t.title}</h1><span>{t.intro}</span>
-        <small className={styles.prototypeTruth}>{t.truth}</small>
+        <small className={styles.prototypeTruth} data-testid="tables-truth-notice">{t.truth}</small>
       </header>
 
       <figure className={styles.editorialBand} data-testid="tables-editorial-image">

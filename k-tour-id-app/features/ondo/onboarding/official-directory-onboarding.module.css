@@ -370,8 +370,8 @@
 .identityEntry > span:first-child { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #242120; color: #fff; }
 .identityEntry > span:nth-child(2) { display: grid; gap: 2px; }
 .identityEntry strong { font-size: 13px; font-weight: 800; }
-.identityEntry small { color: #6b625d; font-size: 12px; line-height: 1.35; }
-.identityEntry > span:nth-child(3) { border: 1px solid rgb(33 28 25 / 15%); border-radius: 999px; padding: 4px 7px; color: #5f5550; font-size: 12px; font-weight: 850; letter-spacing: .05em; }
+.identityEntry small { color: var(--arc-muted); font-size: 12px; line-height: 1.35; }
+.identityEntry > span:nth-child(3) { border: 1px solid rgb(33 28 25 / 15%); border-radius: 999px; padding: 4px 7px; color: var(--arc-muted); font-size: 12px; font-weight: 850; letter-spacing: .05em; }
 
 @media (max-width: 350px) {
   .identityEntry { grid-template-columns: 36px minmax(0, 1fr) 16px; }
@@ -863,7 +863,7 @@
   --arc-ink: #171717;
   --arc-paper: #fff;
   --arc-paper-strong: #fff;
-  --arc-muted: #666;
+  --arc-muted: #4f4f4f;
   --arc-hairline: rgb(23 23 23 / 11%);
   --arc-coral: #3f3f3f;
   --arc-plum: #171717;
@@ -898,7 +898,7 @@
 
 .progress .progressActive { background: #171717; }
 .eyebrow,
-.heading > span,
+.heading > span { color: var(--arc-muted); }
 .sourceIntro > summary { color: #555; }
 .personaSelected { border-color: #171717; }
 

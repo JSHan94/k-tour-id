@@ -165,7 +165,7 @@
 
 .returnContext h3 {
   margin: 0;
-  color: #666;
+  color: #646464;
   font-size: 12px;
   font-weight: 840;
   letter-spacing: .11em;
@@ -174,7 +174,7 @@
 
 .returnContext p { display: grid; gap: 4px; margin: 0; }
 .returnContext strong { font-size: 15px; font-weight: 810; }
-.returnContext span { color: #666; font-size: 12px; line-height: 1.48; }
+.returnContext span { color: #646464; font-size: 12px; line-height: 1.48; }
 
 .actions { display: grid; gap: 9px; }
 
