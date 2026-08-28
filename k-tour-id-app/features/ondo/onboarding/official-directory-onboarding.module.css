@@ -158,7 +158,7 @@
   font-size: 12px;
   font-weight: 820;
   letter-spacing: .04em;
-  transition: transform 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .language button[aria-pressed="true"] {

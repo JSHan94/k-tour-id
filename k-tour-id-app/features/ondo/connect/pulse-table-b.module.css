@@ -71,7 +71,7 @@
 .plan h3 { margin: 0; color: #756c63; font-size: 12px; font-weight: 810; letter-spacing: .09em; text-transform: uppercase; }
 .plan dl { display: grid; gap: 11px; margin: 0; }
 .plan dl > div { display: grid; grid-template-columns: minmax(104px, .78fr) minmax(0, 1.25fr); gap: 10px; }
-.plan dt { display: flex; align-items: center; gap: 6px; color: #70675f; font-size: 12px; line-height: 1.4; }
+.plan dt { display: flex; align-items: center; gap: 6px; color: #625b55; font-size: 12px; line-height: 1.4; }
 .plan dd { min-width: 0; margin: 0; font-size: 12px; font-weight: 690; line-height: 1.45; overflow-wrap: anywhere; }
 
 .openButton,

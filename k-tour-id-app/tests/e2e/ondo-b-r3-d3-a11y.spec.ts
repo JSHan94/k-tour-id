@@ -6,6 +6,7 @@ import {
   openCanonicalVenue,
   openLabs,
   prepareBPage,
+  seedB,
   TABLE_ID,
 } from "../helpers/ondo-b-qa"
 
@@ -19,24 +20,12 @@ const READY_SESSION = {
 }
 
 async function seedD3(page: Page, locale: "en" | "ko", { labs = false } = {}) {
-  await page.addInitScript(({ nextLocale, nextSession, withLabs }) => {
-    localStorage.setItem("ondo.preferences.v3", JSON.stringify({
-      locale: nextLocale,
-      guideSeen: true,
-      autoNight: false,
-      savedVenueIds: [],
-      discoveryPreferences: [],
-    }))
-    sessionStorage.setItem("ondo.session.v3", JSON.stringify({
-      onboarding: "ONB-COMPLETE",
-      persona: "short_term",
-      after19: "A19-OFF",
-      tableMembershipById: {},
-      ...nextSession,
-    }))
-    sessionStorage.removeItem("ondo.chat.v2")
-    sessionStorage.removeItem("ondo.table-outcomes.v2")
-    sessionStorage.removeItem("ondo.accepted-visits.v2")
+  await seedB(page, {
+    locale,
+    local: { autoNight: false },
+    session: { ...READY_SESSION, onboarding: "ONB-COMPLETE", persona: "short_term", after19: "A19-OFF", tableMembershipById: {} },
+  })
+  await page.addInitScript(({ withLabs }) => {
     if (withLabs) {
       sessionStorage.setItem("ondo-b.labs.v1", JSON.stringify({
         acknowledged: true,
@@ -51,7 +40,7 @@ async function seedD3(page: Page, locale: "en" | "ko", { labs = false } = {}) {
     } else {
       sessionStorage.removeItem("ondo-b.labs.v1")
     }
-  }, { nextLocale: locale, nextSession: READY_SESSION, withLabs: labs })
+  }, { withLabs: labs })
 }
 
 async function expectNoSeriousAxe(page: Page, selector: string) {
@@ -82,17 +71,32 @@ async function expectCenterHit(control: Locator) {
   })).toBe(true)
 }
 
+async function installOneShotDeviceWriteFailure(page: Page) {
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem
+    let pending = true
+    Storage.prototype.setItem = function (key, value) {
+      if (this === localStorage && key === "ondo-b.device.v1" && pending) {
+        pending = false
+        throw new DOMException("Quota exceeded", "QuotaExceededError")
+      }
+      return original.call(this, key, value)
+    }
+  })
+}
+
 async function openTable(page: Page, locale: "en" | "ko", scenario: string) {
   await seedD3(page, locale)
   await gotoB(page, `?qa=1&scenario=${scenario}`)
   await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", locale)
   await expectHydratedShell(page)
-  const tablesNav = page.getByRole("button", { name: locale === "ko" ? "모임" : "Tables", exact: true })
+  const tablesNav = page.getByTestId("nav-tables")
+  await expect(tablesNav).toHaveAccessibleName(locale === "ko" ? "테이블" : "Tables")
   await expectCenterHit(tablesNav)
   await tablesNav.click()
-  const tables = page.getByRole("region", { name: locale === "ko" ? "장소별 Table" : "Tables by place" })
+  const tables = page.getByTestId("tables-entry")
   await expect(tables).toBeVisible()
-  await tables.locator(`[data-table-id='${TABLE_ID}']`).click()
+  await tables.getByTestId(`table-open-${TABLE_ID}`).click()
   await expect(page.getByTestId("table-join")).toBeVisible()
 }
 
@@ -113,140 +117,81 @@ test.beforeEach(async ({ page }) => {
 for (const locale of ["en", "ko"] as const) {
   const copy = locale === "ko"
     ? {
-        requesting: "참여 미리보기를 확인하고 있어요.",
-        confirmed: "참여 미리보기가 확정됐어요. 이제 대화를 열 수 있어요.",
-        network: "이 로컬 미리보기를 업데이트하지 못했어요. 실제 호스트에게 연락하거나 실제 예약을 만들지 않았어요. 다시 시도해도 이 Table의 시간과 자리는 그대로예요.",
-        policy: "이 Table의 참여 조건을 충족하지 못했어요.",
-        full: "이 고정 로컬 미리보기는 자리가 모두 찬 상태로 설정되어 있어요. 근처 다른 Table을 확인해 주세요.",
-        retryJoin: "참여 미리보기 다시 시도",
-        openChat: "대화 열기",
-        alternative: "근처 다른 Table 보기",
-        signalFailure: "신호를 남기지 못했어요. 초안은 유지됐어요.",
-        signalSuccess: "현장 팁을 이 기기의 데모에 저장했어요. 실제 서비스에는 전송되지 않았어요.",
-        signalDuplicate: "이미 반영된 데모 방문이에요. 방문·기여 이력과 공개 ONDO 점수는 다시 바뀌지 않았어요.",
         signalNote: "키오스크에서 먼저 주문해요.",
-        signalRetry: "다시 시도",
-        signalReturn: "장소로 돌아가기",
         walletFailure: "테스트용 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.",
         walletConnect: "서명 기능 연결 시뮬레이션",
         walletRetry: "다시 시도",
       }
     : {
-        requesting: "Checking your preview participation.",
-        confirmed: "Your preview participation is confirmed. You can now open the chat.",
-        network: "This local preview could not be updated. No live host or reservation was contacted. Retry keeps this Table, time, and seats unchanged.",
-        policy: "The Table policy was not met.",
-        full: "This fixed local preview is configured as full. Choose another nearby Table.",
-        retryJoin: "Retry join preview",
-        openChat: "Open chat",
-        alternative: "View another Table nearby",
-        signalFailure: "The signal could not be submitted. Your draft was kept.",
-        signalSuccess: "Your local tip was saved to this device demo. Nothing was sent to a live service.",
-        signalDuplicate: "This demo visit was already recorded. Visit and contribution histories and the public ONDO score did not change again.",
         signalNote: "Order at the kiosk first.",
-        signalRetry: "Try again",
-        signalReturn: "Return to venue",
         walletFailure: "The test connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.",
         walletConnect: "Simulate signer connection",
         walletRetry: "Try again",
       }
 
-  for (const scenario of ["table-network", "table-policy", "table-full"] as const) {
-    test(`R3 D3-001 ${locale} Table ${scenario} replaces request status once and focuses its recovery`, async ({ page }) => {
-      test.setTimeout(45_000)
-      await openTable(page, locale, scenario)
-      await page.getByTestId("table-join").click()
+  test(`R3 D3-001 ${locale} Table device-save failure owns one alert and focuses its retry`, async ({ page }) => {
+    test.setTimeout(45_000)
+    await openTable(page, locale, "save-failed")
+    const detail = page.getByTestId("table-detail")
+    await detail.getByTestId("table-join-draft").fill(locale === "ko" ? "창가 자리, 한국어와 영어 모두 괜찮아요." : "Window seat; Korean and English both work.")
+    await detail.getByTestId("table-join").click()
+    const confirmation = detail.getByTestId("table-join-confirmation")
+    await expect(confirmation).toBeVisible()
 
-      const requesting = page.getByTestId("table-requesting")
-      await expect(requesting).toHaveAttribute("role", "status")
-      await expect(requesting).toHaveAttribute("aria-atomic", "true")
-      await expect(requesting).toHaveText(copy.requesting)
-      await expect(page.getByTestId("ondo-sheet").getByText(copy.requesting, { exact: true })).toHaveCount(1)
+    const confirm = detail.getByTestId("table-join-confirm")
+    await installOneShotDeviceWriteFailure(page)
+    await confirm.click()
+    const alert = detail.getByTestId("table-join-save-error")
+    await expect(alert).toHaveAttribute("role", "alert")
+    await expect(alert).toHaveText(locale === "ko"
+      ? "My Korea에 계획을 저장하지 못해 아직 참여하지 않았어요. 다시 시도해 주세요."
+      : "My Korea could not save the plan, so you have not joined. Try again.")
+    await expect(detail.locator("[role='alert']")).toHaveCount(1)
+    await expect(confirmation).toBeVisible()
+    await expect(detail.getByTestId("table-open-chat")).toHaveCount(0)
+    await expect(confirm).toBeFocused()
+    await expectNoSeriousAxe(page, "[data-testid='table-detail']")
 
-      const message = page.getByTestId("table-action-message")
-      const expectedFailure = scenario === "table-network" ? copy.network : scenario === "table-policy" ? copy.policy : copy.full
-      await expect(message).toHaveAttribute("role", "alert")
-      await expect(message).toHaveText(expectedFailure)
-      await expect(page.getByTestId("ondo-sheet").getByText(expectedFailure, { exact: true })).toHaveCount(1)
-      await expect(page.getByTestId("ondo-sheet").locator("[role='alert']")).toHaveCount(1)
-      if (scenario === "table-network") {
-        await expect(message).not.toContainText(locale === "ko" ? "연결 문제" : "A connection problem")
-      }
+    await confirm.click()
+    await expect(alert).toHaveCount(0)
+    await expect(detail.getByTestId("table-open-chat")).toBeFocused()
+  })
 
-      const recovery = scenario === "table-full"
-        ? page.getByTestId("table-view-alternative")
-        : page.getByTestId("table-join-retry")
-      await expect(recovery).toBeFocused()
-      await expectControlDescription(recovery, message)
-      await expectNoSeriousAxe(page, "[data-testid='ondo-sheet']")
-
-      if (scenario !== "table-full") {
-        await page.evaluate(() => history.replaceState({}, "", `${location.pathname}?qa=1`))
-        await recovery.click()
-        await expect(page.getByTestId("table-requesting")).toHaveAttribute("role", "status")
-        await expect(page.getByTestId("ondo-sheet").locator("[role='alert']")).toHaveCount(0)
-        const openChat = page.getByRole("button", { name: copy.openChat, exact: true })
-        await expect(openChat).toBeFocused()
-        const confirmed = page.getByTestId("table-action-message")
-        await expect(confirmed).toHaveAttribute("role", "status")
-        await expect(confirmed).toHaveText(copy.confirmed)
-        await expectControlDescription(openChat, confirmed)
-        await expect(page.getByTestId("ondo-sheet").getByText(copy.confirmed, { exact: true })).toHaveCount(1)
-      } else {
-        await expect(recovery).toHaveText(copy.alternative)
-      }
-    })
-  }
-
-  test(`R3 D3-001 ${locale} Local Signal announces fail, success, and duplicate exactly once`, async ({ page }) => {
+  test(`R3 D3-001 ${locale} Local Signal device-save failure preserves its exact draft and recovery`, async ({ page }) => {
     test.setTimeout(60_000)
     await seedD3(page, locale)
-    await openCanonicalVenue(page, { query: "qa=1&scenario=local-signal-fail" })
+    await openCanonicalVenue(page)
     await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", locale)
-    await page.getByTestId("canonical-venue-signal").click()
-    let signal = page.getByTestId("local-signal-overlay")
+    await page.getByTestId("canonical-local-signal-open").click()
+    const signal = page.getByTestId("ondo-b-local-signal")
+    const tag = signal.getByRole("button", { name: locale === "ko" ? "지금은 여유로워요" : "Calm right now", exact: true })
+    await tag.click()
     await signal.locator("textarea").fill(copy.signalNote)
-    await page.getByTestId("local-signal-submit").click()
+    await signal.getByTestId("local-signal-person-check").click()
+    await expect(page.getByTestId("ondo-b-action-gate")).toHaveCount(0)
+    await expect(signal.getByText(locale === "ko"
+      ? "확인을 마쳤어요. 이 기기에 로컬 시그널을 저장할 수 있어요."
+      : "Confirmation complete. Your Local Signal is ready to save on this device.", { exact: true })).toHaveAttribute("role", "status")
+    const post = signal.getByTestId("local-signal-post")
+    await expect(post).toBeVisible()
+    await expect(post).toBeFocused()
+    await installOneShotDeviceWriteFailure(page)
+    await post.click()
 
-    let outcome = page.getByTestId("local-signal-outcome")
-    await expect(outcome).toHaveAttribute("role", "alert")
-    await expect(outcome).toHaveText(copy.signalFailure)
-    await expect(signal.getByText(copy.signalFailure, { exact: true })).toHaveCount(1)
-    await expect(signal.locator("[role='alert'], [role='status']")).toHaveCount(1)
-    const retry = signal.getByRole("button", { name: copy.signalRetry, exact: true })
-    await expect(retry).toBeFocused()
-    await expectControlDescription(retry, outcome)
+    const alert = signal.getByTestId("local-signal-post-error")
+    await expect(alert).toHaveAttribute("role", "alert")
+    await expect(alert).toHaveText(locale === "ko"
+      ? "이 기기에 이 로컬 시그널을 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다."
+      : "Could not save this Local Signal on this device. Your exact draft and place remain open.")
+    await expect(signal.locator("[role='alert']")).toHaveCount(1)
+    await expect(signal.locator("textarea")).toHaveValue(copy.signalNote)
+    await expect(tag).toHaveAttribute("aria-pressed", "true")
+    await expect(post).toBeFocused()
+    await expectNoSeriousAxe(page, "[data-testid='ondo-b-local-signal']")
 
-    await page.evaluate(() => {
-      sessionStorage.removeItem("ondo.qa.scenario.v1")
-      history.replaceState({}, "", `${location.pathname}?venueId=${new URLSearchParams(location.search).get("venueId")}&qa=1`)
-    })
-    await retry.click()
-    await expect(signal.locator("[role='alert']")).toHaveCount(0)
-    outcome = page.getByTestId("local-signal-outcome")
-    await expect(outcome).toHaveAttribute("role", "status")
-    await expect(outcome).toHaveText(copy.signalSuccess)
-    await expect(signal.getByText(copy.signalSuccess, { exact: true })).toHaveCount(1)
-    await expect(signal.locator("[role='alert'], [role='status']")).toHaveCount(1)
-    let returnControl = signal.getByRole("button", { name: copy.signalReturn, exact: true })
-    await expect(returnControl).toBeFocused()
-    await expectControlDescription(returnControl, outcome)
-    await expectNoSeriousAxe(page, "[data-testid='local-signal-overlay']")
-
-    await returnControl.click()
-    await page.getByTestId("canonical-place-details").click()
-    await page.getByTestId("canonical-venue-signal").click()
-    signal = page.getByTestId("local-signal-overlay")
-    await signal.locator("textarea").fill(copy.signalNote)
-    await page.getByTestId("local-signal-submit").click()
-    outcome = page.getByTestId("local-signal-outcome")
-    await expect(outcome).toHaveAttribute("role", "status")
-    await expect(outcome).toHaveText(copy.signalDuplicate)
-    await expect(signal.getByText(copy.signalDuplicate, { exact: true })).toHaveCount(1)
-    await expect(signal.locator("[role='alert'], [role='status']")).toHaveCount(1)
-    returnControl = signal.getByRole("button", { name: copy.signalReturn, exact: true })
-    await expect(returnControl).toBeFocused()
-    await expectControlDescription(returnControl, outcome)
+    await post.click()
+    await expect(signal).toBeHidden()
+    await expect(page.getByTestId("canonical-local-signal-open")).toBeFocused()
   })
 
   test(`R3 D3-002 ${locale} Labs wallet failure owns one alert and clears it on retry`, async ({ page }) => {

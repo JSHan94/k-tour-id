@@ -285,6 +285,7 @@ export function CanonicalPlaceOverlay() {
   const openRef = useRef<HTMLButtonElement | null>(null)
   const peekTraversalFocusPendingRef = useRef(false)
   const after19AccessRef = useRef<HTMLElement | null>(null)
+  const tableScopeTriggerRef = useRef<HTMLButtonElement | null>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
   const venue = venueId ? canonicalMapVenueById(venueId) : undefined
@@ -518,6 +519,14 @@ export function CanonicalPlaceOverlay() {
     actions.setTab("tables")
   }
 
+  function closeTableScope() {
+    const target = tableScopeTriggerRef.current
+    setTableScopeOpen(false)
+    window.requestAnimationFrame(() => {
+      if (target?.isConnected && !target.closest("[inert],[aria-hidden='true']")) target.focus({ preventScroll: true })
+    })
+  }
+
   function openAfter19FromPlace() {
     if (after19Unlocked) return
     const historyEntry = readBDiscoveryHistory()
@@ -642,14 +651,14 @@ export function CanonicalPlaceOverlay() {
             </section>
           ) : (
             <section className={styles.tableActions} aria-label={copy.tablesAtPlace} data-testid="venue-table-scope" data-empty-state={tableScopeOpen ? "open" : "closed"}>
-              <button type="button" className={styles.tablePrimary} data-testid="canonical-venue-tables" aria-expanded={tableScopeOpen} onClick={() => setTableScopeOpen((open) => !open)}>
+              <button ref={tableScopeTriggerRef} type="button" className={styles.tablePrimary} data-testid="canonical-venue-tables" aria-expanded={tableScopeOpen} onClick={() => setTableScopeOpen((open) => !open)}>
                 <UsersRound size={18} aria-hidden="true" />
                 <span><strong>{copy.tablesAtPlace}</strong><small>{copy.noTables}</small></span>
                 <ChevronRight size={17} aria-hidden="true" />
               </button>
               {tableScopeOpen ? <div className={styles.tableEmpty} data-testid="venue-tables-empty">
                 <strong role="status">{copy.noTables}</strong><p>{copy.noTablesBody}</p>
-                <div><button type="button" data-testid="tables-back-to-venue" onClick={() => setTableScopeOpen(false)}>{copy.backToPlace}</button><button type="button" data-testid="tables-browse-all" onClick={browseAllTables}>{copy.browseTables}</button></div>
+                <div><button type="button" data-testid="tables-back-to-venue" onClick={closeTableScope}>{copy.backToPlace}</button><button type="button" data-testid="tables-browse-all" onClick={browseAllTables}>{copy.browseTables}</button></div>
               </div> : null}
             </section>
           )}
