@@ -6,17 +6,12 @@ type Locale = "en" | "ko"
 type CityId = "seoul" | "busan"
 
 const SEARCH_LABEL = {
-  en: "Food place or neighborhood",
-  ko: "가게 이름, 지역, 음식 검색",
-} as const
-
-const RESULT_SUFFIX = {
-  en: "sourced food places",
-  ko: "곳의 공식 식음료 장소",
+  en: "Place, district or category",
+  ko: "장소명, 지역 또는 업태",
 } as const
 
 function resultLabel(locale: Locale, count: number) {
-  return locale === "ko" ? `${count}${RESULT_SUFFIX.ko}` : `${count} ${count === 1 ? "sourced food place" : RESULT_SUFFIX.en}`
+  return locale === "ko" ? `공식 기록 ${count}개` : `${count} official ${count === 1 ? "record" : "records"}`
 }
 
 async function openCityList(page: Page, city: CityId) {
@@ -26,7 +21,9 @@ async function openCityList(page: Page, city: CityId) {
 
 async function search(page: Page, locale: Locale, query: string, count: number) {
   await page.getByLabel(SEARCH_LABEL[locale]).fill(query)
-  await expect(page.getByText(resultLabel(locale, count), { exact: true })).toBeVisible()
+  const result = page.getByTestId("ondo-b-result-bar").locator("b")
+  await expect(result).toHaveAttribute("data-compact-count", String(count))
+  await expect(result).toHaveText(resultLabel(locale, count))
   const names = page.getByTestId("ondo-b-venue-list").getByTestId("official-source-name")
   await expect(names).toHaveCount(Math.min(count, 30))
   return names.allTextContents()
@@ -60,21 +57,21 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
       {
         city: "seoul",
         intents: [
-          { query: "pizza", count: 3, sourceTokens: ["피자"], example: "고피자 신촌1호점", category: "Global food" },
-          { query: "chicken", count: 4, sourceTokens: ["치킨", "통닭"], example: "교촌치킨 명지대점", category: "Specialty" },
-          { query: "coffee", count: 4, sourceTokens: ["커피", "카페"], example: "서울커피", category: "Food & drink" },
-          { query: "gukbap", count: 3, sourceTokens: ["국밥"], example: "국밥쟁이", category: "Korean food" },
-          { query: "kalguksu", count: 5, sourceTokens: ["칼국수"], example: "대선 칼국수", category: "Korean food" },
-          { query: "kimbap", count: 3, sourceTokens: ["김밥"], example: "김밥천국", category: "Korean food" },
-          { query: "tteokbokki", count: 2, sourceTokens: ["떡볶이"], example: "맛있는 할매 집 떡볶이", category: "Casual meal" },
+          { query: "pizza", count: 3, sourceTokens: ["피자"], example: "고피자 신촌1호점", category: "Western & international" },
+          { query: "chicken", count: 4, sourceTokens: ["치킨", "통닭"], example: "교촌치킨 명지대점", category: "Grills & specialty" },
+          { query: "coffee", count: 4, sourceTokens: ["커피", "카페"], example: "서울커피", category: "Pub & café licence types" },
+          { query: "gukbap", count: 3, sourceTokens: ["국밥"], example: "국밥쟁이", category: "Korean" },
+          { query: "kalguksu", count: 5, sourceTokens: ["칼국수"], example: "대선 칼국수", category: "Korean" },
+          { query: "kimbap", count: 3, sourceTokens: ["김밥"], example: "김밥천국", category: "Korean" },
+          { query: "tteokbokki", count: 2, sourceTokens: ["떡볶이"], example: "맛있는 할매 집 떡볶이", category: "Quick service" },
         ],
       },
       {
         city: "busan",
         intents: [
-          { query: "pizza", count: 5, sourceTokens: ["피자"], example: "도미노피자 명지점", category: "Global food" },
-          { query: "chicken", count: 11, sourceTokens: ["치킨", "통닭"], example: "국제통닭 수영직영점", category: "Korean food" },
-          { query: "coffee", count: 3, sourceTokens: ["커피", "카페"], example: "커피센터(COFFEE CENTRE)", category: "Global food" },
+          { query: "pizza", count: 5, sourceTokens: ["피자"], example: "도미노피자 명지점", category: "Western & international" },
+          { query: "chicken", count: 11, sourceTokens: ["치킨", "통닭"], example: "국제통닭 수영직영점", category: "Korean" },
+          { query: "coffee", count: 3, sourceTokens: ["커피", "카페"], example: "커피센터(COFFEE CENTRE)", category: "Western & international" },
         ],
       },
     ] as const
@@ -98,7 +95,7 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
     await search(page, "en", "pizza", 3)
     const card = page.getByTestId("ondo-b-venue-list").locator("li", { hasText: "고피자 신촌1호점" })
     await expect(card.getByTestId("official-source-name")).toHaveText("고피자 신촌1호점")
-    await expect(card.locator("em")).toHaveText("Official Korean source name")
+    await expect(card.getByText("Official Korean source name", { exact: true })).toHaveText("Official Korean source name")
     const transliteration = card.getByText("Gopija Sinchon1hojeom", { exact: true }).locator("..")
     await expect(transliteration).toContainText("Transliterated for navigation · Generated, not an official English name")
     await card.getByRole("button").click()
@@ -112,7 +109,7 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
     await expect(detailProvenance).toContainText("Official Korean source name")
     await expect(detailProvenance).toContainText("Gopija Sinchon1hojeom")
     await expect(detailProvenance).toContainText("Transliterated for navigation · Generated, not an official English name")
-    await expect(detail.getByText("English menu").locator("..")).toContainText("Not confirmed by this source")
+    await expect(detail.getByText("Menu and prices").locator("..")).toContainText("Not provided by this source")
     await expect(detail).not.toContainText("pizza")
   })
 
@@ -125,7 +122,7 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
       await expect(page.getByTestId("ondo-b-venue-list")).toContainText("고피자 신촌1호점")
 
       await search(page, locale, locale === "ko" ? "강남구" : "Gangnam-gu", 20)
-      await search(page, locale, locale === "ko" ? "한식" : "Korean food", 50)
+      await search(page, locale, locale === "ko" ? "한식" : "Korean", 50)
 
       await search(page, locale, "Gopija", 1)
       await expect(page.getByTestId("ondo-b-venue-list")).toContainText("고피자 신촌1호점")
@@ -133,7 +130,7 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
       await page.getByLabel(SEARCH_LABEL[locale]).fill("definitely-no-such-ondo-place")
       const empty = page.getByTestId("ondo-b-empty-results")
       await expect(empty).toBeVisible()
-      await empty.getByRole("button", { name: locale === "ko" ? "검색어와 필터 초기화" : "Clear search and filters" }).click()
+      await empty.getByRole("button", { name: locale === "ko" ? "검색어와 업태 초기화" : "Clear search and category" }).click()
       await expect(page.getByLabel(SEARCH_LABEL[locale])).toHaveValue("")
       await expect(page.getByText(resultLabel(locale, 200), { exact: true })).toBeVisible()
       await expect(empty).toHaveCount(0)
