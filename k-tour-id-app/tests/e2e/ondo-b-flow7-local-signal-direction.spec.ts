@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
+const ACTION_GATE_KEY = "ondo-b.action-gates.v1"
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 const OTHER_SIGNAL_VENUE_IDS = [
   "mois-02d77be9fc4b43fbb360", "mois-10dc6ac2751c13751604", "mois-2a37cbb20954007d7e30",
@@ -290,9 +291,12 @@ test("FLOW7-SESSION-004 Person success expires on the actual clock and cannot cr
   await signal.locator("fieldset button").first().click()
   await openEligibilityResult(page, signal, "success")
   await expect(signal.getByTestId("local-signal-post")).toBeVisible()
-  const issuedAt = await page.evaluate(() => Date.now())
-  await page.clock.install({ time: issuedAt })
-  await page.clock.fastForward(300_001)
+  const personExpiresAt = await page.evaluate((key) => {
+    const session = JSON.parse(sessionStorage.getItem(key) ?? "{}") as { person?: { expiresAt?: unknown } }
+    return typeof session.person?.expiresAt === "string" ? session.person.expiresAt : null
+  }, ACTION_GATE_KEY)
+  expect(personExpiresAt).toEqual(expect.any(String))
+  await page.clock.setFixedTime(new Date(Date.parse(personExpiresAt!) + 1))
   await signal.getByTestId("local-signal-post").click()
   await expect(signal.getByTestId("local-signal-person-check")).toBeVisible()
   await expect(signal.getByTestId("local-signal-draft")).toHaveAttribute("data-gate-return", "expired")
