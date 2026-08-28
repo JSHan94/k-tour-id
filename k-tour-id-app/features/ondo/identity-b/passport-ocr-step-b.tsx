@@ -149,6 +149,7 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
   const initialActionRef = useRef<HTMLButtonElement>(null)
   const previewActionRef = useRef<HTMLButtonElement>(null)
   const replaceActionRef = useRef<HTMLButtonElement>(null)
+  const processingHeadingRef = useRef<HTMLHeadingElement>(null)
   const reviewActionRef = useRef<HTMLButtonElement>(null)
   const previewUrlRef = useRef<string | null>(null)
   const selectionRef = useRef(0)
@@ -173,10 +174,12 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       if (error) (stage === "preview" ? replaceActionRef.current : initialActionRef.current)?.focus({ preventScroll: true })
+      else if (stage === "select") initialActionRef.current?.focus({ preventScroll: true })
       else if (stage === "preview") {
         previewActionRef.current?.focus()
         previewActionRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
       }
+      else if (stage === "processing") processingHeadingRef.current?.focus({ preventScroll: true })
       else if (stage === "review") reviewActionRef.current?.focus({ preventScroll: true })
     })
     return () => window.cancelAnimationFrame(frame)
@@ -330,7 +333,7 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
     </> : null}
 
     {stage === "processing" ? <>
-      <h1>{copy.processingTitle}</h1>
+      <h1 ref={processingHeadingRef} tabIndex={-1} data-testid="passport-ocr-processing-title">{copy.processingTitle}</h1>
       <p className={styles.lead}>{copy.processingLead}</p>
       <ol className={styles.processing} data-testid="passport-ocr-processing">
         {(copy.processingSteps as readonly string[]).map((label, index) => {

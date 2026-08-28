@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test"
+import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { CANONICAL_MAP_VENUES_COMPACT } from "../../lib/ondo/venues/map-data"
+import { CANONICAL_MAP_VENUES_COMPACT, canonicalMapVenueById } from "../../lib/ondo/venues/map-data"
 import {
   CURATED_PULSE_SNAPSHOTS,
   PULSE_CITY_STATUS,
@@ -13,6 +14,12 @@ import {
 import { openBDiscoveryAlternativeVenue, openBDiscoveryVenue } from "../../features/ondo/map/b-discovery-history"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
+const FEATURED_SIGNAL_IDS = [
+  "mois-0021cd596bc5b2a922ad", "mois-0348cfe16225dbbcec8a", "mois-02c79775c050624e474d",
+  "mois-0907f914f70fc6e4b7ed", "mois-110f0d9867977ae410e8", "mois-18939eecb43c15ab4305",
+  "mois-03041681b54ea5399763", "mois-0977b107c7db944e75cf",
+] as const
+const FEATURED_SIGNAL_ID_SET = new Set<string>(FEATURED_SIGNAL_IDS)
 
 test("B-PULSE-HOT-001 Pulse is a separate B-native evidence model over all 400 canonical places", () => {
   expect(CANONICAL_MAP_VENUES_COMPACT).toHaveLength(400)
@@ -20,11 +27,27 @@ test("B-PULSE-HOT-001 Pulse is a separate B-native evidence model over all 400 c
   expect(PULSE_CITY_STATUS).toMatchObject({ seoul: "active", busan: "growing" })
 
   const canonicalIds = new Set(CANONICAL_MAP_VENUES_COMPACT.map((venue) => venue.id))
+  expect(CURATED_PULSE_SNAPSHOTS).toHaveLength(80)
+  expect(new Set(CURATED_PULSE_SNAPSHOTS.map((snapshot) => snapshot.venueId)).size).toBe(80)
   expect(CURATED_PULSE_SNAPSHOTS.every((snapshot) => canonicalIds.has(snapshot.venueId))).toBe(true)
-  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === "seoul").length).toBeGreaterThanOrEqual(5)
-  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === "seoul").length).toBeLessThanOrEqual(8)
-  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === "busan").length).toBeGreaterThanOrEqual(2)
-  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === "busan").length).toBeLessThanOrEqual(4)
+  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === "seoul")).toHaveLength(40)
+  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === "busan")).toHaveLength(40)
+  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => canonicalMapVenueById(snapshot.venueId)?.primaryCategory === "night" && snapshot.cityId === "seoul")).toHaveLength(7)
+  expect(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => canonicalMapVenueById(snapshot.venueId)?.primaryCategory === "night" && snapshot.cityId === "busan")).toHaveLength(10)
+  for (const featuredId of FEATURED_SIGNAL_IDS) expect(CURATED_PULSE_SNAPSHOTS.some((snapshot) => snapshot.venueId === featuredId)).toBe(true)
+  expect(createHash("sha256").update(CURATED_PULSE_SNAPSHOTS.map((snapshot) => snapshot.venueId).join("\n")).digest("hex"))
+    .toBe("aedda4c065ce94259171f6eabb369f9eb1f40fddc7545457b2997a49d68fbc79")
+
+  for (const cityId of ["seoul", "busan"] as const) {
+    const canonicalDistricts = new Set(CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === cityId).map((venue) => venue.districtId))
+    const canonicalCategories = new Set(CANONICAL_MAP_VENUES_COMPACT.filter((venue) => venue.cityId === cityId).map((venue) => venue.primaryCategory))
+    const signalDistricts = new Set(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === cityId)
+      .map((snapshot) => canonicalMapVenueById(snapshot.venueId)?.districtId))
+    const signalCategories = new Set(CURATED_PULSE_SNAPSHOTS.filter((snapshot) => snapshot.cityId === cityId)
+      .map((snapshot) => canonicalMapVenueById(snapshot.venueId)?.primaryCategory))
+    expect(signalDistricts).toEqual(canonicalDistricts)
+    expect(signalCategories).toEqual(canonicalCategories)
+  }
 
   for (const snapshot of CURATED_PULSE_SNAPSHOTS) {
     expect(snapshot.score).toBeGreaterThanOrEqual(0)
@@ -33,6 +56,8 @@ test("B-PULSE-HOT-001 Pulse is a separate B-native evidence model over all 400 c
     expect(snapshot.updatedAt).toMatch(/^2026-/)
     expect(snapshot.confidence).not.toBe("limited")
     expect(snapshot.evidence.length).toBeGreaterThan(0)
+    expect(snapshot.truth).toBe("SIMULATED")
+    if (!FEATURED_SIGNAL_ID_SET.has(snapshot.venueId)) expect(snapshot.evidence.every((item) => item.origin === "simulated-fixture")).toBe(true)
   }
 })
 
@@ -49,6 +74,7 @@ test("B-PULSE-HOT-002 limited samples never invent a score, count, recency, or c
     updatedAt: null,
     freshness: "limited",
     confidence: "limited",
+    truth: "UNKNOWN",
   })
   expect(PULSE_DISCLOSURE.en).toBe("Curated visit signals, not live crowding or official LOCALDATA facts.")
   expect(PULSE_DISCLOSURE.ko).toBe("선별된 방문 신호이며, 실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다.")

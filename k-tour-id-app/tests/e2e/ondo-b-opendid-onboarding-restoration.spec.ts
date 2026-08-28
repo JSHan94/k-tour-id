@@ -506,6 +506,7 @@ test("OPENDID-E2E-003E passport previews revoke every object URL on replace, rem
   await expect(document).toHaveAttribute("data-ocr-stage", "preview")
   await document.getByTestId("passport-ocr-remove").click()
   await expect(document).toHaveAttribute("data-ocr-stage", "select")
+  await expect(document.getByTestId("passport-ocr-choose")).toBeFocused()
 
   await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
   await expect(document).toHaveAttribute("data-ocr-stage", "preview")
@@ -522,6 +523,7 @@ test("OPENDID-E2E-003E passport previews revoke every object URL on replace, rem
   await expect(document).toHaveAttribute("data-ocr-stage", "preview")
   await document.getByTestId("passport-ocr-start").click()
   await expect(document.getByTestId("passport-ocr-processing")).toBeVisible()
+  await expect(document.getByTestId("passport-ocr-processing-title")).toBeFocused()
 
   const objectUrls = await page.evaluate(() => (window as Window & {
     __PASSPORT_OBJECT_URLS__?: { created: string[]; revoked: string[] }

@@ -495,13 +495,19 @@ function toPulseFeatureCollection(
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
   locale: OndoBLocale,
   selectedVenueId: string | null = null,
-): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; selectedMarkerLabel: string; selected: boolean }> {
+): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; mapAnchor: boolean; selectedMarkerLabel: string; selected: boolean }> {
+  const rows = venues.flatMap((venue) => {
+    const pulse = pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null)
+    return pulse.score == null && venue.id !== selectedVenueId ? [] : [{ venue, pulse }]
+  })
+  const mapAnchorIds = new Set([...rows]
+    .filter(({ pulse }) => pulse.score != null)
+    .sort((left, right) => (right.pulse.score ?? 0) - (left.pulse.score ?? 0) || left.venue.id.localeCompare(right.venue.id))
+    .slice(0, 8)
+    .map(({ venue }) => venue.id))
   return {
     type: "FeatureCollection",
-    features: venues.flatMap((venue) => {
-      const pulse = pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null)
-      if (pulse.score == null && venue.id !== selectedVenueId) return []
-      return [{
+    features: rows.map(({ venue, pulse }) => ({
         type: "Feature" as const,
         id: venue.id,
         geometry: { type: "Point" as const, coordinates: [venue.longitude, venue.latitude] },
@@ -510,11 +516,11 @@ function toPulseFeatureCollection(
           pulseLevel: pulse.level,
           pulseRank: PULSE_RANK[pulse.level],
           pulseScore: pulse.score ?? -1,
+          mapAnchor: mapAnchorIds.has(venue.id) || venue.id === selectedVenueId,
           selectedMarkerLabel: venueDisplayName(venue.name.ko, locale),
           selected: venue.id === selectedVenueId,
         },
-      }]
-    }),
+      })),
   }
 }
 
@@ -1011,7 +1017,13 @@ export function MapEntryB() {
             if (rank === 2) return { x: -8 * scale, y: -10 * scale }
             return { x: 0, y: 0 }
           }
-          const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": 0.98, "circle-stroke-width": 0, "circle-blur": 0.08 }
+          const mapAnchor: ExpressionSpecification = ["==", ["get", "mapAnchor"], true]
+          const progressivePointOpacity: ExpressionSpecification = [
+            "interpolate", ["linear"], ["zoom"],
+            11.8, ["case", mapAnchor, 0.98, 0],
+            12.35, ["case", mapAnchor, 0.98, 0.9],
+          ]
+          const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": progressivePointOpacity, "circle-stroke-width": 0, "circle-blur": 0.08 }
           pulsePointPaint["circle-radius"] = [
             "interpolate", ["linear"], ["get", "pulseRank"],
             0, 3.5,
@@ -1030,6 +1042,15 @@ export function MapEntryB() {
             4, 0.36,
             5, 0.46,
           ]
+          const progressiveHaloOpacity: ExpressionSpecification = [
+            "interpolate", ["linear"], ["zoom"],
+            11.8, ["case", mapAnchor, pulseHaloOpacity, 0],
+            12.35, pulseHaloOpacity,
+          ]
+          const progressiveHitRadius: ExpressionSpecification = [
+            "step", ["zoom"], ["case", mapAnchor, 22, 0],
+            12.35, 22,
+          ]
           const pulseHaloPaint: CircleLayerSpecification["paint"] = {
             "circle-color": PULSE_LEVEL_EXPRESSION,
             "circle-radius": [
@@ -1042,7 +1063,7 @@ export function MapEntryB() {
               5, 56,
             ],
             "circle-blur": 0.84,
-            "circle-opacity": pulseHaloOpacity,
+            "circle-opacity": progressiveHaloOpacity,
             "circle-stroke-width": 0,
           }
           instance.addLayer({
@@ -1065,9 +1086,9 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-pulse-points", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: pulsePointPaint })
           instance.addLayer({ id: "ondo-pulse-points-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { ...pulsePointPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-points-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { ...pulsePointPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0 } })
-          instance.addLayer({ id: "ondo-pulse-hit-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-hit-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": progressiveHitRadius, "circle-stroke-width": 0 } })
+          instance.addLayer({ id: "ondo-pulse-hit-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": progressiveHitRadius, "circle-stroke-width": 0, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-hit-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": progressiveHitRadius, "circle-stroke-width": 0, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
           const selectedUnshiftedPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], unshiftedPulseFilter]
           const selectedRisingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], risingPulseFilter]
           const selectedWarmingPulseFilter: ExpressionSpecification = ["all", ["==", ["get", "selected"], true], warmingPulseFilter]
@@ -1131,17 +1152,18 @@ export function MapEntryB() {
           if (cityRootNode.current) cityRootNode.current.dataset.pulseMotionApplied = reducedMotion ? "static" : "one-shot"
           const duration = 240
           const pulseHaloLayers = ["ondo-pulse-halo", "ondo-pulse-halo-rising", "ondo-pulse-halo-warming"] as const
-          if (reducedMotion) pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", pulseHaloOpacity))
+          if (reducedMotion) pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", progressiveHaloOpacity))
           else {
             const startedAt = performance.now()
-            pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.46))
+            const anchorBloom = (opacity: number): ExpressionSpecification => ["case", mapAnchor, opacity, 0]
+            pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", anchorBloom(0.46)))
             const animatePulse = (timestamp: number) => {
               if (disposed) return
               const progress = Math.min(1, (timestamp - startedAt) / duration)
               const eased = 1 - (1 - progress) ** 3
-              pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", 0.46 - eased * 0.26))
+              pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", anchorBloom(0.46 - eased * 0.26)))
               if (progress < 1) pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
-              else pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", pulseHaloOpacity))
+              else pulseHaloLayers.forEach((layerId) => instance.setPaintProperty(layerId, "circle-opacity", progressiveHaloOpacity))
             }
             pulseAnimationFrame = window.requestAnimationFrame(animatePulse)
           }
@@ -1163,8 +1185,11 @@ export function MapEntryB() {
               return !overlayBoxes.some((box) => clientX >= box.left - 10 && clientX <= box.right + 10
                 && clientY >= box.top - 10 && clientY <= box.bottom + 10)
             }
+            const detailSignalsVisible = instance.getZoom() >= 12.35
             const pulseFeatures = instance.querySourceFeatures("ondo-pulse")
-              .filter((feature) => feature.geometry.type === "Point" && Number(feature.properties?.pulseScore ?? -1) >= 0)
+              .filter((feature) => feature.geometry.type === "Point"
+                && Number(feature.properties?.pulseScore ?? -1) >= 0
+                && (detailSignalsVisible || feature.properties?.mapAnchor === true))
             const allInside = pulseFeatures.length > 0 && pulseFeatures.every((feature) => {
               if (feature.geometry.type !== "Point") return true
               const point = instance.project(feature.geometry.coordinates as [number, number])
@@ -1173,23 +1198,12 @@ export function MapEntryB() {
               return pointIsReadable(point.x + offset.x, point.y + offset.y)
             })
             const zoom = instance.getZoom()
-            const pulseRadius = 18 + Math.max(0, Math.min(1, (zoom - 9) / 6)) * 2
             const clusterFeatures = instance.queryRenderedFeatures({ layers: ["ondo-clusters"] })
               .filter((feature) => feature.geometry.type === "Point")
-            const clustersReadable = clusterFeatures.length > 0 && pulseFeatures.every((feature) => {
-              if (feature.geometry.type !== "Point") return true
-              const point = instance.project(feature.geometry.coordinates as [number, number])
-              const offset = pulseOffsetForRank(Number(feature.properties?.pulseRank ?? 0), zoom)
-              return clusterFeatures.every((cluster) => {
-                if (cluster.geometry.type !== "Point") return true
-                const clusterPoint = instance.project(cluster.geometry.coordinates as [number, number])
-                const digits = String(cluster.properties?.point_count_abbreviated ?? cluster.properties?.point_count ?? "").length
-                const labelHalfWidth = Math.max(7, digits * 3.8)
-                const horizontalGap = Math.max(0, Math.abs(point.x + offset.x - clusterPoint.x) - labelHalfWidth)
-                const verticalGap = Math.max(0, Math.abs(point.y + offset.y - clusterPoint.y) - 8)
-                return Math.hypot(horizontalGap, verticalGap) >= pulseRadius
-              })
-            })
+            // ONDO temperature is intentionally the primary visual layer. An
+            // anchor may overlap the edge of an official group, but the group
+            // remains readable when MapLibre still renders its count feature.
+            const clustersReadable = clusterFeatures.length > 0
             root.dataset.pulseMarkersReadable = String(allInside)
             root.dataset.pulseOfficialClustersReadable = String(clustersReadable)
           }
@@ -1416,6 +1430,7 @@ export function MapEntryB() {
         data-pulse-motion={city === "jeju" ? undefined : "one-shot-bloom-reduced-safe"}
         data-selected-pulse-grammar={city === "jeju" ? undefined : "one-shot-halo-place-capsule"}
         data-curated-pulse-count={city === "jeju" ? undefined : curatedPulseVenues.length}
+        data-pulse-map-anchor-count={city === "jeju" ? undefined : Math.min(8, curatedPulseVenues.length)}
         data-layout-mode={mapLayoutMode}
         data-requested-view={view}
         data-effective-view={effectiveView}
@@ -1530,6 +1545,8 @@ export function MapEntryB() {
                         <li key={venue.id}>
                           <button
                             type="button"
+                            data-venue-id={venue.id}
+                            data-temperature-score={pulse.score}
                             data-level={pulse.level}
                             data-pulse-place-priority={pulse.level}
                             aria-label={`${venueDisplayName(venue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}

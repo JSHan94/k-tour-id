@@ -94,8 +94,9 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(root).toHaveAttribute("data-city-record-count", "200")
     await expect(root).toHaveAttribute("data-cluster-grammar", "official-record-count")
     await expect(root).toHaveAttribute("data-pulse-map-grammar", "aura-over-official-groups")
-    await expect(root).toHaveAttribute("data-curated-pulse-count", "6")
-    await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(6)
+    await expect(root).toHaveAttribute("data-curated-pulse-count", "40")
+    await expect(root).toHaveAttribute("data-pulse-map-anchor-count", "8")
+    await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(40)
     const key = page.getByTestId("ondo-b-map-key")
     await expect(key).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
     await expect(key).toHaveAttribute("aria-label", "ONDO temperature · official groups. Outlined numbers are official record groups. Small dots are individual records. Curated visit signals, not live crowding or official LOCALDATA facts.")
@@ -139,6 +140,8 @@ test.describe("ONDO B map truth and failure boundary", () => {
       await expect(root).toHaveAttribute("data-after19-active", "true")
       await expect(root).toHaveAttribute("data-city-record-count", "200")
       await expect(root).toHaveAttribute("data-result-count", "30")
+      await expect(root).toHaveAttribute("data-curated-pulse-count", city === "seoul" ? "7" : "10")
+      await expect(root).toHaveAttribute("data-pulse-map-anchor-count", city === "seoul" ? "7" : "8")
       await expect(page.getByRole("button", { name: "Pub & café licence types", exact: true })).toHaveAttribute("aria-pressed", "true")
       const after19 = page.getByTestId("ondo-b-after19-global")
       await expect(after19).toHaveAttribute("data-after19-mode", "on")
@@ -148,6 +151,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
       await expect(after19Status).toContainText(`Opened for this tab · ${label}`)
       await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("30 official records")
       await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(30)
+      await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(city === "seoul" ? 7 : 10)
     }
 
     await page.getByRole("button", { name: "Turn off After 19 now" }).click()

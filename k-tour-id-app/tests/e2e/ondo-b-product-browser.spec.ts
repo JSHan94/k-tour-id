@@ -28,11 +28,12 @@ test.describe("ONDO B official-record discovery and external-map boundary", () =
       await page.locator(`[data-city='${city}']`).click()
       await page.getByRole("button", { name: "List" }).click()
       const root = page.getByTestId("ondo-b-map-entry")
-      const curatedCount = city === "seoul" ? 6 : 2
+      const curatedCount = 40
       await expect(root).toHaveAttribute("data-directory-source", "MOIS_LOCALDATA_GENERAL_RESTAURANTS")
       await expect(root).toHaveAttribute("data-city-record-count", "200")
       await expect(root).toHaveAttribute("data-result-count", "200")
       await expect(root).toHaveAttribute("data-curated-pulse-count", String(curatedCount))
+      await expect(root).toHaveAttribute("data-pulse-map-anchor-count", "8")
       await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("200 official records")
       const list = page.getByTestId("ondo-b-venue-list")
       await expect(list.locator("li")).toHaveCount(31)
