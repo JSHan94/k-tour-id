@@ -59,6 +59,25 @@ async function expectActionsAtLeast44(root: Locator) {
   }
 }
 
+async function expectPeakVisualMeter(pulse: Locator, meter: Locator) {
+  const dot = meter.locator(":scope > i")
+  await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
+  await expect(meter).toBeVisible()
+  await expect(dot).toBeVisible()
+  await expect(meter).toHaveCSS("background-image", /linear-gradient/)
+  await expect(dot).toHaveCSS("background-color", "rgb(122, 32, 72)")
+  const [meterBox, dotBox] = await Promise.all([meter.boundingBox(), dot.boundingBox()])
+  expect(meterBox).not.toBeNull()
+  expect(dotBox).not.toBeNull()
+  const dotCenter = dotBox!.x + dotBox!.width / 2
+  expect(dotCenter).toBeGreaterThanOrEqual(meterBox!.x + meterBox!.width * .9)
+  expect(dotCenter).toBeLessThanOrEqual(meterBox!.x + meterBox!.width + 1)
+
+  await expect(pulse.locator("[data-level='peak']")).toHaveCount(0)
+  await expect(pulse.getByText("91", { exact: true })).toBeHidden()
+  await expect(pulse.getByText(/^(?:PEAK|피크)$/)).toBeHidden()
+}
+
 async function openPeakPlace(page: Page) {
   await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
   const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${PEAK_VENUE_ID}']`)
@@ -76,14 +95,16 @@ for (const locale of ["en", "ko"] as const) {
       await page.setViewportSize(viewport)
       const peek = await openPeakPlace(page)
       await expect(peek).toHaveAttribute("data-venue-id", PEAK_VENUE_ID)
-      await expect(peek.getByTestId("canonical-place-pulse")).toHaveAttribute("data-pulse-level", "peak")
-      await expect(peek.getByTestId("canonical-place-pulse")).toHaveCSS("border-left-color", "rgb(122, 32, 72)")
+      const peekPulse = peek.getByTestId("canonical-place-pulse")
+      await expect(peekPulse).toHaveAttribute("data-pulse-level", "peak")
+      const peekMeter = peekPulse.locator(":scope > span[aria-hidden='true']").nth(1)
+      await expectPeakVisualMeter(peekPulse, peekMeter)
       await expect(peek).toBeFocused()
       await expect(peek.getByTestId("canonical-place-details")).not.toBeFocused()
       await expect(peek.getByTestId("canonical-place-details")).toHaveCSS("outline-style", "none")
       await page.keyboard.press("Tab")
       await expect(peek.locator("button").first()).toBeFocused()
-      await expect(peek.locator("button").first()).toHaveCSS("outline-color", "rgb(29, 102, 209)")
+      await expect(peek.locator("button").first()).toHaveCSS("outline-color", "rgb(23, 23, 23)")
       await expectVisibleDirectTextAtLeast12(peek)
       await expectActionsAtLeast44(peek)
 
@@ -104,10 +125,10 @@ for (const locale of ["en", "ko"] as const) {
       await expect(back).not.toBeFocused()
       await page.keyboard.press("Tab")
       await expect(back).toBeFocused()
-      await expect(back).toHaveCSS("outline-color", "rgb(29, 102, 209)")
+      await expect(back).toHaveCSS("outline-color", "rgb(23, 23, 23)")
       await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
-      await expect(pulse.locator("[data-level='peak']")).toHaveCSS("background-color", "rgb(122, 32, 72)")
-      await expect(pulse.locator("[data-level='peak']")).toHaveCSS("color", "rgb(255, 253, 248)")
+      const detailMeter = pulse.locator("summary span[aria-hidden='true']")
+      await expectPeakVisualMeter(pulse, detailMeter)
       await expectVisibleDirectTextAtLeast12(overlay)
       await expectActionsAtLeast44(overlay)
       expect(await body.evaluate((element) => element.scrollHeight > element.clientHeight)).toBe(true)
@@ -116,7 +137,7 @@ for (const locale of ["en", "ko"] as const) {
 
       await page.keyboard.press("Escape")
       await expect(overlay).toBeHidden()
-      await expect(peek).toBeFocused()
+      await expect(peek.getByTestId("canonical-place-details")).toBeFocused()
       await peek.getByRole("button", { name: locale === "ko" ? "장소 닫기" : "Close place", exact: true }).click()
       await expect(peek).toBeHidden()
     }
