@@ -76,11 +76,13 @@ export function useModalIsolation(open: boolean, modalRef: RefObject<HTMLElement
   useLayoutEffect(() => {
     if (!open) return
     const modal = modalRef.current
-    const boundary = modal?.closest<HTMLElement>("[data-testid='ondo-canvas']")
-    if (!modal || !boundary) return
+    if (!modal) return
+    const localBoundary = modal.closest<HTMLElement>("[data-testid='ondo-canvas']")
+    const boundary = localBoundary ?? document.querySelector<HTMLElement>("[data-testid='ondo-canvas']")
+    if (!boundary) return
 
-    const covered = new Set<HTMLElement>()
     const owner = Symbol("ondo-modal-isolation")
+    const covered = new Set<HTMLElement>()
     const priority = Number(modal.dataset.modalLayerPriority ?? "0") || 0
     let branch: HTMLElement = modal
 
@@ -89,28 +91,76 @@ export function useModalIsolation(open: boolean, modalRef: RefObject<HTMLElement
       covered.add(element)
     }
 
-    while (branch !== boundary) {
-      const parent = branch.parentElement
-      if (!parent) break
-      Array.from(parent.children).forEach((candidate) => {
-        if (!(candidate instanceof HTMLElement) || candidate === branch || candidate.contains(modal)) return
-        const priorityOwner = candidate.matches("[data-modal-layer-priority]")
-          ? candidate
-          : candidate.querySelector<HTMLElement>("[data-modal-layer-priority]")
-        const candidatePriority = Number(priorityOwner?.dataset.modalLayerPriority ?? "0") || 0
-        // A parent sheet can mount after a restored nested gate. Keep the
-        // explicitly higher-priority child operable instead of making it inert
-        // just because React committed the parent later on this reload.
-        if (candidatePriority > priority) return
-        remember(candidate)
-        candidate.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']").forEach(remember)
+    let portalObserver: MutationObserver | null = null
+    if (!localBoundary) {
+      // A portal modal (currently the wallet-connect sheet) lives under
+      // document.body rather than inside the ONDO canvas. Keep the canvas in
+      // sync for the portal's whole lifetime so a lower-priority dialog that
+      // mounts after the portal is isolated too, independent of mount order.
+      const syncPortalIsolation = () => {
+        const desired = new Set<HTMLElement>()
+        Array.from(boundary.children).forEach((candidate) => {
+          if (!(candidate instanceof HTMLElement)) return
+          const priorityOwner = candidate.matches("[data-modal-layer-priority]")
+            ? candidate
+            : candidate.querySelector<HTMLElement>("[data-modal-layer-priority]")
+          const candidatePriority = Number(priorityOwner?.dataset.modalLayerPriority ?? "0") || 0
+          if (candidatePriority > priority) return
+          desired.add(candidate)
+          candidate.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']").forEach((dialog) => desired.add(dialog))
+        })
+        // acquireIsolation intentionally removes dialog semantics. Preserve
+        // those already-covered descendants while their eligible canvas
+        // branch remains mounted, even when another child mutation triggers a
+        // rescan and the role selector no longer matches them.
+        covered.forEach((element) => {
+          if (!element.isConnected || desired.has(element)) return
+          if (Array.from(desired).some((candidate) => candidate !== element && candidate.contains(element))) desired.add(element)
+        })
+        covered.forEach((element) => {
+          if (desired.has(element)) return
+          releaseIsolation(element, owner)
+          covered.delete(element)
+        })
+        desired.forEach((element) => {
+          if (covered.has(element)) return
+          covered.add(element)
+          acquireIsolation(element, owner)
+        })
+      }
+      syncPortalIsolation()
+      portalObserver = new MutationObserver(syncPortalIsolation)
+      portalObserver.observe(boundary, {
+        attributes: true,
+        attributeFilter: ["data-modal-layer-priority"],
+        childList: true,
+        subtree: true,
       })
-      branch = parent
+    } else {
+      while (branch !== boundary) {
+        const parent = branch.parentElement
+        if (!parent) break
+        Array.from(parent.children).forEach((candidate) => {
+          if (!(candidate instanceof HTMLElement) || candidate === branch || candidate.contains(modal)) return
+          const priorityOwner = candidate.matches("[data-modal-layer-priority]")
+            ? candidate
+            : candidate.querySelector<HTMLElement>("[data-modal-layer-priority]")
+          const candidatePriority = Number(priorityOwner?.dataset.modalLayerPriority ?? "0") || 0
+          // A parent sheet can mount after a restored nested gate. Keep the
+          // explicitly higher-priority child operable instead of making it inert
+          // just because React committed the parent later on this reload.
+          if (candidatePriority > priority) return
+          remember(candidate)
+          candidate.querySelectorAll<HTMLElement>("[role='dialog'],[role='alertdialog']").forEach(remember)
+        })
+        branch = parent
+      }
     }
 
-    covered.forEach((element) => acquireIsolation(element, owner))
+    if (localBoundary) covered.forEach((element) => acquireIsolation(element, owner))
 
     return () => {
+      portalObserver?.disconnect()
       covered.forEach((element) => releaseIsolation(element, owner))
     }
   }, [modalRef, open])

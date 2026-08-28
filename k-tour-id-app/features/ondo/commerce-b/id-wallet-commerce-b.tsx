@@ -442,7 +442,7 @@ function WalletConnectSheet({ locale, boundarySeen, onAcknowledge, onClose, onRe
 
   return createPortal(
     <div className={styles.sheetBackdrop}>
-      <div ref={rootRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={copy.linkDialog} data-testid="wallet-connect-sheet" data-phase={phase} onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}>
+      <div ref={rootRef} className={styles.sheet} role="dialog" aria-modal="true" aria-label={copy.linkDialog} data-testid="wallet-connect-sheet" data-modal-layer-priority="200" data-phase={phase} onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}>
         <div className={styles.grabber} aria-hidden="true" />
         <header><span>{copy.linkDialog}</span><button type="button" data-wallet-focus aria-label={copy.close} onClick={onClose}><X size={20} aria-hidden="true" /></button></header>
         {phase === "info" ? (

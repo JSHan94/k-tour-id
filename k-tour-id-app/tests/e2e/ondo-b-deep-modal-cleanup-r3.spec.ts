@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright"
-import { expect, test, type Page } from "@playwright/test"
+import { expect, test, type Locator, type Page } from "@playwright/test"
 import {
   openCanonicalVenue,
   prepareBPage,
@@ -8,44 +8,58 @@ import {
 } from "../helpers/ondo-b-qa"
 
 const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
+const EMPTY_TABLE_VENUE_ID = "mois-18939eecb43c15ab4305"
 
 type Locale = "en" | "ko"
 
 const COPY = {
   en: {
-    accountStart: "Create account · Simulated",
-    accountFinish: "Complete account simulation",
-    personStart: "Start check",
-    personFinish: "Complete simulated check",
-    ageStart: "Start 19+ check simulation",
-    ageFinish: "Confirm 19+ · Simulated",
-    paymentStart: "Start Payment KYC simulation",
-    paymentFinish: "Complete Payment KYC · Simulated",
+    removeSaved: "Remove from Saved",
+    walletConnect: "Prepare test wallet",
     tip: "Order beside the entrance.",
-    back: /Back to Roba/,
+    back: "Back to this place",
     browse: "Browse all Tables",
+    closePlace: "Close place",
   },
   ko: {
-    accountStart: "계정 만들기 · 시뮬레이션",
-    accountFinish: "계정 시뮬레이션 완료",
-    personStart: "본인 확인 시작",
-    personFinish: "본인 확인 시뮬레이션 완료",
-    ageStart: "19+ 확인 시뮬레이션 시작",
-    ageFinish: "19+ 확인 · 시뮬레이션",
-    paymentStart: "결제용 KYC 시뮬레이션 시작",
-    paymentFinish: "결제용 KYC 완료 · 시뮬레이션",
+    removeSaved: "저장 취소",
+    walletConnect: "테스트 지갑 준비",
     tip: "주문은 입구 옆에서 해요.",
-    back: "장소로 돌아가기",
-    browse: "전체 Table 둘러보기",
+    back: "이 장소로 돌아가기",
+    browse: "전체 테이블 보기",
+    closePlace: "장소 닫기",
   },
 } as const
 
-async function completeGate(page: Page, start: string, finish: string) {
-  const gate = page.getByTestId("ondo-gate-overlay")
+async function expectNestedModalIsolation(page: Page, parent: Locator) {
+  await expect(parent).toHaveAttribute("inert", "")
+  await expect(parent).toHaveAttribute("aria-hidden", "true")
+  await expect(page.locator("[aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
+}
+
+async function expectParentRestored(parent: Locator) {
+  await expect(parent).not.toHaveAttribute("inert", "")
+  await expect(parent).not.toHaveAttribute("aria-hidden", "true")
+  await expect(parent).toHaveAttribute("role", "dialog")
+  await expect(parent).toHaveAttribute("aria-modal", "true")
+}
+
+async function expectNoSeriousAxe(page: Page, include: string) {
+  const axe = await new AxeBuilder({ page })
+    .include(include)
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .analyze()
+  expect(axe.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([])
+}
+
+async function completeAccountGate(page: Page, parent: Locator) {
+  const gate = page.getByTestId("account-save-gate")
   await expect(gate).toBeVisible()
-  await gate.getByRole("button", { name: start, exact: true }).click()
-  await gate.getByRole("button", { name: finish, exact: true }).click()
+  await expectNestedModalIsolation(page, parent)
+  await gate.getByTestId("account-start").click()
+  await gate.getByTestId("account-complete").click()
   await expect(gate).toHaveCount(0)
+  await expectParentRestored(parent)
 }
 
 async function openExpandedVenueFromPeek(page: Page) {
@@ -84,44 +98,91 @@ async function accumulateAccountPersonAgePaymentAndVisit(page: Page, locale: Loc
   await openCanonicalVenue(page)
 
   // Account / save, preserving the exact canonical venue.
+  const canonicalDetail = page.getByTestId("canonical-place-overlay")
   await page.getByTestId("canonical-venue-save").click()
-  await completeGate(page, copy.accountStart, copy.accountFinish)
-  await expect(page.getByTestId("canonical-venue-save")).toBeDisabled()
+  await completeAccountGate(page, canonicalDetail)
+  const savedVenue = page.getByTestId("canonical-venue-save")
+  await expect(savedVenue).toHaveAttribute("aria-pressed", "true")
+  await expect(savedVenue).toContainText(copy.removeSaved)
+  await expect(savedVenue).toBeEnabled()
 
-  // Person / Local Signal, including the post-gate resubmission and return.
-  await page.getByTestId("canonical-venue-signal").click()
-  const signal = page.getByTestId("local-signal-overlay")
+  // Person / provider-neutral passport eKYC preview, preserving the exact
+  // Local Signal draft. OpenDID issuance is covered by its onboarding journey.
+  await page.getByTestId("canonical-local-signal-open").click()
+  const signal = page.getByTestId("ondo-b-local-signal")
+  await signal.locator("fieldset button").first().click()
   await signal.locator("textarea").fill(copy.tip)
-  await page.getByTestId("local-signal-submit").click()
-  await completeGate(page, copy.personStart, copy.personFinish)
-  await expect(signal, `Person completion must return to Local Signal; session=${JSON.stringify(await sessionState(page))}`).toBeVisible()
-  await page.getByTestId("local-signal-submit").click()
-  await expect(signal).toHaveAttribute("data-signal-status", "submitted")
-  await page.getByTestId("local-signal-return").click()
+  await signal.getByTestId("local-signal-person-check").click()
+  const personGate = page.getByTestId("ondo-b-action-gate")
+  await expect(personGate).toHaveAttribute("data-active-gate", "person")
+  await expectNestedModalIsolation(page, signal)
+  await personGate.getByTestId("person-route-choice-passport_ekyc").click()
+  await expect(personGate).toHaveAttribute("data-person-route", "passport_ekyc")
+  await personGate.getByTestId("local-check-boundary-continue").click()
+  await expect(personGate).toBeHidden()
+  await expectParentRestored(signal)
+  await expect(signal.locator("textarea"), `Person completion must preserve the Local Signal draft; session=${JSON.stringify(await sessionState(page))}`).toHaveValue(copy.tip)
+  await signal.getByTestId("local-signal-post").click()
+  await expect(signal).toBeHidden()
+  await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
 
-  // Age / venue-scoped After19, restoring the same place detail.
+  // Age / venue-scoped After19, restoring the same Place detail.
   await openExpandedVenueFromPeek(page)
   await page.getByTestId("canonical-after19-unlock").click()
-  await completeGate(page, copy.ageStart, copy.ageFinish)
+  const ageGate = page.getByTestId("global-after19-prompt-layer")
+  await expect(ageGate.getByTestId("global-after19-return-context")).toHaveAttribute("data-return-venue", CANONICAL_VENUE_ID)
+  await expectNestedModalIsolation(page, canonicalDetail)
+  await ageGate.getByTestId("global-after19-confirm").click()
+  await expect(ageGate).toBeHidden()
+  await expectParentRestored(canonicalDetail)
   const detail = page.getByTestId("canonical-place-overlay")
   await expect(detail).toBeVisible()
   await expect(page.getByTestId("canonical-after19-access")).toHaveAttribute("data-after19-venue-status", "unlocked")
 
-  // Payment KYC / checkout / separate simulated visit and tenth stamp.
-  await page.getByTestId("canonical-venue-checkout").click()
-  await page.getByTestId("checkout-start").click()
-  await completeGate(page, copy.paymentStart, copy.paymentFinish)
-  await page.getByTestId("checkout-start").click()
-  await page.getByTestId("checkout-confirm").click()
-  await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-payment-state", "PAY-SIMULATED-SUCCESS")
-  await page.getByTestId("visit-proof-check").click()
-  await expect(page.getByTestId("checkout-overlay")).toHaveAttribute("data-stamp-count", "10")
-  await page.getByTestId("checkout-overlay").getByRole("button", { name: locale === "ko" ? "장소로 돌아가기" : "Return to venue", exact: true }).click()
+  // Payment KYC / current meal-benefit checkout / separate visit and tenth stamp.
+  await page.getByTestId("canonical-meal-benefit-open").click()
+  const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+  await expect(offer).toHaveAttribute("data-origin-venue-id", CANONICAL_VENUE_ID)
+  await offer.getByTestId("payment-confirm").click()
+  const wallet = page.getByTestId("wallet-connect-sheet")
+  await expect(wallet).toBeVisible()
+  await expectNestedModalIsolation(page, offer)
+  await wallet.getByRole("button", { name: copy.walletConnect, exact: true }).click()
+  await expect(wallet).toBeHidden()
+  await expectParentRestored(offer)
+  await offer.getByTestId("benefit-accept").click()
+  await offer.getByTestId("payment-minimum-consent").getByRole("checkbox").check()
+  await offer.getByTestId("payment-confirm").click()
+  const paymentGate = page.getByTestId("ondo-b-action-gate")
+  await expect(paymentGate).toHaveAttribute("data-active-gate", "payment_kyc")
+  await expectNestedModalIsolation(page, offer)
+  await paymentGate.getByTestId("action-gate-confirm").click()
+  await expect(paymentGate).toBeHidden()
+  await expectParentRestored(offer)
+  const receipt = offer.getByTestId("payment-receipt")
+  await expect(receipt).toHaveAttribute("data-completion-kind", "receipt")
+  const visit = offer.getByTestId("visit-stamp-receipt")
+  await expect(visit).toHaveAttribute("data-stamp-count", "9")
+  await visit.getByTestId("visit-proof-check").click()
+  await expect(visit).toHaveAttribute("data-stamp-count", "10")
+  await receipt.getByTestId("payment-receipt-return").click()
 
+  // Stay in the same SPA session and move from the canonical Place to a real
+  // directory Place with no open Table. This proves modal cleanup rather than
+  // masking it behind a reload.
+  await expect(detail).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
+  await detail.getByRole("button", { name: copy.closePlace, exact: true }).click()
+  const list = page.getByTestId("ondo-b-venue-list")
+  if (!await list.isVisible()) await page.getByTestId("ondo-b-view-toggle").click()
+  await expect(list).toBeVisible()
+  const emptyVenue = list.locator(`[data-venue-id='${EMPTY_TABLE_VENUE_ID}']`).getByRole("button").first()
+  await emptyVenue.scrollIntoViewIfNeeded()
+  await emptyVenue.click()
   await openExpandedVenueFromPeek(page)
-  await page.getByTestId("canonical-venue-tables").click()
-  await expect(page.getByTestId("venue-table-scope")).toBeVisible()
-  await expect(page.getByTestId("venue-tables-empty")).toBeVisible()
+  const emptyDetail = page.getByTestId("canonical-place-overlay")
+  await expect(emptyDetail).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
+  await emptyDetail.getByTestId("canonical-venue-tables").click()
+  await expect(emptyDetail.getByTestId("venue-tables-empty")).toBeVisible()
   await expect.poll(async () => sessionState(page)).toMatchObject({
     account: "ACC-ACTIVE",
     person: "PER-VERIFIED",
@@ -133,36 +194,30 @@ async function accumulateAccountPersonAgePaymentAndVisit(page: Page, locale: Loc
 
 async function expectInteractiveVenueScope(page: Page, locale: Locale) {
   const copy = COPY[locale]
-  const active = page.locator("[data-active-tab='tables']")
+  const detail = page.getByTestId("canonical-place-overlay")
+  const scope = detail.getByTestId("venue-table-scope")
   const nav = page.getByTestId("ondo-main-nav")
-  await expect(active).not.toHaveAttribute("inert", "")
-  await expect(active).not.toHaveAttribute("aria-hidden", "true")
-  await expect(nav).not.toHaveAttribute("inert", "")
-  await expect(nav).not.toHaveAttribute("aria-hidden", "true")
-  await expect(page.locator("[data-testid='ondo-canvas'] [inert]")).toHaveCount(0)
-  await expect(nav.getByRole("button")).toHaveCount(4)
+  await expect(detail).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
+  await expect(scope).toHaveAttribute("data-empty-state", "open")
+  await expect(nav).toHaveAttribute("inert", "")
+  await expect(nav).toHaveAttribute("aria-hidden", "true")
+  await expect(nav.locator(":scope > button")).toHaveCount(5)
 
-  const back = page.getByTestId("tables-back-to-venue")
-  const browse = page.getByTestId("tables-browse-all")
-  await expect(page.getByRole("button", { name: copy.back })).toBeVisible()
-  await expect(page.getByRole("button", { name: copy.browse, exact: true })).toBeVisible()
+  const back = detail.getByTestId("tables-back-to-venue")
+  const browse = detail.getByTestId("tables-browse-all")
+  await expect(back).toHaveAccessibleName(copy.back)
+  await expect(browse).toHaveAccessibleName(copy.browse)
+  await expect(back).toBeEnabled()
+  await expect(browse).toBeEnabled()
 
   await back.focus()
   await expect(back).toBeFocused()
   await page.keyboard.press("Tab")
   await expect(browse).toBeFocused()
-  await page.keyboard.press("Tab")
-  await expect(page.getByTestId("nav-ondo")).toBeFocused()
   await page.keyboard.press("Shift+Tab")
-  await expect(browse).toBeFocused()
-  await page.keyboard.press("Escape")
-  await expect(page.getByTestId("venue-table-scope")).toBeVisible()
+  await expect(back).toBeFocused()
 
-  const axe = await new AxeBuilder({ page })
-    .include("[data-testid='ondo-b-root']")
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-    .analyze()
-  expect(axe.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([])
+  await expectNoSeriousAxe(page, "[data-testid='canonical-place-overlay']")
 }
 
 const PROFILES = [
@@ -187,34 +242,91 @@ for (const profile of PROFILES) {
 
     // Both venue-scoped recovery actions work without a reload.
     await page.getByTestId("tables-back-to-venue").click()
-    await openExpandedVenueFromPeek(page)
+    await expect(page.getByTestId("venue-table-scope")).toHaveAttribute("data-empty-state", "closed")
     await page.getByTestId("canonical-venue-tables").click()
     await page.getByTestId("tables-browse-all").click()
-    await expect(page.getByRole("region", { name: profile.locale === "ko" ? "장소별 Table" : "Tables by place" })).toBeVisible()
-    await page.getByTestId("tables-back-to-place-scope").click()
-    await expectInteractiveVenueScope(page, profile.locale)
+    await expect(page.getByTestId("tables-entry")).toBeVisible()
+    await expect(page.getByTestId("nav-tables")).toHaveAttribute("aria-current", "page")
+    await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("inert", "")
+    await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("aria-hidden", "true")
+    await expectNoSeriousAxe(page, "[data-testid='ondo-b-root']")
 
-    // All four persistent destinations work, and the exact venue scope remains
-    // recoverable by returning to Tables after each transition.
+    // All five persistent destinations work after the deep modal sequence, and
+    // Explore restores the exact no-Table Place without a reload.
     await page.getByTestId("nav-my").click()
-    await expect(page.getByTestId("ondo-my-entry")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-my-korea-entry")).toBeVisible()
     await page.getByTestId("nav-tables").click()
-    await expect(page.getByTestId("venue-table-scope")).toBeVisible()
+    await expect(page.getByTestId("tables-entry")).toBeVisible()
 
     await page.getByTestId("nav-id").click()
-    await expect(page.getByTestId("ondo-identity-entry")).toBeVisible()
-    await page.getByTestId("nav-tables").click()
-    await expect(page.getByTestId("venue-table-scope")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
+    await page.getByTestId("nav-settings").click()
+    await expect(page.getByTestId("ondo-b-settings-entry")).toBeVisible()
 
     await page.getByTestId("nav-ondo").click()
-    await expect(page.locator("[data-testid='canonical-place-peek'], [data-testid='canonical-place-overlay']")).toBeVisible()
-    await openExpandedVenueFromPeek(page)
+    await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
     await page.getByTestId("canonical-venue-tables").click()
-    await expect(page.getByTestId("venue-table-scope")).toBeVisible()
-
-    await page.getByTestId("nav-tables").click()
-    await expect(page.getByTestId("venue-table-scope")).toBeVisible()
     await expectInteractiveVenueScope(page, profile.locale)
-    await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
+    await expect(page).toHaveURL(new RegExp(`venueId=${EMPTY_TABLE_VENUE_ID}`))
   })
 }
+
+test("D5-R3-004 wallet portal owns lower-priority dialogs mounted before and after it", async ({ page }, testInfo) => {
+  await page.setViewportSize(testInfo.project.name === "desktop-chromium" ? { width: 1440, height: 1000 } : { width: 390, height: 844 })
+  await seedB(page, {
+    locale: "en",
+    session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", paymentKyc: "PKY-VERIFIED" },
+  })
+  await openCanonicalVenue(page)
+  await page.getByTestId("canonical-meal-benefit-open").click()
+  const offer = page.getByTestId("ondo-b-id-wallet-commerce")
+
+  await page.evaluate(() => {
+    const probe = document.createElement("section")
+    probe.dataset.testid = "modal-priority-probe-before"
+    probe.dataset.modalLayerPriority = "100"
+    probe.style.cssText = "position:fixed;z-index:1540"
+    probe.setAttribute("role", "dialog")
+    probe.setAttribute("aria-modal", "true")
+    document.querySelector("[data-testid='ondo-canvas']")?.append(probe)
+  })
+
+  await offer.getByTestId("payment-confirm").click()
+  const wallet = page.getByTestId("wallet-connect-sheet")
+  await expect(wallet).toHaveAttribute("data-modal-layer-priority", "200")
+  const before = page.getByTestId("modal-priority-probe-before")
+  await expect(before).toHaveAttribute("inert", "")
+  await expect(before).toHaveAttribute("aria-hidden", "true")
+  const stacking = await wallet.evaluate((element) => ({
+    wallet: Number.parseInt(getComputedStyle(element.parentElement!).zIndex, 10),
+    lowerPriorityDialog: Number.parseInt(getComputedStyle(document.querySelector<HTMLElement>("[data-testid='modal-priority-probe-before']")!).zIndex, 10),
+  }))
+  expect(stacking.wallet).toBeGreaterThan(stacking.lowerPriorityDialog)
+
+  await page.evaluate(() => {
+    const probe = document.createElement("section")
+    probe.dataset.testid = "modal-priority-probe-after"
+    probe.dataset.modalLayerPriority = "100"
+    probe.setAttribute("role", "dialog")
+    probe.setAttribute("aria-modal", "true")
+    document.querySelector("[data-testid='ondo-canvas']")?.append(probe)
+  })
+  const after = page.getByTestId("modal-priority-probe-after")
+  await expect(after).toHaveAttribute("inert", "")
+  await expect(after).toHaveAttribute("aria-hidden", "true")
+  await expect(page.locator("[aria-modal='true']:not([aria-hidden='true']):not([inert])")).toHaveCount(1)
+
+  await wallet.locator("header button").click()
+  await expect(wallet).toBeHidden()
+  for (const probe of [before, after]) {
+    await expect(probe).not.toHaveAttribute("inert", "")
+    await expect(probe).not.toHaveAttribute("aria-hidden", "true")
+    await expect(probe).toHaveAttribute("role", "dialog")
+    await expect(probe).toHaveAttribute("aria-modal", "true")
+  }
+  await page.evaluate(() => {
+    document.querySelector("[data-testid='modal-priority-probe-before']")?.remove()
+    document.querySelector("[data-testid='modal-priority-probe-after']")?.remove()
+  })
+  await expectParentRestored(offer)
+})
