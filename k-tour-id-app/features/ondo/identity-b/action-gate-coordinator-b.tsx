@@ -351,9 +351,31 @@ export function BActionGateCoordinator() {
 
   useEffect(() => {
     if (!pending || !activeGate) return
-    const frame = window.requestAnimationFrame(() => dialogRef.current?.focus({ preventScroll: true }))
+    const frame = window.requestAnimationFrame(() => {
+      const layer = layerRef.current
+      // Let a higher-priority portal isolate a newly mounted lower gate before
+      // it can claim focus. Immediate Escape is owned independently below.
+      if (!layer || layer.closest("[inert],[aria-hidden='true']")) return
+      dialogRef.current?.focus({ preventScroll: true })
+    })
     return () => window.cancelAnimationFrame(frame)
   }, [activeGate, pending?.tokenId, view])
+
+  useEffect(() => {
+    if (!pending || readyTokenId === pending.tokenId || (!activeGate && !expiredReturn)) return
+    const ownEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return
+      const layer = layerRef.current
+      // A higher-priority portal can temporarily isolate this gate. In that
+      // case Escape belongs to the exposed modal, not this inert descendant.
+      if (!layer || layer.closest("[inert],[aria-hidden='true']")) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      cancel()
+    }
+    document.addEventListener("keydown", ownEscape, true)
+    return () => document.removeEventListener("keydown", ownEscape, true)
+  }, [activeGate, expiredReturn, pending?.tokenId, readyTokenId])
 
   useEffect(() => {
     if (!pending || session.personRoute || !pending.gatePlan.includes("person")) return
