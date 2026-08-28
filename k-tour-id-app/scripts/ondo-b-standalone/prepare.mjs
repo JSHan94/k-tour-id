@@ -15,7 +15,7 @@ import "./globals.css"
 
 export const metadata: Metadata = {
   applicationName: "ONDO",
-  title: "ONDO 溫圖 — Korea Pulse map for Seoul, Busan, and Jeju",
+  title: "ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju",
   description: "Browse 400 licensed Seoul and Busan food-service records alongside a separate source-linked Jeju editorial collection.",
   openGraph: { siteName: "ONDO" },
   robots: { index: false, follow: false },
