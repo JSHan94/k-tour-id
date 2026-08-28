@@ -77,6 +77,7 @@ test("a limited place returns from Local Signal with device evidence and no inve
   await activate(page.getByRole("button", { name: "Lively right now" }))
   await page.getByRole("textbox", { name: "Optional local note" }).fill("A short device-only note")
   await activate(page.getByTestId("local-signal-person-check"))
+  await activate(page.getByTestId("person-route-choice-mobile_id_cx"))
   await activate(page.getByTestId("local-check-boundary-continue"))
   await expect(page.getByTestId("ondo-b-local-check-walkthrough")).toBeHidden()
   await activate(page.getByRole("button", { name: "Post on this device" }))

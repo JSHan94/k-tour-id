@@ -103,18 +103,46 @@ function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
   if (level !== "nation" && !city) return null
   if ((level === "peek" || level === "detail") && (!venueId === !editorialPlaceId)) return null
   if (editorialPlaceId && city !== "jeju") return null
+  const focus = focusValue(value.focus)
   return {
     v: 3,
     documentId: typeof value.documentId === "string" ? value.documentId.slice(0, 64) : "legacy",
     level,
-    city,
-    view: viewValue(value.view),
-    query: queryValue(value.query),
-    category: value.v === 2 || value.v === 3 ? categoryValue(value.category) : "all",
+    city: level === "nation" ? undefined : city,
+    view: level === "nation" ? "map" : viewValue(value.view),
+    query: level === "nation" ? "" : queryValue(value.query),
+    category: level === "nation" || value.v === 1 ? "all" : categoryValue(value.category),
     venueId: level === "peek" || level === "detail" ? venueId : undefined,
     editorialPlaceId: level === "peek" || level === "detail" ? editorialPlaceId : undefined,
-    focus: focusValue(value.focus),
+    focus: level === "nation"
+      ? focus?.kind === "city" ? focus : undefined
+      : level === "city" ? focus : undefined,
   }
+}
+
+function canonicalEntry(entry: BDiscoveryHistoryEntry, nextDocumentId = entry.documentId): BDiscoveryHistoryEntry {
+  return {
+    v: 3,
+    documentId: nextDocumentId,
+    level: entry.level,
+    ...(entry.city ? { city: entry.city } : {}),
+    view: entry.view,
+    query: entry.query,
+    category: entry.category,
+    ...(entry.venueId ? { venueId: entry.venueId } : {}),
+    ...(entry.editorialPlaceId ? { editorialPlaceId: entry.editorialPlaceId } : {}),
+    ...(entry.focus ? { focus: entry.focus } : {}),
+  }
+}
+
+function exactCanonicalValue(actual: unknown, expected: unknown): boolean {
+  if (!isRecord(expected)) return Object.is(actual, expected)
+  if (!isRecord(actual)) return false
+  const actualKeys = Reflect.ownKeys(actual)
+  const expectedKeys = Reflect.ownKeys(expected)
+  return actualKeys.length === expectedKeys.length
+    && expectedKeys.every((key) => actualKeys.includes(key)
+      && exactCanonicalValue(Reflect.get(actual, key), Reflect.get(expected, key)))
 }
 
 function dispatchBDiscoveryTraversal(event: PopStateEvent) {
@@ -167,26 +195,26 @@ function entryUrl(entry: BDiscoveryHistoryEntry) {
   return `${url.pathname}${url.search}`
 }
 
-function entriesMatch(left: BDiscoveryHistoryEntry | null, right: BDiscoveryHistoryEntry) {
-  if (!left) return false
-  return left.v === right.v
-    && left.documentId === right.documentId
-    && left.level === right.level
-    && left.city === right.city
-    && left.view === right.view
-    && left.query === right.query
-    && left.category === right.category
-    && left.venueId === right.venueId
-    && left.editorialPlaceId === right.editorialPlaceId
-    && JSON.stringify(left.focus) === JSON.stringify(right.focus)
+function historyStateMatchesCanonical(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
+  const rawState = window.history.state
+  if (!isRecord(rawState)) return false
+  const expectedState = mergedState(entry, preservedState)
+  const rawKeys = Reflect.ownKeys(rawState)
+  const expectedKeys = Reflect.ownKeys(expectedState)
+  if (rawKeys.length !== expectedKeys.length || !expectedKeys.every((key) => rawKeys.includes(key))) return false
+  return expectedKeys.every((key) => key === HISTORY_KEY
+    ? exactCanonicalValue(Reflect.get(rawState, key), entry)
+    : Object.is(Reflect.get(rawState, key), Reflect.get(expectedState, key)))
 }
 
 function replaceEntry(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
-  History.prototype.replaceState.call(window.history, mergedState(entry, preservedState), "", entryUrl(entry))
+  const canonical = canonicalEntry(entry)
+  History.prototype.replaceState.call(window.history, mergedState(canonical, preservedState), "", entryUrl(canonical))
 }
 
 function pushEntry(entry: BDiscoveryHistoryEntry) {
-  History.prototype.pushState.call(window.history, mergedState(entry), "", entryUrl(entry))
+  const canonical = canonicalEntry(entry)
+  History.prototype.pushState.call(window.history, mergedState(canonical), "", entryUrl(canonical))
 }
 
 export function replaceBDiscoveryUrl(url: string) {
@@ -208,17 +236,14 @@ export function readBDiscoveryHistory(state?: unknown): BDiscoveryHistoryEntry |
 export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preservedState?: unknown) {
   const existing = sanitizeEntry(entry)
   if (!existing) return null
-  const currentDocumentId = documentId()
-  const current: BDiscoveryHistoryEntry = existing.documentId === currentDocumentId
-    ? existing
-    : { ...existing, documentId: currentDocumentId }
+  const current = canonicalEntry(existing, documentId())
   // Next patches the History prototype and treats even an identical
   // replaceState call as a router reconciliation. The traversal stabilizer
-  // calls this more than once by design, so keep it idempotent: rewriting an
-  // already-canonical entry only creates duplicate RSC requests and can abort
-  // one of them when the user immediately changes tabs.
-  if (entriesMatch(readBDiscoveryHistory(), current)
-    && `${window.location.pathname}${window.location.search}` === entryUrl(current)) return current
+  // calls this more than once by design. Only the exact raw allowlisted entry,
+  // URL, and preserved outer state may skip the rewrite: comparing sanitized
+  // entries here would let private or unknown raw fields survive indefinitely.
+  const canonicalUrl = new URL(entryUrl(current), window.location.origin).href
+  if (historyStateMatchesCanonical(current, preservedState) && window.location.href === canonicalUrl) return current
   replaceEntry(current, preservedState)
   return current
 }
@@ -226,9 +251,79 @@ export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preser
 export function normalizeBDiscoveryHistoryForActiveDocument() {
   const existing = readBDiscoveryHistory()
   if (!existing) return null
-  const currentDocumentId = documentId()
-  if (existing.documentId === currentDocumentId && existing.v === 3) return existing
   return replaceBDiscoveryHistoryForActiveDocument(existing)
+}
+
+export type BDiscoveryCityContext = {
+  city: BDiscoveryCity
+  view: BDiscoveryView
+  query: string
+  category: BDiscoveryCategory
+  focus?: "search" | "view-toggle"
+}
+
+export function restoreBDiscoveryCityContext(input: BDiscoveryCityContext): BDiscoveryHistoryEntry | null
+export function restoreBDiscoveryCityContext(input: unknown) {
+  if (!isRecord(input)) return null
+  const city = cityValue(input.city)
+  const view = input.view === "map" || input.view === "list" ? input.view : undefined
+  const category = input.category === "all"
+    || input.category === "korean" || input.category === "casual" || input.category === "japanese"
+    || input.category === "chinese" || input.category === "global" || input.category === "night"
+    || input.category === "specialty"
+    ? input.category
+    : undefined
+  const focus = input.focus === undefined
+    ? undefined
+    : input.focus === "search" || input.focus === "view-toggle"
+      ? { kind: input.focus } as const
+      : null
+  if (!city || !view || !category || focus === null || typeof input.query !== "string") return null
+  return replaceBDiscoveryHistoryForActiveDocument({
+    v: 3,
+    documentId: documentId(),
+    level: "city",
+    city,
+    view: city === "jeju" ? "map" : view,
+    query: city === "jeju" ? "" : queryValue(input.query),
+    category: city === "jeju" ? "all" : category,
+    ...(focus ? { focus } : {}),
+  } satisfies BDiscoveryHistoryEntry)
+}
+
+export type BDiscoveryVenueContext = {
+  city: BDiscoveryCity
+  view: BDiscoveryView
+  query: string
+  category: BDiscoveryCategory
+  venueId: string
+  level: "peek" | "detail"
+}
+
+export function restoreBDiscoveryVenueContext(input: BDiscoveryVenueContext): BDiscoveryHistoryEntry | null
+export function restoreBDiscoveryVenueContext(input: unknown) {
+  if (!isRecord(input)) return null
+  const city = cityValue(input.city)
+  const view = input.view === "map" || input.view === "list" ? input.view : undefined
+  const category = input.category === "all"
+    || input.category === "korean" || input.category === "casual" || input.category === "japanese"
+    || input.category === "chinese" || input.category === "global" || input.category === "night"
+    || input.category === "specialty"
+    ? input.category
+    : undefined
+  const venueId = venueValue(input.venueId)
+  const level = input.level === "peek" || input.level === "detail" ? input.level : undefined
+  if (!city || !view || !category || !venueId || !level || typeof input.query !== "string") return null
+  return replaceBDiscoveryHistoryForActiveDocument({
+    v: 3,
+    documentId: documentId(),
+    level,
+    city,
+    view,
+    query: queryValue(input.query),
+    category,
+    venueId,
+  } satisfies BDiscoveryHistoryEntry)
 }
 
 export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDiscoveryCity | undefined) {

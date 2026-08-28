@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from "@playwright/test"
+import { expect, type Locator, type Page, type Request } from "@playwright/test"
 
 export const B_ROUTE = "/ondo-b"
 export const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
@@ -72,9 +72,9 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ERROR: A("dedicated map-truth route abort latches data-map-state=error and keeps the sourced list usable"), RETRY: A("Retry map starts a fresh attempt and increments data-map-attempt to 2"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
   }),
   flow("FL-002", "Age proof to exact After19 venue", {
-    ENTRY: A("locked compact 19+ access inside the exact canonical venue"), DECISION: A("global 19+ prompt preserves venueId"), CANCEL: A("prompt cancel returns to the same locked venue detail"),
-    ERROR: A("simulated global 19+ failure retains venue context"), RETRY: A("same venue-scoped prompt retry"), TERMINAL: A("unlocked compact access and global banner"),
-    RETURN: A("the exact canonical detail remains mounted with After19 on"),
+    ENTRY: A("locked compact 19+ access inside the exact canonical venue"), DECISION: A("strict tab-scoped OPEN_AFTER19 token preserves exact city, map, query, category, venue and detail context"), CANCEL: A("prompt cancel returns to the same locked venue detail and clears the token"),
+    ERROR: A("simulated global 19+ failure retains the one pending exact-return token"), RETRY: A("same venue-scoped prompt retry"), TERMINAL: A("one-shot token consumption unlocks the compact access and global banner"),
+    RETURN: A("reload restores the exact canonical venue detail, with a same-city fallback only if the venue disappears"),
   }),
   flow("FL-003", "Table to image chat to feedback", {
     ENTRY: A("B-native Pulse Tables detail"), DECISION: A("Account then 19+ join plan with exact draft"), CANCEL: A("gate cancel preserves draft and leave cancel preserves seat"),
@@ -85,11 +85,11 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ERROR: A("injected payment failure keeps receipt and visit stamp absent"), RETRY: A("B-native payment recovery retries the same offer"), TERMINAL: A("receipt, visit 9→10, then refund receipt"), RETURN: A("receipt return restores the exact origin venue"),
   }),
   flow("FL-005", "Korean CX", {
-    ENTRY: A("local-contributor Local Signal Person gate"), DECISION: A("B-native mobile_id_cx / OmniOne CX route"), CANCEL: A("gate cancel preserves exact signal draft"),
+    ENTRY: A("Local Signal Person gate opens without inferring identity from discovery intent"), DECISION: A("the user explicitly selects the B-native mobile_id_cx / OmniOne CX route"), CANCEL: A("gate cancel preserves exact signal draft"),
     ERROR: A("simulated CX failure"), RETRY: A("same gate retry"), TERMINAL: A("PER-VERIFIED only"), RETURN: A("original local-signal sheet"),
   }),
   flow("FL-006", "Residence Card", {
-    ENTRY: A("preparing persona Local Signal Person gate"), DECISION: A("mobile_residence_card route resolves unavailable"), CANCEL: A("gate cancel preserves the exact signal draft"),
+    ENTRY: A("Local Signal Person gate opens without inferring identity from discovery intent"), DECISION: A("the user explicitly selects mobile_residence_card before it resolves unavailable"), CANCEL: A("gate cancel preserves the exact signal draft"),
     ERROR: A("B-native unavailable result without a fake provider"), RETRY: A("passport_ekyc alternate is the explicit completion route"), TERMINAL: A("PER-VERIFIED only after passport completion"), RETURN: A("original venue-scoped B Local Signal remains exact"),
   }),
   flow("FL-007", "Short-term onboarding", {
@@ -156,7 +156,10 @@ export const B_CONTENT_CASES = [
 })))
 
 type RuntimeEvidence = { product: string[]; externalMap: string[]; externalAsset: string[]; navigationAbort: string[] }
+type PendingNextNavigationAbort = { item: string; requestUrl: string; targetUrl: string; sequence: number }
+type NextNavigationAbortState = { pending: PendingNextNavigationAbort[]; sequence: number }
 const runtimeEvidence = new WeakMap<Page, RuntimeEvidence>()
+const nextNavigationAbortState = new WeakMap<Page, NextNavigationAbortState>()
 const EXTERNAL_MAP_HOSTS = new Set(["tiles.openfreemap.org"])
 const EXTERNAL_ASSET_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"])
 
@@ -170,19 +173,32 @@ function isExternalAssetUrl(raw: string | undefined) {
   try { return EXTERNAL_ASSET_HOSTS.has(new URL(raw).hostname) } catch { return [...EXTERNAL_ASSET_HOSTS].some((host) => raw.includes(host)) }
 }
 
-function isExpectedNextNavigationAbort(raw: string, reason: string) {
-  if (reason !== "net::ERR_ABORTED") return false
+function strictNextNavigationAbort(
+  page: Page,
+  request: Request,
+  reason: string,
+): Pick<PendingNextNavigationAbort, "requestUrl" | "targetUrl"> | null {
+  if (reason !== "net::ERR_ABORTED" || request.method() !== "GET" || request.resourceType() !== "fetch") return null
   try {
-    const url = new URL(raw)
-    return url.pathname === B_ROUTE && url.searchParams.has("_rsc")
+    const pageUrl = new URL(page.url())
+    const requestUrl = new URL(request.url())
+    const rscValues = requestUrl.searchParams.getAll("_rsc")
+    const headers = Object.fromEntries(Object.entries(request.headers()).map(([name, value]) => [name.toLowerCase(), value]))
+    if (requestUrl.origin !== pageUrl.origin || requestUrl.pathname !== B_ROUTE
+      || requestUrl.username || requestUrl.password || requestUrl.hash
+      || rscValues.length !== 1 || !rscValues[0]
+      || headers.rsc !== "1" || !headers["next-router-state-tree"]) return null
+    requestUrl.searchParams.delete("_rsc")
+    return { requestUrl: request.url(), targetUrl: requestUrl.href }
   } catch {
-    return false
+    return null
   }
 }
 
 export function installBRuntimeGuard(page: Page) {
   const evidence: RuntimeEvidence = { product: [], externalMap: [], externalAsset: [], navigationAbort: [] }
   runtimeEvidence.set(page, evidence)
+  nextNavigationAbortState.set(page, { pending: [], sequence: 0 })
   page.on("console", (message) => {
     if (message.type() !== "error") return
     const location = message.location().url
@@ -194,10 +210,18 @@ export function installBRuntimeGuard(page: Page) {
   page.on("pageerror", (error) => evidence.product.push(`pageerror: ${error.message}`))
   page.on("requestfailed", (request) => {
     const reason = request.failure()?.errorText ?? "request failed"
-    if (isExternalMapUrl(request.url())) evidence.externalMap.push(`requestfailed: ${request.url()} · ${reason}`)
-    else if (isExternalAssetUrl(request.url())) evidence.externalAsset.push(`requestfailed: ${request.url()} · ${reason}`)
-    else if (isExpectedNextNavigationAbort(request.url(), reason)) evidence.navigationAbort.push(`requestfailed: ${request.url()} · ${reason}`)
-    else evidence.product.push(`requestfailed: ${request.url()} · ${reason}`)
+    const item = `requestfailed: ${request.url()} · ${reason}`
+    if (isExternalMapUrl(request.url())) evidence.externalMap.push(item)
+    else if (isExternalAssetUrl(request.url())) evidence.externalAsset.push(item)
+    else {
+      evidence.product.push(item)
+      const navigationAbort = strictNextNavigationAbort(page, request, reason)
+      const abortState = nextNavigationAbortState.get(page)
+      if (navigationAbort && abortState) {
+        abortState.sequence += 1
+        abortState.pending.push({ item, ...navigationAbort, sequence: abortState.sequence })
+      }
+    }
   })
   page.on("response", (response) => {
     if (response.status() < 400) return
@@ -216,6 +240,62 @@ export function getBRuntimeEvidence(page: Page): RuntimeEvidence {
 
 export function hasBRuntimeGuard(page: Page) {
   return runtimeEvidence.has(page)
+}
+
+function exactBNextNavigationTarget(page: Page, targetUrl: string) {
+  const pageUrl = new URL(page.url())
+  const requestedTarget = new URL(targetUrl, pageUrl)
+  if (requestedTarget.origin !== pageUrl.origin || requestedTarget.pathname !== B_ROUTE
+    || requestedTarget.username || requestedTarget.password
+    || requestedTarget.hash || requestedTarget.searchParams.has("_rsc")) {
+    throw new Error("target must be the exact same-origin /ondo-b URL without credentials, a hash, or an _rsc parameter")
+  }
+  // Use the same URLSearchParams serialization as strictNextNavigationAbort,
+  // without sorting, so parameter values and order stay exact.
+  requestedTarget.search = requestedTarget.searchParams.toString()
+  return requestedTarget.href
+}
+
+/**
+ * Declare the exact B navigation before triggering it, then invoke the returned
+ * consumer after Playwright observes the expected abort. Only aborts created
+ * after this declaration can be consumed; any additional abort stays product evidence.
+ */
+export function allowBNextNavigationAbort(
+  page: Page,
+  { targetUrl, count, minimumCount = count }: { targetUrl: string; count: number; minimumCount?: number },
+) {
+  const evidence = runtimeEvidence.get(page)
+  const abortState = nextNavigationAbortState.get(page)
+  if (!evidence || !abortState) throw new Error("B runtime guard was not installed for this page")
+  if (!Number.isSafeInteger(count) || count <= 0) throw new Error("Next navigation abort count must be a positive integer")
+  if (!Number.isSafeInteger(minimumCount) || minimumCount < 0 || minimumCount > count) throw new Error("Next navigation abort minimumCount must be an integer between zero and count")
+  let exactTarget: string
+  try {
+    exactTarget = exactBNextNavigationTarget(page, targetUrl)
+  } catch (error) {
+    throw new Error(`Invalid Next navigation abort target: ${error instanceof Error ? error.message : String(error)}`)
+  }
+  const startedAfterSequence = abortState.sequence
+  let consumed = false
+  return () => {
+    if (consumed) throw new Error(`Next navigation abort allowance was already consumed for ${exactTarget}`)
+    consumed = true
+    const matches = abortState.pending.filter((abort) => abort.sequence > startedAfterSequence && abort.targetUrl === exactTarget)
+    if (matches.length < minimumCount) {
+      throw new Error(`Expected at least ${minimumCount} scoped Next navigation abort(s) for ${exactTarget}, received ${matches.length}`)
+    }
+    const consumedAborts = matches.slice(0, count)
+    for (const abort of consumedAborts) {
+      const pendingIndex = abortState.pending.indexOf(abort)
+      if (pendingIndex >= 0) abortState.pending.splice(pendingIndex, 1)
+      const productIndex = evidence.product.indexOf(abort.item)
+      if (productIndex < 0) throw new Error(`Next navigation abort was already consumed: ${abort.requestUrl}`)
+      evidence.product.splice(productIndex, 1)
+      evidence.navigationAbort.push(abort.item)
+    }
+    return consumedAborts.map((abort) => abort.requestUrl)
+  }
 }
 
 export async function expectBRuntimeClean(page: Page) {

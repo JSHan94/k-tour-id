@@ -12,6 +12,7 @@ export const B_ACTION_AXIS_SESSION_EVENT = "ondo:b:action-axis-session"
 
 export type BActionGateKind = "account" | "person" | "age" | "payment_kyc"
 export type BActionGateCta = "JOIN_TABLE" | "SUBMIT_LOCAL_SIGNAL" | "START_CHECKOUT"
+export type BPersonRouteB = "mobile_id_cx" | "mobile_residence_card" | "passport_ekyc"
 
 type BActionReturnBase = {
   version: 1
@@ -155,7 +156,8 @@ export function requestBActionGate(returnTo: BActionReturnTo) {
   try {
     const current = restoreBActionGateSession(window.sessionStorage)
     if (current.pending && isBActionReturnPending(current.pending) && current.pending.tokenId !== returnTo.tokenId) return false
-    window.sessionStorage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify({ ...current, pending: returnTo, outcome: null }))
+    const personRoute = current.pending?.tokenId === returnTo.tokenId ? current.personRoute : null
+    if (!persistBActionGateSession(window.sessionStorage, { ...current, pending: returnTo, personRoute, outcome: null })) return false
   } catch {
     return false
   }
@@ -175,11 +177,18 @@ export type BActionConsumptionMarker = {
   cta: BActionGateCta
   consumedAt: string
 }
+export type BPersonRouteSelectionB = {
+  tokenId: string
+  route: BPersonRouteB
+}
 export type BActionGateSession = {
   version: 1
   person: BActionAxis
   payment: BActionAxis
   pending: BActionReturnTo | null
+  // A route is an explicit, non-sensitive choice scoped to one pending token.
+  // It contains no nationality, residence status, document data, or provider result.
+  personRoute: BPersonRouteSelectionB | null
   // Only a non-sensitive receipt is persisted across the synchronous
   // consume -> device-mutation boundary. Draft text, tags and place context
   // must never survive in the consumed slot.
@@ -188,7 +197,7 @@ export type BActionGateSession = {
 }
 
 const blankAxis = (): BActionAxis => ({ status: "unverified", expiresAt: null })
-export const DEFAULT_B_ACTION_GATE_SESSION: BActionGateSession = { version: 1, person: blankAxis(), payment: blankAxis(), pending: null, lastConsumed: null, outcome: null }
+export const DEFAULT_B_ACTION_GATE_SESSION: BActionGateSession = { version: 1, person: blankAxis(), payment: blankAxis(), pending: null, personRoute: null, lastConsumed: null, outcome: null }
 
 function sanitizeAxis(value: unknown, now: Date): BActionAxis {
   if (!value || typeof value !== "object" || Array.isArray(value)) return blankAxis()
@@ -216,25 +225,15 @@ function sanitizeConsumptionMarker(value: unknown): BActionConsumptionMarker | n
   return { tokenId: record.tokenId, cta, consumedAt: new Date(consumedAt).toISOString() }
 }
 
-function migrateLegacyActionAxes(storage: Pick<Storage, "getItem">, now: Date): BActionGateSession {
-  const legacy = parse(storage, "ondo.session.v3")
-  if (!legacy || typeof legacy !== "object" || Array.isArray(legacy)) return { ...DEFAULT_B_ACTION_GATE_SESSION, person: blankAxis(), payment: blankAxis() }
-  const record = legacy as Record<string, unknown>
-  // The locked v3 session shape has no Person/Payment expiry fields. A verified
-  // value can only come from this same browser tab, so migrate it once into a
-  // bounded canonical TTL instead of inventing a nonexistent legacy timestamp.
-  // The legacy record remains byte-for-byte untouched.
-  const migratedExpiry = new Date(now.getTime() + B_ACTION_AXIS_TTL_MS).toISOString()
-  const person = record.person === "PER-VERIFIED" ? { status: "eligible", expiresAt: migratedExpiry } satisfies BActionAxis : blankAxis()
-  const payment = record.paymentKyc === "PKY-VERIFIED" ? { status: "eligible", expiresAt: migratedExpiry } satisfies BActionAxis : blankAxis()
-  return { version: 1, person, payment, pending: null, lastConsumed: null, outcome: null }
+function sanitizePersonRoute(value: unknown, pending: BActionReturnTo | null): BPersonRouteSelectionB | null {
+  if (!pending || !pending.gatePlan.includes("person") || !value || typeof value !== "object" || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  if (Object.keys(record).length !== 2 || record.tokenId !== pending.tokenId) return null
+  if (record.route !== "mobile_id_cx" && record.route !== "mobile_residence_card" && record.route !== "passport_ekyc") return null
+  return { tokenId: pending.tokenId, route: record.route }
 }
 
-export function restoreBActionGateSession(storage: Pick<Storage, "getItem">, now = new Date()): BActionGateSession {
-  let hasCurrent = false
-  try { hasCurrent = storage.getItem(B_ACTION_GATE_SESSION_KEY) !== null } catch { return { ...DEFAULT_B_ACTION_GATE_SESSION, person: blankAxis(), payment: blankAxis() } }
-  if (!hasCurrent) return migrateLegacyActionAxes(storage, now)
-  const value = parse(storage, B_ACTION_GATE_SESSION_KEY)
+function sanitizeBActionGateSession(value: unknown, now: Date): BActionGateSession {
   if (!value || typeof value !== "object" || Array.isArray(value)) return { ...DEFAULT_B_ACTION_GATE_SESSION, person: blankAxis(), payment: blankAxis() }
   const record = value as Record<string, unknown>
   if (record.version !== 1) return { ...DEFAULT_B_ACTION_GATE_SESSION, person: blankAxis(), payment: blankAxis() }
@@ -250,13 +249,37 @@ export function restoreBActionGateSession(storage: Pick<Storage, "getItem">, now
     person: sanitizeAxis(record.person, now),
     payment: sanitizeAxis(record.payment, now),
     pending,
+    personRoute: sanitizePersonRoute(record.personRoute, pending),
     lastConsumed: sanitizeConsumptionMarker(record.lastConsumed),
     outcome,
   }
 }
 
-export function persistBActionGateSession(storage: Pick<Storage, "setItem">, session: BActionGateSession) {
-  try { storage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify(session)); return true } catch { return false }
+function migrateLegacyActionAxes(storage: Pick<Storage, "getItem">, now: Date): BActionGateSession {
+  const legacy = parse(storage, "ondo.session.v3")
+  if (!legacy || typeof legacy !== "object" || Array.isArray(legacy)) return { ...DEFAULT_B_ACTION_GATE_SESSION, person: blankAxis(), payment: blankAxis() }
+  const record = legacy as Record<string, unknown>
+  // The locked v3 session shape has no Person/Payment expiry fields. A verified
+  // value can only come from this same browser tab, so migrate it once into a
+  // bounded canonical TTL instead of inventing a nonexistent legacy timestamp.
+  // The legacy record remains byte-for-byte untouched.
+  const migratedExpiry = new Date(now.getTime() + B_ACTION_AXIS_TTL_MS).toISOString()
+  const person = record.person === "PER-VERIFIED" ? { status: "eligible", expiresAt: migratedExpiry } satisfies BActionAxis : blankAxis()
+  const payment = record.paymentKyc === "PKY-VERIFIED" ? { status: "eligible", expiresAt: migratedExpiry } satisfies BActionAxis : blankAxis()
+  return { version: 1, person, payment, pending: null, personRoute: null, lastConsumed: null, outcome: null }
+}
+
+export function restoreBActionGateSession(storage: Pick<Storage, "getItem">, now = new Date()): BActionGateSession {
+  let hasCurrent = false
+  try { hasCurrent = storage.getItem(B_ACTION_GATE_SESSION_KEY) !== null } catch { return { ...DEFAULT_B_ACTION_GATE_SESSION, person: blankAxis(), payment: blankAxis() } }
+  if (!hasCurrent) return migrateLegacyActionAxes(storage, now)
+  const value = parse(storage, B_ACTION_GATE_SESSION_KEY)
+  return sanitizeBActionGateSession(value, now)
+}
+
+export function persistBActionGateSession(storage: Pick<Storage, "setItem">, session: BActionGateSession, now = new Date()) {
+  const sanitized = sanitizeBActionGateSession(session, now)
+  try { storage.setItem(B_ACTION_GATE_SESSION_KEY, JSON.stringify(sanitized)); return true } catch { return false }
 }
 
 export function updateBActionAxisSession(
@@ -288,7 +311,7 @@ export function consumePendingBActionAtMutation(
   const consumed = consumeBActionReturnTo(latest.pending, satisfied, now)
   if (!consumed) return null
   const lastConsumed: BActionConsumptionMarker = { tokenId: consumed.tokenId, cta: consumed.cta, consumedAt: consumed.consumedAt! }
-  const next = { ...latest, pending: null, lastConsumed, outcome: null }
+  const next = { ...latest, pending: null, personRoute: null, lastConsumed, outcome: null }
   return persistBActionGateSession(storage, next) ? consumed : null
 }
 
@@ -301,7 +324,7 @@ export function restoreConsumedBActionAfterMutationFailure(
   if (latest.pending || latest.lastConsumed?.tokenId !== consumed.tokenId || consumed.consumedAt === null) return false
   const pending = { ...consumed, consumedAt: null }
   if (!isBActionReturnPending(pending, now)) return false
-  return persistBActionGateSession(storage, { ...latest, pending, lastConsumed: null, outcome: null })
+  return persistBActionGateSession(storage, { ...latest, pending, personRoute: null, lastConsumed: null, outcome: null })
 }
 
 export function finalizeConsumedBAction(
@@ -311,7 +334,7 @@ export function finalizeConsumedBAction(
 ) {
   const latest = restoreBActionGateSession(storage, now)
   if (latest.pending || latest.lastConsumed?.tokenId !== consumed.tokenId || consumed.consumedAt === null) return false
-  return persistBActionGateSession(storage, { ...latest, lastConsumed: null, outcome: null })
+  return persistBActionGateSession(storage, { ...latest, personRoute: null, lastConsumed: null, outcome: null })
 }
 
 export function abandonPendingBAction(
@@ -321,7 +344,7 @@ export function abandonPendingBAction(
 ) {
   const latest = restoreBActionGateSession(storage, now)
   if (!latest.pending || latest.pending.tokenId !== expected.tokenId) return false
-  if (persistBActionGateSession(storage, { ...latest, pending: null, outcome: null })) return true
+  if (persistBActionGateSession(storage, { ...latest, pending: null, personRoute: null, outcome: null })) return true
   // Privacy-first fallback: if a browser refuses the bounded rewrite, remove
   // the complete gate record so a discarded draft cannot survive a reload.
   try { storage.removeItem(B_ACTION_GATE_SESSION_KEY); return true } catch { return false }

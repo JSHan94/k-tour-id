@@ -64,7 +64,7 @@ test("premium Travel Pass keeps readiness independent and wallet linking consume
   const commerce = page.getByTestId("ondo-b-id-wallet-commerce")
   await commerce.getByTestId("wallet-link-open").click()
   const sheet = page.getByTestId("wallet-connect-sheet")
-  await sheet.getByRole("button", { name: "Connect wallet" }).click()
+  await sheet.getByRole("button", { name: "Prepare test wallet" }).click()
   await expect(commerce).toHaveAttribute("data-wallet", "ready")
   await expect(page.getByTestId("traveler-id-payment")).toHaveAttribute("data-status", "none")
   await expect(page.locator("body")).not.toContainText(/choose.*outcome|return wallet ready|settlement mirror/i)

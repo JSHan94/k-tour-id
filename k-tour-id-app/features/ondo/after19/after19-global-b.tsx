@@ -3,6 +3,9 @@
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 import { AlertTriangle, ChevronRight, MoonStar, RotateCcw, ShieldCheck, X } from "lucide-react"
+import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
+import { venueDisplayName } from "@/lib/ondo/venues/display"
+import { restoreBDiscoveryCityContext, restoreBDiscoveryVenueContext } from "../map/b-discovery-history"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import {
@@ -18,6 +21,17 @@ import {
   type GlobalAfter19PreferenceB,
   type GlobalAfter19SessionB,
 } from "./after19-global-b-model"
+import {
+  completePlaceAfter19Return,
+  isPlaceAfter19ReturnPending,
+  persistPlaceAfter19ReturnSession,
+  PLACE_AFTER19_RETURN_REQUEST_EVENT,
+  renewPlaceAfter19Return,
+  requestPlaceAfter19Return,
+  restorePlaceAfter19ReturnSession,
+  type PlaceAfter19ReturnB,
+  type PlaceAfter19ReturnOutcomeB,
+} from "./after19-place-return-b-model"
 import styles from "./after19-global-b.module.css"
 
 export type GlobalAfter19ContextB = {
@@ -34,7 +48,7 @@ type GlobalAfter19BProps = {
 }
 
 type Notice = "off" | "expired" | null
-type GateView = "intro" | "failure"
+type GateView = "intro" | "failure" | "expired"
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex='-1'])"
 
@@ -60,6 +74,9 @@ const COPY = {
     cancel: "Stay on this map",
     failedTitle: "The 19+ preview did not complete",
     failedBody: "Your city, selected place, filters, and map position are unchanged.",
+    expiredReturnTitle: "This return request expired",
+    expiredReturnBody: "Start a fresh 19+ preview request or stay with the restored Place context.",
+    missingVenue: "That place is no longer available. Return to the same city discovery view.",
     retry: "Try again",
     offNotice: "After 19 is off for this tab and will not reopen automatically.",
     undo: "Turn back on",
@@ -88,6 +105,9 @@ const COPY = {
     cancel: "이 지도에 머물기",
     failedTitle: "19+ 프리뷰를 완료하지 못했어요",
     failedBody: "도시·선택 장소·필터·지도 위치는 그대로 유지됩니다.",
+    expiredReturnTitle: "장소 복귀 요청이 만료됐어요",
+    expiredReturnBody: "새 19+ 프리뷰 요청을 시작하거나 복구된 장소 탐색 화면에 머물 수 있어요.",
+    missingVenue: "해당 장소를 더 이상 찾을 수 없어 같은 도시의 탐색 화면으로 돌아갑니다.",
     retry: "다시 시도",
     offNotice: "이 탭에서 After 19를 껐으며 자동으로 다시 열리지 않습니다.",
     undo: "다시 켜기",
@@ -116,6 +136,9 @@ const COPY = {
     cancel: "この地図にとどまる",
     failedTitle: "19+プレビューを完了できませんでした",
     failedBody: "都市、選択中の場所、フィルター、地図位置は変わっていません。",
+    expiredReturnTitle: "場所への復帰リクエストの有効期限が切れました",
+    expiredReturnBody: "新しい19+プレビューを開始するか、復元した場所の探索画面にとどまれます。",
+    missingVenue: "この場所は利用できなくなったため、同じ都市の探索画面に戻ります。",
     retry: "もう一度試す",
     offNotice: "このタブではAfter 19をオフにし、自動では再開しません。",
     undo: "もう一度オンにする",
@@ -140,6 +163,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   const [clock, setClock] = useState(() => new Date())
   const [gateOpen, setGateOpen] = useState(false)
   const [gateView, setGateView] = useState<GateView>("intro")
+  const [placeReturn, setPlaceReturn] = useState<PlaceAfter19ReturnB | null>(null)
   const [notice, setNotice] = useState<Notice>(null)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLElement | null>(null)
@@ -158,7 +182,28 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     setNotice(restored.session.expiryNotice ? "expired" : null)
     writeStorage(window.localStorage, GLOBAL_AFTER19_PREFERENCE_KEY, restored.preference)
     writeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, restored.session)
+    const restoredReturn = restorePlaceAfter19ReturnSession(window.sessionStorage)
+    persistPlaceAfter19ReturnSession(window.sessionStorage, restoredReturn)
+    if (restoredReturn.pending) {
+      setPlaceReturn(restoredReturn.pending)
+      setGateView(isPlaceAfter19ReturnPending(restoredReturn.pending) ? "intro" : "expired")
+      setGateOpen(true)
+    }
     setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    const requested = (event: Event) => {
+      const tokenId = event instanceof CustomEvent ? (event.detail as { tokenId?: unknown } | null)?.tokenId : null
+      const restored = restorePlaceAfter19ReturnSession(window.sessionStorage)
+      if (!restored.pending || restored.pending.tokenId !== tokenId) return
+      setPlaceReturn(restored.pending)
+      setGateView(isPlaceAfter19ReturnPending(restored.pending) ? "intro" : "expired")
+      setNotice(null)
+      setGateOpen(true)
+    }
+    window.addEventListener(PLACE_AFTER19_RETURN_REQUEST_EVENT, requested)
+    return () => window.removeEventListener(PLACE_AFTER19_RETURN_REQUEST_EVENT, requested)
   }, [])
 
   useEffect(() => {
@@ -206,6 +251,10 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   }, [clock, hydrated, preference, session])
 
   useEffect(() => {
+    if (placeReturn && !isPlaceAfter19ReturnPending(placeReturn, clock)) setGateView("expired")
+  }, [clock, placeReturn])
+
+  useEffect(() => {
     if (!gateOpen) return
     const frame = window.requestAnimationFrame(() => primaryRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
@@ -236,6 +285,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
 
   function openGate() {
     openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : chipRef.current
+    setPlaceReturn(null)
     setGateView("intro")
     setNotice(null)
     setGateOpen(true)
@@ -250,19 +300,98 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   }
 
   function cancelGate() {
+    if (placeReturn) {
+      finishPlaceReturn("cancel")
+      return
+    }
     setGateOpen(false)
     restoreOpener()
   }
 
   function runCheck() {
+    const now = new Date()
+    setClock(now)
+    if (placeReturn && !isPlaceAfter19ReturnPending(placeReturn, now)) {
+      setGateView("expired")
+      return
+    }
     const qa = (window as Window & { __ONDO_B_QA__?: { after19Global?: "failure" } }).__ONDO_B_QA__
     if (qa?.after19Global === "failure") {
       setGateView("failure")
       return
     }
-    commitSession(completeGlobalAfter19AgeB(clock))
+    if (placeReturn) {
+      if (!finishPlaceReturn("success", now)) return
+      commitSession(completeGlobalAfter19AgeB(now))
+    } else {
+      commitSession(completeGlobalAfter19AgeB(now))
+      setGateOpen(false)
+      window.requestAnimationFrame(() => activeOffRef.current?.focus({ preventScroll: true }))
+    }
+  }
+
+  function restorePlaceContext(returnTo: PlaceAfter19ReturnB) {
+    const venue = canonicalMapVenueById(returnTo.venueId)
+    const restored = venue?.cityId === returnTo.cityId
+      ? restoreBDiscoveryVenueContext({
+          city: returnTo.cityId,
+          view: returnTo.view,
+          query: returnTo.query,
+          category: returnTo.category,
+          venueId: returnTo.venueId,
+          level: returnTo.level,
+        })
+      : restoreBDiscoveryCityContext({
+          city: returnTo.cityId,
+          view: returnTo.view,
+          query: returnTo.query,
+          category: returnTo.category,
+          focus: returnTo.view === "list" ? "search" : "view-toggle",
+        })
+    if (restored) window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }))
+    return Boolean(restored && venue?.cityId === returnTo.cityId)
+  }
+
+  function focusPlaceDestination(returnTo: PlaceAfter19ReturnB, exactVenue: boolean, attempt = 0) {
+    const target = exactVenue
+      ? document.querySelector<HTMLElement>(`[data-testid='canonical-after19-access'][data-after19-venue-id='${CSS.escape(returnTo.venueId)}']`)
+      : document.querySelector<HTMLElement>(returnTo.view === "list" ? "[data-testid='ondo-b-search']" : "[data-testid='ondo-b-view-toggle']")
+    if (target?.isConnected && !target.closest("[inert],[aria-hidden='true']")) {
+      target.focus({ preventScroll: true })
+      if (document.activeElement === target) return
+    }
+    if (attempt < 9) window.requestAnimationFrame(() => focusPlaceDestination(returnTo, exactVenue, attempt + 1))
+  }
+
+  function finishPlaceReturn(outcome: PlaceAfter19ReturnOutcomeB, now = new Date()) {
+    if (!placeReturn) return false
+    const exactVenue = restorePlaceContext(placeReturn)
+    const consumed = completePlaceAfter19Return(placeReturn, outcome, now)
+    if (!consumed) {
+      setGateView("expired")
+      return false
+    }
+    setPlaceReturn(null)
     setGateOpen(false)
-    window.requestAnimationFrame(() => activeOffRef.current?.focus({ preventScroll: true }))
+    window.requestAnimationFrame(() => focusPlaceDestination(placeReturn, exactVenue))
+    return true
+  }
+
+  function retryExpiredPlaceReturn() {
+    if (!placeReturn) return
+    if (!canonicalMapVenueById(placeReturn.venueId)) {
+      finishPlaceReturn("cancel")
+      return
+    }
+    const now = new Date()
+    setClock(now)
+    const renewed = renewPlaceAfter19Return(placeReturn, now)
+    if (!requestPlaceAfter19Return(renewed, now)) {
+      setGateView("failure")
+      return
+    }
+    setPlaceReturn(renewed)
+    setGateView("intro")
   }
 
   function turnOff() {
@@ -313,8 +442,19 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
 
   if (!hydrated) return null
 
-  const contextLabel = context.venueLabel ?? context.cityLabel
-  const contextKind = context.venueLabel ? t.venue : t.city
+  const returnVenue = placeReturn ? canonicalMapVenueById(placeReturn.venueId) : null
+  const returnVenueLabel = returnVenue ? venueDisplayName(returnVenue.name.ko, locale) : null
+  const returnCityLabel = placeReturn
+    ? ({
+        en: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" },
+        ko: { seoul: "서울", busan: "부산", jeju: "제주" },
+        ja: { seoul: "ソウル", busan: "釜山", jeju: "済州" },
+      } as const)[locale][placeReturn.cityId]
+    : context.cityLabel
+  const contextLabel = returnVenueLabel ?? (placeReturn ? returnCityLabel : context.venueLabel ?? context.cityLabel)
+  const contextKind = returnVenueLabel || (!placeReturn && context.venueLabel) ? t.venue : t.city
+  const returnCityId = placeReturn?.cityId ?? context.cityId
+  const returnVenueId = placeReturn?.venueId ?? context.venueId
 
   return (
     <div
@@ -354,13 +494,14 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
             <header className={styles.dialogHeader}><span><ShieldCheck size={18} aria-hidden="true" />{t.header}</span><i aria-hidden="true" /></header>
             <div className={styles.body}>
               {gateView === "failure" ? <AlertTriangle className={styles.heroFailure} size={27} aria-hidden="true" /> : <MoonStar className={styles.hero} size={27} aria-hidden="true" />}
-              <h2 id="global-after19-title">{gateView === "failure" ? t.failedTitle : t.title}</h2>
-              <p className={styles.lead}>{gateView === "failure" ? t.failedBody : t.body}</p>
+              <h2 id="global-after19-title">{gateView === "failure" ? t.failedTitle : gateView === "expired" ? t.expiredReturnTitle : t.title}</h2>
+              <p className={styles.lead}>{gateView === "failure" ? t.failedBody : gateView === "expired" ? t.expiredReturnBody : t.body}</p>
               <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{t.truth}</p>
-              <section className={styles.returnContext} data-testid="global-after19-return-context" data-return-city={context.cityId} data-return-venue={context.venueId ?? "none"}>
+              <section className={styles.returnContext} data-testid="global-after19-return-context" data-return-cta={placeReturn?.cta ?? "OPEN_AFTER19"} data-return-city={returnCityId} data-return-venue={returnVenueId ?? "none"} data-return-level={placeReturn?.level ?? (context.venueId ? "detail" : "city")} data-return-focus={placeReturn?.focusTarget ?? "global-after19-toggle"}>
                 <small>{t.context} · {contextKind}</small>
                 <strong>{contextLabel}</strong>
-                {context.venueLabel ? <span>{context.cityLabel}</span> : null}
+                {returnVenueLabel || (!placeReturn && context.venueLabel) ? <span>{returnCityLabel}</span> : null}
+                {placeReturn && !returnVenue ? <span>{t.missingVenue}</span> : null}
               </section>
               {gateView === "intro" ? (
                 <>
@@ -371,9 +512,9 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
                 </>
               ) : null}
               <div className={styles.actions}>
-                <button ref={primaryRef} type="button" className={styles.primary} data-testid={gateView === "failure" ? "global-after19-retry" : "global-after19-confirm"} onClick={runCheck}>
-                  {gateView === "failure" ? <RotateCcw size={17} aria-hidden="true" /> : <ShieldCheck size={17} aria-hidden="true" />}
-                  {gateView === "failure" ? t.retry : t.primary}
+                <button ref={primaryRef} type="button" className={styles.primary} data-testid={gateView === "failure" || gateView === "expired" ? "global-after19-retry" : "global-after19-confirm"} onClick={gateView === "expired" ? retryExpiredPlaceReturn : runCheck}>
+                  {gateView === "failure" || gateView === "expired" ? <RotateCcw size={17} aria-hidden="true" /> : <ShieldCheck size={17} aria-hidden="true" />}
+                  {gateView === "failure" || gateView === "expired" ? t.retry : t.primary}
                 </button>
                 <button type="button" className={styles.secondary} data-testid="global-after19-cancel" onClick={cancelGate}>{t.cancel}</button>
               </div>

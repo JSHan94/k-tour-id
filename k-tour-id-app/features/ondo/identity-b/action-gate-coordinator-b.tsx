@@ -30,6 +30,7 @@ import {
   type BActionGateKind,
   type BActionGateOutcome,
   type BActionGateSession,
+  type BPersonRouteB,
   type BActionReturnTo,
 } from "./action-gate-contract-b"
 import styles from "./action-gate-coordinator-b.module.css"
@@ -38,7 +39,6 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),select:no
 
 type GateView = "intro" | "failure" | "unavailable" | "expired"
 type GateQaOutcome = Exclude<GateView, "intro">
-type PersonRouteB = "mobile_id_cx" | "mobile_residence_card" | "passport_ekyc"
 type QaWindow = Window & {
   __ONDO_B_QA__?: {
     actionGate?: Partial<Record<BActionGateKind, GateQaOutcome>>
@@ -55,7 +55,7 @@ const COPY = {
     accountTitle: "Create a local account preview",
     accountBody: "Account comes first. It does not complete Person, 19+, identity, or Payment checks.",
     personTitle: "Confirm Person for this action",
-    personBody: "Your saved intent selects the route. Success records only this tab’s Person answer and returns to the exact Local Signal draft. No identity provider is connected and no credential is created.",
+    personBody: "Choose the route you want to use. Success records only this tab’s Person answer and returns to the exact Local Signal draft. No route is inferred from your travel intent. No identity provider is connected and no credential is created.",
     ageTitle: "Confirm 19+ for this Table",
     ageBody: "Only an eligibility result and expiry are kept in this tab. No birth date or official venue restriction is claimed.",
     paymentTitle: "Prepare Payment eligibility",
@@ -65,6 +65,11 @@ const COPY = {
     mobileAction: "Continue with Mobile ID · Simulated",
     residenceAction: "Check Residence Card availability",
     passportAction: "Continue with Passport eKYC · Simulated",
+    routeChoiceLegend: "Choose a Person route",
+    routeChoiceMobile: "Mobile ID / CX",
+    routeChoiceResidence: "Residence Card · registered residents",
+    routeChoicePassport: "Passport eKYC",
+    providerDetails: "Provider and data details",
     routeLabel: "Person route",
     mobileTitle: "Mobile ID · OmniOne CX",
     mobileNote: "Simulated handoff using OmniOne CX semantics. No request is sent and no Mobile ID or K-Tour credential is created.",
@@ -110,7 +115,7 @@ const COPY = {
     accountTitle: "로컬 계정 미리보기 만들기",
     accountBody: "계정을 먼저 준비합니다. 본인·19+·신원·결제 확인은 완료되지 않습니다.",
     personTitle: "이 작업의 본인 여부 확인",
-    personBody: "저장한 이용 목적에 맞는 경로를 보여줍니다. 성공 시 이 탭의 본인 여부만 기록하고 정확한 로컬 시그널 초안으로 돌아갑니다. 연결된 신원 공급자나 생성되는 자격증명은 없습니다.",
+    personBody: "사용할 경로를 직접 선택하세요. 성공 시 이 탭의 본인 여부만 기록하고 정확한 로컬 시그널 초안으로 돌아갑니다. 여행 목적에서 경로를 추론하지 않습니다.",
     ageTitle: "이 테이블의 19+ 확인",
     ageBody: "충족 결과와 만료 시각만 이 탭에 남습니다. 생년월일이나 장소의 공식 제한을 주장하지 않습니다.",
     paymentTitle: "결제 자격 준비",
@@ -120,6 +125,11 @@ const COPY = {
     mobileAction: "모바일 신분증으로 계속 · 시뮬레이션",
     residenceAction: "모바일 외국인등록증 연결 확인",
     passportAction: "여권 eKYC로 계속 · 시뮬레이션",
+    routeChoiceLegend: "본인 확인 경로 선택",
+    routeChoiceMobile: "모바일 신분증 / CX",
+    routeChoiceResidence: "외국인등록증 · 등록 거주자",
+    routeChoicePassport: "여권 eKYC",
+    providerDetails: "공급자 및 데이터 세부정보",
     routeLabel: "본인 확인 경로",
     mobileTitle: "모바일 신분증 · OmniOne CX",
     mobileNote: "OmniOne CX 의미 체계를 따른 전달 과정을 시뮬레이션합니다. 실제 요청을 보내거나 모바일 신분증·K-Tour 자격증명을 만들지 않습니다.",
@@ -165,7 +175,7 @@ const COPY = {
     accountTitle: "ローカルアカウントのプレビューを作成",
     accountBody: "最初にアカウントを準備します。本人、19歳以上、身元、決済の確認は完了しません。",
     personTitle: "この操作の本人確認",
-    personBody: "保存した利用目的に合う経路を表示します。成功時はこのタブの本人回答だけを記録し、元のLocal Signal下書きに戻ります。外部サービスへの接続や資格情報の作成はありません。",
+    personBody: "使用する経路を明示的に選んでください。成功時はこのタブの本人回答だけを記録し、元のLocal Signal下書きに戻ります。旅行目的から経路を推測しません。",
     ageTitle: "このテーブルの19歳以上確認",
     ageBody: "適格結果と有効期限だけをこのタブに保持します。生年月日や店舗の公式制限は示しません。",
     paymentTitle: "決済利用条件を準備",
@@ -175,6 +185,11 @@ const COPY = {
     mobileAction: "モバイルIDで続ける · シミュレーション",
     residenceAction: "モバイル在留カードの接続を確認",
     passportAction: "パスポートeKYCで続ける · シミュレーション",
+    routeChoiceLegend: "本人確認経路を選択",
+    routeChoiceMobile: "モバイルID / CX",
+    routeChoiceResidence: "在留カード · 登録済み居住者",
+    routeChoicePassport: "パスポートeKYC",
+    providerDetails: "事業者とデータの詳細",
     routeLabel: "本人確認経路",
     mobileTitle: "モバイルID · OmniOne CX",
     mobileNote: "OmniOne CXの意味体系に沿った受け渡しをシミュレーションします。実際の要求やモバイルID、K-Tour資格情報は作成しません。",
@@ -217,10 +232,9 @@ const COPY = {
   },
 } as const
 
-function personRouteForPersona(persona: string | null): PersonRouteB {
-  if (persona === "local_contributor" || persona === "korean_local") return "mobile_id_cx"
-  if (persona === "preparing" || persona === "long_term_resident") return "mobile_residence_card"
-  return "passport_ekyc"
+function personRouteForIdentityMethod(method: "mobile_id" | "mobile_residence_card" | "passport_ekyc" | null): BPersonRouteB | null {
+  if (method === "mobile_id") return "mobile_id_cx"
+  return method
 }
 
 function writeGlobalAge(session: GlobalAfter19SessionB) {
@@ -255,15 +269,11 @@ export function BActionGateCoordinator() {
   const [clock, setClock] = useState(() => new Date())
   const [view, setView] = useState<GateView>("intro")
   const [readyTokenId, setReadyTokenId] = useState<string | null>(null)
-  const [personRouteOverride, setPersonRouteOverride] = useState<{ tokenId: string; route: PersonRouteB } | null>(null)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLElement | null>(null)
-  const primaryRef = useRef<HTMLButtonElement | null>(null)
   const pending = session.pending
   const copy = COPY[state.locale]
-  const personRoute = pending && personRouteOverride?.tokenId === pending.tokenId
-    ? personRouteOverride.route
-    : personRouteForPersona(state.persona)
+  const personRoute = pending && session.personRoute?.tokenId === pending.tokenId ? session.personRoute.route : null
 
   useModalIsolation(Boolean(pending && readyTokenId !== pending.tokenId), layerRef)
 
@@ -308,7 +318,6 @@ export function BActionGateCoordinator() {
       if (!detail || restored.pending?.tokenId !== detail.tokenId) return
       setSession(restored)
       setReadyTokenId(null)
-      setPersonRouteOverride(null)
       setView("intro")
     }
     function syncAge() { setAgeSession(restoreGlobalAfter19B(window.localStorage, window.sessionStorage).session) }
@@ -329,12 +338,6 @@ export function BActionGateCoordinator() {
     }
   }, [])
 
-  useEffect(() => {
-    if (!pending) return
-    const frame = window.requestAnimationFrame(() => primaryRef.current?.focus({ preventScroll: true }))
-    return () => window.cancelAnimationFrame(frame)
-  }, [pending, view])
-
   const satisfied = useMemo(() => {
     const result = new Set<BActionGateKind>()
     if (state.account === "ACC-ACTIVE") result.add("account")
@@ -345,6 +348,20 @@ export function BActionGateCoordinator() {
   }, [ageSession, clock, session.payment, session.person, state.account])
 
   const activeGate = pending?.gatePlan.find((gate) => !satisfied.has(gate)) ?? null
+
+  useEffect(() => {
+    if (!pending || !activeGate) return
+    const frame = window.requestAnimationFrame(() => dialogRef.current?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [activeGate, pending?.tokenId, view])
+
+  useEffect(() => {
+    if (!pending || session.personRoute || !pending.gatePlan.includes("person")) return
+    const route = personRouteForIdentityMethod(state.identityCredential?.method ?? null)
+    if (!route) return
+    const next: BActionGateSession = { ...session, personRoute: { tokenId: pending.tokenId, route } }
+    if (persistBActionGateSession(window.sessionStorage, next)) setSession(next)
+  }, [pending, session, state.identityCredential?.method])
 
   useEffect(() => {
     if (!pending || !isBActionReturnPending(pending, clock) || activeGate) return
@@ -389,6 +406,7 @@ export function BActionGateCoordinator() {
 
   function confirm() {
     if (!pending || !activeGate || !isBActionReturnPending(pending, clock)) { setView("expired"); return }
+    if (activeGate === "person" && !personRoute) return
     if (activeGate === "person" && personRoute === "mobile_residence_card") {
       fail(activeGate, gateOutcome(activeGate) ?? "unavailable")
       return
@@ -422,9 +440,25 @@ export function BActionGateCoordinator() {
 
   function usePassportAlternative() {
     if (!pending || activeGate !== "person" || personRoute !== "mobile_residence_card") return
-    const next: BActionGateSession = { ...session, person: { status: "unverified", expiresAt: null }, outcome: null }
+    const next: BActionGateSession = {
+      ...session,
+      person: { status: "unverified", expiresAt: null },
+      personRoute: { tokenId: pending.tokenId, route: "passport_ekyc" },
+      outcome: null,
+    }
     if (!commit(next)) { setView("failure"); return }
-    setPersonRouteOverride({ tokenId: pending.tokenId, route: "passport_ekyc" })
+    setView("intro")
+  }
+
+  function selectPersonRoute(route: BPersonRouteB) {
+    if (!pending || activeGate !== "person" || !isBActionReturnPending(pending, clock)) return
+    const next: BActionGateSession = {
+      ...session,
+      person: { status: "unverified", expiresAt: null },
+      personRoute: { tokenId: pending.tokenId, route },
+      outcome: null,
+    }
+    if (!commit(next)) { setView("failure"); return }
     setView("intro")
   }
 
@@ -442,10 +476,10 @@ export function BActionGateCoordinator() {
     const latest = restoreBActionGateSession(window.sessionStorage, clock)
     if (latest.pending?.tokenId !== pending.tokenId) return
     const returning = latest.pending
-    if (!persistBActionGateSession(window.sessionStorage, { ...latest, pending: null, outcome: null })) { setView("failure"); return }
-    setSession({ ...latest, pending: null, outcome: null })
+    const cleared: BActionGateSession = { ...latest, pending: null, personRoute: null, outcome: null }
+    if (!persistBActionGateSession(window.sessionStorage, cleared)) { setView("failure"); return }
+    setSession(cleared)
     setReadyTokenId(null)
-    setPersonRouteOverride(null)
     restoreContext(returning)
     const gateOutcome = latest.outcome?.tokenId === returning.tokenId ? latest.outcome.status : "cancel"
     window.setTimeout(() => window.dispatchEvent(new CustomEvent(B_ACTION_GATE_CANCEL_EVENT, { detail: { ...returning, gateOutcome } })), 0)
@@ -455,7 +489,8 @@ export function BActionGateCoordinator() {
     if (!pending) return
     if (!isBActionReturnPending(pending, clock)) {
       const renewed = renewBActionReturnTo(pending, clock)
-      commit({ ...session, pending: renewed, outcome: null })
+      const renewedRoute = personRoute ? { tokenId: renewed.tokenId, route: personRoute } : null
+      commit({ ...session, pending: renewed, personRoute: renewedRoute, outcome: null })
       restoreContext(renewed)
     } else {
       commit({ ...session, outcome: null })
@@ -470,8 +505,8 @@ export function BActionGateCoordinator() {
     const first = focusable[0]
     const last = focusable.at(-1)
     if (!first || !last) return
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus({ preventScroll: true }) }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus({ preventScroll: true }) }
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === dialogRef.current)) { event.preventDefault(); last.focus({ preventScroll: true }) }
+    else if (!event.shiftKey && (document.activeElement === last || document.activeElement === dialogRef.current)) { event.preventDefault(); first.focus({ preventScroll: true }) }
   }
 
   if (!hydrated || !pending || readyTokenId === pending.tokenId) return null
@@ -490,43 +525,60 @@ export function BActionGateCoordinator() {
       : resolvedView === "expired" ? copy.expiredBody
         : gate === "account" ? copy.accountBody : gate === "person" ? copy.personBody : gate === "age" ? copy.ageBody : copy.paymentBody
   const action = gate === "account" ? copy.accountAction
-    : gate === "person" ? personRoute === "mobile_id_cx" ? copy.mobileAction : personRoute === "mobile_residence_card" ? copy.residenceAction : copy.passportAction
+    : gate === "person" ? personRoute === "mobile_id_cx" ? copy.mobileAction : personRoute === "mobile_residence_card" ? copy.residenceAction : personRoute === "passport_ekyc" ? copy.passportAction : copy.personAction
       : gate === "age" ? copy.ageAction : copy.paymentAction
   const GateIcon = gate === "account" ? CircleUserRound : gate === "person" ? UserRoundCheck : gate === "age" ? BadgeCheck : CreditCard
-  const PersonRouteIcon = personRoute === "mobile_id_cx" ? Smartphone : personRoute === "mobile_residence_card" ? IdCard : BookOpenCheck
-  const personRouteTitle = personRoute === "mobile_id_cx" ? copy.mobileTitle : personRoute === "mobile_residence_card" ? copy.residenceTitle : copy.passportTitle
-  const personRouteNote = personRoute === "mobile_id_cx" ? copy.mobileNote : personRoute === "mobile_residence_card" ? copy.residenceNote : copy.passportNote
+  const PersonRouteIcon = personRoute === "mobile_id_cx" ? Smartphone : personRoute === "mobile_residence_card" ? IdCard : personRoute === "passport_ekyc" ? BookOpenCheck : null
+  const personRouteTitle = personRoute === "mobile_id_cx" ? copy.mobileTitle : personRoute === "mobile_residence_card" ? copy.residenceTitle : personRoute === "passport_ekyc" ? copy.passportTitle : null
+  const personRouteNote = personRoute === "mobile_id_cx" ? copy.mobileNote : personRoute === "mobile_residence_card" ? copy.residenceNote : personRoute === "passport_ekyc" ? copy.passportNote : null
+  const routeChoices = [
+    { route: "mobile_id_cx", label: copy.routeChoiceMobile, Icon: Smartphone },
+    { route: "mobile_residence_card", label: copy.routeChoiceResidence, Icon: IdCard },
+    { route: "passport_ekyc", label: copy.routeChoicePassport, Icon: BookOpenCheck },
+  ] as const
 
   return (
-    <div ref={layerRef} className={styles.layer} data-testid="ondo-b-action-gate" data-modal-layer-priority="100" data-active-gate={gate} data-person-route={gate === "person" ? personRoute : undefined} data-gate-view={resolvedView} data-return-cta={pending.cta}>
+    <div ref={layerRef} className={styles.layer} data-testid="ondo-b-action-gate" data-modal-layer-priority="100" data-active-gate={gate} data-person-route={gate === "person" ? personRoute ?? "unselected" : undefined} data-gate-view={resolvedView} data-return-cta={pending.cta}>
       <div className={styles.backdrop} aria-hidden="true" />
-      <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined} data-check-kind={gate} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"} onKeyDown={handleKeyDown}>
+      <section ref={dialogRef} className={styles.dialog} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined} data-check-kind={gate} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"} onKeyDown={handleKeyDown}>
         <header><span><ShieldCheck size={18} aria-hidden="true" />{copy.header}</span><button type="button" aria-label={copy.cancel} onClick={cancel}><X size={18} aria-hidden="true" /></button></header>
         <div className={styles.body}>
-          <div className={resolvedView === "intro" ? styles.hero : styles.heroError}>{resolvedView === "intro" ? <GateIcon size={31} aria-hidden="true" /> : <AlertTriangle size={31} aria-hidden="true" />}</div>
-          <h2 id="b-action-gate-title">{title}</h2>
-          <p className={styles.lead}>{body}</p>
-          <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{copy.truth}</p>
-          {gate === "person" ? <section className={styles.personRoute} data-testid={`person-route-${personRoute}`} data-route-status={residenceUnavailable ? "unavailable" : resolvedView === "failure" ? "failed" : "ready"}>
-            <span className={styles.personRouteIcon}><PersonRouteIcon size={21} aria-hidden="true" /></span>
-            <span><small>{copy.routeLabel}</small><strong>{personRouteTitle}</strong><em>{personRouteNote}</em></span>
-          </section> : null}
-          {gate === "person" && resolvedView === "intro" ? <section className={styles.consent} data-testid="local-check-consent">
-            <p data-testid="consent-requester"><small>{copy.consentRequester}</small><strong>{copy.consentRequesterValue}</strong></p>
-            <p data-testid="consent-purpose"><small>{copy.consentPurpose}</small><strong>{copy.consentPurposeValue}</strong></p>
-            <p data-testid="consent-minimum"><small>{copy.consentMinimum}</small><strong>{copy.consentMinimumValue}</strong></p>
-            <p data-testid="consent-retention"><small>{copy.consentRetention}</small><strong>{copy.consentRetentionValue}</strong></p>
-          </section> : null}
-          <section className={styles.returnContext} data-testid="action-gate-return-context" data-return-venue={pending.venueId} data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"} data-return-nonce={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? pending.draftNonce : "none"}>
-            <small>{copy.returnLabel}</small><strong>{returnLabel(pending, copy)}</strong>
-            {pending.cta === "JOIN_TABLE" && pending.draft ? <blockquote>{pending.draft}</blockquote> : null}
-            {pending.cta === "SUBMIT_LOCAL_SIGNAL" && pending.note ? <blockquote>{pending.note}</blockquote> : null}
-          </section>
-          <ol className={styles.plan} aria-label={copy.planLabel}>{pending.gatePlan.map((item) => <li key={item} data-state={satisfied.has(item) ? "complete" : item === activeGate ? "active" : "upcoming"}>{satisfied.has(item) ? <BadgeCheck size={15} aria-hidden="true" /> : <i aria-hidden="true" />}{item === "payment_kyc" ? copy.planPayment : item === "person" ? copy.planPerson : item === "age" ? copy.planAge : copy.planAccount}</li>)}</ol>
+          <div className={styles.content}>
+            <div className={resolvedView === "intro" ? styles.hero : styles.heroError}>{resolvedView === "intro" ? <GateIcon size={31} aria-hidden="true" /> : <AlertTriangle size={31} aria-hidden="true" />}</div>
+            <h2 id="b-action-gate-title">{title}</h2>
+            <p className={styles.lead}>{body}</p>
+            {gate === "person" && resolvedView === "intro" ? <fieldset className={styles.routeChoices} data-testid="person-route-choices">
+              <legend>{copy.routeChoiceLegend}</legend>
+              <div>{routeChoices.map(({ route, label, Icon }) => <button key={route} type="button" aria-pressed={personRoute === route} data-selected={personRoute === route ? "true" : "false"} data-testid={`person-route-choice-${route}`} onClick={() => selectPersonRoute(route)}><Icon size={18} aria-hidden="true" /><span>{label}</span></button>)}</div>
+            </fieldset> : null}
+            {gate === "person" && personRoute && PersonRouteIcon ? <section className={styles.personRoute} data-testid={`person-route-${personRoute}`} data-route-status={residenceUnavailable ? "unavailable" : resolvedView === "failure" ? "failed" : "ready"}>
+              <span className={styles.personRouteIcon}><PersonRouteIcon size={21} aria-hidden="true" /></span>
+              <span><small>{copy.routeLabel}</small><strong>{personRouteTitle}</strong></span>
+            </section> : null}
+            {gate === "person" ? <details className={styles.disclosure} data-testid="person-provider-disclosure">
+              <summary>{copy.providerDetails}<ChevronRight size={17} aria-hidden="true" /></summary>
+              <div>
+                {personRouteNote ? <p className={styles.routeNote}>{personRouteNote}</p> : null}
+                <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{copy.truth}</p>
+                {resolvedView === "intro" ? <section className={styles.consent} data-testid="local-check-consent">
+                  <p data-testid="consent-requester"><small>{copy.consentRequester}</small><strong>{copy.consentRequesterValue}</strong></p>
+                  <p data-testid="consent-purpose"><small>{copy.consentPurpose}</small><strong>{copy.consentPurposeValue}</strong></p>
+                  <p data-testid="consent-minimum"><small>{copy.consentMinimum}</small><strong>{copy.consentMinimumValue}</strong></p>
+                  <p data-testid="consent-retention"><small>{copy.consentRetention}</small><strong>{copy.consentRetentionValue}</strong></p>
+                </section> : null}
+              </div>
+            </details> : <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{copy.truth}</p>}
+            <section className={styles.returnContext} data-testid="action-gate-return-context" data-return-venue={pending.venueId} data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"} data-return-nonce={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? pending.draftNonce : "none"}>
+              <small>{copy.returnLabel}</small><strong>{returnLabel(pending, copy)}</strong>
+              {pending.cta === "JOIN_TABLE" && pending.draft ? <blockquote>{pending.draft}</blockquote> : null}
+              {pending.cta === "SUBMIT_LOCAL_SIGNAL" && pending.note ? <blockquote>{pending.note}</blockquote> : null}
+            </section>
+            <ol className={styles.plan} aria-label={copy.planLabel}>{pending.gatePlan.map((item) => <li key={item} data-state={satisfied.has(item) ? "complete" : item === activeGate ? "active" : "upcoming"}>{satisfied.has(item) ? <BadgeCheck size={15} aria-hidden="true" /> : <i aria-hidden="true" />}{item === "payment_kyc" ? copy.planPayment : item === "person" ? copy.planPerson : item === "age" ? copy.planAge : copy.planAccount}</li>)}</ol>
+          </div>
           <div className={styles.actions} data-testid={resolvedView === "intro" ? undefined : "local-check-result"} data-result={resolvedView === "intro" ? undefined : resolvedView}>
-            {resolvedView === "intro" ? <button ref={primaryRef} type="button" className={styles.primary} data-testid={gate === "person" ? "local-check-boundary-continue" : gate === "age" ? "after19-start" : "action-gate-confirm"} onClick={confirm}>{action}<ChevronRight size={17} aria-hidden="true" /></button>
-              : residenceUnavailable ? <button ref={primaryRef} type="button" className={styles.primary} data-testid="local-check-passport-alternate" onClick={usePassportAlternative}><BookOpenCheck size={17} aria-hidden="true" />{copy.usePassport}</button>
-                : <button ref={primaryRef} type="button" className={styles.primary} data-testid="action-gate-retry" onClick={retry}><RotateCcw size={17} aria-hidden="true" />{resolvedView === "expired" ? copy.renew : copy.retry}</button>}
+            {resolvedView === "intro" ? gate !== "person" || personRoute ? <button type="button" className={styles.primary} data-testid={gate === "person" ? "local-check-boundary-continue" : gate === "age" ? "after19-start" : "action-gate-confirm"} onClick={confirm}>{action}<ChevronRight size={17} aria-hidden="true" /></button> : null
+              : residenceUnavailable ? <button type="button" className={styles.primary} data-testid="local-check-passport-alternate" onClick={usePassportAlternative}><BookOpenCheck size={17} aria-hidden="true" />{copy.usePassport}</button>
+                : <button type="button" className={styles.primary} data-testid="action-gate-retry" onClick={retry}><RotateCcw size={17} aria-hidden="true" />{resolvedView === "expired" ? copy.renew : copy.retry}</button>}
             <button type="button" className={styles.secondary} data-testid="action-gate-cancel" onClick={cancel}>{copy.cancel}</button>
           </div>
         </div>

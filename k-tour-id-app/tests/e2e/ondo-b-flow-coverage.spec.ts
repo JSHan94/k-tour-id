@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test"
 import {
-  B_ACTION_GATE_KEY, B_ACTIVITY_PROFILE_KEY, B_AFTER19_SESSION_KEY, B_DEVICE_KEY,
+  allowBNextNavigationAbort, B_ACTION_GATE_KEY, B_ACTIVITY_PROFILE_KEY, B_AFTER19_SESSION_KEY, B_DEVICE_KEY,
   B_FLOW_CONTRACTS, CANONICAL_VENUE_ID, expectBRuntimeClean, expectNoRawTruthLeaks,
   finishAccountGate, gotoB, installBRuntimeGuard, openCanonicalVenue, openLabs, openTables,
   prepareBPage, seedB, seedFreshOnboarding, sessionState, TABLE_ID,
@@ -247,6 +247,8 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-005", "ENTRY/DECISION/CANCEL"), async () => {
       await signal.getByTestId("local-signal-person-check").click()
       const gate = page.getByTestId("ondo-b-action-gate")
+      await expect(gate).toHaveAttribute("data-person-route", "unselected")
+      await gate.getByTestId("person-route-choice-mobile_id_cx").click()
       await expect(gate).toHaveAttribute("data-person-route", "mobile_id_cx")
       await expect(page.getByTestId("person-route-mobile_id_cx")).toBeVisible()
       await gate.getByTestId("action-gate-cancel").click()
@@ -256,6 +258,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await setQa(page, { actionGate: { person: "failure" } })
       await signal.getByTestId("local-signal-person-check").click()
       const gate = page.getByTestId("ondo-b-action-gate")
+      await gate.getByTestId("person-route-choice-mobile_id_cx").click()
       await gate.getByTestId("local-check-boundary-continue").click()
       await expect(gate.getByTestId("local-check-result")).toHaveAttribute("data-result", "failure")
       await gate.getByTestId("action-gate-retry").click()
@@ -276,6 +279,8 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-006", "ENTRY/DECISION/CANCEL"), async () => {
       await signal.getByTestId("local-signal-person-check").click()
       const gate = page.getByTestId("ondo-b-action-gate")
+      await expect(gate).toHaveAttribute("data-person-route", "unselected")
+      await gate.getByTestId("person-route-choice-mobile_residence_card").click()
       await expect(gate).toHaveAttribute("data-person-route", "mobile_residence_card")
       await gate.getByTestId("action-gate-cancel").click()
       await expect(signal.getByRole("textbox", { name: "Optional local note" })).toHaveValue(note)
@@ -283,6 +288,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     })
     await test.step(evidence("FL-006", "ERROR/RETRY"), async () => {
       const gate = page.getByTestId("ondo-b-action-gate")
+      await gate.getByTestId("person-route-choice-mobile_residence_card").click()
       await gate.getByTestId("local-check-boundary-continue").click()
       await expect(gate.getByTestId("local-check-result")).toHaveAttribute("data-result", "unavailable")
       await gate.getByTestId("local-check-passport-alternate").click()
@@ -374,12 +380,22 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.waitForLoadState("networkidle")
       await page.reload({ waitUntil: "domcontentloaded" })
       await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-save-state", "SAV-SAVED")
+      const consumeCityNavigationAbort = allowBNextNavigationAbort(page, {
+        targetUrl: "/ondo-b?city=seoul",
+        count: 1,
+        minimumCount: 0,
+      })
       await page.getByTestId("canonical-place-overlay").getByRole("button", { name: "Close place" }).click()
       await expect(page.getByTestId("canonical-place-overlay")).toBeHidden()
       await expect(page).toHaveURL(/\/ondo-b\?city=seoul$/)
       await page.getByTestId("nav-my").click()
       await page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`).click()
       await expect(page.getByTestId("canonical-place-peek")).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)
+      // Chromium emits the requestfailed event after the synchronous saved-place
+      // restoration has painted, so let that one exact scoped transition settle
+      // before consuming its optional browser-cancelled RSC request.
+      await page.waitForTimeout(500)
+      consumeCityNavigationAbort()
     })
   })
 

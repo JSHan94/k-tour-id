@@ -120,6 +120,7 @@ async function openPersonConsent(page: Page, signal: Locator) {
 async function openEligibilityResult(page: Page, signal: Locator, outcome: EligibilityOutcome) {
   await setEligibility(page, outcome)
   const gate = await openPersonConsent(page, signal)
+  await gate.getByTestId("person-route-choice-mobile_id_cx").click()
   await gate.getByTestId("local-check-boundary-continue").click()
   if (outcome === "success") {
     await expect(gate).toBeHidden()
@@ -596,18 +597,23 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   await expect(accessible.first()).toContainText("Pulse 91 · PEAK · freshness curated-snapshot · confidence high")
 })
 
-test("FLOW7-CONSENT-012 phone consent shows all truth rows and both 44px decisions without scrolling", async ({ page }) => {
+test("FLOW7-CONSENT-012 phone Person gate keeps both 44px decisions visible and details progressively reachable", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 })
   const { signal } = await openSignal(page)
   await signal.locator("fieldset button").first().click()
   const gate = await openPersonConsent(page, signal)
-  for (const row of ["consent-requester", "consent-purpose", "consent-minimum", "consent-retention"]) await expect(gate.getByTestId(row)).toBeInViewport()
+  await gate.getByTestId("person-route-choice-mobile_id_cx").click()
   const verify = gate.getByTestId("local-check-boundary-continue")
   const decline = gate.getByTestId("action-gate-cancel")
   for (const action of [verify, decline]) {
     await expect(action).toBeInViewport()
     const box = await action.boundingBox()
     expect(box!.height).toBeGreaterThanOrEqual(44)
+  }
+  await gate.getByTestId("person-provider-disclosure").locator("summary").click()
+  for (const row of ["consent-requester", "consent-purpose", "consent-minimum", "consent-retention"]) {
+    await gate.getByTestId(row).scrollIntoViewIfNeeded()
+    await expect(gate.getByTestId(row)).toBeVisible()
   }
   await quietCapture(page, "successor-en-320x720-person-consent")
 })

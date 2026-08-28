@@ -29,6 +29,7 @@ test("B-A11Y-RECOVERY-001 Local Signal storage failure keeps its draft, alert, a
   await signal.getByTestId("local-signal-person-check").click()
   await page.getByTestId("ondo-b-action-gate").getByTestId("action-gate-confirm").click()
   const check = page.getByTestId("ondo-b-local-check-walkthrough")
+  await check.getByTestId("person-route-choice-mobile_id_cx").click()
   await check.getByTestId("local-check-boundary-continue").click()
   await expect(check).toBeHidden()
   const post = signal.getByTestId("local-signal-post")

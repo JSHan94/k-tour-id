@@ -14,6 +14,13 @@ import {
   sanitizeGlobalAfter19Session,
   type GlobalAfter19SessionB,
 } from "../after19/after19-global-b-model"
+import {
+  createPlaceAfter19Return,
+  PLACE_AFTER19_RETURN_COMPLETE_EVENT,
+  PLACE_AFTER19_RETURN_REQUEST_EVENT,
+  requestPlaceAfter19Return,
+  restorePlaceAfter19ReturnSession,
+} from "../after19/after19-place-return-b-model"
 import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, openBDiscoveryVenue, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
 import { pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -276,6 +283,7 @@ export function CanonicalPlaceOverlay() {
   const detailRef = useRef<HTMLElement | null>(null)
   const peekRef = useRef<HTMLDivElement | null>(null)
   const openRef = useRef<HTMLButtonElement | null>(null)
+  const after19AccessRef = useRef<HTMLElement | null>(null)
   const returnFocusRef = useRef<HTMLElement | null>(null)
   const venueId = state.surface.kind === "venue" ? state.surface.venueId : undefined
   const venue = venueId ? canonicalMapVenueById(venueId) : undefined
@@ -330,19 +338,37 @@ export function CanonicalPlaceOverlay() {
   }, [])
 
   useEffect(() => {
-    if (!after19Handoff) return
-    const globalRoot = document.querySelector<HTMLElement>("[data-testid='ondo-b-after19-global']")
-    const syncHandoff = () => {
-      if (!globalRoot?.querySelector("[data-testid='global-after19-prompt-layer']")) setAfter19Handoff(false)
+    const pending = restorePlaceAfter19ReturnSession(window.sessionStorage).pending
+    setAfter19Handoff(Boolean(pending))
+
+    const requested = () => {
+      const latest = restorePlaceAfter19ReturnSession(window.sessionStorage).pending
+      if (latest) setAfter19Handoff(true)
     }
-    const observer = new MutationObserver(syncHandoff)
-    observer.observe(globalRoot ?? document.body, { childList: true, subtree: true })
-    const frame = window.requestAnimationFrame(syncHandoff)
+    const completed = (event: Event) => {
+      const detail = event instanceof CustomEvent ? event.detail as { tokenId?: unknown } : null
+      if (!pending || detail?.tokenId !== pending.tokenId) {
+        const latest = restorePlaceAfter19ReturnSession(window.sessionStorage)
+        if (latest.pending?.venueId === venueId) return
+      }
+      setAfter19Handoff(false)
+      const focusAccess = (attempt = 0) => {
+        const target = after19AccessRef.current
+        if (target?.isConnected && !target.closest("[inert],[aria-hidden='true']")) {
+          target.focus({ preventScroll: true })
+          if (document.activeElement === target) return
+        }
+        if (attempt < 7) window.requestAnimationFrame(() => focusAccess(attempt + 1))
+      }
+      window.requestAnimationFrame(() => focusAccess())
+    }
+    window.addEventListener(PLACE_AFTER19_RETURN_REQUEST_EVENT, requested)
+    window.addEventListener(PLACE_AFTER19_RETURN_COMPLETE_EVENT, completed)
     return () => {
-      window.cancelAnimationFrame(frame)
-      observer.disconnect()
+      window.removeEventListener(PLACE_AFTER19_RETURN_REQUEST_EVENT, requested)
+      window.removeEventListener(PLACE_AFTER19_RETURN_COMPLETE_EVENT, completed)
     }
-  }, [after19Handoff])
+  }, [venueId])
 
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
@@ -391,6 +417,7 @@ export function CanonicalPlaceOverlay() {
     ? `${pulse.freshness === "growing" ? copy.pulseGrowingSnapshot : copy.pulseFixedSnapshot} · ${pulse.updatedAt.slice(0, 16).replace("T", " ")} UTC`
     : copy.pulseLimited
   const currentVenueId = venue.id
+  const currentVenueCity = venue.cityId
   const after19Unlocked = after19Session.mode === "on" && isGlobalAfter19AgeCurrent(after19Session)
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
@@ -470,13 +497,16 @@ export function CanonicalPlaceOverlay() {
 
   function openAfter19FromPlace() {
     if (after19Unlocked) return
-    const globalOpener = document.querySelector<HTMLButtonElement>("[data-testid='global-after19-toggle']")
-    if (!globalOpener) return
-    // Keep the canonical venue selected while the existing global After 19
-    // owner takes modal focus. Its own prompt retains cancel/failure/retry and
-    // writes the one shared tab-scoped eligibility result.
-    setAfter19Handoff(true)
-    globalOpener.click()
+    const historyEntry = readBDiscoveryHistory()
+    if (historyEntry?.level !== "detail" || historyEntry.venueId !== currentVenueId || historyEntry.city !== currentVenueCity) return
+    const returnTo = createPlaceAfter19Return({
+      venueId: currentVenueId,
+      cityId: currentVenueCity,
+      view: historyEntry.view,
+      query: historyEntry.query,
+      category: historyEntry.category,
+    })
+    if (requestPlaceAfter19Return(returnTo)) setAfter19Handoff(true)
   }
 
   if (!expanded) return (
@@ -569,7 +599,7 @@ export function CanonicalPlaceOverlay() {
             <button type="button" onClick={toggleSave} aria-pressed={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.removeSaved : copy.save}</button>
           </div>
 
-          <section className={styles.after19Access} data-testid="canonical-after19-access" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"} data-after19-venue-id={currentVenueId}>
+          <section ref={after19AccessRef} className={styles.after19Access} tabIndex={-1} data-testid="canonical-after19-access" data-after19-focus-target="persistent" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"} data-after19-venue-id={currentVenueId}>
             <MoonStar size={18} aria-hidden="true" />
             <span><strong>{copy.after19Preview}</strong><small>{after19Unlocked ? copy.after19PolicyUnlocked : copy.after19PolicyLocked}</small></span>
             {after19Unlocked ? <em role="status"><BadgeCheck size={15} aria-hidden="true" />{copy.after19Ready}</em> : <button type="button" onClick={openAfter19FromPlace} data-testid="canonical-after19-unlock" data-visual-priority="secondary">{copy.after19Unlock}<ChevronRight size={15} aria-hidden="true" /></button>}

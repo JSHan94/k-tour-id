@@ -107,6 +107,7 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
     sessionStorage: [
       "features/ondo/after19/after19-global-b-model.ts",
       "features/ondo/after19/after19-global-b.tsx",
+      "features/ondo/after19/after19-place-return-b-model.ts",
       "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
       "features/ondo/connect/tables-entry-b.tsx",
       "features/ondo/identity-b/action-gate-contract-b.ts",
@@ -129,6 +130,7 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
       "ondo-b.account.v1",
       "ondo-b.action-gates.v1",
       "ondo-b.activity-profile.v1",
+      "ondo-b.after19.place-return.v1",
       "ondo-b.after19.preferences.v1",
       "ondo-b.after19.session.v1",
       "ondo-b.labs.v1",
