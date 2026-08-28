@@ -2,10 +2,18 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, BadgeCheck, Bookmark, ChevronRight, CircleHelp, MapPin, Navigation, NotebookPen, UsersRound, WalletCards, X } from "lucide-react"
+import { ArrowLeft, BadgeCheck, Bookmark, ChevronRight, CircleHelp, MapPin, MoonStar, Navigation, NotebookPen, UsersRound, WalletCards, X } from "lucide-react"
 import type { CanonicalVenueDetail, CanonicalVenueDetailResponse } from "@/lib/ondo/venues/detail-contract"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDistrictLabel, venueNamePresentation } from "@/lib/ondo/venues/display"
+import {
+  DEFAULT_GLOBAL_AFTER19_SESSION,
+  GLOBAL_AFTER19_SESSION_EVENT,
+  isGlobalAfter19AgeCurrent,
+  restoreGlobalAfter19B,
+  sanitizeGlobalAfter19Session,
+  type GlobalAfter19SessionB,
+} from "../after19/after19-global-b-model"
 import { B_DISCOVERY_TRAVERSAL_EVENT, closeBDiscoveryPlace, goBackFromBDiscovery, openBDiscoveryDetail, openBDiscoveryVenue, readBDiscoveryHistory, readBDiscoveryTraversal } from "../map/b-discovery-history"
 import { pulseAlternativesForVenue, pulseForVenue, pulseLevelLabel, type PulseLocalSignalTagB } from "../pulse-b/pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -77,6 +85,11 @@ const COPY = {
     browseTables: "Browse all Tables",
     after19: "19+ required",
     after19Body: "You’ll verify after choosing Join.",
+    after19Preview: "After 19",
+    after19PolicyLocked: "ONDO policy · not an official restriction for this place.",
+    after19PolicyUnlocked: "ONDO preview on · not an official restriction for this place.",
+    after19Unlock: "Open 19+ preview",
+    after19Ready: "On",
     pulseBoundary: "Curated visit signals · not live crowding or official venue facts.",
   },
   ko: {
@@ -140,6 +153,11 @@ const COPY = {
     browseTables: "전체 테이블 보기",
     after19: "19+ 필수",
     after19Body: "참여를 누른 뒤 확인해요.",
+    after19Preview: "After 19",
+    after19PolicyLocked: "ONDO 정책 · 이 장소의 공식 이용 제한이 아니에요.",
+    after19PolicyUnlocked: "ONDO 프리뷰 켜짐 · 이 장소의 공식 이용 제한이 아니에요.",
+    after19Unlock: "19+ 프리뷰 열기",
+    after19Ready: "켜짐",
     pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
   },
   ja: {
@@ -203,6 +221,11 @@ const COPY = {
     browseTables: "すべてのテーブルを見る",
     after19: "19歳以上の確認が必要",
     after19Body: "参加を選んだ後に確認します。",
+    after19Preview: "After 19",
+    after19PolicyLocked: "ONDOの方針・この場所の公式な利用制限ではありません。",
+    after19PolicyUnlocked: "ONDOプレビューはオン・この場所の公式な利用制限ではありません。",
+    after19Unlock: "19+プレビューを開く",
+    after19Ready: "オン",
     pulseBoundary: "選定した訪問シグナルに基づく参考値です。リアルタイムの混雑状況でも、公式の場所情報でもありません。",
   },
 } as const
@@ -246,6 +269,8 @@ export function CanonicalPlaceOverlay() {
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [detailAttempt, setDetailAttempt] = useState(0)
   const [tableScopeOpen, setTableScopeOpen] = useState(false)
+  const [after19Session, setAfter19Session] = useState<GlobalAfter19SessionB>(DEFAULT_GLOBAL_AFTER19_SESSION)
+  const [after19Handoff, setAfter19Handoff] = useState(false)
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const detailRef = useRef<HTMLElement | null>(null)
@@ -290,7 +315,34 @@ export function CanonicalPlaceOverlay() {
     return () => window.cancelAnimationFrame(frame)
   }, [expanded, venueId])
 
-  useModalIsolation(state.tab === "ondo" && Boolean(venueId), expanded ? layerRef : peekRef)
+  useModalIsolation(state.tab === "ondo" && Boolean(venueId) && !after19Handoff, expanded ? layerRef : peekRef)
+
+  useEffect(() => {
+    const syncAfter19 = (event?: Event) => {
+      const detail = event instanceof CustomEvent ? event.detail : null
+      setAfter19Session(detail
+        ? sanitizeGlobalAfter19Session(detail)
+        : restoreGlobalAfter19B(window.localStorage, window.sessionStorage).session)
+    }
+    syncAfter19()
+    window.addEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncAfter19)
+    return () => window.removeEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncAfter19)
+  }, [])
+
+  useEffect(() => {
+    if (!after19Handoff) return
+    const globalRoot = document.querySelector<HTMLElement>("[data-testid='ondo-b-after19-global']")
+    const syncHandoff = () => {
+      if (!globalRoot?.querySelector("[data-testid='global-after19-prompt-layer']")) setAfter19Handoff(false)
+    }
+    const observer = new MutationObserver(syncHandoff)
+    observer.observe(globalRoot ?? document.body, { childList: true, subtree: true })
+    const frame = window.requestAnimationFrame(syncHandoff)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [after19Handoff])
 
   useEffect(() => {
     if (!expanded || !venueId || detail?.id === venueId) return
@@ -339,6 +391,7 @@ export function CanonicalPlaceOverlay() {
     ? `${pulse.freshness === "growing" ? copy.pulseGrowingSnapshot : copy.pulseFixedSnapshot} · ${pulse.updatedAt.slice(0, 16).replace("T", " ")} UTC`
     : copy.pulseLimited
   const currentVenueId = venue.id
+  const after19Unlocked = after19Session.mode === "on" && isGlobalAfter19AgeCurrent(after19Session)
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${venue.latitude},${venue.longitude}`)}`
 
   function restorePeekOpener() {
@@ -413,6 +466,17 @@ export function CanonicalPlaceOverlay() {
   function browseAllTables() {
     setTableScopeOpen(false)
     actions.setTab("tables")
+  }
+
+  function openAfter19FromPlace() {
+    if (after19Unlocked) return
+    const globalOpener = document.querySelector<HTMLButtonElement>("[data-testid='global-after19-toggle']")
+    if (!globalOpener) return
+    // Keep the canonical venue selected while the existing global After 19
+    // owner takes modal focus. Its own prompt retains cancel/failure/retry and
+    // writes the one shared tab-scoped eligibility result.
+    setAfter19Handoff(true)
+    globalOpener.click()
   }
 
   if (!expanded) return (
@@ -504,6 +568,12 @@ export function CanonicalPlaceOverlay() {
             <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-primary-directions" data-visual-priority="primary"><Navigation size={18} />{copy.directions}</a>
             <button type="button" onClick={toggleSave} aria-pressed={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.removeSaved : copy.save}</button>
           </div>
+
+          <section className={styles.after19Access} data-testid="canonical-after19-access" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"} data-after19-venue-id={currentVenueId}>
+            <MoonStar size={18} aria-hidden="true" />
+            <span><strong>{copy.after19Preview}</strong><small>{after19Unlocked ? copy.after19PolicyUnlocked : copy.after19PolicyLocked}</small></span>
+            {after19Unlocked ? <em role="status"><BadgeCheck size={15} aria-hidden="true" />{copy.after19Ready}</em> : <button type="button" onClick={openAfter19FromPlace} data-testid="canonical-after19-unlock" data-visual-priority="secondary">{copy.after19Unlock}<ChevronRight size={15} aria-hidden="true" /></button>}
+          </section>
 
           {currentVenueId === TABLE_VENUE_ID ? (
             <section className={styles.tableActions} aria-label={locale === "ko" ? "이 장소의 테이블" : locale === "ja" ? "この場所のテーブル" : "Table at this place"}>

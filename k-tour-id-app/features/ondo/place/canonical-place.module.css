@@ -64,6 +64,13 @@
 .decisionActions a { border: 1px solid #20201e; background: #20201e; color: #fff; }
 .decisionActions button { border: 1px solid #dedbd5; background: transparent; color: #20201e; }
 .decisionActions button:disabled { color: #77746e; cursor: not-allowed; }
+.after19Access { display: grid; min-height: 56px; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 9px; margin: -4px 0 18px; padding: 6px 7px 6px 12px; border: 1px solid rgb(23 23 23 / 10%); border-radius: 16px; background: rgb(255 255 255 / 88%); color: #242424; box-shadow: 0 7px 20px rgb(0 0 0 / 4%); }
+.after19Access > svg { color: #6f3150; }
+.after19Access > span { display: grid; min-width: 0; gap: 1px; }
+.after19Access strong { font-size: 12px; font-weight: 820; }
+.after19Access small { color: #666; font-size: 12px; font-weight: 610; line-height: 1.35; }
+.after19Access button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 4px; padding: 0 9px; border: 0; border-radius: 12px; background: #f1eef0; color: #4e2138; font: inherit; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.after19Access em { display: inline-flex; min-height: 32px; align-items: center; gap: 4px; padding: 0 9px; border-radius: 999px; background: #f1eef0; color: #4e2138; font-size: 12px; font-style: normal; font-weight: 820; }
 .tableActions { display: grid; gap: 8px; margin: -3px 0 20px; padding: 15px 0; border-block: 1px solid #dedbd5; }
 .tableActions button { display: grid; width: 100%; min-height: 64px; grid-template-columns: 24px minmax(0, 1fr) 20px; align-items: center; gap: 10px; padding: 11px 12px; border: 1px solid #d7d2cb; border-radius: 14px; background: #fff; color: #292724; font: inherit; text-align: left; }
 .tableActions button > span { display: grid; min-width: 0; gap: 3px; }
@@ -106,6 +113,7 @@
 .detailError button:focus-visible,
 .decisionActions a:focus-visible,
 .decisionActions button:focus-visible,
+.after19Access button:focus-visible,
 .localSignalAction button:focus-visible,
 .demoOfferAction button:focus-visible,
 .saveError button:focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 2px; }
@@ -459,6 +467,7 @@
 .decisionActions button { background: rgb(255 255 253 / 78%); }
 
 .tableActions,
+.after19Access,
 .demoOfferAction,
 .localSignalAction {
   border-color: transparent;
@@ -512,6 +521,7 @@
   .peekActions button:hover,
   .decisionActions a:hover,
   .decisionActions button:hover,
+  .after19Access button:hover,
   .tableActions button:hover,
   .demoOfferAction button:hover,
   .localSignalAction button:hover { transform: translateY(-2px); }
@@ -705,12 +715,13 @@
     grid-template-areas:
       "identity pulse"
       "decisions pulse"
+      "after19 pulse"
       "table table"
       "offer signal"
       "save save"
       "evidence before"
       "source source";
-    grid-template-rows: repeat(7, auto);
+    grid-template-rows: repeat(8, auto);
   }
   .detailIdentityStage { grid-area: identity; min-height: 260px; padding: 30px; }
   .detailIdentityStage > h2 { font-size: clamp(40px, 3.5vw, 54px); }
@@ -817,12 +828,13 @@
     grid-template-areas:
       "identity pulse"
       "decisions pulse"
+      "after19 pulse"
       "table table"
       "offer signal"
       "save save"
       "evidence before"
       "source source";
-    grid-template-rows: repeat(7, auto);
+    grid-template-rows: repeat(8, auto);
     grid-auto-flow: row dense;
     align-content: start;
     gap: 0 28px;
@@ -831,6 +843,7 @@
 
   .body > .detailIdentityStage { grid-area: identity; align-self: stretch; }
   .decisionActions { grid-area: decisions; align-self: end; margin: 18px 0 0; }
+  .after19Access { grid-area: after19; align-self: start; margin: 12px 0 0; }
   .pulsePanel { grid-area: pulse; align-self: start; margin: 0; }
   .tableActions { grid-area: table; margin: 18px 0 0; }
   .demoOfferAction { grid-area: offer; margin: 16px 0 0; }
@@ -841,6 +854,7 @@
   .source { grid-area: source; margin-top: 18px; }
 
   .tableActions,
+  .after19Access,
   .demoOfferAction,
   .localSignalAction,
   .sourceEvidence,
@@ -925,6 +939,7 @@
 .decisionActions button { background: rgb(255 255 255 / 88%); }
 
 .tableActions,
+.after19Access,
 .demoOfferAction,
 .localSignalAction,
 .sourceEvidence,

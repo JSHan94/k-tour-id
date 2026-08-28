@@ -167,6 +167,20 @@ function entryUrl(entry: BDiscoveryHistoryEntry) {
   return `${url.pathname}${url.search}`
 }
 
+function entriesMatch(left: BDiscoveryHistoryEntry | null, right: BDiscoveryHistoryEntry) {
+  if (!left) return false
+  return left.v === right.v
+    && left.documentId === right.documentId
+    && left.level === right.level
+    && left.city === right.city
+    && left.view === right.view
+    && left.query === right.query
+    && left.category === right.category
+    && left.venueId === right.venueId
+    && left.editorialPlaceId === right.editorialPlaceId
+    && JSON.stringify(left.focus) === JSON.stringify(right.focus)
+}
+
 function replaceEntry(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
   History.prototype.replaceState.call(window.history, mergedState(entry, preservedState), "", entryUrl(entry))
 }
@@ -198,6 +212,13 @@ export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preser
   const current: BDiscoveryHistoryEntry = existing.documentId === currentDocumentId
     ? existing
     : { ...existing, documentId: currentDocumentId }
+  // Next patches the History prototype and treats even an identical
+  // replaceState call as a router reconciliation. The traversal stabilizer
+  // calls this more than once by design, so keep it idempotent: rewriting an
+  // already-canonical entry only creates duplicate RSC requests and can abort
+  // one of them when the user immediately changes tabs.
+  if (entriesMatch(readBDiscoveryHistory(), current)
+    && `${window.location.pathname}${window.location.search}` === entryUrl(current)) return current
   replaceEntry(current, preservedState)
   return current
 }
@@ -206,10 +227,7 @@ export function normalizeBDiscoveryHistoryForActiveDocument() {
   const existing = readBDiscoveryHistory()
   if (!existing) return null
   const currentDocumentId = documentId()
-  if (existing.documentId === currentDocumentId && existing.v === 3) {
-    replaceEntry(existing)
-    return existing
-  }
+  if (existing.documentId === currentDocumentId && existing.v === 3) return existing
   return replaceBDiscoveryHistoryForActiveDocument(existing)
 }
 

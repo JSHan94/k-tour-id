@@ -12,6 +12,15 @@
 .lead { margin: 13px 0 0; color: #6b6661; font-size: 15px; line-height: 1.55; }
 .truth { display: flex; align-items: flex-start; gap: 8px; margin: 18px 0 0; padding: 11px 12px; border-radius: 14px; background: #f6f5f3; color: #5f5954; font-size: 12px; line-height: 1.45; }
 .truth svg { flex: 0 0 auto; margin-top: 1px; }
+.personRoute { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 14px; padding: 13px 14px; border: 1px solid #dfdcd8; border-radius: 18px; background: linear-gradient(135deg, #fff 0%, #f7f6f4 100%); box-shadow: 0 8px 24px rgb(34 30 27 / .05); }
+.personRoute[data-route-status="unavailable"] { border-color: #e3c9bf; background: linear-gradient(135deg, #fff 0%, #fff5f1 100%); }
+.personRoute[data-route-status="failed"] { border-color: #e5d0c8; }
+.personRouteIcon { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 14px; background: #272421; color: #fff; }
+.personRoute[data-route-status="unavailable"] .personRouteIcon { background: #9a4938; }
+.personRoute > span:last-child { display: grid; min-width: 0; }
+.personRoute small { color: #77706a; font-size: 12px; font-weight: 720; letter-spacing: .04em; text-transform: uppercase; }
+.personRoute strong { margin-top: 2px; color: #2e2a27; font-size: 15px; line-height: 1.25; }
+.personRoute em { margin-top: 3px; color: #69635e; font-size: 12px; font-style: normal; line-height: 1.38; }
 .consent { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 14px; overflow: hidden; border: 1px solid #e4e0dc; border-radius: 18px; background: #e4e0dc; }
 .consent p { display: grid; align-content: start; gap: 4px; min-height: 88px; margin: 0; padding: 13px 14px; background: #fff; }
 .consent small { color: #6f6963; font-size: 12px; font-weight: 680; letter-spacing: .02em; }
@@ -40,6 +49,11 @@
   .dialog[data-check-origin="local_signal"][data-check-kind="person"] .body h2 { font-size: 21px; line-height: 1.05; }
   .dialog[data-check-origin="local_signal"][data-check-kind="person"] .lead { margin-top: 6px; font-size: 12px; line-height: 1.34; }
   .dialog[data-check-origin="local_signal"][data-check-kind="person"] .truth { margin-top: 7px; padding: 7px 8px; font-size: 12px; line-height: 1.3; }
+  .dialog[data-check-origin="local_signal"][data-check-kind="person"] .personRoute { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; margin-top: 7px; padding: 7px 8px; border-radius: 13px; box-shadow: none; }
+  .dialog[data-check-origin="local_signal"][data-check-kind="person"] .personRouteIcon { width: 36px; height: 36px; border-radius: 11px; }
+  .dialog[data-check-origin="local_signal"][data-check-kind="person"] .personRoute small { font-size: 12px; letter-spacing: .02em; }
+  .dialog[data-check-origin="local_signal"][data-check-kind="person"] .personRoute strong { font-size: 12px; }
+  .dialog[data-check-origin="local_signal"][data-check-kind="person"] .personRoute em { margin-top: 1px; font-size: 12px; line-height: 1.22; }
   .dialog[data-check-origin="local_signal"][data-check-kind="person"] .consent { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 7px; border-radius: 13px; }
   .dialog[data-check-origin="local_signal"][data-check-kind="person"] .consent p { min-height: 0; padding: 7px 8px; }
   .dialog[data-check-origin="local_signal"][data-check-kind="person"] .consent small { font-size: 12px; }

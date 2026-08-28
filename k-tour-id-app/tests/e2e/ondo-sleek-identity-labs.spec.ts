@@ -15,7 +15,6 @@ const READY_SESSION = {
 
 async function seedCurrentActivity(page: Page, stamps: number) {
   await page.addInitScript((currentStamps) => {
-    if (sessionStorage.getItem("ondo-b.activity-profile.v1") !== null) return
     sessionStorage.setItem("ondo-b.activity-profile.v1", JSON.stringify({
       profile: {
         displayName: "Traveler",

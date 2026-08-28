@@ -115,6 +115,7 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
       "features/ondo/identity-b/traveler-id-entry-b.tsx",
       "features/ondo/labs/labs-entry.tsx",
       "features/ondo/local-signal-b/local-signal-layer-b.tsx",
+      "features/ondo/place/canonical-place-overlay.tsx",
       "features/ondo/shared/state/ondo-b-provider.tsx",
       "features/ondo/shared/ui/use-qa-controls.ts",
     ],

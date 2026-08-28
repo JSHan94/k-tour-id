@@ -2,7 +2,14 @@ import { expect, type Locator, type Page } from "@playwright/test"
 
 export const B_ROUTE = "/ondo-b"
 export const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
-export const TABLE_ID = "table-seongsu-dinner"
+export const TABLE_ID = "table-seoul-night-bites"
+
+export const B_DEVICE_KEY = "ondo-b.device.v1"
+export const B_ACCOUNT_KEY = "ondo-b.account.v1"
+export const B_ACTION_GATE_KEY = "ondo-b.action-gates.v1"
+export const B_AFTER19_PREFERENCE_KEY = "ondo-b.after19.preferences.v1"
+export const B_AFTER19_SESSION_KEY = "ondo-b.after19.session.v1"
+export const B_ACTIVITY_PROFILE_KEY = "ondo-b.activity-profile.v1"
 
 export const B_FLOW_IDS = [
   "FL-001", "FL-002", "FL-003", "FL-004", "FL-005", "FL-006",
@@ -61,41 +68,41 @@ const N = (proof: string) => ["not_applicable", proof] as const
  */
 export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   flow("FL-001", "Guest Discover", {
-    ENTRY: A("real /ondo-b nation surface"), DECISION: A("Seoul/List/place selection"), CANCEL: A("close place and preserve city"),
+    ENTRY: A("real /ondo-b nation surface"), DECISION: A("Seoul compact-count/list/place selection"), CANCEL: A("close place and preserve city"),
     ERROR: A("dedicated map-truth route abort latches data-map-state=error and keeps the sourced list usable"), RETRY: A("Retry map starts a fresh attempt and increments data-map-attempt to 2"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
   }),
   flow("FL-002", "Age proof to exact After19 venue", {
-    ENTRY: A("locked After19 card inside the exact canonical venue"), DECISION: A("age-only JIT explanation preserves venueId"), CANCEL: A("gate cancel returns to the same locked venue detail"),
-    ERROR: A("simulated age failure retains the venue-scoped return token"), RETRY: A("same venue age task retry"), TERMINAL: A("verified After19 venue card and banner"),
-    RETURN: A("consumed OPEN_AFTER19 action restores the exact venue detail with After19 on"),
+    ENTRY: A("locked compact 19+ access inside the exact canonical venue"), DECISION: A("global 19+ prompt preserves venueId"), CANCEL: A("prompt cancel returns to the same locked venue detail"),
+    ERROR: A("simulated global 19+ failure retains venue context"), RETRY: A("same venue-scoped prompt retry"), TERMINAL: A("unlocked compact access and global banner"),
+    RETURN: A("the exact canonical detail remains mounted with After19 on"),
   }),
   flow("FL-003", "Table to image chat to feedback", {
-    ENTRY: A("shared Tables surface mounted in B"), DECISION: A("place/time join request"), CANCEL: A("leave confirmation cancel"),
-    ERROR: A("deterministic table-network failure and locked chat"), RETRY: A("visible join retry"), TERMINAL: A("chat photo/check-in/feedback receipt"), RETURN: A("reload returns to joined Table"),
+    ENTRY: A("B-native Pulse Tables detail"), DECISION: A("Account then 19+ join plan with exact draft"), CANCEL: A("gate cancel preserves draft and leave cancel preserves seat"),
+    ERROR: A("deterministic 19+ gate and message failures"), RETRY: A("same join gate and failed message retry"), TERMINAL: A("image chat/check-in/feedback receipt"), RETURN: A("reload returns to persisted joined Table"),
   }),
   flow("FL-004", "Checkout to stamp milestone", {
-    ENTRY: A("canonical venue checkout"), DECISION: A("KRW/OOKRW preview confirmation"), CANCEL: A("cancel keeps receipt/stamp absent"),
-    ERROR: A("payment-declined keeps stamp 9"), RETRY: A("failed checkout Try again"), TERMINAL: A("receipt then unique visit 9 to 10"), RETURN: A("close returns to same venue context"),
+    ENTRY: A("canonical meal benefit in ID · Wallet"), DECISION: A("benefit, wallet, minimum consent and OOKRW quote"), CANCEL: A("offer cancel returns to exact canonical detail with no receipt"),
+    ERROR: A("injected payment failure keeps receipt and visit stamp absent"), RETRY: A("B-native payment recovery retries the same offer"), TERMINAL: A("receipt, visit 9→10, then refund receipt"), RETURN: A("receipt return restores the exact origin venue"),
   }),
   flow("FL-005", "Korean CX", {
-    ENTRY: A("Korean persona local-signal Person gate"), DECISION: A("OmniOne CX route"), CANCEL: A("gate cancel preserves signal draft"),
+    ENTRY: A("local-contributor Local Signal Person gate"), DECISION: A("B-native mobile_id_cx / OmniOne CX route"), CANCEL: A("gate cancel preserves exact signal draft"),
     ERROR: A("simulated CX failure"), RETRY: A("same gate retry"), TERMINAL: A("PER-VERIFIED only"), RETURN: A("original local-signal sheet"),
   }),
   flow("FL-006", "Residence Card", {
-    ENTRY: A("resident local-signal Person gate"), DECISION: A("ordinary Mobile Residence Card action resolves NOT_CONFIGURED"), CANCEL: A("gate cancel preserves the exact signal draft"),
-    ERROR: A("visible unsupported result without QA controls"), RETRY: A("passport alternate is the only completion route"), TERMINAL: A("PER-VERIFIED only after passport completion"), RETURN: A("original venue-scoped local-signal sheet exactly once"),
+    ENTRY: A("preparing persona Local Signal Person gate"), DECISION: A("mobile_residence_card route resolves unavailable"), CANCEL: A("gate cancel preserves the exact signal draft"),
+    ERROR: A("B-native unavailable result without a fake provider"), RETRY: A("passport_ekyc alternate is the explicit completion route"), TERMINAL: A("PER-VERIFIED only after passport completion"), RETURN: A("original venue-scoped B Local Signal remains exact"),
   }),
   flow("FL-007", "Short-term onboarding", {
-    ENTRY: A("first-run guide"), DECISION: A("short-term intent/preferences"), CANCEL: A("Explore as guest"),
-    ERROR: A("onboarding=failure fallback"), RETRY: N("validation failure intentionally falls through to the usable map; no retry screen is specified"), TERMINAL: A("ONB-COMPLETE guest"), RETURN: A("real B nation/map shell"),
+    ENTRY: A("first-run guest setup"), DECISION: A("travelling persona and preferences"), CANCEL: A("Explore without setup"),
+    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: N("The canonical onboarding contract falls back to a usable guest Explore; retry is not a required user checkpoint."), TERMINAL: A("ONB-COMPLETE travelling guest"), RETURN: A("real B nation/map shell"),
   }),
   flow("FL-008", "Korean local onboarding", {
-    ENTRY: A("first-run guide"), DECISION: A("Korean-local persona"), CANCEL: A("Explore as guest"),
-    ERROR: A("onboarding=failure fallback"), RETRY: N("fallback is the terminal Guest map; CX is not started here"), TERMINAL: A("map without CX gate"), RETURN: A("real B nation/map shell"),
+    ENTRY: A("first-run guest setup"), DECISION: A("local_contributor persona"), CANCEL: A("Explore without setup"),
+    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: N("The canonical onboarding contract falls back to guest Explore and does not start or retry CX during setup."), TERMINAL: A("map without prematurely opening CX"), RETURN: A("real B nation/map shell"),
   }),
   flow("FL-009", "Resident onboarding", {
-    ENTRY: A("first-run guide"), DECISION: A("resident persona"), CANCEL: A("Explore as guest"),
-    ERROR: A("onboarding=failure fallback"), RETRY: N("fallback is the terminal Guest map; Residence Card is not started here"), TERMINAL: A("map without Residence gate"), RETURN: A("real B nation/map shell"),
+    ENTRY: A("first-run guest setup"), DECISION: A("preparing persona"), CANCEL: A("Explore without setup"),
+    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: N("The canonical onboarding contract falls back to guest Explore and does not start or retry Residence checks during setup."), TERMINAL: A("map without prematurely opening Residence route"), RETURN: A("real B nation/map shell"),
   }),
   flow("FL-010", "Account gate", {
     ENTRY: A("Save on canonical venue"), DECISION: A("account explanation/start"), CANCEL: A("Escape preserves selected venue"),
@@ -106,12 +113,12 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ERROR: A("save-failed fixture exposes a visible local-save failure while preserving the venue and CTA"), RETRY: A("Retry save reaches the persisted Saved state"), TERMINAL: A("saved card persists through reload into My Korea"), RETURN: A("saved card returns to exact venue"),
   }),
   flow("FL-012", "Local signal first mission", {
-    ENTRY: A("venue Local Signal"), DECISION: A("note/photo draft"), CANCEL: A("Cancel draft returns to venue"),
-    ERROR: A("local-signal-fail preserves draft"), RETRY: A("visible Try again plus clean-route success"), TERMINAL: A("Visit and Contribution only"), RETURN: A("Return to same venue"),
+    ENTRY: A("B-native venue Local Signal"), DECISION: A("tag/note/photo draft"), CANCEL: A("Escape discards draft and returns to detail"),
+    ERROR: A("device-write failure preserves exact draft"), RETRY: A("same post action succeeds after storage recovery"), TERMINAL: A("Contribution only; no payment or visit inference"), RETURN: A("exact canonical detail remains mounted"),
   }),
   flow("FL-013", "Manual 19+ proof", {
-    ENTRY: A("After 19 chip"), DECISION: A("Confirm 19+"), CANCEL: A("Escape to normal ONDO"),
-    ERROR: A("simulated proof failure"), RETRY: A("same proof retry"), TERMINAL: A("AGE-VERIFIED/A19-ON"), RETURN: A("B map remains available"),
+    ENTRY: A("global 19+ chip"), DECISION: A("venue/city-scoped minimum confirmation"), CANCEL: A("prompt cancel to normal ONDO"),
+    ERROR: A("injected global proof failure"), RETRY: A("same prompt retry"), TERMINAL: A("eligible/on global session"), RETURN: A("B map remains available"),
   }),
   flow("FL-014", "Auto After19", {
     ENTRY: A("fixed KST evening resume"), DECISION: A("four guards cause banner"), CANCEL: A("manual off"),
@@ -126,8 +133,8 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
     ERROR: A("unknown/stale and ineligible trait"), RETRY: A("trait retry fixture"), TERMINAL: A("limited eligibility, never safety guarantee"), RETURN: A("same venue or Labs parent"),
   }),
   flow("FL-017", "Payment KYC", {
-    ENTRY: A("checkout Continue with Payment KYC"), DECISION: A("separate Payment KYC gate"), CANCEL: A("gate cancel to same checkout"),
-    ERROR: A("simulated KYC failure"), RETRY: A("same checkout token retry"), TERMINAL: A("PKY-VERIFIED only"), RETURN: A("same checkout, then receipt"),
+    ENTRY: A("B-native meal benefit payment decision"), DECISION: A("separate payment_kyc action axis"), CANCEL: A("gate cancel to same origin-scoped offer"),
+    ERROR: A("injected payment-axis failure"), RETRY: A("same checkout token retry"), TERMINAL: A("payment eligible independently, then receipt"), RETURN: A("receipt returns to exact canonical origin"),
   }),
   flow("FL-018", "Labs wallet and bridge", {
     ENTRY: A("My Korea Labs opt-in"), DECISION: A("acknowledge/signer/quote"), CANCEL: A("bridge cancel changes no assets"),
@@ -148,7 +155,7 @@ export const B_CONTENT_CASES = [
   locale,
 })))
 
-type RuntimeEvidence = { product: string[]; externalMap: string[]; externalAsset: string[] }
+type RuntimeEvidence = { product: string[]; externalMap: string[]; externalAsset: string[]; navigationAbort: string[] }
 const runtimeEvidence = new WeakMap<Page, RuntimeEvidence>()
 const EXTERNAL_MAP_HOSTS = new Set(["tiles.openfreemap.org"])
 const EXTERNAL_ASSET_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"])
@@ -163,8 +170,18 @@ function isExternalAssetUrl(raw: string | undefined) {
   try { return EXTERNAL_ASSET_HOSTS.has(new URL(raw).hostname) } catch { return [...EXTERNAL_ASSET_HOSTS].some((host) => raw.includes(host)) }
 }
 
+function isExpectedNextNavigationAbort(raw: string, reason: string) {
+  if (reason !== "net::ERR_ABORTED") return false
+  try {
+    const url = new URL(raw)
+    return url.pathname === B_ROUTE && url.searchParams.has("_rsc")
+  } catch {
+    return false
+  }
+}
+
 export function installBRuntimeGuard(page: Page) {
-  const evidence: RuntimeEvidence = { product: [], externalMap: [], externalAsset: [] }
+  const evidence: RuntimeEvidence = { product: [], externalMap: [], externalAsset: [], navigationAbort: [] }
   runtimeEvidence.set(page, evidence)
   page.on("console", (message) => {
     if (message.type() !== "error") return
@@ -179,6 +196,7 @@ export function installBRuntimeGuard(page: Page) {
     const reason = request.failure()?.errorText ?? "request failed"
     if (isExternalMapUrl(request.url())) evidence.externalMap.push(`requestfailed: ${request.url()} · ${reason}`)
     else if (isExternalAssetUrl(request.url())) evidence.externalAsset.push(`requestfailed: ${request.url()} · ${reason}`)
+    else if (isExpectedNextNavigationAbort(request.url(), reason)) evidence.navigationAbort.push(`requestfailed: ${request.url()} · ${reason}`)
     else evidence.product.push(`requestfailed: ${request.url()} · ${reason}`)
   })
   page.on("response", (response) => {
@@ -206,7 +224,7 @@ export async function expectBRuntimeClean(page: Page) {
 
 export type BSessionSeed = Record<string, unknown> & {
   onboarding?: string
-  persona?: "short_term" | "long_term_resident" | "korean_local"
+  persona?: "short_term" | "long_term_resident" | "korean_local" | "travelling" | "preparing" | "local_contributor"
   account?: string
   person?: string
   age?: string
@@ -238,7 +256,17 @@ export async function seedB(
   } = {},
 ) {
   await page.addInitScript(({ nextLocale, nextSession, nextLocal, shouldClear }) => {
-    const legacySession = {
+    const legacySession: Record<string, unknown> & {
+      onboarding: string
+      persona: string
+      account: string
+      person: string
+      age: string
+      ageExpiresAt?: string
+      paymentKyc: string
+      after19: string
+      stamps: number
+    } = {
       onboarding: "ONB-COMPLETE", persona: "short_term", account: "ACC-GUEST", person: "PER-UNVERIFIED",
       age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED", after19: "A19-OFF", stamps: 9, ...nextSession,
     }
@@ -246,29 +274,67 @@ export async function seedB(
       locale: nextLocale, guideSeen: true, autoNight: true, savedVenueIds: [], discoveryPreferences: [], ...nextLocal,
     }))
     if (!sessionStorage.getItem("ondo.session.v3")) sessionStorage.setItem("ondo.session.v3", JSON.stringify(legacySession))
-    if (!localStorage.getItem("ondo-b.device.v1")) {
-      const persona = legacySession.persona === "korean_local"
-        ? "local_contributor"
-        : legacySession.persona === "long_term_resident"
-          ? "preparing"
-          : "travelling"
-      localStorage.setItem("ondo-b.device.v1", JSON.stringify({
-        locale: nextLocale,
-        onboarding: legacySession.onboarding === "ONB-NEW" ? "ONB-NEW" : "ONB-COMPLETE",
-        persona,
-        discoveryPreferences: [],
-        savedVenueIds: [],
-        privateNotesByVenue: {},
-        recentVenueIds: [],
-        plannedTableRefs: [],
-        localSignalPostedVenueIds: [],
-        localPulseEvidenceByVenue: {},
-        localInteractionBoundarySeen: false,
-        commerceLocalBoundarySeen: false,
-        commerceReceipts: [],
-        ...nextLocal,
-      }))
-    }
+    const persona = legacySession.persona === "korean_local"
+      ? "local_contributor"
+      : legacySession.persona === "long_term_resident"
+        ? "preparing"
+        : legacySession.persona === "short_term"
+          ? "travelling"
+          : legacySession.persona
+    const legacyMembership = legacySession["tableMembershipById"] && typeof legacySession["tableMembershipById"] === "object"
+      ? legacySession["tableMembershipById"] as Record<string, unknown>
+      : {}
+    const plannedTableRefs = legacyMembership["table-seoul-night-bites"]
+      ? [{ tableId: "table-seoul-night-bites", venueId: "mois-0021cd596bc5b2a922ad" }]
+      : []
+    if (!localStorage.getItem("ondo-b.device.v1")) localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: nextLocale,
+      onboarding: legacySession.onboarding === "ONB-NEW" ? "ONB-NEW" : "ONB-COMPLETE",
+      persona: persona ?? null,
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      savedEditorialPlaceIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      recentEditorialPlaceIds: [],
+      plannedTableRefs,
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+      ...nextLocal,
+    }))
+
+    const axisExpiresAt = "2026-08-20T11:30:00.000Z"
+    if (!sessionStorage.getItem("ondo-b.account.v1")) sessionStorage.setItem("ondo-b.account.v1", JSON.stringify({
+      account: legacySession.account === "ACC-ACTIVE" ? "ACC-ACTIVE" : "ACC-GUEST",
+      returnTo: null,
+    }))
+    if (!sessionStorage.getItem("ondo-b.action-gates.v1")) sessionStorage.setItem("ondo-b.action-gates.v1", JSON.stringify({
+      version: 1,
+      person: legacySession.person === "PER-VERIFIED" ? { status: "eligible", expiresAt: axisExpiresAt } : { status: "unverified", expiresAt: null },
+      payment: legacySession.paymentKyc === "PKY-VERIFIED" ? { status: "eligible", expiresAt: axisExpiresAt } : { status: "unverified", expiresAt: null },
+      pending: null,
+      lastConsumed: null,
+      outcome: null,
+    }))
+    const ageEligible = legacySession.age === "AGE-VERIFIED"
+    if (!sessionStorage.getItem("ondo-b.after19.session.v1")) sessionStorage.setItem("ondo-b.after19.session.v1", JSON.stringify({
+      version: 1,
+      age: ageEligible ? "eligible" : "unverified",
+      ageExpiresAt: ageEligible ? (legacySession.ageExpiresAt ?? axisExpiresAt) : null,
+      mode: legacySession.after19 === "A19-ON" ? "on" : legacySession.after19 === "A19-MANUAL-OFF" ? "manual-off" : "off",
+      activation: legacySession.after19 === "A19-ON" ? "manual" : null,
+      expiryNotice: false,
+    }))
+    if (!localStorage.getItem("ondo-b.after19.preferences.v1")) localStorage.setItem("ondo-b.after19.preferences.v1", JSON.stringify({ version: 1, autoOpen: true }))
+    if (!sessionStorage.getItem("ondo-b.activity-profile.v1")) sessionStorage.setItem("ondo-b.activity-profile.v1", JSON.stringify({
+      profile: legacySession["profile"] ?? { displayName: "Traveler", from: { value: "", consent: false }, livesIn: { value: "", consent: false }, languages: { value: [], consent: false } },
+      reputation: legacySession["reputation"] ?? { visit: "new", contribution: "new", meetup: "new" },
+      stamps: typeof legacySession.stamps === "number" ? legacySession.stamps : 0,
+      acceptedEvidenceIds: legacySession["acceptedActivityEventKeys"] ?? [],
+    }))
     if (shouldClear && sessionStorage.getItem("ondo.qa.b-seed-cleared") !== "1") {
       sessionStorage.removeItem("ondo.chat.v2")
       sessionStorage.removeItem("ondo.table-outcomes.v2")
@@ -282,14 +348,36 @@ export async function seedB(
 
 export async function seedFreshOnboarding(page: Page, locale: BLocale = "en") {
   await page.addInitScript((nextLocale) => {
+    if (sessionStorage.getItem("ondo.qa.b-fresh-cleared") === "1") return
     localStorage.removeItem("ondo.preferences.v3")
-    localStorage.setItem("ondo-b.device.v1", JSON.stringify({ locale: nextLocale, onboarding: "ONB-NEW" }))
+    if (!localStorage.getItem("ondo-b.device.v1")) localStorage.setItem("ondo-b.device.v1", JSON.stringify({
+      locale: nextLocale,
+      onboarding: "ONB-NEW",
+      persona: null,
+      discoveryPreferences: [],
+      savedVenueIds: [],
+      savedEditorialPlaceIds: [],
+      privateNotesByVenue: {},
+      recentVenueIds: [],
+      recentEditorialPlaceIds: [],
+      plannedTableRefs: [],
+      localSignalPostedVenueIds: [],
+      localPulseEvidenceByVenue: {},
+      localInteractionBoundarySeen: false,
+      commerceLocalBoundarySeen: false,
+      commerceReceipts: [],
+    }))
     sessionStorage.removeItem("ondo.session.v3")
+    sessionStorage.removeItem("ondo-b.account.v1")
+    sessionStorage.removeItem("ondo-b.action-gates.v1")
+    sessionStorage.removeItem("ondo-b.after19.session.v1")
+    sessionStorage.removeItem("ondo-b.activity-profile.v1")
     sessionStorage.removeItem("ondo.chat.v2")
     sessionStorage.removeItem("ondo.table-outcomes.v2")
     sessionStorage.removeItem("ondo.labs.v2")
     sessionStorage.removeItem("ondo-b.labs.v1")
     sessionStorage.removeItem("ondo.accepted-visits.v2")
+    sessionStorage.setItem("ondo.qa.b-fresh-cleared", "1")
     if (nextLocale === "ko") localStorage.setItem("ondo.preferences.v3", JSON.stringify({ locale: "ko", guideSeen: false, autoNight: true, savedVenueIds: [], discoveryPreferences: [] }))
   }, locale)
 }
@@ -325,10 +413,11 @@ export async function openCanonicalVenue(page: Page, { expanded = true, query = 
 }
 
 export async function openTables(page: Page, tableId = TABLE_ID) {
-  await page.getByRole("button", { name: "Tables", exact: true }).click()
-  const tables = page.getByRole("region", { name: "Tables by place" })
+  await page.getByTestId("nav-tables").click()
+  const tables = page.getByTestId("tables-entry")
   await expect(tables).toBeVisible()
-  await tables.locator(`[data-table-id='${tableId}']`).click()
+  await page.getByTestId(`table-open-${tableId}`).click()
+  await expect(page.getByTestId("table-detail")).toHaveAttribute("data-table-id", tableId)
 }
 
 export async function openLabs(page: Page) {
@@ -344,29 +433,55 @@ export async function openLabs(page: Page) {
 }
 
 export async function finishAccountGate(page: Page) {
-  await page.getByRole("button", { name: "Create account · Simulated" }).click()
-  await page.getByRole("button", { name: "Complete account simulation" }).click()
+  const saveGate = page.getByTestId("account-save-gate")
+  if (await saveGate.isVisible().catch(() => false)) {
+    await saveGate.getByTestId("account-start").click()
+    await saveGate.getByTestId("account-complete").click()
+    return
+  }
+  await page.getByTestId("ondo-b-action-gate").getByTestId("action-gate-confirm").click()
 }
 
 export async function finishPersonGate(page: Page) {
-  await page.getByRole("button", { name: "Start check" }).click()
-  await page.getByRole("button", { name: "Complete simulated check" }).click()
-  await expect.poll(() => sessionState(page)).toMatchObject({ person: "PER-VERIFIED" })
+  const gate = page.getByTestId("ondo-b-action-gate")
+  await gate.getByTestId("local-check-boundary-continue").click()
+  await expect.poll(async () => (await sessionState(page)).person).toBe("PER-VERIFIED")
 }
 
 export async function finishAgeGate(page: Page) {
-  await page.getByRole("button", { name: "Start 19+ check simulation" }).click()
-  await page.getByRole("button", { name: "Confirm 19+ · Simulated" }).click()
+  const actionGate = page.getByTestId("ondo-b-action-gate")
+  if (await actionGate.isVisible().catch(() => false)) await actionGate.getByTestId("after19-start").click()
+  else await page.getByTestId("global-after19-confirm").click()
 }
 
 export async function finishPaymentGate(page: Page) {
-  await page.getByRole("button", { name: "Start Payment KYC simulation" }).click()
-  await page.getByRole("button", { name: "Complete Payment KYC · Simulated" }).click()
+  await page.getByTestId("ondo-b-action-gate").getByTestId("action-gate-confirm").click()
   await expect.poll(async () => (await sessionState(page)).paymentKyc).toBe("PKY-VERIFIED")
 }
 
 export async function sessionState(page: Page) {
-  return page.evaluate(() => JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}") as Record<string, unknown>)
+  return page.evaluate(() => {
+    const legacy = JSON.parse(sessionStorage.getItem("ondo.session.v3") ?? "{}") as Record<string, unknown>
+    const account = JSON.parse(sessionStorage.getItem("ondo-b.account.v1") ?? "{}") as Record<string, unknown>
+    const action = JSON.parse(sessionStorage.getItem("ondo-b.action-gates.v1") ?? "{}") as {
+      person?: { status?: unknown }
+      payment?: { status?: unknown }
+      pending?: unknown
+    }
+    const after19 = JSON.parse(sessionStorage.getItem("ondo-b.after19.session.v1") ?? "{}") as Record<string, unknown>
+    const activity = JSON.parse(sessionStorage.getItem("ondo-b.activity-profile.v1") ?? "{}") as Record<string, unknown>
+    return {
+      ...legacy,
+      account: account.account ?? legacy.account ?? "ACC-GUEST",
+      person: action.person?.status === "eligible" ? "PER-VERIFIED" : "PER-UNVERIFIED",
+      paymentKyc: action.payment?.status === "eligible" ? "PKY-VERIFIED" : "PKY-NOT-STARTED",
+      age: after19.age === "eligible" ? "AGE-VERIFIED" : "AGE-UNVERIFIED",
+      after19: after19.mode === "on" ? "A19-ON" : after19.mode === "manual-off" ? "A19-MANUAL-OFF" : "A19-OFF",
+      stamps: activity.stamps ?? legacy.stamps ?? 0,
+      reputation: activity.reputation ?? legacy.reputation,
+      gate: action.pending ?? null,
+    } as Record<string, unknown>
+  })
 }
 
 export async function expectNoRawTruthLeaks(page: Page, scope?: Locator) {
@@ -422,14 +537,13 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
   await seedB(page, { locale, session })
   if (surface === "nation" || surface === "after19") {
     await gotoB(page, surface === "after19" ? "?city=seoul" : "")
-    if (surface === "after19") await expect(page.getByTestId("after19-auto-banner")).toBeVisible()
-    return surface === "after19" ? page.getByTestId("ondo-after19-layer") : page.getByTestId("ondo-b-map-entry")
+    if (surface === "after19") await expect(page.getByTestId("global-after19-banner")).toBeVisible()
+    return surface === "after19" ? page.getByTestId("ondo-b-after19-global") : page.getByTestId("ondo-b-map-entry")
   }
   if (surface === "city-list") {
     await gotoB(page)
     await page.locator("[data-city='seoul']").click()
-    const listName = locale === "ko" ? "목록" : "List"
-    await page.getByRole("button", { name: listName }).click()
+    await page.getByTestId("ondo-b-view-toggle").click()
     return page.getByTestId("ondo-b-map-entry")
   }
   if (surface === "place") {
@@ -439,25 +553,21 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
   if (surface === "account-gate") {
     await openCanonicalVenue(page)
     await page.getByTestId("canonical-venue-save").click()
-    return page.getByTestId("ondo-gate-overlay")
+    return page.getByTestId("account-save-gate")
   }
   if (surface === "age-gate") {
     await gotoB(page, "?city=seoul")
-    const chip = locale === "ko" ? "After 19" : "After 19"
-    await page.getByRole("button", { name: chip, exact: true }).click()
-    await page.getByRole("button", { name: /Confirm 19\+|19\+ 확인/ }).click()
-    return page.getByTestId("ondo-gate-overlay")
+    await page.getByTestId("global-after19-toggle").click()
+    return page.getByTestId("global-after19-prompt-layer")
   }
   if (surface === "tables" || surface === "table-chat") {
     await gotoB(page)
-    const nav = page.getByRole("navigation").locator("button").nth(2)
-    await nav.click()
+    await page.getByTestId("nav-tables").click()
     if (surface === "tables") return page.getByTestId("tables-entry")
-    const joined = page.getByRole("region", { name: locale === "ko" ? "참여 중" : "Joined" })
-    await joined.locator(`[data-table-id='${TABLE_ID}']`).click()
+    await page.getByTestId(`table-open-${TABLE_ID}`).click()
     const chat = page.getByTestId("table-chat")
     if (!(await chat.isVisible().catch(() => false))) {
-      const openChat = page.getByRole("button", { name: locale === "ko" ? "대화 열기" : "Open chat" })
+      const openChat = page.getByTestId("table-open-chat")
       if (await openChat.isVisible().catch(() => false)) await openChat.click()
     }
     await expect(chat).toBeVisible()
@@ -465,18 +575,18 @@ export async function setupBSurface(page: Page, surface: BSurfaceId, locale: BLo
   }
   if (surface === "local-signal") {
     await openCanonicalVenue(page)
-    await page.getByTestId("canonical-venue-signal").click()
-    return page.getByTestId("local-signal-overlay")
+    await page.getByTestId("canonical-local-signal-open").click()
+    return page.getByTestId("ondo-b-local-signal")
   }
   if (surface === "checkout") {
     await openCanonicalVenue(page)
-    await page.getByTestId("canonical-venue-checkout").click()
-    return page.getByTestId("checkout-overlay")
+    await page.getByTestId("canonical-meal-benefit-open").click()
+    return page.getByTestId("ondo-b-id-wallet-commerce")
   }
   if (surface === "identity" || surface === "profile") {
     await gotoB(page)
-    await page.getByRole("navigation").locator("button").nth(3).click()
-    return surface === "profile" ? page.getByTestId("ondo-profile-panel") : page.getByTestId("ondo-identity-entry")
+    await page.getByTestId("nav-id").click()
+    return surface === "profile" ? page.getByTestId("ondo-profile-panel") : page.getByTestId("ondo-b-traveler-id")
   }
   await gotoB(page)
   await openLabs(page)
