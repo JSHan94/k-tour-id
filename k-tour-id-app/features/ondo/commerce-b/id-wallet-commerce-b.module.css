@@ -555,26 +555,9 @@
 .root summary { min-height: 45px; }
 
 .heading { gap: 5px; padding-inline: 2px; }
-.heading > p { color: #9b4434; letter-spacing: .17em; }
+.heading > p { color: var(--flow8-plum); letter-spacing: .17em; }
 .heading h2 { font-size: clamp(30px, 9vw, 42px); font-weight: 805; letter-spacing: -.055em; }
 .heading > span { max-width: 540px; color: #6d625d; font-size: 13px; line-height: 1.48; }
-
-.nonLiveBoundary {
-  display: flex;
-  min-height: 38px;
-  align-items: center;
-  gap: 8px;
-  margin: -2px 0 0;
-  border: 1px solid rgb(73 51 42 / 9%);
-  border-radius: 14px;
-  padding: 8px 11px;
-  background: rgb(255 252 247 / 74%);
-  color: #665851;
-  font-size: 12px;
-  font-weight: 690;
-  line-height: 1.35;
-}
-.nonLiveBoundary svg { flex: 0 0 auto; color: #a14c39; }
 
 .balanceCard {
   position: relative;
@@ -595,6 +578,7 @@
 }
 .balanceCard::before {
   opacity: 0;
+  transform: none;
   animation: none;
 }
 .balanceCard::after {
@@ -619,6 +603,8 @@
 .balanceCard[data-wallet-state="ready"]::before {
   opacity: .42;
   background: linear-gradient(108deg, transparent 15%, rgb(255 255 255 / 14%) 42%, transparent 65%);
+  background-position: 160% 0;
+  background-size: 220% 100%;
   animation: flow8Glint var(--flow8-motion-emphasis) 100ms cubic-bezier(.2, .8, .2, 1) both;
 }
 .balanceCard[data-wallet-state="ready"]::after {
@@ -930,7 +916,6 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
-  .nonLiveBoundary { min-height: 34px; padding-block: 5px; }
   .balanceCard { min-height: 164px; gap: 7px; padding: 13px 15px; }
   .balanceTop { gap: 8px; }
   .balanceTop small { max-width: 145px; }
@@ -955,7 +940,6 @@
 @media (orientation: landscape) and (max-height: 500px) {
   .root { grid-template-columns: minmax(250px, .78fr) minmax(320px, 1.22fr); align-items: start; gap: 10px 16px; margin-top: 0; }
   .heading { grid-column: 1; }
-  .nonLiveBoundary { grid-column: 1; }
   .balanceCard { grid-column: 1; min-height: 168px; }
   .dashboardGrid { grid-column: 2; grid-row: 1 / span 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .privacy { grid-column: 1 / -1; }
@@ -969,7 +953,15 @@
   .offerBenefit { grid-column: 2; grid-row: 1; margin: 0; padding: 13px; }
   .consentCard { grid-column: 2; grid-row: 2; margin: 0; padding: 11px; }
   .consentCard > div p { display: none; }
-  .testDetails { display: none; }
+  .testDetails {
+    display: block;
+    max-height: 44px;
+    grid-column: 2;
+    grid-row: 3;
+    margin: 0;
+    overflow: auto;
+  }
+  .testDetails[open] { max-height: 112px; }
   .offerDecision {
     position: fixed;
     z-index: 8;
@@ -1009,7 +1001,6 @@
     margin-top: 0;
   }
   .heading,
-  .nonLiveBoundary,
   .balanceCard { grid-column: 1; }
   .dashboardGrid { grid-column: 2; grid-row: 1 / span 3; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
   .benefitCard,
@@ -1054,7 +1045,6 @@
     gap: 10px;
   }
   .heading,
-  .nonLiveBoundary,
   .balanceCard,
   .dashboardGrid,
   .privacy {
@@ -1070,7 +1060,10 @@
 }
 
 @keyframes flow8ObjectIn { from { opacity: 0; transform: translateY(10px) scale(.992); } }
-@keyframes flow8Glint { from { transform: translateX(-72%); } to { transform: translateX(72%); } }
+@keyframes flow8Glint {
+  from { opacity: 0; background-position: 160% 0; }
+  to { opacity: .42; background-position: -60% 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .balanceCard,
@@ -1107,9 +1100,7 @@
   .heading { gap: 2px; }
   .heading h2 { font-size: 32px; }
   .heading > span { display: none; }
-  .nonLiveBoundary { min-height: 28px; padding-block: 3px; font-size: 12px; line-height: 1.22; }
   .heading,
-  .nonLiveBoundary,
   .balanceCard,
   .dashboardGrid,
   .privacy { grid-column: 1; grid-row: auto; }

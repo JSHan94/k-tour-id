@@ -57,7 +57,7 @@ async function expectNoSeriousAxe(page: Page, selector: string) {
 }
 
 async function activateTab(page: Page, name: "My Korea" | "ID", targetTestId: string) {
-  const tab = page.getByRole("button", { name, exact: true })
+  const tab = page.getByTestId(name === "My Korea" ? "nav-my" : "nav-id")
   await expect.poll(async () => {
     await tab.click({ force: true, timeout: 1_000 }).catch(() => undefined)
     return page.getByTestId(targetTestId).isVisible().catch(() => false)
@@ -160,20 +160,21 @@ test("SLK-009 Japanese B Labs localizes the boundary, decisions, failures, retri
   await page.getByTestId("open-labs").click({ force: true })
 
   const boundary = page.getByRole("dialog", { name: "技術ラボ" })
-  await expect(boundary).toContainText("技術的な仮説を体験する実験エリアです")
+  await expect(boundary).toContainText("ウォレット準備、経路確認、旅の記念ツール")
+  await expect(boundary).toContainText("お金・アカウント・プロバイダー・ネットワークには接続しません")
   await expect(boundary.getByTestId("labs-acknowledge")).toHaveAccessibleName("内容を確認して見る")
   await expect(boundary).not.toContainText(/This is an experimental area|I understand|Wallet, balance, bridge/i)
   await boundary.getByTestId("labs-acknowledge").click()
 
   const labs = page.getByTestId("labs-overlay")
   await expect(labs).toContainText("資産別残高")
-  await expect(labs).toContainText("チェーン接続仮説のシミュレーション")
+  await expect(labs).toContainText("チェーン経路チェック")
   await expect(labs).toContainText("店舗の利用条件")
   await expect(labs).toContainText("2026年8月1日")
-  await expect(labs).not.toContainText(/Balances by asset|Bridge hypothesis simulation|Merchant access conditions|Souvenir badge simulation|Target network:|Checked at|Retry this condition/i)
+  await expect(labs).not.toContainText(/Balances by asset|Bridge hypothesis simulation|Merchant access conditions|Souvenir badge simulation|Target network:|Checked at|Retry this condition|シミュレーション|プレビュー/i)
 
   await labs.getByTestId("labs-connect-wallet").click()
-  await expect(labs.getByTestId("labs-wallet-outcome")).toContainText("テスト接続を完了できませんでした")
+  await expect(labs.getByTestId("labs-wallet-outcome")).toContainText("署名の準備を完了できませんでした")
   await expect(labs.getByTestId("labs-connect-wallet")).toHaveAccessibleName("もう一度試す")
   await page.evaluate(() => sessionStorage.removeItem("ondo.qa.scenario.v1"))
   await labs.getByTestId("labs-connect-wallet").click()
@@ -199,16 +200,16 @@ test("SLK-009 Japanese B Labs localizes the boundary, decisions, failures, retri
   await expect(trait).toHaveAttribute("data-trait-state", "eligible")
   await expect(trait).toContainText("条件を満たしています")
 
-  const consent = labs.getByLabel("公開用の記念バッジ・シミュレーションに同意します。")
+  const consent = labs.getByLabel("公開バッジには場所のアクティビティだけを使います。")
   await consent.check()
   await page.evaluate(() => sessionStorage.setItem("ondo.qa.scenario.v1", "mint-failed"))
   await labs.getByTestId("labs-badge-mint").click()
   await expect(labs).toHaveAttribute("data-mint-state", "NFT-FAILED")
-  await expect(labs).toContainText("記念バッジのシミュレーションを完了できませんでした")
+  await expect(labs).toContainText("バッジ情報を準備できませんでした")
   await page.evaluate(() => sessionStorage.removeItem("ondo.qa.scenario.v1"))
   await labs.getByTestId("labs-badge-mint").click()
   await expect(labs).toHaveAttribute("data-mint-state", "NFT-MINTED")
-  await expect(labs).toContainText("実際のNFTや取引は作成されていません")
+  await expect(labs).toContainText("NFTや取引は作成されていません")
 })
 
 test("SLK-009 B Labs isolates its session from A and cannot restore a badge without the local milestone", async ({ page }) => {

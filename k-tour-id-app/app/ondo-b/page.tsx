@@ -2,8 +2,9 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
-const title = "ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju"
-const description = "Browse 400 licensed Seoul and Busan food-service records alongside a source-linked Jeju editorial collection; pending places remain separate from official records."
+const title = "K-TOUR ID | ONDO 溫圖"
+const description = "A map-first Korea travel experience by ONDO 溫圖—discover Seoul, Busan, and Jeju with a privacy-minded K-TOUR ID travel pass."
+const socialImage = "/og-map-first.png"
 
 function configuredOrigin() {
   const configured = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN
@@ -19,7 +20,8 @@ function configuredOrigin() {
 function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
   const configured = configuredOrigin()
   if (configured) return configured
-  const host = requestHeaders.get("host")?.toLowerCase() ?? ""
+  const forwardedHost = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim().toLowerCase() ?? ""
+  const host = (forwardedHost || requestHeaders.get("host")?.toLowerCase()) ?? ""
   if (/^(?:localhost|127\.0\.0\.1)(?::\d{1,5})?$/.test(host)) {
     try {
       return new URL(`http://${host}`).origin
@@ -28,29 +30,32 @@ function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
     }
   }
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.phenixnet-jl\.chatgpt\.site$/.test(host)) return `https://${host}`
+  if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.vercel\.app$/.test(host)) return `https://${host}`
   return "https://ondo-directory.invalid"
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers()
   const origin = requestOrigin(requestHeaders)
-  const imageUrl = new URL("/og-ondo-directory.png", origin).toString()
+  const imageUrl = new URL(socialImage, origin).toString()
 
   return {
     metadataBase: new URL(origin),
-    applicationName: "ONDO",
+    applicationName: "K-TOUR ID",
     title,
     description,
     alternates: { canonical: "/ondo-b" },
     openGraph: {
-      siteName: "ONDO",
+      siteName: "K-TOUR ID",
       title,
       description,
+      type: "website",
+      url: "/ondo-b",
       images: [{
         url: imageUrl,
-        width: 1200,
-        height: 630,
-        alt: "ONDO 溫圖 Korea map with 400 official Seoul and Busan records and a separate Jeju editorial collection",
+        width: 1731,
+        height: 909,
+        alt: "K-TOUR ID by ONDO 溫圖 — a map-first Korea travel experience",
       }],
     },
     twitter: {

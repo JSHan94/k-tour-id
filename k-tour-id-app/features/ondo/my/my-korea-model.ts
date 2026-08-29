@@ -6,7 +6,7 @@ export const MY_KOREA_TABLE_CATALOG = {
   "table-seoul-night-bites": {
     venueId: "mois-0021cd596bc5b2a922ad",
     title: { en: "Night bites, one shared table", ko: "야식 한 상, 함께 앉는 테이블" },
-    schedule: { en: "Fri, Aug 28 · 20:30 KST", ko: "8월 28일 금요일 · 20:30 KST" },
+    schedule: { en: "Fri, Sep 18 · 20:30 KST", ko: "9월 18일 금요일 · 20:30 KST" },
   },
 } as const
 

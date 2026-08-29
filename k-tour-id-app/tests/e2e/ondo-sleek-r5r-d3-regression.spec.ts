@@ -68,7 +68,7 @@ test.describe("D3 CLEAN1 regressions", () => {
         await expect(anchors).toHaveCount(3)
         for (let index = 0; index < 3; index += 1) {
           await expectMinimumMetadataSize(anchors.nth(index).locator("strong"), `${label} city anchor ${index + 1}`)
-          await expectMinimumMetadataSize(anchors.nth(index).locator("[data-region-kind-label]"), `${label} city kind ${index + 1}`)
+          await expect(anchors.nth(index).locator("[data-region-kind-label]")).toHaveCount(0)
           await expect(anchors.nth(index).locator("em")).toHaveCount(0)
         }
         await expectNoHorizontalOverflow(page)

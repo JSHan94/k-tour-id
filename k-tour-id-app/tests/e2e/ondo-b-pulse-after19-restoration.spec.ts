@@ -55,7 +55,7 @@ async function expectExactConfirmation(page: Page, draft: string) {
 test("Pulse Table shows canonical place provenance and host-provided gathering fields", async ({ page }) => {
   await openTables(page)
   const active = page.getByTestId(`table-card-${TABLE_ID}`)
-  await expect(active).toContainText("Place record")
+  await expect(active).toContainText("Place")
   await expect(active).toContainText("The host provides the gathering details")
   const gatheringFields = ["table-sample-time", "table-sample-menu", "table-sample-language", "table-sample-cost", "table-sample-participants"]
   let visibleFields = 0

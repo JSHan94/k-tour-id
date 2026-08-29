@@ -248,7 +248,7 @@ async function auditUltraShortViewMode(
   issue(violations, scenario, "ultra-short-view-noninteractive", "view-mode", !viewReceipt?.visible && focusableVisible === 0, `view=${viewReceipt ? JSON.stringify(viewReceipt) : "absent"} focusable=${focusableVisible}`)
   const resultReceipt = await elementReceipt(result)
   const resultCount = await root.getAttribute("data-result-count")
-  issue(violations, scenario, "ultra-short-compact-count", "result-count", Boolean(resultReceipt?.visible && resultCount && resultReceipt.text.includes(resultCount)), `count=${resultCount} result=${resultReceipt?.text ?? "missing"}`)
+  issue(violations, scenario, "ultra-short-result-action", "result-action", Boolean(resultReceipt?.visible && resultCount && await result.getAttribute("data-result-count") === resultCount), `count=${resultCount} result=${resultReceipt?.text ?? "missing"}`)
   if (await indicator.count()) issue(violations, scenario, "ultra-short-mode-indicator", "list-mode", Boolean(indicatorReceipt?.visible), indicatorReceipt ? JSON.stringify(indicatorReceipt) : "hidden")
 }
 

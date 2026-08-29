@@ -148,9 +148,9 @@ test("FLOW7-COPY-007 local-only draft copy never promises benefit or public cont
     "アカウント、ID、資格情報は作成されません",
   ]) expect(signal).toContain(truth)
   for (const consumerTruth of [
-    "AT THIS OFFICIAL-LISTED PLACE",
-    "공식 목록에 있는 이 장소에서",
-    "公式リストに掲載されたこの場所で",
+    "AT THIS PLACE",
+    "이 장소에서",
+    "この場所で",
     "Confirmation complete",
     "확인을 마쳤어요",
     "確認が完了しました",

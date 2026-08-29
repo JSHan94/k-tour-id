@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react"
 import { useEffect, useLayoutEffect, useRef } from "react"
-import { Bookmark, Compass, Fingerprint, Settings, UsersRound } from "lucide-react"
+import { Bookmark, IdCard, MapPinned, Settings, UsersRound } from "lucide-react"
 import { OndoBProvider, useOndoB, type OndoBTab } from "../shared/state/ondo-b-provider"
 import styles from "./ondo-shell.module.css"
 
@@ -15,11 +15,11 @@ export type OndoBAppSlots = {
   overlays?: ReactNode
 }
 
-const B_NAV: Array<{ id: OndoBTab; icon: typeof Compass }> = [
-  { id: "ondo", icon: Compass },
+const B_NAV: Array<{ id: OndoBTab; icon: typeof MapPinned }> = [
+  { id: "ondo", icon: MapPinned },
   { id: "my", icon: Bookmark },
   { id: "tables", icon: UsersRound },
-  { id: "id", icon: Fingerprint },
+  { id: "id", icon: IdCard },
   { id: "settings", icon: Settings },
 ]
 
@@ -29,9 +29,21 @@ const B_NAV_COPY = {
   ja: { ondo: "探す", my: "マイ韓国", tables: "テーブル", id: "ID・ウォレット", settings: "設定" },
 } as const
 
+const B_NAV_DISPLAY_COPY = {
+  en: { ondo: "Explore", my: "Saved", tables: "Tables", id: "Pass", settings: "Settings" },
+  ko: { ondo: "탐색", my: "저장", tables: "테이블", id: "패스", settings: "설정" },
+  ja: { ondo: "探す", my: "保存", tables: "テーブル", id: "パス", settings: "設定" },
+} as const
+
+const B_NAV_ARIA_COPY = {
+  en: { ondo: "Explore", my: "Saved · My Korea", tables: "Tables", id: "Pass · ID and Wallet", settings: "Settings" },
+  ko: { ondo: "탐색", my: "저장 · 내 한국", tables: "테이블", id: "패스 · ID와 지갑", settings: "설정" },
+  ja: { ondo: "探す", my: "保存・マイ韓国", tables: "テーブル", id: "パス・IDとウォレット", settings: "設定" },
+} as const
+
 const SHELL_COPY = {
-  en: { app: "ONDO official food place app", content: "content", nav: "Main navigation" },
-  ko: { app: "ONDO 공식 식음료 장소 앱", content: "콘텐츠", nav: "주요 메뉴" },
+  en: { app: "ONDO Korea food and travel app", content: "content", nav: "Main navigation" },
+  ko: { app: "ONDO 한국 먹거리·여행 앱", content: "콘텐츠", nav: "주요 메뉴" },
   ja: { app: "ONDO 韓国フード・旅行アプリ", content: "コンテンツ", nav: "メインメニュー" },
 } as const
 
@@ -182,7 +194,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
         >
           {active}
         </div>
-        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" data-nav-presentation="mobile-labeled-desktop-icon-first" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" data-nav-presentation="labeled-universal-icons" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
             <button
               key={id}
@@ -190,18 +202,16 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
               className={state.tab === id ? styles.navActive : undefined}
               aria-current={state.tab === id ? "page" : undefined}
               aria-controls="ondo-active-panel"
-              aria-label={B_NAV_COPY[state.locale][id]}
+              aria-label={B_NAV_ARIA_COPY[state.locale][id]}
               data-state={state.tab === id ? "selected" : "idle"}
               data-testid={`nav-${id}`}
               onFocus={(event) => event.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" })}
               onClick={() => selectTab(id)}
             >
               <span className={styles.navIcon} aria-hidden="true">
-                {id === "ondo"
-                  ? <img src="/brand/ondo-mark-micro-24.svg" alt="" />
-                  : <Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} />}
+                <Icon size={22} strokeWidth={state.tab === id ? 2.35 : 1.75} />
               </span>
-              <small className={styles.navLabel} aria-hidden="true" data-nav-tooltip={B_NAV_COPY[state.locale][id]}>{B_NAV_COPY[state.locale][id]}</small>
+              <small className={styles.navLabel} aria-hidden="true">{B_NAV_DISPLAY_COPY[state.locale][id]}</small>
             </button>
           ))}
         </nav>

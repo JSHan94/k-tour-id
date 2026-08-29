@@ -50,22 +50,83 @@ test.describe("map-first Korea and Jeju integration", () => {
         await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
 
         const atlas = page.getByTestId("ondo-b-korea-atlas")
+        await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-hydrated", "true")
         await expect(atlas).toBeVisible()
+        await page.waitForFunction(() => {
+          const plot = document.querySelector<HTMLElement>("[data-testid='ondo-b-atlas-plot']")
+          const pin = document.querySelector<HTMLElement>("[data-testid='ondo-b-atlas-plot'] [data-city='seoul']")
+          if (!plot || !pin) return false
+          const plotStyle = getComputedStyle(plot)
+          const pinStyle = getComputedStyle(pin)
+          return plotStyle.position === "absolute"
+            && pinStyle.position === "absolute"
+            && pinStyle.display === "grid"
+            && Number.parseFloat(pinStyle.width) >= 148
+            && Number.parseFloat(pinStyle.minHeight) >= 52
+        })
+        await page.evaluate(() => document.fonts.ready)
+        await expect.poll(() => atlas.locator("[data-city]").evaluateAll((nodes) => nodes.every((node) => (
+          (node as HTMLElement).offsetHeight >= 52
+            && node.getAnimations().every((animation) => animation.playState !== "running")
+        )))).toBe(true)
+        await page.waitForTimeout(100)
+        await expect.poll(() => atlas.locator("[data-city]").evaluateAll((nodes) => nodes.every((node) => (
+          (node as HTMLElement).offsetHeight >= 52
+        )))).toBe(true)
         await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveCount(0)
         const atlasBox = await box(atlas)
+        const plotBox = await box(atlas.getByTestId("ondo-b-atlas-plot"))
         expect(atlasBox.height / viewport.height).toBeGreaterThanOrEqual(.52)
         const cityBoxes: Array<Awaited<ReturnType<typeof box>>> = []
+        const pinBoxes: Array<Awaited<ReturnType<typeof box>>> = []
+        const atlasCoordinates = {
+          seoul: { latitude: "37.5647", longitude: "126.9874", atlasX: "86.1", atlasY: "77.6", x: .287, y: .22171 },
+          busan: { latitude: "35.1794", longitude: "129.0541", atlasX: "184.1", atlasY: "212.7", x: .61367, y: .60771 },
+          jeju: { latitude: "33.3802", longitude: "126.5404", atlasX: "64.9", atlasY: "314.6", x: .21633, y: .89886 },
+        } as const
+        const cityLabels = {
+          en: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" },
+          ko: { seoul: "서울", busan: "부산", jeju: "제주" },
+          ja: { seoul: "ソウル", busan: "釜山", jeju: "済州" },
+        } as const
         for (const city of ["seoul", "busan", "jeju"] as const) {
           const node = atlas.locator(`[data-city='${city}']`)
           await expect(node).toBeVisible()
+          await expect(node).toHaveAttribute("data-atlas-pin", "true")
+          await expect(node).toHaveAttribute("data-atlas-latitude", atlasCoordinates[city].latitude)
+          await expect(node).toHaveAttribute("data-atlas-longitude", atlasCoordinates[city].longitude)
+          await expect(node).toHaveAttribute("data-atlas-x", atlasCoordinates[city].atlasX)
+          await expect(node).toHaveAttribute("data-atlas-y", atlasCoordinates[city].atlasY)
+          await expect(node).toHaveText(cityLabels[locale][city])
+          await expect(node.locator("[data-region-kind-label]")).toHaveCount(0)
+          await node.focus()
+          await expect(node).toBeFocused()
           const nodeBox = await box(node)
-          expect(nodeBox.height).toBeGreaterThanOrEqual(44)
+          const pinBox = await box(node.locator("i"))
+          const touchTargetHeight = await node.evaluate((element) => (element as HTMLElement).offsetHeight)
+          expect(touchTargetHeight, `${locale} ${viewport.width}x${viewport.height} ${city} touch target`).toBeGreaterThanOrEqual(44)
+          expect(nodeBox.x).toBeGreaterThanOrEqual(atlasBox.x - .5)
+          expect(nodeBox.x + nodeBox.width).toBeLessThanOrEqual(atlasBox.x + atlasBox.width + .5)
+          expect(nodeBox.y).toBeGreaterThanOrEqual(atlasBox.y - .5)
+          expect(nodeBox.y + nodeBox.height).toBeLessThanOrEqual(atlasBox.y + atlasBox.height + .5)
+          const stopBox = await box(atlas.locator(`[data-atlas-stop='${city}']`))
+          expect(Math.abs(pinBox.x + pinBox.width / 2 - (stopBox.x + stopBox.width / 2))).toBeLessThanOrEqual(12)
+          expect(Math.abs(pinBox.y + pinBox.height / 2 - (stopBox.y + stopBox.height / 2))).toBeLessThanOrEqual(12)
+          expect(Math.abs(pinBox.x + pinBox.width / 2 - (plotBox.x + plotBox.width * atlasCoordinates[city].x))).toBeLessThanOrEqual(12)
+          expect(Math.abs(pinBox.y + pinBox.height / 2 - (plotBox.y + plotBox.height * atlasCoordinates[city].y))).toBeLessThanOrEqual(12)
           expect(await node.evaluate((element) => {
             const bounds = element.getBoundingClientRect()
             return document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)?.closest("[data-city]") === element
           }), `${locale} ${viewport.width}x${viewport.height} ${city} owns its centre`).toBe(true)
           cityBoxes.push(nodeBox)
+          pinBoxes.push(pinBox)
         }
+        const pinCenter = (pin: Awaited<ReturnType<typeof box>>) => ({ x: pin.x + pin.width / 2, y: pin.y + pin.height / 2 })
+        const [seoulPin, busanPin, jejuPin] = pinBoxes.map(pinCenter)
+        expect(seoulPin.x).toBeLessThan(busanPin.x)
+        expect(seoulPin.y).toBeLessThan(busanPin.y)
+        expect(jejuPin.x).toBeLessThan(busanPin.x)
+        expect(jejuPin.y).toBeGreaterThan(busanPin.y)
         expect(intersects(cityBoxes[0], cityBoxes[1])).toBe(false)
         expect(intersects(cityBoxes[0], cityBoxes[2])).toBe(false)
         expect(intersects(cityBoxes[1], cityBoxes[2])).toBe(false)
@@ -80,14 +141,12 @@ test.describe("map-first Korea and Jeju integration", () => {
         expect(await atlas.evaluate((element) => getComputedStyle(element, "::after").content)).toMatch(/none|normal|^""$/)
         await expect(atlas.locator("[data-city='jeju']")).toHaveAttribute("data-truth-kind", "editorial-region")
         await expect(atlas.locator("[data-city='jeju']")).not.toHaveAttribute("data-official-count", /.+/)
-        await expect(atlas.locator("[data-city='seoul'] svg.lucide-map-pin, [data-city='busan'] svg.lucide-map-pin")).toHaveCount(2)
-        await expect(atlas.locator("[data-city='jeju'] svg.lucide-sparkles")).toHaveCount(1)
+        await expect(atlas.locator("[data-city] svg.lucide-map-pin")).toHaveCount(3)
+        await expect(atlas.locator("svg.lucide-sparkles")).toHaveCount(0)
+        await expect(atlas).not.toContainText(/\bExplore\b|탐색|探す/)
         for (const city of ["seoul", "busan", "jeju"] as const) {
           const node = atlas.locator(`[data-city='${city}']`)
           await expect(node).not.toContainText(/\d|official|공식|record|기록|active|growing|운영|확장/i)
-          await expect(node.locator("[data-region-kind-label]")).toHaveText(city === "jeju"
-            ? { en: "Travel ideas", ko: "여행 아이디어", ja: "旅のアイデア" }[locale]
-            : { en: "Food map", ko: "먹거리 지도", ja: "フードマップ" }[locale])
           const [wellBox, iconBox] = await Promise.all([box(node.locator("i")), box(node.locator("i svg"))])
           expect(iconBox.x).toBeGreaterThanOrEqual(wellBox.x)
           expect(iconBox.y).toBeGreaterThanOrEqual(wellBox.y)
@@ -95,6 +154,12 @@ test.describe("map-first Korea and Jeju integration", () => {
           expect(iconBox.y + iconBox.height).toBeLessThanOrEqual(wellBox.y + wellBox.height)
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
+
+        // Geometry is asserted at every breakpoint; run the full history and
+        // editorial interaction once at the canonical mobile viewport so the
+        // matrix does not repeatedly reinitialize Next's client router while
+        // the same page is being resized in place.
+        if (viewport.width !== 390) continue
 
         await atlas.locator("[data-city='jeju']").click()
         await expect(page).toHaveURL(/city=jeju/)

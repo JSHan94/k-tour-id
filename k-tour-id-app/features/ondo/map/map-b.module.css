@@ -303,8 +303,14 @@
     gap: 9px;
     padding: 5px 8px 5px 2px;
   }
-  .venueList button > span:nth-child(2) > small,
+  .venueList button > span:nth-child(2) > small:not(.transliterationTruth),
   .venueList button > span:nth-child(2) > em { display: none; }
+  .venueList .transliterationTruth {
+    overflow: hidden;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .venueList strong {
     display: -webkit-box;
     overflow: hidden;
@@ -594,7 +600,6 @@
   .resultBar small { display: none; }
   .venueList button { min-height: 74px; }
   .venueList .officialNameTruth,
-  .venueList .transliterationTruth,
   .venueList .categoryTruth { display: none; }
   .venueList button > span:nth-child(2) > .listPulse { display: block; }
   .listPulse > span { display: none; }
@@ -681,8 +686,14 @@
     gap: 9px;
     padding: 5px 8px 5px 2px;
 }
-.ultraShort .venueList button > span:nth-child(2) > small,
+.ultraShort .venueList button > span:nth-child(2) > small:not(.transliterationTruth),
 .ultraShort .venueList button > span:nth-child(2) > em { display: none; }
+.ultraShort .venueList .transliterationTruth {
+    overflow: hidden;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .ultraShort .venueList strong {
     display: -webkit-box;
     overflow: hidden;
@@ -1783,6 +1794,289 @@
   }
 }
 
+/* After 19 is a single night product surface, not a darkened map surrounded
+   by leftover light controls. Keep every map-owned surface on the same tonal
+   ladder and reserve neon pink for state and focus—not for whole cards. */
+.root[data-after19-active="true"] {
+  --night-canvas: #09090d;
+  --night-surface: rgb(20 20 27 / 94%);
+  --night-surface-raised: rgb(28 27 36 / 96%);
+  --night-surface-soft: rgb(35 31 42 / 88%);
+  --night-line: rgb(255 255 255 / 14%);
+  --night-line-strong: rgb(255 255 255 / 22%);
+  --night-ink: #f7f5fa;
+  --night-muted: #b8b4c1;
+  --night-accent: #ff72b8;
+  --night-accent-soft: rgb(255 78 158 / 14%);
+  --night-glow: rgb(255 78 158 / 22%);
+  background: var(--night-canvas);
+  color: var(--night-ink);
+  color-scheme: dark;
+}
+
+.root[data-after19-active="true"] .map {
+  background:
+    radial-gradient(circle at 68% 36%, rgb(96 35 96 / 22%), transparent 35%),
+    linear-gradient(155deg, #121019, #08080d);
+}
+
+.root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
+  filter: saturate(.86) contrast(1.08) brightness(.86);
+}
+
+.root[data-after19-active="true"] .topline,
+.root[data-after19-active="true"] .search,
+.root[data-after19-active="true"] .rail,
+.root[data-after19-active="true"] .mapUtilityCluster:not([data-editorial-open="true"]),
+.root[data-after19-active="true"] .mapKey,
+.root[data-after19-active="true"] .resultBar,
+.root[data-after19-active="true"] .attribution,
+.root[data-after19-active="true"] .locationMessage,
+.root[data-after19-active="true"] .locate,
+.root[data-after19-active="true"] .editorialPlaceList {
+  border-color: var(--night-line);
+  background: var(--night-surface);
+  color: var(--night-ink);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 34%), inset 0 1px 0 rgb(255 255 255 / 6%);
+  backdrop-filter: blur(20px) saturate(1.08);
+}
+
+.root[data-after19-active="true"] .topline h1,
+.root[data-after19-active="true"] .back,
+.root[data-after19-active="true"] .language,
+.root[data-after19-active="true"] .search,
+.root[data-after19-active="true"] .search input,
+.root[data-after19-active="true"] .rail button,
+.root[data-after19-active="true"] .mapKey,
+.root[data-after19-active="true"] .resultBar,
+.root[data-after19-active="true"] .resultBar b,
+.root[data-after19-active="true"] .attribution,
+.root[data-after19-active="true"] .locationMessage > summary,
+.root[data-after19-active="true"] .locate,
+.root[data-after19-active="true"] .creditDetails summary,
+.root[data-after19-active="true"] .editorialPlaceList > summary {
+  color: var(--night-ink);
+}
+
+.root[data-after19-active="true"] .search input::placeholder,
+.root[data-after19-active="true"] .resultBar small,
+.root[data-after19-active="true"] .mapKey small { color: var(--night-muted); }
+
+.root[data-after19-active="true"] .rail button[aria-pressed="true"] {
+  border: 1px solid rgb(255 114 184 / 34%);
+  background: linear-gradient(135deg, rgb(255 114 184 / 21%), rgb(112 49 115 / 24%));
+  color: #fff;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 5%) inset, 0 0 24px var(--night-glow);
+}
+
+.root[data-after19-active="true"] .after19ModeChip {
+  border-color: rgb(255 114 184 / 40%);
+  background: var(--night-accent-soft);
+  color: #ff9bce;
+}
+
+.root[data-after19-active="true"] .mapUtilityCluster :global([data-testid="global-after19-banner"]),
+.root[data-after19-active="true"] .mapUtilityCluster :global([data-testid="global-after19-banner"] > button) {
+  border: 1px solid rgb(255 114 184 / 42%);
+  background: linear-gradient(145deg, rgb(78 34 65 / 96%), rgb(36 25 42 / 98%));
+  color: var(--night-ink);
+  box-shadow: 0 0 22px var(--night-glow), inset 0 1px 0 rgb(255 255 255 / 9%);
+}
+
+.root[data-after19-active="true"] .mapUtilityCluster :global([data-testid="global-after19-banner"] > button)::after {
+  color: #ff9bce;
+}
+
+.root[data-after19-active="true"] :global([data-testid="ondo-b-japan-first-discovery"]) {
+  --story-ink: var(--night-ink);
+  --story-muted: var(--night-muted);
+  --story-quiet: #9d98a8;
+  --story-accent: var(--night-accent);
+  --story-accent-soft: var(--night-accent-soft);
+  --story-line: var(--night-line);
+  --story-surface: linear-gradient(145deg, rgb(29 25 35 / 97%), rgb(17 17 23 / 97%));
+  --story-panel: var(--night-surface-raised);
+  --story-card: linear-gradient(155deg, rgb(37 35 44 / 98%), rgb(24 22 30 / 98%));
+  --story-control: rgb(43 41 50 / 96%);
+  --story-action: var(--night-accent);
+  --story-action-ink: #180e16;
+  --story-shadow: 0 18px 46px rgb(0 0 0 / 38%);
+  color: var(--night-ink);
+}
+
+.root[data-after19-active="true"] .mapUtilityCluster > :global([data-testid="ondo-b-japan-first-discovery"]:not([open])) > summary {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.root[data-after19-active="true"] .map :global(.maplibregl-ctrl-group) {
+  overflow: hidden;
+  border-color: var(--night-line);
+  background: var(--night-surface);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 32%);
+}
+
+.root[data-after19-active="true"] .map :global(.maplibregl-ctrl button) {
+  border-color: var(--night-line);
+  background-color: var(--night-surface-raised);
+}
+
+.root[data-after19-active="true"] .map :global(.maplibregl-ctrl-icon) {
+  filter: invert(1) brightness(1.45);
+  opacity: .88;
+}
+
+.root[data-after19-active="true"] .map :global(.maplibregl-ctrl button:hover) {
+  background-color: rgb(52 45 59 / 98%);
+}
+
+.root[data-after19-active="true"] .mapKeyDetailsBody,
+.root[data-after19-active="true"] .creditDetailsBody {
+  border-color: var(--night-line);
+  background: var(--night-surface-raised);
+  color: var(--night-ink);
+  box-shadow: 0 18px 42px rgb(0 0 0 / 38%);
+}
+
+.root[data-after19-active="true"] .mapKeyDetailsBody small,
+.root[data-after19-active="true"] .methodologyDisclosure > summary,
+.root[data-after19-active="true"] .creditDetailsBody a,
+.root[data-after19-active="true"] .pulseLegend span { color: var(--night-muted); }
+
+.root[data-after19-active="true"] .pulsePlaces button {
+  background: rgb(255 255 255 / 5%);
+  color: var(--night-ink);
+}
+
+.root[data-after19-active="true"] .pulsePlaces button b { color: var(--night-muted); }
+
+.root[data-after19-active="true"] .editorialPlaceList > div {
+  border-color: var(--night-line);
+  background: var(--night-surface-raised);
+  box-shadow: 0 18px 42px rgb(0 0 0 / 38%);
+}
+
+.root[data-after19-active="true"] .editorialPlaceList button { color: var(--night-ink); }
+.root[data-after19-active="true"] .editorialPlaceList button[aria-current="location"] {
+  background: var(--night-accent-soft);
+  color: #ffadd5;
+}
+
+/* Jeju already opens as a live map. Keep the truthful collection and source
+   controls one tap away without repeating “Explore Jeju” as a fake CTA. */
+.editorialPlaceList {
+  top: auto;
+  bottom: 0;
+  width: 48px;
+  min-height: 48px;
+  border-radius: 15px;
+}
+
+.editorialPlaceList > summary {
+  width: 48px;
+  min-height: 48px;
+  grid-template-columns: 1fr;
+  place-items: center;
+  gap: 0;
+  padding: 0;
+}
+
+.editorialPlaceList:not([open]) > summary > span,
+.editorialPlaceList:not([open]) > summary > svg:last-child {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.editorialPlaceList[open] {
+  /* Leave the attribution target in the same bottom lane fully visible and
+     tappable, including the 320px compact phone boundary. */
+  width: min(320px, calc(100cqw - (2 * var(--map-edge, 14px)) - 56px));
+}
+.editorialPlaceList[open] > summary {
+  width: 100%;
+  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  place-items: center stretch;
+  gap: 8px;
+  padding-inline: 11px;
+}
+
+.editorialPlaceList > div {
+  position: absolute;
+  right: 0;
+  bottom: 56px;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  border: 1px solid rgb(23 23 23 / 11%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 98%);
+  box-shadow: 0 16px 38px rgb(0 0 0 / 13%);
+}
+
+.resultBar[data-result-source="editorial"] {
+  position: absolute;
+  width: 1px !important;
+  min-width: 0 !important;
+  height: 1px !important;
+  min-height: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+/* Counts and source provenance remain available to assistive technology and
+   QA data, while the persistent map chrome presents only the next action. */
+.resultBar[data-effective-view] > span.resultTruth {
+  position: absolute;
+  display: block;
+  width: 1px;
+  min-width: 0;
+  max-width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.resultBar[data-effective-view] > button,
+.resultBar[data-effective-view] > .forcedListLabel {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  gap: 6px;
+  padding-inline: 6px;
+}
+
+.viewActionLabel { display: inline; white-space: nowrap; }
+
+.root:not(.ultraShort) > .mapChrome {
+  grid-template-columns: 126px minmax(0, 1fr) minmax(76px, auto) 44px;
+}
+
+.root:not(.ultraShort) > .mapChrome > .resultBar,
+.resultBar[data-effective-view="map"],
+.resultBar[data-effective-view="list"] {
+  width: auto;
+  min-width: 76px;
+  padding: 2px;
+}
+
+@container ondo-map-root (min-width: 600px) and (max-height: 500px) {
+  .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .mapChrome,
+  .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .mapChrome > .resultBar {
+    width: 104px;
+  }
+}
+
 .root[data-editorial-point-count] > .mapUtilityCluster {
   top: calc(64px + env(safe-area-inset-top));
 }
@@ -2319,7 +2613,6 @@
   .venueList .empty { grid-column: 1 / -1; }
   .venueList li[data-venue-id] > button { min-height: 128px; }
   .venueList .officialNameTruth,
-  .venueList .transliterationTruth,
   .venueList .categoryTruth { display: none; }
 }
 
@@ -3222,6 +3515,171 @@
 .koreaAtlas .cityNode[data-city="seoul"],
 .koreaAtlas .cityNode[data-city="busan"],
 .koreaAtlas .cityNode[data-city="jeju"] { background: rgb(255 255 255 / 97%); }
+
+/* Nation regions are map pins, not destination cards. Seoul, Busan and Jeju
+   intentionally share one marker/label grammar; their different source truth
+   remains in data attributes and the accessible name. */
+.koreaAtlas,
+.dotMap.koreaAtlas { view-transition-name: ondo-map-surface; }
+.root[data-city] { view-transition-name: ondo-map-surface; }
+
+.koreaAtlas .cityNode,
+.koreaAtlas .cityNode[data-city="seoul"],
+.koreaAtlas .cityNode[data-city="busan"],
+.koreaAtlas .cityNode[data-city="jeju"] {
+  --atlas-node-width: 150px;
+  --atlas-pin-center-x: 22px;
+  --atlas-pin-center-y: 26px;
+  width: var(--atlas-node-width);
+  min-height: 52px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 0;
+  padding: 4px 8px 4px 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.koreaAtlas .cityNode i,
+.koreaAtlas .cityNode[data-city="seoul"] i,
+.koreaAtlas .cityNode[data-city="busan"] i,
+.koreaAtlas .cityNode[data-city="jeju"] i {
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgb(23 23 23 / 18%);
+  background: #fff;
+  color: #171717;
+  box-shadow: 0 7px 18px rgb(0 0 0 / 11%);
+}
+
+.koreaAtlas .cityNode span {
+  z-index: 1;
+  display: flex;
+  width: auto;
+  min-height: 36px;
+  align-items: center;
+  margin-left: -5px;
+  padding: 0 12px 0 11px;
+  border: 1px solid rgb(23 23 23 / 12%);
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 7px 18px rgb(0 0 0 / 8%);
+}
+
+.koreaAtlas .cityNode strong {
+  color: #171717;
+  font-size: 15px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+@media (min-width: 801px) and (min-height: 501px) {
+  .koreaAtlas .cityNode,
+  .koreaAtlas .cityNode[data-city] {
+    --atlas-node-width: 164px;
+    --atlas-pin-center-y: 28px;
+    width: var(--atlas-node-width);
+    min-height: 56px;
+  }
+  .koreaAtlas .cityNode strong { font-size: 17px; }
+}
+
+/* The outline and pins share one 300×350 plotting plane. TS projects all
+   three region anchors into this same plane, including Jeju's island centre,
+   so responsive changes move the complete map rather than detaching labels. */
+.atlasPlot {
+  position: absolute;
+  z-index: 1;
+  top: 18%;
+  right: -4%;
+  width: 79%;
+  height: 76%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.atlasPlot > svg {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  opacity: .2;
+  pointer-events: none;
+}
+
+.atlasPlot > svg circle { fill: #5e463b; opacity: .62; }
+.atlasPlot .cityNode { pointer-events: auto; }
+
+.koreaAtlas .cityNode[data-city="seoul"] {
+  top: calc(var(--atlas-y) - var(--atlas-pin-center-y));
+  right: auto;
+  bottom: auto;
+  left: calc(var(--atlas-x) - var(--atlas-pin-center-x));
+}
+
+.koreaAtlas .cityNode[data-city="busan"] {
+  top: calc(var(--atlas-y) - var(--atlas-pin-center-y));
+  right: auto;
+  bottom: auto;
+  left: calc(var(--atlas-x) - var(--atlas-node-width) + var(--atlas-pin-center-x));
+  grid-template-columns: minmax(0, 1fr) 44px;
+  padding: 4px 0 4px 8px;
+}
+
+.koreaAtlas .cityNode[data-city="busan"] i { grid-row: 1; grid-column: 2; }
+.koreaAtlas .cityNode[data-city="busan"] span {
+  grid-row: 1;
+  grid-column: 1;
+  margin-right: -5px;
+  margin-left: 0;
+  padding: 0 11px 0 12px;
+  border-right: 0;
+  border-left: 1px solid rgb(23 23 23 / 12%);
+  border-radius: 999px 0 0 999px;
+}
+
+.koreaAtlas .cityNode[data-city="jeju"] {
+  top: calc(var(--atlas-y) - var(--atlas-pin-center-y));
+  right: auto;
+  bottom: auto;
+  left: calc(var(--atlas-x) - var(--atlas-pin-center-x));
+}
+
+@media (max-width: 430px) and (min-height: 600px) {
+  .atlasPlot { top: 25%; right: -1%; width: 88%; height: 72%; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .atlasPlot { top: 3%; right: 3%; width: 61%; height: 96%; }
+}
+
+@media (min-width: 801px) and (min-height: 501px) {
+  .atlasPlot { top: 6%; right: 3%; width: 61%; height: 88%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .koreaAtlas .cityNode { transition: none !important; }
+}
+
+/* Touch navigation uses a local reveal so a rapid browser-back gesture cannot
+   race the document-level View Transition. Desktop keeps the shared-element
+   atlas zoom; coarse pointers get the same visual beat without owning history. */
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  .root[data-city] { animation: atlasTouchReveal 240ms cubic-bezier(.2, .72, .24, 1) both; }
+}
+
+@keyframes atlasTouchReveal {
+  from { opacity: .82; transform: scale(.985); transform-origin: center; }
+  to { opacity: 1; transform: scale(1); transform-origin: center; }
+}
 /* Keep the final rendered browse surface neutral after the older reference
    composition layers above. Night mode owns its own higher-contrast palette. */
 .root:not([data-after19-active="true"]) .map :global(.maplibregl-canvas) {
@@ -3257,4 +3715,10 @@
     width: 104px;
     height: 48px;
   }
+}
+
+/* Final cascade lock: the legacy map-filter block above must not brighten an
+   active After 19 canvas back into the light palette. */
+.root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
+  filter: saturate(.86) contrast(1.08) brightness(.86);
 }

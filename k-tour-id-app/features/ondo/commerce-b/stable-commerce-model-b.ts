@@ -8,6 +8,7 @@ export const STABLE_B_REFUND_OPERATION_ID = "ONDO-LOCAL-REFUND-20260825-001"
 export const STABLE_B_REFUND_RECEIPT_ID = "ONDO-LOCAL-REFUND-20260825-001"
 
 export type StableCommerceBStatus = "idle" | "paid" | "refunded"
+export type StableCommerceBProviderOrder = "NOT_CONNECTED"
 export type StableCommerceBVoucher = "available" | "selected" | "consumed"
 export type StableCommerceBBenefitRecommendation = "recommended" | "accepted" | "declined"
 export type StableCommerceBBenefitPolicyStatus = "recommended" | "ineligible" | "below_minimum" | "expired"
@@ -22,6 +23,7 @@ export type StableCommerceBLedgerEntry = {
 
 export type StableCommerceBState = {
   status: StableCommerceBStatus
+  providerOrder: StableCommerceBProviderOrder
   voucher: StableCommerceBVoucher
   benefitRecommendation: StableCommerceBBenefitRecommendation
   confirmationPending: boolean
@@ -49,6 +51,7 @@ export type StableCommerceBAction =
 export function createStableCommerceBState(): StableCommerceBState {
   return {
     status: "idle",
+    providerOrder: "NOT_CONNECTED",
     voucher: "available",
     benefitRecommendation: "recommended",
     confirmationPending: false,

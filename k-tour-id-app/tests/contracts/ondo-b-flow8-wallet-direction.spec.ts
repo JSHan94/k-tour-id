@@ -29,7 +29,7 @@ test("FLOW8-DIR-001 Travel Pass, Wallet, offer, and completion states share one 
   expect(commerce).toContain('data-flow8-object="receipt"')
 })
 
-test("FLOW8-OBJECT-002 Pass and wallet remain memorable non-live objects without credential, provider, or chain implication", () => {
+test("FLOW8-OBJECT-002 Pass and wallet keep first-frame copy consumer-shaped while setup owns provider truth", () => {
   const commerce = source(COMMERCE)
   const commerceCss = source(COMMERCE_CSS)
   const pass = source(PASS)
@@ -50,7 +50,12 @@ test("FLOW8-OBJECT-002 Pass and wallet remain memorable non-live objects without
   expect(pass).toContain('data-testid="travel-pass-local-boundary"')
   expect(pass).not.toContain("Fingerprint")
   expect(pass).not.toContain("BadgeCheck")
-  expect(commerce).toContain('data-testid="wallet-non-live-boundary"')
+  expect(commerce).not.toContain('data-testid="wallet-non-live-boundary"')
+  expect(commerce).toContain('connect: "Set up travel wallet"')
+  expect(commerce).toContain('connect: "여행 지갑 설정"')
+  expect(commerce).toContain('linkBody: "Turn on a non-live OOKRW Test balance for ONDO offers on this device."')
+  expect(commerce).toContain('data-testid="wallet-eyebrow"')
+  expect(commerceCss).toMatch(/\.heading > p\s*\{[^}]*color:\s*var\(--flow8-plum\)/)
 })
 
 test("FLOW8-OFFER-003 quote owns the foreground, benefit shows a visible delta, and review has one sticky decision zone", () => {
@@ -66,7 +71,10 @@ test("FLOW8-OFFER-003 quote owns the foreground, benefit shows a visible delta, 
   expect(css).toMatch(/\.offerDecision[\s\S]*\.payButton[\s\S]*min-height:\s*44px/)
   expect(css).toMatch(/\.discount[\s\S]*color:/)
   expect(commerce).toContain('data-testid="commerce-fixed-quote-boundary"')
+  expect(commerce).toContain('data-testid="commerce-payment-details"')
   expect(commerce).toContain("not an exchange rate or 1:1 value guarantee")
+  expect(commerce).toContain("Only wallet readiness and this benefit choice are used.")
+  expect(commerce).not.toContain("This local walkthrough uses only wallet-ready and benefit-selected.")
 })
 
 test("FLOW8-COMPLETE-004 receipt and refund are distinct completion objects with durable references and exact return", () => {
@@ -77,6 +85,8 @@ test("FLOW8-COMPLETE-004 receipt and refund are distinct completion objects with
   expect(commerce).toContain("STABLE_B_RECEIPT_ID")
   expect(commerce).toContain("STABLE_B_REFUND_RECEIPT_ID")
   expect(commerce).toContain('data-testid="payment-receipt-return"')
+  expect(commerce).toContain("actions.returnFromCommerceOrigin()")
+  expect(commerce).not.toContain("function returnToCommercePlace()")
   expect(css).toContain('.receiptWrap[data-refunded="false"]')
   expect(css).toContain('.receiptWrap[data-refunded="true"]')
   expect(css).toMatch(/\.receiptCard[\s\S]*font-variant-numeric:\s*tabular-nums/)
@@ -256,7 +266,7 @@ test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts res
   })
 
   const accepted = commerceSessionFromReceipts([receipt("paid", 3)])
-  expect(accepted).toMatchObject({ status: "paid", voucher: "consumed", benefitRecommendation: "accepted", confirmationCount: 1, receiptCount: 1, refundCount: 0, chargedDebit: 19, redemptionCount: 1 })
+  expect(accepted).toMatchObject({ status: "paid", providerOrder: "NOT_CONNECTED", voucher: "consumed", benefitRecommendation: "accepted", confirmationCount: 1, receiptCount: 1, refundCount: 0, chargedDebit: 19, redemptionCount: 1 })
   expect(accepted.ledger.map(({ amount, kind }) => [amount, kind])).toEqual([[-19, "PAYMENT"], [19, "PAYMENT"]])
 
   const declined = commerceSessionFromReceipts([receipt("paid", 0)])
@@ -264,7 +274,7 @@ test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts res
   expect(declined.ledger.map(({ amount }) => amount)).toEqual([-22, 22])
 
   const refunded = commerceSessionFromReceipts([receipt("refunded", 3)])
-  expect(refunded).toMatchObject({ status: "refunded", voucher: "available", confirmationCount: 1, receiptCount: 1, refundCount: 1, chargedDebit: 19, redemptionCount: 0 })
+  expect(refunded).toMatchObject({ status: "refunded", providerOrder: "NOT_CONNECTED", voucher: "available", confirmationCount: 1, receiptCount: 1, refundCount: 1, chargedDebit: 19, redemptionCount: 0 })
   expect(refunded.ledger.map(({ amount, kind }) => [amount, kind])).toEqual([[-19, "PAYMENT"], [19, "PAYMENT"], [19, "REFUND"], [-19, "REFUND"]])
   expect(refunded.ledger.map(({ operationId, receiptId }) => [operationId, receiptId])).toEqual([
     ["ONDO-LOCAL-OP-20260825-001", "ONDO-LOCAL-20260825-001"],

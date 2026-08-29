@@ -119,6 +119,13 @@ const BRIDGE_COPY: Record<Exclude<BridgePhase, "none">, LocalizedLabsCopy> = {
   destination_confirmed: { ko: "도착 단계 확인됨 · 시뮬레이션", en: "Destination confirmed · Simulated", ja: "送信先で確認済み · シミュレーション" },
 }
 
+const B_BRIDGE_COPY: Record<Exclude<BridgePhase, "none">, LocalizedLabsCopy> = {
+  source_submitted: { ko: "출발 단계 준비됨", en: "Source step ready", ja: "送信元ステップ準備完了" },
+  source_confirmed: { ko: "출발 단계 확인됨 · 도착 대기", en: "Source confirmed · Destination pending", ja: "送信元を確認・到着待ち" },
+  relaying: { ko: "경로 확인 중", en: "Checking route", ja: "経路を確認中" },
+  destination_confirmed: { ko: "도착 단계 확인됨", en: "Destination step confirmed", ja: "送信先ステップ確認済み" },
+}
+
 type LabsOriginTab = "ondo" | "my" | "tables" | "id" | "settings"
 
 type LabsEntryCoreProps = {
@@ -355,10 +362,12 @@ export function LabsEntryCore({ locale, originTab: originTabValue, stamps, provi
       <LabsSheet provider={provider} locale={locale} label={labsLabel} onClose={close} size="full">
         <div className={styles.boundary}>
           <span className={styles.labMark}><FlaskConical size={24} /></span>
-          <p className={styles.eyebrow}>{text("기술 실험실 · 시뮬레이션", "LABS · SIMULATED", "技術ラボ · シミュレーション")}</p>
+          <p className={styles.eyebrow}>{provider === "b" ? text("기기 내 도구", "ON-DEVICE TOOLS", "端末内ツール") : text("기술 실험실 · 시뮬레이션", "LABS · SIMULATED", "技術ラボ · シミュレーション")}</p>
           <h2>{labsLabel}</h2>
-          <p>{text("기술 가설을 보여주는 실험 영역입니다. 실제 자산 이동이나 운영 서비스가 아닙니다.", "This is an experimental area for technical hypotheses. It does not move real assets or represent a production service.", "技術的な仮説を体験する実験エリアです。実際の資産移動や運用中のサービスではありません。")}</p>
-          <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{qaControls
+          <p>{provider === "b" ? text("지갑 준비, 경로 확인, 여행 기념 도구를 한곳에서 살펴보세요.", "Explore wallet preparation, route checks, and travel keepsakes in one place.", "ウォレット準備、経路確認、旅の記念ツールをひとつの場所で確認できます。") : text("기술 가설을 보여주는 실험 영역입니다. 실제 자산 이동이나 운영 서비스가 아닙니다.", "This is an experimental area for technical hypotheses. It does not move real assets or represent a production service.", "技術的な仮説を体験する実験エリアです。実際の資産移動や運用中のサービスではありません。")}</p>
+          <InlineNotice tone="warm"><AlertTriangle size={18} /><span>{provider === "b"
+            ? text("이 기기에서만 동작하며 돈·계정·제공자·네트워크에 연결하지 않습니다.", "Runs only on this device; no money, account, provider, or network is connected.", "この端末内だけで動作し、お金・アカウント・プロバイダー・ネットワークには接続しません。")
+            : qaControls
             ? text("지갑, 잔고, 체인 연결과 기념 배지 결과는 반복해도 같은 테스트용 미리보기입니다.", "Wallet, balance, bridge, and badge results here are deterministic fixtures.", "ウォレット、残高、チェーン接続、記念バッジの結果は、何度試しても同じテスト用プレビューです。")
             : text("지갑, 잔고, 체인 연결과 기념 배지는 모두 재현 가능한 미리보기 결과입니다.", "Wallet, balance, bridge, and badge results are reproducible previews.", "ウォレット、残高、チェーン接続、記念バッジは、すべて再現可能なプレビューです。")}</span></InlineNotice>
           <button type="button" className={styles.primary} onClick={() => setAcknowledged(true)} data-testid="labs-acknowledge">{text("이해하고 보기", "I understand", "内容を確認して見る")}</button>
@@ -369,7 +378,7 @@ export function LabsEntryCore({ locale, originTab: originTabValue, stamps, provi
   }
 
   const canDisconnect = wallet !== "WAL-CONNECTING" && bridge !== "BRG-PENDING"
-  const phaseCopy = phase === "none" ? null : BRIDGE_COPY[phase][locale]
+  const phaseCopy = phase === "none" ? null : (provider === "b" ? B_BRIDGE_COPY : BRIDGE_COPY)[phase][locale]
   const walletOutcomeId = "labs-wallet-outcome"
 
   return (
@@ -377,22 +386,26 @@ export function LabsEntryCore({ locale, originTab: originTabValue, stamps, provi
       <div className={styles.body} data-wallet-state={wallet} data-bridge-state={bridge} data-bridge-phase={phase} data-mint-state={mint} data-testid="labs-overlay">
         <header className={styles.header}>
           <button type="button" data-sheet-initial-focus onClick={close} aria-label={returnLabel}><ArrowLeft size={20} /></button>
-          <div><p className={styles.eyebrow}>{text("기술 실험실 · 시뮬레이션", "LABS · SIMULATED", "技術ラボ · シミュレーション")}</p><h2>{labsLabel}</h2></div>
-          <span className={styles.truthBadge}>{text("시뮬레이션", "SIMULATED", "シミュレーション")}</span>
+          <div><p className={styles.eyebrow}>{provider === "b" ? text("기기 내 도구", "ON-DEVICE TOOLS", "端末内ツール") : text("기술 실험실 · 시뮬레이션", "LABS · SIMULATED", "技術ラボ · シミュレーション")}</p><h2>{labsLabel}</h2></div>
+          <span className={styles.truthBadge}>{provider === "b" ? text("로컬", "LOCAL", "ローカル") : text("시뮬레이션", "SIMULATED", "シミュレーション")}</span>
         </header>
 
-        <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{text("실제 자산 이동이나 운영 서비스가 아닙니다.", "No real assets move and this is not a production service.", "実際の資産移動はなく、運用中のサービスでもありません。")}</span></InlineNotice>
+        <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{provider === "b" ? text("돈·계정·제공자·네트워크에 연결하지 않습니다.", "No money, account, provider, or network is connected.", "お金・アカウント・プロバイダー・ネットワークには接続しません。") : text("실제 자산 이동이나 운영 서비스가 아닙니다.", "No real assets move and this is not a production service.", "実際の資産移動はなく、運用中のサービスでもありません。")}</span></InlineNotice>
 
         <section className={styles.card} aria-labelledby="labs-signer-title">
-          <div className={styles.sectionHeading}><span><WalletCards size={18} /></span><div><h3 id="labs-signer-title">{text("Sui zkLogin · 서명 방식 식별자", "Sui zkLogin signer", "Sui zkLogin · 署名方式")}</h3><p>{text("대상 네트워크: Sui Testnet · 시뮬레이션", "Target network: Sui Testnet · Simulated", "対象ネットワーク：Sui Testnet · シミュレーション")}</p></div></div>
+          <div className={styles.sectionHeading}><span><WalletCards size={18} /></span><div><h3 id="labs-signer-title">{text("Sui zkLogin · 서명 방식 식별자", "Sui zkLogin signer", "Sui zkLogin · 署名方式")}</h3><p>{provider === "b" ? text("Sui Testnet · 기기 내 경로", "Sui Testnet · on-device route", "Sui Testnet・端末内ルート") : text("대상 네트워크: Sui Testnet · 시뮬레이션", "Target network: Sui Testnet · Simulated", "対象ネットワーク：Sui Testnet · シミュレーション")}</p></div></div>
           <p className={styles.bodyCopy}>{text("Sui 주소와 트랜잭션 서명 경로를 보여줍니다. ONDO 계정, 본인 확인(KYC) 또는 멀티체인 지갑을 만들지는 않습니다.", "Shows a Sui address and transaction-signing route. It does not create an ONDO account, KYC, or multichain wallet.", "Suiアドレスとトランザクションの署名経路を表示します。ONDOアカウント、本人確認（KYC）、マルチチェーンウォレットは作成されません。")}</p>
-          {wallet === "WAL-READY" ? <div><small className={styles.identifierLabel}>{text("미리보기 주소 식별자", "Preview address identifier", "プレビュー用アドレス識別子")}</small><code className={styles.address}>{qaControls ? "0x8a71…ondo_fixture" : "0x8a71…ondo_preview"}</code></div> : null}
-          {wallet === "WAL-FAILED" ? <div id={walletOutcomeId} className={styles.walletOutcome} role="alert" aria-atomic="true" data-testid="labs-wallet-outcome"><AlertTriangle size={17} /><span>{qaControls
-            ? text("테스트용 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.", "The test connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.", "テスト接続を完了できませんでした。ONDOアカウント、本人確認（KYC）、マルチチェーンウォレット、実際の資産・取引・アカウントには影響ありません。")
-            : text("미리보기 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.", "The preview connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.", "プレビュー接続を完了できませんでした。ONDOアカウント、本人確認（KYC）、マルチチェーンウォレット、実際の資産・取引・アカウントには影響ありません。")}</span></div> : null}
+          {wallet === "WAL-READY" ? <div><small className={styles.identifierLabel}>{provider === "b" ? text("서명 주소", "Signer address", "署名アドレス") : text("미리보기 주소 식별자", "Preview address identifier", "プレビュー用アドレス識別子")}</small><code className={styles.address}>{qaControls ? "0x8a71…ondo_fixture" : "0x8a71…ondo_preview"}</code></div> : null}
+          {wallet === "WAL-FAILED" ? <div id={walletOutcomeId} className={styles.walletOutcome} role="alert" aria-atomic="true" data-testid="labs-wallet-outcome"><AlertTriangle size={17} /><span>{provider === "b"
+            ? text("서명 준비를 완료하지 못했어요. 아무것도 제출되지 않았습니다.", "Signer preparation did not complete. Nothing was submitted.", "署名の準備を完了できませんでした。何も送信されていません。")
+            : qaControls
+              ? text("테스트용 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.", "The test connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.", "テスト接続を完了できませんでした。ONDOアカウント、本人確認（KYC）、マルチチェーンウォレット、実際の資産・取引・アカウントには影響ありません。")
+              : text("미리보기 연결을 완료하지 못했어요. ONDO 계정, 본인 확인(KYC), 멀티체인 지갑, 실제 자산, 거래 또는 실제 계정에는 아무 영향이 없습니다.", "The preview connection did not complete. No ONDO account, KYC, multichain wallet, real asset, transaction, or real account was affected.", "プレビュー接続を完了できませんでした。ONDOアカウント、本人確認（KYC）、マルチチェーンウォレット、実際の資産・取引・アカウントには影響ありません。")}</span></div> : null}
           {wallet === "WAL-DISCONNECTED" || wallet === "WAL-FAILED" ? <button ref={walletRetryRef} type="button" className={styles.secondary} onClick={connectWallet} aria-describedby={wallet === "WAL-FAILED" ? walletOutcomeId : undefined} data-testid="labs-connect-wallet">{wallet === "WAL-FAILED"
             ? text("다시 시도", "Try again", "もう一度試す")
-            : qaControls
+            : provider === "b"
+              ? text("서명 준비", "Prepare signer", "署名を準備")
+              : qaControls
               ? text("서명 기능 연결 시뮬레이션", "Simulate signer connection", "署名機能の接続をシミュレーション")
               : text("미리보기 서명 기능 연결", "Connect preview signer", "プレビュー用署名機能を接続")}</button> : null}
           {wallet === "WAL-CONNECTING" ? <button type="button" className={styles.secondary} aria-busy="true" disabled>{text("연결 중", "Connecting", "接続中")}</button> : null}
@@ -412,8 +425,8 @@ export function LabsEntryCore({ locale, originTab: originTabValue, stamps, provi
         </section>
 
         <section className={styles.card} aria-labelledby="labs-bridge-title">
-          <div className={styles.sectionHeading}><span><Link2 size={18} /></span><div><h3 id="labs-bridge-title">{text("체인 연결 가설 시뮬레이션", "Bridge hypothesis simulation", "チェーン接続仮説のシミュレーション")}</h3><p>{text("경로 식별자: Sui Testnet → OmniOne · 가설", "Sui Testnet → OmniOne hypothesis", "経路：Sui Testnet → OmniOne · 仮説")}</p></div></div>
-          <InlineNotice tone="warm"><AlertTriangle size={17} /><span>{text("공식 Sui↔OmniOne 체인 연결이 확인된 것은 아닙니다.", "An official Sui↔OmniOne bridge has not been confirmed.", "SuiとOmniOneを結ぶ公式ブリッジは確認されていません。")}</span></InlineNotice>
+          <div className={styles.sectionHeading}><span><Link2 size={18} /></span><div><h3 id="labs-bridge-title">{provider === "b" ? text("체인 경로 확인", "Chain route check", "チェーン経路チェック") : text("체인 연결 가설 시뮬레이션", "Bridge hypothesis simulation", "チェーン接続仮説のシミュレーション")}</h3><p>{provider === "b" ? text("Sui Testnet → OmniOne", "Sui Testnet → OmniOne", "Sui Testnet → OmniOne") : text("경로 식별자: Sui Testnet → OmniOne · 가설", "Sui Testnet → OmniOne hypothesis", "経路：Sui Testnet → OmniOne · 仮説")}</p></div></div>
+          <InlineNotice tone="warm"><AlertTriangle size={17} /><span>{text("Sui↔OmniOne 경로는 연결되어 있지 않습니다.", "No Sui↔OmniOne route is connected.", "Sui↔OmniOneの経路は接続されていません。")}</span></InlineNotice>
           <div className={styles.route}><span>13.50 USDT</span><ArrowRight size={18} /><span>13,460 OOKRW</span></div>
           {phaseCopy ? <div ref={progressRef} className={styles.progress} role="status" aria-live="polite" tabIndex={-1}><span className={phase === "destination_confirmed" ? styles.completeDot : styles.pendingDot} /><strong>{phaseCopy}</strong></div> : null}
           {bridge === "BRG-IDLE" || bridge === "BRG-FAILED" || bridge === "BRG-CANCELLED" || bridge === "BRG-EXPIRED" ? <button ref={quoteButtonRef} type="button" className={styles.primary} onClick={quoteBridge} disabled={wallet !== "WAL-READY"} data-testid="labs-bridge-quote">{wallet === "WAL-READY"
@@ -422,13 +435,13 @@ export function LabsEntryCore({ locale, originTab: originTabValue, stamps, provi
               : text("예상 조건 보기", "View quote", "見積もりを見る")
             : text("서명 기능 연결 후 예상 조건 보기", "Connect signer for quote", "署名機能を接続して見積もりを見る")}</button> : null}
           {bridge === "BRG-QUOTED" ? <><div className={styles.quote} data-testid="labs-quote"><span>{text("예상 경로 수수료", "Estimated route fee", "推定経路手数料")}</span><strong>$0.04</strong><small>{quoteExpiresAt != null && quoteExpiresAt <= Date.now()
-            ? text("예상 조건 만료 · 시뮬레이션", "Quote expired · Simulated", "見積もり期限切れ · シミュレーション")
-            : text("최대 2분 동안 유효 · 시뮬레이션", "Valid for up to 2 min · Simulated", "最長2分間有効 · シミュレーション")}</small></div><button ref={confirmButtonRef} type="button" className={styles.primary} onClick={confirmBridge} data-testid="labs-bridge-confirm">{text("예상 조건 확인", "Confirm quote", "見積もりを確認")}</button><button type="button" className={styles.secondary} onClick={cancelBridge} data-testid="labs-bridge-cancel">{text("취소", "Cancel", "キャンセル")}</button></> : null}
-          {bridge === "BRG-CONFIRMING" ? <><button ref={submitButtonRef} type="button" className={styles.primary} onClick={submitBridge} data-testid="labs-bridge-submit">{text("체인 연결 시뮬레이션 시작", "Start bridge simulation", "ブリッジのシミュレーションを開始")}</button><button type="button" className={styles.secondary} onClick={cancelBridge} data-testid="labs-bridge-cancel">{text("취소", "Cancel", "キャンセル")}</button></> : null}
-          {bridge === "BRG-PENDING" && qaControls ? <button ref={advanceButtonRef} type="button" className={styles.primary} onClick={advanceBridge} data-testid="labs-bridge-advance">{text("다음 테스트 단계", "Advance fixture phase", "次のテスト段階へ")}<ChevronRight size={17} /></button> : null}
-          {bridge === "BRG-SIMULATED-SUCCESS" ? <><div role="status" aria-live="polite"><InlineNotice tone="success"><Check size={18} /><span>{text("도착 단계까지 확인된 시뮬레이션입니다. 실제 자산은 바뀌지 않았습니다.", "The simulation reached destination confirmation. No real assets changed.", "送信先での確認まで完了したシミュレーションです。実際の資産は変更されていません。")}</span></InlineNotice></div><div ref={bridgeReceiptRef} className={styles.bridgeReceipt} data-testid="labs-bridge-receipt" tabIndex={-1}><strong>{text("예상 전후 · 읽기 전용", "Projected before and after · Read only", "推定前後 · 閲覧のみ")}</strong><span>{text("Sui Testnet의 USDT", "USDT on Sui Testnet", "Sui TestnetのUSDT")} <b>13.50 → 0.00</b></span><span>{text("OmniOne 가설의 OOKRW", "OOKRW on OmniOne hypothesis", "OmniOne仮説のOOKRW")} <b>18,000 → 31,460</b></span><small>{text("실제 잔고나 거래는 변경되지 않았습니다.", "Actual balances and transactions were not changed.", "実際の残高や取引は変更されていません。")}</small></div></> : null}
-          {bridge === "BRG-FAILED" ? <div role="alert"><InlineNotice tone="danger"><AlertTriangle size={17} /><span>{text("시뮬레이션 실패 · 현재 단계와 모든 잔고는 그대로예요. 새 예상 조건으로 다시 시작할 수 있습니다.", "Simulation failed. The current phase and every balance remain unchanged. You can restart with a fresh quote.", "シミュレーションに失敗しました。現在の段階とすべての残高は変わっていません。新しい見積もりでやり直せます。")}</span></InlineNotice></div> : null}
-          {bridge === "BRG-CANCELLED" ? <div role="status" aria-live="polite"><InlineNotice tone="neutral"><span>{text("시뮬레이션을 취소했어요. 잔고는 바뀌지 않았으며, 새 예상 조건으로 다시 시작할 수 있습니다.", "Simulation cancelled. Balances did not change, and you can restart with a fresh quote.", "シミュレーションをキャンセルしました。残高は変わっていません。新しい見積もりでやり直せます。")}</span></InlineNotice></div> : null}
+            ? provider === "b" ? text("예상 조건 만료", "Quote expired", "見積もり期限切れ") : text("예상 조건 만료 · 시뮬레이션", "Quote expired · Simulated", "見積もり期限切れ · シミュレーション")
+            : provider === "b" ? text("최대 2분 동안 유효", "Valid for up to 2 min", "最長2分間有効") : text("최대 2분 동안 유효 · 시뮬레이션", "Valid for up to 2 min · Simulated", "最長2分間有効 · シミュレーション")}</small></div><button ref={confirmButtonRef} type="button" className={styles.primary} onClick={confirmBridge} data-testid="labs-bridge-confirm">{text("예상 조건 확인", "Confirm quote", "見積もりを確認")}</button><button type="button" className={styles.secondary} onClick={cancelBridge} data-testid="labs-bridge-cancel">{text("취소", "Cancel", "キャンセル")}</button></> : null}
+          {bridge === "BRG-CONFIRMING" ? <><button ref={submitButtonRef} type="button" className={styles.primary} onClick={submitBridge} data-testid="labs-bridge-submit">{provider === "b" ? text("경로 확인 시작", "Run route check", "経路チェックを開始") : text("체인 연결 시뮬레이션 시작", "Start bridge simulation", "ブリッジのシミュレーションを開始")}</button><button type="button" className={styles.secondary} onClick={cancelBridge} data-testid="labs-bridge-cancel">{text("취소", "Cancel", "キャンセル")}</button></> : null}
+          {bridge === "BRG-PENDING" && qaControls ? <button ref={advanceButtonRef} type="button" className={styles.primary} onClick={advanceBridge} data-testid="labs-bridge-advance">{provider === "b" ? text("다음 단계", "Next step", "次のステップ") : text("다음 테스트 단계", "Advance fixture phase", "次のテスト段階へ")}<ChevronRight size={17} /></button> : null}
+          {bridge === "BRG-SIMULATED-SUCCESS" ? <><div role="status" aria-live="polite"><InlineNotice tone="success"><Check size={18} /><span>{provider === "b" ? text("도착 단계까지 확인했어요. 잔고는 그대로입니다.", "Route check reached the destination step. Balances remain unchanged.", "送信先ステップまで確認しました。残高は変わりません。") : text("도착 단계까지 확인된 시뮬레이션입니다. 실제 자산은 바뀌지 않았습니다.", "The simulation reached destination confirmation. No real assets changed.", "送信先での確認まで完了したシミュレーションです。実際の資産は変更されていません。")}</span></InlineNotice></div><div ref={bridgeReceiptRef} className={styles.bridgeReceipt} data-testid="labs-bridge-receipt" tabIndex={-1}><strong>{text("예상 전후 · 읽기 전용", "Projected before and after · Read only", "推定前後 · 閲覧のみ")}</strong><span>{text("Sui Testnet의 USDT", "USDT on Sui Testnet", "Sui TestnetのUSDT")} <b>13.50 → 0.00</b></span><span>{provider === "b" ? text("OmniOne의 OOKRW", "OOKRW on OmniOne", "OmniOneのOOKRW") : text("OmniOne 가설의 OOKRW", "OOKRW on OmniOne hypothesis", "OmniOne仮説のOOKRW")} <b>18,000 → 31,460</b></span><small>{text("실제 잔고나 거래는 변경되지 않았습니다.", "Actual balances and transactions were not changed.", "実際の残高や取引は変更されていません。")}</small></div></> : null}
+          {bridge === "BRG-FAILED" ? <div role="alert"><InlineNotice tone="danger"><AlertTriangle size={17} /><span>{provider === "b" ? text("경로 확인을 완료하지 못했어요. 잔고는 그대로이며 새 예상 조건으로 다시 시작할 수 있어요.", "Route check did not complete. Balances remain unchanged; start again with a fresh quote.", "経路チェックを完了できませんでした。残高は変わらず、新しい見積もりでやり直せます。") : text("시뮬레이션 실패 · 현재 단계와 모든 잔고는 그대로예요. 새 예상 조건으로 다시 시작할 수 있습니다.", "Simulation failed. The current phase and every balance remain unchanged. You can restart with a fresh quote.", "シミュレーションに失敗しました。現在の段階とすべての残高は変わっていません。新しい見積もりでやり直せます。")}</span></InlineNotice></div> : null}
+          {bridge === "BRG-CANCELLED" ? <div role="status" aria-live="polite"><InlineNotice tone="neutral"><span>{provider === "b" ? text("경로 확인을 취소했어요. 잔고는 그대로입니다.", "Route check cancelled. Balances remain unchanged.", "経路チェックをキャンセルしました。残高は変わりません。") : text("시뮬레이션을 취소했어요. 잔고는 바뀌지 않았으며, 새 예상 조건으로 다시 시작할 수 있습니다.", "Simulation cancelled. Balances did not change, and you can restart with a fresh quote.", "シミュレーションをキャンセルしました。残高は変わっていません。新しい見積もりでやり直せます。")}</span></InlineNotice></div> : null}
           {bridge === "BRG-EXPIRED" ? <InlineNotice tone="warm"><AlertTriangle size={17} /><span>{text("예상 조건이 만료되어 제출하지 않았어요. 새 예상 조건을 받아 계속해 주세요.", "The quote expired, so nothing was submitted. Get a new quote to continue.", "見積もりの有効期限が切れたため、送信されませんでした。新しい見積もりを取得して続けてください。")}</span></InlineNotice> : null}
           {qaControls ? <button type="button" className={styles.inlineLink} onClick={() => setMismatch((current) => !current)}>{text("예상 조건 불일치 예시 보기", "View quote mismatch example", "見積もり不一致の例を見る")}</button> : null}
           {qaControls && mismatch ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{text("자산·체인·금액이 예상 조건과 달라 진행하지 않았어요.", "The asset, chain, or amount did not match the quote, so nothing was submitted.", "資産・チェーン・金額が見積もりと一致しないため、送信されませんでした。")}</span></InlineNotice> : null}
@@ -484,17 +497,17 @@ export function LabsEntryCore({ locale, originTab: originTabValue, stamps, provi
         </details>
 
         <section className={styles.card} aria-labelledby="labs-badge-title">
-          <div className={styles.sectionHeading}><span><FlaskConical size={18} /></span><div><h3 id="labs-badge-title">{text("기념 배지 시뮬레이션", "Souvenir badge simulation", "記念バッジのシミュレーション")}</h3><p>{stamps}/10</p></div></div>
+          <div className={styles.sectionHeading}><span><FlaskConical size={18} /></span><div><h3 id="labs-badge-title">{provider === "b" ? text("여행 기념 배지", "Travel keepsake badge", "旅の記念バッジ") : text("기념 배지 시뮬레이션", "Souvenir badge simulation", "記念バッジのシミュレーション")}</h3><p>{stamps}/10</p></div></div>
           <p className={styles.bodyCopy}>{badgeBody}</p>
           {stamps < 10 ? <InlineNotice tone="neutral"><span>{badgeRequirement}</span></InlineNotice> : null}
-          {stamps === 10 && mint !== "NFT-MINTED" ? <label className={styles.consent}><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setMint(event.target.checked ? "NFT-OPTED-IN" : "NFT-ELIGIBLE") }} /> <span>{text("공개 기념 배지 시뮬레이션에 동의해요.", "I consent to the public badge simulation.", "公開用の記念バッジ・シミュレーションに同意します。")}</span></label> : null}
+          {stamps === 10 && mint !== "NFT-MINTED" ? <label className={styles.consent}><input type="checkbox" checked={consent} onChange={(event) => { setConsent(event.target.checked); setMint(event.target.checked ? "NFT-OPTED-IN" : "NFT-ELIGIBLE") }} /> <span>{provider === "b" ? text("공개 배지에 들어갈 장소 활동만 사용해요.", "Use only place activity in the public badge.", "公開バッジには場所のアクティビティだけを使います。") : text("공개 기념 배지 시뮬레이션에 동의해요.", "I consent to the public badge simulation.", "公開用の記念バッジ・シミュレーションに同意します。")}</span></label> : null}
           {stamps === 10 && mint !== "NFT-MINTED" ? <button type="button" className={styles.primary} onClick={mintBadge} disabled={!consent || wallet !== "WAL-READY" || mint === "NFT-MINTING"} data-testid="labs-badge-mint">{wallet !== "WAL-READY"
             ? text("서명 기능 연결 필요", "Signer connection required", "署名機能の接続が必要です")
             : mint === "NFT-MINTING"
-              ? text("시뮬레이션 중", "Simulating", "シミュレーション中")
-              : text("시뮬레이션 시작", "Start simulation", "シミュレーションを開始")}</button> : null}
-          {mint === "NFT-MINTED" ? <InlineNotice tone="success"><Check size={18} /><span>{text("기념 배지 시뮬레이션 완료 · 실제 NFT나 거래는 생성되지 않았습니다.", "Badge simulation complete. No real NFT or transaction was created.", "記念バッジのシミュレーションが完了しました。実際のNFTや取引は作成されていません。")}</span></InlineNotice> : null}
-          {mint === "NFT-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{text("기념 배지 시뮬레이션을 완료하지 못했어요. 공개 기록은 생성되지 않았습니다.", "Badge simulation did not complete. No public record was created.", "記念バッジのシミュレーションを完了できませんでした。公開記録は作成されていません。")}</span></InlineNotice> : null}
+              ? provider === "b" ? text("배지 준비 중", "Preparing badge", "バッジを準備中") : text("시뮬레이션 중", "Simulating", "シミュレーション中")
+              : provider === "b" ? text("배지 준비", "Prepare badge", "バッジを準備") : text("시뮬레이션 시작", "Start simulation", "シミュレーションを開始")}</button> : null}
+          {mint === "NFT-MINTED" ? <InlineNotice tone="success"><Check size={18} /><span>{provider === "b" ? text("배지 정보가 준비됐어요. NFT나 거래는 생성되지 않았습니다.", "Badge details are ready. No NFT or transaction was created.", "バッジ情報を準備しました。NFTや取引は作成されていません。") : text("기념 배지 시뮬레이션 완료 · 실제 NFT나 거래는 생성되지 않았습니다.", "Badge simulation complete. No real NFT or transaction was created.", "記念バッジのシミュレーションが完了しました。実際のNFTや取引は作成されていません。")}</span></InlineNotice> : null}
+          {mint === "NFT-FAILED" ? <InlineNotice tone="danger"><AlertTriangle size={17} /><span>{provider === "b" ? text("배지 정보를 준비하지 못했어요. 게시된 내용은 없습니다.", "Badge preparation did not complete. Nothing was published.", "バッジ情報を準備できませんでした。公開された内容はありません。") : text("기념 배지 시뮬레이션을 완료하지 못했어요. 공개 기록은 생성되지 않았습니다.", "Badge simulation did not complete. No public record was created.", "記念バッジのシミュレーションを完了できませんでした。公開記録は作成されていません。")}</span></InlineNotice> : null}
         </section>
       </div>
     </LabsSheet>

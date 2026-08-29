@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import { transliterateKoreanForJapanese, venueDistrictLabel, venueNamePresentation } from "../../lib/ondo/venues/display"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
@@ -51,7 +52,7 @@ test("JA-B-002 every reachable B journey owns Japanese truth copy without changi
     "最初にアカウントを準備します。本人、19歳以上、身元、決済の確認は完了しません。",
     "このテーブルの19歳以上確認",
     "適格結果と有効期限だけをこのタブに保持します。生年月日や店舗の公式制限は示しません。",
-    "ローカル・シミュレーション確認 · 外部サービス、資格情報、書類、元の本人情報は使用しません",
+    "端末内確認 · 外部サービス、資格情報、書類、元の本人情報は使用しません",
     "テーブルとホストへのメモ",
     "今回はしない — 操作を変えずに戻る",
   ]) expect(actionGate).toContain(truth)
@@ -65,11 +66,31 @@ test("JA-B-003 Korean official facts remain Korean while Japanese labels explain
   const place = source("features/ondo/place/canonical-place-overlay.tsx")
   const map = source("features/ondo/map/map-entry-b.tsx")
 
-  expect(display).toContain('return locale === "ko" ? name : romanizeKorean(name)')
+  expect(transliterateKoreanForJapanese("로바")).toBe("ロバ")
+  expect(transliterateKoreanForJapanese("미야비")).toBe("ミヤビ")
+  expect(venueNamePresentation("로바", "ja").transliteration).not.toMatch(/[A-Za-z]/)
+  expect(venueDistrictLabel("seoul", "마포구", "ja")).toBe("麻浦区")
+  expect(venueDistrictLabel("seoul", "강남구", "ja")).toBe("江南区")
+  expect(display).toContain("transliterateKoreanForJapanese")
   expect(display).toContain("韓国語の公式名称")
   expect(display).toContain("公式日本語名ではありません")
-  expect(place).toContain("韓国行政安全部 LOCALDATA")
-  expect(map).toContain("公式ディレクトリ記録ではありません")
+  expect(place).toContain("韓国行政安全部・LOCALDATA飲食店データ")
+  expect(map).toContain("済州・VISITKOREAの編集スポット")
+})
+
+test("JA-B-003A Japanese traveler surfaces productize Jeju and OpenDID implementation truth", () => {
+  const editorialPlace = source("features/ondo/place/editorial-place-overlay-b.tsx")
+  const saved = source("features/ondo/my/saved-entry-b.tsx")
+  const setup = source("features/ondo/identity-b/ktour-id-setup-b.tsx")
+
+  expect(editorialPlace).toContain('truth: "済州の旅スポット"')
+  expect(editorialPlace).toContain('sourceDetails: "情報源の詳細"')
+  expect(editorialPlace).toContain("<details className={styles.sources}")
+  expect(saved).toContain('removeEditorial: "保存した旅スポットを削除"')
+  expect(setup).toContain('holder: "トラベルパスに追加"')
+  expect(setup).toContain('presentationRetention: "今回の依頼だけに使用 · 自動で期限切れ · 結果は保存しない"')
+  expect(setup).toContain("meta={[copy.holderLabel, copy.holderMeta]}")
+  expect(setup).not.toContain("meta={[CREDENTIAL_TYPE, copy.holderMeta]}")
 })
 
 test("JA-B-004 original editorial art is visually primary and external provenance stays separate", () => {

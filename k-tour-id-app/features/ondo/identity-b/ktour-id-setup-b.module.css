@@ -8,7 +8,7 @@
 .iconButton { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #e2e2e2; border-radius: 50%; background: #fff; color: #181818; }
 .iconButton { cursor: pointer; }
 .iconButton:focus-visible { outline: 3px solid rgb(17 17 17 / 28%); outline-offset: 2px; }
-.progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 12px 18px 4px; }
+.progress { display: grid; flex: 0 0 auto; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 12px 18px 4px; }
 .progress > div { display: flex; min-width: 0; align-items: center; gap: 6px; color: #666; }
 .progress > div::after { height: 1px; min-width: 4px; flex: 1; background: #e8e8e8; content: ""; }
 .progress > div:last-child::after { display: none; }
@@ -18,7 +18,7 @@
 .progress [data-current="true"] span { border-color: #111; background: #111; color: #fff; }
 .progress [data-complete="true"] { color: #444; }
 .progress [data-complete="true"] span { border-color: #bdbdbd; background: #f2f2f2; }
-.body { padding: 24px 20px 18px; }
+.body { flex: 0 0 auto; padding: 24px 20px 18px; }
 .body h1 { max-width: 540px; margin: 8px 0 0; font-size: clamp(30px, 8.5vw, 48px); font-weight: 820; line-height: 1.02; letter-spacing: -.055em; }
 .nowrap { white-space: nowrap; }
 .eyebrow { margin: 0; color: #5d263f; font-size: 12px; font-weight: 850; letter-spacing: .11em; line-height: 1.4; text-transform: uppercase; }

@@ -64,7 +64,7 @@ test.describe("ONDO B global Manual and Auto After19", () => {
     await expect(gate).toBeVisible()
     await expect(gate.getByTestId("global-after19-return-context")).toHaveAttribute("data-return-city", "seoul")
     await expect(gate.getByTestId("global-after19-return-context")).toContainText("Seoul")
-    await expect(gate).toContainText("Narrows this map to pub & café licence types. Actual entry, age and alcohol-service rules are not confirmed.")
+    await expect(gate).toContainText("Narrows this map to pubs and cafés. Actual entry, age and alcohol-service rules are not confirmed.")
     await expect(gate.getByTestId("global-after19-confirm")).toBeFocused()
     await expect(page.getByTestId("maplibre-map")).toHaveAttribute("inert", "")
     await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("inert", "")

@@ -193,7 +193,7 @@ test.describe("personal surfaces visual excellence", () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await offer.getByTestId("benefit-accept").click()
     await offer.getByTestId("payment-confirm").click()
-    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up local test balance" }).click()
+    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up travel wallet" }).click()
     await offer.getByTestId("payment-minimum-consent").locator("input").check()
     await offer.getByTestId("payment-confirm").click()
     const gate = page.getByTestId("ondo-b-action-gate")

@@ -37,7 +37,7 @@ test("PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview
     const source = readFileSync(path.join(appRoot, relativePath), "utf8")
     if (relativePath === "features/ondo/place/canonical-place-overlay.tsx") {
       expect(source).toContain("canonical-meal-benefit-open")
-      expect(source).toContain("This offer comes from ONDO, not the official place record or venue")
+      expect(source).toContain("See an ONDO meal benefit for this place")
       expect(source, relativePath).not.toMatch(/simulat|fixture|locals eat now/i)
     } else if (relativePath === "features/ondo/onboarding/official-directory-onboarding.tsx") {
       expect(source).toContain("Optional · guest Explore stays open")
@@ -55,7 +55,7 @@ test("PROD-DISCOVERY-004 place surface preserves sourced facts and canonical dec
   const source = readFileSync(path.join(appRoot, "features/ondo/place/canonical-place-overlay.tsx"), "utf8")
   expect(source).toContain("canonical-venue-directions")
   expect(source).toContain("canonical-venue-save")
-  expect(source).toContain("Official Korean restaurant licence record")
+  expect(source).toContain("LOCALDATA place information")
   expect(source).toContain("data-address-truth")
   expect(source).toContain("UNKNOWN")
 })

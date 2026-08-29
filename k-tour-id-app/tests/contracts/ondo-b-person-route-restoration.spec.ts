@@ -40,8 +40,8 @@ test("FL-005/006 Person route restoration stays inside the common exact-return g
   expect(coordinator).toContain("pending: null, personRoute: null, outcome: null")
   expect(coordinator).toContain('person: readyAxis(clock)')
   expect(coordinator).toContain("No identity provider is connected and no credential is created")
-  expect(coordinator).toContain("OmniOne CX가 아닌 별도의 공급자 중립 프리뷰")
-  expect(coordinator).toContain("OmniOne CXとは別の事業者中立プレビュー")
+  expect(coordinator).toContain("OmniOne CX가 아닌 별도의 공급자 중립 경로")
+  expect(coordinator).toContain("OmniOne CXとは別の事業者中立経路")
 })
 
 test("FL-005/006 route card preserves the mobile type and touch floors", () => {

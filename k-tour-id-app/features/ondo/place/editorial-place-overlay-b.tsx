@@ -2,53 +2,59 @@
 
 import type { KeyboardEvent } from "react"
 import { useEffect, useRef, useState } from "react"
-import { ArrowUpRight, Bookmark, MapPin, Navigation, X } from "lucide-react"
+import { ArrowUpRight, Bookmark, ChevronRight, MapPin, Navigation, X } from "lucide-react"
 import { closeBDiscoveryPlace } from "../map/b-discovery-history"
 import { editorialPlaceById, JAPAN_FIRST_LAUNCH_CONTENT } from "../pulse-b/japan-first-pulse-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./editorial-place-overlay-b.module.css"
 
-const FOCUSABLE = "a[href],button:not([disabled]),[tabindex]:not([tabindex='-1'])"
+const FOCUSABLE = "a[href],button:not([disabled]),summary,[tabindex]:not([tabindex='-1'])"
 
 const COPY = {
   en: {
-    truth: "Verified editorial place",
-    boundary: "VISITKOREA place page · not a LOCALDATA official food record",
+    truth: "Jeju travel place",
+    boundary: "Travel guide",
     address: "Address",
     directions: "Directions",
     save: "Save to My Korea",
     saved: "Saved in My Korea",
     remove: "Remove from My Korea",
     source: "Place source",
+    sourceDetails: "Source details",
+    imageSource: "Hero image",
     collection: "Story source",
     checked: "Place page and embedded map checked Aug 28, 2026",
     close: "Close place",
     saveFailed: "This device could not update the saved place. Try again.",
   },
   ko: {
-    truth: "검증된 편집 장소",
-    boundary: "VISITKOREA 장소 페이지 · LOCALDATA 공식 음식점 기록 아님",
+    truth: "제주 여행 장소",
+    boundary: "여행 가이드",
     address: "주소",
     directions: "길찾기",
     save: "내 한국에 저장",
     saved: "내 한국에 저장됨",
     remove: "내 한국에서 삭제",
     source: "장소 출처",
+    sourceDetails: "출처 정보",
+    imageSource: "대표 이미지",
     collection: "이야기 출처",
     checked: "장소 페이지와 내장 지도를 2026년 8월 28일 확인",
     close: "장소 닫기",
     saveFailed: "이 기기의 저장 장소를 업데이트하지 못했어요. 다시 시도해 주세요.",
   },
   ja: {
-    truth: "確認済みの編集スポット",
-    boundary: "VISITKOREAのスポットページ・LOCALDATA公式飲食店記録ではありません",
+    truth: "済州の旅スポット",
+    boundary: "旅ガイド",
     address: "住所",
     directions: "経路を見る",
     save: "マイ韓国に保存",
     saved: "マイ韓国に保存済み",
     remove: "マイ韓国から削除",
     source: "スポット情報源",
+    sourceDetails: "情報源の詳細",
+    imageSource: "メイン画像",
     collection: "ストーリー情報源",
     checked: "スポットページと埋め込み地図を2026年8月28日に確認",
     close: "スポットを閉じる",
@@ -83,6 +89,8 @@ export function EditorialPlaceOverlayB() {
     const story = JAPAN_FIRST_LAUNCH_CONTENT.find((item) => item.id === storyId)
     return story ? [story] : []
   })
+  const fallbackJejuStory = JAPAN_FIRST_LAUNCH_CONTENT.find((item) => item.id === "C18")
+  const heroMedia = stories.find((story) => story.editorialMedia)?.editorialMedia ?? fallbackJejuStory?.editorialMedia
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${activePlace.location.latitude},${activePlace.location.longitude}`)}`
 
   function close() {
@@ -119,7 +127,11 @@ export function EditorialPlaceOverlayB() {
           <button ref={closeRef} type="button" onClick={close} aria-label={copy.close}><X size={19} aria-hidden="true" /></button>
         </header>
         <div className={styles.body}>
-          <div className={styles.atmosphere} aria-hidden="true"><i /><i /><i /><b /></div>
+          {heroMedia ? (
+            <figure className={styles.hero} data-testid="ondo-b-editorial-place-hero">
+              <img src={heroMedia.src} alt={heroMedia.alt[locale]} />
+            </figure>
+          ) : null}
           <section className={styles.identity}>
             <p>{place.sourceCollection[locale]}</p>
             <h2 id="editorial-place-title">{place.name[locale]}</h2>
@@ -131,11 +143,15 @@ export function EditorialPlaceOverlayB() {
             <button type="button" onClick={toggleSaved} aria-pressed={saved} data-testid="ondo-b-editorial-place-save"><Bookmark size={18} aria-hidden="true" />{saved ? copy.remove : copy.save}</button>
           </div>
           {saveError ? <p className={styles.error} role="alert">{copy.saveFailed}</p> : null}
-          <section className={styles.sources} aria-label={copy.source}>
-            <p>{copy.checked}</p>
-            <a href={place.placeSourceUrl} target="_blank" rel="noreferrer"><span><b>{copy.source}</b><small>VISITKOREA · {place.location.coordinateSource}</small></span><ArrowUpRight size={17} aria-hidden="true" /></a>
-            {stories.map((story) => <a key={story.id} href={story.sourceReferences[0].url} target="_blank" rel="noreferrer"><span><b>{copy.collection}</b><small>{story.title[locale]}</small></span><ArrowUpRight size={17} aria-hidden="true" /></a>)}
-          </section>
+          <details className={styles.sources} aria-label={copy.source}>
+            <summary><span>{copy.sourceDetails}</span><ChevronRight size={17} aria-hidden="true" /></summary>
+            <div className={styles.sourceBody}>
+              <p>{copy.checked}</p>
+              {heroMedia ? <p className={styles.mediaCredit}><b>{copy.imageSource}</b><span>{heroMedia.credit[locale]}</span></p> : null}
+              <a href={place.placeSourceUrl} target="_blank" rel="noreferrer"><span><b>{copy.source}</b><small>VISITKOREA · {place.location.coordinateSource}</small></span><ArrowUpRight size={17} aria-hidden="true" /></a>
+              {stories.map((story) => <a key={story.id} href={story.sourceReferences[0].url} target="_blank" rel="noreferrer"><span><b>{copy.collection}</b><small>{story.title[locale]}</small></span><ArrowUpRight size={17} aria-hidden="true" /></a>)}
+            </div>
+          </details>
         </div>
       </article>
     </div>

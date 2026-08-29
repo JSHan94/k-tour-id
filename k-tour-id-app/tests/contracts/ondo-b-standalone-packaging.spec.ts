@@ -71,7 +71,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     ])
 
     const files = filesBelow(STAGE_ROOT)
-    expect(files).toContain("public/og-ondo-directory.png")
+    expect(files).toContain("public/og-map-first.png")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.tsx")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
@@ -87,7 +87,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
       "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
       "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
-      "public/og-ondo-directory.png",
+      "public/og-map-first.png",
     ])
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
     expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
@@ -138,7 +138,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
     expect(visibleSource).toContain("OOKRW Test is a non-live product balance")
     expect(visibleSource).toContain("This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money")
-    expect(visibleSource).toContain("This offer comes from ONDO, not the official place record or venue")
+    expect(visibleSource).toContain("See an ONDO meal benefit for this place")
   })
 
   test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {

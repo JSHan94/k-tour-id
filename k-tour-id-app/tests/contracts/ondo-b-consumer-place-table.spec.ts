@@ -39,6 +39,7 @@ test("normal After19 is a single eligibility path and outcome authoring is QA-on
 
 test("Tables and Local Signal own photo, retry, chat, check-in, and feedback states", () => {
   const tables = source("features/ondo/connect/tables-entry-b.tsx")
+  const tableStyles = source("features/ondo/connect/pulse-table-b.module.css")
   const signal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
 
   for (const testId of [
@@ -61,6 +62,9 @@ test("Tables and Local Signal own photo, retry, chat, check-in, and feedback sta
   expect(tables).toContain("image/jpeg")
   expect(tables).toContain("URL.revokeObjectURL")
   expect(tables).toContain('data-testid="table-chat-image-error"')
+  expect(tables).toContain('aria-describedby="tables-editorial-provenance"')
+  expect(tables).toContain('id="tables-editorial-provenance"')
+  expect(tableStyles).toContain("clip-path: inset(50%)")
   expect(signal).toContain("MAX_LOCAL_SIGNAL_PHOTO_BYTES")
   expect(signal).toContain('data-testid="local-signal-photo-error"')
   expect(signal).toContain("JPEG, PNG, or WebP")
@@ -73,8 +77,8 @@ test("destructive copy and contextual benefit copy state their exact device and 
 
   expect(settings).toContain("OOKRW Test receipts")
   expect(settings).toContain("OOKRW Test 영수증")
-  expect(place).toContain("This offer comes from ONDO, not the official place record or venue.")
-  expect(place).toContain("이 혜택은 공식 장소 기록이나 매장이 아닌 ONDO에서 제공합니다.")
+  expect(place).toContain("See an ONDO meal benefit for this place.")
+  expect(place).toContain("이 장소에서 쓸 수 있는 ONDO 식사 혜택을 확인하세요.")
   expect(place).not.toContain("Confirm payment support with the venue")
 })
 

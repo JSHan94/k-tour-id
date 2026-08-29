@@ -11,7 +11,7 @@ import {
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
 test.describe("ONDO B product-wide white/ink visual reset", () => {
-  test("RESET-001 shared shell owns neutral tokens and an icon-first localized desktop rail", () => {
+  test("RESET-001 shared shell owns neutral tokens and concise localized wayfinding", () => {
     const app = source("features/ondo/app/ondo-app-b.tsx")
     const css = source("features/ondo/app/ondo-shell.module.css")
 
@@ -19,12 +19,12 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
     expect(css).toContain("--ondo-paper: #f7f7f5")
     expect(css).toContain("--ondo-ink: #171717")
     expect(css).toContain("--ondo-phone-edge: 16px")
-    expect(app).toContain('data-nav-presentation="mobile-labeled-desktop-icon-first"')
-    expect(app).toContain("data-nav-tooltip={B_NAV_COPY[state.locale][id]}")
+    expect(app).toContain('data-nav-presentation="labeled-universal-icons"')
+    expect(app).toContain("B_NAV_DISPLAY_COPY[state.locale][id]")
     expect(app).toContain('aria-hidden="true"')
     expect(css).toContain(".nav button[data-state=\"selected\"]")
-    expect(css).toContain(".nav button:hover .navLabel")
-    expect(css).toContain(".nav button:focus-visible .navLabel")
+    expect(css).toContain(".stage[data-variant=\"B\"] .navLabel")
+    expect(css).toContain("opacity: 1")
     expect(css).toContain("@media (prefers-reduced-motion: reduce)")
   })
 
@@ -46,7 +46,8 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
     const map = source("features/ondo/map/map-entry-b.tsx")
     const css = source("features/ondo/map/map-b.module.css")
 
-    expect(map).toContain('data-chrome-role="count-view"')
+    expect(map).toContain('data-chrome-role="view-action"')
+    expect(map).toContain('data-testid="ondo-b-result-truth"')
     expect(map).toContain('data-pulse-key-presentation="compact-gradient"')
     expect(map).toContain('data-testid="ondo-b-pulse-methodology"')
     expect(map).toContain('data-attribution-presentation="compact-legal"')

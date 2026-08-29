@@ -68,10 +68,10 @@ export async function scanStandaloneArtifact() {
 
   const emittedImages = artifactFiles.filter((file) => /\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(file))
   const expectedOg = PUBLIC_FILES[0]
-  const emittedOg = emittedImages.find((file) => file.endsWith("/og-ondo-directory.png") || file === "og-ondo-directory.png")
-  if (!emittedOg) fail("The production ONDO social card is missing")
+  const emittedOg = emittedImages.find((file) => file.endsWith("/og-map-first.png") || file === "og-map-first.png")
+  if (!emittedOg) fail("The production K-TOUR ID social card is missing")
   if (await digest(resolve(STAGE_DIST, emittedOg)) !== await digest(resolve(APP_ROOT, expectedOg))) {
-    fail("The emitted ONDO social card differs from the validated source")
+    fail("The emitted K-TOUR ID social card differs from the validated source")
   }
   for (const publicFile of PUBLIC_FILES.slice(1)) {
     const publicPath = publicFile.replace(/^public\//, "")

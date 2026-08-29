@@ -600,7 +600,7 @@ async function triggerPaymentGate(page: Page, locale: BLocale, qa = false) {
   await expect(connect).toBeVisible()
   if (qa) {
     await connect.getByRole("button", {
-      name: locale === "ko" ? "로컬 테스트 잔액 설정" : "Set up local test balance",
+      name: locale === "ko" ? "여행 지갑 설정" : locale === "ja" ? "旅のウォレットを設定" : "Set up travel wallet",
       exact: true,
     }).click()
     await expect(connect).toHaveAttribute("data-phase", "failed")
@@ -657,7 +657,7 @@ async function prepareCommerceWallet(page: Page, locale: BLocale) {
   const sheet = page.getByTestId("wallet-connect-sheet")
   await expect(sheet).toBeVisible()
   await sheet.getByRole("button", {
-    name: locale === "ko" ? "로컬 테스트 잔액 설정" : "Set up local test balance",
+    name: locale === "ko" ? "여행 지갑 설정" : locale === "ja" ? "旅のウォレットを設定" : "Set up travel wallet",
     exact: true,
   }).click()
   await expect(sheet).toBeHidden()
@@ -1018,14 +1018,14 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
 
   await settle(page)
   if (state === "CITY-FILTERED-MAP") {
-    await expect(page.getByTestId("ondo-b-result-bar")).toContainText(locale === "ko" ? "공식 기록 1개" : "1 official record")
+    await expect(page.getByTestId("ondo-b-result-bar")).toContainText(locale === "ko" ? "장소 1곳" : "1 place")
   }
   if (state === "LABS-TRAIT-FAIL") {
     const targetNetwork = locale === "ko"
-      ? "대상 네트워크: Sui Testnet · 시뮬레이션"
+      ? "Sui Testnet · 기기 내 경로"
       : locale === "ja"
-        ? "対象ネットワーク：Sui Testnet · シミュレーション"
-        : "Target network: Sui Testnet · Simulated"
+        ? "Sui Testnet・端末内ルート"
+        : "Sui Testnet · on-device route"
     await expect(page.getByTestId("labs-overlay").getByText(targetNetwork, { exact: true })).toHaveCount(1)
   }
   if (state === "TRUST-FOUR-AXES") {

@@ -220,20 +220,26 @@
   .canvas { width: 100vw; border: 0; }
 
   .nav {
-    min-height: 64px;
+    min-height: 72px;
     margin-top: 7px;
     padding: 5px;
     border-radius: 20px;
   }
-  .nav button { min-height: 52px; padding: 3px 2px; }
+  .nav button { min-height: 60px; padding: 4px 2px 3px; }
+  .navIcon { width: 26px; height: 26px; }
   .navLabel {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    min-height: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
+    position: static;
+    display: grid;
+    width: 100%;
+    height: auto;
+    min-height: 12px;
+    place-items: center;
+    overflow: visible;
+    clip: auto;
+    font-size: 12px;
+    letter-spacing: 0;
+    line-height: 1;
+    white-space: normal;
   }
 }
 
@@ -303,7 +309,7 @@
 
 @media (max-width: 340px) {
   .nav { width: calc(100% - 16px); gap: 2px; padding-inline: 4px; }
-  .navLabel { font-size: 12px; letter-spacing: -.045em; }
+  .navLabel { font-size: 12px; letter-spacing: 0; }
   .stage[data-locale="ko"] .navLabel,
   .stage[data-locale="ja"] .navLabel { letter-spacing: 0; }
 }
@@ -434,33 +440,26 @@
   .stage[data-variant="B"] .navIcon { width: 30px; height: 30px; }
   .stage[data-variant="B"] .navActive .navIcon { transform: none; }
   .stage[data-variant="B"] .navLabel {
-    position: absolute;
-    z-index: 4;
-    top: 50%;
-    left: calc(100% + 10px);
-    display: flex;
-    width: max-content;
-    max-width: 180px;
-    min-height: 34px;
-    align-items: center;
-    padding: 0 11px;
-    border: 1px solid rgb(23 23 23 / 10%);
-    border-radius: 10px;
-    background: #171717;
-    color: #fff;
-    box-shadow: 0 8px 22px rgb(0 0 0 / 16%);
+    position: static;
+    z-index: auto;
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    min-height: 14px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
     font-size: 12px;
-    line-height: 1.1;
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(-5px, -50%);
-    transition: opacity var(--ondo-motion-fast) ease, transform var(--ondo-motion-fast) var(--ondo-ease-out);
-  }
-
-  .stage[data-variant="B"] .nav button:hover .navLabel,
-  .stage[data-variant="B"] .nav button:focus-visible .navLabel {
+    letter-spacing: 0;
+    line-height: 1;
     opacity: 1;
-    transform: translate(0, -50%);
+    pointer-events: none;
+    transform: none;
+    transition: none;
   }
 
   .stage[data-variant="B"] .toast {
@@ -516,8 +515,21 @@
     transform: translateY(-50%);
   }
   .stage[data-variant="B"] .navActive::after { width: 3px !important; height: 22px; }
-  .stage[data-variant="B"] .navIcon { width: 24px; height: 24px; }
-  .stage[data-variant="B"] .navLabel { display: none; }
+  .stage[data-variant="B"] .navIcon { width: 23px; height: 23px; }
+  .stage[data-variant="B"] .navLabel {
+    position: static;
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    min-height: 14px;
+    place-items: center;
+    padding: 0;
+    font-size: 12px;
+    letter-spacing: 0;
+    line-height: 1;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* After 19 is a complete browse presentation, including the app frame. The
@@ -536,14 +548,15 @@
 }
 .stage[data-variant="B"]:has([data-after19-active="true"]) .nav {
   border-color: rgb(255 255 255 / 14%);
-  background: rgb(20 20 24 / 96%);
-  box-shadow: 0 14px 34px rgb(0 0 0 / 34%), inset 0 1px 0 rgb(255 255 255 / 8%);
+  background: rgb(15 15 21 / 96%);
+  box-shadow: 0 14px 34px rgb(0 0 0 / 38%), inset 0 1px 0 rgb(255 255 255 / 7%);
 }
-.stage[data-variant="B"]:has([data-after19-active="true"]) .nav button { color: #a9a9b1; }
+.stage[data-variant="B"]:has([data-after19-active="true"]) .nav button { color: #a9a6b2; }
 .stage[data-variant="B"]:has([data-after19-active="true"]) .navActive {
-  border-color: rgb(255 255 255 / 16%);
-  background: #f7f7f8;
-  color: #111115;
-  box-shadow: 0 0 24px rgb(255 77 155 / 18%);
+  border-color: rgb(255 114 184 / 28%);
+  background: linear-gradient(145deg, rgb(43 35 47 / 98%), rgb(25 24 32 / 98%));
+  color: #fff;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 5%) inset, 0 0 26px rgb(255 78 158 / 18%);
 }
-.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive::after { background: #ff4d9b; }
+.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive .navIcon { color: #fff; }
+.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive::after { background: #ff72b8 !important; }

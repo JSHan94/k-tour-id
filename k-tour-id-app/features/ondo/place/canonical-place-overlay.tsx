@@ -28,14 +28,15 @@ import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import styles from "./canonical-place.module.css"
 
 const TABLE_VENUE_ID = "mois-0021cd596bc5b2a922ad"
+const ACTIVE_TABLE_STARTS_AT = "2026-09-18T20:30:00+09:00"
 export const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
 
 const COPY = {
   en: {
-    active: "Official Korean restaurant licence record",
-    source: "Official source record",
-    sourceBody: "Ministry of the Interior and Safety LOCALDATA · General food-service licence directory",
-    sourceBoundary: "The record confirms an active licence at the source date. It does not confirm that the business is open today.",
+    active: "LOCALDATA place information",
+    source: "Source details",
+    sourceBody: "Ministry of the Interior and Safety · LOCALDATA food-service dataset",
+    sourceBoundary: "Listed in LOCALDATA at the source date. Check today’s opening directly with the place.",
     before: "Information not provided by this source",
     unknown: "Not provided by this source",
     unknownShort: "Not provided",
@@ -43,12 +44,12 @@ const COPY = {
     card: "Foreign-issued card support",
     menu: "Menu and prices",
     language: "English-language support",
-    category: "Official business type",
-    licence: "Licence status",
-    activeLicence: "Active at source date",
-    opened: "Licence start date",
+    category: "Place type",
+    licence: "Source status",
+    activeLicence: "Listed at source date",
+    opened: "First listed",
     modified: "Source record updated",
-    details: "Official record details",
+    details: "Place details",
     directions: "Directions",
     save: "Save on this device",
     saved: "Saved on this device",
@@ -57,14 +58,14 @@ const COPY = {
     localSignalPosted: "Update Local Signal on this device",
     localSignalBoundary: "Choose a quick observation and optional photo in this open, device-local flow. Only saved selections and time enter history; the photo is discarded.",
     demoOffer: "See ONDO meal benefit",
-    demoOfferBody: "Review an ONDO meal benefit in this app. This offer comes from ONDO, not the official place record or venue.",
+    demoOfferBody: "See an ONDO meal benefit for this place.",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
     retrySave: "Retry device save",
     detailLoading: "Loading official address evidence…",
     detailUnavailable: "Official address evidence is temporarily unavailable",
-    retryDetail: "Retry official record",
+    retryDetail: "Retry place details",
     sourceSnapshot: "Source snapshot",
     sourceRecord: "LOCALDATA management ID",
     sourceReference: "Source reference",
@@ -85,7 +86,8 @@ const COPY = {
     pulseAlternative: "Open calmer place",
     pulseLocalEvidence: "On this device",
     table: "View Table",
-    tableBody: "Fri, Aug 28 · 20:30 KST · Korean + English · 1 seat left",
+    tableBody: "Fri, Sep 18 · 20:30 KST · Korean + English · 1 seat left",
+    tableClosedBody: "This Table has ended · view details",
     tablesAtPlace: "Tables at this place",
     noTables: "No open Table here yet",
     noTablesBody: "Keep this exact place open, or browse all local Tables.",
@@ -99,10 +101,10 @@ const COPY = {
     pulseBoundary: "Curated visit signals · not live crowding or official venue facts.",
   },
   ko: {
-    active: "한국 공식 음식점 인허가 기록",
-    source: "공식 출처 기록",
-    sourceBody: "행정안전부 LOCALDATA · 일반음식점 인허가 디렉터리",
-    sourceBoundary: "출처 기준일의 유효 인허가 상태를 확인합니다. 현재 영업 중이라는 뜻은 아닙니다.",
+    active: "LOCALDATA 장소 정보",
+    source: "출처 상세",
+    sourceBody: "행정안전부 · LOCALDATA 음식점 데이터",
+    sourceBoundary: "출처 기준일에 LOCALDATA에 등록된 장소입니다. 오늘 영업 여부는 장소에 직접 확인해 주세요.",
     before: "이 출처에서 제공하지 않는 정보",
     unknown: "이 출처에서 제공하지 않음",
     unknownShort: "미제공",
@@ -110,12 +112,12 @@ const COPY = {
     card: "해외 발급 카드 지원",
     menu: "메뉴와 가격",
     language: "영어 지원",
-    category: "공식 업태구분명",
-    licence: "인허가 상태",
-    activeLicence: "출처 기준일 영업 상태",
-    opened: "인허가 시작일",
+    category: "장소 유형",
+    licence: "출처 상태",
+    activeLicence: "출처 기준일 등록",
+    opened: "최초 등록일",
     modified: "출처 기록 수정일",
-    details: "공식 기록 상세",
+    details: "장소 상세",
     directions: "길찾기",
     save: "이 기기에 저장",
     saved: "이 기기에 저장됨",
@@ -124,14 +126,14 @@ const COPY = {
     localSignalPosted: "이 기기의 로컬 시그널 업데이트",
     localSignalBoundary: "이 기기에서 열린 흐름에 짧은 관찰과 선택 사진을 더하세요. 선택한 관찰과 시각만 기록에 남고 사진은 폐기됩니다.",
     demoOffer: "ONDO 식사 혜택 보기",
-    demoOfferBody: "이 앱에서 ONDO 식사 혜택을 확인하세요. 이 혜택은 공식 장소 기록이나 매장이 아닌 ONDO에서 제공합니다.",
+    demoOfferBody: "이 장소에서 쓸 수 있는 ONDO 식사 혜택을 확인하세요.",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
     retrySave: "기기 저장 다시 시도",
     detailLoading: "공식 주소 근거를 불러오는 중…",
     detailUnavailable: "공식 주소 근거를 잠시 불러올 수 없어요",
-    retryDetail: "공식 기록 다시 불러오기",
+    retryDetail: "장소 상세 다시 불러오기",
     sourceSnapshot: "출처 스냅샷",
     sourceRecord: "LOCALDATA 관리번호",
     sourceReference: "출처 참조",
@@ -152,7 +154,8 @@ const COPY = {
     pulseAlternative: "더 여유로운 장소 열기",
     pulseLocalEvidence: "이 기기에서",
     table: "테이블 보기",
-    tableBody: "8월 28일 금요일 · 20:30 KST · 한국어 + 영어 · 1자리 남음",
+    tableBody: "9월 18일 금요일 · 20:30 KST · 한국어 + 영어 · 1자리 남음",
+    tableClosedBody: "종료된 테이블 · 상세 보기",
     tablesAtPlace: "이 장소의 테이블",
     noTables: "아직 열린 테이블이 없어요",
     noTablesBody: "이 장소를 그대로 보거나 전체 로컬 테이블을 둘러보세요.",
@@ -166,10 +169,10 @@ const COPY = {
     pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
   },
   ja: {
-    active: "韓国の公式飲食店営業許可記録",
-    source: "公式出典記録",
-    sourceBody: "韓国行政安全部 LOCALDATA・一般飲食店営業許可ディレクトリ",
-    sourceBoundary: "この記録は、出典日時点で営業許可が有効だったことだけを示します。現在営業中であることを保証するものではありません。",
+    active: "LOCALDATAの場所情報",
+    source: "出典の詳細",
+    sourceBody: "韓国行政安全部・LOCALDATA飲食店データ",
+    sourceBoundary: "出典日時点でLOCALDATAに掲載された場所です。現在の営業状況は店舗に確認してください。",
     before: "この出典では確認できない情報",
     unknown: "この出典では確認できません",
     unknownShort: "情報なし",
@@ -177,12 +180,12 @@ const COPY = {
     card: "海外発行カードへの対応",
     menu: "メニューと価格",
     language: "日本語・英語への対応",
-    category: "公式業種名",
-    licence: "営業許可の状態",
-    activeLicence: "出典日時点で有効",
-    opened: "営業許可開始日",
+    category: "場所タイプ",
+    licence: "出典での状態",
+    activeLicence: "出典日時点で掲載",
+    opened: "初回掲載日",
     modified: "出典記録の更新日",
-    details: "公式記録の詳細",
+    details: "場所の詳細",
     directions: "経路を見る",
     save: "この端末に保存",
     saved: "この端末に保存済み",
@@ -191,14 +194,14 @@ const COPY = {
     localSignalPosted: "この端末のローカルシグナルを更新",
     localSignalBoundary: "この端末で開いている操作に短い観察と任意の写真を加えます。選んだ内容と時刻だけが履歴に残り、写真は破棄されます。",
     demoOffer: "ONDOの食事特典を見る",
-    demoOfferBody: "アプリ内でONDOの食事特典を確認します。この特典は公式の場所記録や店舗ではなく、ONDOが提供します。",
+    demoOfferBody: "この場所で使えるONDOの食事特典を確認できます。",
     close: "場所を閉じる",
     back: "場所の概要に戻る",
     saveFailed: "この端末に場所を保存できませんでした。選択中の場所は開いたままです。",
     retrySave: "もう一度保存",
     detailLoading: "公式住所の根拠を読み込み中…",
     detailUnavailable: "公式住所の根拠を一時的に読み込めません",
-    retryDetail: "公式記録を再読み込み",
+    retryDetail: "場所の詳細を再読み込み",
     sourceSnapshot: "出典スナップショット",
     sourceRecord: "LOCALDATA管理番号",
     sourceReference: "出典参照",
@@ -219,7 +222,8 @@ const COPY = {
     pulseAlternative: "落ち着いた場所を開く",
     pulseLocalEvidence: "この端末",
     table: "テーブルを見る",
-    tableBody: "8月28日（金）・20:30 KST・韓国語＋英語・残り1席",
+    tableBody: "9月18日（金）・20:30 KST・韓国語＋英語・残り1席",
+    tableClosedBody: "終了したTable・詳細を見る",
     tablesAtPlace: "この場所のテーブル",
     noTables: "現在募集中のテーブルはありません",
     noTablesBody: "この場所に戻るか、すべてのローカルテーブルを見られます。",
@@ -240,7 +244,7 @@ const CATEGORY = {
   japanese: { en: "Japanese", ko: "일식", ja: "日本料理" },
   chinese: { en: "Chinese", ko: "중식", ja: "中華料理" },
   global: { en: "Western & international", ko: "경양식·외국음식", ja: "洋食・各国料理" },
-  night: { en: "Pub & café licence types", ko: "주점·카페 업태", ja: "パブ・カフェ業種" },
+  night: { en: "Pubs & cafés", ko: "주점·카페", ja: "パブ・カフェ" },
   specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", ja: "焼き物・専門店" },
 } as const
 
@@ -273,6 +277,9 @@ export function CanonicalPlaceOverlay() {
   const [detailState, setDetailState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [detailAttempt, setDetailAttempt] = useState(0)
   const [tableScopeOpen, setTableScopeOpen] = useState(false)
+  const [tableClockNow, setTableClockNow] = useState(() => Date.now())
+  const tableStartsAtMs = Date.parse(ACTIVE_TABLE_STARTS_AT)
+  const tableUpcoming = tableClockNow < tableStartsAtMs
   const [after19Session, setAfter19Session] = useState<GlobalAfter19SessionB>(DEFAULT_GLOBAL_AFTER19_SESSION)
   const [after19Handoff, setAfter19Handoff] = useState(false)
   const closeRef = useRef<HTMLButtonElement | null>(null)
@@ -288,6 +295,17 @@ export function CanonicalPlaceOverlay() {
   const venue = venueId ? canonicalMapVenueById(venueId) : undefined
   const locale = state.locale
   const copy = COPY[locale]
+
+  useEffect(() => {
+    if (!tableUpcoming) return
+    const remaining = tableStartsAtMs - Date.now()
+    if (remaining <= 0) {
+      setTableClockNow(Date.now())
+      return
+    }
+    const timer = window.setTimeout(() => setTableClockNow(Date.now()), Math.min(remaining + 25, 2_147_000_000))
+    return () => window.clearTimeout(timer)
+  }, [tableClockNow, tableStartsAtMs, tableUpcoming])
 
   useEffect(() => {
     peekTraversalFocusPendingRef.current = false
@@ -544,9 +562,17 @@ export function CanonicalPlaceOverlay() {
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <section className={styles.peekIdentityStage} data-testid="canonical-place-identity-stage" data-pulse-level={pulse.level}>
         <div className={styles.placeAtmosphere} data-testid="canonical-place-atmosphere" aria-hidden="true"><i /><i /><i /></div>
-        <div className={styles.meta}><span>{district} · {category}</span><i>{copy.active}</i></div>
+        <div className={styles.meta}><span>{district} · {category}</span><i className={styles.srOnly}>{copy.active}</i></div>
         <h2>{name.officialName}</h2>
-        <div className={styles.nameProvenance} data-testid="canonical-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
+        <div
+          className={`${styles.nameProvenance} ${locale === "ko" ? styles.srOnly : ""}`}
+          data-testid="canonical-name-provenance"
+          aria-label={`${name.officialNameLabel}: ${name.officialName}. ${name.transliterationLabel}: ${name.transliteration}`}
+        >
+          <span className={styles.srOnly}>{name.officialNameLabel}</span>
+          <strong>{name.transliteration}</strong>
+          <small className={styles.srOnly}>{name.transliterationLabel}</small>
+        </div>
       </section>
       <section className={styles.pulsePeek} role="group" aria-label={pulseTitle} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
         <span className={styles.pulseVisualLabel} aria-hidden="true">{copy.temperature}</span>
@@ -579,7 +605,15 @@ export function CanonicalPlaceOverlay() {
             <div className={styles.placeAtmosphere} data-testid="canonical-place-atmosphere" aria-hidden="true"><i /><i /><i /></div>
             <p className={styles.eyebrow}>{district} · {category}</p>
             <h2 id="canonical-place-title">{name.officialName}</h2>
-            <div className={styles.detailNameProvenance} data-testid="canonical-detail-name-provenance"><span>{name.officialNameLabel}</span><strong>{name.transliteration}</strong><small>{name.transliterationLabel}</small></div>
+            <div
+              className={`${styles.detailNameProvenance} ${locale === "ko" ? styles.srOnly : ""}`}
+              data-testid="canonical-detail-name-provenance"
+              aria-label={`${name.officialNameLabel}: ${name.officialName}. ${name.transliterationLabel}: ${name.transliteration}`}
+            >
+              <span className={styles.srOnly}>{name.officialNameLabel}</span>
+              <strong>{name.transliteration}</strong>
+              <small className={styles.srOnly}>{name.transliterationLabel}</small>
+            </div>
             {detailState === "error" ? (
               <section className={styles.detailError} role="alert" data-detail-state="error" data-address-truth="ERROR">
                 <p><MapPin size={16} />{copy.detailUnavailable}</p>
@@ -638,7 +672,7 @@ export function CanonicalPlaceOverlay() {
             <section className={styles.tableActions} aria-label={locale === "ko" ? "이 장소의 테이블" : locale === "ja" ? "この場所のテーブル" : "Table at this place"}>
               <button type="button" className={styles.tablePrimary} onClick={openTableFromPlace} data-testid="canonical-place-table">
                 <UsersRound size={18} aria-hidden="true" />
-                <span><strong>{copy.table}</strong><small>{copy.tableBody}</small></span>
+                <span><strong>{copy.table}</strong><small>{tableUpcoming ? copy.tableBody : copy.tableClosedBody}</small></span>
                 <ChevronRight size={17} aria-hidden="true" />
               </button>
               <aside className={styles.eligibilityChip} data-testid="canonical-after19-required">

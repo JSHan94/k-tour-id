@@ -1,15 +1,18 @@
 import { expect, test } from "@playwright/test"
 import { seedB, seedFreshOnboarding } from "../helpers/ondo-b-qa"
 
-test.describe("ONDO deployment brand", () => {
-  test("the public root enters ONDO with the 溫圖 signature and ONDO metadata", async ({ page }) => {
+test.describe("K-TOUR ID and ONDO deployment brand", () => {
+  test("the public root enters ONDO while shared metadata leads with K-TOUR ID", async ({ page }) => {
     await seedB(page)
     await page.goto("/", { waitUntil: "domcontentloaded" })
 
     await expect(page).toHaveURL(/\/ondo-b$/)
-    await expect(page).toHaveTitle("ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju")
-    await expect(page.locator('meta[name="application-name"]')).toHaveAttribute("content", "ONDO")
-    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "ONDO")
+    await expect(page).toHaveTitle("K-TOUR ID | ONDO 溫圖")
+    await expect(page.locator('meta[name="application-name"]')).toHaveAttribute("content", "K-TOUR ID")
+    await expect(page.locator('meta[property="og:site_name"]')).toHaveAttribute("content", "K-TOUR ID")
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute("content", "K-TOUR ID | ONDO 溫圖")
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /\/og-map-first\.png$/)
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute("content", /\/og-map-first\.png$/)
     await expect(page.locator('link[rel="icon"][href*="ondo-mark-micro-16.svg"]')).toHaveCount(1)
 
     const lockup = page.locator('[data-ondo-brand-lockup="compact"]')

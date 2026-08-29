@@ -208,17 +208,11 @@
 
 .editorialBand figcaption {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
-  max-width: calc(100% - 16px);
-  border-radius: 999px;
-  padding: 5px 8px;
-  background: rgb(20 20 20 / 72%);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-  backdrop-filter: blur(10px);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .entry {

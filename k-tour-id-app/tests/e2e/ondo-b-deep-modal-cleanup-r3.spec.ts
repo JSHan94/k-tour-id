@@ -15,7 +15,7 @@ type Locale = "en" | "ko"
 const COPY = {
   en: {
     removeSaved: "Remove from Saved",
-    walletConnect: "Set up local test balance",
+    walletConnect: "Set up travel wallet",
     tip: "Order beside the entrance.",
     back: "Back to this place",
     browse: "Browse all Tables",
@@ -23,7 +23,7 @@ const COPY = {
   },
   ko: {
     removeSaved: "저장 취소",
-    walletConnect: "로컬 테스트 잔액 설정",
+    walletConnect: "여행 지갑 설정",
     tip: "주문은 입구 옆에서 해요.",
     back: "이 장소로 돌아가기",
     browse: "전체 테이블 보기",

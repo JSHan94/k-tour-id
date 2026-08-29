@@ -11,9 +11,15 @@ import {
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
 
 const NAV_ACCESSIBLE_NAMES: Record<BLocale, readonly string[]> = {
-  en: ["Explore", "My Korea", "Tables", "ID · Wallet", "Settings"],
-  ko: ["탐색", "내 한국", "테이블", "ID · 지갑", "설정"],
-  ja: ["探す", "マイ韓国", "テーブル", "ID・ウォレット", "設定"],
+  en: ["Explore", "Saved · My Korea", "Tables", "Pass · ID and Wallet", "Settings"],
+  ko: ["탐색", "저장 · 내 한국", "테이블", "패스 · ID와 지갑", "설정"],
+  ja: ["探す", "保存・マイ韓国", "テーブル", "パス・IDとウォレット", "設定"],
+}
+
+const NAV_VISIBLE_LABELS: Record<BLocale, readonly string[]> = {
+  en: ["Explore", "Saved", "Tables", "Pass", "Settings"],
+  ko: ["탐색", "저장", "테이블", "패스", "설정"],
+  ja: ["探す", "保存", "テーブル", "パス", "設定"],
 }
 
 async function box(locator: Locator) {
@@ -69,7 +75,8 @@ async function expectPolishedFiveTabDock(page: Page, locale: BLocale, screenshot
     await expect(button).toHaveAccessibleName(NAV_ACCESSIBLE_NAMES[locale][index])
     await expect(icon).toBeVisible()
     await expect(icon.locator("img, svg")).toHaveCount(1)
-    await expect(label).toHaveCount(1)
+    await expect(label).toBeVisible()
+    await expect(label).toHaveText(NAV_VISIBLE_LABELS[locale][index])
     const buttonBox = await box(button)
     const iconBox = await box(icon)
     const mobileContract = await button.evaluate((element) => {
@@ -80,6 +87,7 @@ async function expectPolishedFiveTabDock(page: Page, locale: BLocale, screenshot
         labelPosition: labelStyle.position,
         labelWidth: Number.parseFloat(labelStyle.width),
         labelHeight: Number.parseFloat(labelStyle.height),
+        labelFontSize: Number.parseFloat(labelStyle.fontSize),
         labelOverflow: labelStyle.overflow,
         labelClip: labelStyle.clip,
       }
@@ -89,8 +97,10 @@ async function expectPolishedFiveTabDock(page: Page, locale: BLocale, screenshot
     expect(mobileContract.minHeight).toBeGreaterThanOrEqual(52)
     expect(iconBox.width).toBeGreaterThanOrEqual(24)
     expect(iconBox.height).toBeGreaterThanOrEqual(24)
-    expect(mobileContract).toMatchObject({ labelPosition: "absolute", labelHeight: 1, labelOverflow: "hidden", labelClip: "rect(0px, 0px, 0px, 0px)" })
-    expect(mobileContract.labelWidth).toBeLessThanOrEqual(2)
+    expect(mobileContract).toMatchObject({ labelPosition: "static", labelOverflow: "visible", labelClip: "auto" })
+    expect(mobileContract.labelWidth).toBeGreaterThanOrEqual(12)
+    expect(mobileContract.labelHeight).toBeGreaterThanOrEqual(12)
+    expect(mobileContract.labelFontSize).toBeGreaterThanOrEqual(12)
     buttonBoxes.push(buttonBox)
   }
 

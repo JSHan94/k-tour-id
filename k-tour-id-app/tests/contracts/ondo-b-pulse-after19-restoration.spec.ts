@@ -21,8 +21,8 @@ test("B-PULSE-002 the consumer Table separates canonical venue facts from host-p
   expect(tables).toContain('TABLE_VENUE_ID = "mois-0021cd596bc5b2a922ad"')
   expect(tables).toContain("canonicalMapVenueById(TABLE_VENUE_ID)")
   for (const evidence of [
-    "Place record",
-    "The host provides the gathering details",
+    'official: "Place"',
+    "The host chose this place and provides the gathering details",
     "table-sample-time",
     "table-sample-menu",
     "table-sample-language",
@@ -50,7 +50,7 @@ test("B-AFTER19-001 Table action eligibility returns only the 19+ predicate and 
     "Confirm 19+ for this Table",
     "Only an eligibility result and expiry are kept in this tab",
     "No birth date or official venue restriction is claimed",
-    "SIMULATED LOCAL CHECK · no external provider, credential, document, or raw identity data",
+    "ON-DEVICE CHECK · no external provider, credential, document, or raw identity data",
   ]) expect(gate).toContain(evidence)
   for (const evidence of [
     'age: "unverified" | "eligible"',

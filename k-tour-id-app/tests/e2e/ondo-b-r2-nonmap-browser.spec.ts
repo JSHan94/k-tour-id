@@ -132,7 +132,7 @@ test("My Korea preserves a bilingual save while setup edits persona and preferen
   await discovery.getByRole("button", { name: "Cafés and dessert", exact: true }).click()
   await discovery.getByRole("button", { name: "Vegan", exact: true }).click()
   await expect(discovery).toContainText("These choices shape discovery context only.")
-  await expect(discovery).toContainText("They never hide places or claim support that official records do not confirm.")
+  await expect(discovery).toContainText("They never hide places or claim dietary support that has not been confirmed.")
   await expect.poll(() => page.evaluate(() => {
     const device = JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}")
     return [device.persona, device.discoveryPreferences]

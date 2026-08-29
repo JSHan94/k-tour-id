@@ -159,5 +159,6 @@ test("cancel creates no plan while the Local Signal merge contract can render ho
   const my = await openMy(page)
   await expect(my.getByTestId("my-korea-planned-empty")).toBeVisible()
   await expect(my.getByTestId(`contribution-venue-${VENUE_ID}`)).toContainText("이 기기에서 남긴 로컬 시그널")
-  await expect(page.getByTestId("nav-my")).toContainText("내 한국")
+  await expect(page.getByTestId("nav-my")).toContainText("저장")
+  await expect(page.getByTestId("nav-my")).toHaveAccessibleName("저장 · 내 한국")
 })

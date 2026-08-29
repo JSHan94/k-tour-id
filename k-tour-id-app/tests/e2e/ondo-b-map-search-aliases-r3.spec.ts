@@ -11,7 +11,7 @@ const SEARCH_LABEL = {
 } as const
 
 function resultLabel(locale: Locale, count: number) {
-  return locale === "ko" ? `공식 기록 ${count}개` : `${count} official ${count === 1 ? "record" : "records"}`
+  return locale === "ko" ? `장소 ${count}곳` : `${count} ${count === 1 ? "place" : "places"}`
 }
 
 async function openCityList(page: Page, city: CityId) {
@@ -21,8 +21,8 @@ async function openCityList(page: Page, city: CityId) {
 
 async function search(page: Page, locale: Locale, query: string, count: number) {
   await page.getByLabel(SEARCH_LABEL[locale]).fill(query)
-  const result = page.getByTestId("ondo-b-result-bar").locator("b")
-  await expect(result).toHaveAttribute("data-compact-count", String(count))
+  const result = page.getByTestId("ondo-b-result-truth").locator("b")
+  await expect(page.getByTestId("ondo-b-result-bar")).toHaveAttribute("data-result-count", String(count))
   await expect(result).toHaveText(resultLabel(locale, count))
   const names = page.getByTestId("ondo-b-venue-list").getByTestId("official-source-name")
   await expect(names).toHaveCount(Math.min(count, 30))
@@ -59,7 +59,7 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
         intents: [
           { query: "pizza", count: 3, sourceTokens: ["피자"], example: "고피자 신촌1호점", category: "Western & international" },
           { query: "chicken", count: 4, sourceTokens: ["치킨", "통닭"], example: "교촌치킨 명지대점", category: "Grills & specialty" },
-          { query: "coffee", count: 4, sourceTokens: ["커피", "카페"], example: "서울커피", category: "Pub & café licence types" },
+          { query: "coffee", count: 4, sourceTokens: ["커피", "카페"], example: "서울커피", category: "Pubs & cafés" },
           { query: "gukbap", count: 3, sourceTokens: ["국밥"], example: "국밥쟁이", category: "Korean" },
           { query: "kalguksu", count: 5, sourceTokens: ["칼국수"], example: "대선 칼국수", category: "Korean" },
           { query: "kimbap", count: 3, sourceTokens: ["김밥"], example: "김밥천국", category: "Korean" },

@@ -117,7 +117,7 @@ export const SOURCE_FILES = Object.freeze([
 ])
 
 export const PUBLIC_FILES = Object.freeze([
-  "public/og-ondo-directory.png",
+  "public/og-map-first.png",
   "public/brand/ondo-lockup.svg",
   "public/brand/ondo-mark.svg",
   "public/brand/ondo-mark-inverse.svg",

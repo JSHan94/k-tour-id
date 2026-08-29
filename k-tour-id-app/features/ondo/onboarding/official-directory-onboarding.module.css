@@ -582,25 +582,40 @@
 
 .chip,
 .chipSelected {
+  display: inline-flex;
   min-width: 0;
-  min-height: 45px;
-  border: 1px solid rgb(89 60 46 / 15%);
+  min-height: 48px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(23 23 23 / 14%);
   border-radius: 14px;
-  padding: 7px 9px;
-  background: rgb(255 253 249 / 74%);
-  color: #5f554f;
+  padding: 7px 10px;
+  background: #fff;
+  color: #3f3f3d;
   font: inherit;
   font-size: 12px;
-  font-weight: 720;
-  line-height: 1.25;
+  font-weight: 740;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+  text-align: center;
+  text-wrap: balance;
+  white-space: normal;
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
 }
 
 .chipSelected {
-  border-color: #743a31;
-  background: #743a31;
+  border-color: #171717;
+  background: #171717;
   color: #fff;
-  box-shadow: 0 9px 20px rgb(76 39 31 / 14%);
+  box-shadow: 0 9px 20px rgb(23 23 23 / 16%);
+}
+
+.layer .chip:focus-visible,
+.layer .chipSelected:focus-visible {
+  outline: 3px solid #171717;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px #fff;
 }
 
 .preferenceNote {

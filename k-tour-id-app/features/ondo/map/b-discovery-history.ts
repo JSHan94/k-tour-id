@@ -33,6 +33,8 @@ const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
 let traversalGuardReferences = 0
 let pendingPeekTraversalVenueId: string | undefined
+let traversalFocusVersion = 0
+let cancelTraversalFocus: (() => void) | undefined
 
 export type BDiscoveryTraversalDetail = {
   entry: BDiscoveryHistoryEntry
@@ -147,17 +149,51 @@ function exactCanonicalValue(actual: unknown, expected: unknown): boolean {
 }
 
 function dispatchBDiscoveryTraversal(event: PopStateEvent) {
+  cancelTraversalFocus?.()
   if (window.location.pathname !== "/ondo-b") {
     pendingPeekTraversalVenueId = undefined
+    traversalFocusVersion += 1
     return
   }
   const entry = readBDiscoveryHistory(event.state)
   if (!entry) {
     pendingPeekTraversalVenueId = undefined
+    traversalFocusVersion += 1
     return
   }
   event.stopImmediatePropagation()
   pendingPeekTraversalVenueId = entry.level === "peek" ? entry.venueId : undefined
+  const focusVersion = ++traversalFocusVersion
+  if ((entry.level === "nation" || entry.level === "city") && entry.focus) {
+    let frame = 0
+    let timeout = 0
+    let observer: MutationObserver | undefined
+    const cleanup = () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(timeout)
+      observer?.disconnect()
+      if (cancelTraversalFocus === cleanup) cancelTraversalFocus = undefined
+    }
+    const focusAfterCommit = () => {
+      if (traversalFocusVersion !== focusVersion) {
+        cleanup()
+        return
+      }
+      const target = focusBDiscoveryTarget(entry)
+      if (target) {
+        target.focus({ preventScroll: true })
+        if (document.activeElement === target) {
+          cleanup()
+          return
+        }
+      }
+    }
+    observer = new MutationObserver(focusAfterCommit)
+    observer.observe(document.documentElement, { childList: true, subtree: true })
+    frame = window.requestAnimationFrame(focusAfterCommit)
+    timeout = window.setTimeout(cleanup, 3_000)
+    cancelTraversalFocus = cleanup
+  }
   window.dispatchEvent(new CustomEvent<BDiscoveryTraversalDetail>(B_DISCOVERY_TRAVERSAL_EVENT, {
     detail: { entry, preservedState: event.state },
   }))
@@ -552,7 +588,7 @@ export function closeBDiscoveryPlace() {
 export function focusBDiscoveryTarget(entry: BDiscoveryHistoryEntry) {
   const focus = entry.focus
   if (!focus) return null
-  if (focus.kind === "city") return document.querySelector<HTMLElement>(`[data-city='${focus.city}']`)
+  if (focus.kind === "city") return document.querySelector<HTMLElement>(`[data-testid='ondo-b-nation'] [data-city='${focus.city}']`)
   if (focus.kind === "venue") {
     return document.querySelector<HTMLElement>(`[data-venue-opener='${CSS.escape(focus.venueId)}']`)
       ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-view-toggle']")

@@ -33,10 +33,10 @@ test("OPENDID-B-001 restores the three truthful identity routes without provider
   expect(setup).not.toContain("Recorded on OmniOne")
 })
 
-test("OPENDID-B-002 every route is visibly simulated and never performs identity network or sensitive storage", () => {
-  expect(`${setup}\n${passportOcr}`).toContain("SIMULATED")
-  expect(setup).toContain("No identity provider or OpenDID service is contacted")
-  expect(setup).toContain("K-Tour ID Demo Issuer")
+test("OPENDID-B-002 every route has one on-device boundary and never performs identity network or sensitive storage", () => {
+  expect(`${setup}\n${passportOcr}`).not.toContain("SIMULATED")
+  expect(setup).toContain("No identity provider or OpenDID service is connected")
+  expect(setup).toContain("ONDO K-Tour ID")
   expect(setup).toContain("no document, face, provider result or credential is saved")
   expect(passportOcr).toContain("No filename, image or metadata is saved or sent")
 
@@ -189,13 +189,16 @@ test("OPENDID-B-008 freezes the complete consent-to-presentation state machine",
   ]) expect(`${setup}\n${passportOcr}`).toContain(testId)
 })
 
-test("OPENDID-B-009 fixes the release environment to simulation and preserves exact truth in three locales", () => {
+test("OPENDID-B-009 keeps the internal environment contract and presents concise on-device truth in three locales", () => {
   for (const truth of [
-    "SIMULATED · No identity provider or OpenDID service is contacted.",
+    'env: "ON-DEVICE"',
+    'envDetail: "No identity provider or OpenDID service is connected."',
     "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
-    "시뮬레이션 · 신원확인 기관이나 OpenDID 서비스에 요청을 보내지 않습니다.",
+    'env: "기기 내"',
+    'envDetail: "신원확인 기관이나 OpenDID 서비스에 연결하지 않습니다."',
     "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
-    "シミュレーション · 本人確認事業者やOpenDIDサービスには送信しません。",
+    'env: "端末内"',
+    'envDetail: "本人確認事業者やOpenDIDサービスには接続しません。"',
     "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
   ]) expect(setup).toContain(truth)
 
@@ -264,10 +267,10 @@ test("OPENDID-B-013 keeps passport OCR local, bounded, masked and cleanup-owned"
   expect(passportOcr).toContain('role="status"')
   expect(passportOcr).toContain('aria-live="polite"')
   expect(passportOcr).toContain('aria-busy={stage === "decoding" || stage === "processing"}')
-  expect(passportOcr.match(/SIMULATED OCR · LOCAL PREVIEW/g) ?? []).toHaveLength(3)
-  expect(passportOcr).toContain("•••••••• · demo mask only")
+  for (const truth of ["ON-DEVICE OCR", "기기 내 OCR", "端末内OCR"]) expect(passportOcr).toContain(truth)
+  expect(passportOcr).toContain("•••••••• · masked example")
   expect(passportOcr).toContain("Not extracted or retained")
-  expect(passportOcr).toContain("SIMULATED · no provider decision")
+  expect(passportOcr).toContain("No provider decision")
   expect(passportOcr).toContain("No name, passport number, MRZ, birth date, image or metadata continues to the next step")
   expect(passportOcr).not.toMatch(/console\.|FileReader|readAsDataURL|FormData|fetch\s*\(/)
 })

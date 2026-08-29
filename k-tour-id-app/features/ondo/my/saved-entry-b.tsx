@@ -21,17 +21,17 @@ const COPY = {
     title: "My Korea",
     boundary: "Saved places, recent views, joined Tables, and Local Signals stay in this browser. They are not reservations or synced activity.",
     savedTitle: "Saved places",
-    savedBody: "Official food records and verified VISITKOREA editorial places you chose to keep.",
+    savedBody: "Food places and travel ideas you chose to keep.",
     savedEmpty: "Nothing saved yet",
     savedEmptyBody: "Save a place from Explore and it will appear here.",
     explore: "Explore places",
     remove: "Remove saved place and private note",
-    removeEditorial: "Remove saved editorial place",
-    editorialBoundary: "VISITKOREA editorial · not an official food record",
+    removeEditorial: "Remove saved travel place",
+    editorialBoundary: "Travel story",
     recentTitle: "Recently viewed places",
-    recentBody: "Official records and editorial places stay visibly separate here.",
+    recentBody: "Food places and travel stories stay easy to tell apart here.",
     recentEmpty: "No recently viewed places",
-    recentEmptyBody: "Opening an official place from Explore starts this list.",
+    recentEmptyBody: "Open a food place from Explore to start this list.",
     viewed: "Viewed on this device",
     plannedTitle: "Planned meals",
     plannedBody: "A Table appears here only after you confirm its local join. No booking is created.",
@@ -53,7 +53,7 @@ const COPY = {
     refundReference: "Test refund reference",
     openWallet: "Open wallet",
     openReceiptPlace: "Open exact place",
-    labsBody: "Optional wallet and bridge previews",
+    labsBody: "Optional wallet and bridge tools",
     openLabs: "Open Labs",
   },
   ko: {
@@ -61,17 +61,17 @@ const COPY = {
     title: "내 한국",
     boundary: "저장한 장소, 최근 조회, 참여한 테이블과 로컬 시그널은 이 브라우저에만 남습니다. 예약이나 동기화된 활동 기록이 아닙니다.",
     savedTitle: "저장한 장소",
-    savedBody: "직접 저장한 공식 음식점 기록과 검증된 VISITKOREA 편집 장소입니다.",
+    savedBody: "직접 저장한 음식 장소와 여행 아이디어입니다.",
     savedEmpty: "아직 저장한 장소가 없어요",
     savedEmptyBody: "탐색에서 다시 보고 싶은 장소를 저장하면 여기에 나타나요.",
     explore: "장소 탐색하기",
     remove: "저장한 장소와 개인 메모 삭제",
-    removeEditorial: "저장한 편집 장소 삭제",
-    editorialBoundary: "VISITKOREA 편집 · 공식 음식점 기록 아님",
+    removeEditorial: "저장한 여행 장소 삭제",
+    editorialBoundary: "여행 이야기",
     recentTitle: "최근 본 장소",
-    recentBody: "공식 기록과 편집 장소를 구분해 보여줍니다.",
+    recentBody: "음식 장소와 여행 이야기를 쉽게 구분해 보여줍니다.",
     recentEmpty: "최근 본 장소가 없어요",
-    recentEmptyBody: "탐색에서 공식 장소를 열면 이 목록이 시작됩니다.",
+    recentEmptyBody: "탐색에서 음식 장소를 열면 이 목록이 시작됩니다.",
     viewed: "이 기기에서 조회함",
     plannedTitle: "식사 계획",
     plannedBody: "로컬 참여를 최종 확인한 테이블만 나타납니다. 예약은 생성되지 않습니다.",
@@ -93,7 +93,7 @@ const COPY = {
     refundReference: "테스트 환불 참조",
     openWallet: "지갑 열기",
     openReceiptPlace: "이 장소 열기",
-    labsBody: "선택형 지갑·체인 연결 미리보기",
+    labsBody: "선택형 지갑·체인 연결 도구",
     openLabs: "Labs 열기",
   },
   ja: {
@@ -101,17 +101,17 @@ const COPY = {
     title: "マイ韓国",
     boundary: "保存した場所、最近見た場所、参加したテーブル、ローカルシグナルはこのブラウザにのみ保存されます。予約や同期されたアクティビティではありません。",
     savedTitle: "保存した場所",
-    savedBody: "保存した公式飲食店記録と、確認済みのVISITKOREA編集スポットです。",
+    savedBody: "保存した食の場所と旅のアイデアです。",
     savedEmpty: "まだ保存した場所はありません",
-    savedEmptyBody: "Exploreで気になる場所を保存すると、ここに表示されます。",
+    savedEmptyBody: "「探す」で気になる場所を保存すると、ここに表示されます。",
     explore: "場所を探す",
     remove: "保存した場所とプライベートメモを削除",
-    removeEditorial: "保存した編集スポットを削除",
-    editorialBoundary: "VISITKOREA編集・公式飲食店記録ではありません",
+    removeEditorial: "保存した旅スポットを削除",
+    editorialBoundary: "旅ストーリー",
     recentTitle: "最近見た場所",
-    recentBody: "公式記録と編集スポットを区別して表示します。",
+    recentBody: "食の場所と旅ストーリーを見分けやすく表示します。",
     recentEmpty: "最近見た場所はありません",
-    recentEmptyBody: "Exploreで公式の場所を開くと、ここに追加されます。",
+    recentEmptyBody: "「探す」で食の場所を開くと、ここに追加されます。",
     viewed: "この端末で閲覧",
     plannedTitle: "食事の予定",
     plannedBody: "ローカル参加を確定したテーブルだけが表示されます。予約は作成されません。",
@@ -133,7 +133,7 @@ const COPY = {
     refundReference: "テスト返金参照",
     openWallet: "ウォレットを開く",
     openReceiptPlace: "このお店を開く",
-    labsBody: "任意のウォレット・ブリッジ機能プレビュー",
+    labsBody: "任意のウォレット・ブリッジ機能",
     openLabs: "Labsを開く",
   },
 } as const
@@ -153,7 +153,7 @@ const EMPTY_INSPIRATION = {
 const JA_TABLE_COPY: Record<keyof typeof MY_KOREA_TABLE_CATALOG, { title: string; schedule: string }> = {
   "table-seoul-night-bites": {
     title: "夜食を囲む、ひとつのテーブル",
-    schedule: "8月28日（金）· 20:30 KST",
+    schedule: "9月18日（金）· 20:30 KST",
   },
 }
 
@@ -280,12 +280,18 @@ export function SavedEntryB() {
             const name = personalVenueName(venue.name.ko, locale)
             return (
               <article className={styles.savedCard} key={venue.id} data-testid={`saved-card-${venue.id}`}>
-                <button className={styles.savedOpen} type="button" onClick={() => openVenue(venue.id, venue.cityId)} data-testid={`saved-venue-${venue.id}`}>
+                <button
+                  className={styles.savedOpen}
+                  type="button"
+                  onClick={() => openVenue(venue.id, venue.cityId)}
+                  data-testid={`saved-venue-${venue.id}`}
+                  aria-label={`${name.officialNameLabel}: ${name.officialName}. ${name.transliterationLabel}: ${name.transliteration}. ${personalDistrictLabel(venue.cityId, venue.districtId, locale)}`}
+                >
                   <MapPin size={18} aria-hidden="true" />
                   <span>
                     <strong>{name.officialName}</strong>
-                    <small>{name.officialNameLabel}</small>
-                    {locale !== "ko" ? <small><b>{name.transliteration}</b> · {name.transliterationLabel}</small> : null}
+                    <small className={styles.srOnly}>{name.officialNameLabel}</small>
+                    {locale !== "ko" ? <small><b>{name.transliteration}</b><span className={styles.srOnly}> · {name.transliterationLabel}</span></small> : null}
                     <small>{personalDistrictLabel(venue.cityId, venue.districtId, locale)}</small>
                   </span>
                   <ChevronRight size={18} aria-hidden="true" />

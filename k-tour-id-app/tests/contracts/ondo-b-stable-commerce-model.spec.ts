@@ -21,6 +21,7 @@ test("B-COMMERCE-MODEL-001 voucher-adjusted success debits once and creates one 
   expect(state.confirmationCount).toBe(1)
   expect(state.receiptCount).toBe(1)
   expect(state.receiptId).toBe("ONDO-LOCAL-20260825-001")
+  expect(state.providerOrder).toBe("NOT_CONNECTED")
   expect(state.voucher).toBe("consumed")
   expect(state.redemptionCount).toBe(1)
   expect(state.ledger).toEqual([
@@ -41,6 +42,7 @@ test("B-COMMERCE-MODEL-002 refund reverses the ledger and restores the one-use v
 
   expect(stableCommerceBalanceB(state)).toBe(60)
   expect(state.status).toBe("refunded")
+  expect(state.providerOrder).toBe("NOT_CONNECTED")
   expect(state.refundCount).toBe(1)
   expect(state.voucher).toBe("available")
   expect(state.redemptionCount).toBe(0)
@@ -60,6 +62,7 @@ test("B-COMMERCE-MODEL-003 failure and insufficient returns never mutate the led
     expect(state.receiptCount).toBe(0)
     expect(state.ledger).toEqual([])
     expect(state.status).toBe("idle")
+    expect(state.providerOrder).toBe("NOT_CONNECTED")
     expect(state.lastOutcome).toBe(outcome)
   }
 })

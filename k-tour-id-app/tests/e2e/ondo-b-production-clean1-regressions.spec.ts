@@ -3,6 +3,7 @@ import { CANONICAL_VENUE_ID } from "../helpers/ondo-b-qa"
 
 const ORIGIN = new URL(process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3112").origin
 const DEVICE_KEY = "ondo-b.device.v1"
+const AFTER19_SESSION_KEY = "ondo-b.after19.session.v1"
 // The current white-and-ink direction uses the same high-contrast focus token
 // as the product shell; keep this receipt exact so browser-default blue cannot
 // silently return.
@@ -283,7 +284,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("Roba")
     const selectedCategory = page.getByTestId("ondo-b-category-rail").getByRole("button", { pressed: true })
-    await expect(selectedCategory).toHaveAccessibleName("Pub & café licence types")
+    await expect(selectedCategory).toHaveAccessibleName("Pubs & cafés")
     await context.close()
 
     const onboardingContext = await productionContext(browser, { width: 390, height: 844 }, "en", "ONB-NEW")
@@ -299,5 +300,39 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await expect(restored.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
     expect((await canonicalReceipt(onboardingPage)).level).toBe("detail")
     await onboardingContext.close()
+  })
+
+  test("CLEAN1-AFTER19 keeps the map locked to pubs and cafés through URL restore and empty-search reset", async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile-chromium", "the mobile project covers the consumer category rail once")
+    const context = await productionContext(browser, { width: 390, height: 844 }, "en")
+    await context.addInitScript(({ key }) => {
+      sessionStorage.setItem(key, JSON.stringify({
+        version: 1,
+        age: "eligible",
+        ageExpiresAt: "2026-09-01T20:30:00+09:00",
+        mode: "on",
+        activation: "manual",
+        expiryNotice: false,
+      }))
+    }, { key: AFTER19_SESSION_KEY })
+    const page = await openPage(context, "/ondo-b?city=seoul&view=list&category=all")
+    const root = page.getByTestId("ondo-b-map-entry")
+    const rail = page.getByTestId("ondo-b-category-rail")
+    await expect(root).toHaveAttribute("data-after19-active", "true")
+    await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("night")
+    await expect(rail.getByRole("button")).toHaveCount(1)
+    await expect(rail.getByRole("button", { name: "Pubs & cafés", pressed: true })).toBeVisible()
+    await expect(rail.getByRole("button", { name: "All" })).toHaveCount(0)
+    await expect(rail.getByRole("button", { name: "Korean" })).toHaveCount(0)
+
+    await page.getByTestId("ondo-b-search").fill("__no_after19_place__")
+    const empty = page.getByTestId("ondo-b-empty-results")
+    await expect(empty).toContainText("No places match")
+    await empty.getByRole("button", { name: "Clear search" }).click()
+    await expect(page.getByTestId("ondo-b-search")).toHaveValue("")
+    await expect(empty).toHaveCount(0)
+    await expect(rail.getByRole("button", { name: "Pubs & cafés", pressed: true })).toBeVisible()
+    await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("night")
+    await context.close()
   })
 })

@@ -23,57 +23,57 @@ type IdentityQa = {
 const COPY = {
   en: {
     guest: "Explore without setup",
-    environment: "SIMULATED · No identity provider or OpenDID service is contacted.",
+    environment: "ON-DEVICE",
     privateCredential: "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
     passportProvider: "Passport eKYC uses a separate provider — not OmniOne CX",
     assuranceChange: "Passport eKYC does not verify registered-resident status and is not an equivalent residence-card check.",
-    presentationRequester: "ONDO Table demo verifier",
+    presentationRequester: "ONDO Table",
     presentationPurpose: "Minimum trip eligibility for this one request",
     presentationEvidence: "K-Tour travel eligibility · yes/no only",
-    presentationRetention: "One request · nonce and expiry semantics · no VP stored",
-    presentationApproved: "SIMULATED · APPROVED ONCE",
+    presentationRetention: "This request only · expires automatically · result not stored",
+    presentationApproved: "APPROVED ONCE",
     unchanged: "unchanged",
     backToKTourId: "Back to K-Tour ID",
     returnTraveler: "Return to Travel Pass",
     ocrTitle: "Choose one passport image",
     ocrReviewTitle: "Review the minimum result",
-    ocrResult: "SIMULATED · no provider decision",
+    ocrResult: "No provider decision",
   },
   ko: {
     guest: "설정 없이 탐색",
-    environment: "시뮬레이션 · 신원확인 기관이나 OpenDID 서비스에 요청을 보내지 않습니다.",
+    environment: "기기 내",
     privateCredential: "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
     passportProvider: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
     assuranceChange: "여권 eKYC는 등록외국인 체류 자격을 확인하지 않으며 외국인등록증 확인과 동등하지 않습니다.",
-    presentationRequester: "ONDO 테이블 데모 검증자",
+    presentationRequester: "ONDO 테이블",
     presentationPurpose: "이번 한 번의 요청을 위한 최소 여행 자격 확인",
     presentationEvidence: "K-Tour 여행 자격 · 예/아니오만",
-    presentationRetention: "한 번의 요청 · nonce와 만료 의미 적용 · VP 저장 안 함",
-    presentationApproved: "시뮬레이션 · 한 번 승인됨",
+    presentationRetention: "이번 요청에만 사용 · 자동 만료 · 결과 저장 안 함",
+    presentationApproved: "한 번 승인됨",
     unchanged: "상태 변경 없음",
     backToKTourId: "K-Tour ID로 돌아가기",
     returnTraveler: "여행 패스로 돌아가기",
     ocrTitle: "여권 이미지 한 장 선택",
     ocrReviewTitle: "최소 결과 확인",
-    ocrResult: "시뮬레이션 · 제공자 판정 없음",
+    ocrResult: "제공자 판정 없음",
   },
   ja: {
     guest: "設定せずに見る",
-    environment: "シミュレーション · 本人確認事業者やOpenDIDサービスには送信しません。",
+    environment: "端末内",
     privateCredential: "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
     passportProvider: "パスポートeKYCはOmniOne CXではなく別の事業者",
     assuranceChange: "パスポートeKYCは登録居住者の在留資格を確認せず、在留カード確認と同等ではありません。",
-    presentationRequester: "ONDOテーブルのデモ検証者",
+    presentationRequester: "ONDOテーブル",
     presentationPurpose: "今回一回の依頼に必要な最小限の旅行資格確認",
     presentationEvidence: "K-Tour旅行資格 · 可否のみ",
-    presentationRetention: "一回の依頼 · nonceと有効期限を適用 · VPは保存しない",
-    presentationApproved: "シミュレーション · 一回のみ承認",
+    presentationRetention: "今回の依頼だけに使用 · 自動で期限切れ · 結果は保存しない",
+    presentationApproved: "一回のみ承認",
     unchanged: "状態変更なし",
     backToKTourId: "K-Tour IDに戻る",
     returnTraveler: "トラベルパスに戻る",
     ocrTitle: "パスポート画像を1枚選択",
     ocrReviewTitle: "最小限の結果を確認",
-    ocrResult: "シミュレーション · 事業者の判定なし",
+    ocrResult: "事業者の判定なし",
   },
 } as const
 
@@ -82,6 +82,8 @@ const METHOD_TEST_IDS: Record<IdentityMethod, string> = {
   mobile_residence_card: "k-tour-id-method-mobile-residence-card",
   passport_ekyc: "k-tour-id-method-passport-ekyc",
 }
+
+const RAW_PROTOCOL_COPY = /KTourVisitorCredential|\bholder\b|\bDID\b|\bVC\b|\bVP\b|\bnonce\b/i
 
 const METHOD_EVIDENCE = {
   en: {
@@ -223,7 +225,7 @@ async function reachPassportEvidence(setup: Locator) {
   return advanceUntil(setup, "k-tour-id-evidence-preview")
 }
 
-async function reachCredential(setup: Locator, rapidIssue = false) {
+async function reachCredential(setup: Locator, rapidIssue = false, consumerLocale?: Exclude<Locale, "en">) {
   await reachPassportEvidence(setup)
   const issuance = await advanceUntil(setup, "k-tour-id-issuance-preview")
   await expect(issuance).toBeVisible()
@@ -236,6 +238,7 @@ async function reachCredential(setup: Locator, rapidIssue = false) {
   }
   const holder = await advanceUntil(setup, "k-tour-id-holder-delivery")
   await expect(holder).toBeVisible()
+  if (consumerLocale) await expect(holder).not.toContainText(RAW_PROTOCOL_COPY)
   return advanceUntil(setup, "k-tour-id-credential")
 }
 
@@ -356,10 +359,14 @@ test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation deci
     await page.getByTestId("nav-id").click()
     await page.getByTestId("traveler-id-ktour-id-open").click()
     const setup = page.getByTestId("k-tour-id-setup")
-    await reachCredential(setup)
+    await reachCredential(setup, false, locale === "en" ? undefined : locale)
+
+    const ready = setup.getByTestId("k-tour-id-credential")
+    if (locale !== "en") await expect(ready).not.toContainText(RAW_PROTOCOL_COPY)
 
     await setup.getByTestId("k-tour-id-presentation-open").click()
     const request = setup.getByTestId("k-tour-id-presentation-request")
+    if (locale !== "en") await expect(request).not.toContainText(RAW_PROTOCOL_COPY)
     await expect(request.getByTestId("identity-presentation-requester")).toContainText(COPY[locale].presentationRequester)
     await expect(request.getByTestId("identity-presentation-purpose")).toContainText(COPY[locale].presentationPurpose)
     await expect(request.getByTestId("identity-presentation-evidence")).toContainText(COPY[locale].presentationEvidence)
@@ -370,15 +377,16 @@ test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation deci
     await expect(consent).toContainText(COPY[locale].presentationRequester)
     await expect(consent.getByTestId("identity-presentation-predicate")).toContainText(COPY[locale].presentationEvidence)
     await setup.getByTestId("k-tour-id-presentation-approve").click()
+    if (locale !== "en") await expect(setup.getByTestId("k-tour-id-presentation-result")).not.toContainText(RAW_PROTOCOL_COPY)
     await expect(setup.getByTestId("identity-presentation-result-status")).toHaveText(COPY[locale].presentationApproved)
     await expect(setup.getByTestId("identity-presentation-credential-state")).toContainText(COPY[locale].unchanged)
     await expect(setup.getByTestId("k-tour-id-result-back")).toHaveText(COPY[locale].backToKTourId)
     await expect(setup.getByTestId("k-tour-id-return")).toHaveText(COPY[locale].returnTraveler)
     await setup.getByTestId("k-tour-id-result-back").click()
-    const ready = setup.getByTestId("k-tour-id-credential")
-    await expect(ready).toHaveAttribute("data-status", "simulated_ready")
-    await expect(ready).toHaveAttribute("data-wallet-provisioning", "aa-assumed-local")
-    await expect(ready.getByTestId("k-tour-id-wallet-ready")).toBeVisible()
+    const readyAgain = setup.getByTestId("k-tour-id-credential")
+    await expect(readyAgain).toHaveAttribute("data-status", "simulated_ready")
+    await expect(readyAgain).toHaveAttribute("data-wallet-provisioning", "aa-assumed-local")
+    await expect(readyAgain.getByTestId("k-tour-id-wallet-ready")).toBeVisible()
     await setup.getByTestId("k-tour-id-return").click()
     await expect(setup).toHaveCount(0)
     await expect(page.getByTestId("ondo-b-id-wallet-commerce")).toHaveAttribute("data-wallet", "ready")
@@ -403,7 +411,7 @@ test("OPENDID-E2E-003F EN KO JA keep the local OCR boundary and masked review ex
     await page.getByTestId("traveler-id-ktour-id-open").click()
     const setup = page.getByTestId("k-tour-id-setup")
     const document = await reachPassportDocument(setup)
-    await expect(document.getByText("SIMULATED OCR · LOCAL PREVIEW", { exact: true })).toBeVisible()
+    await expect(document.getByText(locale === "en" ? "ON-DEVICE OCR" : locale === "ko" ? "기기 내 OCR" : "端末内OCR", { exact: true })).toBeVisible()
     await expect(document.getByRole("heading", { name: COPY[locale].ocrTitle, exact: true })).toBeVisible()
     await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
     await expect(document).toHaveAttribute("data-ocr-stage", "preview")
@@ -416,7 +424,7 @@ test("OPENDID-E2E-003F EN KO JA keep the local OCR boundary and masked review ex
 })
 
 for (const viewport of [{ width: 320, height: 720 }, { width: 844, height: 390 }] as const) {
-  test(`OPENDID-E2E-003G ${viewport.width}x${viewport.height} keeps selected passport and simulated OCR action usable together`, async ({ page }) => {
+  test(`OPENDID-E2E-003G ${viewport.width}x${viewport.height} keeps selected passport and on-device OCR action usable together`, async ({ page }) => {
     await page.setViewportSize(viewport)
     const { setup } = await openTravelerSetup(page)
     const document = await reachPassportDocument(setup)
@@ -467,9 +475,9 @@ test("OPENDID-E2E-003D passport OCR requires a decodable bounded image and expos
   await expect(processing).not.toContainText("%")
   await expect(document).toHaveAttribute("data-ocr-stage", "review")
   const review = document.getByTestId("passport-ocr-review")
-  await expect(review).toContainText("•••••••• · demo mask only")
+  await expect(review).toContainText("•••••••• · masked example")
   await expect(review).toContainText("Not extracted or retained")
-  await expect(review).toContainText("SIMULATED · no provider decision")
+  await expect(review).toContainText("No provider decision")
   await expect(document.getByTestId("k-tour-id-continue")).toBeFocused()
   await document.getByTestId("k-tour-id-continue").click()
   await expect(setup.getByTestId("k-tour-id-passport-face")).toBeVisible()

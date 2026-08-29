@@ -19,6 +19,9 @@ test("B-EXPLORE-V3-001 Korea overview is a geographic living atlas rather than a
   expect(map).toContain("data-region-role={cityNode.regionRole}")
   expect(map).toContain("data-official-count={cityNode.officialCount}")
   expect(map).toContain("data-editorial-count={cityNode.editorialCount}")
+  expect(map).toContain('data-atlas-pin="true"')
+  expect(map).not.toContain("data-region-kind-label")
+  expect(mapCss).toContain("Nation regions are map pins, not destination cards")
 })
 
 test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and official-record grammars", () => {

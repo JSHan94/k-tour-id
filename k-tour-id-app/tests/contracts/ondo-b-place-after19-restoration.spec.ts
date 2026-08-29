@@ -144,9 +144,9 @@ test("FL-002 Place stays concise while the gate owns the user-facing boundary", 
   const global = source("features/ondo/after19/after19-global-b.tsx")
   expect(place).not.toMatch(/ONDO policy|ONDO 정책|ONDOの方針/)
   for (const truth of [
-    "Narrows this map to pub & café licence types. Actual entry, age and alcohol-service rules are not confirmed.",
+    "Narrows this map to pubs and cafés. Actual entry, age and alcohol-service rules are not confirmed.",
     "주점·카페 업태만 모아 보여줘요. 실제 입장·연령·주류 제공 조건은 확인되지 않았어요.",
-    "パブ・カフェの営業許可業種に絞って表示します。実際の入店・年齢・酒類提供条件は確認していません。",
+    "パブ・カフェの場所に絞って表示します。実際の入店・年齢・酒類提供条件は確認していません。",
   ]) expect(global).toContain(truth)
   for (const locale of ["en", "ko", "ja"]) expect(global).toContain(`${locale}: {`)
   expect(global).not.toMatch(/activateAccount|paymentKyc|passport|dateOfBirth|birthDate|credentialPayload|verifyAge\(/i)

@@ -30,6 +30,8 @@ export const TABLE_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 export const ACTIVE_TABLE_ID = "table-seoul-night-bites"
 export const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
 export const MAX_TABLE_CHAT_IMAGE_BYTES = 10 * 1024 * 1024
+export const ACTIVE_TABLE_STARTS_AT = "2026-09-18T20:30:00+09:00"
+const ACTIVE_TABLE_STARTS_AT_MS = Date.parse(ACTIVE_TABLE_STARTS_AT)
 const TABLE_CHAT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 
 type JoinStage = "idle" | "confirm" | "joined" | "chat"
@@ -42,13 +44,14 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:
 const COPY = {
   en: {
     eyebrow: "Upcoming in Seoul",
+    pastEyebrow: "Previous Table in Seoul",
     title: "ONDO Tables",
     intro: "Small plans anchored to a real place, with the details you need before choosing a seat.",
     truth: "Messages and photos stay in this tab. A confirmed plan is saved to My Korea on this device. Nothing is booked, sent to the venue, or charged.",
-    official: "Place record",
-    officialBoundary: "An official Korean restaurant licence record confirms the place. The host provides the gathering details.",
+    official: "Place",
+    officialBoundary: "The host chose this place and provides the gathering details.",
     timeLabel: "When",
-    time: "Fri, Aug 28 · 20:30 KST",
+    time: "Fri, Sep 18 · 20:30 KST",
     menuLabel: "Food plan",
     menu: "Share two savoury plates; order together",
     languageLabel: "Languages",
@@ -114,24 +117,27 @@ const COPY = {
     checkInBoundary: "Marks this device only. It does not verify your location or attendance.",
     tableHeader: "ONDO Table",
     tableOpen: "1 seat left",
+    tableClosed: "Table closed",
     tableTitle: "Night bites, one shared table",
     tableSubtitle: "A relaxed Friday meal in Gangnam",
+    pastJoin: "This Table has ended",
     joinSaveFailed: "My Korea could not save the plan, so you have not joined. Try again.",
     leaveSaveFailed: "My Korea could not remove the plan, so you are still in this Table. Try again.",
-    venueUnavailable: "Official venue record unavailable.",
+    venueUnavailable: "Place information is unavailable.",
     minMessage: "Let’s meet by the entrance at 20:20.",
     jaeMessage: "English or Korean both work for me.",
     you: "You",
   },
   ko: {
     eyebrow: "서울의 다음 모임",
+    pastEyebrow: "서울에서 지난 테이블",
     title: "온도 테이블",
     intro: "실제 장소에 연결된 작은 약속을 보고, 참여에 필요한 정보를 한눈에 확인하세요.",
     truth: "메시지와 사진은 이 탭에만 남고, 확정한 계획만 이 기기의 My Korea에 저장돼요. 예약·장소 전송·결제는 일어나지 않습니다.",
-    official: "장소 기록",
-    officialBoundary: "한국의 공식 음식점 인허가 기록으로 장소를 확인하며, 모임 정보는 호스트가 제공합니다.",
+    official: "장소",
+    officialBoundary: "호스트가 고른 장소이며, 모임 정보도 호스트가 알려드려요.",
     timeLabel: "시간",
-    time: "8월 28일 금요일 · 20:30 KST",
+    time: "9월 18일 금요일 · 20:30 KST",
     menuLabel: "음식 계획",
     menu: "짭짤한 요리 두 가지를 함께 주문해 나눠요",
     languageLabel: "언어",
@@ -197,24 +203,27 @@ const COPY = {
     checkInBoundary: "이 기기에만 표시됩니다. 위치나 실제 참석을 확인하지 않습니다.",
     tableHeader: "온도 테이블",
     tableOpen: "1자리 남음",
+    tableClosed: "종료된 테이블",
     tableTitle: "야식 한 상, 함께 앉는 테이블",
     tableSubtitle: "강남에서 가볍게 나누는 금요일 저녁",
+    pastJoin: "이 테이블은 종료됐어요",
     joinSaveFailed: "My Korea에 계획을 저장하지 못해 아직 참여하지 않았어요. 다시 시도해 주세요.",
     leaveSaveFailed: "My Korea에서 계획을 삭제하지 못해 아직 이 테이블에 참여 중이에요. 다시 시도해 주세요.",
-    venueUnavailable: "공식 장소 기록을 불러올 수 없어요.",
+    venueUnavailable: "장소 정보를 불러올 수 없어요.",
     minMessage: "20:20에 입구 옆에서 만나요.",
     jaeMessage: "저는 영어와 한국어 모두 괜찮아요.",
     you: "나",
   },
   ja: {
     eyebrow: "ソウルで開催予定",
+    pastEyebrow: "ソウルで開催済み",
     title: "ONDOテーブル",
     intro: "実在する場所を起点にした少人数の予定です。席を選ぶ前に必要な情報を確認できます。",
     truth: "メッセージと写真はこのタブだけに残り、確定した予定だけがこの端末のマイ韓国に保存されます。予約、店舗への送信、決済は行われません。",
-    official: "場所の記録",
-    officialBoundary: "韓国の公式飲食店営業許可記録で場所を確認しています。集まりの詳細はホストが提供します。",
+    official: "場所",
+    officialBoundary: "ホストが選んだ場所です。集まりの詳細もホストが案内します。",
     timeLabel: "日時",
-    time: "8月28日（金）・20:30 KST",
+    time: "9月18日（金）・20:30 KST",
     menuLabel: "食事プラン",
     menu: "料理を2品、一緒に注文してシェア",
     languageLabel: "使用言語",
@@ -280,11 +289,13 @@ const COPY = {
     checkInBoundary: "この端末にだけ記録します。位置や実際の参加を確認するものではありません。",
     tableHeader: "ONDOテーブル",
     tableOpen: "残り1席",
+    tableClosed: "終了したTable",
     tableTitle: "夜のひと皿を囲むTable",
     tableSubtitle: "江南で気軽に楽しむ金曜の夕食",
+    pastJoin: "このTableは終了しました",
     joinSaveFailed: "マイ韓国に予定を保存できなかったため、まだ参加していません。もう一度お試しください。",
     leaveSaveFailed: "マイ韓国から予定を削除できなかったため、まだこのTableに参加中です。もう一度お試しください。",
-    venueUnavailable: "公式の場所記録を利用できません。",
+    venueUnavailable: "場所の情報を利用できません。",
     minMessage: "20:20に入口の横で会いましょう。",
     jaeMessage: "英語でも韓国語でも大丈夫です。",
     you: "自分",
@@ -305,6 +316,8 @@ export function PulseTablesEntryB() {
   const locale = state.locale
   const socialLocale: SocialLocale = locale
   const t = COPY[socialLocale]
+  const [tableClockNow, setTableClockNow] = useState(() => Date.now())
+  const isUpcoming = tableClockNow < ACTIVE_TABLE_STARTS_AT_MS
   const venue = canonicalMapVenueById(TABLE_VENUE_ID)
   const [selected, setSelected] = useState(false)
   const [draft, setDraft] = useState("")
@@ -364,6 +377,31 @@ export function PulseTablesEntryB() {
   const venuePresentation = useMemo(() => venue ? venueNamePresentation(venue.name.ko, locale) : null, [locale, venue])
   const district = venue ? venueDistrictLabel(venue.cityId, venue.districtId, locale) : ""
 
+  function expireJoinAtMutation(pending: BTableActionReturn | null) {
+    const now = Date.now()
+    if (now < ACTIVE_TABLE_STARTS_AT_MS) return false
+    const stored = pending ?? restoreBActionGateSession(window.sessionStorage).pending
+    if (stored?.cta === "JOIN_TABLE" && stored.tableId === ACTIVE_TABLE_ID && stored.venueId === TABLE_VENUE_ID) {
+      abandonPendingBAction(window.sessionStorage, stored)
+    }
+    setTableClockNow(now)
+    setReturnTo(null)
+    setJoinStage((current) => current === "joined" ? current : "idle")
+    setJoinPersistError(false)
+    return true
+  }
+
+  useEffect(() => {
+    if (!isUpcoming) return
+    const remaining = ACTIVE_TABLE_STARTS_AT_MS - Date.now()
+    if (remaining <= 0) {
+      expireJoinAtMutation(null)
+      return
+    }
+    const timer = window.setTimeout(() => expireJoinAtMutation(null), Math.min(remaining + 25, 2_147_000_000))
+    return () => window.clearTimeout(timer)
+  }, [isUpcoming, tableClockNow])
+
   useEffect(() => {
     function openFromPlace(event?: Event) {
       const detail = event instanceof CustomEvent ? event.detail as { tableId?: string; venueId?: string; mode?: string; draft?: string } : null
@@ -384,6 +422,7 @@ export function PulseTablesEntryB() {
     function gateComplete(event: Event) {
       const detail = event instanceof CustomEvent ? event.detail as BTableActionReturn : null
       if (!detail || detail.cta !== "JOIN_TABLE" || detail.tableId !== ACTIVE_TABLE_ID || detail.venueId !== TABLE_VENUE_ID || detail.consumedAt !== null) return
+      if (expireJoinAtMutation(detail)) return
       setDraft(detail.draft)
       setReturnTo(detail)
       setJoinStage("confirm")
@@ -444,10 +483,12 @@ export function PulseTablesEntryB() {
   }
 
   function beginJoin() {
+    if (expireJoinAtMutation(null)) return
     requestBActionGate(createBTableActionReturn({ tableId: ACTIVE_TABLE_ID, venueId: TABLE_VENUE_ID, draft }))
   }
 
   function confirmJoin() {
+    if (expireJoinAtMutation(returnTo)) return
     if (!returnTo) {
       setJoinPersistError(true)
       return
@@ -577,18 +618,18 @@ export function PulseTablesEntryB() {
   return (
     <section className={styles.entry} data-testid="tables-entry" data-visual-direction="timeleft-warm-atlas">
       <header className={styles.entryHeader}>
-        <p>{t.eyebrow}</p><h1>{t.title}</h1><span>{t.intro}</span>
+        <p>{isUpcoming ? t.eyebrow : t.pastEyebrow}</p><h1>{t.title}</h1><span>{t.intro}</span>
         <small className={styles.prototypeTruth} data-testid="tables-truth-notice">{t.truth}</small>
       </header>
 
       <figure className={styles.editorialBand} data-testid="tables-editorial-image">
-        <img src="/editorial/people/ondo-tables-dinner-v2-landscape.jpg" alt={TABLE_EDITORIAL[socialLocale].alt} />
-        <figcaption>{TABLE_EDITORIAL[socialLocale].caption}</figcaption>
+        <img src="/editorial/people/ondo-tables-dinner-v2-landscape.jpg" alt={TABLE_EDITORIAL[socialLocale].alt} aria-describedby="tables-editorial-provenance" />
+        <figcaption id="tables-editorial-provenance">{TABLE_EDITORIAL[socialLocale].caption}</figcaption>
       </figure>
 
       <div className={styles.cards}>
-        <article className={styles.cardActive} data-testid={`table-card-${ACTIVE_TABLE_ID}`} data-table-state="TABLE-OPEN">
-          <div className={styles.cardTop}><span>{t.tableOpen}</span><ShieldCheck size={18} aria-hidden="true" /></div>
+        <article className={styles.cardActive} data-testid={`table-card-${ACTIVE_TABLE_ID}`} data-table-state={isUpcoming ? "TABLE-OPEN" : "TABLE-CLOSED"}>
+          <div className={styles.cardTop}><span>{isUpcoming ? t.tableOpen : t.tableClosed}</span><ShieldCheck size={18} aria-hidden="true" /></div>
           <h2>{t.tableTitle}</h2>
           <p>{t.tableSubtitle}</p>
           <OfficialVenue venueName={venuePresentation.officialName} district={district} copy={t} />
@@ -607,7 +648,7 @@ export function PulseTablesEntryB() {
               <button type="button" onClick={closeTable} aria-label={t.close}><X size={18} aria-hidden="true" /></button>
             </header>
             <div className={styles.detailBody}>
-              <p className={styles.detailEyebrow}>{district} · {t.tableOpen}</p>
+              <p className={styles.detailEyebrow}>{district} · {isUpcoming ? t.tableOpen : t.tableClosed}</p>
               <h2 id="table-b-title">{t.tableTitle}</h2>
               <OfficialVenue venueName={venuePresentation.officialName} district={district} copy={t} />
               <PlanFields copy={t} />
@@ -615,8 +656,8 @@ export function PulseTablesEntryB() {
 
               {joinStage === "idle" ? <section className={styles.joinPanel}>
                 <label htmlFor="table-join-draft">{t.draftLabel}</label>
-                <textarea id="table-join-draft" data-testid="table-join-draft" maxLength={280} value={draft} placeholder={t.draftHint} onChange={(event) => setDraft(event.target.value)} />
-                <button type="button" className={styles.primary} data-testid="table-join" onClick={beginJoin}>{t.join}</button>
+                <textarea id="table-join-draft" data-testid="table-join-draft" maxLength={280} value={draft} placeholder={t.draftHint} disabled={!isUpcoming} onChange={(event) => setDraft(event.target.value)} />
+                <button type="button" className={styles.primary} data-testid="table-join" disabled={!isUpcoming} onClick={beginJoin}>{isUpcoming ? t.join : t.pastJoin}</button>
               </section> : null}
 
               {joinStage === "confirm" && returnTo ? <section className={styles.confirmation} data-testid="table-join-confirmation" data-return-table={returnTo.tableId} data-return-venue={returnTo.venueId}>

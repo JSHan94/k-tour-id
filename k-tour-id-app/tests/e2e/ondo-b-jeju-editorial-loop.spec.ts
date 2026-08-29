@@ -5,9 +5,9 @@ const DEVICE_KEY = "ondo-b.device.v1"
 const PLACE_ID = "jeju-seongsan-ilchulbong"
 
 const LOCALE_COPY = {
-  en: { place: "Seongsan Ilchulbong Tuff Cone", close: "Close place" },
-  ko: { place: "성산일출봉", close: "장소 닫기" },
-  ja: { place: "城山日出峰", close: "スポットを閉じる" },
+  en: { place: "Seongsan Ilchulbong Tuff Cone", close: "Close place", sourceDetails: "Source details", checked: "Place page and embedded map checked Aug 28, 2026" },
+  ko: { place: "성산일출봉", close: "장소 닫기", sourceDetails: "출처 정보", checked: "장소 페이지와 내장 지도를 2026년 8월 28일 확인" },
+  ja: { place: "城山日出峰", close: "スポットを閉じる", sourceDetails: "情報源の詳細", checked: "スポットページと埋め込み地図を2026年8月28日に確認" },
 } as const
 
 async function seed(page: Page, locale: keyof typeof LOCALE_COPY) {
@@ -67,6 +67,9 @@ test.describe("verified Jeju editorial loop", () => {
       await expect(detail).toHaveAttribute("data-official-record", "false")
       await expect(detail).toHaveAttribute("data-pulse-eligible", "false")
       await expect(detail).not.toContainText(/Pulse|Local Signal|Tables?|checkout/i)
+      await expect(detail.getByText(LOCALE_COPY[locale].checked, { exact: true })).toBeHidden()
+      await detail.locator("details summary").click({ force: true })
+      await expect(detail.getByText(LOCALE_COPY[locale].checked, { exact: true })).toBeVisible()
       expect((await new AxeBuilder({ page }).include("[data-testid='ondo-b-editorial-place-overlay']").analyze()).violations).toEqual([])
 
       await page.getByTestId("ondo-b-editorial-place-save").click()

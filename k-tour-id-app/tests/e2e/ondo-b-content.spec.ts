@@ -32,10 +32,10 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       expect(copy.length, "surface must contain user-facing copy").toBeGreaterThan(20)
       if (item.surface === "onboarding") {
         if (item.locale === "ko") {
-          expect(copy).toContain("나에게 맞는 한국의 한 끼를, 공공 기록에서 찾아보세요.")
+          expect(copy).toContain("지금의 나에게 잘 맞는 한국의 한 끼를 찾아보세요.")
           expect(copy).toContain("서울·부산의 먹거리와 제주 여행 아이디어를 둘러보고, 나만의 취향을 이 기기에 저장해요.")
         } else {
-          expect(copy).toContain("Find a meal that fits your Korea—grounded in public records.")
+          expect(copy).toContain("Find a meal that feels right for your Korea.")
           expect(copy).toContain("Explore food in Seoul and Busan, plus travel ideas across Jeju, then keep your starting preferences on this device.")
         }
         expect(copy).not.toMatch(/dense food|early coverage|서울의 촘촘|부산의 초기/i)

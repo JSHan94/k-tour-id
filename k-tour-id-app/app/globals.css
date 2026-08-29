@@ -869,6 +869,38 @@
   100% { opacity: 1; transform: translateX(0); }
 }
 
+/* B's Korea atlas and city map share this one named surface. Keeping the
+   document-level pseudo-elements here avoids CSS Module pure-selector errors
+   and leaves every surface without this name—including A—untouched. */
+@keyframes ondo-map-surface-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.06); }
+}
+
+@keyframes ondo-map-surface-in {
+  from { opacity: 0; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* View-transition snapshots sit in the top layer. They are visual only: the
+   live map controls underneath must keep receiving pointer input throughout
+   the 240ms atlas-to-city zoom. */
+::view-transition,
+::view-transition-group(ondo-map-surface),
+::view-transition-image-pair(ondo-map-surface),
+::view-transition-old(ondo-map-surface),
+::view-transition-new(ondo-map-surface) {
+  pointer-events: none;
+}
+
+::view-transition-old(ondo-map-surface) {
+  animation: ondo-map-surface-out 220ms cubic-bezier(.22, .8, .3, 1) both;
+}
+
+::view-transition-new(ondo-map-surface) {
+  animation: ondo-map-surface-in 240ms cubic-bezier(.22, .8, .3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -877,6 +909,10 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  ::view-transition-old(ondo-map-surface),
+  ::view-transition-new(ondo-map-surface) {
+    animation: none !important;
   }
 }
 @import "maplibre-gl/dist/maplibre-gl.css";

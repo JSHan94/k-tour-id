@@ -63,7 +63,8 @@ const COPY = {
     header: "19+ · After 19",
     title: "Turn on After 19?",
     body: "Use a 19+ eligibility result in this tab, then return to the same map.",
-    truth: "Narrows this map to pub & café licence types. Actual entry, age and alcohol-service rules are not confirmed.",
+    truth: "Narrows this map to pubs and cafés. Actual entry, age and alcohol-service rules are not confirmed.",
+    jejuTruth: "Jeju keeps its editorial places and stories; ONDO does not infer pubs or cafés from those sources.",
     context: "Return to",
     venue: "Selected place",
     city: "Current map",
@@ -95,6 +96,7 @@ const COPY = {
     title: "After 19을 켤까요?",
     body: "이 탭의 19+ 충족 결과를 사용한 뒤 같은 지도로 돌아옵니다.",
     truth: "주점·카페 업태만 모아 보여줘요. 실제 입장·연령·주류 제공 조건은 확인되지 않았어요.",
+    jejuTruth: "제주는 편집 장소와 여행 이야기를 그대로 보여주며, 해당 출처로 주점·카페를 추정하지 않아요.",
     context: "돌아갈 곳",
     venue: "선택한 장소",
     city: "현재 지도",
@@ -125,7 +127,8 @@ const COPY = {
     header: "19+ · After 19",
     title: "After 19をオンにしますか？",
     body: "このタブの19歳以上という適格結果を使い、同じ地図に戻ります。",
-    truth: "パブ・カフェの営業許可業種に絞って表示します。実際の入店・年齢・酒類提供条件は確認していません。",
+    truth: "パブ・カフェの場所に絞って表示します。実際の入店・年齢・酒類提供条件は確認していません。",
+    jejuTruth: "済州では編集スポットとストーリーをそのまま表示し、その情報源からパブやカフェを推定しません。",
     context: "戻る場所",
     venue: "選択中の場所",
     city: "現在の地図",
@@ -497,7 +500,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
               {gateView === "failure" ? <AlertTriangle className={styles.heroFailure} size={27} aria-hidden="true" /> : <MoonStar className={styles.hero} size={27} aria-hidden="true" />}
               <h2 id="global-after19-title">{gateView === "failure" ? t.failedTitle : gateView === "expired" ? t.expiredReturnTitle : t.title}</h2>
               <p className={styles.lead}>{gateView === "failure" ? t.failedBody : gateView === "expired" ? t.expiredReturnBody : t.body}</p>
-              <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{t.truth}</p>
+              <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{context.cityId === "jeju" ? t.jejuTruth : t.truth}</p>
               <section className={styles.returnContext} data-testid="global-after19-return-context" data-return-cta={placeReturn?.cta ?? "OPEN_AFTER19"} data-return-city={returnCityId} data-return-venue={returnVenueId ?? "none"} data-return-level={placeReturn?.level ?? (context.venueId ? "detail" : "city")} data-return-focus={placeReturn?.focusTarget ?? "global-after19-toggle"}>
                 <small>{t.context} · {contextKind}</small>
                 <strong>{contextLabel}</strong>

@@ -73,7 +73,7 @@ async function preparePayment(page: Page) {
   if (await offer.getAttribute("data-wallet-status") !== "ready") {
     await offer.getByTestId("payment-confirm").click()
     const sheet = page.getByTestId("wallet-connect-sheet")
-    await sheet.getByRole("button", { name: "Set up local test balance", exact: true }).click()
+    await sheet.getByRole("button", { name: "Set up travel wallet", exact: true }).click()
     await expect(sheet).toBeHidden()
   }
   await offer.getByTestId("benefit-accept").click()
@@ -102,8 +102,8 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-001", "ENTRY/DECISION"), async () => {
       await gotoB(page)
       await page.locator("[data-city='seoul'][data-official-count='200']").click()
-      await expect(page.getByTestId("ondo-b-result-bar").locator("[data-compact-count='200']")).toBeVisible()
-      await expect(page.getByTestId("ondo-b-result-bar")).toContainText("200 official records")
+      await expect(page.getByTestId("ondo-b-result-truth")).toContainText("200 places")
+      await expect(page.getByTestId("ondo-b-view-toggle")).toContainText("List")
     })
     await test.step(evidence("FL-001", "ERROR/RETRY"), async () => {
       const map = page.getByTestId("ondo-b-map-entry")
@@ -121,7 +121,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await test.step(evidence("FL-001", "CANCEL/RETURN"), async () => {
       await page.getByTestId("canonical-place-overlay").locator("header").getByRole("button", { name: "Back to place summary" }).click()
       await page.getByTestId("canonical-place-peek").getByRole("button", { name: "Close place" }).click()
-      await expect(page.getByTestId("ondo-b-result-bar").locator("[data-compact-count='200']")).toBeVisible()
+      await expect(page.getByTestId("ondo-b-result-truth")).toContainText("200 places")
     })
   })
 
@@ -206,6 +206,7 @@ test.describe("ONDO B canonical flow journeys", () => {
     await openCanonicalVenue(page)
     await test.step(evidence("FL-004", "ENTRY/DECISION/CANCEL"), async () => {
       const offer = await openOffer(page)
+      await offer.getByTestId("commerce-payment-details").locator("summary").click()
       await expect(offer.getByTestId("commerce-fixed-quote-boundary")).toBeVisible()
       await offer.getByTestId("payment-cancel").click()
       await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()

@@ -35,7 +35,7 @@ test.describe("production official-source discovery", () => {
 
     const onboarding = page.getByTestId("ondo-onboarding")
     await expect(onboarding).toBeVisible()
-    await expect(onboarding).toContainText("Find a meal that fits your Korea")
+    await expect(onboarding).toContainText("Find a meal that feels right for your Korea")
     await expect(onboarding).toContainText("Explore food in Seoul and Busan, plus travel ideas across Jeju")
     const identityEntry = onboarding.getByTestId("k-tour-id-setup-open")
     await expect(identityEntry).toContainText(/Optional.*guest Explore stays open/i)
@@ -73,12 +73,14 @@ test.describe("production official-source discovery", () => {
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-directory-source", SOURCE_ID)
     await expect(root).toHaveAttribute("data-city-record-count", "200")
-    await expect(page.getByText("200 official records", { exact: true })).toBeVisible()
+    await expect(page.getByTestId("ondo-b-result-truth")).toContainText("200 places")
+    await expect(page.getByTestId("ondo-b-view-toggle")).toContainText("Map")
 
     const koreanCategory = page.getByRole("button", { name: "Korean", exact: true })
     await koreanCategory.click()
     await expect(koreanCategory).toHaveAttribute("aria-pressed", "true")
-    await expect(page.getByText("50 official records", { exact: true })).toBeVisible()
+    await expect(root).toHaveAttribute("data-result-count", "50")
+    await expect(page.getByTestId("ondo-b-result-truth")).toContainText("50 places")
     await page.getByRole("button", { name: "All", exact: true }).click()
     await page.getByLabel("Place, district or category").fill("로바")
     await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(1)
@@ -96,7 +98,7 @@ test.describe("production official-source discovery", () => {
     await page.goto("/ondo-b?city=busan", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 15_000 })
-    await expect(page.getByTestId("ondo-b-map-fallback-status")).toContainText("200 official records remain available")
+    await expect(page.getByTestId("ondo-b-map-fallback-status")).toContainText("All 200 places remain available")
     await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
     failTiles = false
     await page.getByRole("button", { name: "Retry map" }).click()
@@ -108,7 +110,7 @@ test.describe("production official-source discovery", () => {
     await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     await page.getByTestId("ondo-b-venue-list").locator(`li[data-venue-id='${EMPTY_TABLE_VENUE_ID}'] button`).click()
     const peek = page.getByTestId("canonical-place-peek")
-    await expect(peek).toContainText("Official Korean restaurant licence record")
+    await expect(peek).toContainText("LOCALDATA place information")
     await expect(peek.getByTestId("canonical-venue-directions")).toHaveAttribute("href", /google\.com\/maps\/dir/)
     await peek.getByTestId("canonical-place-details").click()
 
@@ -154,7 +156,7 @@ test.describe("production official-source discovery", () => {
     await expect(tables).toHaveAttribute("aria-expanded", "false")
     await expect(tables).toBeFocused()
 
-    await expect(detail.getByTestId("canonical-meal-benefit-open")).toContainText("This offer comes from ONDO, not the official place record or venue.")
+    await expect(detail.getByTestId("canonical-meal-benefit-open")).toContainText("See an ONDO meal benefit for this place.")
     await expect(detail.getByTestId("canonical-local-signal-open")).toContainText("device-local flow")
     await expect(detail.getByTestId("canonical-venue-checkout")).toHaveCount(0)
     await expect(page.getByTestId("checkout-overlay")).toHaveCount(0)

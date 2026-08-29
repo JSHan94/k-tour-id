@@ -174,14 +174,14 @@ test("FID-STATE-002 deterministic payment reducer covers success, fail/retry, in
   expect(result.initial).toMatchObject({
     quoteDebit: 22, holderBalance: 60, merchantSettlement: 0,
     state: {
-      status: "idle", voucher: "available", confirmationPending: false, confirmationCount: 0,
+      status: "idle", providerOrder: "NOT_CONNECTED", voucher: "available", confirmationPending: false, confirmationCount: 0,
       receiptCount: 0, refundCount: 0, chargedDebit: 0, receiptId: null, lastOutcome: null, ledger: [],
     },
   })
   expect(result.success).toMatchObject({
     quoteDebit: 19, holderBalance: 41, merchantSettlement: 19,
     state: {
-      status: "paid", voucher: "consumed", confirmationPending: false, confirmationCount: 1,
+      status: "paid", providerOrder: "NOT_CONNECTED", voucher: "consumed", confirmationPending: false, confirmationCount: 1,
       receiptCount: 1, refundCount: 0, chargedDebit: 19, receiptId: "ONDO-LOCAL-20260825-001", lastOutcome: "success",
     },
   })
@@ -206,7 +206,7 @@ test("FID-STATE-003 one-use voucher, refund restoration, and holder/merchant mir
 
   expect(result.refunded).toMatchObject({
     quoteDebit: 22, holderBalance: 60, merchantSettlement: 0,
-    state: { status: "refunded", voucher: "available", receiptCount: 1, refundCount: 1, chargedDebit: 19, receiptId: "ONDO-LOCAL-20260825-001", lastOutcome: "success" },
+    state: { status: "refunded", providerOrder: "NOT_CONNECTED", voucher: "available", receiptCount: 1, refundCount: 1, chargedDebit: 19, receiptId: "ONDO-LOCAL-20260825-001", lastOutcome: "success" },
   })
   expect(result.refunded.state.ledger).toHaveLength(4)
   for (const kind of ["PAYMENT", "REFUND"]) {
@@ -274,6 +274,8 @@ test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native jou
     "payment-recovery",
     "payment-retry",
     "payment-receipt",
+    "commerce-provider-status",
+    "NOT_CONNECTED",
     "payment-refund",
     "canonical-meal-benefit-open",
     "commerce-origin-return",
@@ -292,7 +294,9 @@ test("FID-P0-013 commerce boundary and persistence rules cannot be weakened", ()
   expect(commerce).toContain("not a stablecoin or on-chain asset")
   expect(commerce).toContain("OOKRW Test는 실제로 작동하지 않는 제품용 잔액")
   expect(commerce).toContain("스테이블코인이나 온체인 자산이 아닙니다")
-  expect(commerce).toContain("<details className={styles.testDetails}>")
+  expect(commerce).toContain('data-provider-order={commerce.providerOrder}')
+  expect(commerce).toContain("No order was placed with the venue")
+  expect(commerce).toMatch(/<details className=\{styles\.testDetails\}[^>]*data-testid="commerce-payment-details"/)
   expect(commerce).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|localStorage|URLSearchParams/)
   expect(commerce).toContain("restoreBActionGateSession(window.sessionStorage)")
   expect(commerce).toContain("consumePendingBActionAtMutation(window.sessionStorage")

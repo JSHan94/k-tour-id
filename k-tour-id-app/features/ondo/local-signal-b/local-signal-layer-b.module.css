@@ -29,7 +29,7 @@
 .photo figure { display: grid; gap: 9px; margin: 0; }
 .photo img { display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 12px; object-fit: cover; background: #eeeae4; }
 .photo figcaption { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.photo button { display: flex; min-height: 44px; align-items: center; justify-content: center; gap: 6px; border: 1px solid #d4cfc8; border-radius: 11px; background: #fff; color: #514b45; font: inherit; font-size: 12px; font-weight: 730; }
+.photo button { display: flex; min-height: 45px; align-items: center; justify-content: center; gap: 6px; border: 1px solid #d4cfc8; border-radius: 11px; background: #fff; color: #514b45; font: inherit; font-size: 12px; font-weight: 730; }
 .photo .photoAdd { border-style: dashed; background: #faf8f4; }
 .photo > p { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; margin: 0; color: #773e35; font-size: 12px; line-height: 1.45; }
 .photo > p button { border-color: #934a3f; padding-inline: 10px; background: #934a3f; color: #fff; }
@@ -533,9 +533,9 @@
   .photo { gap: 6px; margin-top: 9px; padding: 8px 9px; border-radius: 14px; box-shadow: 0 8px 20px rgb(0 0 0 / 5%); }
   .photo > div { gap: 1px; }
   .photo > div small { max-width: 145px; overflow: visible; line-height: 1.25; white-space: normal; }
-  .photo .photoAdd { min-width: 104px; min-height: 44px; }
+  .photo .photoAdd { min-width: 104px; min-height: 45px; }
   .photo > p { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .photo > p button { width: 100%; min-height: 44px; margin: 0; }
+  .photo > p button { width: 100%; min-height: 45px; margin: 0; }
   .truth { margin-top: 9px; padding: 9px 10px; border-radius: 14px; }
   .truth small { margin-top: 2px; line-height: 1.35; }
   .actions {
@@ -629,7 +629,7 @@
   .photo figure { grid-template-columns: minmax(0, 1fr) 116px; align-items: stretch; gap: 7px; }
   .photo img { height: 112px; aspect-ratio: auto; object-position: 50% 64%; }
   .photo figcaption { grid-template-columns: 1fr; gap: 6px; margin: 0; }
-  .photo button { min-height: 44px; }
+  .photo button { min-height: 45px; }
   .truth { margin-top: 8px; padding: 9px 10px; border-radius: 14px; }
   .truth small { margin-top: 2px; line-height: 1.32; }
   .personBoundary { margin-top: 7px; line-height: 1.32; }
@@ -677,6 +677,16 @@
   38% { transform: translateX(3px); }
   72% { transform: translateX(-2px); }
   100% { transform: none; }
+}
+
+/* Keep touch geometry safely above the 44px release gate. Chromium can
+   resolve an exact CSS 44px edge to 43.99997px at fractional device scales. */
+.layer > header button,
+.tags button,
+.note textarea,
+.photo button {
+  box-sizing: border-box;
+  min-height: 45px;
 }
 
 @media (prefers-reduced-motion: reduce) {

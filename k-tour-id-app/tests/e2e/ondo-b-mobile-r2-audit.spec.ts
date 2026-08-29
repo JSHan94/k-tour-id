@@ -224,7 +224,7 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     const map = page.getByTestId("ondo-b-map-entry")
     const search = page.getByTestId("ondo-b-search")
     const originalCategory = page.getByRole("button", { name: "Korean", exact: true })
-    const nightCategory = page.getByRole("button", { name: "Pub & café licence types", exact: true })
+    const nightCategory = page.getByRole("button", { name: "Pubs & cafés", exact: true })
     await expect(search).toHaveValue("mapo")
     await expect(originalCategory).toHaveAttribute("aria-pressed", "true")
     await expect(map).toHaveAttribute("data-requested-view", "list")
