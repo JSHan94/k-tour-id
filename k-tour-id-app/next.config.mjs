@@ -33,7 +33,10 @@ const nextConfig = {
   },
   async headers() {
     return [
+      { source: "/", headers: productionSecurityHeaders },
       { source: "/ondo-b", headers: productionSecurityHeaders },
+      { source: "/ondo-a", headers: productionSecurityHeaders },
+      { source: "/ondo", headers: productionSecurityHeaders },
       { source: "/api/ondo/venues/:path*", headers: productionSecurityHeaders },
     ]
   },

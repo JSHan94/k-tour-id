@@ -148,6 +148,12 @@
 .receiptCard div:last-child { border-bottom: 0; }
 .receiptCard strong { color: #372f31; }
 .receiptCard code { overflow: hidden; color: #51484a; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.settlementDetails { width: 100%; margin-top: 12px; overflow: hidden; border: 1px solid rgb(67 48 53 / 11%); border-radius: 17px; background: rgb(255 253 250 / 74%); color: #69615d; text-align: left; }
+.settlementDetails summary { display: flex; min-height: 48px; cursor: pointer; align-items: center; gap: 8px; padding: 0 15px; font-size: 12px; font-weight: 800; list-style: none; }
+.settlementDetails summary::-webkit-details-marker { display: none; }
+.settlementDetails > div { display: grid; min-height: 42px; grid-template-columns: minmax(92px, .8fr) minmax(0, 1.2fr); align-items: center; gap: 12px; border-top: 1px solid rgb(67 48 53 / 8%); padding: 8px 15px; font-size: 12px; }
+.settlementDetails > div > :last-child { min-width: 0; overflow-wrap: anywhere; color: #372f31; text-align: right; }
+.settlementDetails > p { display: flex; align-items: center; gap: 7px; margin: 0; border-top: 1px solid rgb(67 48 53 / 8%); padding: 11px 15px 13px; color: #756c67; font-size: 12px; font-weight: 700; }
 .refundDetails { width: 100%; margin-top: 12px; border-radius: 17px; padding: 0 15px; background: #eae4df; color: #69615d; text-align: left; }
 .refundDetails summary { min-height: 48px; cursor: pointer; align-content: center; font-size: 12px; font-weight: 800; }
 .refundDetails p { margin: 0; font-size: 12px; line-height: 1.55; }
@@ -506,6 +512,7 @@
 }
 
 .testDetails,
+.settlementDetails,
 .refundDetails,
 .privacy {
   border: 1px solid rgb(72 52 44 / 8%);
@@ -798,6 +805,18 @@
   box-shadow: 0 -20px 42px rgb(55 38 29 / 9%);
   backdrop-filter: blur(20px) saturate(1.08);
 }
+.demoNote {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: #6d6561;
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+.demoNote svg { flex: 0 0 auto; }
 .offerDecision .payButton {
   position: static;
   inset: auto;

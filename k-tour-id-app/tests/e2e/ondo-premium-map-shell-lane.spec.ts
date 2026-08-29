@@ -29,7 +29,7 @@ async function requiredBox(locator: Locator) {
 async function openSeoul(page: Page, locale: "en" | "ko", viewport: { width: number; height: number }) {
   await page.setViewportSize(viewport)
   await seed(page, locale)
-  await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+  await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
   const root = page.getByTestId("ondo-b-map-entry")
   await expect(root).toHaveAttribute("data-effective-view", "map")
   await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
@@ -135,7 +135,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
   test("844x390 opens on the compact map and an explicit List remains scrollable", async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
     await seed(page, "ko")
-    await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-effective-view", "map")
     await expect(page.getByTestId("maplibre-map")).toBeVisible()

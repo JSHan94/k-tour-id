@@ -1,6 +1,15 @@
 import { expect, test } from "@playwright/test"
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
+import {
+  createPresentationRequestB,
+  createSimulatedCredentialB,
+  isPresentationRequestActiveB,
+  isSimulatedCredentialActiveB,
+  KTOUR_ID_CREDENTIAL_TTL_MS,
+  KTOUR_ID_PRESENTATION_TTL_MS,
+  resolvePresentationRequestB,
+} from "../../features/ondo/identity-b/ktour-id-setup-model-b"
 
 const root = process.cwd()
 const source = (path: string) => {
@@ -15,6 +24,38 @@ const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
 const onboarding = source("features/ondo/onboarding/official-directory-onboarding.tsx")
 const traveler = source("features/ondo/identity-b/traveler-id-entry-b.tsx")
 const product = source("features/ondo/app/ondo-product-b.tsx")
+const setupCopy = setup.slice(setup.indexOf("const COPY"), setup.indexOf("const FOCUSABLE"))
+
+test("OPENDID-B-MODEL-001 credential readiness expires at the exact two-hour boundary", () => {
+  const issuedAt = 1_000
+  const credential = createSimulatedCredentialB("passport_ekyc", issuedAt)
+  expect(isSimulatedCredentialActiveB(credential, issuedAt)).toBe(true)
+  expect(isSimulatedCredentialActiveB(credential, issuedAt + KTOUR_ID_CREDENTIAL_TTL_MS - 1)).toBe(true)
+  expect(isSimulatedCredentialActiveB(credential, issuedAt + KTOUR_ID_CREDENTIAL_TTL_MS)).toBe(false)
+})
+
+test("OPENDID-B-MODEL-002 presentation nonce expires and can be consumed only once", () => {
+  const issuedAt = 5_000
+  const request = createPresentationRequestB(issuedAt, "nonce:contract")
+  expect(request.nonce).toBe("nonce:contract")
+  expect(isPresentationRequestActiveB(request, issuedAt + KTOUR_ID_PRESENTATION_TTL_MS - 1)).toBe(true)
+
+  const approved = resolvePresentationRequestB(request, "approve", issuedAt + 1)
+  expect(approved).toMatchObject({ approved: true, code: null })
+  expect(approved.request.consumedAt).toBe(issuedAt + 1)
+  expect(resolvePresentationRequestB(approved.request, "approve", issuedAt + 2)).toMatchObject({
+    approved: false,
+    code: "PRESENTATION_REPLAY",
+  })
+  expect(resolvePresentationRequestB(createPresentationRequestB(issuedAt), "deny", issuedAt + 1)).toMatchObject({
+    approved: false,
+    code: "PRESENTATION_DENIED",
+  })
+  expect(resolvePresentationRequestB(request, "approve", issuedAt + KTOUR_ID_PRESENTATION_TTL_MS)).toMatchObject({
+    approved: false,
+    code: "PRESENTATION_REQUEST_EXPIRED",
+  })
+})
 
 test("OPENDID-B-001 restores the three truthful identity routes without provider substitution", () => {
   expect(setup).toContain('"mobile_id"')
@@ -28,7 +69,7 @@ test("OPENDID-B-001 restores the three truthful identity routes without provider
   expect(setup).toContain("KTourVisitorCredential")
 
   expect(setup).toContain("Passport eKYC uses a separate provider — not OmniOne CX")
-  expect(setup).toContain("Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status")
+  expect(setup).toContain("Private K-Tour service credential · no identity provider or OpenDID service is connected, so no real DID or VC is issued")
   expect(setup).not.toContain("Issuer: OmniOne")
   expect(setup).not.toContain("Recorded on OmniOne")
 })
@@ -37,7 +78,10 @@ test("OPENDID-B-002 every route has one on-device boundary and never performs id
   expect(`${setup}\n${passportOcr}`).not.toContain("SIMULATED")
   expect(setup).toContain("No identity provider or OpenDID service is connected")
   expect(setup).toContain("ONDO K-Tour ID")
-  expect(setup).toContain("no document, face, provider result or credential is saved")
+  expect(setup).toContain("No Mobile ID payload, name, birth date, signed callback or provider result is stored")
+  expect(setup).toContain("No residence-card payload, name, birth date, signed callback or provider result is stored")
+  expect(setup).toContain("No passport fields, face image, provider result, DID or VC payload is stored")
+  expect(setup).toContain('details.retention, "identity-consent-retention"')
   expect(passportOcr).toContain("No filename, image or metadata is saved or sent")
 
   expect(`${setup}\n${passportOcr}`).not.toMatch(/\b(?:fetch|XMLHttpRequest|sendBeacon|WebSocket|FormData)\s*\(/)
@@ -105,9 +149,9 @@ test("OPENDID-B-005 Account, Person, 19+, identity credential and Payment remain
 test("OPENDID-B-006 EN, KO and JA carry equivalent provider and private-credential boundaries", () => {
   expect(setup).toMatch(/const COPY\s*=\s*\{[\s\S]*?en:\s*\{[\s\S]*?ko:\s*\{[\s\S]*?ja:\s*\{/)
   for (const truth of [
-    "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다",
+    "민간 K-Tour 서비스 자격증명 · 신원확인 기관과 OpenDID 서비스가 연결되지 않아 실제 DID·VC를 발급하지 않습니다",
     "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
-    "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません",
+    "民間のK-Tourサービス資格情報 · 本人確認事業者とOpenDIDサービスは未接続のため、実際のDID・VCは発行しません",
     "パスポートeKYCはOmniOne CXではなく別の事業者",
   ]) expect(setup).toContain(truth)
 })
@@ -168,6 +212,7 @@ test("OPENDID-B-008 freezes the complete consent-to-presentation state machine",
     "identity-consent-provider",
     "identity-consent-evidence",
     "identity-consent-retention",
+    "identity-consent-wallet",
     "k-tour-id-route-step",
     "k-tour-id-evidence-preview",
     "k-tour-id-issuance-preview",
@@ -193,13 +238,13 @@ test("OPENDID-B-009 keeps the internal environment contract and presents concise
   for (const truth of [
     'env: "ON-DEVICE"',
     'envDetail: "No identity provider or OpenDID service is connected."',
-    "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
+    "Private K-Tour service credential · no identity provider or OpenDID service is connected, so no real DID or VC is issued.",
     'env: "기기 내"',
     'envDetail: "신원확인 기관이나 OpenDID 서비스에 연결하지 않습니다."',
-    "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
+    "민간 K-Tour 서비스 자격증명 · 신원확인 기관과 OpenDID 서비스가 연결되지 않아 실제 DID·VC를 발급하지 않습니다.",
     'env: "端末内"',
     'envDetail: "本人確認事業者やOpenDIDサービスには接続しません。"',
-    "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
+    "民間のK-Tourサービス資格情報 · 本人確認事業者とOpenDIDサービスは未接続のため、実際のDID・VCは発行しません。",
   ]) expect(setup).toContain(truth)
 
   expect(setup).toContain('data-environment="simulated"')
@@ -208,6 +253,36 @@ test("OPENDID-B-009 keeps the internal environment contract and presents concise
   expect(passportOcr).toContain('type="file"')
   expect(passportOcr).toContain('accept="image/jpeg,image/png,image/webp"')
   expect(passportOcr).toContain('capture="environment"')
+})
+
+test("OPENDID-B-014 consent is route-specific, discloses local wallet preparation, and keeps protocol detail progressive", () => {
+  expect(setup).toContain("mobileRetention")
+  expect(setup).toContain("residenceRetention")
+  expect(setup).toContain("passportRetention")
+  expect(setup).not.toMatch(/mobileRetention:\s*"[^"]*(?:image|이미지|画像)/i)
+  expect(setup).not.toMatch(/residenceRetention:\s*"[^"]*(?:image|이미지|画像)/i)
+  expect(setup).toContain("After K-Tour ID is ready, ONDO prepares a device-only travel balance in this tab")
+  expect(setup).toContain("K-Tour ID 준비가 끝나면 ONDO가 이 탭에 기기 전용 여행 잔액을 준비합니다")
+  expect(setup).toContain("K-Tour IDの準備後、ONDOがこのタブに端末専用の旅行残高を用意します")
+  expect(setup).toContain('<details className={styles.protocolDetails}>')
+  expect(setup).toContain('<p data-testid="k-tour-id-technical-truth">')
+  expect(setup).not.toContain('<span className={styles.contractOnly} data-testid="k-tour-id-technical-truth">')
+  expect(setupCopy).not.toMatch(/\b(?:walkthrough|preview|simulated|test)\b/i)
+  expect(traveler).not.toContain("Test wallet")
+  expect(traveler).not.toContain("테스트 지갑")
+  expect(traveler).not.toContain("テストウォレット")
+})
+
+test("OPENDID-B-015 official K-Tour ID source assets stay inside identity contexts", () => {
+  for (const asset of [
+    "public/brand/ktour-id-lockup-transparent.png",
+    "public/brand/ktour-id-mark.png",
+    "public/brand/ktour-id-mark-32.png",
+  ]) expect(existsSync(resolve(root, asset))).toBe(true)
+  expect(setup).toContain('/brand/ktour-id-lockup-transparent.png')
+  expect(setup).toContain('/brand/ktour-id-mark.png')
+  expect(traveler).toContain('/brand/ktour-id-mark-32.png')
+  expect(setup).toContain('data-testid="k-tour-id-brand-lockup"')
 })
 
 test("OPENDID-B-010 freezes deterministic recovery, credential status, and one-shot guards", () => {
@@ -241,7 +316,7 @@ test("OPENDID-B-010 freezes deterministic recovery, credential status, and one-s
     expect(model).toContain(`"${status}"`)
   }
   expect(setup).toContain("issuedOnceRef")
-  expect(setup).toContain("__ONDO_B_QA__")
+  expect(setup).toContain("readQaRuntime<QaRuntime>()")
 })
 
 test("OPENDID-B-011 keeps the five axes independent and identity data out of device persistence", () => {

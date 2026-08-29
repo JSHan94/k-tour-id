@@ -20,6 +20,7 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120_000,
+        env: { ...process.env, NEXT_PUBLIC_ONDO_QA_CONTROLS: "1" },
       },
   use: {
     ...devices["Desktop Chrome"],

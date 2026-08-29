@@ -163,7 +163,7 @@ test.describe("ONDO B structural production map chrome", () => {
   test("resize hands zoom focus to a visible successor without stealing unrelated focus", async ({ page }) => {
     await seed(page, "en", "idle")
     await page.setViewportSize({ width: 900, height: 720 })
-    await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     const zoomIn = page.locator(".maplibregl-ctrl-group button").first()
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
@@ -207,7 +207,7 @@ test.describe("ONDO B structural production map chrome", () => {
         for (const viewport of VIEWPORTS) {
           await context.setOffline(false)
           await page.setViewportSize(viewport)
-          await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+          await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
           const root = page.getByTestId("ondo-b-map-entry")
           await expect(root).toHaveAttribute("data-layout-mode", /^(ultra-short|compact-map|spacious-map)$/)
           const layout = await root.getAttribute("data-layout-mode")

@@ -37,7 +37,7 @@ async function seed(page: Page, locale: "en" | "ko", options: { membership?: "co
       document.head.append(style)
     }, { once: true })
   })
-  await page.goto("/ondo-b")
+  await page.goto("/")
   // Let the provider finish its initial empty-state persistence before the
   // deterministic seed replaces it; otherwise its hydration effect can win.
   await page.waitForFunction(() => (
@@ -75,7 +75,7 @@ async function openJoinedChat(page: Page, locale: "en" | "ko" = "en") {
 }
 
 async function openSignal(page: Page, query = "") {
-  await page.goto(`/ondo-b${query ? `?${query}&` : "?"}venueId=${CANONICAL_VENUE_ID}`)
+  await page.goto(`/${query ? `?${query}&` : "?"}venueId=${CANONICAL_VENUE_ID}`)
   await page.getByTestId("canonical-place-details").click()
   await page.getByTestId("canonical-venue-signal").click()
   await expect(page.getByTestId("local-signal-overlay")).toBeVisible()
@@ -123,7 +123,7 @@ for (const locale of ["en", "ko"] as const) {
 
     await page.getByLabel(locale === "ko" ? "Table로 돌아가기" : "Back to Table").click()
     await page.getByTestId("ondo-sheet").getByRole("button", { name: locale === "ko" ? "닫기" : "Close" }).click()
-    await page.goto(`/ondo-b?venueId=${CANONICAL_VENUE_ID}`)
+    await page.goto(`/?venueId=${CANONICAL_VENUE_ID}`)
     await page.getByTestId("canonical-place-details").click()
     await page.getByTestId("canonical-venue-tables").click()
     if (locale === "ko") {

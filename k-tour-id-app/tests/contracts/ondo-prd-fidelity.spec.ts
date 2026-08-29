@@ -7,7 +7,7 @@ import { sanitizeLocalSignalVenueIds } from "../../features/ondo/my/my-korea-mod
 import { ONDO_DEFERRED, ONDO_MUST_LIVE } from "../helpers/ondo-prd-fidelity"
 
 const APP_ROOT = process.cwd()
-const ROUTE_ENTRY = resolve(APP_ROOT, "app/ondo-b/page.tsx")
+const ROUTE_ENTRY = resolve(APP_ROOT, "app/page.tsx")
 const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".css", ".json"] as const
 
@@ -68,12 +68,12 @@ const liveSource = liveFiles.map((file) => readFileSync(file, "utf8")).join("\n"
 const appSource = source
 
 function expectReachable(path: string) {
-  expect(livePaths, `${path} must be reachable from app/ondo-b/page.tsx; a detached file cannot satisfy fidelity`).toContain(path)
+  expect(livePaths, `${path} must be reachable from canonical app/page.tsx; a detached file cannot satisfy fidelity`).toContain(path)
 }
 
 function expectLiveEvidence(evidence: readonly string[]) {
   for (const token of evidence) {
-    expect(liveSource, `missing live /ondo-b evidence: ${token}`).toContain(token)
+    expect(liveSource, `missing live canonical / evidence: ${token}`).toContain(token)
   }
 }
 
@@ -121,7 +121,7 @@ test("FID-G0-003 guest discovery and onboarding remain reachable without identit
   }
 })
 
-test("FID-G0-004 every existing and restored golden surface is reachable from /ondo-b", () => {
+test("FID-G0-004 every existing and restored golden surface is reachable from canonical /", () => {
   for (const path of [
     "features/ondo/my/saved-entry-b.tsx",
     "features/ondo/my/my-korea-model.ts",
@@ -267,7 +267,7 @@ test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native jou
     "wallet-link-open",
     "wallet-connect-sheet",
     "wallet-link-retry",
-    "OOKRW Test",
+    "OOKRW",
     "payment-minimum-consent",
     "payment-confirm",
     "payment-cancel",
@@ -288,14 +288,18 @@ test("FID-P0-013 commerce boundary and persistence rules cannot be weakened", ()
   const provider = appSource("features/ondo/shared/state/ondo-b-provider.tsx")
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  expect(commerce).toContain("This flow contacts no wallet, merchant, stablecoin network or payment provider and moves no money")
-  expect(commerce).toContain("지갑·가맹점·스테이블코인 네트워크·결제 공급자에 연결하지 않고 돈을 이동하지 않습니다")
-  expect(commerce).toContain("OOKRW Test is a non-live product balance")
+  expect(commerce).toContain("No wallet, merchant, stablecoin network or payment provider is contacted")
+  expect(commerce).toContain("외부 지갑·가맹점·네트워크·결제 공급자에 연결하지 않습니다")
+  expect(commerce).toContain("OOKRW is a device-only product balance")
   expect(commerce).toContain("not a stablecoin or on-chain asset")
-  expect(commerce).toContain("OOKRW Test는 실제로 작동하지 않는 제품용 잔액")
+  expect(commerce).toContain("OOKRW는 이 기기에서만 작동하는 제품용 잔액")
   expect(commerce).toContain("스테이블코인이나 온체인 자산이 아닙니다")
   expect(commerce).toContain('data-provider-order={commerce.providerOrder}')
   expect(commerce).toContain("No order was placed with the venue")
+  expect(commerce).toContain('data-testid="commerce-operation-id"')
+  expect(commerce).toContain('data-testid="commerce-holder-delta"')
+  expect(commerce).toContain('data-testid="commerce-merchant-delta"')
+  expect(commerce).toContain('data-testid="commerce-settlement-total"')
   expect(commerce).toMatch(/<details className=\{styles\.testDetails\}[^>]*data-testid="commerce-payment-details"/)
   expect(commerce).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|localStorage|URLSearchParams/)
   expect(commerce).toContain("restoreBActionGateSession(window.sessionStorage)")

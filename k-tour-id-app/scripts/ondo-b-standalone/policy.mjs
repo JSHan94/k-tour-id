@@ -5,6 +5,18 @@ export const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 export const STAGE_DIST = resolve(STAGE_ROOT, "dist")
 export const LOCAL_ONLY_PROJECT_ID = "appgprj_local_only_ondo_b_artifact"
 export const HISTORICAL_B_PROJECT_ID = "appgprj_6a85de65d6148191aa042ae9c2787dd2"
+export const PERSONAL_DEPLOY_OWNER = "woogieboogie-jl"
+export const PERSONAL_VERCEL_USER = "jaewook-9643"
+export const BLOCKED_LINKED_VERCEL_PROJECT_ID = "prj_w5rckTz9B1DO55fvVRXjQRy9L5RM"
+export const LEGACY_DISCOVERY_QUERY_KEYS = Object.freeze([
+  "category",
+  "city",
+  "detail",
+  "editorialPlaceId",
+  "q",
+  "venueId",
+  "view",
+])
 
 // These modules are intentionally B-native: they implement truthful,
 // synchronous device-local walkthroughs and do not import the legacy provider,
@@ -62,7 +74,7 @@ export const REQUIRED_B_NATIVE_LABS_FILES = Object.freeze([
 ])
 
 export const SOURCE_FILES = Object.freeze([
-  "app/icon.svg",
+  "app/page.tsx",
   "app/ondo-b/page.tsx",
   "app/api/ondo/venues/[venueId]/route.ts",
   "build/sites-vite-plugin.ts",
@@ -118,6 +130,16 @@ export const SOURCE_FILES = Object.freeze([
 
 export const PUBLIC_FILES = Object.freeze([
   "public/og-map-first.png",
+  "public/brand/ktour-id-lockup-transparent.png",
+  "public/brand/ktour-id-lockup.png",
+  "public/brand/ktour-id-logo-source.png",
+  "public/brand/ktour-id-mark-180.png",
+  "public/brand/ktour-id-mark-192.png",
+  "public/brand/ktour-id-mark-32.png",
+  "public/brand/ktour-id-mark-512.png",
+  "public/brand/ktour-id-mark-64.png",
+  "public/brand/ktour-id-mark.png",
+  "public/brand/ktour-id-wordmark.png",
   "public/brand/ondo-lockup.svg",
   "public/brand/ondo-mark.svg",
   "public/brand/ondo-mark-inverse.svg",
@@ -188,4 +210,11 @@ export const LEGACY_ARTIFACT_TEXT = Object.freeze([
   /CheckoutOverlay|ChatOverlay|RewardsEntry|\bLabsEntry\b/,
   /k-tour-id\.wallet/i,
   /(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/m,
+])
+
+export const FORBIDDEN_QA_ARTIFACT_TEXT = Object.freeze([
+  /__ONDO_B_QA__/,
+  /ondo\.qa\.controls\.v1/,
+  /ondo\.qa\.scenario\.v1/,
+  /NEXT_PUBLIC_ONDO_QA_CONTROLS/,
 ])

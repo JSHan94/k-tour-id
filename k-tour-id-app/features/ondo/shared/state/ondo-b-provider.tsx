@@ -327,7 +327,7 @@ const DEVICE_MESSAGE = {
 } satisfies Record<string, Record<OndoBLocale, string>>
 
 function isProductionPath() {
-  return typeof window !== "undefined" && window.location.pathname.replace(/\/$/, "") === "/ondo-b"
+  return typeof window !== "undefined" && window.location.pathname === "/"
 }
 
 function restoreBDeviceState(value: unknown): OndoBDeviceState {
@@ -478,7 +478,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         accountReturnTo: accountSession.returnTo,
         saveStatusByVenue: Object.fromEntries(restored.savedVenueIds.map((venueId) => [venueId, "SAV-SAVED" as const])),
           commerceOrigin: null,
-          commerceWalletStatus: "disconnected",
+          commerceWalletStatus: restored.commerceReceipts.length ? "ready" : "disconnected",
           commerceSession: commerceSessionFromReceipts(restored.commerceReceipts),
           commerceReceiptVenueId: restored.commerceReceipts[0]?.venueId ?? null,
           hydrated: true,

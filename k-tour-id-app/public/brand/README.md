@@ -1,5 +1,15 @@
 # ONDO 溫圖 brand marks
 
+## K-TOUR ID supplied mark
+
+`ktour-id-mark.png` is the byte-for-byte transparent mark supplied in the
+workspace `sources/` folder (SHA-256
+`2f7467cb8efe5640489f8387e7b7f842b56b45a53619f61268b864fb9cd9b38d`).
+The `-32`, `-64`, `-180`, `-192`, and `-512` files are size-only PNG exports
+from that master. Use the 32 px and 192 px exports for browser icons and the
+180 px export for Apple touch metadata; do not derive icons from screenshots
+or the horizontal lockup.
+
 `溫圖` is the product's Hanja signature: `溫` for warmth and `圖` for map. It
 sits beside the full lockup; `ONDO` remains the international product name.
 

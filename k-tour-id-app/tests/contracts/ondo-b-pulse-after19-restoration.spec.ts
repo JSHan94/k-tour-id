@@ -38,7 +38,8 @@ test("B-PULSE-003 joining confirms before Table chat and exposes message, check-
     expect(tables).toContain(evidence)
   }
   expect(tables).toContain("Messages and photos remain in this tab")
-  expect(tables).toContain("Nothing is booked, sent to the venue, or charged")
+  expect(tables).toContain("Messages and photos stay with this Table")
+  expect(tables).not.toContain("Nothing is booked, sent to the venue, or charged")
   expect(tables).not.toMatch(/\bopenDm\b|\bdirectMessage\b|\bmatchmaking\b|["']\/connect\/chat|chat-message-input/)
 })
 
@@ -70,7 +71,7 @@ test("B-AFTER19-002 normal controls are single-path while fixture-driven recover
     expect(gate).toContain(evidence)
   }
   for (const hiddenControl of ["gate-failure-choice", "gate-unsupported-choice", "gate-expired-choice"]) expect(gate).not.toContain(hiddenControl)
-  expect(gate).toContain("(window as QaWindow).__ONDO_B_QA__")
+  expect(gate).toContain("readQaRuntime<QaRuntime>()")
   expect(gate).toContain('if (gate === "age" && qa?.after19)')
   expect(returnTo).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
   expect(returnTo).toContain('return hasExactKeys(candidate, ["tableId", "draft"])')
@@ -84,7 +85,9 @@ test("B-AFTER19-002 normal controls are single-path while fixture-driven recover
   expect(tables).toContain('detail.cta !== "JOIN_TABLE" || detail.tableId !== ACTIVE_TABLE_ID || detail.venueId !== TABLE_VENUE_ID || detail.consumedAt !== null')
   expect(tables).toContain("consumePendingBActionAtMutation(window.sessionStorage, returnTo, satisfied)")
   expect(`${gate}\n${returnTo}\n${ageModel}`).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|EventSource/)
-  expect(ageModel).not.toMatch(/setTimeout|payment|receipt|providerResponse/i)
+  expect(ageModel).toContain("GlobalAfter19PredicateReceiptB")
+  expect(ageModel).toContain('disclosure: "predicate_only"')
+  expect(ageModel).not.toMatch(/setTimeout|payment|providerResponse/i)
 })
 
 test("B-PULSE-004 the slice keeps concise truth plus EN/KO/JA, modal, keyboard, and responsive contracts", () => {
@@ -94,7 +97,8 @@ test("B-PULSE-004 the slice keeps concise truth plus EN/KO/JA, modal, keyboard, 
   const productSource = `${tables}\n${gate}`
   expect(productSource).toContain("Minimum check · this tab only")
   expect(productSource).toContain("Only an eligibility result and expiry are kept in this tab")
-  expect(productSource).toContain("Nothing is booked, sent to the venue, or charged")
+  expect(productSource).toContain("Messages and photos stay with this Table")
+  expect(tables).toContain('<details className={styles.tablePrivacy} data-testid="tables-truth-notice">')
   for (const locale of ["en", "ko", "ja"]) expect(productSource).toContain(`${locale}: {`)
   expect(productSource).toContain("useModalIsolation")
   expect(productSource).toContain("onKeyDown")

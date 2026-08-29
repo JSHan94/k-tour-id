@@ -32,7 +32,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
       localStorage.clear()
       sessionStorage.clear()
     })
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     const dialog = page.getByTestId("ondo-onboarding")
     await expect(dialog).toBeVisible()
     await expect(dialog).toBeFocused()
@@ -59,7 +59,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
     await page.setViewportSize({ width: 360, height: 800 })
     for (const locale of ["en", "ko"] as const) {
       await seedProduction(page, locale)
-      await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       const controls = page.locator("[data-testid='ondo-b-category-rail'] button")
       await expect(controls).toHaveCount(8)
       const boxes = await controls.evaluateAll((buttons) => buttons.map((button) => {
@@ -72,7 +72,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
 
   test("B-PROD-INCLUSIVE-002 empty directory results preserve list semantics and contrast", async ({ page }) => {
     await seedProduction(page, "en")
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     await page.getByTestId("ondo-b-search").fill("no-record-can-match-this-query")
     const empty = page.getByTestId("ondo-b-empty-results")
     await expect(empty).toBeVisible()
@@ -83,7 +83,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
 
   test("B-PROD-INCLUSIVE-003 saved-place metadata stays at the 12px production floor", async ({ page }) => {
     await seedProduction(page, "en", [CANONICAL_VENUE_ID])
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-my").click()
     const card = page.getByTestId(`saved-card-${CANONICAL_VENUE_ID}`)
     await expect(card).toBeVisible()
@@ -97,7 +97,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
 
   test("B-PROD-INCLUSIVE-004 reset confirmation traps Tab and restores its opener", async ({ page }) => {
     await seedProduction(page, "en", [CANONICAL_VENUE_ID])
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-settings").click()
     await page.getByTestId("ondo-b-device-data-settings").locator(":scope > summary").click()
     const opener = page.getByTestId("ondo-b-clear-device-open")
@@ -117,7 +117,7 @@ test.describe("ONDO B production inclusive surfaces", () => {
 
   test("B-PROD-INCLUSIVE-005 place summary isolates the underlying directory", async ({ page }) => {
     await seedProduction(page, "en")
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     const directory = page.getByTestId("ondo-b-map-entry")
     await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
     const peek = page.getByTestId("canonical-place-peek")

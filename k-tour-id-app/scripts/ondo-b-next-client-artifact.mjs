@@ -4,11 +4,17 @@ import { runInNewContext } from "node:vm"
 
 const APP_ROOT = resolve(import.meta.dirname, "..")
 const NEXT_ROOT = resolve(APP_ROOT, ".next")
-const CLIENT_MANIFEST = resolve(NEXT_ROOT, "server/app/ondo-b/page_client-reference-manifest.js")
+const CLIENT_MANIFEST = resolve(NEXT_ROOT, "server/app/page_client-reference-manifest.js")
 const SERVER_ROUTE = resolve(NEXT_ROOT, "server/app/api/ondo/venues/[venueId]/route.js")
 const SERVER_TRACE = `${SERVER_ROUTE}.nft.json`
 const PULSE_SOURCE = resolve(APP_ROOT, "features/ondo/pulse-b/pulse-model-b.ts")
 const MAX_CURATED_PULSE_MULTIPLICITY = 6
+const FORBIDDEN_QA_RUNTIME_TEXT = [
+  "__ONDO_B_QA__",
+  "ondo.qa.controls.v1",
+  "ondo.qa.scenario.v1",
+  "NEXT_PUBLIC_ONDO_QA_CONTROLS",
+]
 
 function fail(message, details) {
   throw new Error(`${message}${details ? `\n${JSON.stringify(details, null, 2)}` : ""}`)
@@ -21,10 +27,10 @@ export async function scanOndoBNextClientArtifact() {
   ])
   const context = { globalThis: {} }
   runInNewContext(manifestSource, context)
-  const manifest = context.globalThis.__RSC_MANIFEST?.["/ondo-b/page"]
+  const manifest = context.globalThis.__RSC_MANIFEST?.["/page"]
   const entry = Object.entries(manifest?.clientModules ?? {})
     .find(([file]) => file.endsWith("/features/ondo/app/ondo-product-b.tsx"))?.[1]
-  if (!entry) fail("The /ondo-b client entry is absent from the Next build manifest")
+  if (!entry) fail("The canonical / client entry is absent from the Next build manifest")
 
   const chunkFiles = [...new Set(entry.chunks.filter((item) => typeof item === "string" && item.endsWith(".js")))]
   const chunks = await Promise.all(chunkFiles.map(async (file) => ({
@@ -33,6 +39,8 @@ export async function scanOndoBNextClientArtifact() {
     source: await readFile(resolve(NEXT_ROOT, file), "utf8"),
   })))
   const clientSource = chunks.map(({ source }) => source).join("\n")
+  const qaRuntimeHits = FORBIDDEN_QA_RUNTIME_TEXT.filter((text) => clientSource.includes(text))
+  if (qaRuntimeHits.length) fail("Production QA controls leaked into the canonical / client chunks", qaRuntimeHits)
   const venueIds = [...clientSource.matchAll(/mois-[0-9a-f]+/g)].map((match) => match[0])
   const venueIdCounts = new Map()
   for (const venueId of venueIds) venueIdCounts.set(venueId, (venueIdCounts.get(venueId) ?? 0) + 1)
@@ -52,10 +60,10 @@ export async function scanOndoBNextClientArtifact() {
     unexpectedElevatedVenueIds,
   }
   if (clientSource.includes("sourceRecordDigest") || clientSource.includes('"sourceIds"')) {
-    fail("Full canonical venue details leaked into the /ondo-b client chunks", client)
+    fail("Full canonical venue details leaked into the canonical / client chunks", client)
   }
   if (!clientSource.includes("UNKNOWN_FALLBACK_TO_KO") || !clientSource.includes("MOIS_LOCALDATA_GENERAL_RESTAURANTS")) {
-    fail("Compact canonical venue data is absent from the /ondo-b client chunks", client)
+    fail("Compact canonical venue data is absent from the canonical / client chunks", client)
   }
   if (
     client.venueIdOccurrences < 800
@@ -65,7 +73,7 @@ export async function scanOndoBNextClientArtifact() {
     || client.maxVenueIdMultiplicity > MAX_CURATED_PULSE_MULTIPLICITY
     || unexpectedElevatedVenueIds.length
   ) {
-    fail("The /ondo-b client venue multiplicity differs from the compact 400-record dataset", client)
+    fail("The canonical / client venue multiplicity differs from the compact 400-record dataset", client)
   }
 
   const [serverSource, serverTrace] = await Promise.all([

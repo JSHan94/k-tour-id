@@ -22,7 +22,7 @@ async function seedDevice(page: Page, locale: "en" | "ko" = "en", extra: Record<
 }
 
 async function gotoB(page: Page, search = "") {
-  await page.goto(`/ondo-b${search}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/${search}`, { waitUntil: "domcontentloaded" })
   await expect(page.getByTestId("ondo-b-root")).toBeVisible()
 }
 

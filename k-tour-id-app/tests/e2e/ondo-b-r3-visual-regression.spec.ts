@@ -231,10 +231,10 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await expect(unlock).toHaveText("Turn on After 19")
     await unlock.click()
     const prompt = page.getByTestId("global-after19-prompt-layer")
-    await expect(prompt).toContainText("Narrows this map to pubs and cafés. Actual entry, age and alcohol-service rules are not confirmed.")
+    await expect(prompt).toContainText("Narrows this map to official business types associated with bars and pubs.")
     await prompt.locator("summary").click()
-    await expect(prompt).toContainText("This does not confirm opening hours, alcohol service, admission, or a venue age restriction.")
-    await expect(prompt).toContainText("Your date of birth is not requested or stored")
+    await expect(prompt).toContainText("simulated OpenDID age-predicate receipt")
+    await expect(prompt).toContainText("Your date of birth is never requested or stored")
     await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
   })
 

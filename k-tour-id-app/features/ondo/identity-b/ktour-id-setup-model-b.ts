@@ -62,8 +62,22 @@ export type OndoBSimulatedCredential = {
   expiresAt: number
 }
 
+export type OndoBPresentationRequest = {
+  nonce: string
+  issuedAt: number
+  expiresAt: number
+  consumedAt: number | null
+}
+
+export type OndoBPresentationResolution = {
+  request: OndoBPresentationRequest
+  approved: boolean
+  code: "PRESENTATION_DENIED" | "PRESENTATION_REQUEST_EXPIRED" | "PRESENTATION_REPLAY" | null
+}
+
 export const KTOUR_ID_SETUP_TTL_MS = 10 * 60 * 1000
 export const KTOUR_ID_CREDENTIAL_TTL_MS = 2 * 60 * 60 * 1000
+export const KTOUR_ID_PRESENTATION_TTL_MS = 2 * 60 * 1000
 
 export function createIdentitySetupSessionB(
   origin: OndoBIdentitySetupOrigin,
@@ -100,4 +114,39 @@ export function createSimulatedCredentialB(
 
 export function isSimulatedCredentialActiveB(credential: OndoBSimulatedCredential, now = Date.now()) {
   return now >= credential.issuedAt && now < credential.expiresAt
+}
+
+export function createPresentationRequestB(
+  now = Date.now(),
+  nonce = `presentation:${now}`,
+): OndoBPresentationRequest {
+  return {
+    nonce,
+    issuedAt: now,
+    expiresAt: now + KTOUR_ID_PRESENTATION_TTL_MS,
+    consumedAt: null,
+  }
+}
+
+export function isPresentationRequestActiveB(request: OndoBPresentationRequest, now = Date.now()) {
+  return request.consumedAt === null && now >= request.issuedAt && now < request.expiresAt
+}
+
+export function resolvePresentationRequestB(
+  request: OndoBPresentationRequest,
+  decision: "approve" | "deny",
+  now = Date.now(),
+): OndoBPresentationResolution {
+  if (request.consumedAt !== null) {
+    return { request, approved: false, code: "PRESENTATION_REPLAY" }
+  }
+  if (now < request.issuedAt || now >= request.expiresAt) {
+    return { request, approved: false, code: "PRESENTATION_REQUEST_EXPIRED" }
+  }
+
+  const consumed = { ...request, consumedAt: now }
+  if (decision === "deny") {
+    return { request: consumed, approved: false, code: "PRESENTATION_DENIED" }
+  }
+  return { request: consumed, approved: true, code: null }
 }

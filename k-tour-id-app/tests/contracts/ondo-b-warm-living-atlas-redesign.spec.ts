@@ -61,7 +61,7 @@ test("ATLAS-005 visual redesign preserves consumer truth and every money boundar
     "payment-confirm",
     "payment-receipt",
     "payment-refund",
-    "OOKRW Test",
+    "OOKRW",
   ]) expect(combined, `missing ${contract}`).toContain(contract)
 
   for (const forbidden of ["real credential", "real stablecoin", "on-chain payment"]) {

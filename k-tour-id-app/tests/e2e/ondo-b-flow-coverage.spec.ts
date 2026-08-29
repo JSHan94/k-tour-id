@@ -229,7 +229,7 @@ test.describe("ONDO B canonical flow journeys", () => {
       await expect(stamp).toHaveAttribute("data-stamp-count", "9")
       await stamp.getByTestId("visit-proof-check").click()
       await expect(stamp).toHaveAttribute("data-stamp-count", "10")
-      await offer.getByTestId("payment-receipt").locator("details summary").click()
+      await offer.getByTestId("payment-receipt").getByTestId("commerce-refund-details").locator("summary").click()
       await offer.getByTestId("payment-refund").click()
       await expect(offer.getByTestId("payment-receipt")).toHaveAttribute("data-completion-kind", "refunded")
       const receipts = (await stored(page, "local", B_DEVICE_KEY)).commerceReceipts as Array<Record<string, unknown>>
@@ -382,13 +382,13 @@ test.describe("ONDO B canonical flow journeys", () => {
       await page.reload({ waitUntil: "domcontentloaded" })
       await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-save-state", "SAV-SAVED")
       const consumeCityNavigationAbort = allowBNextNavigationAbort(page, {
-        targetUrl: "/ondo-b?city=seoul",
+        targetUrl: "/?city=seoul",
         count: 1,
         minimumCount: 0,
       })
       await page.getByTestId("canonical-place-overlay").getByRole("button", { name: "Close place" }).click()
       await expect(page.getByTestId("canonical-place-overlay")).toBeHidden()
-      await expect(page).toHaveURL(/\/ondo-b\?city=seoul$/)
+      await expect(page).toHaveURL(/\/\?city=seoul$/)
       await page.getByTestId("nav-my").click()
       await page.getByTestId(`saved-venue-${CANONICAL_VENUE_ID}`).click()
       await expect(page.getByTestId("canonical-place-peek")).toHaveAttribute("data-venue-id", CANONICAL_VENUE_ID)

@@ -34,7 +34,7 @@ async function openFresh(browser: Browser, locale: Locale, profile: (typeof PROF
     }))
   }, { key: DEVICE_KEY, language: locale })
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await expect(page.locator("html")).toHaveAttribute("lang", locale)
   await expect(page.getByTestId("ondo-onboarding")).toBeVisible()
   return { context, page }
@@ -62,7 +62,7 @@ async function openCompleted(browser: Browser, locale: Locale, profile: (typeof 
     }))
   }, { key: DEVICE_KEY, language: locale })
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await expect(page.locator("html")).toHaveAttribute("lang", locale)
   await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
   return { context, page }
@@ -376,7 +376,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
     const context = await browser.newContext({ viewport: PROFILES[1], locale: "ja-JP" })
     const page = await context.newPage()
     await page.addInitScript((key) => localStorage.setItem(key, "{malformed"), DEVICE_KEY)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await expect(page.locator("html")).toHaveAttribute("lang", "ja")
     await expect(page.getByTestId("onboarding-step-value")).toContainText("ゲストの好みを設定")
     await context.close()

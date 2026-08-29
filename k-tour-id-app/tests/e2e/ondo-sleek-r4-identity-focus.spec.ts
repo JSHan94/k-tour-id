@@ -100,7 +100,7 @@ async function openLocalSignal(page: Page, locale: "en" | "ko", persona: "korean
 async function expectOnboardingTerminal(page: Page, locale: "en" | "ko", mode: "finish" | "skip" | "fallback") {
   const copy = COPY[locale]
   await seedFreshOnboarding(page, locale)
-  await page.goto(`/ondo-b${mode === "fallback" ? "?onboarding=failure" : ""}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/${mode === "fallback" ? "?onboarding=failure" : ""}`, { waitUntil: "domcontentloaded" })
   const onboarding = page.getByTestId("ondo-onboarding")
 
   if (mode === "skip") {
@@ -128,7 +128,7 @@ async function expectGlobalAfter19Terminal(page: Page, locale: "en" | "ko") {
     session: { account: "ACC-ACTIVE", person: "PER-VERIFIED", age: "AGE-UNVERIFIED", paymentKyc: "PKY-NOT-STARTED" },
     local: { autoNight: false },
   })
-  await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+  await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
   await page.getByTestId("after19-toggle").click()
   await page.getByTestId("after19-prompt-layer").getByRole("button", { name: copy.after19Prompt, exact: true }).click()
   const gate = page.getByTestId("ondo-gate-overlay")

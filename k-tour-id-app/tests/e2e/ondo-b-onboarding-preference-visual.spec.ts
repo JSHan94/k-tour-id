@@ -5,7 +5,7 @@ const DEVICE_KEY = "ondo-b.device.v1"
 async function openPreferences(page: Page, viewport: { width: number; height: number }) {
   await page.setViewportSize(viewport)
   await page.addInitScript((key) => localStorage.removeItem(key), DEVICE_KEY)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByRole("button", { name: "Set guest preferences", exact: true }).click()
   await page.getByTestId("persona-travelling").click()
   await page.getByRole("button", { name: "Choose food preferences", exact: true }).click()
@@ -67,7 +67,7 @@ test("B-SETTINGS-VIS-002 Settings starts at its product title while device stora
       privateNotesByVenue: {},
     }))
   }, DEVICE_KEY)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-settings").click()
 
   const settings = page.getByTestId("ondo-b-settings-entry")

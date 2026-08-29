@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, type Request } from "@playwright/test"
 
-export const B_ROUTE = "/ondo-b"
+export const B_ROUTE = "/"
 export const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
 export const TABLE_ID = "table-seoul-night-bites"
 
@@ -61,14 +61,14 @@ const A = (proof: string) => ["actual", proof] as const
 const N = (proof: string) => ["not_applicable", proof] as const
 
 /**
- * Honest flow registry. `actual` means a browser interaction on `/ondo-b` proves it.
+ * Honest flow registry. `actual` means a browser interaction on `/` proves it.
  * `gap` means the Flow Catalog requires it but the fixed product SHA has no honest
  * reachable state. `not_applicable` is reserved for flows whose contract deliberately
  * falls back without a user-facing error/retry surface.
  */
 export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   flow("FL-001", "Guest Discover", {
-    ENTRY: A("real /ondo-b nation surface"), DECISION: A("Seoul compact-count/list/place selection"), CANCEL: A("close place and preserve city"),
+    ENTRY: A("real / nation surface"), DECISION: A("Seoul compact-count/list/place selection"), CANCEL: A("close place and preserve city"),
     ERROR: A("dedicated map-truth route abort latches data-map-state=error and keeps the sourced list usable"), RETRY: A("Retry map starts a fresh attempt and increments data-map-attempt to 2"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
   }),
   flow("FL-002", "Age proof to exact After19 venue", {
@@ -248,7 +248,7 @@ function exactBNextNavigationTarget(page: Page, targetUrl: string) {
   if (requestedTarget.origin !== pageUrl.origin || requestedTarget.pathname !== B_ROUTE
     || requestedTarget.username || requestedTarget.password
     || requestedTarget.hash || requestedTarget.searchParams.has("_rsc")) {
-    throw new Error("target must be the exact same-origin /ondo-b URL without credentials, a hash, or an _rsc parameter")
+    throw new Error("target must be the exact same-origin / URL without credentials, a hash, or an _rsc parameter")
   }
   // Use the same URLSearchParams serialization as strictNextNavigationAbort,
   // without sorting, so parameter values and order stay exact.

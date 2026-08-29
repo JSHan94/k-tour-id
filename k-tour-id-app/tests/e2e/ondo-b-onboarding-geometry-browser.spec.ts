@@ -10,7 +10,7 @@ async function resetAndOpenOnboarding(page: Page) {
     localStorage.removeItem("ondo.preferences.v3")
     sessionStorage.removeItem("ondo.session.v3")
   })
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
 }
 

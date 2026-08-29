@@ -17,7 +17,7 @@
 
 .root button:focus-visible,
 .root summary:focus-visible {
-  outline: 3px solid rgb(25 25 25 / 30%);
+  outline: 3px solid var(--ondo-focus, #ff72b8);
   outline-offset: 2px;
 }
 

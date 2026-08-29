@@ -16,6 +16,8 @@ import {
   PULSE_DISCLOSURE,
   pulseForVenue,
   pulseLevelLabel,
+  type PulseConfidenceB,
+  type PulseFreshnessB,
   type PulseLocalEvidenceB,
 } from "../pulse-b/pulse-model-b"
 import { editorialPlaceById, JEJU_EDITORIAL_PLACES, PULSE_COMPOSITION_DISCLOSURE, PULSE_PRODUCTION_DRIVER_DISCLOSURE, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
@@ -51,6 +53,45 @@ type MapLayoutMode = "measuring" | "ultra-short" | "compact-map" | "spacious-map
 type LocationState = "idle" | "locating" | "ready" | "denied" | "unsupported"
 type UserLocation = { longitude: number; latitude: number }
 const SEARCH_MAX_LENGTH = 120
+const AFTER19_BROWSE_SNAPSHOT_KEY = "ondo-b.after19.browse-snapshot.v1"
+
+type After19BrowseSnapshot = {
+  version: 1
+  city: Exclude<CityId, "jeju">
+  view: ViewMode
+  query: string
+  category: BDiscoveryCategory
+  center: [number, number] | null
+  zoom: number | null
+}
+
+function readAfter19BrowseSnapshot(): After19BrowseSnapshot | null {
+  try {
+    const value = JSON.parse(window.sessionStorage.getItem(AFTER19_BROWSE_SNAPSHOT_KEY) ?? "null") as Record<string, unknown> | null
+    if (!value || value.version !== 1 || (value.city !== "seoul" && value.city !== "busan")) return null
+    const view = value.view === "list" ? "list" : value.view === "map" ? "map" : null
+    const category = value.category
+    const validCategory = category === "all" || category === "korean" || category === "casual" || category === "japanese"
+      || category === "chinese" || category === "global" || category === "night" || category === "specialty"
+    const center = Array.isArray(value.center) && value.center.length === 2 && value.center.every((part) => typeof part === "number" && Number.isFinite(part))
+      ? value.center as [number, number]
+      : null
+    const zoom = typeof value.zoom === "number" && Number.isFinite(value.zoom) ? value.zoom : null
+    if (!view || !validCategory) return null
+    return { version: 1, city: value.city, view, query: typeof value.query === "string" ? value.query.slice(0, SEARCH_MAX_LENGTH) : "", category, center, zoom }
+  } catch {
+    return null
+  }
+}
+
+function persistAfter19BrowseSnapshot(snapshot: After19BrowseSnapshot | null) {
+  try {
+    if (snapshot) window.sessionStorage.setItem(AFTER19_BROWSE_SNAPSHOT_KEY, JSON.stringify(snapshot))
+    else window.sessionStorage.removeItem(AFTER19_BROWSE_SNAPSHOT_KEY)
+  } catch {
+    // The in-memory snapshot below remains available when session storage is blocked.
+  }
+}
 
 const SOURCE_ID = "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
 const SOURCE_DATE = CANONICAL_MAP_VENUES_COMPACT[0]?.sourceSnapshotAt.slice(0, 10) ?? "2026-08-19"
@@ -96,7 +137,7 @@ const COPY = {
     editorialMapLoading: "Loading the Jeju map…",
     noResultsTitle: "No places match",
     noResultsBody: "Clear the search and category to see every place in this city.",
-    noResultsBodyLocked: "Clear the search to see every pub and café in this city.",
+    noResultsBodyLocked: "Clear the search to see every bar and pub in this city.",
     clearResults: "Clear search and category",
     clearSearch: "Clear search",
     mapKey: "ONDO temperature · place groups",
@@ -155,7 +196,7 @@ const COPY = {
     editorialMapLoading: "제주 지도를 불러오는 중…",
     noResultsTitle: "일치하는 장소가 없어요",
     noResultsBody: "검색어와 분류를 초기화하면 이 도시의 모든 장소를 볼 수 있어요.",
-    noResultsBodyLocked: "검색어를 지우면 이 도시의 주점·카페를 모두 볼 수 있어요.",
+    noResultsBodyLocked: "검색어를 지우면 이 도시의 주점을 모두 볼 수 있어요.",
     clearResults: "검색어와 업태 초기화",
     clearSearch: "검색어 지우기",
     mapKey: "온도 · 장소 묶음",
@@ -214,7 +255,7 @@ const COPY = {
     editorialMapLoading: "済州の地図を読み込み中…",
     noResultsTitle: "一致する場所がありません",
     noResultsBody: "検索語と分類を解除すると、この都市のすべての場所を確認できます。",
-    noResultsBodyLocked: "検索語を解除すると、この都市のパブ・カフェをすべて確認できます。",
+    noResultsBodyLocked: "検索語を解除すると、この都市の居酒屋・パブを確認できます。",
     clearResults: "検索語と業種を解除",
     clearSearch: "検索語を解除",
     mapKey: "ONDO温度・場所グループ",
@@ -252,6 +293,19 @@ const TEMPERATURE_NAME: Record<OndoBLocale, string> = {
   ja: "ONDO温度",
 }
 
+const TEMPERATURE_FRESHNESS: Record<PulseFreshnessB, Record<OndoBLocale, string>> = {
+  "curated-snapshot": { en: "curated snapshot", ko: "선별 스냅샷", ja: "選定スナップショット" },
+  growing: { en: "recently updated", ko: "최근 업데이트", ja: "最近更新" },
+  limited: { en: "limited signals", ko: "신호 부족", ja: "シグナル不足" },
+}
+
+const TEMPERATURE_CONFIDENCE: Record<PulseConfidenceB, Record<OndoBLocale, string>> = {
+  high: { en: "high", ko: "높음", ja: "高い" },
+  medium: { en: "medium", ko: "보통", ja: "中程度" },
+  low: { en: "low", ko: "낮음", ja: "低い" },
+  limited: { en: "limited", ko: "신호 부족", ja: "限定的" },
+}
+
 const NEXT_LOCALE: Record<OndoBLocale, OndoBLocale> = { en: "ja", ja: "ko", ko: "en" }
 const NEXT_LOCALE_LABEL: Record<OndoBLocale, string> = { en: "JA", ja: "KO", ko: "EN" }
 const NEXT_LOCALE_ACCESSIBLE_LABEL: Record<OndoBLocale, string> = {
@@ -269,6 +323,12 @@ const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; ja: string;
   global: { en: "Western & international", ko: "경양식·외국음식", ja: "洋食・各国料理", compact: { en: "Western", ko: "외국음식", ja: "洋食・各国" }, short: "G" },
   night: { en: "Pubs & cafés", ko: "주점·카페", ja: "パブ・カフェ", compact: { en: "Pubs & cafés", ko: "주점·카페", ja: "パブ・カフェ" }, short: "P" },
   specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", ja: "焼き物・専門店", compact: { en: "Grills", ko: "구이·횟집", ja: "焼き物・専門" }, short: "S" },
+}
+
+const AFTER19_CATEGORY_LABEL: Record<OndoBLocale, string> = {
+  en: "Bars & pubs",
+  ko: "주점",
+  ja: "居酒屋・パブ",
 }
 
 const MAP_VENUES = Object.freeze([...CANONICAL_MAP_VENUES_COMPACT].sort((left, right) => (
@@ -622,12 +682,7 @@ function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId,
       {orderedVenues.slice(0, visibleCount).map(({ venue, pulse }) => {
         const presentation = venueNamePresentation(venue.name.ko, locale)
         const category = CATEGORY[venue.primaryCategory]
-        const pulseSummary = pulse.score == null
-          ? `${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(pulse.level, locale)}`
-          : `${TEMPERATURE_NAME[locale]} ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)}`
-        const pulseDetail = pulse.signalCount == null
-          ? PULSE_DISCLOSURE[locale]
-          : `${pulse.signalCount} ${copy.pulseSignals} · ${PULSE_DISCLOSURE[locale]}`
+        const pulseSummary = `${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(pulse.level, locale)}`
         return (
           <li key={venue.id} data-venue-id={venue.id} data-pulse-priority={pulse.score == null ? undefined : pulse.level}>
             <button
@@ -637,23 +692,24 @@ function VenueList({ venues, locale, localPulseEvidenceByVenue, selectedVenueId,
               aria-haspopup="dialog"
               aria-expanded={selectedVenueId === venue.id}
               aria-controls={selectedVenueId === venue.id ? "canonical-place-dialog" : undefined}
-              aria-label={`${presentation.officialName} · ${presentation.officialNameLabel} · ${presentation.transliteration} · ${presentation.transliterationLabel} · ${venueDistrictLabel(venue.cityId, venue.districtId, locale)} · ${category[locale]} · ${pulseSummary} · ${copy.categoryBasis}`}
+              aria-label={`${presentation.officialName} · ${presentation.transliteration} · ${venueDistrictLabel(venue.cityId, venue.districtId, locale)} · ${category[locale]} · ${pulseSummary}`}
             >
               <span className={styles.categoryBadge}>{category.short}</span>
               <span>
                 <small>{venueDistrictLabel(venue.cityId, venue.districtId, locale)} · {category[locale]}</small>
                 <strong data-testid="official-source-name">{presentation.officialName}</strong>
-                <em
+                <span
                   className={styles.listPulse}
+                  role="img"
                   data-testid="ondo-b-list-pulse"
                   data-pulse-level={pulse.level}
                   data-pulse-numeric="hidden"
-                  aria-label={`${pulseSummary} · ${pulseDetail}${pulse.localEvidence ? ` · ${copy.pulseLocal}` : ""}`}
+                  aria-label={`${pulseSummary}${pulse.localEvidence ? ` · ${copy.pulseLocal}` : ""}`}
                 >
                   <span className={styles.listPulseSignal} aria-hidden="true"><i /><i /><i /></span>
-                  <span className={styles.srOnly}>{pulseSummary} · {pulseDetail}</span>
+                  <span className={styles.srOnly}>{pulseSummary}</span>
                   {pulse.localEvidence ? <span className={styles.srOnly}>{copy.pulseLocal}</span> : null}
-                </em>
+                </span>
                 <em className={styles.srOnly}>{copy.officialName}</em>
                 <small className={locale === "ko" ? styles.srOnly : styles.transliterationTruth}><span>{presentation.transliteration}</span><span className={styles.srOnly}> · {presentation.transliterationLabel}</span></small>
                 <small className={styles.srOnly}>{copy.categoryBasis}</small>
@@ -685,14 +741,8 @@ export function MapEntryB() {
   const filterCameraSignatureRef = useRef("")
   const after19WasActiveRef = useRef(false)
   const after19ActiveRef = useRef(false)
-  const after19BrowseSnapshotRef = useRef<{
-    city: Exclude<CityId, "jeju">
-    view: ViewMode
-    query: string
-    category: BDiscoveryCategory
-    center: [number, number] | null
-    zoom: number | null
-  } | null>(null)
+  const after19BrowseSnapshotRef = useRef<After19BrowseSnapshot | null>(null)
+  const pendingCityFocusRef = useRef<CityId | null>(null)
   const [city, setCity] = useState<CityId | null>(null)
   const [view, setView] = useState<ViewMode>("map")
   const [query, setQuery] = useState("")
@@ -709,6 +759,10 @@ export function MapEntryB() {
   const [after19Active, setAfter19Active] = useState(false)
   after19ActiveRef.current = after19Active
   currentCityRef.current = city
+  // After 19 owns one visual mode across every city. Jeju keeps its editorial
+  // source semantics, so only the bar-type filtering is withheld there.
+  const after19ThemeActive = after19Active
+  const after19FilterActive = after19Active && city !== "jeju"
   const selectedVenueId = state.surface.kind === "venue" ? state.surface.venueId : null
   const [selectedEditorialPlaceId, setSelectedEditorialPlaceId] = useState<EditorialPlaceB["id"] | null>(null)
   const selectedVenue = selectedVenueId ? CANONICAL_MAP_VENUES_COMPACT.find((venue) => venue.id === selectedVenueId) ?? null : null
@@ -716,17 +770,34 @@ export function MapEntryB() {
   const selectedPulse = selectedVenue ? pulseForVenue(selectedVenue.id, state.localPulseEvidenceByVenue[selectedVenue.id] ?? null) : null
   const effectiveView: ViewMode = city === "jeju" ? "map" : mapLayoutMode === "ultra-short" ? "list" : view
   const categoryOptions = Object.keys(CATEGORY) as BDiscoveryCategory[]
-  const categoryRailItems = after19Active ? (["night"] as BDiscoveryCategory[]) : categoryOptions
+  const categoryRailItems = after19FilterActive ? (["night"] as BDiscoveryCategory[]) : categoryOptions
 
   useEffect(() => setEditorialOpen(false), [city])
+
+  useLayoutEffect(() => {
+    if (!city || pendingCityFocusRef.current !== city) return
+    pendingCityFocusRef.current = null
+    const focusEnteredCity = () => {
+      const target = city === "jeju"
+        ? document.querySelector<HTMLElement>("[data-testid='ondo-b-editorial-collection-marker']")
+          ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-city-back']")
+        : document.querySelector<HTMLInputElement>("[data-testid='ondo-b-search']")
+      target?.focus({ preventScroll: true })
+    }
+    focusEnteredCity()
+    window.requestAnimationFrame(focusEnteredCity)
+  }, [city])
 
   useEffect(() => {
     const wasActive = after19WasActiveRef.current
     after19WasActiveRef.current = after19Active
-    if (after19Active === wasActive || !city || city === "jeju") return
+    if (after19Active === wasActive || !city) return
     if (after19Active) {
+      if (city === "jeju") return
       const currentCenter = mapRef.current?.getCenter()
-      after19BrowseSnapshotRef.current = {
+      const existing = readAfter19BrowseSnapshot()
+      const snapshot: After19BrowseSnapshot = existing ?? {
+        version: 1,
         city,
         view,
         query,
@@ -734,19 +805,30 @@ export function MapEntryB() {
         center: currentCenter ? [currentCenter.lng, currentCenter.lat] : null,
         zoom: mapRef.current?.getZoom() ?? null,
       }
+      after19BrowseSnapshotRef.current = snapshot
+      if (!existing) persistAfter19BrowseSnapshot(snapshot)
       setCategory("night")
       replaceBDiscoveryCityContext({ city, view, query, category: "night" })
       return
     }
-    const snapshot = after19BrowseSnapshotRef.current
+    const snapshot = after19BrowseSnapshotRef.current ?? readAfter19BrowseSnapshot()
     after19BrowseSnapshotRef.current = null
-    if (!snapshot || snapshot.city !== city) return
+    persistAfter19BrowseSnapshot(null)
+    if (!snapshot) return
+    setCity(snapshot.city)
     setView(snapshot.view)
     setQuery(snapshot.query)
     setCategory(snapshot.category)
-    replaceBDiscoveryCityContext({ city, view: snapshot.view, query: snapshot.query, category: snapshot.category })
+    replaceBDiscoveryCityContext({ city: snapshot.city, view: snapshot.view, query: snapshot.query, category: snapshot.category })
     if (snapshot.center && snapshot.zoom != null) {
-      window.requestAnimationFrame(() => mapRef.current?.jumpTo({ center: snapshot.center!, zoom: snapshot.zoom! }))
+      const restoreCamera = (attempt = 0) => {
+        if (currentCityRef.current === snapshot.city && mapRef.current) {
+          mapRef.current.jumpTo({ center: snapshot.center!, zoom: snapshot.zoom! })
+        } else if (attempt < 10) {
+          window.requestAnimationFrame(() => restoreCamera(attempt + 1))
+        }
+      }
+      window.requestAnimationFrame(() => restoreCamera())
     }
   }, [after19Active])
 
@@ -873,10 +955,11 @@ export function MapEntryB() {
   const venues = useMemo(() => MAP_VENUES.filter((venue) => {
     if (!city || venue.cityId !== city) return false
     if (category !== "all" && venue.primaryCategory !== category) return false
+    if (after19FilterActive && !venue.after19PresentationEligible) return false
     const categoryCopy = CATEGORY[venue.primaryCategory]
     const haystack = `${venue.name.ko} ${venue.name.en} ${venueDisplayName(venue.name.ko, "en")} ${categoryCopy.ko} ${categoryCopy.en} ${venue.districtId} ${venueDistrictLabel(venue.cityId, venue.districtId, "en")} ${mapFoodIntentAliases(venue.name.ko).join(" ")}`.toLowerCase()
     return !query.trim() || haystack.includes(query.trim().toLowerCase())
-  }), [category, city, query])
+  }), [after19FilterActive, category, city, query])
   const filteredMap = query.trim().length > 0 || category !== "all"
   const curatedPulseVenues = useMemo(() => venues.flatMap((venue) => {
     const pulse = pulseForVenue(venue.id, state.localPulseEvidenceByVenue[venue.id] ?? null)
@@ -1301,11 +1384,27 @@ export function MapEntryB() {
   useEffect(() => {
     const map = mapRef.current
     if (!map || !map.getLayer("ondo-night-dim")) return
-    const color = after19Active ? AFTER19_PULSE_LEVEL_EXPRESSION : PULSE_LEVEL_EXPRESSION
-    map.setPaintProperty("ondo-night-dim", "fill-opacity", after19Active ? (city === "jeju" ? 0.46 : 0.52) : 0)
+    const color = after19ThemeActive ? AFTER19_PULSE_LEVEL_EXPRESSION : PULSE_LEVEL_EXPRESSION
+    // Night mode is a real basemap palette, not a translucent grey veil. Keep
+    // ONDO's heat layers untouched so the neon temperature remains legible.
+    map.setPaintProperty("ondo-night-dim", "fill-opacity", 0)
+    map.setPaintProperty("canvas", "background-color", after19ThemeActive ? "#090a0f" : "#fbfbfa")
+    map.setPaintProperty("park", "fill-color", after19ThemeActive ? "#101816" : "#edf0e9")
+    map.setPaintProperty("park", "fill-opacity", after19ThemeActive ? 0.9 : 0.62)
+    map.setPaintProperty("water", "fill-color", after19ThemeActive ? "#0a121b" : "#e8eef0")
+    map.setPaintProperty("buildings", "fill-color", after19ThemeActive ? "#181820" : "#f3f3f1")
+    map.setPaintProperty("buildings", "fill-outline-color", after19ThemeActive ? "#2c2c38" : "#e9e9e6")
+    map.setPaintProperty("buildings", "fill-opacity", after19ThemeActive ? 0.78 : 0.58)
+    map.setPaintProperty("roads-minor", "line-color", after19ThemeActive ? "#242630" : "#e4e1dc")
+    map.setPaintProperty("roads-major", "line-color", after19ThemeActive ? "#44414f" : "#d8d4cd")
+    map.setPaintProperty("roads-secondary", "line-color", after19ThemeActive ? "#34333f" : "#dedbd5")
+    map.setPaintProperty("city-boundaries", "line-color", after19ThemeActive ? "#5a5666" : "#c8c3ba")
+    map.setPaintProperty("place-labels", "text-color", after19ThemeActive ? "#d7d3dc" : "#4f4b45")
+    map.setPaintProperty("place-labels", "text-halo-color", after19ThemeActive ? "#090a0f" : "#fbfbfa")
+    map.setPaintProperty("place-labels", "text-halo-width", after19ThemeActive ? 1.4 : 1.2)
     if (map.getLayer("ondo-temperature-field")) {
-      map.setPaintProperty("ondo-temperature-field", "heatmap-color", after19Active ? AFTER19_HEAT_COLOR : PULSE_HEAT_COLOR)
-      map.setPaintProperty("ondo-temperature-field", "heatmap-opacity", after19Active
+      map.setPaintProperty("ondo-temperature-field", "heatmap-color", after19ThemeActive ? AFTER19_HEAT_COLOR : PULSE_HEAT_COLOR)
+      map.setPaintProperty("ondo-temperature-field", "heatmap-opacity", after19ThemeActive
         ? ["interpolate", ["linear"], ["zoom"], 8, 0.62, 12, 0.82, 15, 0.46]
         : ["interpolate", ["linear"], ["zoom"], 8, 0.5, 12, 0.68, 15, 0.32])
     }
@@ -1318,34 +1417,34 @@ export function MapEntryB() {
       if (map.getLayer(layerId)) map.setPaintProperty(layerId, "circle-color", color)
     }
     if (map.getLayer("ondo-clusters")) {
-      map.setPaintProperty("ondo-clusters", "circle-color", after19Active ? "rgba(23,21,29,.82)" : "rgba(255,255,255,.34)")
-      map.setPaintProperty("ondo-clusters", "circle-stroke-color", after19Active
+      map.setPaintProperty("ondo-clusters", "circle-color", after19ThemeActive ? "rgba(23,21,29,.82)" : "rgba(255,255,255,.34)")
+      map.setPaintProperty("ondo-clusters", "circle-stroke-color", after19ThemeActive
         ? ["step", ["get", "point_count"], "rgba(255,255,255,.28)", 15, "rgba(255,114,184,.48)", 50, "rgba(255,114,184,.7)"]
         : ["step", ["get", "point_count"], "rgba(74,70,65,.30)", 15, "rgba(155,68,52,.38)", 50, "rgba(122,32,72,.48)"])
     }
-    if (map.getLayer("ondo-points")) map.setPaintProperty("ondo-points", "circle-color", after19Active ? "#a7a1af" : "#716d67")
+    if (map.getLayer("ondo-points")) map.setPaintProperty("ondo-points", "circle-color", after19ThemeActive ? "#a7a1af" : "#716d67")
     if (map.getLayer("ondo-editorial-selected-halo")) {
-      map.setPaintProperty("ondo-editorial-selected-halo", "circle-color", after19Active ? "#ff72b8" : "#171717")
-      map.setPaintProperty("ondo-editorial-selected-halo", "circle-opacity", after19Active ? 0.24 : 0.12)
+      map.setPaintProperty("ondo-editorial-selected-halo", "circle-color", after19ThemeActive ? "#ff72b8" : "#171717")
+      map.setPaintProperty("ondo-editorial-selected-halo", "circle-opacity", after19ThemeActive ? 0.24 : 0.12)
     }
     if (map.getLayer("ondo-editorial-points")) {
-      map.setPaintProperty("ondo-editorial-points", "circle-color", after19Active
+      map.setPaintProperty("ondo-editorial-points", "circle-color", after19ThemeActive
         ? ["case", ["==", ["get", "selected"], true], "#ff72b8", "#211d29"]
         : ["case", ["==", ["get", "selected"], true], "#171717", "#ffffff"])
-      map.setPaintProperty("ondo-editorial-points", "circle-stroke-color", after19Active ? "#ffd1e8" : "#171717")
+      map.setPaintProperty("ondo-editorial-points", "circle-stroke-color", after19ThemeActive ? "#ffd1e8" : "#171717")
     }
     if (map.getLayer("ondo-editorial-selected-label")) {
-      map.setPaintProperty("ondo-editorial-selected-label", "text-color", after19Active ? "#fff7fb" : "#171717")
-      map.setPaintProperty("ondo-editorial-selected-label", "text-halo-color", after19Active ? "rgba(20,14,24,.88)" : "rgba(255,255,255,.94)")
-      map.setPaintProperty("ondo-editorial-selected-label", "text-halo-width", after19Active ? 1 : 2)
+      map.setPaintProperty("ondo-editorial-selected-label", "text-color", after19ThemeActive ? "#fff7fb" : "#171717")
+      map.setPaintProperty("ondo-editorial-selected-label", "text-halo-color", after19ThemeActive ? "rgba(20,14,24,.88)" : "rgba(255,255,255,.94)")
+      map.setPaintProperty("ondo-editorial-selected-label", "text-halo-width", after19ThemeActive ? 1 : 2)
     }
     for (const layerId of ["ondo-selected-pulse-capsule", "ondo-selected-pulse-capsule-rising", "ondo-selected-pulse-capsule-warming"]) {
       if (!map.getLayer(layerId)) continue
-      map.setPaintProperty(layerId, "text-color", after19Active ? "#fff7fb" : "#29231f")
-      map.setPaintProperty(layerId, "text-halo-color", after19Active ? "rgba(20,14,24,.72)" : "rgba(255,253,249,.4)")
-      map.setPaintProperty(layerId, "text-halo-width", after19Active ? 1 : 0.5)
+      map.setPaintProperty(layerId, "text-color", after19ThemeActive ? "#fff7fb" : "#29231f")
+      map.setPaintProperty(layerId, "text-halo-color", after19ThemeActive ? "rgba(20,14,24,.72)" : "rgba(255,253,249,.4)")
+      map.setPaintProperty(layerId, "text-halo-width", after19ThemeActive ? 1 : 0.5)
     }
-  }, [after19Active, city, mapState])
+  }, [after19ThemeActive, city, mapState])
 
   useEffect(() => {
     const directorySource = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined
@@ -1379,6 +1478,7 @@ export function MapEntryB() {
   function chooseCity(next: CityId) {
     const commitSelection = () => {
       const nextCategory: BDiscoveryCategory = after19Active && next !== "jeju" ? "night" : "all"
+      pendingCityFocusRef.current = next
       enterBDiscoveryCity(next)
       setCity(next)
       setView("map")
@@ -1520,7 +1620,8 @@ export function MapEntryB() {
         data-map-root-block-size={mapRootBlockSize.toFixed(1)}
         data-selected-venue-id={selectedVenueId ?? "none"}
         data-selected-editorial-place-id={selectedEditorialPlaceId ?? "none"}
-        data-after19-active={after19Active ? "true" : "false"}
+        data-after19-active={after19ThemeActive ? "true" : "false"}
+        data-after19-session-active={after19Active ? "true" : "false"}
       >
         <p id="ondo-b-map-instruction" className={styles.srOnly} aria-hidden={editorialOpen ? true : undefined}>{city === "jeju" ? copy.editorialMapA11y : copy.mapA11y}</p>
         <header className={styles.cityHeader} data-testid="ondo-b-city-header">
@@ -1532,16 +1633,19 @@ export function MapEntryB() {
           {city !== "jeju" ? <>
             <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={MAP_UI[locale].clearSearch}><X size={16} /></button> : null}</div>
             <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
-              {categoryRailItems.map((item) => <button key={item} type="button" aria-label={CATEGORY[item][locale]} aria-pressed={category === item} onClick={() => { const nextCategory = after19Active ? "night" : item; setCategory(nextCategory); updateCityContext({ category: nextCategory }) }}>{mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : CATEGORY[item][locale]}</button>)}
+              {categoryRailItems.map((item) => {
+                const label = after19FilterActive ? AFTER19_CATEGORY_LABEL[locale] : CATEGORY[item][locale]
+                return <button key={item} type="button" aria-label={label} aria-pressed={category === item} onClick={() => { const nextCategory = after19FilterActive ? "night" : item; setCategory(nextCategory); updateCityContext({ category: nextCategory }) }}>{after19FilterActive ? label : mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : label}</button>
+              })}
             </div>
           </> : null}
         </header>
 
-        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? MAP_UI[locale].editorialRegion : MAP_UI[locale].mapRegion} aria-describedby="ondo-b-map-instruction ondo-b-pulse-marker-accessible-detail ondo-b-result-truth" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
+        <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? MAP_UI[locale].editorialRegion : MAP_UI[locale].mapRegion} aria-describedby="ondo-b-map-instruction ondo-b-result-truth" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
         <ul id="ondo-b-pulse-marker-accessible-detail" className={styles.srOnly} data-testid="ondo-b-pulse-marker-accessible-detail" aria-hidden={editorialOpen ? true : undefined}>
           {curatedPulseVenues.map(({ venue, pulse }) => (
             <li key={venue.id}>
-              {`${venueDisplayName(venue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}
+              {`${venueDisplayName(venue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${TEMPERATURE_FRESHNESS[pulse.freshness][locale]} · ${MAP_UI[locale].confidence} ${TEMPERATURE_CONFIDENCE[pulse.confidence][locale]}`}
             </li>
           ))}
         </ul>
@@ -1572,6 +1676,9 @@ export function MapEntryB() {
           />
           {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} presentation={effectiveView === "list" || mapState === "error" ? "list" : "map"} onOpenChange={setEditorialOpen} onSelectEditorialPlace={city === "jeju" ? focusEditorialPlace : undefined} /> : null}
         </div>
+        {city !== "jeju" && effectiveView === "map" && mapState !== "error" && (!online || locationState === "denied" || locationState === "unsupported") ? (
+          <p className={styles.locationFeedback} data-testid="ondo-b-location-feedback" role="alert" aria-live="assertive">{locationMessage}</p>
+        ) : null}
 
         <div className={styles.mapChrome} data-testid="ondo-b-map-chrome">
           {city === "jeju" ? <details className={styles.editorialPlaceList} data-testid="ondo-b-editorial-place-list">
@@ -1639,7 +1746,7 @@ export function MapEntryB() {
                             data-temperature-score={pulse.score}
                             data-level={pulse.level}
                             data-pulse-place-priority={pulse.level}
-                            aria-label={`${venueDisplayName(venue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${pulse.freshness} · ${MAP_UI[locale].confidence} ${pulse.confidence}`}
+                            aria-label={`${venueDisplayName(venue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(pulse.level, locale)} · ${MAP_UI[locale].freshness} ${TEMPERATURE_FRESHNESS[pulse.freshness][locale]} · ${MAP_UI[locale].confidence} ${TEMPERATURE_CONFIDENCE[pulse.confidence][locale]}`}
                             onClick={() => selectVenue(venue)}
                           >
                             <span>{venueDisplayName(venue.name.ko, locale)}</span>
@@ -1672,10 +1779,10 @@ export function MapEntryB() {
           <div className={styles.listPanel} data-testid="ondo-b-list-panel">
             {mapState === "error" ? <div className={styles.mapError} role="status" data-testid="ondo-b-map-fallback-status"><span>{copy.mapUnavailable}</span><button type="button" onClick={retryMap}>{copy.retryMap}</button></div> : null}
             <span className={styles.srOnly} data-testid="ondo-b-pulse-disclosure">{PULSE_DISCLOSURE[locale]}</span>
-            <VenueList venues={venues} locale={locale} localPulseEvidenceByVenue={state.localPulseEvidenceByVenue} selectedVenueId={selectedVenueId} visibleCount={visibleCount} categoryLocked={after19Active} onClear={() => { const nextCategory = after19Active ? "night" : "all"; setQuery(""); setCategory(nextCategory); updateCityContext({ query: "", category: nextCategory }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} />
+            <VenueList venues={venues} locale={locale} localPulseEvidenceByVenue={state.localPulseEvidenceByVenue} selectedVenueId={selectedVenueId} visibleCount={visibleCount} categoryLocked={after19FilterActive} onClear={() => { const nextCategory = after19FilterActive ? "night" : "all"; setQuery(""); setCategory(nextCategory); updateCityContext({ query: "", category: nextCategory }) }} onMore={() => setVisibleCount((count) => Math.min(venues.length, count + 30))} onSelect={selectVenue} />
           </div>
         ) : null}
-        {selectedVenue && selectedPulse ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-marker-status">{venueDisplayName(selectedVenue.name.ko, locale)} · {selectedPulse.score == null ? `${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(selectedPulse.level, locale)}` : `${TEMPERATURE_NAME[locale]} ${selectedPulse.score} · ${pulseLevelLabel(selectedPulse.level, locale)}`}</span> : null}
+        {selectedVenue && selectedPulse ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-marker-status">{`${venueDisplayName(selectedVenue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(selectedPulse.level, locale)}`}</span> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
       </section>
     </div>

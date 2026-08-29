@@ -51,7 +51,7 @@ test("Tables stays polished and closable at 360, 390, and 430 CSS pixels", async
   await seed(page)
   for (const width of [360, 390, 430]) {
     await page.setViewportSize({ width, height: 800 })
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-tables").click()
     const entry = page.getByTestId("tables-entry")
     await expect(entry.getByRole("heading", { name: "ONDO Tables" })).toBeVisible()
@@ -78,7 +78,7 @@ test("short-landscape Table modal reclaims the hidden navigation lane in EN and 
 
   for (const locale of ["en", "ko"] as const) {
     await seed(page, locale)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     const nav = page.getByTestId("ondo-main-nav")
     await page.getByTestId("nav-tables").click()
     await page.getByTestId(`table-open-${TABLE_ID}`).click()
@@ -121,7 +121,7 @@ test("short-landscape Table modal reclaims the hidden navigation lane in EN and 
 test("My Korea, ID · Wallet, and Settings share natural scrolling and premium touch targets", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 })
   await seed(page, "ko")
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
 
   for (const [nav, root] of [
     ["nav-my", "ondo-b-my-korea-entry"],
@@ -149,7 +149,7 @@ test("visible direct feature text stays at least 12px in EN and KO across phone 
   for (const locale of ["en", "ko"] as const) {
     for (const viewport of [{ width: 360, height: 800 }, { width: 390, height: 844 }, { width: 430, height: 800 }, { width: 844, height: 390 }]) {
       await page.setViewportSize(viewport)
-      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await page.goto("/", { waitUntil: "domcontentloaded" })
       await page.evaluate(({ key, nextLocale }) => {
         localStorage.setItem(key, JSON.stringify({
           locale: nextLocale,

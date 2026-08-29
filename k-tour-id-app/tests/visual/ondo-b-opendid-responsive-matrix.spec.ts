@@ -82,7 +82,7 @@ for (const locale of LOCALES) {
       page.on("pageerror", (error) => pageErrors.push(error.message))
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
       await seed(page, locale)
-      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await page.goto("/", { waitUntil: "domcontentloaded" })
       await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", locale)
       await page.getByTestId("nav-id").click()
       await page.getByTestId("traveler-id-ktour-id-open").click()

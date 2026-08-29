@@ -24,6 +24,7 @@ import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import type { OndoBLocalSignalTag } from "../shared/state/ondo-b-provider"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import styles from "./local-signal-layer-b.module.css"
 
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[href],[tabindex]:not([tabindex='-1'])"
@@ -366,7 +367,7 @@ export function LocalSignalLayerB() {
       revealPhotoState()
       return
     }
-    if (allowQaFailure && window.__ONDO_B_QA__?.localSignalPhoto === "failure" && !photoFailedOnce) {
+    if (allowQaFailure && readQaRuntime<{ localSignalPhoto?: "failure" }>()?.localSignalPhoto === "failure" && !photoFailedOnce) {
       setPhotoFile(file)
       setPhotoFailedOnce(true)
       setPhotoCanRetry(true)
@@ -534,7 +535,7 @@ export function LocalSignalLayerB() {
               <div className={styles.completion}>
                 <section ref={photoSectionRef} className={styles.photo} data-photo-stage={photoStage}>
                 <div><strong>{copy.photo}</strong><small>{copy.photoHelp}</small></div>
-                <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" onChange={selectPhoto} />
+                <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" tabIndex={-1} onChange={selectPhoto} />
                 {photoUrl ? <figure role="status"><img src={photoUrl} alt={copy.photoAlt} /><figcaption><button type="button" data-testid="local-signal-photo-replace" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.replacePhoto}</button><button type="button" data-testid="local-signal-photo-remove" onClick={removePhoto}><Trash2 size={16} aria-hidden="true" />{copy.removePhoto}</button></figcaption></figure> : null}
                     {photoError ? <p ref={photoErrorRef} role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" && photoCanRetry ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) void preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : <button type="button" data-testid="local-signal-photo-choose-another" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.photoChooseAnother}</button>}</p> : null}
                 {!photoUrl && !photoFailed ? <button type="button" className={styles.photoAdd} onClick={() => photoInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{copy.photo}</button> : null}

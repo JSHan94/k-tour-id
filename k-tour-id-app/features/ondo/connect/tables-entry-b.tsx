@@ -24,6 +24,7 @@ import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import styles from "./pulse-table-b.module.css"
 
 export const TABLE_VENUE_ID = "mois-0021cd596bc5b2a922ad"
@@ -47,7 +48,8 @@ const COPY = {
     pastEyebrow: "Previous Table in Seoul",
     title: "ONDO Tables",
     intro: "Small plans anchored to a real place, with the details you need before choosing a seat.",
-    truth: "Messages and photos stay in this tab. A confirmed plan is saved to My Korea on this device. Nothing is booked, sent to the venue, or charged.",
+    privacy: "Table privacy",
+    truth: "Messages and photos stay with this Table. A joined plan is saved to My Korea on this device.",
     official: "Place",
     officialBoundary: "The host chose this place and provides the gathering details.",
     timeLabel: "When",
@@ -133,7 +135,8 @@ const COPY = {
     pastEyebrow: "서울에서 지난 테이블",
     title: "온도 테이블",
     intro: "실제 장소에 연결된 작은 약속을 보고, 참여에 필요한 정보를 한눈에 확인하세요.",
-    truth: "메시지와 사진은 이 탭에만 남고, 확정한 계획만 이 기기의 My Korea에 저장돼요. 예약·장소 전송·결제는 일어나지 않습니다.",
+    privacy: "테이블 개인정보",
+    truth: "메시지와 사진은 이 테이블에만 남고, 참여한 일정은 이 기기의 My Korea에 저장돼요.",
     official: "장소",
     officialBoundary: "호스트가 고른 장소이며, 모임 정보도 호스트가 알려드려요.",
     timeLabel: "시간",
@@ -219,7 +222,8 @@ const COPY = {
     pastEyebrow: "ソウルで開催済み",
     title: "ONDOテーブル",
     intro: "実在する場所を起点にした少人数の予定です。席を選ぶ前に必要な情報を確認できます。",
-    truth: "メッセージと写真はこのタブだけに残り、確定した予定だけがこの端末のマイ韓国に保存されます。予約、店舗への送信、決済は行われません。",
+    privacy: "Tableのプライバシー",
+    truth: "メッセージと写真はこのTableにだけ残り、参加した予定はこの端末のマイ韓国に保存されます。",
     official: "場所",
     officialBoundary: "ホストが選んだ場所です。集まりの詳細もホストが案内します。",
     timeLabel: "日時",
@@ -305,9 +309,9 @@ const COPY = {
 type TableCopy = (typeof COPY)[SocialLocale]
 
 const TABLE_EDITORIAL = {
-  en: { alt: "Four fictional travelers sharing a Korean meal", caption: "Editorial scene · fictional diners, not this Table or venue" },
-  ko: { alt: "한국 음식을 함께 나누는 가상의 여행자 네 명", caption: "에디토리얼 이미지 · 이 테이블이나 장소의 실제 참여자가 아닙니다" },
-  ja: { alt: "韓国料理を囲む架空の旅行者4人", caption: "編集イメージ · このTableや店舗の実際の参加者ではありません" },
+  en: { alt: "Four travelers sharing a Korean meal", caption: "Shared dinner inspiration" },
+  ko: { alt: "한국 음식을 함께 나누는 여행자 네 명", caption: "함께하는 저녁 식사 이미지" },
+  ja: { alt: "韓国料理を囲む4人の旅行者", caption: "一緒に楽しむ夕食のイメージ" },
 } satisfies Record<SocialLocale, { alt: string; caption: string }>
 
 export function PulseTablesEntryB() {
@@ -586,7 +590,7 @@ export function PulseTablesEntryB() {
 
   function sendMessage() {
     if (!compose.trim() && !chatImage) return
-    const shouldFail = window.__ONDO_B_QA__?.tableMessage === "failure" && !failedOnce
+    const shouldFail = readQaRuntime<{ tableMessage?: "failure" }>()?.tableMessage === "failure" && !failedOnce
     setMessages((current) => [...current, { id: Date.now(), text: compose.trim(), imageUrl: chatImage, state: shouldFail ? "failed" : "ready" }])
     setCompose(""); setChatImage(null)
     if (shouldFail) setFailedOnce(true)
@@ -619,7 +623,6 @@ export function PulseTablesEntryB() {
     <section className={styles.entry} data-testid="tables-entry" data-visual-direction="timeleft-warm-atlas">
       <header className={styles.entryHeader}>
         <p>{isUpcoming ? t.eyebrow : t.pastEyebrow}</p><h1>{t.title}</h1><span>{t.intro}</span>
-        <small className={styles.prototypeTruth} data-testid="tables-truth-notice">{t.truth}</small>
       </header>
 
       <figure className={styles.editorialBand} data-testid="tables-editorial-image">
@@ -632,7 +635,7 @@ export function PulseTablesEntryB() {
           <div className={styles.cardTop}><span>{isUpcoming ? t.tableOpen : t.tableClosed}</span><ShieldCheck size={18} aria-hidden="true" /></div>
           <h2>{t.tableTitle}</h2>
           <p>{t.tableSubtitle}</p>
-          <OfficialVenue venueName={venuePresentation.officialName} district={district} copy={t} />
+          <OfficialVenue venueName={locale === "ko" ? venuePresentation.officialName : venuePresentation.transliteration} officialName={venuePresentation.officialName} district={district} copy={t} />
           <PlanFields copy={t} />
           <button ref={openerRef} type="button" className={styles.openButton} data-testid={`table-open-${ACTIVE_TABLE_ID}`} onClick={openActiveTable}>{t.open}<ChevronRight size={17} aria-hidden="true" /></button>
         </article>
@@ -650,13 +653,14 @@ export function PulseTablesEntryB() {
             <div className={styles.detailBody}>
               <p className={styles.detailEyebrow}>{district} · {isUpcoming ? t.tableOpen : t.tableClosed}</p>
               <h2 id="table-b-title">{t.tableTitle}</h2>
-              <OfficialVenue venueName={venuePresentation.officialName} district={district} copy={t} />
+              <OfficialVenue venueName={locale === "ko" ? venuePresentation.officialName : venuePresentation.transliteration} officialName={venuePresentation.officialName} district={district} copy={t} />
               <PlanFields copy={t} />
               <aside className={styles.ageNotice}><ShieldCheck size={18} aria-hidden="true" /><span>{t.ageNotice}</span></aside>
 
               {joinStage === "idle" ? <section className={styles.joinPanel}>
                 <label htmlFor="table-join-draft">{t.draftLabel}</label>
                 <textarea id="table-join-draft" data-testid="table-join-draft" maxLength={280} value={draft} placeholder={t.draftHint} disabled={!isUpcoming} onChange={(event) => setDraft(event.target.value)} />
+                <details className={styles.tablePrivacy} data-testid="tables-truth-notice"><summary>{t.privacy}</summary><p>{t.truth}</p></details>
                 <button type="button" className={styles.primary} data-testid="table-join" disabled={!isUpcoming} onClick={beginJoin}>{isUpcoming ? t.join : t.pastJoin}</button>
               </section> : null}
 
@@ -689,7 +693,7 @@ export function PulseTablesEntryB() {
                   {chatImage ? <div className={styles.chatImage}><img src={chatImage} alt="" /><button type="button" onClick={removeChatImage} aria-label={t.removePhoto}><X size={15} aria-hidden="true" /></button></div> : null}
                   {chatImageError ? <p className={styles.messageError} data-testid="table-chat-image-error" role="alert">{chatImageError}</p> : null}
                   <label><span>{t.compose}</span><textarea data-testid="table-chat-compose" value={compose} onChange={(event) => setCompose(event.target.value)} /></label>
-                  <input ref={imageInputRef} className={styles.fileInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={t.attach} data-testid="table-chat-image" onChange={chooseImage} />
+                  <input ref={imageInputRef} className={styles.fileInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={t.attach} data-testid="table-chat-image" tabIndex={-1} onChange={chooseImage} />
                   <div><button type="button" className={styles.attachButton} onClick={() => imageInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{chatImage ? t.replacePhoto : t.attach}</button><button type="button" className={styles.sendButton} data-testid="table-message-send" disabled={!compose.trim() && !chatImage} onClick={sendMessage}><Send size={17} aria-hidden="true" />{t.send}</button></div>
                 </div>
                 <div className={styles.checkInGroup} inert={safetyOpen} aria-hidden={safetyOpen || undefined}>
@@ -716,8 +720,8 @@ export function PulseTablesEntryB() {
   )
 }
 
-function OfficialVenue({ venueName, district, copy }: { venueName: string; district: string; copy: TableCopy }) {
-  return <section className={styles.official}><strong>{copy.official}</strong><p>{venueName} · {district}</p><span>{copy.officialBoundary}</span></section>
+function OfficialVenue({ venueName, officialName, district, copy }: { venueName: string; officialName: string; district: string; copy: TableCopy }) {
+  return <section className={styles.official}><strong>{copy.official}</strong><p>{venueName} · {district}</p>{venueName !== officialName ? <small lang="ko">{officialName}</small> : null}<span>{copy.officialBoundary}</span></section>
 }
 
 function PlanFields({ copy }: { copy: TableCopy }) {

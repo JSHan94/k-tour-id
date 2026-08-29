@@ -20,15 +20,15 @@ test.describe.configure({ timeout: 120_000 })
 
 const TRUTH = {
   en: {
-    table: "Nothing is booked, sent to the venue, or charged.",
+    table: "Messages and photos stay with this Table.",
     local: "nothing is uploaded",
   },
   ko: {
-    table: "예약·장소 전송·결제는 일어나지 않습니다.",
+    table: "메시지와 사진은 이 테이블에만 남고",
     local: "업로드하지 않습니다",
   },
   ja: {
-    table: "予約、店舗への送信、決済は行われません。",
+    table: "メッセージと写真はこのTableにだけ残り",
     local: "アップロードされません",
   },
 } as const
@@ -63,7 +63,7 @@ async function waitForShell(page: Page) {
 
 async function openTables(page: Page, locale: Locale = "en") {
   await seed(page, locale)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await page.getByTestId("nav-tables").click()
   const entry = page.getByTestId("tables-entry")
@@ -101,7 +101,7 @@ async function openChat(page: Page) {
 }
 
 async function openLocalSignal(page: Page) {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await page.locator("[data-city='seoul']").click()
   const toggle = page.getByTestId("ondo-b-view-toggle")
@@ -279,7 +279,10 @@ for (const locale of ["en", "ko", "ja"] as const) {
   test(`SOC-DIR-TRUTH ${locale} preserves non-booking and non-upload boundaries`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 })
     const entry = await openTables(page, locale)
-    await expect(entry).toContainText(TRUTH[locale].table)
+    await entry.getByTestId(`table-open-${TABLE_ID}`).click()
+    const privacy = page.getByTestId("tables-truth-notice")
+    await privacy.locator("summary").click()
+    await expect(privacy).toContainText(TRUTH[locale].table)
     const body = await entry.innerText()
     expect(body).not.toMatch(/booking confirmed|reservation confirmed|matched with|reputation increased/i)
 

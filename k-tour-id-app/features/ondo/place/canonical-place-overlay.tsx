@@ -446,9 +446,10 @@ export function CanonicalPlaceOverlay() {
   const localSignalPosted = state.localSignalPostedVenueIds.includes(venue.id)
   const pulse = pulseForVenue(venue.id, state.localPulseEvidenceByVenue[venue.id] ?? null)
   const pulseAlternatives = pulseAlternativesForVenue(venue.id)
-  const pulseTitle = pulse.score == null
-    ? `${copy.temperature} · ${pulseLevelLabel(pulse.level, locale)}`
-    : `${copy.temperature} ${pulse.score} · ${pulseLevelLabel(pulse.level, locale)}`
+  // The compact decision communicates temperature through the meter. Keep
+  // the accessible name qualitative too, instead of repeating an internal
+  // score/status badge in the primary experience.
+  const pulseTitle = `${copy.temperature} · ${pulseLevelLabel(pulse.level, locale)}`
   const confidence = ({ high: copy.pulseHigh, medium: copy.pulseMedium, low: copy.pulseLow, limited: copy.pulseLimitedConfidence } as const)[pulse.confidence]
   const fixedSnapshot = pulse.updatedAt
     ? `${pulse.freshness === "growing" ? copy.pulseGrowingSnapshot : copy.pulseFixedSnapshot} · ${pulse.updatedAt.slice(0, 16).replace("T", " ")} UTC`
@@ -577,7 +578,6 @@ export function CanonicalPlaceOverlay() {
       <section className={styles.pulsePeek} role="group" aria-label={pulseTitle} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
         <span className={styles.pulseVisualLabel} aria-hidden="true">{copy.temperature}</span>
         <span className={styles.pulseVisualMeter} data-testid="canonical-place-temperature-meter" aria-hidden="true"><i /></span>
-        <span className={styles.srOnly}>{pulseTitle} · {pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot} · {copy.pulseBoundary}</span>
         {pulse.localEvidence ? <span className={styles.srOnly} data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</span> : null}
       </section>
       <details className={styles.recordSummary} data-testid="canonical-place-source-summary" data-source-presentation="compact-ribbon">

@@ -41,7 +41,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
       else await route.continue()
     })
 
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='seoul']").click()
     const root = page.getByTestId("ondo-b-map-entry")
     await test.step("B-E2E-FL-001-ERROR", async () => {
@@ -62,7 +62,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
   test("city cards and the compact ONDO temperature key keep official records separate from curated signals", async ({ page }) => {
     await seed(page)
     await stubDeterministicBasemap(page)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
 
     const seoul = page.locator("[data-city='seoul']")
     const busan = page.locator("[data-city='busan']")
@@ -106,7 +106,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
 
   test("all onboarding interests remain visible and editable without unsupported filtering", async ({ page }) => {
     await seed(page, ["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"])
-    await page.goto("/ondo-b?city=busan&view=list", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=busan&view=list", { waitUntil: "domcontentloaded" })
     const map = page.getByTestId("ondo-b-map-entry")
     await expect(map).toHaveAttribute("data-result-count", "200")
 
@@ -124,7 +124,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
     await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("200 places")
   })
 
-  test("After19 highlights the official pub/café type without changing directory truth", async ({ page }) => {
+  test("After19 highlights official bar-like source types without changing directory truth", async ({ page }) => {
     await seed(page, [], {
       account: "ACC-ACTIVE",
       person: "PER-VERIFIED",
@@ -134,35 +134,35 @@ test.describe("ONDO B map truth and failure boundary", () => {
     })
 
     for (const [city, label] of [["seoul", "Seoul"], ["busan", "Busan"]] as const) {
-      await page.goto(`/ondo-b?city=${city}&view=list`, { waitUntil: "domcontentloaded" })
+      await page.goto(`/?city=${city}&view=list`, { waitUntil: "domcontentloaded" })
       const root = page.getByTestId("ondo-b-map-entry")
       await expect(root).toHaveAttribute("data-after19-active", "true")
       await expect(root).toHaveAttribute("data-city-record-count", "200")
-      await expect(root).toHaveAttribute("data-result-count", "30")
-      await expect(root).toHaveAttribute("data-curated-pulse-count", city === "seoul" ? "7" : "10")
-      await expect(root).toHaveAttribute("data-pulse-map-anchor-count", city === "seoul" ? "7" : "8")
-      await expect(page.getByRole("button", { name: "Pubs & cafés", exact: true })).toHaveAttribute("aria-pressed", "true")
+      await expect(root).toHaveAttribute("data-result-count", city === "seoul" ? "25" : "28")
+      await expect(root).toHaveAttribute("data-curated-pulse-count", city === "seoul" ? "5" : "9")
+      await expect(root).toHaveAttribute("data-pulse-map-anchor-count", city === "seoul" ? "5" : "8")
+      await expect(page.getByRole("button", { name: "Bars & pubs", exact: true })).toHaveAttribute("aria-pressed", "true")
       const after19 = page.getByTestId("ondo-b-after19-global")
       await expect(after19).toHaveAttribute("data-after19-mode", "on")
       await expect(after19).toHaveAttribute("data-after19-age", "eligible")
       const after19Status = after19.getByRole("status")
       await expect(after19Status).toContainText("After 19 on")
       await expect(after19Status).toContainText(`Opened for this tab · ${label}`)
-      await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("30 places")
-      await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(30)
-      await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(city === "seoul" ? 7 : 10)
+      await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText(`${city === "seoul" ? 25 : 28} places`)
+      await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(city === "seoul" ? 25 : 28)
+      await expect(page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")).toHaveCount(city === "seoul" ? 5 : 9)
     }
 
     await page.getByRole("button", { name: "Turn off After 19 now" }).click()
     await page.getByTestId("global-after19-toggle").click()
     const prompt = page.getByRole("dialog", { name: "Turn on After 19?" })
-    await expect(prompt).toContainText("Narrows this map to pubs and cafés. Actual entry, age and alcohol-service rules are not confirmed.")
+    await expect(prompt).toContainText("Narrows this map to official business types associated with bars and pubs.")
     await prompt.getByText("What this changes", { exact: true }).click()
-    await expect(prompt).toContainText("Only ONDO’s map presentation changes. This does not confirm opening hours, alcohol service, admission, or a venue age restriction.")
+    await expect(prompt).toContainText("simulated OpenDID age-predicate receipt")
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-result-count", "200")
   })
 
-  test("After19 keeps its pubs-and-cafés scope when the user changes city through the Korea map", async ({ page }) => {
+  test("After19 keeps its bar-and-pub scope when the user changes city through the Korea map", async ({ page }) => {
     await seed(page, [], {
       account: "ACC-ACTIVE",
       person: "PER-VERIFIED",
@@ -171,11 +171,11 @@ test.describe("ONDO B map truth and failure boundary", () => {
       after19: "A19-ON",
     })
     await stubDeterministicBasemap(page)
-    await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map", { waitUntil: "domcontentloaded" })
 
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-after19-active", "true")
-    await expect(page.getByRole("button", { name: "Pubs & cafés", exact: true })).toHaveAttribute("aria-pressed", "true")
+    await expect(page.getByRole("button", { name: "Bars & pubs", exact: true })).toHaveAttribute("aria-pressed", "true")
 
     await page.getByTestId("ondo-b-city-back").click()
     await expect(page.getByTestId("ondo-b-korea-atlas")).toBeVisible()
@@ -183,7 +183,7 @@ test.describe("ONDO B map truth and failure boundary", () => {
 
     await expect(root).toHaveAttribute("data-city", "busan")
     await expect(root).toHaveAttribute("data-after19-active", "true")
-    await expect(root).toHaveAttribute("data-result-count", "30")
-    await expect(page.getByRole("button", { name: "Pubs & cafés", exact: true })).toHaveAttribute("aria-pressed", "true")
+    await expect(root).toHaveAttribute("data-result-count", "28")
+    await expect(page.getByRole("button", { name: "Bars & pubs", exact: true })).toHaveAttribute("aria-pressed", "true")
   })
 })

@@ -38,6 +38,7 @@ export default defineConfig({
         url: baseURL,
         reuseExistingServer: false,
         timeout: 180_000,
+        env: { ...process.env, NEXT_PUBLIC_ONDO_QA_CONTROLS: "1" },
       },
   projects: [
     {

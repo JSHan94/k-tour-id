@@ -11,10 +11,21 @@ export type GlobalAfter19PreferenceB = {
   autoOpen: boolean
 }
 
+export type GlobalAfter19PredicateReceiptB = {
+  schema: "opendid-age-predicate.v1"
+  predicate: "AGE_GTE_19"
+  outcome: "eligible"
+  issuerType: "SIMULATED_OPENDID_PROVIDER" | "MIGRATED_LOCAL_SESSION"
+  issuedAt: string
+  expiresAt: string
+  disclosure: "predicate_only"
+}
+
 export type GlobalAfter19SessionB = {
   version: 1
   age: "unverified" | "eligible"
   ageExpiresAt: string | null
+  eligibilityReceipt: GlobalAfter19PredicateReceiptB | null
   mode: "off" | "on" | "manual-off"
   activation: "manual" | "auto" | null
   expiryNotice: boolean
@@ -38,6 +49,7 @@ export const DEFAULT_GLOBAL_AFTER19_SESSION: GlobalAfter19SessionB = {
   version: 1,
   age: "unverified",
   ageExpiresAt: null,
+  eligibilityReceipt: null,
   mode: "off",
   activation: null,
   expiryNotice: false,
@@ -72,6 +84,42 @@ function validExpiry(value: unknown): string | null {
   return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null
 }
 
+function predicateReceipt(value: unknown, expiry: string, issuerType: GlobalAfter19PredicateReceiptB["issuerType"]): GlobalAfter19PredicateReceiptB | null {
+  const current = record(value)
+  const issuedAt = validExpiry(current.issuedAt)
+  const receiptExpiry = validExpiry(current.expiresAt)
+  if (current.schema !== "opendid-age-predicate.v1"
+    || current.predicate !== "AGE_GTE_19"
+    || current.outcome !== "eligible"
+    || current.disclosure !== "predicate_only"
+    || (current.issuerType !== "SIMULATED_OPENDID_PROVIDER" && current.issuerType !== "MIGRATED_LOCAL_SESSION")
+    || !issuedAt
+    || !receiptExpiry
+    || Date.parse(receiptExpiry) !== Date.parse(expiry)
+    || Date.parse(issuedAt) >= Date.parse(receiptExpiry)) return null
+  return {
+    schema: "opendid-age-predicate.v1",
+    predicate: "AGE_GTE_19",
+    outcome: "eligible",
+    issuerType: current.issuerType,
+    issuedAt,
+    expiresAt: receiptExpiry,
+    disclosure: "predicate_only",
+  }
+}
+
+function migratedPredicateReceipt(expiry: string): GlobalAfter19PredicateReceiptB {
+  return {
+    schema: "opendid-age-predicate.v1",
+    predicate: "AGE_GTE_19",
+    outcome: "eligible",
+    issuerType: "MIGRATED_LOCAL_SESSION",
+    issuedAt: new Date(Date.parse(expiry) - GLOBAL_AFTER19_AGE_TTL_MS).toISOString(),
+    expiresAt: expiry,
+    disclosure: "predicate_only",
+  }
+}
+
 export function sanitizeGlobalAfter19Preference(value: unknown): GlobalAfter19PreferenceB {
   const current = record(value)
   return {
@@ -87,7 +135,11 @@ export function sanitizeGlobalAfter19Session(value: unknown, now = new Date()): 
   if (current.version !== 1) return { ...DEFAULT_GLOBAL_AFTER19_SESSION }
 
   const expiry = validExpiry(current.ageExpiresAt)
-  const eligible = current.age === "eligible" && expiry !== null && Date.parse(expiry) > now.getTime()
+  const storedReceipt = expiry ? predicateReceipt(current.eligibilityReceipt, expiry, "MIGRATED_LOCAL_SESSION") : null
+  const receipt = expiry && !Object.prototype.hasOwnProperty.call(current, "eligibilityReceipt")
+    ? migratedPredicateReceipt(expiry)
+    : storedReceipt
+  const eligible = current.age === "eligible" && expiry !== null && receipt !== null && Date.parse(expiry) > now.getTime()
   const requestedMode = current.mode === "on" || current.mode === "manual-off" ? current.mode : "off"
   const mode = requestedMode === "on" && !eligible ? "off" : requestedMode
   const activation = mode === "on" && (current.activation === "manual" || current.activation === "auto")
@@ -98,6 +150,7 @@ export function sanitizeGlobalAfter19Session(value: unknown, now = new Date()): 
     version: 1,
     age: eligible ? "eligible" : "unverified",
     ageExpiresAt: eligible ? expiry : null,
+    eligibilityReceipt: eligible ? receipt : null,
     mode,
     activation,
     expiryNotice: current.expiryNotice === true || (current.age === "eligible" && !eligible),
@@ -126,6 +179,7 @@ function migrateLegacySession(value: unknown, now: Date): GlobalAfter19SessionB 
     version: 1,
     age: eligible ? "eligible" : "unverified",
     ageExpiresAt: eligible ? expiry : null,
+    eligibilityReceipt: eligible && expiry ? migratedPredicateReceipt(expiry) : null,
     mode,
     activation: mode === "on" ? "manual" : null,
     expiryNotice: legacy.age === "AGE-VERIFIED" && !eligible,
@@ -161,6 +215,9 @@ export function restoreGlobalAfter19B(
 export function isGlobalAfter19AgeCurrent(session: GlobalAfter19SessionB, now = new Date()): boolean {
   return session.age === "eligible"
     && session.ageExpiresAt !== null
+    && session.eligibilityReceipt?.predicate === "AGE_GTE_19"
+    && session.eligibilityReceipt.outcome === "eligible"
+    && Date.parse(session.eligibilityReceipt.expiresAt) === Date.parse(session.ageExpiresAt)
     && Date.parse(session.ageExpiresAt) > now.getTime()
 }
 
@@ -185,10 +242,21 @@ export function canAutoOpenGlobalAfter19B(
 }
 
 export function recordGlobalAfter19AgeEligibilityB(now = new Date()): GlobalAfter19SessionB {
+  const issuedAt = now.toISOString()
+  const expiresAt = new Date(now.getTime() + GLOBAL_AFTER19_AGE_TTL_MS).toISOString()
   return {
     version: 1,
     age: "eligible",
-    ageExpiresAt: new Date(now.getTime() + GLOBAL_AFTER19_AGE_TTL_MS).toISOString(),
+    ageExpiresAt: expiresAt,
+    eligibilityReceipt: {
+      schema: "opendid-age-predicate.v1",
+      predicate: "AGE_GTE_19",
+      outcome: "eligible",
+      issuerType: "SIMULATED_OPENDID_PROVIDER",
+      issuedAt,
+      expiresAt,
+      disclosure: "predicate_only",
+    },
     mode: "off",
     activation: null,
     expiryNotice: false,

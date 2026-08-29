@@ -168,7 +168,7 @@ test.describe("ONDO B production map chrome geometry", () => {
 
       for (const viewport of VIEWPORTS) {
         await page.setViewportSize(viewport)
-        await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+        await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
         const root = page.getByTestId("ondo-b-map-entry")
         await expect(root).toHaveAttribute("data-layout-mode", /^(ultra-short|compact-map|spacious-map)$/)
         if (await root.getAttribute("data-layout-mode") === "ultra-short") {

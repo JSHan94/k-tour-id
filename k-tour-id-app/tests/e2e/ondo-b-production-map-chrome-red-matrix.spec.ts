@@ -713,7 +713,7 @@ async function runStateMatrix(browser: Browser, violations: Violation[]) {
         await seedContext(context, locale)
         const page = await context.newPage()
         try {
-          await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+          await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
           const root = page.getByTestId("ondo-b-map-entry")
           await root.waitFor({ state: "visible" })
           const rootReceipt = await elementReceipt(root)
@@ -743,7 +743,7 @@ async function auditUltraShortStateCarry(browser: Browser, violations: Violation
   const page = await context.newPage()
   const scenario = `${locale}/${target.width}x${target.height}/${phase}-carry`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 60_000 })
     const search = root.getByTestId("ondo-b-search")
@@ -774,7 +774,7 @@ async function auditRootBoundaryModes(browser: Browser, violations: Violation[],
   const page = await context.newPage()
   const scenario = `${locale}/actual-root/899x720->900x720`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await root.waitFor({ state: "visible" })
     const firstRect = await elementReceipt(root)
@@ -810,7 +810,7 @@ async function auditAutoListBoundary(
   const page = await context.newPage()
   const scenario = `${locale}/auto-list-boundary/${lower.width}x${lower.height}->${upper.width}x${upper.height}`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 60_000 })
     const search = root.getByTestId("ondo-b-search")
@@ -858,7 +858,7 @@ async function auditRequestedViewKeyboard(browser: Browser, violations: Violatio
   const page = await context.newPage()
   const scenario = `${locale}/900x720/requested-view-keyboard`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     const search = root.getByTestId("ondo-b-search")
@@ -909,7 +909,7 @@ async function auditCompactZoomFocusSeam(
   const page = await context.newPage()
   const scenario = `${locale}/compact-focus/${start.width}x${start.height}->${compact.width}x${compact.height}`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     await root.getByTestId("ondo-b-search").fill("mapo")
@@ -970,7 +970,7 @@ async function auditKeyboardTabOrder(
   const page = await context.newPage()
   const scenario = `${locale}/${viewport.width}x${viewport.height}/${expectedMode}-tab-order`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await settleLayout(root, expectedMode, expectedMode === "ultra-short" ? "list" : "map")
     if (expectedMode !== "ultra-short") await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
@@ -1044,7 +1044,7 @@ async function auditZoomResize(browser: Browser, violations: Violation[], locale
   const page = await context.newPage()
   const scenario = `${locale}/zoom-focus/900x720->667x320->900x720`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     await root.getByTestId("ondo-b-search").fill("mapo")
@@ -1104,7 +1104,7 @@ async function auditListFallback(browser: Browser, violations: Violation[], loca
   const page = await context.newPage()
   const scenario = `${locale}/320x320/list-fallback`
   try {
-    await page.goto("/ondo-b?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map&category=korean", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await root.waitFor({ state: "visible" })
     const query = "mapo"

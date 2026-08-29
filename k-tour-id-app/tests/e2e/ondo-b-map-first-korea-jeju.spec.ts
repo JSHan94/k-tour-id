@@ -47,7 +47,7 @@ test.describe("map-first Korea and Jeju integration", () => {
       ]) {
         await page.setViewportSize(viewport)
         await seed(page, locale)
-        await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+        await page.goto("/", { waitUntil: "domcontentloaded" })
 
         const atlas = page.getByTestId("ondo-b-korea-atlas")
         await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-hydrated", "true")

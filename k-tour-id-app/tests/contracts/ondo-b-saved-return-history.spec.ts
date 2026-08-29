@@ -21,7 +21,7 @@ test("saved return from detail requests native Back without a mounted traversal 
     back() { backCalls += 1 },
   }
   const fakeLocation = {
-    pathname: "/ondo-b",
+    pathname: "/",
     search: `?campaign=detail-contract&city=seoul&view=list&venueId=${CANONICAL_VENUE_ID}&detail=1`,
     hash: "#saved-return",
   }
@@ -36,7 +36,7 @@ test("saved return from detail requests native Back without a mounted traversal 
     expect(backCalls).toBe(1)
     expect(fakeHistory.state).toBe(originalState)
     expect(fakeLocation).toEqual({
-      pathname: "/ondo-b",
+      pathname: "/",
       search: `?campaign=detail-contract&city=seoul&view=list&venueId=${CANONICAL_VENUE_ID}&detail=1`,
       hash: "#saved-return",
     })

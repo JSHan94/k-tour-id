@@ -43,14 +43,14 @@ test.describe("ONDO B production local-device shell", () => {
 
   test("B-PROD-E2E-001 synthetic legacy session and QA query cannot alter B-owned surfaces", async ({ page }) => {
     await seedProductionB(page)
-    await page.goto("/ondo-b?qa=1&scenario=bridge-failed&profile=failure", { waitUntil: "domcontentloaded" })
+    await page.goto("/?qa=1&scenario=bridge-failed&profile=failure", { waitUntil: "domcontentloaded" })
 
     const nav = page.getByTestId("ondo-main-nav")
-    await expect(nav.getByTestId("nav-ondo")).toContainText("Explore")
-    await expect(nav.getByTestId("nav-my")).toContainText("My Korea")
-    await expect(nav.getByTestId("nav-tables")).toContainText("Tables")
-    await expect(nav.getByTestId("nav-id")).toContainText("ID · Wallet")
-    await expect(nav.getByTestId("nav-settings")).toContainText("Settings")
+    await expect(nav.getByTestId("nav-ondo")).toHaveAccessibleName("Explore")
+    await expect(nav.getByTestId("nav-my")).toHaveAccessibleName("Saved · My Korea")
+    await expect(nav.getByTestId("nav-tables")).toHaveAccessibleName("Tables")
+    await expect(nav.getByTestId("nav-id")).toHaveAccessibleName("Pass · ID and Wallet")
+    await expect(nav.getByTestId("nav-settings")).toHaveAccessibleName("Settings")
     for (const testId of ["ondo-gate-overlay", "ondo-after19-layer", "checkout-overlay", "labs-overlay", "ondo-identity-entry", "ondo-trust-panel"]) {
       await expect(page.getByTestId(testId)).toHaveCount(0)
     }
@@ -71,7 +71,7 @@ test.describe("ONDO B production local-device shell", () => {
 
   test("B-PROD-E2E-002 a private note persists locally and never creates activity state", async ({ page }) => {
     await seedProductionB(page, [CANONICAL_VENUE_ID])
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-my").click()
 
     const note = page.getByTestId(`private-note-${CANONICAL_VENUE_ID}`)
@@ -91,7 +91,7 @@ test.describe("ONDO B production local-device shell", () => {
 
   test("B-PROD-E2E-003 a real storage exception reports failure and keeps the draft", async ({ page }) => {
     await seedProductionB(page, [CANONICAL_VENUE_ID])
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-my").click()
     const note = page.getByTestId(`private-note-${CANONICAL_VENUE_ID}`)
     await note.getByRole("textbox").fill("Keep this draft")
@@ -131,7 +131,7 @@ test.describe("ONDO B production local-device shell", () => {
       }
     }, { expectedAState: aState, expectedALocation: malformedALocation, deviceKey: DEVICE_KEY })
 
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await expect(page.getByTestId("ondo-b-root")).toBeVisible()
     await page.waitForTimeout(250)
 
@@ -146,7 +146,7 @@ test.describe("ONDO B production local-device shell", () => {
 
 test.describe("ONDO B production security and resilience boundaries", () => {
   test("B-PROD-SEC-002 social metadata rejects forwarded-host and scheme poisoning", async ({ request }) => {
-    const response = await request.get("/ondo-b", {
+    const response = await request.get("/", {
       headers: {
         "x-forwarded-host": "attacker.example",
         "x-forwarded-proto": "javascript",
@@ -160,7 +160,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
 
   test("B-PROD-SEC-002B invalid local ports fail closed without dropping metadata", async ({ request }) => {
     for (const host of ["localhost:65536", "localhost:99999"]) {
-      const response = await request.get("/ondo-b", { headers: { host } })
+      const response = await request.get("/", { headers: { host } })
       expect(response.ok()).toBeTruthy()
       const html = await response.text()
       expect(html).toContain("K-TOUR ID | ONDO 溫圖")
@@ -171,7 +171,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
   })
 
   test("B-PROD-SEC-003 HTML responses apply baseline browser security policy", async ({ request }) => {
-    const response = await request.get("/ondo-b")
+    const response = await request.get("/")
     expect(response.ok()).toBeTruthy()
     const headers = response.headers()
     expect(headers["content-security-policy"]).toContain("default-src")
@@ -189,7 +189,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
       if (failDetail) await route.fulfill({ status: 503, contentType: "application/json", body: '{"error":"temporarily unavailable"}' })
       else await route.continue()
     })
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await waitForBHydration(page)
     await page.locator("[data-city='seoul']").click()
     await page.getByRole("button", { name: "List", exact: true }).click()
@@ -200,13 +200,13 @@ test.describe("ONDO B production security and resilience boundaries", () => {
     await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "error")
     await expect(detail.getByRole("alert")).toContainText("temporarily unavailable")
     failDetail = false
-    await detail.getByRole("button", { name: "Retry official record" }).click()
+    await detail.getByRole("button", { name: "Retry place details" }).click()
     await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
   })
 
   test("B-PROD-SEC-005 location control discloses external map processing before permission", async ({ page }) => {
     await seedProductionB(page)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='seoul']").click()
     const locate = page.getByTestId("ondo-b-locate")
     await expect(locate).toBeVisible()
@@ -219,7 +219,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
 
   test("B-PROD-SEC-006 directory search bounds pasted input before filtering", async ({ page }) => {
     await seedProductionB(page)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.locator("[data-city='seoul']").click()
     const search = page.getByTestId("ondo-b-search")
     expect(await search.getAttribute("maxlength")).toBe("120")
@@ -228,11 +228,20 @@ test.describe("ONDO B production security and resilience boundaries", () => {
   })
 
   test("B-PROD-SEC-007 B metadata does not inherit the stale A canonical URL", async ({ request }) => {
-    const response = await request.get("/ondo-b")
+    const response = await request.get("/")
     expect(response.ok()).toBeTruthy()
     const html = await response.text()
     expect(html).not.toContain("https://k-tour-id.vercel.app")
     const canonical = html.match(/<link rel="canonical" href="([^"]+)"/i)?.[1]
-    expect(canonical).toMatch(/\/ondo-b\/?$/)
+    expect(canonical).toBeTruthy()
+    expect(new URL(canonical!).pathname).toBe("/")
+  })
+
+  test("B-PROD-ROUTE-008 legacy /ondo-b permanently redirects to / and preserves only discovery context", async ({ request }) => {
+    const response = await request.get("/ondo-b?city=seoul&view=list&token=private", { maxRedirects: 0 })
+    expect(response.status()).toBe(308)
+    const location = new URL(response.headers().location, "http://ondo.local")
+    expect(location.pathname).toBe("/")
+    expect(Object.fromEntries(location.searchParams)).toEqual({ city: "seoul", view: "list" })
   })
 })

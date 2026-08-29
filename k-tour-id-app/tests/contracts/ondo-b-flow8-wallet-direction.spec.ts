@@ -53,7 +53,8 @@ test("FLOW8-OBJECT-002 Pass and wallet keep first-frame copy consumer-shaped whi
   expect(commerce).not.toContain('data-testid="wallet-non-live-boundary"')
   expect(commerce).toContain('connect: "Set up travel wallet"')
   expect(commerce).toContain('connect: "여행 지갑 설정"')
-  expect(commerce).toContain('linkBody: "Turn on a non-live OOKRW Test balance for ONDO offers on this device."')
+  expect(commerce).toContain('linkTitle: "Set up your K-Tour ID wallet"')
+  expect(commerce).toContain('linkBody: "Keep your travel balance and ONDO meal benefits together for this trip."')
   expect(commerce).toContain('data-testid="wallet-eyebrow"')
   expect(commerceCss).toMatch(/\.heading > p\s*\{[^}]*color:\s*var\(--flow8-plum\)/)
 })
@@ -178,8 +179,8 @@ test("FLOW8-TRUTH-009 Wallet and My activity expose non-live truth plus an exact
 
   expect(commerce).toContain('data-testid="wallet-activity-place"')
   expect(my).toContain('data-testid="my-korea-receipt-place"')
-  expect(commerce).toContain("Test payment")
-  expect(commerce).toContain("Test refund")
+  expect(commerce).toContain("Payment saved")
+  expect(commerce).toContain("Payment undone")
   expect(commerce).not.toContain('explore: "Find eligible places"')
   expect(commerce).not.toContain('explore: "대상 장소 찾기"')
   expect(commerce).not.toContain('explore: "対象のお店を探す"')
@@ -202,6 +203,10 @@ test("FLOW8-DURABLE-010 pay and refund are durable-first and reload reconstructs
   expect(commerce).toContain('data-testid="commerce-storage-error"')
   expect(model).toContain('type: "CANCEL_CONFIRMATION"')
   expect(model).toContain('case "CANCEL_CONFIRMATION"')
+  expect(commerce).toContain("const preserveReturnToRef = useRef(false)")
+  expect(commerce).toContain('if (outcome === "success")')
+  expect(commerce).toContain("restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)")
+  expect(commerce).toContain("if (!preserveReturnToRef.current && pending?.cta === \"START_CHECKOUT\"")
 })
 
 test("FLOW8-PRD-011 readiness snapshots stay independent and no external transport or sensitive storage enters Flow 8", () => {
@@ -211,6 +216,7 @@ test("FLOW8-PRD-011 readiness snapshots stay independent and no external transpo
   const stored = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
 
   for (const state of ["personOutcome", "ageOutcome", "commerceWalletStatus"]) expect(`${pass}\n${provider}`).toContain(state)
+  expect(provider).toContain('commerceWalletStatus: restored.commerceReceipts.length ? "ready" : "disconnected"')
   for (const truth of ["Person does not prove 19+", "19+ does not prove identity"]) expect(pass).toContain(truth)
   for (const transport of ["fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "FormData"]) {
     expect(`${commerce}\n${provider}`).not.toContain(transport)
@@ -296,17 +302,17 @@ test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts res
   expect(commerceSessionFromReceipts([])).toEqual(createStableCommerceBState())
 })
 
-test("FLOW8-COPY-014 every locale names the local test and venue boundary without connect, share, or live-payment shorthand", () => {
+test("FLOW8-COPY-014 every locale names the on-device venue boundary without connect, share, or live-payment shorthand", () => {
   const commerce = source(COMMERCE)
   const myKorea = source("features/ondo/my/saved-entry-b.tsx")
 
   for (const truth of [
-    "venue neither offers nor accepts it",
-    "장소는 이 테스트를 제공하거나 받지 않음",
-    "お店はこのテストを提供も受け付けもしません",
-    "Setting up locally…",
-    "로컬에서 설정 중…",
-    "ローカルで設定しています…",
+    "not offered or accepted by the venue",
+    "매장에서 제공하거나 접수하지 않음",
+    "お店での提供・受付なし",
+    "Getting your wallet ready…",
+    "지갑을 준비하는 중…",
+    "ウォレットを準備しています…",
   ]) expect(commerce).toContain(truth)
   for (const stale of [
     "Connect travel wallet", "Connecting…", "Connect test wallet to pay", "Disconnect",
@@ -315,7 +321,13 @@ test("FLOW8-COPY-014 every locale names the local test and venue boundary withou
   ]) {
     expect(commerce).not.toContain(stale)
   }
-  for (const visibleTestTruth of ["Test payment recorded", "테스트 결제 기록", "テスト決済の記録"]) {
+  for (const visibleTestTruth of ["Payment saved", "결제 저장", "支払いを保存"]) {
     expect(myKorea).toContain(visibleTestTruth)
   }
+})
+
+test("FLOW8-AXIS-015 Payment gate commits notify every Pass subscriber", () => {
+  const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+
+  expect(coordinator).toContain("window.dispatchEvent(new CustomEvent(B_ACTION_AXIS_SESSION_EVENT, { detail: next }))")
 })

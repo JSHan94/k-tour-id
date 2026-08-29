@@ -24,7 +24,7 @@ async function seedJapaneseDevice(page: Page) {
 
 async function gotoJapaneseB(page: Page, search = "") {
   await seedJapaneseDevice(page)
-  await page.goto(`/ondo-b${search}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/${search}`, { waitUntil: "domcontentloaded" })
   await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-locale", "ja")
   await expect(page.locator("html")).toHaveAttribute("lang", "ja")
 }

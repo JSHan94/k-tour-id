@@ -27,6 +27,7 @@ export type BDiscoveryHistoryEntry = {
 }
 
 const HISTORY_KEY = "__ondoBDiscovery"
+export const B_DISCOVERY_ROUTE = "/"
 export const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
 const MAX_QUERY_LENGTH = 120
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
@@ -150,7 +151,7 @@ function exactCanonicalValue(actual: unknown, expected: unknown): boolean {
 
 function dispatchBDiscoveryTraversal(event: PopStateEvent) {
   cancelTraversalFocus?.()
-  if (window.location.pathname !== "/ondo-b") {
+  if (window.location.pathname !== B_DISCOVERY_ROUTE) {
     pendingPeekTraversalVenueId = undefined
     traversalFocusVersion += 1
     return
@@ -231,7 +232,7 @@ function mergedState(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
 }
 
 function entryUrl(entry: BDiscoveryHistoryEntry) {
-  const url = new URL("/ondo-b", window.location.origin)
+  const url = new URL(B_DISCOVERY_ROUTE, window.location.origin)
   if (entry.level !== "nation" && entry.city) {
     url.searchParams.set("city", entry.city)
     if (entry.view === "list") url.searchParams.set("view", "list")
@@ -274,7 +275,7 @@ function pushEntry(entry: BDiscoveryHistoryEntry) {
 export function replaceBDiscoveryUrl(url: string) {
   const requested = new URL(url, window.location.origin)
   const current = readBDiscoveryHistory()
-  const nextUrl = requested.pathname === "/ondo-b" && current
+  const nextUrl = requested.pathname === B_DISCOVERY_ROUTE && current
     ? entryUrl(current)
     : `${requested.pathname}${requested.search}${requested.hash}`
   History.prototype.replaceState.call(window.history, window.history.state, "", nextUrl)
@@ -490,7 +491,7 @@ export function openBDiscoveryEditorialPlace(editorialPlaceId: EditorialPlaceB["
 }
 
 export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryCity) {
-  if (typeof window === "undefined" || window.location.pathname !== "/ondo-b") return false
+  if (typeof window === "undefined" || window.location.pathname !== B_DISCOVERY_ROUTE) return false
   const safeVenueId = venueValue(venueId)
   const safeVenueCity = cityValue(venueCity)
   if (!safeVenueId || !safeVenueCity) return false
@@ -519,7 +520,7 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
 }
 
 export function openSavedBDiscoveryEditorialPlace(editorialPlaceId: EditorialPlaceB["id"]) {
-  if (typeof window === "undefined" || window.location.pathname !== "/ondo-b") return false
+  if (typeof window === "undefined" || window.location.pathname !== B_DISCOVERY_ROUTE) return false
   const safeEditorialPlaceId = editorialPlaceValue(editorialPlaceId)
   if (!safeEditorialPlaceId) return false
   const current = readBDiscoveryHistory()

@@ -8,6 +8,7 @@ import { venueDisplayName } from "@/lib/ondo/venues/display"
 import { restoreBDiscoveryCityContext, restoreBDiscoveryVenueContext } from "../map/b-discovery-history"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import {
   canAutoOpenGlobalAfter19B,
   completeGlobalAfter19AgeB,
@@ -48,7 +49,7 @@ type GlobalAfter19BProps = {
 }
 
 type Notice = "off" | "expired" | null
-type GateView = "intro" | "failure" | "expired"
+type GateView = "intro" | "failure" | "unavailable" | "expired"
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex='-1'])"
 
@@ -62,19 +63,21 @@ const COPY = {
     turnOff: "Turn off After 19 now",
     header: "19+ · After 19",
     title: "Turn on After 19?",
-    body: "Use a 19+ eligibility result in this tab, then return to the same map.",
-    truth: "Narrows this map to pubs and cafés. Actual entry, age and alcohol-service rules are not confirmed.",
+    body: "For this experience, a temporary 19+ result stays on this device. No identity provider is contacted.",
+    truth: "Narrows this map to official business types associated with bars and pubs. Actual alcohol service, entry and age rules are not confirmed.",
     jejuTruth: "Jeju keeps its editorial places and stories; ONDO does not infer pubs or cafés from those sources.",
     context: "Return to",
     venue: "Selected place",
     city: "Current map",
     boundary: "What this changes",
-    boundaryBody: "Only ONDO’s map presentation changes. This does not confirm opening hours, alcohol service, admission, or a venue age restriction. Your date of birth is not requested or stored; only an eligible result and its expiry stay in this tab.",
+    boundaryBody: "No OpenDID provider is connected and no credential is issued. The temporary result does not confirm opening hours, alcohol service, admission, or a venue restriction. Your date of birth is never requested or stored.",
     auto: "Open after 19:00 KST when eligible",
     primary: "Turn on After 19",
     cancel: "Stay on this map",
     failedTitle: "After 19 did not turn on",
     failedBody: "Your city, selected place, filters, and map position are unchanged.",
+    unavailableTitle: "19+ check is unavailable",
+    unavailableBody: "Nothing changed. Retry the private predicate check or stay on this map.",
     expiredReturnTitle: "This return request expired",
     expiredReturnBody: "Check 19+ again or stay with the restored Place context.",
     missingVenue: "That place is no longer available. Return to the same city discovery view.",
@@ -94,19 +97,21 @@ const COPY = {
     turnOff: "After 19 바로 끄기",
     header: "19+ · After 19",
     title: "After 19을 켤까요?",
-    body: "이 탭의 19+ 충족 결과를 사용한 뒤 같은 지도로 돌아옵니다.",
-    truth: "주점·카페 업태만 모아 보여줘요. 실제 입장·연령·주류 제공 조건은 확인되지 않았어요.",
+    body: "이 경험에서는 임시 19+ 결과가 이 기기에만 남아요. 신원확인 기관에는 연결하지 않습니다.",
+    truth: "공식 업태상 주점에 해당하는 장소만 모아 보여줘요. 실제 주류 제공·입장·연령 조건은 확인되지 않았어요.",
     jejuTruth: "제주는 편집 장소와 여행 이야기를 그대로 보여주며, 해당 출처로 주점·카페를 추정하지 않아요.",
     context: "돌아갈 곳",
     venue: "선택한 장소",
     city: "현재 지도",
     boundary: "바뀌는 내용",
-    boundaryBody: "ONDO 지도 표현만 바뀝니다. 영업시간·주류 제공·입장 가능 여부나 장소의 연령 제한을 확인하지 않습니다. 생년월일은 요청하거나 저장하지 않고, 19+ 충족 결과와 만료 시각만 이 탭에 남습니다.",
+    boundaryBody: "OpenDID 제공기관에 연결하거나 자격증명을 발급하지 않아요. 임시 결과는 영업시간·주류 제공·입장 가능 여부나 장소 제한을 확인하지 않으며, 생년월일도 요청하거나 저장하지 않습니다.",
     auto: "조건 충족 시 한국 시간 19:00 이후 자동으로 열기",
     primary: "After 19 켜기",
     cancel: "이 지도에 머물기",
     failedTitle: "After 19을 켜지 못했어요",
     failedBody: "도시·선택 장소·필터·지도 위치는 그대로 유지됩니다.",
+    unavailableTitle: "19+ 확인을 사용할 수 없어요",
+    unavailableBody: "바뀐 내용은 없어요. 비공개 조건 확인을 다시 시도하거나 이 지도에 머물 수 있어요.",
     expiredReturnTitle: "장소 복귀 요청이 만료됐어요",
     expiredReturnBody: "19+를 다시 확인하거나 복구된 장소 탐색 화면에 머물 수 있어요.",
     missingVenue: "해당 장소를 더 이상 찾을 수 없어 같은 도시의 탐색 화면으로 돌아갑니다.",
@@ -126,19 +131,21 @@ const COPY = {
     turnOff: "After 19を今すぐオフにする",
     header: "19+ · After 19",
     title: "After 19をオンにしますか？",
-    body: "このタブの19歳以上という適格結果を使い、同じ地図に戻ります。",
-    truth: "パブ・カフェの場所に絞って表示します。実際の入店・年齢・酒類提供条件は確認していません。",
+    body: "この体験では一時的な19歳以上の結果を端末内だけに残します。本人確認事業者には接続しません。",
+    truth: "公式業態で居酒屋・パブに当たる場所だけを表示します。実際の酒類提供、入店、年齢条件は確認していません。",
     jejuTruth: "済州では編集スポットとストーリーをそのまま表示し、その情報源からパブやカフェを推定しません。",
     context: "戻る場所",
     venue: "選択中の場所",
     city: "現在の地図",
     boundary: "変更される内容",
-    boundaryBody: "変わるのはONDOの地図表示だけです。営業時間、酒類提供、入場可否、施設の年齢制限は確認しません。生年月日は求めたり保存したりせず、19歳以上という結果と有効期限だけがこのタブに残ります。",
+    boundaryBody: "OpenDID事業者には接続せず、資格情報も発行しません。一時的な結果は営業時間、酒類提供、入場可否、施設制限を確認するものではなく、生年月日も要求・保存しません。",
     auto: "条件を満たす場合、韓国時間19:00以降に自動で開く",
     primary: "After 19をオンにする",
     cancel: "この地図にとどまる",
     failedTitle: "After 19をオンにできませんでした",
     failedBody: "都市、選択中の場所、フィルター、地図位置は変わっていません。",
+    unavailableTitle: "19歳以上の確認を利用できません",
+    unavailableBody: "変更はありません。非公開の条件確認を再試行するか、この地図にとどまれます。",
     expiredReturnTitle: "場所への復帰リクエストの有効期限が切れました",
     expiredReturnBody: "19歳以上をもう一度確認するか、復元した場所の探索画面にとどまれます。",
     missingVenue: "この場所は利用できなくなったため、同じ都市の探索画面に戻ります。",
@@ -174,6 +181,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   const primaryRef = useRef<HTMLButtonElement | null>(null)
   const activeOffRef = useRef<HTMLButtonElement | null>(null)
   const openerRef = useRef<HTMLElement | null>(null)
+  const consumedQaOutcomeRef = useRef<"failure" | "unavailable" | null>(null)
   const t = COPY[locale]
 
   useModalIsolation(gateOpen, layerRef)
@@ -228,7 +236,8 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   }, [])
 
   useEffect(() => {
-    onActiveChange?.(hydrated && session.mode === "on", session.activation)
+    if (!hydrated) return
+    onActiveChange?.(session.mode === "on", session.activation)
   }, [hydrated, onActiveChange, session.activation, session.mode])
 
   useEffect(() => {
@@ -238,6 +247,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
         version: 1,
         age: "unverified",
         ageExpiresAt: null,
+        eligibilityReceipt: null,
         mode: "off",
         activation: null,
         expiryNotice: true,
@@ -290,6 +300,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : chipRef.current
     setPlaceReturn(null)
     setGateView("intro")
+    consumedQaOutcomeRef.current = null
     setNotice(null)
     setGateOpen(true)
   }
@@ -318,9 +329,11 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
       setGateView("expired")
       return
     }
-    const qa = (window as Window & { __ONDO_B_QA__?: { after19Global?: "failure" } }).__ONDO_B_QA__
-    if (qa?.after19Global === "failure") {
-      setGateView("failure")
+    const qa = readQaRuntime<{ after19Global?: "failure" | "unavailable" }>()
+    const qaOutcome = qa?.after19Global
+    if (qaOutcome && consumedQaOutcomeRef.current !== qaOutcome) {
+      consumedQaOutcomeRef.current = qaOutcome
+      setGateView(qaOutcome)
       return
     }
     if (placeReturn) {
@@ -468,6 +481,8 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
       data-after19-activation={session.activation ?? "none"}
       data-after19-age={session.age}
       data-after19-age-expires-at={session.ageExpiresAt ?? "none"}
+      data-after19-predicate={session.eligibilityReceipt?.predicate ?? "none"}
+      data-after19-issuer-type={session.eligibilityReceipt?.issuerType ?? "none"}
       data-context-city={context.cityId}
       data-context-venue={context.venueId ?? "none"}
     >
@@ -497,9 +512,9 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
           <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="global-after19-title" tabIndex={-1} data-gate-view={gateView} onKeyDown={handleGateKeyDown}>
             <header className={styles.dialogHeader}><span><ShieldCheck size={18} aria-hidden="true" />{t.header}</span><i aria-hidden="true" /></header>
             <div className={styles.body}>
-              {gateView === "failure" ? <AlertTriangle className={styles.heroFailure} size={27} aria-hidden="true" /> : <MoonStar className={styles.hero} size={27} aria-hidden="true" />}
-              <h2 id="global-after19-title">{gateView === "failure" ? t.failedTitle : gateView === "expired" ? t.expiredReturnTitle : t.title}</h2>
-              <p className={styles.lead}>{gateView === "failure" ? t.failedBody : gateView === "expired" ? t.expiredReturnBody : t.body}</p>
+              {gateView === "failure" || gateView === "unavailable" ? <AlertTriangle className={styles.heroFailure} size={27} aria-hidden="true" /> : <MoonStar className={styles.hero} size={27} aria-hidden="true" />}
+              <h2 id="global-after19-title">{gateView === "failure" ? t.failedTitle : gateView === "unavailable" ? t.unavailableTitle : gateView === "expired" ? t.expiredReturnTitle : t.title}</h2>
+              <p className={styles.lead}>{gateView === "failure" ? t.failedBody : gateView === "unavailable" ? t.unavailableBody : gateView === "expired" ? t.expiredReturnBody : t.body}</p>
               <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{context.cityId === "jeju" ? t.jejuTruth : t.truth}</p>
               <section className={styles.returnContext} data-testid="global-after19-return-context" data-return-cta={placeReturn?.cta ?? "OPEN_AFTER19"} data-return-city={returnCityId} data-return-venue={returnVenueId ?? "none"} data-return-level={placeReturn?.level ?? (context.venueId ? "detail" : "city")} data-return-focus={placeReturn?.focusTarget ?? "global-after19-toggle"}>
                 <small>{t.context} · {contextKind}</small>
@@ -516,9 +531,9 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
                 </>
               ) : null}
               <div className={styles.actions}>
-                <button ref={primaryRef} type="button" className={styles.primary} data-testid={gateView === "failure" || gateView === "expired" ? "global-after19-retry" : "global-after19-confirm"} onClick={gateView === "expired" ? retryExpiredPlaceReturn : runCheck}>
-                  {gateView === "failure" || gateView === "expired" ? <RotateCcw size={17} aria-hidden="true" /> : <ShieldCheck size={17} aria-hidden="true" />}
-                  {gateView === "failure" || gateView === "expired" ? t.retry : t.primary}
+                <button ref={primaryRef} type="button" className={styles.primary} data-testid={gateView === "failure" || gateView === "unavailable" || gateView === "expired" ? "global-after19-retry" : "global-after19-confirm"} onClick={gateView === "expired" ? retryExpiredPlaceReturn : runCheck}>
+                  {gateView === "failure" || gateView === "unavailable" || gateView === "expired" ? <RotateCcw size={17} aria-hidden="true" /> : <ShieldCheck size={17} aria-hidden="true" />}
+                  {gateView === "failure" || gateView === "unavailable" || gateView === "expired" ? t.retry : t.primary}
                 </button>
                 <button type="button" className={styles.secondary} data-testid="global-after19-cancel" onClick={cancelGate}>{t.cancel}</button>
               </div>

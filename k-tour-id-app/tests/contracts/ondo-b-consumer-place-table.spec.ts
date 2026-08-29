@@ -22,7 +22,7 @@ test("normal After19 is a single eligibility path and outcome authoring is QA-on
   const actionGateContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
   const ageModel = source("features/ondo/after19/after19-global-b-model.ts")
 
-  expect(after19).toContain("(window as QaWindow).__ONDO_B_QA__")
+  expect(after19).toContain("readQaRuntime<QaRuntime>()")
   expect(after19).toContain('if (gate === "age" && qa?.after19)')
   expect(after19).toContain("Confirm 19+ and continue")
   expect(after19).toContain("Not now — return without changing the action")

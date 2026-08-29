@@ -8,11 +8,11 @@ import { consumeBReturnTo } from "../contracts/return-to-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import styles from "./after19-jit-b.module.css"
 
 declare global {
   interface Window {
-    __ONDO_B_QA__?: { account?: "failure"; after19?: "failure" | "unavailable" | "expired"; tableMessage?: "failure"; localSignalPhoto?: "failure" }
     __ONDO_B_TABLE_INTENT__?: { tableId: string; venueId: string; mode: "view" }
   }
 }
@@ -105,7 +105,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
   const dialogRef = useRef<HTMLElement | null>(null)
   const startRef = useRef<HTMLButtonElement | null>(null)
   const t = COPY[locale]
-  const qaOutcome = window.__ONDO_B_QA__?.after19 ?? null
+  const qaOutcome = readQaRuntime<{ after19?: "failure" | "unavailable" | "expired" }>()?.after19 ?? null
 
   useModalIsolation(open, layerRef)
 

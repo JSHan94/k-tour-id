@@ -309,7 +309,7 @@ for (const locale of ["en", "ko"] as const satisfies readonly BLocale[]) {
 
     await activateTwiceBeforeReactCommits(page.getByTestId("checkout-retry"))
     await expectFocusOwner(page, checkout, "PAY-CONFIRMING", page.getByTestId("checkout-confirm"))
-    await page.evaluate((venueId) => history.replaceState(null, "", `/ondo-b?venueId=${venueId}`), CANONICAL_VENUE_ID)
+    await page.evaluate((venueId) => history.replaceState(null, "", `/?venueId=${venueId}`), CANONICAL_VENUE_ID)
     await holdAnimationFrames(page)
     await holdCheckoutCompletion(page)
     await activateTwiceBeforeReactCommits(page.getByTestId("checkout-confirm"))

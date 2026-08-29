@@ -228,7 +228,7 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-requested-view", "list")
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("safe noodles")
     await expect(page.getByTestId("ondo-b-search")).toBeFocused()
-    await expect(page).toHaveURL(/\/ondo-b\?city=busan&view=list&q=safe(?:\+|%20)noodles&category=korean$/)
+    await expect(page).toHaveURL(/\/\?city=busan&view=list&q=safe(?:\+|%20)noodles&category=korean$/)
     expect(await placeReturnSession(page)).toMatchObject({
       pending: null,
       lastConsumed: { tokenId: mismatched?.tokenId, outcome: "cancel" },
@@ -267,7 +267,7 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-requested-view", "list")
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("safe soup")
     await expect(page.getByTestId("ondo-b-search")).toBeFocused()
-    await expect(page).toHaveURL(/\/ondo-b\?city=seoul&view=list&q=safe(?:\+|%20)soup&category=korean$/)
+    await expect(page).toHaveURL(/\/\?city=seoul&view=list&q=safe(?:\+|%20)soup&category=korean$/)
     expect(await placeReturnSession(page)).toMatchObject({ pending: null, lastConsumed: { outcome: "cancel" } })
   })
 

@@ -37,7 +37,7 @@ async function openOneResultList(page: Page, locale: BLocale) {
   const pulse = result.getByTestId("ondo-b-list-pulse")
   await expect(pulse).toHaveAttribute("data-pulse-level", "hot")
   await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
-  await expect(pulse).toHaveAttribute("aria-label", new RegExp(`^Pulse 80 · ${locale === "ko" ? "핫" : "HOT"}`))
+  await expect(pulse).toHaveAttribute("aria-label", locale === "ko" ? "온도 · 핫" : "ONDO temperature · HOT")
   await expect(result).toContainText(locale === "ko" ? "공식 출처 한글명" : "Official Korean source name")
   await expect(result).toContainText(locale === "ko" ? "공식 영문명 아님" : "Generated, not an official English name")
   return { result, search }
@@ -51,16 +51,18 @@ async function expectFilteredMap(page: Page, locale: BLocale) {
   await expect(root).toHaveAttribute("data-curated-pulse-count", "1")
   const accessibleMarker = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
   await expect(accessibleMarker).toHaveCount(1)
-  await expect(accessibleMarker).toContainText(`${locale === "ko" ? FILTERED_VENUE_NAME : FILTERED_VENUE_TRANSLITERATION} · Pulse 80 · ${locale === "ko" ? "핫" : "HOT"}`)
+  await expect(accessibleMarker).toContainText(locale === "ko"
+    ? `${FILTERED_VENUE_NAME} · 온도 · 핫 · 최신성 선별 스냅샷 · 신뢰도 보통`
+    : `${FILTERED_VENUE_TRANSLITERATION} · ONDO temperature · HOT · freshness curated snapshot · confidence medium`)
 
   const key = page.getByTestId("ondo-b-map-key")
   await expect(key).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
   await expect(key).toHaveAccessibleName(locale === "ko"
-    ? /Pulse 지도 · 공식 기록 묶음.*실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다/
-    : /ONDO temperature · official groups.*not live crowding or official LOCALDATA facts/)
+    ? /온도 · 장소 묶음.*실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다/
+    : /ONDO temperature · place groups.*not live crowding or official LOCALDATA facts/)
   await expect(key.getByTestId("ondo-b-pulse-scale")).toBeVisible()
   await expect(key).not.toContainText(/Simulated score|시뮬레이션 점수/)
-  await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText(locale === "ko" ? "공식 기록 1개" : "1 official record")
+  await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText(locale === "ko" ? "장소 1곳" : "1 place")
 }
 
 async function exerciseFilteredRoundTrip(page: Page, locale: BLocale) {
@@ -143,7 +145,7 @@ test.describe("SLEEK R5 filtered List and Map synchronization", () => {
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-result-count", "1")
     await expect(root).toHaveAttribute("data-curated-pulse-count", "1")
-    await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("1 official record")
+    await expect(page.getByTestId("ondo-b-result-bar").locator("b")).toHaveText("1 place")
     await expect(page.getByTestId("ondo-b-venue-list").locator("li")).toHaveCount(1)
     await expectBRuntimeClean(page)
   })

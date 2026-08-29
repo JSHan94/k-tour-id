@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import { useBActivityProfile, type BActivityProfile, type BProfileField, type BReputation } from "./activity-profile-b-provider"
 import styles from "./profile-reputation-b.module.css"
 
@@ -209,7 +210,7 @@ export function ProfileReputationB({ locale, accountActive, personVerified }: Pr
   }
 
   function saveProfile() {
-    const qa = (window as Window & { __ONDO_B_QA__?: { profile?: "failure" } }).__ONDO_B_QA__
+    const qa = readQaRuntime<{ profile?: "failure" }>()
     const injectedFailure = qa?.profile === "failure" && !failConsumedRef.current
     if (injectedFailure) {
       failConsumedRef.current = true

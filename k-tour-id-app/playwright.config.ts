@@ -34,6 +34,7 @@ export default defineConfig({
       // remains available for a deliberately managed local preview.
       reuseExistingServer: process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === "1",
       timeout: 120_000,
+      env: { ...process.env, NEXT_PUBLIC_ONDO_QA_CONTROLS: "1" },
     },
   projects: [
     {

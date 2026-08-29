@@ -17,7 +17,7 @@ async function openTables(page: Page, locale: "en" | "ko" = "en") {
     }))
   }, { key: DEVICE_KEY, nextLocale: locale })
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-tables").click()
   await expect(page.getByTestId("tables-entry")).toBeVisible()
 }

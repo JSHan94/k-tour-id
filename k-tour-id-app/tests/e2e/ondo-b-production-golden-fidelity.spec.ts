@@ -21,7 +21,7 @@ async function seedGoldenCandidate(page: Page, locale: "en" | "ko") {
 }
 
 async function openMealOffer(page: Page) {
-  await page.goto(`/ondo-b?venueId=${VENUE_ID}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/?venueId=${VENUE_ID}`, { waitUntil: "domcontentloaded" })
   await page.getByTestId("canonical-place-details").click()
   await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
   const entry = page.getByTestId("canonical-meal-benefit-open")
@@ -43,7 +43,7 @@ async function completePaymentGate(page: Page) {
 
 test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and peak-only Too Hot in EN and KO", async ({ page, browser }) => {
   await seedGoldenCandidate(page, "en")
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.locator("[data-city='seoul']").click()
   await page.getByTestId("ondo-b-view-toggle").click()
 
@@ -51,7 +51,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   const listPulse = curatedRow.getByTestId("ondo-b-list-pulse")
   await expect(listPulse).toHaveAttribute("data-pulse-level", "peak")
   await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
-  await expect(listPulse).toHaveAttribute("aria-label", /ONDO temperature 91 · PEAK/)
+  await expect(listPulse).toHaveAttribute("aria-label", "ONDO temperature · PEAK")
   await curatedRow.locator("button").click()
   await page.getByTestId("canonical-place-details").click()
 
@@ -68,11 +68,11 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   const koPage = await koContext.newPage()
   try {
     await seedGoldenCandidate(koPage, "ko")
-    await koPage.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await koPage.goto("/", { waitUntil: "domcontentloaded" })
     await koPage.locator("[data-city='seoul']").click()
     await koPage.getByTestId("ondo-b-view-toggle").click()
     const koCuratedRow = koPage.locator(`[data-venue-id='${VENUE_ID}']`)
-    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", /온도 91 · 피크/)
+    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", "온도 · 피크")
   } finally {
     await koContext.close()
   }
@@ -82,7 +82,7 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
   await seedGoldenCandidate(page, "en")
   const { offer } = await openMealOffer(page)
   await expect(offer.getByRole("heading", { name: "A better meal, one tap away" })).toBeVisible()
-  await expect(offer).toContainText("OOKRW Test")
+  await expect(offer).toContainText("OOKRW")
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-benefit-recommendation", "recommended")
   await offer.getByTestId("benefit-accept").click()
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
@@ -96,15 +96,15 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
   await expect(receipt.getByTestId("commerce-provider-status")).toHaveAttribute("data-provider-order", "NOT_CONNECTED")
   await expect(receipt.getByTestId("commerce-provider-status")).toHaveText("Place orderNot connected")
   await expect(receipt).toContainText("ONDO-LOCAL-20260825-001")
-  await expect(receipt).toContainText("19 OOKRW Test")
+  await expect(receipt).toContainText("19 OOKRW")
   await expect(offer.locator("[data-operation-kind]")).toHaveCount(0)
   await receipt.getByText("Refund & support").click()
   await receipt.getByTestId("payment-refund").click()
   await expect(receipt).toHaveAttribute("data-refunded", "true")
   await expect(receipt).toContainText("Original payment")
-  await expect(receipt).toContainText(/Refunded\s*19 OOKRW Test/)
-  await expect(receipt).toContainText("ONDO benefit3 OOKRW Test")
-  await expect(receipt).toContainText("60 OOKRW Test")
+  await expect(receipt).toContainText(/Refunded\s*19 OOKRW/)
+  await expect(receipt).toContainText("ONDO benefit3 OOKRW")
+  await expect(receipt).toContainText("60 OOKRW")
 })
 
 test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-offer return", async ({ browser }) => {

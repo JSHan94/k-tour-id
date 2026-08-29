@@ -96,3 +96,14 @@ test("VENUE-DATA-008 published category is normalized only from the official bus
     expect(venue.primaryCategory).toBe(expected)
   }
 })
+
+test("VENUE-DATA-009 After 19 selects bar-like official types without treating cafés as age-restricted", () => {
+  const eligible = CANONICAL_MAP_VENUES.filter((venue) => venue.after19PresentationEligible)
+  expect(eligible).toHaveLength(53)
+  expect(eligible.every((venue) => venue.primaryCategory === "night")).toBe(true)
+  for (const venue of CANONICAL_VENUES) {
+    expect(venueToMapRecord(venue).after19PresentationEligible).toBe(
+      venue.primaryCategory === "night" && venue.sourceCategory.value !== "까페",
+    )
+  }
+})

@@ -37,7 +37,7 @@ async function seed(page: Page, locale: "en" | "ko", options: { active?: boolean
 }
 
 async function openTab(page: Page, nav: "nav-my" | "nav-id" | "nav-settings", root: string) {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId(nav).click()
   const surface = page.getByTestId(root)
   await expect(surface).toBeVisible()
@@ -178,7 +178,7 @@ test.describe("personal surfaces visual excellence", () => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.setViewportSize({ width: 1440, height: 1000 })
     await seed(page, "en")
-    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.goto(`/?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
     await page.getByTestId("canonical-meal-benefit-open").click()
     const offer = page.getByTestId("ondo-b-id-wallet-commerce")
@@ -213,7 +213,7 @@ test.describe("personal surfaces visual excellence", () => {
       const style = getComputedStyle(element)
       return `${style.backgroundColor}|${style.backgroundImage}`
     })
-    await receipt.locator("details summary").click()
+    await receipt.getByTestId("commerce-refund-details").locator("summary").click()
     await receipt.getByTestId("payment-refund").click()
     await expect(receipt).toHaveAttribute("data-refunded", "true")
     await page.screenshot({ path: resolve(EVIDENCE_DIR, "en-390-refund.png") })
@@ -228,7 +228,7 @@ test.describe("personal surfaces visual excellence", () => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.setViewportSize({ width: 320, height: 720 })
     await seed(page, "ko", { active: true })
-    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.goto(`/?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
     await page.getByTestId("canonical-meal-benefit-open").click()
 
@@ -283,7 +283,7 @@ test.describe("personal surfaces visual excellence", () => {
       await page.emulateMedia({ reducedMotion: "reduce" })
       await page.setViewportSize({ width: 390, height: 844 })
       await seed(page, locale)
-      await page.goto(`/ondo-b?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+      await page.goto(`/?city=seoul&view=list&venueId=${VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
       await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
       await page.getByTestId("canonical-meal-benefit-open").click()
       const offer = page.getByTestId("ondo-b-id-wallet-commerce")
@@ -329,7 +329,7 @@ test.describe("personal surfaces visual excellence", () => {
         const context = await browser.newContext({ viewport, reducedMotion: "reduce" })
         const page = await context.newPage()
         await seed(page, locale, { active: true })
-        await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+        await page.goto("/", { waitUntil: "domcontentloaded" })
         // The local development harness reports React's CSP/eval diagnostic in
         // a Next.js portal. It is not part of the production UI or evidence.
         await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })

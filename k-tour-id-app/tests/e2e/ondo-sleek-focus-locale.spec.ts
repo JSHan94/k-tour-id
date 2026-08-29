@@ -176,7 +176,7 @@ for (const locale of ["en", "ko"] as const) {
     await expect(page.getByTestId("labs-bridge-quote")).toBeFocused()
     await expectFocusWithinViewport(page, labs)
 
-    await page.evaluate(() => history.replaceState(null, "", "/ondo-b?qa=1"))
+    await page.evaluate(() => history.replaceState(null, "", "/?qa=1"))
     await page.getByTestId("labs-bridge-quote").click()
     await page.getByTestId("labs-bridge-confirm").click()
     await page.getByTestId("labs-bridge-submit").click()

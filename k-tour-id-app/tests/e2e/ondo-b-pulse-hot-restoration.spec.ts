@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
 })
 
 async function openSeoulList(page: import("@playwright/test").Page) {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await activate(page.locator("[data-city='seoul']"))
   await activate(page.getByTestId("ondo-b-view-toggle"))
   await expect(page.getByTestId("ondo-b-list-panel")).toBeVisible()
@@ -34,17 +34,17 @@ async function activate(locator: import("@playwright/test").Locator) {
 
 test("Pulse is reachable from city list to selected confidence and Too Hot alternatives", async ({ page }) => {
   await openSeoulList(page)
-  await expect(page.getByTestId("ondo-b-pulse-city-status")).toContainText("Curated Pulse active")
+  await expect(page.getByTestId("ondo-b-pulse-city-status")).toContainText("ONDO temperature · curated food signal")
   const curatedRow = page.locator("[data-venue-id='mois-0021cd596bc5b2a922ad']")
-  await expect(curatedRow.getByTestId("ondo-b-list-pulse")).toContainText(/Pulse \d+ · (PEAK|HOT|RISING|WARMING|LOW)/)
+  await expect(curatedRow.getByTestId("ondo-b-list-pulse")).toHaveAccessibleName("ONDO temperature · PEAK")
 
   await activate(curatedRow.locator("button"))
   await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-selected-venue-id", "mois-0021cd596bc5b2a922ad")
-  await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("ONDO temperature 91 · PEAK")
+  await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("ONDO temperature · PEAK")
   const selectedPeek = page.getByTestId("canonical-place-peek")
   await expect(selectedPeek).toHaveAttribute("role", "dialog")
   await expect(selectedPeek).toHaveAttribute("aria-label", /로바/)
-  await expect(page.getByTestId("canonical-place-pulse")).toContainText(/Pulse \d+ · (PEAK|HOT|RISING|WARMING|LOW)/)
+  await expect(page.getByTestId("canonical-place-pulse")).toHaveAccessibleName("ONDO temperature · PEAK")
   await activate(page.getByTestId("canonical-place-details"))
   await activate(page.getByTestId("canonical-place-pulse").locator("summary"))
   await expect(page.getByTestId("pulse-confidence")).toBeVisible()
@@ -85,10 +85,11 @@ test("Pulse is reachable from city list to selected confidence and Too Hot alter
 test("a limited place returns from Local Signal with device evidence and no invented shared metrics", async ({ page }) => {
   const venueId = "mois-02d77be9fc4b43fbb360"
   await openSeoulList(page)
+  await page.getByRole("button", { name: "Load 30 more" }).click()
   await page.locator(`[data-venue-id='${venueId}'] button`).click()
   await page.getByTestId("canonical-place-details").click()
   const pulse = page.getByTestId("canonical-place-pulse")
-  await expect(pulse).toContainText("Pulse · LIMITED")
+  await expect(pulse.locator("summary")).toHaveAccessibleName("ONDO temperature · LIMITED")
   await expect(pulse.getByTestId("pulse-score")).toHaveCount(0)
   await expect(pulse.getByTestId("pulse-signal-count")).toHaveCount(0)
 
@@ -108,7 +109,7 @@ test("a limited place returns from Local Signal with device evidence and no inve
 
   await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", venueId)
   await expect(page.getByTestId("pulse-local-device-evidence")).toContainText("On this device")
-  await expect(pulse).toContainText("Pulse · LIMITED")
+  await expect(pulse.locator("summary")).toHaveAccessibleName("ONDO temperature · LIMITED")
   await expect(pulse.getByTestId("pulse-score")).toHaveCount(0)
   await expect(pulse.getByTestId("pulse-signal-count")).toHaveCount(0)
   const saved = await page.evaluate((key) => localStorage.getItem(key), DEVICE_KEY)
@@ -117,11 +118,11 @@ test("a limited place returns from Local Signal with device evidence and no inve
 })
 
 test("Korean Pulse copy keeps the non-live, non-LOCALDATA boundary", async ({ page }) => {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await activate(page.locator("[data-language-target='ja']"))
   await activate(page.locator("[data-language-target='ko']"))
   await activate(page.locator("[data-city='seoul']"))
   await activate(page.getByTestId("ondo-b-view-toggle"))
-  await expect(page.getByTestId("ondo-b-pulse-city-status")).toContainText("선별 Pulse 운영 중")
+  await expect(page.getByTestId("ondo-b-pulse-city-status")).toContainText("온도 · 선별 식음료 신호")
   await expect(page.getByTestId("ondo-b-pulse-disclosure")).toContainText("실시간 혼잡도나 공식 LOCALDATA 사실이 아닙니다")
 })

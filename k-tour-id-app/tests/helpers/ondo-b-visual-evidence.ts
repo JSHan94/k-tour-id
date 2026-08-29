@@ -1800,7 +1800,7 @@ export function bSnapshotName(item: BVisualCase, viewport: BSleekViewportId) {
 
 export function attachBCaseMetadata(testInfo: TestInfo, item: BVisualCase, viewport: BSleekViewportId) {
   return testInfo.attach("evidence-case.json", {
-    body: JSON.stringify({ ...item, viewport, sourceRoute: "/ondo-b", tilePolicy: "external vector tiles replaced; ONDO overlays unmasked" }, null, 2),
+    body: JSON.stringify({ ...item, viewport, sourceRoute: "/", tilePolicy: "external vector tiles replaced; ONDO overlays unmasked" }, null, 2),
     contentType: "application/json",
   })
 }

@@ -25,7 +25,7 @@ test.describe("ONDO B premium shell", () => {
   test("desktop product surfaces use an intentional wide composition", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 1000 })
     await seed(page)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
 
     for (const navId of ["nav-my", "nav-tables", "nav-id", "nav-settings"]) {
       await page.getByTestId(navId).click()
@@ -40,7 +40,7 @@ test.describe("ONDO B premium shell", () => {
   test("mobile navigation uses shared premium motion without weakening touch geometry", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 })
     await seed(page)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
 
     const root = page.getByTestId("ondo-b-root")
     expect(await root.evaluate((element) => getComputedStyle(element).getPropertyValue("--ondo-motion-medium").trim())).toBe("240ms")
@@ -57,7 +57,7 @@ test.describe("ONDO B premium shell", () => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.setViewportSize({ width: 390, height: 844 })
     await seed(page)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-id").click()
     await expect(page.getByTestId("nav-id")).toHaveAttribute("data-state", "selected")
     expect(await page.getByTestId("nav-id").evaluate((element) => getComputedStyle(element).animationName)).toBe("none")

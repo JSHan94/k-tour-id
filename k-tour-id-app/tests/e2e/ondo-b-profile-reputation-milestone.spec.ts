@@ -68,7 +68,7 @@ async function seed(page: Page, locale: Locale, stamps = 0) {
 
 async function openTravelPass(page: Page, locale: Locale, query = "") {
   await seed(page, locale)
-  await page.goto(`/ondo-b${query}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/${query}`, { waitUntil: "domcontentloaded" })
   await expect(page.locator("html")).toHaveAttribute("lang", locale)
   await page.getByTestId("nav-id").click()
   await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
@@ -111,7 +111,7 @@ test("profile, axes, and stamps reflow without clipping from 320px through lands
     { width: 844, height: 390 },
   ]) {
     await page.setViewportSize(viewport)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-id").click()
     const surface = page.getByTestId("ondo-b-profile-activity")
     await expect(surface).toBeVisible()
@@ -154,7 +154,7 @@ test("profile consent, failure retry, and reload persistence keep previous data 
 
 test("payment alone never adds a stamp; a unique visit reaches 10 once and opens Labs", async ({ page }) => {
   await seed(page, "en", 9)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   const offer = await openOffer(page)
   await offer.getByTestId("payment-confirm").click()
   await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up travel wallet", exact: true }).click()
@@ -185,7 +185,7 @@ test("clear saved content tombstones every B session axis without reviving legac
     localStorage.setItem(preferenceKey, JSON.stringify({ version: 1, autoOpen: false }))
     sessionStorage.setItem(sessionKey, JSON.stringify({ version: 1, age: "eligible", ageExpiresAt: new Date(Date.now() + 86_400_000).toISOString(), mode: "manual-off", activation: null, expiryNotice: false }))
   }, { preferenceKey: AFTER19_PREFERENCE_KEY, sessionKey: AFTER19_SESSION_KEY })
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-settings").click()
   const settings = page.getByTestId("ondo-b-device-data-settings")
   await settings.locator("summary").click()
@@ -209,7 +209,7 @@ test("clear saved content tombstones every B session axis without reviving legac
 
 test("clear saved content rolls back every session key when a mid-transaction tombstone write fails", async ({ page }) => {
   await seed(page, "en", 4)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.evaluate(() => sessionStorage.setItem("ondo-b.labs.v1", JSON.stringify({ stage: "ready", private: "keep-on-failure" })))
   const before = await page.evaluate(({ deviceKey, accountKey, actionKey, activityKey, preferenceKey, sessionKey }) => ({
     device: localStorage.getItem(deviceKey),

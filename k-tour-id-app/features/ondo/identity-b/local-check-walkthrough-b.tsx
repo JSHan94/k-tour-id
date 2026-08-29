@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { AlertTriangle, BadgeCheck, CircleOff, LoaderCircle, ShieldCheck, X } from "lucide-react"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import styles from "./local-check-walkthrough-b.module.css"
 
 export type LocalCheckKind = "person" | "age"
@@ -22,8 +23,6 @@ type Props = {
 }
 
 type Phase = "consent" | "processing" | "result"
-type QaWindow = Window & { __ONDO_B_QA__?: { eligibility?: LocalCheckOutcome } }
-
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
 
 const COPY = {
@@ -182,7 +181,7 @@ export function LocalCheckWalkthroughB({ locale, check, origin, boundarySeen, on
   useEffect(() => {
     if (phase !== "processing") return
     return runAfterFrames(() => {
-      const injected = (window as QaWindow).__ONDO_B_QA__?.eligibility ?? "success"
+      const injected = readQaRuntime<{ eligibility?: LocalCheckOutcome }>()?.eligibility ?? "success"
       if (injected === "cancel") { finish("cancel"); return }
       setResult(injected)
       setPhase("result")

@@ -42,7 +42,7 @@ test.describe("Japan-first discovery reuses the existing Explore skeleton", () =
       ]) {
         await page.setViewportSize(viewport)
         await seed(page, locale)
-        await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+        await page.goto("/", { waitUntil: "domcontentloaded" })
 
         const atlas = page.getByTestId("ondo-b-korea-atlas")
         const seoul = atlas.locator("[data-city='seoul']")

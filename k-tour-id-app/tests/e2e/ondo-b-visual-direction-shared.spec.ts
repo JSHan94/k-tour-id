@@ -26,7 +26,7 @@ for (const locale of ["ko", "ja"] as const) {
   test(`Warm Living Atlas keeps ${locale.toUpperCase()} mobile navigation naturally tracked`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 })
     await seedCompleted(page, locale)
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
 
     const nav = page.getByTestId("ondo-main-nav")
     await expect(nav).toBeVisible()
@@ -55,7 +55,7 @@ for (const locale of ["ko", "ja"] as const) {
 test("Warm Living Atlas retains five actions and desktop rail ownership", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 })
   await seedCompleted(page, "ja")
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
 
   const nav = page.getByTestId("ondo-main-nav")
   await expect(nav.locator("button")).toHaveCount(5)

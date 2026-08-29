@@ -8,7 +8,7 @@ import { AppProvider } from "@/lib/store/app-provider"
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname()
-  const isProductionDirectory = pathname === "/ondo-b" || pathname.startsWith("/ondo-b/")
+  const isProductionDirectory = pathname === "/" || pathname === "/ondo-b" || pathname.startsWith("/ondo-b/")
 
   if (isProductionDirectory) return children
 

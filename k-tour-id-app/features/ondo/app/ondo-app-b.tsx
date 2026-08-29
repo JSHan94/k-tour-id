@@ -42,9 +42,9 @@ const B_NAV_ARIA_COPY = {
 } as const
 
 const SHELL_COPY = {
-  en: { app: "ONDO Korea food and travel app", content: "content", nav: "Main navigation" },
-  ko: { app: "ONDO 한국 먹거리·여행 앱", content: "콘텐츠", nav: "주요 메뉴" },
-  ja: { app: "ONDO 韓国フード・旅行アプリ", content: "コンテンツ", nav: "メインメニュー" },
+  en: { app: "ONDO Korea food and travel app", content: "content", nav: "Main navigation", skipNav: "Skip to main navigation" },
+  ko: { app: "ONDO 한국 먹거리·여행 앱", content: "콘텐츠", nav: "주요 메뉴", skipNav: "주요 메뉴로 건너뛰기" },
+  ja: { app: "ONDO 韓国フード・旅行アプリ", content: "コンテンツ", nav: "メインメニュー", skipNav: "メインメニューへ移動" },
 } as const
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
@@ -178,6 +178,15 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
   return (
     <main className={styles.stage} data-ondo-locale={state.locale} data-testid="ondo-b-root" data-variant="B" data-locale={state.locale}>
       <section ref={canvasRef} className={styles.canvas} aria-label={SHELL_COPY[state.locale].app} data-testid="ondo-canvas" data-responsive-shell="mobile-dock-desktop-rail">
+        {!onboardingActive ? (
+          <a
+            className={styles.skipNav}
+            href="#ondo-main-nav"
+            onClick={() => window.requestAnimationFrame(() => document.querySelector<HTMLElement>("#ondo-main-nav button")?.focus({ preventScroll: true }))}
+          >
+            {SHELL_COPY[state.locale].skipNav}
+          </a>
+        ) : null}
         <div
           ref={contentRef}
           className={styles.content}
@@ -194,7 +203,7 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
         >
           {active}
         </div>
-        <nav className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" data-nav-presentation="labeled-universal-icons" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
+        <nav id="ondo-main-nav" className={styles.nav} data-testid="ondo-main-nav" data-nav-count="5" data-navigation-mode="responsive" data-nav-presentation="labeled-universal-icons" aria-label={SHELL_COPY[state.locale].nav} inert={onboardingActive ? true : undefined} aria-hidden={onboardingActive ? true : undefined}>
           {B_NAV.map(({ id, icon: Icon }) => (
             <button
               key={id}

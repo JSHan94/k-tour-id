@@ -136,7 +136,7 @@ async function seedDevice(page: Page, item: BProductionVisualCase, options: {
 }
 
 async function gotoProductionB(page: Page, locale: BProductionVisualCase["locale"]) {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   const root = page.getByTestId("ondo-b-root")
   await expect(root).toBeVisible()
   await expect(root).toHaveAttribute("data-variant", "B")

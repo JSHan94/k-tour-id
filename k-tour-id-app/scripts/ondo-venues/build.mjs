@@ -46,6 +46,7 @@ function geoJson(venues) {
         nameKo: venue.name.ko.value,
         nameEn: null,
         primaryCategory: venue.primaryCategory,
+        after19PresentationEligible: venue.primaryCategory === "night" && venue.sourceCategory.value !== "까페",
         licenseStatus: "ACTIVE_LICENSE_RECORD",
         openNow: null,
         ondoScore: null,

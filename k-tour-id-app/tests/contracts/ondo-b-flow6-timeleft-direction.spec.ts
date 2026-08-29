@@ -17,11 +17,14 @@ test("FLOW6-DIR-001 Tables, detail, and 19+ expose one stateful Timeleft directi
   expect(gateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
 
   for (const truth of [
-    "Nothing is booked, sent to the venue, or charged.",
+    "Messages and photos stay with this Table.",
     "No identity provider is connected and no credential is created.",
     "Only an eligibility result and expiry are kept in this tab.",
     "Messages and photos remain in this tab.",
   ]) expect(`${tables}\n${gate}`).toContain(truth)
+
+  expect(tables).toContain('<details className={styles.tablePrivacy} data-testid="tables-truth-notice">')
+  expect(tables).not.toContain("Nothing is booked, sent to the venue, or charged.")
 
   expect(`${tables}\n${gate}`).not.toMatch(/booking confirmed|reservation confirmed|matched with|live host|live chat|payment completed/i)
 })

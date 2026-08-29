@@ -66,7 +66,7 @@ async function activateTab(page: Page, name: "My Korea" | "ID", targetTestId: st
 
 async function openCheckout(page: Page, query = "") {
   const suffix = query ? `?${query.replace(/^\?/, "")}` : ""
-  await page.goto(`/ondo-b${suffix}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/${suffix}`, { waitUntil: "domcontentloaded" })
   await expect(page.getByTestId("ondo-b-root")).toBeVisible({ timeout: 30_000 })
   const seoul = page.locator("[data-testid='ondo-b-nation'] [data-city='seoul']")
   await expect.poll(async () => {
@@ -115,9 +115,9 @@ test("SLK-004 keyboard close restores the exact My and ID origin tab and opener"
   await expect(idOpener).toBeFocused()
 })
 
-test("SLK-009 exact /ondo-b Labs contains no QA author controls or phrases", async ({ page }) => {
+test("SLK-009 exact / Labs contains no QA author controls or phrases", async ({ page }) => {
   await seedAcknowledgedLabs(page)
-  await expect(page).toHaveURL(/\/ondo-b$/)
+  await expect(page).toHaveURL(/\/$/)
   await activateTab(page, "My Korea", "ondo-my-entry")
   await page.getByTestId("open-labs-milestone").click()
   const labs = page.getByTestId("labs-overlay")

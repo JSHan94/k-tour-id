@@ -11,7 +11,7 @@ import { useOndoB } from "../shared/state/ondo-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
-import { useQaControls } from "../shared/ui/use-qa-controls"
+import { readQaRuntime, useQaControls } from "../shared/ui/use-qa-controls"
 import styles from "./account-save-gate-b.module.css"
 
 type AccountGateView = "intro" | "review" | "failure"
@@ -147,7 +147,7 @@ export function AccountSaveGateB({ locale, returnTo, venueLabel, onCancel, onCom
   }
 
   function start() {
-    if (window.__ONDO_B_QA__?.account === "failure") setView("failure")
+    if (readQaRuntime<{ account?: "failure" }>()?.account === "failure") setView("failure")
     else setView("review")
   }
 

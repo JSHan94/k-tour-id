@@ -6,6 +6,7 @@ import {
   LEGACY_ARTIFACT_PATH,
   LEGACY_ARTIFACT_TEXT,
   EXPECTED_ROUTE_FILES,
+  FORBIDDEN_QA_ARTIFACT_TEXT,
   HISTORICAL_B_PROJECT_ID,
   PUBLIC_FILES,
   STAGE_DIST,
@@ -56,6 +57,15 @@ export async function scanStandaloneArtifact() {
     }
   }
   if (textHits.length) fail("Legacy route or product content was emitted", textHits)
+
+  const qaHits = []
+  for (const file of artifactFiles.filter((item) => TEXT_EXTENSIONS.has(extname(item)))) {
+    const text = await readFile(resolve(STAGE_DIST, file), "utf8")
+    for (const pattern of FORBIDDEN_QA_ARTIFACT_TEXT) {
+      if (pattern.test(text)) qaHits.push(`${file}: ${pattern}`)
+    }
+  }
+  if (qaHits.length) fail("Production QA controls were emitted", qaHits)
 
   const serverBundle = await readFile(serverEntry, "utf8")
   const emittedRoutes = [...serverBundle.matchAll(/\n\t\tpattern: "([^"]+)",/g)]

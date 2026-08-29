@@ -44,7 +44,7 @@ async function waitForHydratedShell(page: Page) {
 
 async function openTables(page: Page, locale: Locale = "en") {
   await seed(page, locale)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForHydratedShell(page)
   await page.getByTestId("nav-tables").click()
   const entry = page.getByTestId("tables-entry")
@@ -92,7 +92,7 @@ async function openChat(page: Page) {
 }
 
 async function openLocalSignal(page: Page) {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForHydratedShell(page)
   await page.locator("[data-city='seoul']").click()
   const viewToggle = page.getByTestId("ondo-b-view-toggle")

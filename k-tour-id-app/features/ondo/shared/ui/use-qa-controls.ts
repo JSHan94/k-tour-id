@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react"
 
+/**
+ * Deterministic failure injection is compiled into an explicitly opted-in QA
+ * build only. Production and standalone artifacts keep this false, so query
+ * parameters and console globals cannot alter traveler-visible state.
+ */
+export const QA_RUNTIME_ENABLED = process.env.NEXT_PUBLIC_ONDO_QA_CONTROLS === "1"
+
 const QA_ENABLED_KEY = "ondo.qa.controls.v1"
 const QA_SCENARIO_KEY = "ondo.qa.scenario.v1"
 const QA_SCENARIOS = new Set([
@@ -27,6 +34,7 @@ let qaCapturedPath: string | null = null
 /** Capture the explicit QA seam before discovery URL canonicalization removes
  * all non-product query keys. Values stay session-only and are allow-listed. */
 export function captureQaControls(search: string) {
+  if (!QA_RUNTIME_ENABLED) return
   if (typeof window === "undefined") return
   const params = new URLSearchParams(search)
   const currentPath = window.location.pathname
@@ -49,6 +57,7 @@ export function captureQaControls(search: string) {
 }
 
 export function readQaScenario() {
+  if (!QA_RUNTIME_ENABLED) return null
   if (typeof window === "undefined") return null
   try {
     if (window.sessionStorage.getItem(QA_ENABLED_KEY) !== "1") return null
@@ -67,6 +76,7 @@ export function useQaControls() {
   const [enabled, setEnabled] = useState(false)
 
   useEffect(() => {
+    if (!QA_RUNTIME_ENABLED) return
     captureQaControls(window.location.search)
     try {
       setEnabled(window.sessionStorage.getItem(QA_ENABLED_KEY) === "1")
@@ -76,4 +86,10 @@ export function useQaControls() {
   }, [])
 
   return enabled
+}
+
+/** Read an allowlisted test fixture installed by Playwright in an opted-in QA build. */
+export function readQaRuntime<T extends object>() {
+  if (!QA_RUNTIME_ENABLED || typeof window === "undefined") return undefined
+  return (window as Window & { __ONDO_B_QA__?: T }).__ONDO_B_QA__
 }

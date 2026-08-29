@@ -31,7 +31,7 @@ test.describe("production official-source discovery", () => {
       localStorage.clear()
       sessionStorage.clear()
     })
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
 
     const onboarding = page.getByTestId("ondo-onboarding")
     await expect(onboarding).toBeVisible()
@@ -65,7 +65,7 @@ test.describe("production official-source discovery", () => {
 
   test("city, official category, search, list and legacy URL cleanup remain usable", async ({ page }) => {
     await seedDirectory(page)
-    await page.goto("/ondo-b?city=seoul&view=list&heat=signal&hot=1&after19Return=legacy", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=list&heat=signal&hot=1&after19Return=legacy", { waitUntil: "domcontentloaded" })
 
     await expect(page).toHaveURL(/city=seoul/)
     await expect(page).toHaveURL(/view=list/)
@@ -95,7 +95,7 @@ test.describe("production official-source discovery", () => {
       if (failTiles) await route.abort("failed")
       else await route.continue()
     })
-    await page.goto("/ondo-b?city=busan", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=busan", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 15_000 })
     await expect(page.getByTestId("ondo-b-map-fallback-status")).toContainText("All 200 places remain available")
@@ -107,7 +107,7 @@ test.describe("production official-source discovery", () => {
 
   test("place detail shows sourced facts, unknowns, directions and no unsupported actions", async ({ page }) => {
     await seedDirectory(page)
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     await page.getByTestId("ondo-b-venue-list").locator(`li[data-venue-id='${EMPTY_TABLE_VENUE_ID}'] button`).click()
     const peek = page.getByTestId("canonical-place-peek")
     await expect(peek).toContainText("LOCALDATA place information")

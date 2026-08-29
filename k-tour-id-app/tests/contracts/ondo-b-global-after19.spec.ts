@@ -23,12 +23,8 @@ const NOW = new Date("2026-08-28T11:30:00.000Z") // 20:30 KST
 test("B-AFTER19-MODEL-001 auto entry requires every KST, preference, age, expiry and manual-off guard", () => {
   const preference: GlobalAfter19PreferenceB = { version: 1, autoOpen: true }
   const eligible: GlobalAfter19SessionB = {
-    version: 1,
-    age: "eligible",
-    ageExpiresAt: "2026-08-29T11:30:00.000Z",
+    ...recordGlobalAfter19AgeEligibilityB(NOW),
     mode: "off",
-    activation: null,
-    expiryNotice: false,
   }
 
   expect(canAutoOpenGlobalAfter19B(preference, eligible, NOW)).toBe(true)
@@ -57,6 +53,7 @@ test("B-AFTER19-MODEL-002 current keys are strictly sanitized and never fall thr
     version: 1,
     age: "unverified",
     ageExpiresAt: null,
+    eligibilityReceipt: null,
     mode: "off",
     activation: null,
     expiryNotice: true,
@@ -75,16 +72,34 @@ test("B-AFTER19-MODEL-003 legacy state migrates only when new keys are absent", 
   expect(restored.session).toMatchObject({ age: "eligible", mode: "manual-off", activation: null })
 })
 
-test("B-AFTER19-MODEL-004 completion creates only a bounded tab result and expiry", () => {
+test("B-AFTER19-MODEL-004 completion creates a bounded predicate-only OpenDID receipt", () => {
   expect(GLOBAL_AFTER19_SESSION_EVENT).toBe("ondo-b-after19-session-change")
   expect(recordGlobalAfter19AgeEligibilityB(NOW)).toMatchObject({ age: "eligible", mode: "off", activation: null })
   const completed = completeGlobalAfter19AgeB(NOW)
   expect(completed).toMatchObject({ age: "eligible", mode: "on", activation: "manual", expiryNotice: false })
+  expect(completed.eligibilityReceipt).toEqual({
+    schema: "opendid-age-predicate.v1",
+    predicate: "AGE_GTE_19",
+    outcome: "eligible",
+    issuerType: "SIMULATED_OPENDID_PROVIDER",
+    issuedAt: NOW.toISOString(),
+    expiresAt: completed.ageExpiresAt,
+    disclosure: "predicate_only",
+  })
   expect(Date.parse(completed.ageExpiresAt!)).toBe(NOW.getTime() + GLOBAL_AFTER19_AGE_TTL_MS)
   expect(sanitizeGlobalAfter19Session(completed, new Date(NOW.getTime() + GLOBAL_AFTER19_AGE_TTL_MS + 1))).toMatchObject({
     age: "unverified",
     ageExpiresAt: null,
+    eligibilityReceipt: null,
     mode: "off",
     expiryNotice: true,
   })
+})
+
+test("B-AFTER19-MODEL-005 rejects a forged or mismatched predicate receipt", () => {
+  const eligible = recordGlobalAfter19AgeEligibilityB(NOW)
+  expect(sanitizeGlobalAfter19Session({
+    ...eligible,
+    eligibilityReceipt: { ...eligible.eligibilityReceipt, expiresAt: "2099-01-01T00:00:00.000Z" },
+  }, NOW)).toMatchObject({ age: "unverified", eligibilityReceipt: null, mode: "off" })
 })

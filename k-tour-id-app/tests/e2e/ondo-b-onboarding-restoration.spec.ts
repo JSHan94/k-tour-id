@@ -11,7 +11,7 @@ async function openFresh(page: Page) {
     sessionStorage.setItem("ondo-b.onboarding-restoration-seeded", "1")
   }, DEVICE_KEY)
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
 }
 

@@ -162,7 +162,7 @@ test("B-PULSE-HOT-007 only an exact current place can canonically transition to 
   Object.defineProperty(globalThis, "History", { configurable: true, value: FixtureHistory })
   Object.defineProperty(globalThis, "window", {
     configurable: true,
-    value: { history, location: { origin: "https://ondo.test", pathname: "/ondo-b" } },
+    value: { history, location: { origin: "https://ondo.test", pathname: "/" } },
   })
 
   try {
@@ -184,7 +184,7 @@ test("B-PULSE-HOT-007 only an exact current place can canonically transition to 
         venueId: alternativeVenueId,
       },
     })
-    expect(history.url).toBe(`/ondo-b?city=seoul&view=list&q=late+dinner&category=korean&venueId=${alternativeVenueId}`)
+    expect(history.url).toBe(`/?city=seoul&view=list&q=late+dinner&category=korean&venueId=${alternativeVenueId}`)
   } finally {
     if (previousHistory) Object.defineProperty(globalThis, "History", previousHistory)
     else Reflect.deleteProperty(globalThis, "History")

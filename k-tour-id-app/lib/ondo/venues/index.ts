@@ -38,6 +38,7 @@ export function venueToMapRecord(venue: CanonicalVenue): CanonicalMapVenue {
     name: { ko: venue.name.ko.value!, en: venue.name.en.value ?? venue.name.ko.value! },
     nameEnTruth: "UNKNOWN_FALLBACK_TO_KO",
     primaryCategory: venue.primaryCategory,
+    after19PresentationEligible: venue.primaryCategory === "night" && venue.sourceCategory.value !== "까페",
     latitude: venue.location.latitude,
     longitude: venue.location.longitude,
     licenseStatus: "ACTIVE_LICENSE_RECORD",

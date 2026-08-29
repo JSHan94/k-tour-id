@@ -63,7 +63,7 @@ test("PROD-VIS-003 current production visual harness has no prototype helper, qu
   const source = files.filter(existsSync).map((path) => readFileSync(path, "utf8")).join("\n")
   expect(source).not.toMatch(/ondo-b-visual-evidence|ondo-b-qa|B_VISUAL_CASES|B_SLEEK_VIEWPORTS/)
   expect(source).not.toMatch(/(?:scenario|qaCase|[?&]qa=|[?&]scenario=|sessionStorage|ondo\.(?:preferences|session)\.v3)/i)
-  expect(source).not.toMatch(/page\.goto\(\s*["'`]\/ondo-b\?/)
+  expect(source).not.toMatch(/page\.goto\(\s*["'`]\/\?(?:[^"'`]*(?:qa|scenario)=)/)
 })
 
 test("PROD-VIS-004 the new current namespace contains exactly 124 fresh non-empty PNG baselines", () => {

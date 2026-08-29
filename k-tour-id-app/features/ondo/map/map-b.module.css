@@ -1387,7 +1387,7 @@
   color: #fafafa;
 }
 .root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
-  filter: grayscale(.2) saturate(.82) contrast(1.28) brightness(.43);
+  filter: saturate(1.04) contrast(1.03);
 }
 .root[data-after19-active="true"] .topline,
 .root[data-after19-active="true"] .search,
@@ -1452,10 +1452,40 @@
 .root[data-after19-active="true"] .venueList small,
 .root[data-after19-active="true"] .venueList em,
 .root[data-after19-active="true"] .pulseDisclosure { color: #d2d2d8; }
+.root[data-after19-active="true"] .venueList .transliterationTruth span { color: #f2eef5; }
 .root[data-after19-active="true"] :global([data-testid="ondo-b-japan-first-discovery"]) {
-  --night-surface: #17171b;
+  --story-ink: #faf8fb;
+  --story-muted: #cbc6d0;
+  --story-quiet: #aaa4b0;
+  --story-accent: #ff72b8;
+  --story-accent-soft: rgb(255 114 184 / 13%);
+  --story-line: rgb(255 255 255 / 13%);
+  --story-surface: linear-gradient(145deg, rgb(25 24 31 / 98%), rgb(17 17 22 / 96%));
+  --story-panel: rgb(13 13 18 / 98%);
+  --story-card: linear-gradient(155deg, #1b1a21, #121218);
+  --story-control: #1b1a21;
+  --story-action: #ff72b8;
+  --story-action-ink: #140f16;
+  --story-shadow: 0 20px 54px rgb(0 0 0 / 42%);
   color: #fafafa;
 }
+
+.root[data-after19-active="true"] .locationMessage > p,
+.root[data-after19-active="true"] .mapKeyDetailsBody,
+.root[data-after19-active="true"] .creditDetailsBody {
+  border-color: rgb(255 255 255 / 14%);
+  background: rgb(18 18 23 / 98%);
+  color: #d5d1da;
+  box-shadow: 0 18px 44px rgb(0 0 0 / 38%);
+}
+.root[data-after19-active="true"] .mapKeyLead > span,
+.root[data-after19-active="true"] .mapKeyDetails summary,
+.root[data-after19-active="true"] .creditDetails summary,
+.root[data-after19-active="true"] .mapKeyDetailsBody small,
+.root[data-after19-active="true"] .methodologyDisclosure > summary,
+.root[data-after19-active="true"] .pulsePlaces button b,
+.root[data-after19-active="true"] .attribution a { color: #ded9e2; }
+.root[data-after19-active="true"] .methodologyDisclosure { border-color: rgb(255 255 255 / 12%); }
 
 @media (max-width: 430px) {
   .root:not(.ultraShort) > .mapChrome {
@@ -1493,7 +1523,7 @@
 .mapUtilityCluster > * { min-width: 0; pointer-events: auto; }
 
 .mapUtilityCluster .locationMessage {
-  position: static;
+  position: relative;
   inset: auto;
   width: 44px;
   max-width: 44px;
@@ -1539,10 +1569,17 @@
 .mapUtilityCluster .locationMessage > p {
   position: absolute;
   top: 52px;
-  right: 0;
+  /* Location is the first compact control. Shift its disclosure to the
+     right edge of the complete utility group so the 320/390px card remains
+     fully inside the map instead of opening beyond the left viewport edge. */
+  right: -104px;
   left: auto;
   width: min(320px, calc(100cqw - (2 * var(--map-edge, 14px))));
   max-width: none;
+}
+
+.mapUtilityCluster:has(> :global([data-testid="ondo-b-japan-first-discovery"])) .locationMessage > p {
+  right: -151px;
 }
 
 .mapUtilityCluster .locate {
@@ -1821,7 +1858,7 @@
 }
 
 .root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
-  filter: saturate(.86) contrast(1.08) brightness(.86);
+  filter: saturate(1.04) contrast(1.03);
 }
 
 .root[data-after19-active="true"] .topline,
@@ -1932,7 +1969,8 @@
 }
 
 .root[data-after19-active="true"] .mapKeyDetailsBody,
-.root[data-after19-active="true"] .creditDetailsBody {
+.root[data-after19-active="true"] .creditDetailsBody,
+.root[data-after19-active="true"] .locationMessage > p {
   border-color: var(--night-line);
   background: var(--night-surface-raised);
   color: var(--night-ink);
@@ -3720,5 +3758,5 @@
 /* Final cascade lock: the legacy map-filter block above must not brighten an
    active After 19 canvas back into the light palette. */
 .root[data-after19-active="true"] .map :global(.maplibregl-canvas) {
-  filter: saturate(.86) contrast(1.08) brightness(.86);
+  filter: saturate(1.04) contrast(1.03);
 }

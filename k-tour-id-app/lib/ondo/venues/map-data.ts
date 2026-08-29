@@ -11,6 +11,7 @@ type CompactFeature = {
     nameKo: string
     nameEn: string | null
     primaryCategory: VenuePrimaryCategory
+    after19PresentationEligible: boolean
     sourceSnapshotAt: string
     sourceRefId: "MOIS_LOCALDATA_GENERAL_RESTAURANTS"
   }
@@ -26,6 +27,7 @@ export const CANONICAL_MAP_VENUES_COMPACT: readonly CanonicalMapVenue[] = Object
   name: { ko: feature.properties.nameKo, en: feature.properties.nameEn ?? feature.properties.nameKo },
   nameEnTruth: "UNKNOWN_FALLBACK_TO_KO" as const,
   primaryCategory: feature.properties.primaryCategory,
+  after19PresentationEligible: feature.properties.after19PresentationEligible,
   latitude: feature.geometry.coordinates[1],
   longitude: feature.geometry.coordinates[0],
   licenseStatus: "ACTIVE_LICENSE_RECORD" as const,

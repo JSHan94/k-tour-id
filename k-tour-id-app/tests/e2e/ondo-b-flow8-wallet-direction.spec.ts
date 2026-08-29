@@ -20,9 +20,9 @@ const VIEWPORTS: readonly Viewport[] = [
 ]
 
 const COPY = {
-  en: { connect: "Set up travel wallet", retry: "Try setup again", refund: "Request test refund" },
-  ko: { connect: "여행 지갑 설정", retry: "설정 다시 시도", refund: "테스트 환불 요청" },
-  ja: { connect: "旅のウォレットを設定", retry: "設定をもう一度試す", refund: "テスト返金をリクエスト" },
+  en: { connect: "Set up travel wallet", retry: "Try setup again", refund: "Undo payment" },
+  ko: { connect: "여행 지갑 설정", retry: "설정 다시 시도", refund: "결제 되돌리기" },
+  ja: { connect: "旅のウォレットを設定", retry: "設定をもう一度試す", refund: "支払いを取り消す" },
 } as const
 
 test.describe.configure({ timeout: 180_000, mode: "serial" })
@@ -81,7 +81,7 @@ async function waitForShell(page: Page) {
 
 async function openTravelPass(page: Page, locale: Locale = "en", receipts: "none" | "paid" | "refunded" = "none") {
   await seed(page, locale, receipts)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await page.getByTestId("nav-id").click()
   const pass = page.getByTestId("ondo-b-traveler-id")
@@ -92,7 +92,7 @@ async function openTravelPass(page: Page, locale: Locale = "en", receipts: "none
 async function openOffer(page: Page, locale: Locale = "en", qa?: { wallet?: "failure"; payment?: "failure" | "insufficient"; benefit?: BenefitQa }) {
   await seed(page, locale, "none", true)
   if (qa) await page.addInitScript((injected) => { (window as Window & { __ONDO_B_QA__?: Flow8Qa }).__ONDO_B_QA__ = injected }, qa)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await page.locator("[data-city='seoul']").click()
   const toggle = page.getByTestId("ondo-b-view-toggle")
@@ -214,7 +214,7 @@ async function resetCaptureDevice(page: Page, locale: Locale) {
     }))
   }, { key: DEVICE_KEY, language: locale })
   await setCaptureQa(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
 }
 
@@ -248,11 +248,11 @@ test("FLOW8-VIS-001 Pass and Wallet read as two tactile objects in the first use
   await expect(walletObject).toBeVisible()
   await expect(walletObject).toHaveAttribute("data-flow8-object", "wallet")
   await expect(walletObject).toHaveAttribute("data-wallet-state", "disconnected")
-  await expect(walletObject.getByTestId("wallet-display-equivalent")).toHaveText("₩60,000")
-  await expect(walletObject.getByTestId("wallet-test-balance")).toHaveText("60 OOKRW Test")
+  await expect(walletObject.getByTestId("wallet-display-equivalent")).toHaveText("—")
+  await expect(walletObject.getByTestId("wallet-test-balance")).toHaveText("Set up when you want to use an offer")
   await expect(pass.getByTestId("travel-pass-local-boundary")).toBeVisible()
   await expect(page.getByTestId("wallet-non-live-boundary")).toHaveCount(0)
-  await expect(walletObject).toContainText("Ready for eligible ONDO offers")
+  await expect(walletObject).toContainText("Set up when you want to use an offer")
   await expect(walletObject.getByTestId("wallet-link-open")).toHaveAccessibleName("Set up travel wallet")
   await expect(page.getByTestId("wallet-eyebrow")).toHaveCSS("color", "rgb(105, 64, 85)")
   await expectNoHorizontalOverflow(pass)
@@ -268,8 +268,8 @@ test("FLOW8-VIS-001B 320 and 390 keep disconnected and ready wallet decisions in
     const amount = wallet.getByTestId("wallet-display-equivalent")
     const setup = wallet.getByTestId("wallet-link-open")
     await expect(wallet).toHaveAttribute("data-wallet-state", "disconnected")
-    await expect(amount).toHaveText("₩60,000")
-    await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("60 OOKRW Test")
+    await expect(amount).toHaveText("—")
+    await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("Set up when you want to use an offer")
     const [cardBox, amountBox, setupBox] = await Promise.all([wallet.boundingBox(), amount.boundingBox(), setup.boundingBox()])
     expect(cardBox).not.toBeNull()
     expect(amountBox).not.toBeNull()
@@ -281,7 +281,8 @@ test("FLOW8-VIS-001B 320 and 390 keep disconnected and ready wallet decisions in
     await setup.click()
     await connectWallet(page, "en")
     await expect(wallet).toHaveAttribute("data-wallet-state", "ready")
-    await expect(amount).toHaveText("₩60,000")
+    await expect(amount).toHaveText("≈ ₩60,000")
+    await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("60 OOKRW")
     const readyStyle = await wallet.evaluate((element) => getComputedStyle(element).backgroundImage)
     expect(readyStyle).toContain("rgb(16, 16, 18)")
     const readyAction = wallet.getByRole("button", { name: "Reset travel wallet", exact: true })
@@ -346,6 +347,10 @@ test("FLOW8-RECOVERY-004 payment failure and insufficient balance retain retry a
     await expect(recovery).toHaveAttribute("data-recovery", outcome)
     await expect(recovery.getByTestId("payment-retry")).toBeVisible()
     expect((await storedDevice(page)).commerceReceipts ?? []).toEqual([])
+    const recoveredGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: { tokenId?: string } | null; lastConsumed?: { tokenId?: string } | null } | null, ACTION_GATE_KEY)
+    const recoveredToken = recoveredGate?.pending?.tokenId
+    expect(recoveredToken).toEqual(expect.any(String))
+    expect(recoveredGate?.lastConsumed ?? null).toBeNull()
     await recovery.getByTestId("payment-retry").click()
     await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
     await offer.getByTestId("payment-cancel").click()
@@ -353,9 +358,14 @@ test("FLOW8-RECOVERY-004 payment failure and insufficient balance retain retry a
     await expect(place.getByTestId("canonical-meal-benefit-open")).toBeFocused()
     await place.getByTestId("canonical-meal-benefit-open").click()
     const retryOffer = page.getByTestId("ondo-b-id-wallet-commerce")
+    const reopenedGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: { tokenId?: string } | null } | null, ACTION_GATE_KEY)
+    expect(reopenedGate?.pending?.tokenId).toBe(recoveredToken)
     await retryOffer.getByTestId("payment-minimum-consent").locator("input").check()
     await retryOffer.getByTestId("payment-confirm").click()
     await expect(retryOffer.getByTestId("payment-receipt")).toBeVisible()
+    const completedGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: unknown; lastConsumed?: unknown } | null, ACTION_GATE_KEY)
+    expect(completedGate?.pending ?? null).toBeNull()
+    expect(completedGate?.lastConsumed ?? null).toBeNull()
     await context.close()
   }
 })
@@ -388,7 +398,13 @@ test("FLOW8-COMPLETE-006 payment, reload, refund, restored benefit, activity, My
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt).toHaveAttribute("data-completion-kind", "receipt")
   await expect(receipt).toContainText("ONDO-LOCAL-20260825-001")
-  await receipt.locator("details summary").click()
+  const settlement = receipt.getByTestId("commerce-settlement-details")
+  await settlement.locator("summary").click()
+  await expect(settlement.getByTestId("commerce-operation-id")).toContainText("ONDO-LOCAL-OP-20260825-001")
+  await expect(settlement.getByTestId("commerce-holder-delta")).toContainText("−19 OOKRW")
+  await expect(settlement.getByTestId("commerce-merchant-delta")).toContainText("+19 OOKRW")
+  await expect(settlement.getByTestId("commerce-settlement-total")).toContainText("0 OOKRW")
+  await receipt.getByTestId("commerce-refund-details").locator("summary").click()
   await receipt.getByTestId("payment-refund").evaluate((button: HTMLButtonElement) => {
     button.click()
     button.click()
@@ -396,6 +412,12 @@ test("FLOW8-COMPLETE-006 payment, reload, refund, restored benefit, activity, My
   })
   await expect(receipt).toHaveAttribute("data-completion-kind", "refunded")
   await expect(receipt).toContainText("ONDO-LOCAL-REFUND-20260825-001")
+  const refundSettlement = receipt.getByTestId("commerce-settlement-details")
+  await refundSettlement.locator("summary").click()
+  await expect(refundSettlement.getByTestId("commerce-operation-id")).toContainText("ONDO-LOCAL-REFUND-20260825-001")
+  await expect(refundSettlement.getByTestId("commerce-holder-delta")).toContainText("+19 OOKRW")
+  await expect(refundSettlement.getByTestId("commerce-merchant-delta")).toContainText("−19 OOKRW")
+  await expect(refundSettlement.getByTestId("commerce-settlement-total")).toContainText("0 OOKRW")
   await receipt.getByTestId("payment-receipt-return").click()
   await expect.poll(() => page.evaluate(() => JSON.stringify(window.history.state))).toContain(VENUE_ID)
   await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
@@ -414,7 +436,7 @@ test("FLOW8-COMPLETE-006 payment, reload, refund, restored benefit, activity, My
 for (const receiptStatus of ["paid", "refunded"] as const) {
   test(`FLOW8-VENUE-014 a ${receiptStatus} one-use receipt keeps its own venue when opened from another Place`, async ({ page }) => {
     await seed(page, "en", receiptStatus)
-    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${SECOND_VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.goto(`/?city=seoul&view=list&venueId=${SECOND_VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
     await waitForShell(page)
     const secondPlace = page.getByTestId("canonical-place-overlay")
     await expect(secondPlace).toHaveAttribute("data-venue-id", SECOND_VENUE_ID)
@@ -484,7 +506,7 @@ test("FLOW8-DURABLE-007 payment and refund do not visually complete before devic
   expect(finalizedGate?.lastConsumed ?? null).toBeNull()
   expect((await storedDevice(page)).commerceReceipts).toEqual([expect.objectContaining({ status: "paid", paidOOKRW: 19, benefitOOKRW: 3, balanceOOKRW: 41 })])
 
-  await receipt.locator("details summary").click()
+  await receipt.getByTestId("commerce-refund-details").locator("summary").click()
   await installOneShotDeviceWriteFailure(page)
   await receipt.getByTestId("payment-refund").click()
   await expect(receipt).toHaveAttribute("data-completion-kind", "receipt")
@@ -510,10 +532,17 @@ test("FLOW8-CANCEL-008 Escape during processing cancels pending confirmation and
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").click()
   await expect(offer.getByTestId("payment-processing")).toBeVisible()
+  const processingGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: unknown; lastConsumed?: { tokenId?: string } | null } | null, ACTION_GATE_KEY)
+  const processingToken = processingGate?.lastConsumed?.tokenId
+  expect(processingGate?.pending ?? null).toBeNull()
+  expect(processingToken).toEqual(expect.any(String))
   await page.keyboard.press("Escape")
   await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
   await expect(place.getByTestId("canonical-meal-benefit-open")).toBeFocused()
   expect((await storedDevice(page)).commerceReceipts ?? []).toEqual([])
+  const cancelledGate = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null") as { pending?: { tokenId?: string } | null; lastConsumed?: unknown } | null, ACTION_GATE_KEY)
+  expect(cancelledGate?.pending?.tokenId).toBe(processingToken)
+  expect(cancelledGate?.lastConsumed ?? null).toBeNull()
   await place.getByTestId("canonical-meal-benefit-open").click()
   const reopened = page.getByTestId("ondo-b-id-wallet-commerce")
   await expect(reopened).toHaveAttribute("data-payment-state", "review")
@@ -584,7 +613,7 @@ test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and 
   await paymentGate.getByTestId("action-gate-confirm").click()
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt).toBeVisible()
-  await receipt.locator("details summary").click()
+  await receipt.getByTestId("commerce-refund-details").locator("summary").click()
   await receipt.getByTestId("payment-refund").click()
   await expect(receipt).toHaveAttribute("data-completion-kind", "refunded")
   await receipt.getByTestId("payment-receipt-return").click()
@@ -608,9 +637,9 @@ test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and 
 
 test("FLOW8-TRUTH-010 every locale moves non-live truth into setup and commerce actions contact no external service", async ({ browser }) => {
   const setupTruth = {
-    en: /non-live OOKRW Test balance|does not move money/i,
-    ko: /실제 지갑 연결 없이|돈을 이동하지 않으며/,
-    ja: /実際のウォレット接続なし|実際のお金を動かさず/,
+    en: /ONDO travel balance on this device|does not move money/i,
+    ko: /외부 지갑 연결 없이|돈을 이동하지 않으며/,
+    ja: /外部ウォレットに接続せず|実際のお金を動かさず/,
   } as const
   const providerTruth = {
     en: { label: "Place orderNot connected", body: "No order was placed with the venue" },
@@ -646,7 +675,7 @@ test("FLOW8-TRUTH-010 every locale moves non-live truth into setup and commerce 
     await expect(receipt).toBeVisible()
     await expect(receipt.getByTestId("commerce-provider-status")).toHaveAttribute("data-provider-order", "NOT_CONNECTED")
     await expect(receipt.getByTestId("commerce-provider-status")).toHaveText(providerTruth[locale].label)
-    await receipt.locator("details summary").click()
+    await receipt.getByTestId("commerce-refund-details").locator("summary").click()
     await receipt.getByTestId("payment-refund").click()
     await expect(receipt).toHaveAttribute("data-completion-kind", "refunded")
     expect(external).toEqual([])
@@ -684,11 +713,11 @@ test("FLOW8-DECLINED-012 declined benefit keeps 22 → 38, refunds to 60, and re
     button.click()
   })
   const receipt = offer.getByTestId("payment-receipt")
-  await expect(receipt).toContainText("22 OOKRW Test")
-  await expect(receipt).toContainText("0 OOKRW Test")
-  await expect(receipt).toContainText("38 OOKRW Test")
+  await expect(receipt).toContainText("22 OOKRW")
+  await expect(receipt).toContainText("0 OOKRW")
+  await expect(receipt).toContainText("38 OOKRW")
   expect((await storedDevice(page)).commerceReceipts).toEqual([expect.objectContaining({ status: "paid", paidOOKRW: 22, benefitOOKRW: 0, balanceOOKRW: 38 })])
-  await receipt.locator("details summary").click()
+  await receipt.getByTestId("commerce-refund-details").locator("summary").click()
   await receipt.getByTestId("payment-refund").evaluate((button: HTMLButtonElement) => {
     button.click()
     button.click()
@@ -760,7 +789,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       test.skip(process.env.ONDO_FLOW8_CAPTURE !== "1", "Run after PRODUCT seal with ONDO_FLOW8_CAPTURE=1")
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
       await seed(page, locale)
-      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await page.goto("/", { waitUntil: "domcontentloaded" })
       await waitForShell(page)
       const { offer } = await navigateToOfferFromExplore(page)
       await quietCapture(page, `${locale}-${viewport.label}-offer-recommended`)
@@ -866,7 +895,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await quietCapture(page, `${locale}-${viewport.label}-receipt`)
 
       const receipt = offer.getByTestId("payment-receipt")
-      await receipt.locator("details summary").click()
+      await receipt.getByTestId("commerce-refund-details").locator("summary").click()
       await installOneShotDeviceWriteFailure(page)
       await receipt.getByTestId("payment-refund").click()
       await expect(receipt.getByTestId("commerce-storage-error")).toBeVisible()

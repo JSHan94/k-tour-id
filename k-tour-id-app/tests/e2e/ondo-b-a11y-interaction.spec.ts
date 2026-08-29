@@ -39,13 +39,15 @@ test.describe("ONDO B actual-surface accessibility and interaction", () => {
       expect(actionable).toEqual([])
 
       if (surfaceId === "tables") {
-        await expect(surface.getByTestId("tables-truth-notice")).toContainText("Nothing is booked, sent to the venue, or charged.")
         const firstTableCard = surface.locator("[data-testid^='table-card-']").first()
         await expect(firstTableCard).toBeVisible()
         await firstTableCard.getByRole("button", { name: "View Table" }).click()
         const detail = page.getByTestId("table-detail")
         await expect(detail).toBeVisible()
         await expect(detail).toHaveAttribute("data-table-id", /.+/)
+        const privacy = detail.getByTestId("tables-truth-notice")
+        await privacy.locator("summary").click()
+        await expect(privacy).toContainText("Messages and photos stay with this Table.")
         await detail.evaluate(async (node) => {
           const finiteAnimations = node.getAnimations({ subtree: true }).filter((animation) => {
             const endTime = animation.effect?.getComputedTiming().endTime

@@ -66,6 +66,7 @@
 .official { display: grid; gap: 5px; border: 1px solid rgb(46 111 87 / 15%); border-radius: 16px; padding: 13px 14px; background: rgb(239 247 242 / 74%); }
 .official strong { color: #2d7058; font-size: 12px; font-weight: 820; letter-spacing: .08em; text-transform: uppercase; }
 .official p { margin: 0; font-size: 15px; font-weight: 760; }
+.official small { color: #77736d; font-size: 12px; font-weight: 700; }
 .official span { color: #65635d; font-size: 12px; line-height: 1.5; }
 .plan { display: grid; gap: 11px; border-radius: 18px; padding: 15px; background: rgb(239 235 228 / 86%); }
 .plan h3 { margin: 0; color: #756c63; font-size: 12px; font-weight: 810; letter-spacing: .09em; text-transform: uppercase; }
@@ -99,6 +100,9 @@
 .chat { display: grid; gap: 12px; border-top: 1px solid var(--feature-border); padding-top: 18px; }
 .joinPanel label { font-size: 13px; font-weight: 760; }
 .joinPanel textarea { box-sizing: border-box; width: 100%; min-height: 96px; resize: vertical; border: 1px solid rgb(65 52 42 / 17%); border-radius: 15px; padding: 13px; background: #fff; color: inherit; font: inherit; line-height: 1.5; }
+.tablePrivacy { color: #625b54; font-size: 12px; line-height: 1.5; }
+.tablePrivacy summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 760; }
+.tablePrivacy p { margin: 0 0 8px; }
 .confirmation h3,
 .joined h3 { margin: 0; font-size: 23px; font-weight: 740; letter-spacing: -.03em; }
 .confirmation p,
@@ -129,7 +133,7 @@
 .fileInput { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .chatImage { position: relative; width: 112px; }
 .chatImage img { display: block; width: 112px; height: 86px; border-radius: 11px; object-fit: cover; background: #eee8e1; }
-.chatImage button { position: absolute; top: 4px; right: 4px; display: grid; width: 32px; height: 32px; place-items: center; border: 0; border-radius: 50%; background: rgb(28 25 23 / 80%); color: #fff; }
+.chatImage button { position: absolute; top: 4px; right: 4px; display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 50%; background: rgb(28 25 23 / 80%); color: #fff; }
 .checkIn, .checkedIn { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #d3cdc5; border-radius: 13px; background: #fff; color: #403a35; font: inherit; font-size: 13px; font-weight: 760; }
 .checkedIn { border-color: rgb(46 111 87 / 24%); background: #eaf4ed; color: #245a45; }
 .feedback { display: grid; gap: 10px; border-top: 1px solid var(--feature-border); padding-top: 15px; }
@@ -913,7 +917,7 @@
   gap: 10px;
 }
 .status button {
-  min-height: 36px;
+  min-height: 44px;
   border: 1px solid rgb(38 91 70 / 18%);
   border-radius: 999px;
   padding: 0 12px;

@@ -3,6 +3,7 @@ import { dirname, extname, relative, resolve } from "node:path"
 import {
   APP_ROOT,
   HISTORICAL_B_PROJECT_ID,
+  LEGACY_DISCOVERY_QUERY_KEYS,
   LOCAL_ONLY_PROJECT_ID,
   PUBLIC_FILES,
   SOURCE_FILES,
@@ -14,10 +15,27 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  applicationName: "ONDO",
-  title: "ONDO 溫圖 — Korea temperature map for Seoul, Busan, and Jeju",
-  description: "Browse 400 licensed Seoul and Busan food-service records alongside a separate source-linked Jeju editorial collection.",
-  openGraph: { siteName: "ONDO" },
+  applicationName: "K-TOUR ID",
+  title: "K-TOUR ID | ONDO 溫圖",
+  description: "A map-first Korea travel experience by ONDO 溫圖—discover Seoul, Busan, and Jeju with a privacy-minded K-TOUR ID travel pass.",
+  generator: "K-TOUR ID by ONDO 溫圖",
+  icons: {
+    icon: [
+      { url: "/brand/ktour-id-mark-32.png", type: "image/png", sizes: "32x32" },
+      { url: "/brand/ktour-id-mark-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/brand/ktour-id-mark-180.png", type: "image/png", sizes: "180x180" }],
+  },
+  openGraph: {
+    siteName: "K-TOUR ID",
+    title: "K-TOUR ID | ONDO 溫圖",
+    images: [{ url: "/og-map-first.png", width: 1731, height: 909, alt: "K-TOUR ID by ONDO 溫圖 — a map-first Korea travel experience" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "K-TOUR ID | ONDO 溫圖",
+    images: ["/og-map-first.png"],
+  },
   robots: { index: false, follow: false },
 }
 
@@ -33,13 +51,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 }
 `
 
-const ROOT_PAGE = `import { redirect } from "next/navigation"
-
-export default function HomePage() {
-  redirect("/ondo-b")
-}
-`
-
 const GLOBALS = `@import "maplibre-gl/dist/maplibre-gl.css";
 
 :root { --focus: #1d66d1; color-scheme: light; }
@@ -49,6 +60,15 @@ body { background: #efefed; color: #1f1e1c; font-family: -apple-system, BlinkMac
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
+`
+
+const QA_CONTROLS_STUB = `"use client"
+
+export const QA_RUNTIME_ENABLED = false
+export function captureQaControls(_search: string) {}
+export function readQaScenario() { return null }
+export function useQaControls() { return false }
+export function readQaRuntime<T extends object>(): T | undefined { return undefined }
 `
 
 const NEXT_CONFIG = `const securityHeaders = [
@@ -121,6 +141,7 @@ const securityHeaders = {
 }
 
 const allowedPublicAssetPaths = new Set(${JSON.stringify(PUBLIC_FILES.map((path) => `/${path.replace(/^public\//, "")}`))})
+const legacyDiscoveryQueryKeys = ${JSON.stringify(LEGACY_DISCOVERY_QUERY_KEYS)} as const
 
 function secure(response: Response) {
   const headers = new Headers(response.headers)
@@ -133,16 +154,34 @@ function isAllowed(pathname: string) {
     || pathname === "/ondo-b"
     || /^\\/api\\/ondo\\/venues\\/[^/]+$/.test(pathname)
     || pathname === "/_vinext/image"
-    || pathname === "/icon.svg"
     || allowedPublicAssetPaths.has(pathname)
     || pathname.startsWith("/_next/")
     || pathname.startsWith("/assets/")
+}
+
+function legacyDiscoveryRedirect(url: URL) {
+  const canonical = new URL("/", url)
+  for (const key of legacyDiscoveryQueryKeys) {
+    const values = url.searchParams.getAll(key)
+    if (values.length === 1 && values[0].length <= 160) canonical.searchParams.set(key, values[0])
+  }
+  return secure(new Response(null, {
+    status: 308,
+    headers: {
+      "Cache-Control": "private, no-cache, no-store, max-age=0, must-revalidate",
+      Location: canonical.toString(),
+    },
+  }))
 }
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
     if (!isAllowed(url.pathname)) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } })
+    // Vinext does not currently pass App Router searchParams to redirect-only
+    // pages consistently. Own this compatibility redirect at the HTTP boundary
+    // so old bookmarks retain only the public discovery context.
+    if (url.pathname === "/ondo-b") return legacyDiscoveryRedirect(url)
     if (url.pathname === "/_vinext/image") {
       return handleImageOptimization(request, {
         fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
@@ -310,7 +349,6 @@ export async function prepareStandaloneSource({ projectId = process.env.ONDO_B_S
   await writeProductionVenueDetails()
   const generated = new Map([
     ["app/layout.tsx", ROOT_LAYOUT],
-    ["app/page.tsx", ROOT_PAGE],
     ["app/globals.css", GLOBALS],
     ["next.config.mjs", NEXT_CONFIG],
     ["vite.config.ts", VITE_CONFIG],
@@ -318,6 +356,7 @@ export async function prepareStandaloneSource({ projectId = process.env.ONDO_B_S
     ["tsconfig.json", TSCONFIG],
     ["package.json", PACKAGE],
     ["lib/ondo/venues/index.ts", VENUE_INDEX],
+    ["features/ondo/shared/ui/use-qa-controls.ts", QA_CONTROLS_STUB],
     [".openai/hosting.json", `${JSON.stringify({ project_id: projectId, d1: null, r2: null }, null, 2)}\n`],
   ])
   await Promise.all([...generated].map(async ([relativePath, contents]) => {

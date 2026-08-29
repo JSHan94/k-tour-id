@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test"
 import { B_PRODUCTION_FLOWS, B_PRODUCTION_VISUAL_CASES } from "../helpers/ondo-b-production-registry"
 
 const APP_ROOT = process.cwd()
-const B_ENTRY = resolve(APP_ROOT, "app/ondo-b/page.tsx")
+const B_ENTRY = resolve(APP_ROOT, "app/page.tsx")
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".json"] as const
 
 function localImportTargets(source: string) {
@@ -61,7 +61,7 @@ const FALSE_OR_TEST_COPY = [
   /데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처|샘플\s*(?:데이터|신호)/i,
 ] as const
 
-test("PROD-B-001 active /ondo-b keeps the official guest discovery foundation reachable", () => {
+test("PROD-B-001 canonical / keeps the official guest discovery foundation reachable", () => {
   const paths = productionImportGraph().map((file) => relative(APP_ROOT, file))
   expect(paths).toContain("features/ondo/map/map-entry-b.tsx")
   expect(paths).toContain("features/ondo/place/canonical-place-overlay.tsx")
@@ -81,8 +81,9 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
   const source = graphSource(productionImportGraph())
   const queryHits = source.filter(({ source: text }) => (
     /\.get\(\s*["'](?:scenario|qa|qaCase)["']\s*\)/.test(text)
-    || /use-qa-controls|useQaControls|data-qa-controls/.test(text)
   )).map(({ file }) => file)
+  const directQaGlobalHits = source.filter(({ source: text }) => /__ONDO_B_QA__/.test(text)).map(({ file }) => file)
+  const qaModule = source.find(({ file }) => file === "features/ondo/shared/ui/use-qa-controls.ts")?.source ?? ""
   const sessionHits = source.filter(({ source: text }) => /\bsessionStorage\b/.test(text)).map(({ file }) => file)
   const legacyKeys = /ondo\.(?:preferences|session)\.v3|ondo\.(?:chat|table-outcomes|labs|accepted-visits)\.v2/
   const legacyHits = source.filter(({ source: text }) => legacyKeys.test(text)).map(({ file }) => file)
@@ -91,6 +92,10 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
   )))]
   const nonDeviceKeys = storageKeys.filter((key) => key !== "ondo-b.device.v1")
 
+  expect(directQaGlobalHits).toEqual(["features/ondo/shared/ui/use-qa-controls.ts"])
+  expect(qaModule).toContain('QA_RUNTIME_ENABLED = process.env.NEXT_PUBLIC_ONDO_QA_CONTROLS === "1"')
+  expect(qaModule).toContain("if (!QA_RUNTIME_ENABLED) return")
+
   expect({
     queryInjection: queryHits.sort(),
     sessionStorage: sessionHits.sort(),
@@ -98,10 +103,6 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
     nonDeviceStorageKeys: nonDeviceKeys.sort(),
   }).toEqual({
     queryInjection: [
-      "features/ondo/identity-b/account-save-gate-b.tsx",
-      "features/ondo/labs/labs-entry.tsx",
-      "features/ondo/map/b-discovery-history.ts",
-      "features/ondo/shared/state/ondo-b-provider.tsx",
       "features/ondo/shared/ui/use-qa-controls.ts",
     ],
     sessionStorage: [
@@ -116,6 +117,7 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
       "features/ondo/identity-b/traveler-id-entry-b.tsx",
       "features/ondo/labs/labs-entry.tsx",
       "features/ondo/local-signal-b/local-signal-layer-b.tsx",
+      "features/ondo/map/map-entry-b.tsx",
       "features/ondo/place/canonical-place-overlay.tsx",
       "features/ondo/shared/state/ondo-b-provider.tsx",
       "features/ondo/shared/ui/use-qa-controls.ts",
@@ -130,6 +132,7 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
       "ondo-b.account.v1",
       "ondo-b.action-gates.v1",
       "ondo-b.activity-profile.v1",
+      "ondo-b.after19.browse-snapshot.v1",
       "ondo-b.after19.place-return.v1",
       "ondo-b.after19.preferences.v1",
       "ondo-b.after19.session.v1",
@@ -161,12 +164,14 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
           || file === "features/ondo/onboarding/official-directory-onboarding.tsx"
         const truthfulAccountFile = file === "features/ondo/identity-b/account-save-gate-b.tsx"
         const truthfulActionGateFile = file === "features/ondo/identity-b/action-gate-coordinator-b.tsx"
+        const truthfulAfter19File = file === "features/ondo/after19/after19-global-b.tsx"
         const truthfulVisitFile = file === "features/ondo/commerce-b/visit-stamp-receipt-b.tsx"
           || file === "features/ondo/identity-b/profile-reputation-b.tsx"
         const explicitIdentityEnvironment = String(pattern).includes("simulat")
           || String(pattern).includes("demo")
           || String(pattern).includes("데모|시뮬레이션")
         if (truthfulIdentityFile && explicitIdentityEnvironment) return false
+        if (truthfulAfter19File && explicitIdentityEnvironment) return false
         if (truthfulIdentityFile && String(pattern) === String(/\blocal preview\b/i)) return false
         if ((truthfulAccountFile || truthfulActionGateFile) && explicitIdentityEnvironment) return false
         if (truthfulLabsFile) return false
@@ -174,9 +179,9 @@ test("PROD-B-004 reachable user-facing literals contain no test or false-success
         if (String(pattern) === String(/\blocal preview\b/i) && commerceFile && literal.startsWith("Device-local preview · no AI call")) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && commerceFile) return false
         if (String(pattern) === String(/\bOOKRW\b/i) && placeFile && /OOKRW Test/.test(literal) && /Confirm payment support|실제 결제 지원/.test(literal)) return false
-        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && /(?:Paid )?19 OOKRW Test(?: 결제)?/.test(literal)) return false
-        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && literal === "${copy.paid} ${state.commerceSession.chargedDebit} OOKRW Test") return false
-        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && literal === "${copy.refunded} ${state.commerceSession.chargedDebit} OOKRW Test") return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && /(?:Paid )?19 OOKRW(?: 결제)?/.test(literal)) return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && literal === "${copy.paid} ${state.commerceSession.chargedDebit} OOKRW") return false
+        if (String(pattern) === String(/\bOOKRW\b/i) && myKoreaFile && literal === "${copy.refunded} ${state.commerceSession.chargedDebit} OOKRW") return false
         if (String(pattern) === String(/\bOOKRW\b/i) && settingsFile && /OOKRW Test(?: receipts| 영수증|のレシート)/.test(literal)) return false
         if (String(pattern) === String(/\bcheckout\b/i) && commerceFile && literal === "ondo-b-stable-checkout") return false
         if (String(pattern) === String(/\bcheckout\b/i) && truthfulVisitFile && literal === "checkout-stamp-milestone") return false

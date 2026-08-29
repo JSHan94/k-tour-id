@@ -25,7 +25,7 @@ for (const scenario of CASES) {
   test(`${scenario.locale} ${scenario.width}x${scenario.height} keeps one unclipped result action`, async ({ page }) => {
     await page.setViewportSize({ width: scenario.width, height: scenario.height })
     await seed(page, scenario.locale)
-    await page.goto(`/ondo-b?city=seoul&view=${scenario.view}`)
+    await page.goto(`/?city=seoul&view=${scenario.view}`)
 
     const bar = page.getByTestId("ondo-b-result-bar")
     const truth = page.getByTestId("ondo-b-result-truth")

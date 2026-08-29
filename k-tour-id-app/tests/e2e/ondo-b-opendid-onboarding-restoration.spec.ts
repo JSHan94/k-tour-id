@@ -13,6 +13,7 @@ type IdentityMethod = "mobile_id" | "mobile_residence_card" | "passport_ekyc"
 type CredentialFixture = "expired" | "suspended" | "revoked"
 type PresentationFixture = "PRESENTATION_DENIED" | "PRESENTATION_REQUEST_EXPIRED" | "PRESENTATION_REPLAY"
 type IdentityQa = {
+  identitySetupOutcome?: "PROVIDER_TIMEOUT"
   identity?: {
     outcome?: "IDENTITY_METHOD_UNAVAILABLE"
     credentialStatus?: CredentialFixture
@@ -24,7 +25,11 @@ const COPY = {
   en: {
     guest: "Explore without setup",
     environment: "ON-DEVICE",
-    privateCredential: "Private K-Tour service credential · not a government ID, visa, residence card, residence permit or immigration status.",
+    privateCredential: "Private K-Tour service credential · no identity provider or OpenDID service is connected, so no real DID or VC is issued. Not a government ID, visa, residence card, permit or immigration status.",
+    mobileRetention: "No Mobile ID payload, name, birth date, signed callback or provider result is stored.",
+    residenceRetention: "No residence-card payload, name, birth date, signed callback or provider result is stored.",
+    passportRetention: "No passport fields, face image, provider result, DID or VC payload is stored.",
+    walletConsent: "After K-Tour ID is ready, ONDO prepares a device-only travel balance in this tab.",
     passportProvider: "Passport eKYC uses a separate provider — not OmniOne CX",
     assuranceChange: "Passport eKYC does not verify registered-resident status and is not an equivalent residence-card check.",
     presentationRequester: "ONDO Table",
@@ -42,7 +47,11 @@ const COPY = {
   ko: {
     guest: "설정 없이 탐색",
     environment: "기기 내",
-    privateCredential: "민간 K-Tour 서비스 자격증명 · 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
+    privateCredential: "민간 K-Tour 서비스 자격증명 · 신원확인 기관과 OpenDID 서비스가 연결되지 않아 실제 DID·VC를 발급하지 않습니다. 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
+    mobileRetention: "모바일 신분증 원문·이름·생년월일·서명 콜백·기관 응답은 저장하지 않습니다.",
+    residenceRetention: "외국인등록증 원문·이름·생년월일·서명 콜백·기관 응답은 저장하지 않습니다.",
+    passportRetention: "여권 항목·얼굴 이미지·기관 결과·DID·VC 원문은 저장하지 않고",
+    walletConsent: "K-Tour ID 준비가 끝나면 ONDO가 이 탭에 기기 전용 여행 잔액을 준비합니다.",
     passportProvider: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
     assuranceChange: "여권 eKYC는 등록외국인 체류 자격을 확인하지 않으며 외국인등록증 확인과 동등하지 않습니다.",
     presentationRequester: "ONDO 테이블",
@@ -60,7 +69,11 @@ const COPY = {
   ja: {
     guest: "設定せずに見る",
     environment: "端末内",
-    privateCredential: "民間のK-Tourサービス資格情報 · 公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
+    privateCredential: "民間のK-Tourサービス資格情報 · 本人確認事業者とOpenDIDサービスは未接続のため、実際のDID・VCは発行しません。公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
+    mobileRetention: "モバイルID本文、氏名、生年月日、署名済みコールバック、事業者結果は保存しません。",
+    residenceRetention: "在留カード本文、氏名、生年月日、署名済みコールバック、事業者結果は保存しません。",
+    passportRetention: "パスポート項目、顔画像、事業者結果、DID・VC本文は保存せず",
+    walletConsent: "K-Tour IDの準備後、ONDOがこのタブに端末専用の旅行残高を用意します。",
     passportProvider: "パスポートeKYCはOmniOne CXではなく別の事業者",
     assuranceChange: "パスポートeKYCは登録居住者の在留資格を確認せず、在留カード確認と同等ではありません。",
     presentationRequester: "ONDOテーブル",
@@ -136,7 +149,7 @@ async function seedB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-CO
 
 async function openB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-COMPLETE", qa?: IdentityQa) {
   await seedB(page, locale, onboarding, qa)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await expect(page.locator("html")).toHaveAttribute("lang", locale)
   await expect(page.getByTestId("ondo-b-root")).toBeVisible()
 }
@@ -179,6 +192,7 @@ async function selectMethod(setup: Locator, method: IdentityMethod) {
     "identity-consent-provider",
     "identity-consent-evidence",
     "identity-consent-retention",
+    "identity-consent-wallet",
   ]) await expect(consent.getByTestId(testId)).not.toBeEmpty()
   return consent
 }
@@ -345,9 +359,12 @@ test("OPENDID-E2E-003 EN KO JA expose all three consent/provider truths", async 
       const consent = await selectMethod(setup, method)
       const provider = consent.getByTestId("identity-consent-provider")
       const evidence = consent.getByTestId("identity-consent-evidence")
+      const retention = consent.getByTestId("identity-consent-retention")
       if (method === "passport_ekyc") await expect(provider).toContainText(COPY[locale].passportProvider)
       else await expect(provider).toContainText("OmniOne CX")
       await expect(evidence).toContainText(METHOD_EVIDENCE[locale][method])
+      await expect(retention).toContainText(COPY[locale][`${method === "passport_ekyc" ? "passport" : method === "mobile_id" ? "mobile" : "residence"}Retention`])
+      await expect(consent.getByTestId("identity-consent-wallet")).toContainText(COPY[locale].walletConsent)
       await context.close()
     }
   }
@@ -710,6 +727,7 @@ for (const status of ["expired", "suspended", "revoked"] as const) {
 
 for (const outcome of ["PRESENTATION_DENIED", "PRESENTATION_REQUEST_EXPIRED", "PRESENTATION_REPLAY"] as const) {
   const result = outcome === "PRESENTATION_DENIED" ? "denied" : outcome === "PRESENTATION_REQUEST_EXPIRED" ? "expired" : "replay"
+  const visibleTitle = outcome === "PRESENTATION_DENIED" ? "Not shared" : outcome === "PRESENTATION_REQUEST_EXPIRED" ? "Request expired" : "Request already used"
   test(`OPENDID-E2E-008 presentation ${result} fixture is explicit and retry-safe`, async ({ page }) => {
     const { setup } = await openTravelerSetup(page)
     await reachCredential(setup)
@@ -721,6 +739,37 @@ for (const outcome of ["PRESENTATION_DENIED", "PRESENTATION_REQUEST_EXPIRED", "P
     const presentation = setup.getByTestId("k-tour-id-presentation-result")
     await expect(presentation).toHaveAttribute("data-result", result)
     await expect(presentation).toHaveAttribute("data-code", outcome)
+    await expect(presentation.getByRole("heading", { level: 1 })).toHaveText(visibleTitle)
+    if (outcome !== "PRESENTATION_DENIED") await expect(presentation.getByTestId("k-tour-id-result-back")).toHaveText("Start a new request")
     await expect(setup.getByTestId("k-tour-id-credential")).toHaveAttribute("data-issuance-count", "1")
   })
 }
+
+test("OPENDID-E2E-008B credential expiry during consent blocks the one-shot presentation", async ({ page }) => {
+  await page.clock.install({ time: new Date("2026-08-29T10:00:00.000Z") })
+  const { traveler, setup } = await openTravelerSetup(page)
+  await reachCredential(setup)
+  await page.clock.fastForward((119 * 60) * 1_000)
+  await setup.getByTestId("k-tour-id-presentation-open").click()
+  await advanceUntil(setup, "k-tour-id-presentation-consent")
+  await page.clock.fastForward(61_000)
+  await setup.getByTestId("k-tour-id-presentation-approve").click()
+
+  const credential = setup.getByTestId("k-tour-id-credential")
+  await expect(credential).toHaveAttribute("data-status", "expired")
+  await expect(credential).toHaveAttribute("data-code", "CREDENTIAL_EXPIRED")
+  await expect(setup.getByTestId("k-tour-id-presentation-result")).toHaveCount(0)
+  await setup.getByTestId("k-tour-id-return").click()
+  await expect(traveler.getByTestId("traveler-id-credential")).toHaveAttribute("data-status", "expired")
+})
+
+test("OPENDID-E2E-009 a one-shot provider failure recovers through the visible retry", async ({ page }) => {
+  const { setup } = await openTravelerSetup(page, "en", { identitySetupOutcome: "PROVIDER_TIMEOUT" })
+  await selectMethod(setup, "mobile_id")
+  await approveConsent(setup)
+  const failure = await advanceUntil(setup, "k-tour-id-failure")
+  await expect(failure).toHaveAttribute("data-code", "PROVIDER_TIMEOUT")
+  await failure.getByTestId("k-tour-id-retry").click()
+  await expect(setup.getByTestId("k-tour-id-route-step")).toBeVisible()
+  await advanceUntil(setup, "ktour-id-mobile-handoff")
+})

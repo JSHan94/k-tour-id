@@ -12,7 +12,7 @@ const ACTIVE_SESSION = {
 async function openNightMap(page: Page, city: "seoul" | "jeju") {
   await seedB(page, { locale: "en", session: ACTIVE_SESSION })
   const editorial = city === "jeju" ? "&editorialPlaceId=jeju-haenyeo-kitchen-bukchon" : ""
-  await page.goto(`/ondo-b?city=${city}&view=map${editorial}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/?city=${city}&view=map${editorial}`, { waitUntil: "domcontentloaded" })
   const root = page.getByTestId("ondo-b-map-entry")
   await expect(root).toHaveAttribute("data-after19-active", "true")
   await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
@@ -34,6 +34,21 @@ async function expectDarkSurface(locator: Locator) {
   expect(treatment.color).not.toBe("rgb(23, 23, 23)")
 }
 
+async function expectVisibleNightFocus(locator: Locator) {
+  await locator.focus()
+  const focus = await locator.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return {
+      color: style.outlineColor,
+      style: style.outlineStyle,
+      width: style.outlineWidth,
+    }
+  })
+  expect(focus.style).toBe("solid")
+  expect(Number.parseFloat(focus.width)).toBeGreaterThanOrEqual(2)
+  expect(focus.color).toMatch(/rgb\(255, (?:114|143), (?:184|199)\)/)
+}
+
 test.describe("After 19 visual cohesion", () => {
   test.describe.configure({ timeout: 120_000 })
 
@@ -51,7 +66,7 @@ test.describe("After 19 visual cohesion", () => {
       await page.setViewportSize(viewport)
       const root = await openNightMap(page, "seoul")
 
-      await expect(page.getByRole("button", { name: "Pubs & cafés", exact: true })).toHaveAttribute("aria-pressed", "true")
+      await expect(page.getByRole("button", { name: "Bars & pubs", exact: true })).toHaveAttribute("aria-pressed", "true")
       for (const surface of [
         page.getByTestId("ondo-main-nav"),
         page.getByTestId("ondo-b-city-header").locator("div").first(),
@@ -60,6 +75,7 @@ test.describe("After 19 visual cohesion", () => {
         page.getByTestId("ondo-b-editorial-collection-marker"),
         page.getByTestId("ondo-b-attribution"),
       ]) await expectDarkSurface(surface)
+      await expectVisibleNightFocus(page.getByTestId("global-after19-banner").getByRole("button"))
       await expect(page.getByTestId("ondo-b-after19-mode-chip")).toHaveCount(0)
 
       const zoomButtons = root.locator(".maplibregl-ctrl-group button:visible")
@@ -120,6 +136,23 @@ test.describe("After 19 visual cohesion", () => {
     await page.screenshot({ path: testInfo.outputPath("after19-stories-phone.png"), animations: "disabled" })
   })
 
+  test("location denial disclosure stays inside the After 19 night palette", async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await openNightMap(page, "seoul")
+    await page.getByTestId("ondo-b-locate").click()
+    await expect(page.getByTestId("ondo-b-locate")).toHaveAttribute("data-location-state", "denied")
+    await page.getByTestId("ondo-b-location-message").locator(":scope > summary").click()
+    const disclosure = page.getByTestId("ondo-b-location-details")
+    await expect(disclosure).toBeVisible()
+    await expectDarkSurface(disclosure)
+    await expect(disclosure).toHaveCSS("color", "rgb(247, 245, 250)")
+    const box = await disclosure.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box?.x ?? -1).toBeGreaterThanOrEqual(12)
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(378)
+    await page.screenshot({ path: testInfo.outputPath("after19-location-denied-phone.png"), animations: "disabled" })
+  })
+
   test("Jeju 19+ gate preserves editorial truth instead of claiming a pub filter", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await openNightMap(page, "jeju")
@@ -127,6 +160,6 @@ test.describe("After 19 visual cohesion", () => {
     await page.getByTestId("global-after19-toggle").click()
     const gate = page.getByTestId("global-after19-prompt-layer")
     await expect(gate).toContainText("Jeju keeps its editorial places and stories; ONDO does not infer pubs or cafés from those sources.")
-    await expect(gate).not.toContainText("Narrows this map to pubs and cafés")
+    await expect(gate).not.toContainText("Narrows this map to official business types associated with bars and pubs")
   })
 })

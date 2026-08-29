@@ -59,7 +59,7 @@ test.describe("ONDO Explore approved visual direction", () => {
 
   test("Polarsteps-inspired Korea atlas keeps geographic anchors separate at every product breakpoint", async ({ browser }) => {
     for (const profile of MATRIX) {
-      const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/ondo-b")
+      const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/")
 
       const atlas = page.getByTestId("ondo-b-korea-atlas")
       const nodes = ["seoul", "busan", "jeju"].map((city) => atlas.locator(`[data-city='${city}']`))
@@ -125,7 +125,7 @@ test.describe("ONDO Explore approved visual direction", () => {
 
   test("Mapstr plus Beli city canvas keeps a neutral basemap, compact controls, Pulse truth, and tactile list rows", async ({ browser }) => {
     for (const profile of MATRIX) {
-      const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/ondo-b?city=seoul")
+      const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/?city=seoul")
 
       const root = page.getByTestId("ondo-b-map-entry")
       await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
@@ -163,7 +163,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       await noHorizontalOverflow(page)
       await page.screenshot({ path: `${OUTPUT}/${profile.locale}-${profile.width}-map.png` })
 
-      await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       const firstRow = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]").first()
       const rowButton = firstRow.getByRole("button")
       await expect(firstRow).toHaveAttribute("data-pulse-priority", /peak|hot|rising|warming|low|limited/)
@@ -192,7 +192,7 @@ test.describe("ONDO Explore approved visual direction", () => {
 
   for (const locale of ["en", "ko", "ja"] as const) {
     test(`Modern editorial and Place sheets retain truth and actions in ${locale}`, async ({ browser }) => {
-      const { context, page } = await openSeededPage(browser, locale, 390, 844, "/ondo-b?city=seoul")
+      const { context, page } = await openSeededPage(browser, locale, 390, 844, "/?city=seoul")
 
       const discovery = page.getByTestId("ondo-b-japan-first-discovery")
       await discovery.locator(":scope > summary").click()
@@ -238,7 +238,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(supportingStory).toBeVisible()
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-editorial-supporting.png` })
 
-      await page.goto("/ondo-b?city=jeju", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=jeju", { waitUntil: "domcontentloaded" })
       const jejuDiscovery = page.getByTestId("ondo-b-japan-first-discovery")
       await jejuDiscovery.locator(":scope > summary").click()
       const jejuSources = page.getByTestId("ondo-b-jeju-editorial-seeds")
@@ -246,7 +246,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       await expect(jejuSources.locator("a[target='_blank']")).toHaveCount(4)
       await page.screenshot({ path: `${OUTPUT}/${locale}-390-jeju-expanded.png` })
 
-      await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
       const peek = page.getByTestId("canonical-place-peek")
       await expect(peek).toBeVisible()
@@ -277,7 +277,7 @@ test.describe("ONDO Explore approved visual direction", () => {
   }
 
   test("modern desktop Place keeps the cartographic identity stage in the first viewport", async ({ browser }) => {
-    const { context, page } = await openSeededPage(browser, "en", 1440, 1000, "/ondo-b?city=seoul&view=list")
+    const { context, page } = await openSeededPage(browser, "en", 1440, 1000, "/?city=seoul&view=list")
     await page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first().click()
     await page.getByTestId("canonical-place-peek").getByTestId("canonical-place-details").click()
     const desktopDetail = page.getByTestId("canonical-place-overlay")

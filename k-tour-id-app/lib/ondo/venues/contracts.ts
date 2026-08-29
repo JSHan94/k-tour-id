@@ -54,6 +54,7 @@ export type CanonicalMapVenue = {
   name: { ko: string; en: string }
   nameEnTruth: "UNKNOWN_FALLBACK_TO_KO"
   primaryCategory: VenuePrimaryCategory
+  after19PresentationEligible: boolean
   latitude: number
   longitude: number
   licenseStatus: "ACTIVE_LICENSE_RECORD"

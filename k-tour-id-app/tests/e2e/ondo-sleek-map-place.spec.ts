@@ -155,7 +155,7 @@ test.describe("SLEEK-R1 map and place closure", () => {
     const pulse = detail.getByTestId("canonical-place-pulse")
     await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
     await expect(pulse).toHaveAttribute("data-pulse-numeric", "hidden")
-    await expect(pulse.locator("summary")).toHaveAccessibleName("ONDO temperature 91 · PEAK")
+    await expect(pulse.locator("summary")).toHaveAccessibleName("ONDO temperature · PEAK")
     const [decisionBox, pulseBox] = await Promise.all([
       detail.getByTestId("canonical-place-decisions").boundingBox(),
       pulse.boundingBox(),

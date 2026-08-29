@@ -27,7 +27,7 @@ async function seedB(page: Page, locale: "en" | "ko" = "en") {
 }
 
 async function openCanonicalSignal(page: Page) {
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.locator("[data-city='seoul']").click()
   await page.getByRole("button", { name: "List", exact: true }).click()
   await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
@@ -63,7 +63,7 @@ async function runEligibility(page: Page, outcome: "success" | "failure" | "unav
 
 test("B P0 keeps Explore guest-open and exposes separate ID · Wallet and Settings tabs", async ({ page }) => {
   await seedB(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
 
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   const nav = page.getByTestId("ondo-main-nav")
@@ -143,7 +143,7 @@ test("B P0 preserves the draft through cancel, failure, unavailable, expired, an
 
 test("B P0 keeps Person and 19+ outcomes independent and out of storage", async ({ page }) => {
   await seedB(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-id").click()
   const identity = page.getByTestId("ondo-b-traveler-id")
   await identity.getByTestId("traveler-id-person").getByRole("button", { name: "Check Person" }).click()
@@ -164,7 +164,7 @@ test("B P0 keeps Person and 19+ outcomes independent and out of storage", async 
 test("B P0 Korean Local Signal remains keyboard-contained and reflows in short landscape", async ({ page }) => {
   await page.setViewportSize({ width: 844, height: 390 })
   await seedB(page, "ko")
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.locator("[data-city='seoul']").click()
   const listToggle = page.getByRole("button", { name: "목록", exact: true })
   if (await listToggle.count()) await listToggle.click()

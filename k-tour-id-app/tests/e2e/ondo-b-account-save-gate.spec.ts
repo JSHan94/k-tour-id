@@ -33,7 +33,7 @@ async function seed(page: Page, locale: Locale, account: "guest" | "active" = "g
 }
 
 async function openVenue(page: Page, query = "") {
-  await page.goto(`/ondo-b?city=seoul&view=list${query}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/?city=seoul&view=list${query}`, { waitUntil: "domcontentloaded" })
   const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${VENUE_ID}']`)
   await expect(row).toBeVisible({ timeout: 15_000 })
   await row.locator("button").click()
@@ -102,6 +102,25 @@ for (const locale of ["en", "ko", "ja"] as const) {
     await expect(page.getByTestId("traveler-id-account")).toHaveAttribute("data-status", "active")
   })
 }
+
+test("B-ACCOUNT-E2E-JA-REFLOW keeps the account gate inside every required portrait width", async ({ page }) => {
+  await seed(page, "ja")
+  await openVenue(page)
+  await page.getByTestId("canonical-venue-save").click()
+
+  for (const width of [320, 360, 390]) {
+    await page.setViewportSize({ width, height: 844 })
+    const gate = page.getByTestId("account-save-gate")
+    await expect(gate).toBeVisible()
+    await expect(gate.getByRole("heading", { name: "この場所の保存にはアカウントが必要です" })).toBeVisible()
+    const geometry = await page.evaluate(() => ({
+      clientWidth: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }))
+    expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth)
+    await expect(gate).toBeInViewport()
+  }
+})
 
 test("B-ACCOUNT-E2E-FAIL explicit QA failure retries the same save task", async ({ page }) => {
   await seed(page, "en")

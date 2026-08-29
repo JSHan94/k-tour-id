@@ -79,7 +79,7 @@ async function expectPeakVisualMeter(pulse: Locator, meter: Locator) {
 }
 
 async function openPeakPlace(page: Page) {
-  await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+  await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
   const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${PEAK_VENUE_ID}']`)
   await expect(row).toBeVisible()
   await row.locator("button").click()

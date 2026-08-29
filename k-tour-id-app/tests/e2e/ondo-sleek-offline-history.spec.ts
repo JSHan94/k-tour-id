@@ -254,7 +254,7 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
       window.addEventListener(eventName, onOwnedTraversal)
       window.addEventListener("popstate", onDownstreamPopstate, { capture: true })
 
-      History.prototype.replaceState.call(history, state, "", `/ondo-b-shadow${location.search}`)
+      History.prototype.replaceState.call(history, state, "", `/not-ondo-shadow${location.search}`)
       window.dispatchEvent(new PopStateEvent("popstate", { state }))
       History.prototype.replaceState.call(history, state, "", originalUrl)
       window.dispatchEvent(new PopStateEvent("popstate", { state: { ...state, __ondoBDiscovery: { v: 0, level: "city" } } }))
@@ -265,7 +265,7 @@ test.describe("SLEEK offline discovery history stays inside the hydrated B docum
       return { ownedTraversals, downstreamPopstates, pathname: location.pathname }
     }, "ondo:b-discovery-traversal")
 
-    expect(receipt).toEqual({ ownedTraversals: 1, downstreamPopstates: 2, pathname: "/ondo-b" })
+    expect(receipt).toEqual({ ownedTraversals: 1, downstreamPopstates: 2, pathname: "/" })
     await traverse(page, "back")
     await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
     await expect.poll(() => page.evaluate(() => ({

@@ -23,7 +23,7 @@ async function seed(page: Page, locale: "en" | "ko" = "en") {
 test("VIS-SYS-001 mobile dock never overlays content and tabs do not inherit another tab's scroll", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seed(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
 
   const content = page.locator("[data-testid='ondo-canvas'] > div").first()
   const nav = page.getByTestId("ondo-main-nav")
@@ -57,7 +57,7 @@ test("VIS-SYS-001 mobile dock never overlays content and tabs do not inherit ano
 test("VIS-SYS-002 compact mobile map preserves most of the canvas for the Pulse visualization", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seed(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.locator("[data-city='seoul']").click()
   const root = page.getByTestId("ondo-b-map-entry")
   await expect(root).toHaveAttribute("data-effective-view", "map")
@@ -80,7 +80,7 @@ test("VIS-SYS-002 compact mobile map preserves most of the canvas for the Pulse 
 test("VIS-SYS-003 every PRD tab remains scrollable and its last action clears the dock", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await seed(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   const content = page.locator("[data-testid='ondo-canvas'] > div").first()
   const nav = page.getByTestId("ondo-main-nav")
 

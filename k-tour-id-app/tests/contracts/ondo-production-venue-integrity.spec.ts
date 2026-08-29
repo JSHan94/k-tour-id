@@ -261,7 +261,7 @@ test("VENUE-PROD-005 persistence sanitizers accept canonical ids and notes only"
   expect(sanitizeCanonicalVenueNotes(null, [first])).toEqual({})
 })
 
-test("VENUE-PROD-006 /ondo-b production graph contains no fictional legacy venue ids", () => {
+test("VENUE-PROD-006 canonical / production graph contains no fictional legacy venue ids", () => {
   const hits = bProductionImportGraph().flatMap((file) => {
     const source = readFileSync(file, "utf8")
     return LEGACY_VENUE_IDS.filter((id) => source.includes(id)).map((id) => ({ file: relative(APP_ROOT, file), id }))

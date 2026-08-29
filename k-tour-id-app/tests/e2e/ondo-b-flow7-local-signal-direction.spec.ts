@@ -84,7 +84,7 @@ async function waitForShell(page: Page) {
 
 async function openSignal(page: Page, locale: Locale = "en", posted = false) {
   await seed(page, locale, posted)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
   await page.locator("[data-city='seoul']").click({ force: true })
   const toggle = page.getByTestId("ondo-b-view-toggle")
@@ -573,7 +573,7 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   const { signal, place } = await openSignal(page)
   const before = await sharedPlacePulseTuple(place)
   expect(before).toEqual({
-    level: "peak", numeric: "hidden", title: "ONDO temperature 91 · PEAK", score: "91", count: "24", confidence: "High",
+    level: "peak", numeric: "hidden", title: "ONDO temperature · PEAK", score: "91", count: "24", confidence: "High",
     freshnessUpdatedAt: "Curated snapshot · 2026-08-25 02:20 UTC",
   })
   await signal.locator("fieldset button").first().click()
@@ -591,14 +591,16 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   const rows = list.locator("li[data-venue-id]")
   const targetRow = rows.filter({ has: page.locator(`[data-venue-id='${VENUE_ID}']`) })
   const rowIndex = await rows.evaluateAll((items, venueId) => items.findIndex((item) => item.getAttribute("data-venue-id") === venueId), VENUE_ID)
-  expect(rowIndex).toBe(0)
+  // A device-local contribution must not promote the venue ahead of the
+  // shared curated ordering. This fixture is fourth in that stable tuple.
+  expect(rowIndex).toBe(3)
   const listPulse = list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)
   await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
-  await expect(listPulse).toHaveAttribute("aria-label", /ONDO temperature 91 · PEAK · 24 curated signals/)
+  await expect(listPulse).toHaveAttribute("aria-label", "ONDO temperature · PEAK · Your Local Signal is included on this device")
   expect(await targetRow.count()).toBeLessThanOrEqual(1)
   await page.getByTestId("ondo-b-view-toggle").click()
   const accessible = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
-  await expect(accessible.first()).toContainText("ONDO temperature 91 · PEAK · freshness curated-snapshot · confidence high")
+  await expect(accessible.first()).toContainText("ONDO temperature · PEAK · freshness curated snapshot · confidence high")
 })
 
 test("FLOW7-CONSENT-012 phone Person gate keeps both 44px decisions visible and details progressively reachable", async ({ page }) => {

@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import {
   CalendarClock,
   ChevronRight,
   CircleUserRound,
   Compass,
-  FileKey2,
   MapPinned,
   Settings,
   ShieldCheck,
@@ -35,6 +35,7 @@ import {
   type BActionGateSession,
 } from "./action-gate-contract-b"
 import { ProfileReputationB } from "./profile-reputation-b"
+import { isSimulatedCredentialActiveB } from "./ktour-id-setup-model-b"
 import styles from "./traveler-id-entry-b.module.css"
 
 const COPY = {
@@ -59,7 +60,7 @@ const COPY = {
     ageTitle: "19+",
     ageBody: "19+ does not prove identity.",
     paymentTitle: "Payment",
-    paymentBody: "Checked only when a payment action needs it. This is separate from the test wallet below.",
+    paymentBody: "Checked only when a payment action needs it. This is separate from the local travel balance below.",
     credentialTitle: "K-Tour ID",
     credentialBody: "Optional private service credential · separate from Person and 19+.",
     credentialReady: "Ready · this tab",
@@ -71,7 +72,7 @@ const COPY = {
     failure: "Try again",
     unavailable: "Unavailable",
     expired: "Expired",
-    walletReady: "Test wallet ready",
+    walletReady: "Local travel balance ready",
     walletNotReady: "Set up",
     checkPerson: "Check Person",
     checkAge: "Check 19+",
@@ -100,7 +101,7 @@ const COPY = {
     ageTitle: "19+",
     ageBody: "19+는 본인을 증명하지 않습니다.",
     paymentTitle: "결제",
-    paymentBody: "결제 작업에 필요할 때만 별도로 확인합니다. 아래 테스트 지갑과는 다른 상태예요.",
+    paymentBody: "결제 작업에 필요할 때만 별도로 확인합니다. 아래 로컬 여행 잔액과는 다른 상태예요.",
     credentialTitle: "K-Tour ID",
     credentialBody: "선택형 민간 서비스 자격증명 · 본인·19+와 별개입니다.",
     credentialReady: "준비됨 · 이 탭",
@@ -112,7 +113,7 @@ const COPY = {
     failure: "다시 시도",
     unavailable: "이용 불가",
     expired: "만료됨",
-    walletReady: "테스트 지갑 준비됨",
+    walletReady: "로컬 여행 잔액 준비됨",
     walletNotReady: "설정 필요",
     checkPerson: "본인 확인",
     checkAge: "19+ 확인",
@@ -141,7 +142,7 @@ const COPY = {
     ageTitle: "19+",
     ageBody: "19歳以上という結果だけでは、本人であることを証明しません。",
     paymentTitle: "決済",
-    paymentBody: "支払い操作で必要になったときだけ別に確認します。下のテストウォレットとは別の状態です。",
+    paymentBody: "支払い操作で必要になったときだけ別に確認します。下のローカル旅行残高とは別の状態です。",
     credentialTitle: "K-Tour ID",
     credentialBody: "任意の民間サービス資格情報 · 本人・19歳以上とは別です。",
     credentialReady: "準備済み · このタブ",
@@ -153,7 +154,7 @@ const COPY = {
     failure: "再試行が必要",
     unavailable: "利用不可",
     expired: "期限切れ",
-    walletReady: "テストウォレット準備済み",
+    walletReady: "ローカル旅行残高準備済み",
     walletNotReady: "設定が必要",
     checkPerson: "本人であることを確認",
     checkAge: "19歳以上を確認",
@@ -179,10 +180,10 @@ function axisOutcome(axis: BActionAxis): LocalCheckOutcome | null {
   return null
 }
 
-function restoredAgeOutcome(session: GlobalAfter19SessionB | null): LocalCheckOutcome | null {
+function restoredAgeOutcome(session: GlobalAfter19SessionB | null, now = new Date()): LocalCheckOutcome | null {
   if (!session) return null
-  if (isGlobalAfter19AgeCurrent(session)) return "success"
-  return session.expiryNotice ? "expired" : null
+  if (isGlobalAfter19AgeCurrent(session, now)) return "success"
+  return session.expiryNotice || (session.age === "eligible" && session.ageExpiresAt !== null) ? "expired" : null
 }
 
 export function TravelerIdEntryB() {
@@ -191,6 +192,7 @@ export function TravelerIdEntryB() {
   const [ageOutcome, setAgeOutcome] = useState<LocalCheckOutcome | null>(null)
   const [actionSession, setActionSession] = useState<BActionGateSession>(DEFAULT_B_ACTION_GATE_SESSION)
   const [after19Session, setAfter19Session] = useState<GlobalAfter19SessionB | null>(null)
+  const [statusClock, setStatusClock] = useState(() => Date.now())
   const [activeCheck, setActiveCheck] = useState<LocalCheckKind | null>(null)
   const personRef = useRef<HTMLButtonElement>(null)
   const ageRef = useRef<HTMLButtonElement>(null)
@@ -198,8 +200,11 @@ export function TravelerIdEntryB() {
   const copy = COPY[locale]
   const accountActive = state.account === "ACC-ACTIVE"
   const personStatus = personOutcome ?? axisOutcome(actionSession.person)
-  const ageStatus = ageOutcome ?? restoredAgeOutcome(after19Session)
+  const restoredAgeStatus = restoredAgeOutcome(after19Session, new Date(statusClock))
+  const ageStatus = ageOutcome === "success" ? restoredAgeStatus : ageOutcome ?? restoredAgeStatus
   const paymentStatus = axisOutcome(actionSession.payment)
+  const credentialActive = state.identityCredential ? isSimulatedCredentialActiveB(state.identityCredential, statusClock) : false
+  const credentialStatus = state.identityCredential ? credentialActive ? state.identityCredential.status : "expired" : "none"
 
   useEffect(() => {
     function syncActionSession() {
@@ -219,6 +224,19 @@ export function TravelerIdEntryB() {
       window.removeEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncAfter19Session)
     }
   }, [])
+
+  useEffect(() => {
+    const now = Date.now()
+    setStatusClock(now)
+    const credentialExpiry = state.identityCredential?.expiresAt ?? Number.POSITIVE_INFINITY
+    const ageExpiry = after19Session?.ageExpiresAt ? Date.parse(after19Session.ageExpiresAt) : Number.POSITIVE_INFINITY
+    const expiry = Math.min(credentialExpiry, ageExpiry)
+    if (!Number.isFinite(expiry)) return
+    const delay = expiry - now
+    if (delay <= 0) return
+    const timer = window.setTimeout(() => setStatusClock(Date.now()), delay + 16)
+    return () => window.clearTimeout(timer)
+  }, [after19Session?.ageExpiresAt, state.identityCredential])
 
   function returnFromCheck(outcome: LocalCheckOutcome) {
     const returningCheck = activeCheck
@@ -303,8 +321,8 @@ export function TravelerIdEntryB() {
               <button ref={ageRef} type="button" onClick={() => setActiveCheck("age")}>{copy.checkAge}<ChevronRight size={17} aria-hidden="true" /></button>
             </article>
 
-            <article className={styles.statusCard} data-testid="traveler-id-credential" data-status={state.identityCredential?.status ?? "none"}>
-              <div className={styles.statusTop}><FileKey2 size={20} aria-hidden="true" /><span>{state.identityCredential ? copy.credentialReady : copy.credentialEmpty}</span></div>
+            <article className={styles.statusCard} data-testid="traveler-id-credential" data-status={credentialStatus}>
+              <div className={styles.statusTop}><Image src="/brand/ktour-id-mark-32.png" width={20} height={20} alt="" aria-hidden="true" /><span>{credentialStatus === "expired" ? copy.expired : state.identityCredential ? copy.credentialReady : copy.credentialEmpty}</span></div>
               <h3>{copy.credentialTitle}</h3>
               <p>{copy.credentialBody}</p>
               <button type="button" data-testid="traveler-id-ktour-id-open" onClick={() => actions.openIdentitySetup("traveler_id")}>{copy.credentialOpen}<ChevronRight size={17} aria-hidden="true" /></button>

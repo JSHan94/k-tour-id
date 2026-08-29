@@ -1080,3 +1080,27 @@
   font-weight: 750;
 }
 .tableActions .tableEmpty > div > button:last-child { border-color: #171717; background: #171717; color: #fff; }
+
+/* The peek is portalled beside the map, so it cannot inherit the map's night
+   palette. Keep the selected place visually continuous with an active After
+   19 map while retaining the same facts and actions. */
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .peek {
+  border-color: rgb(255 255 255 / 14%);
+  background: linear-gradient(150deg, #1b1a21, #111116 72%);
+  color: #faf8fb;
+  box-shadow: 0 18px 46px rgb(0 0 0 / 46%);
+}
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .grabber { background: #67636e; }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .close { background: rgb(24 23 30 / 94%); color: #faf8fb; }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .meta,
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .nameProvenance,
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .nameProvenance span,
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .nameProvenance small,
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .recordSummary p { color: #cbc6d0; }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .nameProvenance strong { color: #fff7fb; }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .recordSummary,
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .pulsePeek { border-color: rgb(255 255 255 / 13%); }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .pulsePeek { background: linear-gradient(90deg, color-mix(in srgb, var(--pulse-level) 18%, #17171d), #17171d 68%); }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .pulseVisualLabel { color: #eee9f1; }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .peekActions button { border-color: rgb(255 255 255 / 18%); background: #faf8fb; color: #111116; }
+:global(body:has([data-testid="ondo-b-map-entry"][data-after19-active="true"])) .peekActions a { border-color: rgb(255 255 255 / 20%); background: #27242d; color: #faf8fb; }

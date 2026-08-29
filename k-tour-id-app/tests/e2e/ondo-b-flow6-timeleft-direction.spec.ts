@@ -67,7 +67,7 @@ async function seed(page: Page, locale: Locale = "en", joined = false) {
 
 async function openTables(page: Page, locale: Locale = "en", joined = false) {
   await seed(page, locale, joined)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   const scroll = page.getByTestId("ondo-scroll-region")
   await expect(scroll).toBeVisible()
   await expect.poll(() => scroll.evaluate((element) => element.style.getPropertyValue("--ondo-scroll-viewport"))).not.toBe("")

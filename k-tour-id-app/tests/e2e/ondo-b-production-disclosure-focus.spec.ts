@@ -29,7 +29,7 @@ test.describe("ONDO B production disclosure and focus boundaries", () => {
       test(`location message does not cover the map key at ${viewport.width}x${viewport.height} ${locale}`, async ({ page }) => {
         await page.setViewportSize(viewport)
         await seedProductionDirectory(page, locale)
-        await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+        await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
         await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
 
         const disclosure = page.getByTestId("ondo-b-location-message")
@@ -56,7 +56,7 @@ test.describe("ONDO B production disclosure and focus boundaries", () => {
     test(`closing a place restores its exact list opener at ${viewport.width}x${viewport.height}`, async ({ page }) => {
       await page.setViewportSize(viewport)
       await seedProductionDirectory(page)
-      await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       const opener = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first()
       const openerId = await opener.getAttribute("data-venue-opener")
       await opener.click()

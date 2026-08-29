@@ -140,7 +140,7 @@ const KEY_COPY_BY_CASE_ID: Readonly<Record<string, string>> = {
   "CR-PX-023-OPENDID-DOCUMENT-EN": "Choose one passport image",
   "CR-PX-024-OPENDID-FACE-KO": "얼굴·라이브니스",
   "CR-PX-025-OPENDID-EVIDENCE-JA": "最小限の証拠を確認",
-  "CR-PX-026-OPENDID-ISSUANCE-EN": "Issue with OpenDID",
+  "CR-PX-026-OPENDID-ISSUANCE-EN": "Prepare OpenDID delivery",
   "CR-PX-027-OPENDID-HOLDER-KO": "여행 패스에 담기",
   "CR-PX-028-TABLE-JOINED-KO": "참여했어요",
   "CR-PX-029-MY-KOREA-TABLE-LINKAGE-KO": "식사 계획",
@@ -258,7 +258,7 @@ async function seedDevice(page: Page, item: CurrentReferenceVisualCase) {
 
 async function gotoCurrentB(page: Page, item: CurrentReferenceVisualCase) {
   await seedDevice(page, item)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   const root = page.getByTestId("ondo-b-root")
   await expect(root).toBeVisible()
   await expect(root).toHaveAttribute("data-variant", "B")
@@ -433,7 +433,7 @@ export async function setupCurrentReferenceVisualCase(page: Page, item: CurrentR
     await expect(guide).toBeVisible()
     await guide.scrollIntoViewIfNeeded()
   } else if (item.state === "jeju-editorial-place") {
-    await page.goto(`/ondo-b?city=jeju&editorialPlaceId=${EDITORIAL_PLACE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.goto(`/?city=jeju&editorialPlaceId=${EDITORIAL_PLACE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
     const place = page.getByTestId("ondo-b-editorial-place-overlay")
     await expect(place).toHaveAttribute("data-editorial-place-id", EDITORIAL_PLACE_ID)
     await expect(place).toHaveAttribute("data-official-record", "false")
@@ -452,7 +452,7 @@ export async function setupCurrentReferenceVisualCase(page: Page, item: CurrentR
     await expect(page.getByTestId("ondo-b-list-pulse")).toHaveCount(30)
     await expectPulseSignalsAreVisual(page)
   } else if (item.state === "place-detail") {
-    await page.goto(`/ondo-b?venueId=${CANONICAL_VENUE_ID}`, { waitUntil: "domcontentloaded" })
+    await page.goto(`/?venueId=${CANONICAL_VENUE_ID}`, { waitUntil: "domcontentloaded" })
     const peek = page.getByTestId("canonical-place-peek")
     await expect(peek).toBeVisible()
     await peek.getByTestId("canonical-place-details").click()

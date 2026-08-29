@@ -38,7 +38,7 @@ test.describe("verified Jeju editorial loop", () => {
   for (const locale of ["ko", "en", "ja"] as const) {
     test(`${locale.toUpperCase()} story focuses a point before internal detail, save, My Korea, and reload`, async ({ page }) => {
       await seed(page, locale)
-      await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+      await page.goto("/", { waitUntil: "domcontentloaded" })
       const atlas = page.getByTestId("ondo-b-korea-atlas")
       await expect(atlas).toBeVisible()
       await atlas.locator("[data-city='jeju']").click()

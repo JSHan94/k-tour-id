@@ -85,7 +85,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     for (const locale of ["en", "ko"] as const) {
       for (const viewport of PRIMARY_VIEWPORTS) {
         const context = await productionContext(browser, viewport, locale, "ONB-NEW")
-        const page = await openPage(context, "/ondo-b")
+        const page = await openPage(context, "/")
         const dialog = page.getByTestId("ondo-onboarding")
         // Let the product's deliberate initial dialog focus settle before
         // proving the first action's independent focus owner and outline.
@@ -117,7 +117,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     }
 
     const shortContext = await productionContext(browser, { width: 844, height: 390 }, "en", "ONB-NEW")
-    const shortPage = await openPage(shortContext, "/ondo-b")
+    const shortPage = await openPage(shortContext, "/")
     const shortDialog = shortPage.getByTestId("ondo-onboarding")
     await expect(shortDialog).toBeFocused()
     await shortDialog.locator("[data-onboarding-initial-focus]").first().focus()
@@ -131,7 +131,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     for (const locale of ["en", "ko"] as const) {
       for (const viewport of REPRESENTATIVE_VIEWPORTS) {
         const context = await productionContext(browser, viewport, locale)
-        const page = await openPage(context, "/ondo-b?city=seoul&view=list")
+        const page = await openPage(context, "/?city=seoul&view=list")
         const input = page.getByTestId("ondo-b-search")
         const shell = page.getByTestId("ondo-b-search-shell")
         await input.fill("로바")
@@ -187,7 +187,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     for (const locale of ["en", "ko"] as const) {
       for (const viewport of REPRESENTATIVE_VIEWPORTS) {
         const context = await productionContext(browser, viewport, locale)
-        const page = await openPage(context, "/ondo-b?city=seoul&view=map")
+        const page = await openPage(context, "/?city=seoul&view=map")
         const attribution = page.getByTestId("ondo-b-attribution")
         await expect(attribution).toBeVisible()
         const surface = await attribution.evaluate((node) => {
@@ -223,7 +223,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
 
     for (const locale of ["en", "ko"] as const) {
       const context = await productionContext(browser, { width: 334, height: 160 }, locale)
-      const page = await openPage(context, "/ondo-b?city=seoul&view=map")
+      const page = await openPage(context, "/?city=seoul&view=map")
       const root = page.getByTestId("ondo-b-map-entry")
       const content = page.getByTestId("ondo-scroll-region")
       const search = page.getByTestId("ondo-b-search")
@@ -248,7 +248,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
 
   test("CLEAN1-D4-HISTORY restores a canonical detail URL after hydration, reload, and onboarding", async ({ browser }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium", "one Chromium owner covers the canonical history lifecycle")
-    const detailPath = `/ondo-b?city=seoul&view=list&q=Roba&category=night&venueId=${CANONICAL_VENUE_ID}&detail=1`
+    const detailPath = `/?city=seoul&view=list&q=Roba&category=night&venueId=${CANONICAL_VENUE_ID}&detail=1`
     const expectedParams = {
       city: "seoul",
       view: "list",
@@ -302,7 +302,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await onboardingContext.close()
   })
 
-  test("CLEAN1-AFTER19 keeps the map locked to pubs and cafés through URL restore and empty-search reset", async ({ browser }, testInfo) => {
+  test("CLEAN1-AFTER19 keeps the map locked to bars and pubs through URL restore and empty-search reset", async ({ browser }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-chromium", "the mobile project covers the consumer category rail once")
     const context = await productionContext(browser, { width: 390, height: 844 }, "en")
     await context.addInitScript(({ key }) => {
@@ -315,13 +315,13 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
         expiryNotice: false,
       }))
     }, { key: AFTER19_SESSION_KEY })
-    const page = await openPage(context, "/ondo-b?city=seoul&view=list&category=all")
+    const page = await openPage(context, "/?city=seoul&view=list&category=all")
     const root = page.getByTestId("ondo-b-map-entry")
     const rail = page.getByTestId("ondo-b-category-rail")
     await expect(root).toHaveAttribute("data-after19-active", "true")
     await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("night")
     await expect(rail.getByRole("button")).toHaveCount(1)
-    await expect(rail.getByRole("button", { name: "Pubs & cafés", pressed: true })).toBeVisible()
+    await expect(rail.getByRole("button", { name: "Bars & pubs", pressed: true })).toBeVisible()
     await expect(rail.getByRole("button", { name: "All" })).toHaveCount(0)
     await expect(rail.getByRole("button", { name: "Korean" })).toHaveCount(0)
 
@@ -331,8 +331,73 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await empty.getByRole("button", { name: "Clear search" }).click()
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("")
     await expect(empty).toHaveCount(0)
-    await expect(rail.getByRole("button", { name: "Pubs & cafés", pressed: true })).toBeVisible()
+    await expect(rail.getByRole("button", { name: "Bars & pubs", pressed: true })).toBeVisible()
     await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("night")
+    await context.close()
+  })
+
+  test("CLEAN1-MAP-A11Y enters a city with useful focus and a concise map description", async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile-chromium", "one keyboard-capable Chromium project covers the transition")
+    const context = await productionContext(browser, { width: 390, height: 844 }, "en")
+    const page = await openPage(context, "/")
+    const seoul = page.getByTestId("ondo-b-nation").locator("[data-city='seoul']")
+    await seoul.focus()
+    await page.keyboard.press("Enter")
+    await expect(page.getByTestId("ondo-b-search")).toBeFocused()
+    await expect(page.getByTestId("maplibre-map")).toHaveAttribute("aria-describedby", "ondo-b-map-instruction ondo-b-result-truth")
+    await context.close()
+  })
+
+  test("CLEAN1-LOCATION keeps disclosure geometry inside the map and announces denial immediately", async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile-chromium", "the narrow viewport is the clipping boundary")
+    const context = await productionContext(browser, { width: 390, height: 844 }, "en")
+    await context.addInitScript(() => {
+      Object.defineProperty(navigator, "geolocation", {
+        configurable: true,
+        value: { getCurrentPosition: (_success: PositionCallback, failure: PositionErrorCallback) => failure({ code: 1, message: "denied", PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError) },
+      })
+    })
+    const page = await openPage(context, "/?city=seoul&view=map")
+    const disclosure = page.getByTestId("ondo-b-location-message")
+    await disclosure.locator("summary").click()
+    const [detailBox, mapBox] = await Promise.all([page.getByTestId("ondo-b-location-details").boundingBox(), page.getByTestId("ondo-b-map-entry").boundingBox()])
+    expect(detailBox).not.toBeNull()
+    expect(mapBox).not.toBeNull()
+    expect(detailBox!.x).toBeGreaterThanOrEqual(mapBox!.x)
+    expect(detailBox!.x + detailBox!.width).toBeLessThanOrEqual(mapBox!.x + mapBox!.width)
+    await page.getByTestId("ondo-b-locate").click()
+    await expect(page.getByTestId("ondo-b-location-feedback")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-location-feedback")).toContainText(/location|Search/i)
+    await context.close()
+  })
+
+  test("CLEAN1-AFTER19 leaves Jeju editorial discovery unfiltered and gives selected Seoul facts a dark surface", async ({ browser }, testInfo) => {
+    test.skip(testInfo.project.name !== "mobile-chromium", "one mobile After 19 receipt covers both city behaviors")
+    const context = await productionContext(browser, { width: 390, height: 844 }, "en")
+    await context.addInitScript(({ key }) => sessionStorage.setItem(key, JSON.stringify({
+      version: 1,
+      age: "eligible",
+      ageExpiresAt: "2026-09-01T20:30:00+09:00",
+      mode: "on",
+      activation: "manual",
+      expiryNotice: false,
+    })), { key: AFTER19_SESSION_KEY })
+    const page = await openPage(context, "/?city=jeju&view=map")
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-session-active", "true")
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-active", "true")
+    // The place index is intentionally collapsed while the map pins remain the
+    // primary Jeju interaction. Count its complete DOM set without requiring
+    // hidden controls to be exposed in the accessibility tree.
+    await expect(page.getByTestId("ondo-b-editorial-place-list").locator("button")).toHaveCount(8)
+
+    await page.goto(`${ORIGIN}/?city=seoul&view=list&category=night`, { waitUntil: "domcontentloaded" })
+    const firstVenue = page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id] button").first()
+    const transliteration = firstVenue.locator("small > span:not([class*='srOnly'])").first()
+    expect(await transliteration.evaluate((node) => getComputedStyle(node).color)).toBe("rgb(242, 238, 245)")
+    await firstVenue.click()
+    const peek = page.getByTestId("canonical-place-peek")
+    await expect(peek).toBeVisible()
+    expect(await peek.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient")
     await context.close()
   })
 })

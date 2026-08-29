@@ -47,7 +47,7 @@ test.describe("visual-only mobile product polish", () => {
       test(`${locale} ${viewport.width}x${viewport.height} city choices never collide or hide behind navigation`, async ({ page }) => {
         await page.setViewportSize(viewport)
         await seed(page, locale)
-        await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+        await page.goto("/", { waitUntil: "domcontentloaded" })
 
         const nation = page.getByTestId("ondo-b-nation")
         const seoul = nation.locator("[data-city='seoul']")
@@ -86,7 +86,7 @@ test.describe("visual-only mobile product polish", () => {
       test(`${locale} ${viewport.width}x${viewport.height} place peek stays compact and action complete`, async ({ page }) => {
         await page.setViewportSize(viewport)
         await seed(page, locale)
-        await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+        await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
         const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${PEAK_VENUE_ID}']`)
         await row.locator("button").click()
 
@@ -117,7 +117,7 @@ test.describe("visual-only mobile product polish", () => {
   test("short landscape uses a readable side sheet and keeps both decisions in view", async ({ page }) => {
     await page.setViewportSize({ width: 844, height: 390 })
     await seed(page, "en")
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     await page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${PEAK_VENUE_ID}'] button`).click()
     const peek = page.getByTestId("canonical-place-peek")
     const root = page.getByTestId("ondo-b-map-entry")
@@ -134,7 +134,7 @@ test.describe("visual-only mobile product polish", () => {
     test(`${locale} longest official name stays contained in the 320px place peek`, async ({ page }) => {
       await page.setViewportSize({ width: 320, height: 720 })
       await seed(page, locale)
-      await page.goto(`/ondo-b?city=seoul&view=list&venueId=${LONG_NAME_VENUE_ID}`, { waitUntil: "domcontentloaded" })
+      await page.goto(`/?city=seoul&view=list&venueId=${LONG_NAME_VENUE_ID}`, { waitUntil: "domcontentloaded" })
 
       const peek = page.getByTestId("canonical-place-peek")
       const provenance = peek.getByTestId("canonical-name-provenance")
@@ -155,7 +155,7 @@ test.describe("visual-only mobile product polish", () => {
   test("map ready means the Pulse decision layer completed its first readable paint", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 })
     await seed(page, "en")
-    await page.goto("/ondo-b?city=seoul&view=map", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=map", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 12_000 })
     await expect(root).toHaveAttribute("data-pulse-markers-readable", "true")
@@ -165,7 +165,7 @@ test.describe("visual-only mobile product polish", () => {
   test("320px ID · Wallet shows the wallet task before optional readiness details", async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 720 })
     await seed(page, "en")
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-id").click()
     await expect(page.getByTestId("wallet-balance")).toBeInViewport()
     await expect(page.getByTestId("wallet-link-open")).toBeInViewport()
@@ -182,7 +182,7 @@ test.describe("visual-only mobile product polish", () => {
       state.plannedTableRefs = [{ tableId: "table-seoul-night-bites", venueId }]
       localStorage.setItem(key, JSON.stringify(state))
     }, { key: DEVICE_KEY, venueId: PEAK_VENUE_ID })
-    await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+    await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-my").click()
     const planned = page.getByTestId("my-korea-planned")
     const saved = page.getByTestId("ondo-b-saved-entry")
@@ -196,7 +196,7 @@ test.describe("visual-only mobile product polish", () => {
   test("Place decision order keeps Table and meal benefit ahead of optional contribution", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await seed(page, "en")
-    await page.goto(`/ondo-b?city=seoul&view=list&venueId=${PEAK_VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+    await page.goto(`/?city=seoul&view=list&venueId=${PEAK_VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
     const detail = page.getByTestId("canonical-place-overlay")
     const table = detail.getByTestId("canonical-place-table")
     const benefit = detail.getByTestId("canonical-meal-benefit-open")
@@ -210,7 +210,7 @@ test.describe("visual-only mobile product polish", () => {
   test("compact source summary moves into Details without removing its truth", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await seed(page, "en")
-    await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
     await page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${PEAK_VENUE_ID}'] button`).click()
     const peek = page.getByTestId("canonical-place-peek")
     await expect(peek.getByTestId("canonical-place-source-summary")).toBeHidden()

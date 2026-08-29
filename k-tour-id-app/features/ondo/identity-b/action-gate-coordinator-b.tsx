@@ -14,6 +14,7 @@ import {
 import { ONDO_OPEN_TABLE_EVENT } from "../connect/tables-entry-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import {
   B_ACTION_GATE_CANCEL_EVENT,
   B_ACTION_AXIS_SESSION_EVENT,
@@ -39,13 +40,13 @@ const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),select:no
 
 type GateView = "intro" | "failure" | "unavailable" | "expired"
 type GateQaOutcome = Exclude<GateView, "intro">
-type QaWindow = Window & {
-  __ONDO_B_QA__?: {
-    actionGate?: Partial<Record<BActionGateKind, GateQaOutcome>>
-    eligibility?: "success" | "cancel" | "failure" | "unavailable" | "expired"
-    after19?: GateQaOutcome
-    paymentKyc?: GateQaOutcome
-  }
+type QaRuntime = {
+  actionGate?: Partial<Record<BActionGateKind, GateQaOutcome>>
+  eligibility?: "success" | "cancel" | "failure" | "unavailable" | "expired"
+  after19?: GateQaOutcome
+  paymentKyc?: GateQaOutcome
+}
+type TableIntentWindow = Window & {
   __ONDO_B_TABLE_INTENT__?: { tableId: string; venueId: string; mode: string; draft?: string }
 }
 
@@ -205,7 +206,7 @@ const COPY = {
     returnLabel: "戻る場所",
     table: "テーブルとホストへのメモ",
     signal: "Local Signalの下書き",
-    checkout: "食事特典のテスト決済",
+    checkout: "食事特典のお支払い",
     truth: "端末内確認 · 外部サービス、資格情報、書類、元の本人情報は使用しません",
     cancel: "今回はしない — 操作を変えずに戻る",
     failureTitle: "確認を完了できませんでした",
@@ -278,7 +279,7 @@ export function BActionGateCoordinator() {
   const restoreContext = useCallback((returnTo: BActionReturnTo) => {
     if (returnTo.cta === "JOIN_TABLE") {
       actions.setTab("tables")
-      ;(window as QaWindow).__ONDO_B_TABLE_INTENT__ = { tableId: returnTo.tableId, venueId: returnTo.venueId, mode: "view", draft: returnTo.draft }
+      ;(window as TableIntentWindow).__ONDO_B_TABLE_INTENT__ = { tableId: returnTo.tableId, venueId: returnTo.venueId, mode: "view", draft: returnTo.draft }
       window.setTimeout(() => window.dispatchEvent(new CustomEvent(ONDO_OPEN_TABLE_EVENT, { detail: { tableId: returnTo.tableId, venueId: returnTo.venueId, mode: "view", draft: returnTo.draft } })), 0)
       return
     }
@@ -395,11 +396,12 @@ export function BActionGateCoordinator() {
   function commit(next: BActionGateSession) {
     if (!persistBActionGateSession(window.sessionStorage, next)) return false
     setSession(next)
+    window.dispatchEvent(new CustomEvent(B_ACTION_AXIS_SESSION_EVENT, { detail: next }))
     return true
   }
 
   function gateOutcome(gate: BActionGateKind): GateQaOutcome | null {
-    const qa = (window as QaWindow).__ONDO_B_QA__
+    const qa = readQaRuntime<QaRuntime>()
     const explicit = qa?.actionGate?.[gate]
     if (explicit) { delete qa?.actionGate?.[gate]; return explicit }
     if (gate === "age" && qa?.after19) { const outcome = qa.after19; delete qa.after19; return outcome }

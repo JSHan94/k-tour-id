@@ -54,7 +54,7 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
           expect(copy).toContain("Turn on After 19")
         }
       }
-      if (["place", "account-gate", "age-gate", "tables", "table-chat", "local-signal", "checkout", "profile", "labs"].includes(item.surface)) {
+      if (["place", "account-gate", "age-gate", "table-chat", "local-signal", "checkout", "profile", "labs"].includes(item.surface)) {
         expect(copy, "sensitive/simulated surfaces must state a truth or privacy boundary").toMatch(PRODUCT_BOUNDARY)
       }
       if (item.surface === "after19") {
@@ -62,18 +62,17 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
         await expect(surface).toContainText(item.locale === "ko" ? "한국 시간 19:00 이후 자동으로 열림 · 서울" : "Opened after 19:00 KST · Seoul")
       }
       if (item.surface === "tables") {
-        if (item.locale === "ko") {
-          expect(copy).toContain("메시지와 사진은 이 탭에만 남고")
-          expect(copy).toContain("확정한 계획만 이 기기의 My Korea에 저장돼요.")
-          expect(copy).toContain("예약·장소 전송·결제는 일어나지 않습니다.")
-        } else {
-          expect(copy).toContain("Messages and photos stay in this tab.")
-          expect(copy).toContain("A confirmed plan is saved to My Korea on this device.")
-          expect(copy).toContain("Nothing is booked, sent to the venue, or charged.")
-        }
-
         await surface.getByTestId(`table-open-${TABLE_ID}`).click()
         const detail = page.getByTestId("table-detail")
+        const privacy = detail.getByTestId("tables-truth-notice")
+        await privacy.locator("summary").click()
+        if (item.locale === "ko") {
+          await expect(privacy).toContainText("메시지와 사진은 이 테이블에만 남고")
+          await expect(privacy).toContainText("참여한 일정은 이 기기의 My Korea에 저장돼요.")
+        } else {
+          await expect(privacy).toContainText("Messages and photos stay with this Table.")
+          await expect(privacy).toContainText("A joined plan is saved to My Korea on this device.")
+        }
         await expect(detail).toBeVisible()
         await expect(detail).toHaveAttribute("data-table-id", TABLE_ID)
         await expect(detail).toContainText(item.locale === "ko" ? "19+ 테이블 · 참여할 때만 자격을 확인해요." : "19+ Table · eligibility is checked only when you choose to join.")

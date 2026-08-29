@@ -25,7 +25,7 @@ async function seed(page: Page, locale: "en" | "ko" = "en") {
 }
 
 async function openPlace(page: Page, query = "") {
-  await page.goto(`/ondo-b?venueId=${VENUE_ID}${query ? `&${query}` : ""}`, { waitUntil: "domcontentloaded" })
+  await page.goto(`/?venueId=${VENUE_ID}${query ? `&${query}` : ""}`, { waitUntil: "domcontentloaded" })
   await page.getByTestId("canonical-place-details").click()
   return page.getByTestId("canonical-place-overlay")
 }
@@ -74,7 +74,7 @@ test("normal Place reaches the exact Table and keeps internal outcome controls o
 test("QA injection drives an After19 failure without authoring controls", async ({ page }) => {
   await seed(page)
   await page.addInitScript(() => { window.__ONDO_B_QA__ = { after19: "failure" } })
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-tables").click()
   await page.getByTestId(`table-open-${TABLE_ID}`).click()
   await page.getByTestId("table-join").click()
@@ -87,7 +87,7 @@ test("QA injection drives an After19 failure without authoring controls", async 
 test("joined Table supports message retry, check-in, and feedback without a combined reputation score", async ({ page }) => {
   await seed(page)
   await page.addInitScript(() => { window.__ONDO_B_QA__ = { tableMessage: "failure" } })
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-tables").click()
   await page.getByTestId(`table-open-${TABLE_ID}`).click()
   await page.getByTestId("table-join").click()
@@ -101,6 +101,7 @@ test("joined Table supports message retry, check-in, and feedback without a comb
 
   const chat = page.getByTestId("table-chat")
   const imageInput = chat.getByTestId("table-chat-image")
+  await expect(imageInput).toHaveAttribute("tabindex", "-1")
   await imageInput.setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") })
   await expect(chat.getByTestId("table-chat-image-error")).toContainText("JPEG, PNG, or WebP")
   await imageInput.setInputFiles({ name: "too-large.jpg", mimeType: "image/jpeg", buffer: Buffer.alloc((10 * 1024 * 1024) + 1) })
@@ -131,6 +132,7 @@ test("Local Signal supports photo select, replace, remove, and QA retry", async 
   await place.getByTestId("canonical-local-signal-open").click()
   const signal = page.getByTestId("ondo-b-local-signal")
   const photo = signal.getByTestId("local-signal-photo-input")
+  await expect(photo).toHaveAttribute("tabindex", "-1")
   await photo.setInputFiles({ name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") })
   await expect(signal.getByTestId("local-signal-photo-error")).toContainText("JPEG, PNG, or WebP")
   await expect(signal.getByTestId("local-signal-photo-choose-another")).toBeVisible()
@@ -154,7 +156,7 @@ test("Local Signal supports photo select, replace, remove, and QA retry", async 
 
 test("restored Table Account to 19+ gate stays topmost and operable after reload", async ({ page }) => {
   await seed(page)
-  await page.goto("/ondo-b", { waitUntil: "domcontentloaded" })
+  await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-tables").click()
   await page.getByTestId(`table-open-${TABLE_ID}`).click()
   await page.getByTestId("table-join").click()

@@ -34,7 +34,7 @@ test.describe("ONDO B polished Pulse map", () => {
       test(`${locale} ${viewport.width}x${viewport.height} keeps the Pulse map visible and progressive`, async ({ page }) => {
         await page.setViewportSize(viewport)
         await seedDirectory(page, locale)
-        await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+        await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
 
         const root = page.getByTestId("ondo-b-map-entry")
         await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
@@ -95,14 +95,14 @@ test.describe("ONDO B polished Pulse map", () => {
     test(`${locale} 844x390 keeps the map first and an explicit mobile List remains scrollable`, async ({ page }) => {
       await page.setViewportSize({ width: 844, height: 390 })
       await seedDirectory(page, locale)
-      await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
       const root = page.getByTestId("ondo-b-map-entry")
       await expect(root).toHaveAttribute("data-effective-view", "map")
       await expect(page.getByTestId("maplibre-map")).toBeVisible()
       await expect(page.getByTestId("ondo-b-list-panel")).toHaveCount(0)
 
       await page.setViewportSize({ width: 390, height: 844 })
-      await page.goto("/ondo-b?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+      await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
       const mobilePanel = page.getByTestId("ondo-b-list-panel")
       await expect(mobilePanel).toBeVisible()
       expect(await mobilePanel.evaluate((node) => node.scrollHeight > node.clientHeight)).toBe(true)
@@ -118,7 +118,7 @@ test.describe("ONDO B polished Pulse map", () => {
   test("the progressive Pulse sheet opens the hottest place by keyboard", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await seedDirectory(page, "en")
-    await page.goto("/ondo-b?city=seoul", { waitUntil: "domcontentloaded" })
+    await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
     await page.getByTestId("ondo-b-map-key-details").locator(":scope > summary").click()
     await page.getByTestId("ondo-b-pulse-methodology").locator(":scope > summary").click()

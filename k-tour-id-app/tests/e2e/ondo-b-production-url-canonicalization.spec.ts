@@ -32,7 +32,7 @@ test.describe("ONDO B production discovery URL canonicalization", () => {
   for (const locale of ["en", "ko"] as const) {
     test(`strips every non-discovery key and hash while preserving ${locale.toUpperCase()} discovery history`, async ({ page }) => {
       await seedDirectory(page, locale)
-      await page.goto(`/ondo-b?city=seoul&view=list&category=korean&q=${encodeURIComponent(KOREAN_CATEGORY_QUERY)}&qa=1&scenario=save-failed&profile=resident&token=secret-token&email=traveler%40example.com&legacy=1&heat=signal#private-fragment`, { waitUntil: "domcontentloaded" })
+      await page.goto(`/?city=seoul&view=list&category=korean&q=${encodeURIComponent(KOREAN_CATEGORY_QUERY)}&qa=1&scenario=save-failed&profile=resident&token=secret-token&email=traveler%40example.com&legacy=1&heat=signal#private-fragment`, { waitUntil: "domcontentloaded" })
 
       const search = page.getByRole("search").getByRole("textbox")
       const category = page.getByRole("button", { name: locale === "ko" ? "한식" : "Korean", exact: true })

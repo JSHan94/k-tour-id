@@ -17,7 +17,7 @@ const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 const ORIGIN = "http://127.0.0.1:3112"
 
 test("B-HISTORY-PRIVACY raw private and non-canonical history is always replaced, while exact state stays idempotent", () => {
-  let currentUrl = new URL("/ondo-b?city=seoul&view=list", ORIGIN)
+  let currentUrl = new URL("/?city=seoul&view=list", ORIGIN)
   const location = {
     get origin() { return currentUrl.origin },
     get pathname() { return currentUrl.pathname },
@@ -80,7 +80,7 @@ test("B-HISTORY-PRIVACY raw private and non-canonical history is always replaced
         credential: { accessToken: "must not survive" },
       },
     }
-    currentUrl = new URL(`/ondo-b?city=seoul&view=list&q=${safeQuery}`, ORIGIN)
+    currentUrl = new URL(`/?city=seoul&view=list&q=${safeQuery}`, ORIGIN)
     normalizeBDiscoveryHistoryForActiveDocument()
     expect(history.replaceCalls).toBe(2)
     const sanitized = (history.state as Record<string, unknown>).__ondoBDiscovery as Record<string, unknown>
@@ -93,7 +93,7 @@ test("B-HISTORY-PRIVACY raw private and non-canonical history is always replaced
     const missingCategory = { ...sanitized }
     Reflect.deleteProperty(missingCategory, "category")
     history.state = { nextInternal, __ondoBDiscovery: missingCategory }
-    currentUrl = new URL("/ondo-b?city=seoul&view=list&q=" + safeQuery, ORIGIN)
+    currentUrl = new URL("/?city=seoul&view=list&q=" + safeQuery, ORIGIN)
     normalizeBDiscoveryHistoryForActiveDocument()
     expect(history.replaceCalls, "a missing required key must not match its sanitized default").toBe(3)
 
@@ -143,11 +143,11 @@ class RuntimePage extends EventEmitter {
 }
 
 function runtimePage() {
-  return new RuntimePage(`${ORIGIN}/ondo-b?city=seoul&view=list`) as unknown as Page
+  return new RuntimePage(`${ORIGIN}/?city=seoul&view=list`) as unknown as Page
 }
 
 function failedRequest({
-  url = `${ORIGIN}/ondo-b?city=seoul&view=list&_rsc=opaque-token`,
+  url = `${ORIGIN}/?city=seoul&view=list&_rsc=opaque-token`,
   method = "GET",
   reason = "net::ERR_ABORTED",
   resourceType = "fetch",
@@ -186,23 +186,23 @@ test("B-RUNTIME-RSC an unconsumed strict Next abort is a product failure; one ex
   const boundedPage = runtimePage()
   installBRuntimeGuard(boundedPage)
   const consumeFirstAbort = allowBNextNavigationAbort(boundedPage, {
-    targetUrl: `${ORIGIN}/ondo-b?city=seoul&view=list`,
+    targetUrl: `${ORIGIN}/?city=seoul&view=list`,
     count: 1,
   })
   emitFailed(boundedPage)
   emitFailed(boundedPage)
-  expect(consumeFirstAbort()).toEqual([`${ORIGIN}/ondo-b?city=seoul&view=list&_rsc=opaque-token`])
+  expect(consumeFirstAbort()).toEqual([`${ORIGIN}/?city=seoul&view=list&_rsc=opaque-token`])
   expect(getBRuntimeEvidence(boundedPage)).toMatchObject({ product: [expect.any(String)], navigationAbort: [expect.any(String)] })
   await expect(expectBRuntimeClean(boundedPage)).rejects.toThrow()
   expect(() => allowBNextNavigationAbort(boundedPage, {
-    targetUrl: "/ondo-b?city=seoul&view=list",
+    targetUrl: "/?city=seoul&view=list",
     count: 1,
   })()).toThrow(/received 0/)
 
   const allowedPage = runtimePage()
   installBRuntimeGuard(allowedPage)
   const consumeAllowedAbort = allowBNextNavigationAbort(allowedPage, {
-    targetUrl: "/ondo-b?city=seoul&view=list",
+    targetUrl: "/?city=seoul&view=list",
     count: 1,
   })
   emitFailed(allowedPage)
@@ -212,12 +212,12 @@ test("B-RUNTIME-RSC an unconsumed strict Next abort is a product failure; one ex
 
 test("B-RUNTIME-RSC allowance matching is strict across query, path, origin, method, resource type, and reason", () => {
   const cases = [
-    { name: "query", request: {}, targetUrl: "/ondo-b?city=busan&view=list" },
-    { name: "path", request: { url: `${ORIGIN}/ondo-b-extra?city=seoul&_rsc=opaque-token` }, targetUrl: "/ondo-b?city=seoul" },
-    { name: "origin", request: { url: "https://example.test/ondo-b?city=seoul&_rsc=opaque-token" }, targetUrl: "/ondo-b?city=seoul" },
-    { name: "method", request: { method: "POST" }, targetUrl: "/ondo-b?city=seoul&view=list" },
-    { name: "resource type", request: { resourceType: "document" }, targetUrl: "/ondo-b?city=seoul&view=list" },
-    { name: "reason", request: { reason: "net::ERR_FAILED" }, targetUrl: "/ondo-b?city=seoul&view=list" },
+    { name: "query", request: {}, targetUrl: "/?city=busan&view=list" },
+    { name: "path", request: { url: `${ORIGIN}/other-route?city=seoul&_rsc=opaque-token` }, targetUrl: "/?city=seoul" },
+    { name: "origin", request: { url: "https://example.test/?city=seoul&_rsc=opaque-token" }, targetUrl: "/?city=seoul" },
+    { name: "method", request: { method: "POST" }, targetUrl: "/?city=seoul&view=list" },
+    { name: "resource type", request: { resourceType: "document" }, targetUrl: "/?city=seoul&view=list" },
+    { name: "reason", request: { reason: "net::ERR_FAILED" }, targetUrl: "/?city=seoul&view=list" },
   ] as const
 
   for (const contractCase of cases) {
