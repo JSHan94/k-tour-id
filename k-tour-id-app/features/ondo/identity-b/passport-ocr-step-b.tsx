@@ -173,16 +173,18 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      if (error) (stage === "preview" ? replaceActionRef.current : initialActionRef.current)?.focus({ preventScroll: true })
-      else if (stage === "select") initialActionRef.current?.focus({ preventScroll: true })
+      const focusAtDialogTop = (action: HTMLButtonElement | null) => {
+        // Every document-choice state owns the top of the short-landscape
+        // dialog. File chooser errors can otherwise leave the scroll owner
+        // offset far enough for a focused CTA to sit under the sticky header
+        // or below the viewport while `preventScroll` keeps it there.
+        action?.closest<HTMLElement>("[role='dialog']")?.scrollTo({ top: 0, behavior: "auto" })
+        action?.focus({ preventScroll: true })
+      }
+      if (error) focusAtDialogTop(stage === "preview" ? replaceActionRef.current : initialActionRef.current)
+      else if (stage === "select") focusAtDialogTop(initialActionRef.current)
       else if (stage === "preview") {
-        const previewAction = previewActionRef.current
-        // A failed file choice can leave the short-landscape dialog scrolled
-        // beneath its sticky header. Reset that owned scroll container before
-        // focusing the primary action so the retry path cannot park the CTA
-        // under the header and hand its hit target to the header instead.
-        previewAction?.closest<HTMLElement>("[role='dialog']")?.scrollTo({ top: 0, behavior: "auto" })
-        previewAction?.focus({ preventScroll: true })
+        focusAtDialogTop(previewActionRef.current)
       }
       else if (stage === "processing") processingHeadingRef.current?.focus({ preventScroll: true })
       else if (stage === "review") reviewActionRef.current?.focus({ preventScroll: true })
