@@ -31,4 +31,15 @@ test.describe("K-TOUR ID and ONDO deployment brand", () => {
     await expect(lockup.locator('b[lang="ko-Hani"]')).toHaveText("溫圖")
     await expect(onboarding.getByTestId("k-tour-id-setup-open")).toContainText("K-Tour ID")
   })
+
+  test("an allowed deployment host owns its canonical and social image URLs", async ({ request }) => {
+    const response = await request.get("/ondo-b", {
+      headers: { "x-forwarded-host": "k-tour-id.vercel.app" },
+    })
+    expect(response.ok()).toBeTruthy()
+    const html = await response.text()
+    expect(html).toContain('property="og:image" content="https://k-tour-id.vercel.app/og-map-first.png"')
+    expect(html).toContain('name="twitter:image" content="https://k-tour-id.vercel.app/og-map-first.png"')
+    expect(html).toContain('rel="canonical" href="https://k-tour-id.vercel.app/ondo-b"')
+  })
 })

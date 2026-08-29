@@ -18,8 +18,6 @@ function configuredOrigin() {
 }
 
 function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
-  const configured = configuredOrigin()
-  if (configured) return configured
   const forwardedHost = requestHeaders.get("x-forwarded-host")?.split(",")[0]?.trim().toLowerCase() ?? ""
   const host = (forwardedHost || requestHeaders.get("host")?.toLowerCase()) ?? ""
   if (/^(?:localhost|127\.0\.0\.1)(?::\d{1,5})?$/.test(host)) {
@@ -31,6 +29,8 @@ function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
   }
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.phenixnet-jl\.chatgpt\.site$/.test(host)) return `https://${host}`
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.vercel\.app$/.test(host)) return `https://${host}`
+  const configured = configuredOrigin()
+  if (configured) return configured
   return "https://ondo-directory.invalid"
 }
 
