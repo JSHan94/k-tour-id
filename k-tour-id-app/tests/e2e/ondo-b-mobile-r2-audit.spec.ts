@@ -151,6 +151,32 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     expect(receipt.hitOwned).toBe(true)
   })
 
+  test("667x320: Wallet setup action clears the navigation and owns its first-frame hit target", async ({ page }) => {
+    const viewport = { width: 667, height: 320 }
+    await page.setViewportSize(viewport)
+    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await gotoB(page)
+    await page.getByTestId("nav-id").click()
+
+    const action = page.getByTestId("wallet-link-open")
+    const navigation = page.getByTestId("ondo-main-nav")
+    await expect(action).toBeVisible()
+    const receipt = await action.evaluate((button, navTestId) => {
+      const actionBox = button.getBoundingClientRect()
+      const navigationBox = document.querySelector<HTMLElement>(`[data-testid='${navTestId}']`)!.getBoundingClientRect()
+      const owner = document.elementFromPoint(actionBox.left + actionBox.width / 2, actionBox.top + actionBox.height / 2)
+      return {
+        actionTop: actionBox.top,
+        actionBottom: actionBox.bottom,
+        navigationTop: navigationBox.top,
+        hitOwned: owner === button || button.contains(owner),
+      }
+    }, "ondo-main-nav")
+    expect(receipt.actionTop).toBeGreaterThanOrEqual(8)
+    expect(receipt.actionBottom).toBeLessThanOrEqual(receipt.navigationTop - 8)
+    expect(receipt.hitOwned).toBe(true)
+  })
+
   for (const locale of ["en", "ko", "ja"] as const) {
     test(`${locale.toUpperCase()}: rendered and accessible product copy has no retired signal name`, async ({ page }) => {
       await page.setViewportSize({ width: 390, height: 844 })

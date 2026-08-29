@@ -176,8 +176,13 @@ export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; 
       if (error) (stage === "preview" ? replaceActionRef.current : initialActionRef.current)?.focus({ preventScroll: true })
       else if (stage === "select") initialActionRef.current?.focus({ preventScroll: true })
       else if (stage === "preview") {
-        previewActionRef.current?.focus()
-        previewActionRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
+        const previewAction = previewActionRef.current
+        // A failed file choice can leave the short-landscape dialog scrolled
+        // beneath its sticky header. Reset that owned scroll container before
+        // focusing the primary action so the retry path cannot park the CTA
+        // under the header and hand its hit target to the header instead.
+        previewAction?.closest<HTMLElement>("[role='dialog']")?.scrollTo({ top: 0, behavior: "auto" })
+        previewAction?.focus({ preventScroll: true })
       }
       else if (stage === "processing") processingHeadingRef.current?.focus({ preventScroll: true })
       else if (stage === "review") reviewActionRef.current?.focus({ preventScroll: true })

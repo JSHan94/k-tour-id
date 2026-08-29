@@ -32,7 +32,7 @@
 .processing li > span { display: grid; width: 32px; height: 32px; place-items: center; border: 1px solid #d7d7d7; border-radius: 50%; font-size: 12px; font-weight: 850; }
 .processing li > span svg { width: 15px; height: 15px; }
 .processing li strong { color: inherit; font-size: 13px; }
-.processing li small { font-size: 11px; font-weight: 750; }
+.processing li small { font-size: 12px; font-weight: 750; }
 .processing li[data-status="current"] { border-color: #171717; color: #171717; box-shadow: inset 0 0 0 1px #171717; }
 .processing li[data-status="current"] > span,
 .processing li[data-status="complete"] > span { border-color: #171717; background: #171717; color: #fff; }

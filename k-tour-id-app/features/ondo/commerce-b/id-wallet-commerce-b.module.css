@@ -672,6 +672,7 @@
 }
 .balanceCard[data-wallet-state="ready"] .balanceAction { border-color: rgb(255 255 255 / 17%); background: rgb(255 255 255 / 9%); color: #f7f7f8; }
 .balanceAction:active { transform: scale(.985); }
+.balanceActionCompact { display: none; }
 
 .dashboardGrid { gap: 12px; }
 .benefitCard,
@@ -1099,12 +1100,43 @@
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .root { gap: 7px; }
+  .root {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
   .heading { gap: 2px; }
-  .heading h2 { font-size: 34px; }
+  .heading h2 { font-size: 32px; }
   .heading > span { display: none; }
-  .nonLiveBoundary { min-height: 34px; padding-block: 5px; }
-  .balanceCard { min-height: 154px; gap: 7px; padding: 12px 14px; }
+  .nonLiveBoundary { min-height: 28px; padding-block: 3px; font-size: 12px; line-height: 1.22; }
+  .heading,
+  .nonLiveBoundary,
+  .balanceCard,
+  .dashboardGrid,
+  .privacy { grid-column: 1; grid-row: auto; }
+  .balanceCard {
+    min-height: 100px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(46px, 1fr);
+    gap: 4px 10px;
+    padding: 9px 11px;
+  }
+  .balanceTop { grid-column: 1 / -1; }
+  .balanceTop small { max-width: 138px; padding-block: 3px; }
+  .balanceAmount { grid-column: 1; grid-row: 2; }
+  .balanceAmount strong { font-size: 34px; }
+  .balanceFooter { grid-column: 2; grid-row: 2; align-self: end; }
+  .balanceFooter p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .balanceAction { min-height: 44px; padding-inline: 11px; }
+  .balanceActionFull { display: none; }
+  .balanceActionCompact { display: inline; }
+  .dashboardGrid { grid-template-columns: minmax(0, 1fr); }
   .offerDecision { background: rgb(255 255 255 / 95%); }
 }
 

@@ -1310,7 +1310,12 @@ export function MapEntryB() {
       filterCameraSignatureRef.current = filterSignature
       if (filteredMap && filterChanged && !selectedVenueId) focusFilteredVenues(mapRef.current!, venues)
     }
-  }, [category, city, filteredMap, locale, query, selectedVenueId, state.localPulseEvidenceByVenue, venues])
+  // `venues` can change while MapLibre is still loading (for example when a
+  // user types a search immediately after entering a city). In that case the
+  // source does not exist yet and this effect returns early. Re-run once the
+  // map reaches `ready` so the source and camera always receive the current
+  // filtered collection instead of the load callback's initial closure.
+  }, [category, city, filteredMap, locale, mapState, query, selectedVenueId, state.localPulseEvidenceByVenue, venues])
 
   useEffect(() => {
     const editorialSource = mapRef.current?.getSource("ondo-editorial-places") as GeoJSONSource | undefined

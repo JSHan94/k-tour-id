@@ -98,12 +98,15 @@ const COPY = {
     balance: "Local test balance",
     testAsset: "OOKRW Test",
     balanceReady: "Ready on this device",
-    balanceOff: "Preview · not set up",
+    balanceOff: "Preview",
     balanceFailed: "Setup needs another try",
     balanceEquivalent: "Fixed test-display equivalent · not cash or an exchange rate",
     connect: "Set up local test balance",
+    connectCompact: "Set up",
     reconnect: "Try setup again",
+    reconnectCompact: "Try again",
     disconnect: "Reset local test wallet",
+    disconnectCompact: "Reset",
     benefits: "Available benefits",
     benefitTitle: (amount: string) => `${amount} meal benefit`,
     benefitBody: "Shown automatically at eligible ONDO meal offers.",
@@ -143,12 +146,15 @@ const COPY = {
     balance: "로컬 테스트 잔액",
     testAsset: "OOKRW Test",
     balanceReady: "이 기기에서 사용 가능",
-    balanceOff: "미리보기 · 아직 설정 안 됨",
+    balanceOff: "미리보기",
     balanceFailed: "설정을 다시 시도해 주세요",
     balanceEquivalent: "고정 테스트 표시 환산 · 현금이나 환율이 아님",
     connect: "로컬 테스트 잔액 설정",
+    connectCompact: "설정",
     reconnect: "설정 다시 시도",
+    reconnectCompact: "다시 시도",
     disconnect: "로컬 테스트 지갑 초기화",
+    disconnectCompact: "초기화",
     benefits: "사용 가능한 혜택",
     benefitTitle: (amount: string) => `식사 ${amount} 혜택`,
     benefitBody: "대상 ONDO 식사 오퍼에서 자동으로 보여드려요.",
@@ -188,12 +194,15 @@ const COPY = {
     balance: "ローカルテスト残高",
     testAsset: "OOKRW Test",
     balanceReady: "この端末で利用可能",
-    balanceOff: "プレビュー · 未設定",
+    balanceOff: "プレビュー",
     balanceFailed: "設定をもう一度お試しください",
     balanceEquivalent: "固定テスト表示換算 · 現金・為替レートではありません",
     connect: "ローカルテスト残高を設定",
+    connectCompact: "設定",
     reconnect: "設定をもう一度試す",
+    reconnectCompact: "再試行",
     disconnect: "ローカルテストウォレットをリセット",
+    disconnectCompact: "リセット",
     benefits: "利用できる特典",
     benefitTitle: (amount: string) => `食事が${amount}お得`,
     benefitBody: "対象のONDO食事オファーで自動的にご案内します。",
@@ -869,9 +878,9 @@ export function IdWalletCommerceB() {
         <div className={styles.balanceFooter}>
           <p>{copy.balanceEquivalent}</p>
           {walletStatus === "ready" ? (
-            <button type="button" className={styles.balanceAction} onClick={() => actions.setCommerceWalletStatus("disconnected")}>{copy.disconnect}</button>
+            <button type="button" className={styles.balanceAction} aria-label={copy.disconnect} onClick={() => actions.setCommerceWalletStatus("disconnected")}><span className={styles.balanceActionFull}>{copy.disconnect}</span><span className={styles.balanceActionCompact} aria-hidden="true">{copy.disconnectCompact}</span></button>
           ) : (
-            <button ref={linkButtonRef} type="button" className={styles.balanceAction} data-testid="wallet-link-open" onClick={() => setLinkOpen(true)}><Link2 size={17} aria-hidden="true" />{walletStatus === "failed" ? copy.reconnect : copy.connect}</button>
+            <button ref={linkButtonRef} type="button" className={styles.balanceAction} data-testid="wallet-link-open" aria-label={walletStatus === "failed" ? copy.reconnect : copy.connect} onClick={() => setLinkOpen(true)}><Link2 size={17} aria-hidden="true" /><span className={styles.balanceActionFull}>{walletStatus === "failed" ? copy.reconnect : copy.connect}</span><span className={styles.balanceActionCompact} aria-hidden="true">{walletStatus === "failed" ? copy.reconnectCompact : copy.connectCompact}</span></button>
           )}
         </div>
       </section>

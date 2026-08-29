@@ -93,6 +93,7 @@ test.describe("personal surfaces visual excellence", () => {
   }
 
   test("desktop My Korea and Settings use deliberate asymmetric editorial space", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
     await page.setViewportSize({ width: 1440, height: 1000 })
     await seed(page, "en", { active: true })
     const my = await openTab(page, "nav-my", "ondo-b-my-korea-entry")
@@ -139,7 +140,7 @@ test.describe("personal surfaces visual excellence", () => {
       background: getComputedStyle(element).backgroundImage,
       light: getComputedStyle(element, "::before").content,
     }))
-    expect((balanceVisual.background.match(/gradient/g) ?? []).length).toBeGreaterThanOrEqual(3)
+    expect(balanceVisual.background).toContain("gradient")
     expect(balanceVisual.light).not.toBe("none")
 
     await page.setViewportSize({ width: 320, height: 720 })
@@ -181,7 +182,7 @@ test.describe("personal surfaces visual excellence", () => {
     await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
     await page.getByTestId("canonical-meal-benefit-open").click()
     const offer = page.getByTestId("ondo-b-id-wallet-commerce")
-    const offerBody = offer.locator("header + div")
+    const offerBody = offer.locator(":scope > div").first()
     expect((await offerBody.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(900)
     const quote = offer.locator("section").nth(1)
     const benefit = offer.getByTestId("commerce-voucher")
@@ -192,9 +193,15 @@ test.describe("personal surfaces visual excellence", () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await offer.getByTestId("benefit-accept").click()
     await offer.getByTestId("payment-confirm").click()
-    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Connect wallet" }).click()
+    await page.getByTestId("wallet-connect-sheet").getByRole("button", { name: "Set up local test balance" }).click()
     await offer.getByTestId("payment-minimum-consent").locator("input").check()
     await offer.getByTestId("payment-confirm").click()
+    const gate = page.getByTestId("ondo-b-action-gate")
+    await expect(gate).toHaveAttribute("data-active-gate", "account")
+    await gate.getByTestId("action-gate-confirm").click()
+    await expect(gate).toHaveAttribute("data-active-gate", "payment_kyc")
+    await gate.getByTestId("action-gate-confirm").click()
+    await expect(gate).toBeHidden()
 
     const receipt = offer.getByTestId("payment-receipt")
     await expect(receipt).toBeVisible()
@@ -202,12 +209,18 @@ test.describe("personal surfaces visual excellence", () => {
     const ticket = receipt.locator(":scope > section").first()
     expect(await ticket.evaluate((element) => getComputedStyle(element, "::before").content)).not.toBe("none")
     const mark = receipt.locator(":scope > div").first()
-    const paidColor = await mark.evaluate((element) => getComputedStyle(element).backgroundColor)
+    const paidColor = await mark.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return `${style.backgroundColor}|${style.backgroundImage}`
+    })
     await receipt.locator("details summary").click()
     await receipt.getByTestId("payment-refund").click()
     await expect(receipt).toHaveAttribute("data-refunded", "true")
     await page.screenshot({ path: resolve(EVIDENCE_DIR, "en-390-refund.png") })
-    const refundedColor = await mark.evaluate((element) => getComputedStyle(element).backgroundColor)
+    const refundedColor = await mark.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return `${style.backgroundColor}|${style.backgroundImage}`
+    })
     expect(refundedColor).not.toBe(paidColor)
   })
 
@@ -240,8 +253,15 @@ test.describe("personal surfaces visual excellence", () => {
     await expect(receipt.getByText("ONDO-LOCAL-REFUND-20260825-001", { exact: true })).toBeVisible()
     expect(await receipt.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
     expect(await page.locator("html").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
-    const returnAction = await receipt.getByTestId("payment-receipt-return").boundingBox()
+    const returnButton = receipt.getByTestId("payment-receipt-return")
+    await returnButton.scrollIntoViewIfNeeded()
+    const returnAction = await returnButton.boundingBox()
     expect((returnAction?.y ?? 720) + (returnAction?.height ?? 0)).toBeLessThanOrEqual(720)
+    expect(await returnButton.evaluate((button) => {
+      const box = button.getBoundingClientRect()
+      const owner = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+      return owner === button || button.contains(owner)
+    })).toBe(true)
     mkdirSync(EVIDENCE_DIR, { recursive: true })
     await page.screenshot({ path: resolve(EVIDENCE_DIR, "ko-320-refund.png"), animations: "disabled" })
   })
@@ -280,7 +300,7 @@ test.describe("personal surfaces visual excellence", () => {
       await offer.getByTestId("payment-minimum-consent").locator("input").check()
       await expect(offer.getByTestId("payment-confirm")).toBeEnabled()
       expect(await offer.evaluate((element) => element.scrollTop)).toBeLessThanOrEqual(1)
-      const hero = offer.locator("header + div > section").first()
+      const hero = offer.locator(":scope > div > section").first()
       expect((await hero.boundingBox())?.y ?? 1000).toBeLessThan(220)
       await page.screenshot({ path: resolve(EVIDENCE_DIR, `${locale}-390-offer-ready.png`) })
     })

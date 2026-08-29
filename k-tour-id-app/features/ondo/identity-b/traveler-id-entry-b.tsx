@@ -41,7 +41,7 @@ const COPY = {
   en: {
     eyebrow: "YOUR KOREA, YOUR CONTROL",
     title: "Travel Pass",
-    body: "Keep the few answers and payment tools your trip may need — separate, private, and ready only when you choose.",
+    body: "Keep trip answers and payment tools private, ready only when you choose.",
     passLabel: "ONDO · KOREA TRAVEL PASS",
     passState: "Guest pass",
     passStateActive: "Account ready · this tab",
@@ -82,7 +82,7 @@ const COPY = {
   ko: {
     eyebrow: "나의 한국 여행, 나의 선택",
     title: "여행 패스",
-    body: "여행에 필요한 최소 답과 결제 도구를 따로, 안전하게 준비하고 원할 때만 사용하세요.",
+    body: "여행 답변과 결제 도구는 이 기기에만 보관하고, 원할 때만 사용하세요.",
     passLabel: "ONDO · KOREA TRAVEL PASS",
     passState: "게스트 패스",
     passStateActive: "계정 준비됨 · 이 탭",
@@ -123,7 +123,7 @@ const COPY = {
   ja: {
     eyebrow: "韓国の旅を、自分で管理",
     title: "トラベルパス",
-    body: "旅で必要になる最小限の確認結果と決済ツールを、別々に、非公開のまま、必要なときだけ準備できます。",
+    body: "旅の回答と決済ツールは端末内に保ち、必要な時だけ使えます。",
     passLabel: "ONDO · KOREA TRAVEL PASS",
     passState: "ゲストパス",
     passStateActive: "アカウント準備済み · このタブ",

@@ -471,6 +471,39 @@ test("OPENDID-E2E-003D passport OCR requires a decodable bounded image and expos
   await expect(setup.getByTestId("k-tour-id-passport-face")).toBeVisible()
 })
 
+test("OPENDID-E2E-003D2 passport image retry keeps the OCR CTA clear of the sticky header in short landscape", async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 320 })
+  const { setup } = await openTravelerSetup(page)
+  const documentStep = await reachPassportDocument(setup)
+  const input = documentStep.getByTestId("passport-ocr-input")
+
+  await input.setInputFiles({ name: "not-an-image.pdf", mimeType: "application/pdf", buffer: Buffer.from("not an image") })
+  const retry = documentStep.getByTestId("passport-ocr-retry")
+  await expect(retry).toBeFocused()
+  await retry.click()
+  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
+
+  const action = documentStep.getByTestId("passport-ocr-start")
+  await expect(documentStep).toHaveAttribute("data-ocr-stage", "preview")
+  await expect(action).toBeFocused()
+  const receipt = await action.evaluate((button) => {
+    const actionBox = button.getBoundingClientRect()
+    const dialog = button.closest<HTMLElement>("[role='dialog']")!
+    const header = dialog.querySelector<HTMLElement>("header")!
+    const headerBox = header.getBoundingClientRect()
+    const owner = document.elementFromPoint(actionBox.left + actionBox.width / 2, actionBox.top + actionBox.height / 2)
+    return {
+      dialogScrollTop: dialog.scrollTop,
+      actionTop: actionBox.top,
+      headerBottom: headerBox.bottom,
+      hitOwned: owner === button || button.contains(owner),
+    }
+  })
+  expect(receipt.dialogScrollTop).toBe(0)
+  expect(receipt.actionTop).toBeGreaterThanOrEqual(receipt.headerBottom)
+  expect(receipt.hitOwned).toBe(true)
+})
+
 test("OPENDID-E2E-003E passport previews revoke every object URL on replace, remove, close and continue", async ({ page }) => {
   await page.addInitScript(() => {
     const target = window as Window & { __PASSPORT_OBJECT_URLS__?: { created: string[]; revoked: string[] } }
