@@ -33,10 +33,10 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       if (item.surface === "onboarding") {
         if (item.locale === "ko") {
           expect(copy).toContain("나에게 맞는 한국의 한 끼를, 공공 기록에서 찾아보세요.")
-          expect(copy).toContain("서울과 부산의 일반음식점 인허가 기록 400개를 살펴보고, 이용 목적과 음식 취향을 이 기기에 저장할 수 있어요.")
+          expect(copy).toContain("서울·부산의 먹거리와 제주 여행 아이디어를 둘러보고, 나만의 취향을 이 기기에 저장해요.")
         } else {
           expect(copy).toContain("Find a meal that fits your Korea—grounded in public records.")
-          expect(copy).toContain("Browse 400 licensed food-service records across Seoul and Busan, then save a starting intent and food preferences on this device.")
+          expect(copy).toContain("Explore food in Seoul and Busan, plus travel ideas across Jeju, then keep your starting preferences on this device.")
         }
         expect(copy).not.toMatch(/dense food|early coverage|서울의 촘촘|부산의 초기/i)
       }
@@ -47,11 +47,11 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
           expect(copy).not.toContain("공식 영문명 미제공 · 공식 한글명 표시")
         } else expect(copy).toContain("Transliterated for navigation")
         if (item.locale === "ko") {
-          expect(copy).toContain("ONDO 정책 · 이 장소의 공식 이용 제한이 아니에요.")
-          expect(copy).toContain("19+ 프리뷰 열기")
+          expect(copy).not.toContain("ONDO 정책")
+          expect(copy).toContain("After 19 켜기")
         } else {
-          expect(copy).toContain("ONDO policy · not an official restriction for this place.")
-          expect(copy).toContain("Open 19+ preview")
+          expect(copy).not.toContain("ONDO policy")
+          expect(copy).toContain("Turn on After 19")
         }
       }
       if (["place", "account-gate", "age-gate", "tables", "table-chat", "local-signal", "checkout", "profile", "labs"].includes(item.surface)) {

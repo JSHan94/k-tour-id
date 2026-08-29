@@ -82,8 +82,9 @@ test.describe("ONDO Explore approved visual direction", () => {
           expect(overlapArea(nodeBoxes[left], nodeBoxes[right])).toBe(0)
         }
       }
-      const truthBox = await box(atlas.locator("details").first())
-      for (const nodeBox of nodeBoxes) expect(overlapArea(nodeBox, truthBox)).toBe(0)
+      await expect(atlas.locator("details")).toHaveCount(0)
+      for (const node of nodes) await expect(node).not.toContainText(/\d|official|record|idea|공식|기록|아이디어|active|growing|운영|확장/i)
+      expect(Math.max(...nodeBoxes.map((node) => node.height)) - Math.min(...nodeBoxes.map((node) => node.height))).toBeLessThanOrEqual(1)
 
       const atlasStyle = await atlas.evaluate((element) => {
         const style = getComputedStyle(element)
@@ -137,7 +138,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       if (mapState === "ready") {
         await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
         await expect(mapCanvas).toHaveCount(1)
-        expect(await mapCanvas.evaluate((element) => getComputedStyle(element).filter)).toContain("saturate(0.82)")
+        expect(await mapCanvas.evaluate((element) => getComputedStyle(element).filter)).toContain("saturate(0.78)")
       } else {
         await expect(page.getByTestId("ondo-b-map-key")).toHaveCount(0)
         const fallback = page.getByTestId("ondo-b-map-fallback-status")
@@ -219,6 +220,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       const sourceDisclosure = firstStory.locator("details")
       if (await sourceDisclosure.count()) {
         const sourceSummary = sourceDisclosure.locator(":scope > summary")
+        await sourceSummary.scrollIntoViewIfNeeded()
         const sourceBox = await box(sourceSummary)
         const sourceHit = await page.evaluate(({ x, y }) => {
           const hit = document.elementFromPoint(x, y)

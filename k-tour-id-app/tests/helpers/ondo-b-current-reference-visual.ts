@@ -125,7 +125,7 @@ const KEY_COPY_BY_CASE_ID: Readonly<Record<string, string>> = {
   "CR-PX-008-ONBOARDING-INTENT-JA": "ONDOを使う目的は？",
   "CR-PX-009-ONBOARDING-PREFERENCES-JA": "どんな食事や食の希望・制限がありますか？",
   "CR-PX-010-OPENDID-INITIAL": "Set up a private K-Tour ID",
-  "CR-PX-011-OPENDID-CREDENTIAL-READY": "시뮬레이션 K-Tour ID 준비 완료",
+  "CR-PX-011-OPENDID-CREDENTIAL-READY": "K-Tour ID 준비 완료",
   "CR-PX-012-NATION-ATLAS": "Seoul",
   "CR-PX-013-JEJU-JAPAN-EDITORIAL": "済州の物語2件・アイデア10件",
   "CR-PX-014-SEOUL-MAP-PULSE": "서울",

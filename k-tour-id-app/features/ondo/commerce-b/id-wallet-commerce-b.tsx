@@ -249,7 +249,7 @@ const OFFER_COPY = {
     total: "You pay",
     asset: "OOKRW Test",
     voucher: "Your meal benefit",
-    voucherBody: (minimum: string) => `Eligible for this test offer · ${minimum} minimum met · valid through Aug 28`,
+    voucherBody: (minimum: string) => `Eligible for this test offer · ${minimum} minimum met · valid through Sep 30`,
     fixedQuote: "Fixed product quote · not an exchange rate or 1:1 value guarantee",
     recommendation: "Recommended for this meal",
     applied: "Applied",
@@ -309,7 +309,7 @@ const OFFER_COPY = {
     total: "결제 금액",
     asset: "OOKRW Test",
     voucher: "나의 식사 혜택",
-    voucherBody: (minimum: string) => `이 테스트 오퍼 사용 가능 · ${minimum} 최소 금액 충족 · 8월 28일까지`,
+    voucherBody: (minimum: string) => `이 테스트 오퍼 사용 가능 · ${minimum} 최소 금액 충족 · 9월 30일까지`,
     fixedQuote: "제품용 고정 견적 · 환율이나 1:1 가치 보장이 아님",
     recommendation: "이번 식사 추천 혜택",
     applied: "적용됨",
@@ -369,7 +369,7 @@ const OFFER_COPY = {
     total: "使用する残高",
     asset: "OOKRW Test",
     voucher: "食事特典",
-    voucherBody: (minimum: string) => `このテストオファーの対象 · 最低金額${minimum}を達成 · 8月28日まで有効`,
+    voucherBody: (minimum: string) => `このテストオファーの対象 · 最低金額${minimum}を達成 · 9月30日まで有効`,
     fixedQuote: "製品内の固定テスト換算 · 為替レートでも1:1の価値保証でもありません",
     recommendation: "この食事におすすめ",
     applied: "適用済み",
@@ -517,12 +517,12 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, walletStatus, onC
   const breakdown = stableCommerceBreakdownB(commerce)
   const debit = stableCommerceQuoteDebitB(commerce)
   const benefitSelected = commerce.voucher === "selected" || commerce.voucher === "consumed"
-  const benefitExpiresAtMs = Date.parse("2026-08-28T23:59:59+09:00")
+  const benefitExpiresAtMs = Date.parse("2026-09-30T23:59:59+09:00")
   const benefitPolicy = stableCommerceBenefitPolicyB({
     venueEligible: benefitQa !== "ineligible",
     mealOOKRW: benefitQa === "below_minimum" ? 21 : STABLE_B_OOKRW_PRICE,
     minimumOOKRW: STABLE_B_OOKRW_PRICE,
-    nowMs: benefitQa === "expired" ? benefitExpiresAtMs + 1 : Date.parse("2026-08-25T12:00:00+09:00"),
+    nowMs: benefitQa === "expired" ? benefitExpiresAtMs + 1 : Date.now(),
     expiresAtMs: benefitExpiresAtMs,
   })
   useModalIsolation(true, rootRef)

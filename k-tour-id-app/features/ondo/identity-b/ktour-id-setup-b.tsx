@@ -62,7 +62,8 @@ const COPY = {
     evidenceTitle: "Review the minimum evidence", evidenceBody: "Demo result: the selected method completed. No name, document number, image, biometric or provider token is exposed.",
     issue: "Preview OpenDID issuance", issueBody: "OpenDID covers issue, holder delivery, status and presentation. It does not perform passport, document, face or liveness verification.",
     holder: "Deliver to the demo holder", holderBody: "The marker remains in memory in this tab. No DID, VC payload or holder file is created or stored.",
-    ready: "Simulated K-Tour ID ready", readyBody: "This private demo credential is available only in this tab. Check its status before any separate presentation request.",
+    ready: "K-Tour ID ready", readyBody: "Your private travel credential and local travel wallet are ready in this tab.",
+    walletReady: "Travel wallet ready", walletReadyNote: "Local test balance · no provider or network connected",
     present: "Preview presentation", request: "Presentation request", requestBody: "A demo verifier asks for one minimum predicate. No VP or reusable identifier is exposed.",
     presentConsent: "Approve this one request?", presentConsentBody: "Approval applies once. There is no always allow, and denial does not change the credential.",
     presentationRequester: "ONDO Table demo verifier", presentationPurpose: "Minimum trip eligibility for this one request",
@@ -100,7 +101,8 @@ const COPY = {
     evidenceTitle: "최소 증빙 결과 확인", evidenceBody: "데모 결과: 선택한 경로 완료. 이름·문서번호·이미지·생체정보·기관 토큰을 노출하지 않습니다.",
     issue: "OpenDID 발급 미리보기", issueBody: "OpenDID는 발급·holder 전달·상태·제시를 담당하며 여권·문서·얼굴·라이브니스를 검증하지 않습니다.",
     holder: "데모 holder에 전달", holderBody: "표식은 이 탭 메모리에만 유지됩니다. DID·VC 원문·holder 파일을 만들거나 저장하지 않습니다.",
-    ready: "시뮬레이션 K-Tour ID 준비 완료", readyBody: "민간 데모 자격증명은 이 탭에서만 사용할 수 있고 별도 제시 요청 전에 상태를 확인합니다.",
+    ready: "K-Tour ID 준비 완료", readyBody: "민간 여행 자격증명과 로컬 여행 지갑이 이 탭에 준비됐어요.",
+    walletReady: "여행 지갑 준비 완료", walletReadyNote: "로컬 테스트 잔액 · 제공자·네트워크 연결 없음",
     present: "제시 미리보기", request: "자격증명 제시 요청", requestBody: "데모 검증자가 최소 조건 하나만 요청합니다. VP나 재사용 식별자는 노출하지 않습니다.",
     presentConsent: "이번 요청에만 동의할까요?", presentConsentBody: "승인은 한 번만 적용됩니다. 항상 허용은 없고 거절해도 자격증명은 바뀌지 않습니다.",
     presentationRequester: "ONDO 테이블 데모 검증자", presentationPurpose: "이번 한 번의 요청을 위한 최소 여행 자격 확인",
@@ -138,7 +140,8 @@ const COPY = {
     evidenceTitle: "最小限の証拠を確認", evidenceBody: "デモ結果：選択ルート完了。氏名、文書番号、画像、生体情報、事業者トークンは表示しません。",
     issue: "OpenDID発行プレビュー", issueBody: "OpenDIDは発行、holder配信、状態、提示を担い、パスポート、文書、顔、ライブネスは確認しません。",
     holder: "デモholderへ配信", holderBody: "印はこのタブのメモリだけに残ります。DID、VC本文、holderファイルは作成・保存しません。",
-    ready: "シミュレーションK-Tour ID準備完了", readyBody: "民間デモ資格情報はこのタブだけで使え、別の提示依頼の前に状態を確認します。",
+    ready: "K-Tour IDの準備完了", readyBody: "民間の旅行資格情報とローカルのトラベルウォレットをこのタブに用意しました。",
+    walletReady: "トラベルウォレット準備完了", walletReadyNote: "ローカルテスト残高 · 事業者・ネットワーク未接続",
     present: "提示をプレビュー", request: "資格情報の提示依頼", requestBody: "デモ検証者が最小条件を一つだけ求めます。VPや再利用識別子は出しません。",
     presentConsent: "今回だけ承認しますか？", presentConsentBody: "承認は一回だけです。「常に許可」はなく、拒否しても資格情報は変わりません。",
     presentationRequester: "ONDOテーブルのデモ検証者", presentationPurpose: "今回一回の依頼に必要な最小限の旅行資格確認",
@@ -269,6 +272,7 @@ export function KTourIdSetupB() {
     if (!session || !isIdentitySetupSessionActiveB(session)) return fail("IDENTITY_SESSION_EXPIRED", "holder_delivery_preview")
     issuedOnceRef.current = true
     actions.completeIdentitySetup(method)
+    actions.setCommerceWalletStatus("ready")
     setPhase("credential_ready")
   }
 
@@ -325,7 +329,7 @@ export function KTourIdSetupB() {
       {phase === "issuance_preview" ? <Panel testId="k-tour-id-issuance-preview" aliases={["ktour-id-opendid-issue"]} icon={<FileKey2 />} eyebrow="OpenDID · ISSUE PREVIEW" title={copy.issue} body={copy.issueBody} action={copy.next} onAction={() => advance("holder_delivery_preview", "issuance_preview")} meta={[ISSUER, CREDENTIAL_TYPE]} /> : null}
       {phase === "holder_delivery_preview" ? <Panel testId="k-tour-id-holder-delivery" icon={<WalletCards />} eyebrow="OpenDID · HOLDER DELIVERY PREVIEW" title={copy.holder} body={copy.holderBody} action={copy.next} onAction={finishHolder} meta={[CREDENTIAL_TYPE, "IN-MEMORY · THIS TAB"]} /> : null}
 
-      {phase === "credential_ready" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-credential" data-status={credentialStatus} data-code={statusMessage ? `CREDENTIAL_${credentialStatus.toUpperCase()}` : undefined} data-issuance-count={issuedOnceRef.current ? 1 : 0}><span data-testid="ktour-id-result" className={styles.heroIcon}><BadgeCheck size={31} aria-hidden="true" /></span><p className={styles.eyebrow}>{copy.credentialReadyEyebrow}</p><h1>{copy.ready}</h1><p className={styles.lead}>{copy.readyBody}</p><div className={styles.credential}><FileKey2 size={27} aria-hidden="true" /><span><strong>{CREDENTIAL_TYPE}</strong><small>{ISSUER} · SIMULATED</small></span></div>{statusMessage ? <p className={styles.statusWarning} role="alert">{statusMessage}</p> : null}<div className={styles.actions}><button type="button" data-testid="k-tour-id-presentation-open" disabled={Boolean(statusMessage)} className={styles.primary} onClick={() => setPhase("presentation_request")}>{copy.present}<ArrowRight size={17} aria-hidden="true" /></button><button type="button" data-identity-initial-focus data-testid="k-tour-id-return" className={styles.secondary} onClick={actions.closeIdentitySetup}>{returnLabel}</button></div></div> : null}
+      {phase === "credential_ready" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-credential" data-status={credentialStatus} data-code={statusMessage ? `CREDENTIAL_${credentialStatus.toUpperCase()}` : undefined} data-issuance-count={issuedOnceRef.current ? 1 : 0} data-wallet-provisioning="aa-assumed-local"><span data-testid="ktour-id-result" className={styles.heroIcon}><BadgeCheck size={31} aria-hidden="true" /></span><p className={styles.eyebrow}>{copy.credentialReadyEyebrow}</p><h1>{copy.ready}</h1><p className={styles.lead}>{copy.readyBody}</p><div className={styles.credential}><FileKey2 size={27} aria-hidden="true" /><span><strong>{CREDENTIAL_TYPE}</strong><small>{ISSUER} · SIMULATED</small></span></div><div className={styles.credential} data-testid="k-tour-id-wallet-ready"><WalletCards size={27} aria-hidden="true" /><span><strong>{copy.walletReady}</strong><small>{copy.walletReadyNote}</small></span></div>{statusMessage ? <p className={styles.statusWarning} role="alert">{statusMessage}</p> : null}<div className={styles.actions}><button type="button" data-testid="k-tour-id-presentation-open" disabled={Boolean(statusMessage)} className={styles.primary} onClick={() => setPhase("presentation_request")}>{copy.present}<ArrowRight size={17} aria-hidden="true" /></button><button type="button" data-identity-initial-focus data-testid="k-tour-id-return" className={styles.secondary} onClick={actions.closeIdentitySetup}>{returnLabel}</button></div></div> : null}
 
       {phase === "presentation_request" ? <div className={styles.body} data-testid="k-tour-id-presentation-request"><p className={styles.eyebrow}>{copy.presentationRequestEyebrow}</p><h1>{copy.request}</h1><p className={styles.lead}>{copy.requestBody}</p><Disclosure rows={[[copy.requester, copy.presentationRequester, "identity-presentation-requester"], [copy.purpose, copy.presentationPurpose, "identity-presentation-purpose"], [copy.evidence, copy.presentationEvidence, "identity-presentation-evidence"], [copy.retention, copy.presentationRetention, "identity-presentation-retention"]]} /><div className={styles.actions}><button type="button" data-testid="k-tour-id-continue" className={styles.primary} onClick={() => setPhase("presentation_consent")}>{copy.next}</button><button type="button" className={styles.secondary} onClick={() => setPhase("credential_ready")}>{copy.later}</button></div></div> : null}
       {phase === "presentation_consent" ? <div className={styles.body} data-testid="k-tour-id-presentation-consent"><p className={styles.eyebrow}>{copy.presentationRequester}</p><h1>{copy.presentConsent}</h1><p className={styles.lead}>{copy.presentConsentBody}</p><div className={styles.predicate} data-testid="identity-presentation-predicate"><ShieldCheck size={22} aria-hidden="true" /><span><strong>{copy.presentationPredicate}</strong><small>{copy.presentationPredicateRetention}</small></span></div><div className={styles.actions}><button type="button" data-testid="k-tour-id-presentation-approve" className={styles.primary} onClick={() => { const outcome = (window as QaWindow).__ONDO_B_QA__?.identity?.presentationOutcome; setPresentationApproved(outcome ? false : true); setRecoveryCode(outcome ?? null); setPhase("presentation_result") }}>{copy.approve}</button><button type="button" className={styles.secondary} onClick={() => { setPresentationApproved(false); setRecoveryCode("PRESENTATION_DENIED"); setPhase("presentation_result") }}>{copy.deny}</button></div></div> : null}

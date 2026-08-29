@@ -108,14 +108,17 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           const composition = await dialog.evaluate((element) => {
             const valueStep = element.querySelector("[data-testid='onboarding-step-value']")!
             const layer = element.getBoundingClientRect()
-            const scene = getComputedStyle(valueStep, "::after")
+            const scene = valueStep.querySelector<HTMLImageElement>("[data-testid='onboarding-editorial-image'] img")!
+            const sceneRect = scene.getBoundingClientRect()
             return {
               layerWidth: layer.width,
-              sceneBackground: scene.backgroundImage,
-              sceneOpacity: Number.parseFloat(scene.opacity || "1"),
+              sceneWidth: sceneRect.width,
+              sceneHeight: sceneRect.height,
+              sceneOpacity: Number.parseFloat(getComputedStyle(scene).opacity || "1"),
             }
           })
-          expect(composition.sceneBackground).not.toBe("none")
+          expect(composition.sceneWidth).toBeGreaterThan(0)
+          expect(composition.sceneHeight).toBeGreaterThan(0)
           expect(composition.sceneOpacity).toBeGreaterThan(.2)
           if (viewport.width >= 800) expect(composition.layerWidth).toBeGreaterThan(viewport.width * .82)
           if (viewport.height <= 390) {
@@ -180,16 +183,19 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           await gotoB(page)
 
           const nation = page.getByTestId("ondo-b-nation")
-          const city = nation.locator("[data-city='seoul']")
-          const atlas = nation.locator("svg").locator("..")
-          const cityMaterial = await city.evaluate((element) => {
+          const atlas = nation.getByTestId("ondo-b-korea-atlas")
+          const cityMaterials = await nation.locator("[data-city]").evaluateAll((elements) => elements.map((element) => {
             const style = getComputedStyle(element)
-            return { radius: Number.parseFloat(style.borderRadius), background: style.backgroundImage, shadow: style.boxShadow }
-          })
+            return { radius: Number.parseFloat(style.borderRadius), background: style.backgroundImage, backgroundColor: style.backgroundColor, shadow: style.boxShadow }
+          }))
           const atlasScene = await atlas.evaluate((element) => getComputedStyle(element, "::before").backgroundImage)
-          expect(cityMaterial.radius).toBeGreaterThanOrEqual(22)
-          expect(cityMaterial.background).not.toBe("none")
-          expect(cityMaterial.shadow).not.toBe("none")
+          expect(cityMaterials).toHaveLength(3)
+          expect(Math.max(...cityMaterials.map(({ radius }) => radius)) - Math.min(...cityMaterials.map(({ radius }) => radius))).toBeLessThanOrEqual(1)
+          for (const cityMaterial of cityMaterials) {
+            expect(cityMaterial.radius).toBeGreaterThanOrEqual(16)
+            expect(cityMaterial.background !== "none" || cityMaterial.backgroundColor !== "rgba(0, 0, 0, 0)").toBe(true)
+            expect(cityMaterial.shadow).not.toBe("none")
+          }
           expect(atlasScene).not.toBe("none")
           if (viewport.width >= 1200) {
             const atlasBox = await atlas.boundingBox()
@@ -224,13 +230,14 @@ test.describe("ONDO Explore visual-excellence contract", () => {
             return {
               radius: Number.parseFloat(style.borderRadius),
               background: style.backgroundImage,
+              backgroundColor: style.backgroundColor,
               shadow: style.boxShadow,
               railWidth: Number.parseFloat(rail.width),
               railBackground: rail.backgroundColor,
             }
           })
           expect(rowMaterial.radius).toBeGreaterThanOrEqual(18)
-          expect(rowMaterial.background).not.toBe("none")
+          expect(rowMaterial.background !== "none" || rowMaterial.backgroundColor !== "rgba(0, 0, 0, 0)").toBe(true)
           expect(rowMaterial.shadow).not.toBe("none")
           expect(rowMaterial.railWidth).toBeGreaterThanOrEqual(3)
           expect(rowMaterial.railBackground).not.toBe("rgba(0, 0, 0, 0)")
@@ -255,7 +262,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
           const peekMaterial = await peek.evaluate((element) => {
             const style = getComputedStyle(element)
             const title = getComputedStyle(element.querySelector("h2")!)
-            const pulse = getComputedStyle(element.querySelector("[data-testid='canonical-place-pulse']")!)
+            const pulse = getComputedStyle(element.querySelector("[data-testid='canonical-place-temperature-meter']")!)
             return {
               radius: Number.parseFloat(style.borderRadius),
               titleClamp: title.webkitLineClamp,
@@ -263,7 +270,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
               shadow: style.boxShadow,
             }
           })
-          expect(peekMaterial.radius).toBeGreaterThanOrEqual(26)
+          expect(peekMaterial.radius).toBeGreaterThanOrEqual(22)
           expect(peekMaterial.titleClamp).toBe("2")
           expect(peekMaterial.pulseBackground).not.toBe("none")
           expect(peekMaterial.shadow).not.toBe("none")

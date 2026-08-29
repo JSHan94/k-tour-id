@@ -63,19 +63,37 @@ test.describe("map-first Korea and Jeju integration", () => {
           expect(await node.evaluate((element) => {
             const bounds = element.getBoundingClientRect()
             return document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)?.closest("[data-city]") === element
-          })).toBe(true)
+          }), `${locale} ${viewport.width}x${viewport.height} ${city} owns its centre`).toBe(true)
           cityBoxes.push(nodeBox)
         }
         expect(intersects(cityBoxes[0], cityBoxes[1])).toBe(false)
         expect(intersects(cityBoxes[0], cityBoxes[2])).toBe(false)
         expect(intersects(cityBoxes[1], cityBoxes[2])).toBe(false)
-        const truthSummary = atlas.getByTestId("ondo-b-city-truth-legend").locator(":scope > summary")
-        const truthBox = await box(truthSummary)
-        expect(intersects(cityBoxes[0], truthBox)).toBe(false)
-        expect(intersects(cityBoxes[1], truthBox)).toBe(false)
-        expect(intersects(cityBoxes[2], truthBox)).toBe(false)
+        const cityLayoutSizes = await atlas.locator("[data-city]").evaluateAll((nodes) => nodes.map((node) => ({
+          width: (node as HTMLElement).offsetWidth,
+          height: (node as HTMLElement).offsetHeight,
+        })))
+        expect(Math.max(...cityLayoutSizes.map(({ width }) => width)) - Math.min(...cityLayoutSizes.map(({ width }) => width))).toBeLessThanOrEqual(1)
+        expect(Math.max(...cityLayoutSizes.map(({ height }) => height)) - Math.min(...cityLayoutSizes.map(({ height }) => height))).toBeLessThanOrEqual(1)
+        await expect(atlas.getByTestId("ondo-b-city-truth-legend")).toHaveCount(0)
+        await expect(atlas.locator("details")).toHaveCount(0)
+        expect(await atlas.evaluate((element) => getComputedStyle(element, "::after").content)).toMatch(/none|normal|^""$/)
         await expect(atlas.locator("[data-city='jeju']")).toHaveAttribute("data-truth-kind", "editorial-region")
         await expect(atlas.locator("[data-city='jeju']")).not.toHaveAttribute("data-official-count", /.+/)
+        await expect(atlas.locator("[data-city='seoul'] svg.lucide-map-pin, [data-city='busan'] svg.lucide-map-pin")).toHaveCount(2)
+        await expect(atlas.locator("[data-city='jeju'] svg.lucide-sparkles")).toHaveCount(1)
+        for (const city of ["seoul", "busan", "jeju"] as const) {
+          const node = atlas.locator(`[data-city='${city}']`)
+          await expect(node).not.toContainText(/\d|official|공식|record|기록|active|growing|운영|확장/i)
+          await expect(node.locator("[data-region-kind-label]")).toHaveText(city === "jeju"
+            ? { en: "Travel ideas", ko: "여행 아이디어", ja: "旅のアイデア" }[locale]
+            : { en: "Food map", ko: "먹거리 지도", ja: "フードマップ" }[locale])
+          const [wellBox, iconBox] = await Promise.all([box(node.locator("i")), box(node.locator("i svg"))])
+          expect(iconBox.x).toBeGreaterThanOrEqual(wellBox.x)
+          expect(iconBox.y).toBeGreaterThanOrEqual(wellBox.y)
+          expect(iconBox.x + iconBox.width).toBeLessThanOrEqual(wellBox.x + wellBox.width)
+          expect(iconBox.y + iconBox.height).toBeLessThanOrEqual(wellBox.y + wellBox.height)
+        }
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
 
         await atlas.locator("[data-city='jeju']").click()

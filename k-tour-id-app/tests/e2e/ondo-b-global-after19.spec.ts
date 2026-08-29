@@ -64,7 +64,7 @@ test.describe("ONDO B global Manual and Auto After19", () => {
     await expect(gate).toBeVisible()
     await expect(gate.getByTestId("global-after19-return-context")).toHaveAttribute("data-return-city", "seoul")
     await expect(gate.getByTestId("global-after19-return-context")).toContainText("Seoul")
-    await expect(gate.getByText("not an official restriction", { exact: false })).toBeVisible()
+    await expect(gate).toContainText("Narrows this map to pub & café licence types. Actual entry, age and alcohol-service rules are not confirmed.")
     await expect(gate.getByTestId("global-after19-confirm")).toBeFocused()
     await expect(page.getByTestId("maplibre-map")).toHaveAttribute("inert", "")
     await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("inert", "")
@@ -131,9 +131,9 @@ test.describe("ONDO B global Manual and Auto After19", () => {
   })
 
   for (const [locale, city, title] of [
-    ["en", "Seoul", "Open ONDO’s After 19 preview?"],
-    ["ko", "서울", "ONDO After 19 프리뷰를 열까요?"],
-    ["ja", "ソウル", "ONDOのAfter 19プレビューを開きますか？"],
+    ["en", "Seoul", "Turn on After 19?"],
+    ["ko", "서울", "After 19을 켤까요?"],
+    ["ja", "ソウル", "After 19をオンにしますか？"],
   ] as const) {
     test(`FL-013 ${locale.toUpperCase()} prompt keeps its copy and 44px mobile controls`, async ({ page }) => {
       await seedGlobalAfter19(page)

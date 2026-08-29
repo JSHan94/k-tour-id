@@ -80,7 +80,7 @@ test.describe("ONDO B Japanese critical journey", () => {
     await gotoJapaneseB(page)
     const atlas = page.getByTestId("ondo-b-korea-atlas")
     const jeju = atlas.locator("[data-city='jeju']")
-    await expect(jeju).toContainText("旅行アイデア10件")
+    await expect(jeju).toContainText("旅のアイデア")
     await jeju.click()
     await expect(page).toHaveURL(/city=jeju/)
     const discovery = page.getByTestId("ondo-b-japan-first-discovery")

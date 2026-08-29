@@ -69,7 +69,9 @@ checkout/community flow is introduced.
 - Jeju is included immediately as ten editorial seeds from the source report.
 - The Korea overview includes a truthful Jeju editorial-region anchor. The
   Jeju regional map contains one collection marker, not ten place pins.
-- Jeju is labelled `Growing · 10 editorial ideas · exact place links pending`.
+- The overview anchor is labelled only `Jeju`, using the same visual grammar as
+  Seoul and Busan. Its editorial count/status remains programmatically explicit
+  and becomes visible in the Jeju collection where it affects the decision.
 - It is not labelled as MOIS LOCALDATA coverage and does not inherit the Seoul
   or Busan `200 official records` claim.
 - A native progressive disclosure exposes the two Jeju stories and four

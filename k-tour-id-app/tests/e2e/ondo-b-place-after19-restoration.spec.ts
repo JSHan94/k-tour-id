@@ -59,7 +59,7 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
 
     await expect(access).toHaveAttribute("data-after19-venue-status", "locked")
     await expect(access).toHaveAttribute("data-after19-venue-id", CANONICAL_VENUE_ID)
-    await expect(access).toContainText("ONDO policy · not an official restriction for this place.")
+    await expect(access).not.toContainText("ONDO policy")
 
     await unlock.click()
     let prompt = page.getByTestId("global-after19-prompt-layer")
@@ -106,7 +106,8 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
     await expect(prompt).toHaveCount(0)
     await expect(place).toBeVisible()
     await expect(access).toHaveAttribute("data-after19-venue-status", "unlocked")
-    await expect(access).toContainText("ONDO preview on · not an official restriction for this place.")
+    await expect(access).not.toContainText("ONDO preview on")
+    await expect(access.getByRole("status")).toHaveText("On")
     await expect(access).toBeFocused()
     await expect(page.getByTestId("global-after19-banner")).toBeVisible()
     await expect(page).toHaveURL(new RegExp(`venueId=${CANONICAL_VENUE_ID}`))
@@ -270,10 +271,10 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
     expect(await placeReturnSession(page)).toMatchObject({ pending: null, lastConsumed: { outcome: "cancel" } })
   })
 
-  for (const [locale, policy, opener] of [
-    ["en", "ONDO policy · not an official restriction for this place.", "Open 19+ preview"],
-    ["ko", "ONDO 정책 · 이 장소의 공식 이용 제한이 아니에요.", "19+ 프리뷰 열기"],
-    ["ja", "ONDOの方針・この場所の公式な利用制限ではありません。", "19+プレビューを開く"],
+  for (const [locale, opener] of [
+    ["en", "Turn on After 19"],
+    ["ko", "After 19 켜기"],
+    ["ja", "After 19をオンにする"],
   ] as const) {
     test(`${locale.toUpperCase()} compact opener remains readable at 320 and 360 px`, async ({ page }) => {
       await seedPlace(page, locale)
@@ -281,7 +282,7 @@ test.describe("FL-002 Place-local After 19 restoration", () => {
         await page.setViewportSize({ width, height: 800 })
         await openCanonicalVenue(page)
         const access = page.getByTestId("canonical-after19-access")
-        await expect(access).toContainText(policy)
+        await expect(access).not.toContainText(/ONDO policy|ONDO 정책|ONDOの方針/)
         const button = access.getByRole("button", { name: opener })
         await expect(button).toBeVisible()
         const [buttonBox, fontSizes, overflow] = await Promise.all([

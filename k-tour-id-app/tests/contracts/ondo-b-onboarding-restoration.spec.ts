@@ -24,9 +24,10 @@ test("B-ONBOARDING-RESTORE-002 source truth and dietary boundaries remain in bot
   const onboarding = source("features/ondo/onboarding/official-directory-onboarding.tsx")
   const options = source("features/ondo/shared/state/ondo-b-preferences.ts")
 
-  for (const truth of ["LOCALDATA", "400", "200", "Aug 19, 2026", "2026년 8월 19일"]) {
+  for (const truth of ["LOCALDATA", "200", "Aug 19, 2026", "2026년 8월 19일", "2026年8月19日"]) {
     expect(onboarding).toContain(truth)
   }
+  expect(onboarding).not.toContain("400 official")
   expect(onboarding).toContain("Official records do not confirm dietary support")
   expect(onboarding).toContain("공식 기록은 식이 요구사항 지원 여부를 확인하지 않습니다")
   for (const preference of ["classic", "cafe", "late", "lively", "calm", "vegetarian", "vegan", "halal", "allergy_aware"]) {

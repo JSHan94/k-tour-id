@@ -62,27 +62,22 @@ test.describe("D3 CLEAN1 regressions", () => {
         await page.setViewportSize(viewport)
         await gotoB(page)
 
-        const legend = page.getByTestId("ondo-b-city-truth-legend")
-        const legendMetadata = legend.locator("strong:visible, span:visible, small:visible")
-        const visibleMetadataCount = await legendMetadata.count()
-        expect(visibleMetadataCount, `${label} visible nation metadata count`).toBeGreaterThan(0)
-        for (let index = 0; index < visibleMetadataCount; index += 1) {
-          await expectMinimumMetadataSize(legendMetadata.nth(index), `${label} nation metadata ${index + 1}`)
+        const nation = page.getByTestId("ondo-b-nation")
+        await expect(nation.locator("details, footer")).toHaveCount(0)
+        const anchors = nation.locator("[data-city]")
+        await expect(anchors).toHaveCount(3)
+        for (let index = 0; index < 3; index += 1) {
+          await expectMinimumMetadataSize(anchors.nth(index).locator("strong"), `${label} city anchor ${index + 1}`)
+          await expectMinimumMetadataSize(anchors.nth(index).locator("[data-region-kind-label]"), `${label} city kind ${index + 1}`)
+          await expect(anchors.nth(index).locator("em")).toHaveCount(0)
         }
-        const source = page.getByTestId("ondo-b-nation").locator("footer")
-        await expectMinimumMetadataSize(source, `${label} nation source`)
-        expect(await page.getByTestId("ondo-b-nation").evaluate((nation) => {
-          const truth = nation.querySelector("[data-testid='ondo-b-city-truth-legend']")?.getBoundingClientRect()
-          const footer = nation.querySelector("footer")?.getBoundingClientRect()
-          return Boolean(truth && footer && truth.bottom <= footer.top + .5)
-        }), `${label} nation truth and source must not overlap`).toBe(true)
         await expectNoHorizontalOverflow(page)
 
         await gotoB(page, "?city=seoul&view=map")
-        const filters = page.locator(`[aria-label='${locale === "ko" ? "장소 신호 필터" : "Place signal filters"}']`)
+        const filters = page.getByTestId("ondo-b-category-rail")
         const filterButtons = filters.getByRole("button")
-        await expect(filterButtons).toHaveCount(3)
-        for (let index = 0; index < 3; index += 1) {
+        await expect(filterButtons).toHaveCount(8)
+        for (let index = 0; index < 8; index += 1) {
           await expectMinimumMetadataSize(filterButtons.nth(index), `${label} map filter ${index + 1}`)
         }
         expect(await filters.evaluate((rail) => {

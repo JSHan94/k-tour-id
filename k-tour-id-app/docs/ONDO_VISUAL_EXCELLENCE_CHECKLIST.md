@@ -80,9 +80,13 @@ The Explore journey is one connected product experience:
 ### 2. Korea overview — Polarsteps pattern
 
 - [ ] Korea is the primary visual object, not a report header followed by cards.
-- [ ] Seoul, Busan and Jeju read as geographic anchors with clear relative
-      placement and distinct official/editorial truth.
-- [ ] Seoul and Busan keep their official 200-record facts and Pulse status.
+- [ ] Seoul, Busan and Jeju read as equal geographic anchors with clear relative
+      placement and one pin/material/interaction grammar.
+- [ ] The first view contains no printed count, methodology ribbon, floating
+      info control or internal status sentence. One compact localized type
+      label distinguishes Directory from Editorial without color dependence;
+      exact counts remain semantic and surface when a downstream decision needs
+      them.
 - [ ] Jeju remains editorial and has no official count. Only eight exact
       VISITKOREA place-page/embedded-map verified points are mapped; the two
       pending candidates remain source links with no pin or place action.
@@ -91,8 +95,9 @@ The Explore journey is one connected product experience:
 - [ ] Source methodology is progressive and never outranks city choice.
 - [ ] Back/forward/direct URL restores the correct atlas anchor and focus.
 
-Required states: overview, city focused/pressed, source disclosure, history
-return, narrow portrait, short landscape and desktop.
+Required states: overview, city focused/pressed, history return, narrow
+portrait, short landscape and desktop. Source truth is verified semantically on
+the atlas and visibly in the downstream directory/editorial provenance path.
 
 ### 3. City canvas — Mapstr + Beli pattern
 

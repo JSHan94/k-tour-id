@@ -105,8 +105,8 @@ sheet and card.
 | 5. Record count/List/info consume a full row | Mostly accept | Merge count and Map/List into compact chrome. Remove the standalone info button if the key/source action owns the same job. Keep legally required map attribution in a minimal corner treatment. |
 | 6. Desktop rail should rely on better icons | Accept with accessibility guard | Produce distinct ONDO icons, compact the rail and reveal localized labels on hover/focus/selection. Preserve 44px targets and screen-reader names. |
 | 7. Current ONDO mark looks temporary | Accept | Create a real logo exploration board, then deliver a vector master, wordmark, app icon, favicon and dark/light variants. |
-| 8. Large source card is not useful in the main decision | Accept as relocation, not deletion | Replace with one compact source ribbon. Full LOCALDATA scope/date/limitations move to a source drawer or details section. |
-| 9. Large Korea-map methodology sheet overwhelms geography | Accept | Keep one short official/editorial legend on the atlas; move the full city/source explanation into `About this map`. No persistent opaque panel over the atlas. |
+| 8. Large source card is not useful in the main decision | Accept as relocation, not deletion | Remove it from the first decision surface. Keep source identity, date and limitations in the city/detail provenance path and in programmatic truth; legally required basemap attribution remains on the live map. |
+| 9. Large Korea-map methodology sheet overwhelms geography | Accept | Remove the atlas legend/info control. Seoul, Busan and Jeju use one equal anchor grammar with only a compact localized type label (`Directory/Editorial`); counts and methodology remain semantic or downstream. |
 | 10. Balance number is hard to scan | Accept | Rebuild balance as a financial display object with tabular numerals, clearer unit hierarchy and aligned status/action. Apply grouping only to values that require it. |
 
 ## 5. Copy reduction policy
@@ -128,8 +128,8 @@ kept, visualized, shortened, folded or deleted, and which test/state protects it
 |---|---|---|
 | `Curated Pulse active` | Internal/status duplication | Remove from default header; express active heat visually and retain selected-state/a11y truth. |
 | `91 · Peak` on every marker | Decision truth presented too literally | Aura-first default; show number on selection/list/detail. |
-| `400 public records` | Context, occasionally useful | Keep on Korea overview or source drawer, not persistent city-map chrome. |
-| LOCALDATA source date and limitations | Truth/provenance | Compact source ribbon + full source drawer. Never delete. |
+| `400 public records` | Context, occasionally useful | Omit from the Korea overview. Preserve exact counts in semantic city anchors and show them in the directory/result or source context where they become actionable. |
+| LOCALDATA source date and limitations | Truth/provenance | Keep in the city/detail provenance path and failure recovery. Never delete. |
 | OpenFreeMap/OpenStreetMap attribution | Legal provenance | Compact map-corner attribution. Never delete. |
 | `One Pulse`, driver methodology | Methodology | One concise key; full explanation folded. |
 
@@ -156,10 +156,15 @@ and not an identity subject.
 **Keep:** Seoul, Busan and Jeju geography; official/editorial distinction;
 history/focus/direct URL.
 
-**Visualize:** geography, journey route and city scale. Official count becomes a
-small secondary fact, not a card medallion.
+**Visualize:** geography, journey route and three equal city anchors. The atlas
+does not print record counts, editorial counts, status prose or methodology on
+the cards. It expresses destination choice through position, pin, material and
+state; one localized type label prevents official/editorial meaning from relying
+on color alone. Exact counts remain in accessible names and typed attributes,
+then become visible in the city/result/source context.
 
-**Fold:** full source scope and map methodology.
+**Fold:** full source scope and map methodology into the downstream
+directory/detail provenance path. Do not add a floating atlas info control.
 
 **Delete candidates:** repeated `200 official records` sentences and duplicated
 category-normalization explanations outside the source drawer.

@@ -10,11 +10,12 @@ test("JP-MAP-FIRST-001 Korea overview owns Seoul, Busan, and truthful Jeju ancho
 
   expect(map).toContain('type CityId = "seoul" | "busan" | "jeju"')
   expect(map).toContain('data-testid="ondo-b-korea-atlas"')
-  expect(map).toContain('data-city="jeju"')
-  expect(map).toContain('data-truth-kind="editorial-region"')
-  expect(map).toContain('data-editorial-count="10"')
-  expect(map).not.toMatch(/data-city="jeju"[^>]*data-official-count/s)
-  expect(map).not.toMatch(/data-city="jeju"[^>]*>\s*<i>200<\/i>/s)
+  expect(map).toContain('id: "jeju"')
+  expect(map).toContain('truthKind: "editorial-region"')
+  expect(map).toContain("editorialCount: 10")
+  expect(map).toContain("cityNodes.map")
+  expect(map).toContain('cityNode.regionRole === "editorial-collection" ? <Sparkles size={18} /> : <MapPin size={18} />')
+  expect(map).not.toContain('className={`${styles.cityNode} ${styles.jejuNode}`}')
 })
 
 test("JP-MAP-FIRST-002 city entry defaults to map without measuring or short-landscape list flash", () => {

@@ -45,9 +45,9 @@ const COPY = {
     dialog: "ONDO guest setup",
     back: "Go back",
     progress: "Setup progress",
-    eyebrow: "Official places, shaped around you",
+    eyebrow: "Official places, your way",
     title: "Find a meal that fits your Korea—grounded in public records.",
-    body: "Browse 400 licensed food-service records across Seoul and Busan, then save a starting intent and food preferences on this device.",
+    body: "Explore food in Seoul and Busan, plus travel ideas across Jeju, then keep your starting preferences on this device.",
     categoryLabel: "What the directory knows",
     category: "The 200 records in each city come from the Ministry of the Interior and Safety LOCALDATA source. Categories use only each record’s official business type.",
     boundaryLabel: "Coverage boundary",
@@ -56,7 +56,7 @@ const COPY = {
     start: "Set guest preferences",
     guest: "Explore without setup",
     identityTitle: "Set up K-Tour ID",
-    identityNote: "Optional simulated identity route · guest Explore stays open",
+    identityNote: "Optional · guest Explore stays open",
     intentTitle: "What brings you to ONDO?",
     intentBody: "This choice stays on this device. Every option opens the same guest Explore and does not unlock or restrict features.",
     continueToPreferences: "Choose food preferences",
@@ -79,7 +79,7 @@ const COPY = {
     progress: "시작 설정 진행",
     eyebrow: "공식 장소를 나에게 맞게",
     title: "나에게 맞는 한국의 한 끼를, 공공 기록에서 찾아보세요.",
-    body: "서울과 부산의 일반음식점 인허가 기록 400개를 살펴보고, 이용 목적과 음식 취향을 이 기기에 저장할 수 있어요.",
+    body: "서울·부산의 먹거리와 제주 여행 아이디어를 둘러보고, 나만의 취향을 이 기기에 저장해요.",
     categoryLabel: "디렉터리가 아는 것",
     category: "각 도시 200개 기록은 행정안전부 LOCALDATA 출처에서 가져오며, 분류는 공식 업태구분명만을 사용합니다.",
     boundaryLabel: "확인 범위",
@@ -88,7 +88,7 @@ const COPY = {
     start: "게스트 취향 설정",
     guest: "설정 없이 탐색",
     identityTitle: "K-Tour ID 설정",
-    identityNote: "선택형 신원 경로 시뮬레이션 · 게스트 탐색은 그대로",
+    identityNote: "선택 사항 · 게스트 탐색은 그대로 열려 있어요",
     intentTitle: "어떤 목적으로 ONDO를 찾았나요?",
     intentBody: "선택은 이 기기에만 저장됩니다. 세 선택 모두 같은 게스트 탐색으로 이어지며 기능을 열거나 제한하지 않아요.",
     continueToPreferences: "음식 취향 고르기",
@@ -111,7 +111,7 @@ const COPY = {
     progress: "設定の進行状況",
     eyebrow: "公式記録から、自分らしい旅へ",
     title: "韓国で自分に合う一食を、公的な記録から探そう。",
-    body: "ソウルと釜山の飲食店営業許可記録400件を見ながら、旅の目的や食の好みをこの端末に保存できます。",
+    body: "ソウル・釜山の食と済州の旅のアイデアを探し、最初の好みをこの端末に保存できます。",
     categoryLabel: "このディレクトリで分かること",
     category: "各都市200件の記録は韓国行政安全部のLOCALDATAを出典とし、分類には公式の業種名のみを使用しています。",
     boundaryLabel: "確認できる範囲",
@@ -120,7 +120,7 @@ const COPY = {
     start: "ゲストの好みを設定",
     guest: "設定せずに見る",
     identityTitle: "K-Tour IDを設定",
-    identityNote: "任意の本人確認ルートをシミュレーション · ゲスト利用はそのまま",
+    identityNote: "任意 · ゲスト利用はそのまま続けられます",
     intentTitle: "ONDOを使う目的は？",
     intentBody: "選択内容はこの端末にのみ保存されます。どの選択肢でも同じゲスト向けの「探す」画面が開き、機能の解放や制限には使いません。",
     continueToPreferences: "食の好みを選ぶ",
@@ -139,11 +139,11 @@ const COPY = {
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
-const EDITORIAL = {
-  en: { alt: "Three fictional travelers talking on a bright transit walkway", caption: "Editorial scene · fictional travelers" },
-  ko: { alt: "밝은 이동 통로에서 대화하는 가상의 여행자 세 명", caption: "에디토리얼 이미지 · 가상의 여행자" },
-  ja: { alt: "明るい通路で話す架空の旅行者3人", caption: "編集イメージ · 架空の旅行者" },
-} satisfies Record<OndoBLocale, { alt: string; caption: string }>
+const EDITORIAL_ALT = {
+  en: "Travelers talking on a bright transit walkway",
+  ko: "밝은 이동 통로에서 대화하는 여행자 세 명",
+  ja: "明るい通路で話す旅行者3人",
+} satisfies Record<OndoBLocale, string>
 
 function JapaneseHeading({ phrases }: { phrases: readonly string[] }) {
   return <>{phrases.map((phrase) => <span className={styles.jaPhrase} key={phrase}>{phrase}</span>)}</>
@@ -315,8 +315,7 @@ export function OfficialDirectoryOnboardingLayer() {
               : copy.title}</h1>
             <p className={styles.lead}>{copy.body}</p>
             <figure className={styles.valueEditorial} data-testid="onboarding-editorial-image">
-              <img src="/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg" alt={EDITORIAL[state.locale].alt} />
-              <figcaption>{EDITORIAL[state.locale].caption}</figcaption>
+              <img src="/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg" alt={EDITORIAL_ALT[state.locale]} />
             </figure>
             <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
               {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
@@ -342,7 +341,6 @@ export function OfficialDirectoryOnboardingLayer() {
             >
               <span data-testid="onboarding-ktour-id-open"><KeyRound size={19} aria-hidden="true" /></span>
               <span><strong>{copy.identityTitle}</strong><small>{copy.identityNote}</small></span>
-              <span>SIMULATED</span>
               <ChevronRight size={18} aria-hidden="true" />
             </button>
             <details

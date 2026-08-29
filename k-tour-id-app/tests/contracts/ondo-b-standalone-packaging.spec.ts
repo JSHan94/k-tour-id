@@ -156,7 +156,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     for (const sample of blocked) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(sample)), sample).toBe(true)
     }
-    for (const requiredTruth of ["Simulated K-Tour ID ready", "Passport eKYC"]) {
+    for (const requiredTruth of ["K-Tour ID ready", "Passport eKYC"]) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(requiredTruth)), requiredTruth).toBe(false)
     }
 

@@ -35,10 +35,11 @@ test.describe("production official-source discovery", () => {
 
     const onboarding = page.getByTestId("ondo-onboarding")
     await expect(onboarding).toBeVisible()
-    await expect(onboarding).toContainText("400 licensed food-service records")
-    await expect(onboarding).toContainText("Seoul and Busan")
+    await expect(onboarding).toContainText("Find a meal that fits your Korea")
+    await expect(onboarding).toContainText("Explore food in Seoul and Busan, plus travel ideas across Jeju")
     const identityEntry = onboarding.getByTestId("k-tour-id-setup-open")
-    await expect(identityEntry).toContainText(/simulated identity route/i)
+    await expect(identityEntry).toContainText(/Optional.*guest Explore stays open/i)
+    await expect(identityEntry).not.toContainText(/simulat/i)
     const discoveryCopy = await onboarding.evaluate((element) => {
       const copy = element.cloneNode(true) as HTMLElement
       copy.querySelector("[data-testid='k-tour-id-setup-open']")?.remove()
@@ -46,9 +47,10 @@ test.describe("production official-source discovery", () => {
     })
     expect(discoveryCopy).not.toMatch(/demo|simulat|score|persona/i)
     await onboarding.getByRole("button", { name: "한국어로 보기" }).click()
-    await expect(onboarding).toContainText("일반음식점 인허가 기록 400개")
-    await expect(onboarding).toContainText("서울과 부산")
-    await expect(identityEntry).toContainText(/신원.*시뮬레이션/)
+    await expect(onboarding).toContainText("나에게 맞는 한국의 한 끼")
+    await expect(onboarding).toContainText("서울·부산의 먹거리와 제주 여행 아이디어")
+    await expect(identityEntry).toContainText(/선택 사항.*게스트 탐색/)
+    await expect(identityEntry).not.toContainText(/시뮬레이션/)
     await expectNoSeriousAxe(page, "[data-testid='ondo-onboarding']")
     for (const locale of ["ja", "en", "ko"] as const) {
       const choice = onboarding.locator(`[data-locale-choice='${locale}']`)
@@ -137,7 +139,7 @@ test.describe("production official-source discovery", () => {
     const after19 = detail.getByTestId("canonical-after19-access")
     await expect(after19).toHaveAttribute("data-after19-venue-status", "locked")
     await expect(after19).toHaveAttribute("data-after19-venue-id", EMPTY_TABLE_VENUE_ID)
-    await expect(after19).toContainText("ONDO policy · not an official restriction for this place.")
+    await expect(after19).not.toContainText("ONDO policy")
 
     const tableScope = detail.getByTestId("venue-table-scope")
     const tables = detail.getByTestId("canonical-venue-tables")

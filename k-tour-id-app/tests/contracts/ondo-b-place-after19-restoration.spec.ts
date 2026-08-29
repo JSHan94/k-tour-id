@@ -139,14 +139,15 @@ test("FL-002 Place requests the shared global prompt by contract and restores ca
   expect(styles).toContain(".after19Access:focus-visible")
 })
 
-test("FL-002 Place official truth remains ungated in English, Korean, and Japanese", () => {
+test("FL-002 Place stays concise while the gate owns the user-facing boundary", () => {
   const place = source("features/ondo/place/canonical-place-overlay.tsx")
   const global = source("features/ondo/after19/after19-global-b.tsx")
+  expect(place).not.toMatch(/ONDO policy|ONDO 정책|ONDOの方針/)
   for (const truth of [
-    "ONDO policy · not an official restriction for this place.",
-    "ONDO 정책 · 이 장소의 공식 이용 제한이 아니에요.",
-    "ONDOの方針・この場所の公式な利用制限ではありません。",
-  ]) expect(place).toContain(truth)
+    "Narrows this map to pub & café licence types. Actual entry, age and alcohol-service rules are not confirmed.",
+    "주점·카페 업태만 모아 보여줘요. 실제 입장·연령·주류 제공 조건은 확인되지 않았어요.",
+    "パブ・カフェの営業許可業種に絞って表示します。実際の入店・年齢・酒類提供条件は確認していません。",
+  ]) expect(global).toContain(truth)
   for (const locale of ["en", "ko", "ja"]) expect(global).toContain(`${locale}: {`)
   expect(global).not.toMatch(/activateAccount|paymentKyc|passport|dateOfBirth|birthDate|credentialPayload|verifyAge\(/i)
 })

@@ -416,7 +416,8 @@ export async function expectBProductionVisualGuards(page: Page, item: BProductio
   })
   expect(visibleCopy, `${item.id} production-banned visible copy`).not.toMatch(/\bdemo(?:nstration)?\b|\bsimulat(?:e|ed|es|ing|ion|ions)\b|\bfixtures?\b|\bhypoth(?:esis|eses)\b|\btest[- ]?tokens?\b|데모|시뮬레이션|모의\s*(?:성공|결제|인증)|가설|테스트\s*토큰|픽스처/i)
   if (item.setup === "first-run") {
-    await expect(root.getByTestId("k-tour-id-setup-open")).toContainText(item.locale === "ko" ? /신원.*시뮬레이션/ : /simulated identity/i)
+    await expect(root.getByTestId("k-tour-id-setup-open")).toContainText(item.locale === "ko" ? /선택 사항.*게스트 탐색/ : /Optional.*guest Explore/i)
+    await expect(root.getByTestId("k-tour-id-setup-open")).not.toContainText(/simulat|시뮬레이션/i)
   }
 }
 

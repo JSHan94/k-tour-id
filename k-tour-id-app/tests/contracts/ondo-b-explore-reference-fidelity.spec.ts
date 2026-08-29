@@ -12,10 +12,13 @@ const place = source("features/ondo/place/canonical-place-overlay.tsx")
 test("B-EXPLORE-V3-001 Korea overview is a geographic living atlas rather than a city-card report", () => {
   expect(map).toContain('data-visual-object="living-atlas"')
   expect(map).toContain('data-testid="ondo-b-atlas-route"')
-  expect(map).toContain('data-region-role="official-directory"')
-  expect(map).toContain('data-region-role="editorial-collection"')
-  expect(map).toContain('data-official-count="200"')
-  expect(map).toContain('data-editorial-count="10"')
+  expect(map).toContain('regionRole: "official-directory"')
+  expect(map).toContain('regionRole: "editorial-collection"')
+  expect(map).toContain("officialCount: 200")
+  expect(map).toContain("editorialCount: 10")
+  expect(map).toContain("data-region-role={cityNode.regionRole}")
+  expect(map).toContain("data-official-count={cityNode.officialCount}")
+  expect(map).toContain("data-editorial-count={cityNode.editorialCount}")
 })
 
 test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and official-record grammars", () => {

@@ -87,6 +87,8 @@ test("OPENDID-B-004 setup owns explicit progress, recovery, return and focus sta
   expect(provider).toContain("openIdentitySetup")
   expect(provider).toContain("closeIdentitySetup")
   expect(provider).toContain("completeIdentitySetup")
+  expect(setup).toContain('actions.setCommerceWalletStatus("ready")')
+  expect(setup).toContain('data-wallet-provisioning="aa-assumed-local"')
 })
 
 test("OPENDID-B-005 Account, Person, 19+, identity credential and Payment remain independent", () => {

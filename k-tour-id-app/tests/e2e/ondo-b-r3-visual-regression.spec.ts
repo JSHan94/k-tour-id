@@ -222,16 +222,16 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     await expectNoSeriousAxe(page, chat)
   })
 
-  test("locked After19 copy separates ONDO policy from official place truth", async ({ page }) => {
+  test("locked After19 card stays concise while the gate carries the user boundary", async ({ page }) => {
     await seedB(page, { session: { account: "ACC-ACTIVE", person: "PER-VERIFIED" } })
     await openCanonicalVenue(page)
     const access = page.getByTestId("canonical-after19-access")
-    await expect(access).toContainText("ONDO policy · not an official restriction for this place.")
+    await expect(access).not.toContainText("ONDO policy")
     const unlock = access.getByTestId("canonical-after19-unlock")
-    await expect(unlock).toHaveText("Open 19+ preview")
+    await expect(unlock).toHaveText("Turn on After 19")
     await unlock.click()
     const prompt = page.getByTestId("global-after19-prompt-layer")
-    await expect(prompt).toContainText("This is an ONDO presentation choice, not an official restriction for this place.")
+    await expect(prompt).toContainText("Narrows this map to pub & café licence types. Actual entry, age and alcohol-service rules are not confirmed.")
     await prompt.locator("summary").click()
     await expect(prompt).toContainText("This does not confirm opening hours, alcohol service, admission, or a venue age restriction.")
     await expect(prompt).toContainText("Your date of birth is not requested or stored")
@@ -288,10 +288,9 @@ test.describe("ONDO B R3 visual and traveler regression", () => {
     for (const city of ["seoul", "busan"]) {
       const action = nation.locator(`[data-city='${city}']`)
       await expect(action).toHaveAccessibleName(/Open city directory/)
-      const recordTruth = action.locator("em")
-      await expect(recordTruth).toBeVisible()
-      const clips = await recordTruth.evaluate((element) => element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1)
-      expect(clips).toBe(false)
+      await expect(action.locator("[data-region-kind-label]")).toHaveText("Food map")
+      await expect(action.locator("em")).toHaveCount(0)
+      await expect(action.locator("strong")).toBeVisible()
     }
     await expectNoSeriousAxe(page, nation)
 

@@ -2,7 +2,7 @@
 
 import type { CircleLayerSpecification, ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, SymbolLayerSpecification } from "maplibre-gl"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, ChevronRight, Copyright, Info, Languages, List, LocateFixed, Map as MapIcon, MapPin, Search, X } from "lucide-react"
+import { ArrowLeft, ChevronRight, Copyright, Info, Languages, List, LocateFixed, Map as MapIcon, MapPin, Search, Sparkles, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues/contracts"
@@ -231,9 +231,9 @@ const COPY = {
 } satisfies Record<OndoBLocale, Record<string, string>>
 
 const MAP_UI = {
-  en: { atlas: "Korea overview map showing Seoul, Busan, and Jeju", clearSearch: "Clear search", mapRegion: "Official food-service directory map", editorialRegion: "Jeju editorial travel collection map", officialGroups: "Official groups", pulseRange: "Low → Peak", pulseLegend: "ONDO temperature level legend", pulsePlaces: "ONDO temperature places", mapAttribution: "Map attribution", shortList: "List view on a short screen", locationTab: "Location · this tab only", locationOff: "Location access off", locationUnavailable: "Location unavailable", freshness: "freshness", confidence: "confidence", after19View: "19+ view" },
-  ko: { atlas: "서울·부산·제주를 표시한 대한민국 탐색 지도", clearSearch: "검색어 지우기", mapRegion: "공식 일반음식점 디렉터리 지도", editorialRegion: "제주 편집 여행 컬렉션 지도", officialGroups: "공식 묶음", pulseRange: "여유 → 피크", pulseLegend: "온도 단계 범례", pulsePlaces: "온도 장소", mapAttribution: "지도 출처", shortList: "좁은 화면에서 목록 보기 사용 중", locationTab: "위치 · 이 탭에서만", locationOff: "위치 권한 꺼짐", locationUnavailable: "위치 미지원", freshness: "최신성", confidence: "신뢰도", after19View: "19+ 보기" },
-  ja: { atlas: "ソウル・釜山・済州を示す韓国マップ", clearSearch: "検索語を消去", mapRegion: "公式飲食店営業許可ディレクトリの地図", editorialRegion: "済州の編集旅行コレクション地図", officialGroups: "公式記録のまとまり", pulseRange: "ゆったり → ピーク", pulseLegend: "ONDO温度レベルの凡例", pulsePlaces: "ONDO温度の場所", mapAttribution: "地図の出典", shortList: "高さの低い画面ではリスト表示", locationTab: "現在地・このタブ内のみ", locationOff: "位置情報へのアクセスはオフ", locationUnavailable: "位置情報を利用できません", freshness: "更新状況", confidence: "確度", after19View: "19+表示" },
+  en: { atlas: "Korea overview map showing Seoul, Busan, and Jeju", clearSearch: "Clear search", mapRegion: "Official food-service directory map", editorialRegion: "Jeju editorial travel collection map", officialGroups: "Official groups", pulseRange: "Low → Peak", pulseLegend: "ONDO temperature level legend", pulsePlaces: "ONDO temperature places", mapAttribution: "Map attribution", shortList: "List view on a short screen", locationTab: "Location · this tab only", locationOff: "Location access off", locationUnavailable: "Location unavailable", freshness: "freshness", confidence: "confidence", after19View: "19+ view", directoryKind: "Food map", editorialKind: "Travel ideas" },
+  ko: { atlas: "서울·부산·제주를 표시한 대한민국 탐색 지도", clearSearch: "검색어 지우기", mapRegion: "공식 일반음식점 디렉터리 지도", editorialRegion: "제주 편집 여행 컬렉션 지도", officialGroups: "공식 묶음", pulseRange: "여유 → 피크", pulseLegend: "온도 단계 범례", pulsePlaces: "온도 장소", mapAttribution: "지도 출처", shortList: "좁은 화면에서 목록 보기 사용 중", locationTab: "위치 · 이 탭에서만", locationOff: "위치 권한 꺼짐", locationUnavailable: "위치 미지원", freshness: "최신성", confidence: "신뢰도", after19View: "19+ 보기", directoryKind: "먹거리 지도", editorialKind: "여행 아이디어" },
+  ja: { atlas: "ソウル・釜山・済州を示す韓国マップ", clearSearch: "検索語を消去", mapRegion: "公式飲食店営業許可ディレクトリの地図", editorialRegion: "済州の編集旅行コレクション地図", officialGroups: "公式記録のまとまり", pulseRange: "ゆったり → ピーク", pulseLegend: "ONDO温度レベルの凡例", pulsePlaces: "ONDO温度の場所", mapAttribution: "地図の出典", shortList: "高さの低い画面ではリスト表示", locationTab: "現在地・このタブ内のみ", locationOff: "位置情報へのアクセスはオフ", locationUnavailable: "位置情報を利用できません", freshness: "更新状況", confidence: "確度", after19View: "19+表示", directoryKind: "フードマップ", editorialKind: "旅のアイデア" },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
 const TEMPERATURE_NAME: Record<OndoBLocale, string> = {
@@ -387,6 +387,37 @@ function displayDistance(distance: number, locale: OndoBLocale) {
 
 function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(city: CityId): void }) {
   const copy = COPY[locale]
+  const cityNodes: Array<{
+    id: CityId
+    regionRole: "official-directory" | "editorial-collection"
+    officialCount?: number
+    directorySource?: string
+    editorialCount?: number
+    truthKind?: "editorial-region"
+    accessibleTruth: string
+  }> = [
+    {
+      id: "seoul",
+      regionRole: "official-directory",
+      officialCount: 200,
+      directorySource: SOURCE_ID,
+      accessibleTruth: resultCount(200, locale),
+    },
+    {
+      id: "busan",
+      regionRole: "official-directory",
+      officialCount: 200,
+      directorySource: SOURCE_ID,
+      accessibleTruth: resultCount(200, locale),
+    },
+    {
+      id: "jeju",
+      regionRole: "editorial-collection",
+      editorialCount: 10,
+      truthKind: "editorial-region",
+      accessibleTruth: `${copy.jejuStatus} · ${copy.jejuTruth}`,
+    },
+  ]
   return (
     <section className={styles.nation} data-testid="ondo-b-nation">
       <div className={`${styles.dotMap} ${styles.koreaAtlas}`} data-testid="ondo-b-korea-atlas" data-visual-object="living-atlas">
@@ -398,68 +429,31 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
           {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 2 : 1.65} />)}
         </svg>
         <div className={styles.nationIntro}>
-          <small>{copy.coverage}</small>
           <h1>{copy.title}</h1>
-          <p>{copy.body}</p>
         </div>
-        {(["seoul", "busan"] as const).map((cityId) => (
+        {cityNodes.map((cityNode) => (
           <button
-            key={cityId}
+            key={cityNode.id}
             type="button"
             className={styles.cityNode}
-            data-city={cityId}
-            data-region-role="official-directory"
-            data-official-count="200"
-            data-directory-source={SOURCE_ID}
-            onClick={() => onSelect(cityId)}
-            aria-label={`${CITY[cityId].label[locale]} · ${resultCount(200, locale)} · ${copy.openMap}`}
+            data-city={cityNode.id}
+            data-region-role={cityNode.regionRole}
+            data-official-count={cityNode.officialCount}
+            data-directory-source={cityNode.directorySource}
+            data-editorial-count={cityNode.editorialCount}
+            data-truth-kind={cityNode.truthKind}
+            onClick={() => onSelect(cityNode.id)}
+            aria-label={`${CITY[cityNode.id].label[locale]} · ${cityNode.accessibleTruth} · ${copy.openMap}`}
           >
-            <i aria-hidden="true"><MapPin size={18} /></i>
+            <i aria-hidden="true">
+              {cityNode.regionRole === "editorial-collection" ? <Sparkles size={18} /> : <MapPin size={18} />}
+            </i>
             <span>
-              <strong>{CITY[cityId].label[locale]}</strong>
-              <small className={styles.srOnly} data-pulse-city-status={PULSE_CITY_STATUS[cityId]}>{cityPulseStatus(cityId, locale)}</small>
-              <em className={styles.cityRecordTruth}>{resultCount(200, locale)}</em>
+              <strong>{CITY[cityNode.id].label[locale]}</strong>
+              <small className={styles.cityKind} data-region-kind-label={cityNode.regionRole}>{cityNode.regionRole === "editorial-collection" ? MAP_UI[locale].editorialKind : MAP_UI[locale].directoryKind}</small>
             </span>
           </button>
         ))}
-        <button
-          type="button"
-          className={`${styles.cityNode} ${styles.jejuNode}`}
-          data-city="jeju"
-          data-region-role="editorial-collection"
-          data-truth-kind="editorial-region"
-          data-editorial-count="10"
-          onClick={() => onSelect("jeju")}
-          aria-label={`${CITY.jeju.label[locale]} · ${copy.jejuStatus} · ${copy.jejuTruth}`}
-        >
-          <i aria-hidden="true">✦</i>
-          <span>
-            <strong>{CITY.jeju.label[locale]}</strong>
-            <small>{copy.jejuStatus}</small>
-            <em className={styles.cityRecordTruth}>{copy.jejuTruth}</em>
-          </span>
-        </button>
-        <details className={`${styles.cityTruthLegend} ${styles.atlasTruth}`} data-testid="ondo-b-city-truth-legend" data-source-disclosure="compact-ribbon" data-official-count="400">
-          <summary aria-label={`${copy.aboutMap}. ${copy.mapScopeSummary}`}><span className={styles.srOnly}><strong>{copy.aboutMap}</strong><small>{copy.mapScopeSummary}</small></span><Info size={16} aria-hidden="true" /></summary>
-          <div className={styles.atlasTruthBody}>
-            {(["seoul", "busan"] as const).map((cityId) => (
-              <div key={cityId}>
-                <strong>{CITY[cityId].label[locale]}</strong>
-                <span>{resultCount(200, locale)}</span>
-                <small>{copy.categoryBasis}</small>
-              </div>
-            ))}
-            <div>
-              <strong>{CITY.jeju.label[locale]}</strong>
-              <span>{copy.jejuMapTruth}</span>
-              <small>{copy.jejuTruth}</small>
-            </div>
-            <footer>
-              <div><strong>{copy.officialSourceScope}</strong><br />{copy.source}<br />{copy.sourceBoundary}</div>
-              <div><strong>{copy.jejuSourceScope}</strong></div>
-            </footer>
-          </div>
-        </details>
       </div>
     </section>
   )

@@ -94,9 +94,7 @@ const COPY = {
     after19: "19+ required",
     after19Body: "You’ll verify after choosing Join.",
     after19Preview: "After 19",
-    after19PolicyLocked: "ONDO policy · not an official restriction for this place.",
-    after19PolicyUnlocked: "ONDO preview on · not an official restriction for this place.",
-    after19Unlock: "Open 19+ preview",
+    after19Unlock: "Turn on After 19",
     after19Ready: "On",
     pulseBoundary: "Curated visit signals · not live crowding or official venue facts.",
   },
@@ -163,9 +161,7 @@ const COPY = {
     after19: "19+ 필수",
     after19Body: "참여를 누른 뒤 확인해요.",
     after19Preview: "After 19",
-    after19PolicyLocked: "ONDO 정책 · 이 장소의 공식 이용 제한이 아니에요.",
-    after19PolicyUnlocked: "ONDO 프리뷰 켜짐 · 이 장소의 공식 이용 제한이 아니에요.",
-    after19Unlock: "19+ 프리뷰 열기",
+    after19Unlock: "After 19 켜기",
     after19Ready: "켜짐",
     pulseBoundary: "선별된 방문 시그널 · 실시간 혼잡도나 공식 장소 정보가 아니에요.",
   },
@@ -232,9 +228,7 @@ const COPY = {
     after19: "19歳以上の確認が必要",
     after19Body: "参加を選んだ後に確認します。",
     after19Preview: "After 19",
-    after19PolicyLocked: "ONDOの方針・この場所の公式な利用制限ではありません。",
-    after19PolicyUnlocked: "ONDOプレビューはオン・この場所の公式な利用制限ではありません。",
-    after19Unlock: "19+プレビューを開く",
+    after19Unlock: "After 19をオンにする",
     after19Ready: "オン",
     pulseBoundary: "選定した訪問シグナルに基づく参考値です。リアルタイムの混雑状況でも、公式の場所情報でもありません。",
   },
@@ -556,7 +550,7 @@ export function CanonicalPlaceOverlay() {
       </section>
       <section className={styles.pulsePeek} role="group" aria-label={pulseTitle} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
         <span className={styles.pulseVisualLabel} aria-hidden="true">{copy.temperature}</span>
-        <span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span>
+        <span className={styles.pulseVisualMeter} data-testid="canonical-place-temperature-meter" aria-hidden="true"><i /></span>
         <span className={styles.srOnly}>{pulseTitle} · {pulse.signalCount == null ? copy.pulseLimited : `${pulse.signalCount} ${copy.pulseSignals}`} · {fixedSnapshot} · {copy.pulseBoundary}</span>
         {pulse.localEvidence ? <span className={styles.srOnly} data-testid="pulse-local-device-evidence">{copy.pulseLocalEvidence} · {pulse.localEvidence.tags.map((tag) => localTagLabel(tag, locale)).join(" · ")}</span> : null}
       </section>
@@ -598,7 +592,7 @@ export function CanonicalPlaceOverlay() {
 
           <details className={styles.pulsePanel} data-testid="canonical-place-pulse" data-pulse-level={pulse.level} data-pulse-numeric="hidden">
             <summary aria-label={pulseTitle}>
-              <div><span>{copy.temperature}</span><h3 className={styles.srOnly}>{pulseTitle}</h3><span className={styles.pulseVisualMeter} aria-hidden="true"><i /></span></div>
+              <div><span>{copy.temperature}</span><h3 className={styles.srOnly}>{pulseTitle}</h3><span className={styles.pulseVisualMeter} data-testid="canonical-place-temperature-meter" aria-hidden="true"><i /></span></div>
               <ChevronRight size={18} aria-hidden="true" />
             </summary>
             <div className={styles.pulsePanelBody}>
@@ -634,9 +628,9 @@ export function CanonicalPlaceOverlay() {
             <button type="button" onClick={toggleSave} aria-pressed={saved} data-testid="canonical-venue-save" data-visual-priority="secondary"><Bookmark size={18} />{saved ? copy.removeSaved : copy.save}</button>
           </div>
 
-          <section ref={after19AccessRef} className={styles.after19Access} tabIndex={-1} data-testid="canonical-after19-access" data-after19-focus-target="persistent" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"} data-after19-venue-id={currentVenueId}>
+          <section ref={after19AccessRef} className={styles.after19Access} tabIndex={-1} aria-label={`${copy.after19Preview} · ${after19Unlocked ? copy.after19Ready : copy.after19Unlock}`} data-testid="canonical-after19-access" data-after19-focus-target="persistent" data-after19-venue-status={after19Unlocked ? "unlocked" : "locked"} data-after19-venue-id={currentVenueId}>
             <MoonStar size={18} aria-hidden="true" />
-            <span><strong>{copy.after19Preview}</strong><small>{after19Unlocked ? copy.after19PolicyUnlocked : copy.after19PolicyLocked}</small></span>
+            <span><strong>{copy.after19Preview}</strong></span>
             {after19Unlocked ? <em role="status"><BadgeCheck size={15} aria-hidden="true" />{copy.after19Ready}</em> : <button type="button" onClick={openAfter19FromPlace} data-testid="canonical-after19-unlock" data-visual-priority="secondary">{copy.after19Unlock}<ChevronRight size={15} aria-hidden="true" /></button>}
           </section>
 

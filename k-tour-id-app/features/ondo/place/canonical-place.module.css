@@ -68,7 +68,6 @@
 .after19Access > svg { color: #6f3150; }
 .after19Access > span { display: grid; min-width: 0; gap: 1px; }
 .after19Access strong { font-size: 12px; font-weight: 820; }
-.after19Access small { color: #666; font-size: 12px; font-weight: 610; line-height: 1.35; }
 .after19Access button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 4px; padding: 0 9px; border: 0; border-radius: 12px; background: #f1eef0; color: #4e2138; font: inherit; font-size: 12px; font-weight: 800; white-space: nowrap; }
 .after19Access em { display: inline-flex; min-height: 32px; align-items: center; gap: 4px; padding: 0 9px; border-radius: 999px; background: #f1eef0; color: #4e2138; font-size: 12px; font-style: normal; font-weight: 820; }
 .after19Access:focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 3px; }

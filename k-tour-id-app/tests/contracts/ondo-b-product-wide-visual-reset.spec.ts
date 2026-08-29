@@ -58,15 +58,14 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
     expect(css).toContain("--map-edge: var(--ondo-phone-edge, 16px)")
   })
 
-  test("RESET-004 atlas and Place retain full truth behind compact source ribbons", () => {
+  test("RESET-004 atlas keeps truth in attributes while Place retains progressive source evidence", () => {
     const map = source("features/ondo/map/map-entry-b.tsx")
     const place = source("features/ondo/place/canonical-place-overlay.tsx")
 
-    expect(map).toContain('data-source-disclosure="compact-ribbon"')
-    expect(map).toContain('data-official-count="400"')
-    expect(map).toContain('data-official-count="200"')
-    expect(map).toContain('data-editorial-count="10"')
-    expect(map).toContain("copy.sourceBoundary")
+    expect(map).toContain("cityNodes.map")
+    expect(map).toContain("data-official-count={cityNode.officialCount}")
+    expect(map).toContain("data-editorial-count={cityNode.editorialCount}")
+    expect(map).toContain("accessibleTruth")
     expect(place).toContain('data-testid="canonical-place-source-summary"')
     expect(place).toContain('data-source-presentation="compact-ribbon"')
     expect(place).toContain('data-testid="canonical-source-evidence"')
