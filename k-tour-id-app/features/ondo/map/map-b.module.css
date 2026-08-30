@@ -3570,15 +3570,13 @@
 
 .koreaAtlas::before {
   z-index: 0;
-  background:
-    radial-gradient(circle at 75% 34%, transparent 0 82px, rgb(23 23 23 / 3%) 83px 84px, transparent 85px),
-    linear-gradient(151deg, transparent 49.8%, rgb(23 23 23 / 4%) 50%, transparent 50.2%);
+  background: radial-gradient(circle at 75% 34%, transparent 0 82px, rgb(23 23 23 / 3%) 83px 84px, transparent 85px);
 }
 
 .atlasPlot {
   position: absolute;
   z-index: 1;
-  top: 24%;
+  top: 20%;
   left: 50%;
   width: min(calc(100% - 24px), 330px);
   height: auto;
@@ -3601,23 +3599,23 @@
 }
 
 .koreaAtlas .atlasLandmass {
-  fill: rgb(23 23 23 / 3.5%);
-  stroke: #88796f;
-  stroke-width: .75;
+  fill: rgb(23 23 23 / 2%);
+  stroke: #9a908a;
+  stroke-width: .45;
   stroke-linejoin: round;
-  opacity: .74;
+  opacity: .58;
   vector-effect: non-scaling-stroke;
 }
 
 .atlasPlot > svg circle {
   fill: #665e58;
-  opacity: .34;
+  opacity: .24;
 }
 
 .koreaAtlas .atlasRoute {
-  stroke: rgb(122 32 72 / 24%);
-  stroke-width: 1.35;
-  stroke-dasharray: 1 8;
+  stroke: rgb(122 32 72 / 18%);
+  stroke-width: .8;
+  stroke-dasharray: 1 9;
 }
 
 .koreaAtlas .atlasStop { opacity: 0 !important; }
@@ -3656,15 +3654,15 @@
 .koreaAtlas .cityNode[data-city="jeju"] i {
   position: absolute;
   z-index: 2;
-  inset: 0;
+  inset: 4px;
   display: block;
-  width: 44px;
-  height: 44px;
-  border: 1.5px solid #171717;
+  width: 36px;
+  height: 36px;
+  border: .75px solid rgb(23 23 23 / 30%);
   border-radius: 50%;
-  background: rgb(255 255 255 / 92%);
-  box-shadow: 0 7px 17px rgb(0 0 0 / 11%);
-  transition: transform 180ms ease;
+  background: rgb(255 255 255 / 84%);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 9%);
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .koreaAtlas .cityNode i::before,
@@ -3686,22 +3684,23 @@
 }
 
 .koreaAtlas .cityNode[data-signal-state="active"] i::before {
-  inset: 7px;
-  border: 1.5px solid rgb(122 32 72 / 74%);
-  box-shadow: 0 0 0 7px rgb(229 91 55 / 15%), 0 0 25px 7px rgb(122 32 72 / 27%);
+  inset: 5px;
+  border: 1px solid rgb(122 32 72 / 70%);
+  box-shadow: 0 0 0 6px rgb(229 91 55 / 12%), 0 0 22px 8px rgb(122 32 72 / 23%);
 }
-.koreaAtlas .cityNode[data-signal-state="active"] i::after { width: 10px; height: 10px; background: #7a2048; }
+.koreaAtlas .cityNode[data-signal-state="active"] i::after { width: 8px; height: 8px; background: #7a2048; }
 
 .koreaAtlas .cityNode[data-signal-state="growing"] i::before {
-  inset: 9px;
-  border: 1.5px solid rgb(221 120 46 / 78%);
-  box-shadow: 0 0 18px 5px rgb(244 196 94 / 25%);
+  inset: 7px;
+  border: 1px solid rgb(221 120 46 / 74%);
+  box-shadow: 0 0 17px 6px rgb(244 196 94 / 22%);
 }
-.koreaAtlas .cityNode[data-signal-state="growing"] i::after { background: #dd782e; }
+.koreaAtlas .cityNode[data-signal-state="growing"] i::after { width: 7px; height: 7px; background: #dd782e; }
 
 .koreaAtlas .cityNode[data-signal-state="limited"] i::before {
-  inset: 9px;
-  border: 1.5px dashed rgb(93 41 71 / 68%);
+  inset: 7px;
+  border: .75px dashed rgb(93 41 71 / 62%);
+  box-shadow: 0 0 15px 5px rgb(93 41 71 / 11%);
 }
 .koreaAtlas .cityNode[data-signal-state="limited"] i::after { width: 6px; height: 6px; background: #5d2947; }
 
@@ -3709,31 +3708,96 @@
   position: absolute;
   z-index: 1;
   top: 50%;
-  left: 50%;
+  left: calc(100% + 6px);
   display: flex;
   min-width: max-content;
-  min-height: 32px;
+  min-height: 30px;
   align-items: center;
-  padding: 0 8px;
-  border-left: 2px solid rgb(23 23 23 / 62%);
-  background: rgb(255 255 255 / 78%);
-  box-shadow: 0 5px 16px rgb(0 0 0 / 5%);
-  transform: translate(var(--atlas-label-x), var(--atlas-label-y));
-  -webkit-backdrop-filter: blur(7px);
-  backdrop-filter: blur(7px);
+  padding: 0 5px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: auto;
+  transform: translateY(-50%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.koreaAtlas .cityNode[data-label-side="left"] span {
+  right: calc(100% + 6px);
+  left: auto;
+  justify-content: flex-end;
+  border: 0;
+  background: transparent;
+  text-align: right;
+}
+
+.koreaAtlas .cityNode span::before {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  width: 8px;
+  height: .75px;
+  background: rgb(23 23 23 / 34%);
+  content: "";
+}
+
+.koreaAtlas .cityNode[data-label-side="left"] span::before {
+  right: auto;
+  left: 100%;
 }
 
 .koreaAtlas .cityNode strong {
   color: #171717;
   font-size: 14px;
-  font-weight: 790;
+  font-weight: 760;
   letter-spacing: -.025em;
   line-height: 1;
   white-space: nowrap;
+  text-shadow: 0 0 2px #fff, 0 0 6px #fff, 0 0 10px #fff;
 }
 
-.koreaAtlas .cityNode:hover i { transform: scale(1.06); }
+.koreaAtlas .cityNode:hover,
+.koreaAtlas .cityNode:focus-visible,
+.koreaAtlas .cityNode:active {
+  transform: translate(-50%, -50%);
+}
+.koreaAtlas .cityNode { cursor: pointer; touch-action: manipulation; }
+.koreaAtlas .cityNode:hover i { box-shadow: 0 0 0 3px rgb(255 255 255 / 84%), 0 9px 20px rgb(0 0 0 / 13%); }
 .koreaAtlas .cityNode:focus-visible { outline: 3px solid #171717; outline-offset: 4px; }
+
+.editorialTemperatureKey {
+  display: inline-flex;
+  width: 44px;
+  min-width: 44px;
+  max-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.editorialTemperatureKey > span {
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.editorialTemperatureKey > span i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.editorialTemperatureKey > span i:nth-child(1) { width: 24px; height: 24px; background: rgb(194 79 62 / 13%); }
+.editorialTemperatureKey > span i:nth-child(2) { width: 14px; height: 14px; background: rgb(194 79 62 / 22%); }
+.editorialTemperatureKey > span i:nth-child(3) { width: 6px; height: 6px; background: #c24f3e; }
+.editorialTemperatureKey > b { display: none; }
 
 @media (orientation: landscape) and (max-height: 500px) {
   .atlasPlot {

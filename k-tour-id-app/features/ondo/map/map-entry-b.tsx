@@ -421,9 +421,9 @@ function pointInKorea(lon: number, lat: number) {
 const KOREA_DOTS = (() => {
   const result: Array<{ x: number; y: number }> = []
   let row = 0
-  for (let y = 15; y <= 335; y += 7.5) {
-    const offset = row % 2 ? 3.75 : 0
-    for (let x = 26 + offset; x <= 274; x += 7.5) {
+  for (let y = 15; y <= 335; y += 8.75) {
+    const offset = row % 2 ? 4.375 : 0
+    for (let x = 26 + offset; x <= 274; x += 8.75) {
       const lon = DOT_BOUNDS.minLon + ((x - 26) / 248) * (DOT_BOUNDS.maxLon - DOT_BOUNDS.minLon)
       const lat = DOT_BOUNDS.maxLat - ((y - 15) / 320) * (DOT_BOUNDS.maxLat - DOT_BOUNDS.minLat)
       if (pointInKorea(lon, lat)) result.push({ x, y })
@@ -455,7 +455,7 @@ function resultCount(count: number, locale: OndoBLocale) {
 }
 
 function cityPulseStatus(cityId: CityId, locale: OndoBLocale) {
-  if (cityId === "jeju") return locale === "ko" ? "온도 신호 수집 중" : locale === "ja" ? "温度シグナルを収集中" : "Temperature signals collecting"
+  if (cityId === "jeju") return locale === "ko" ? "편집 장소 온도 레이어 · 수치 점수 없음" : locale === "ja" ? "編集スポットの温度レイヤー・数値スコアなし" : "Editorial place temperature layer · no numeric score"
   return PULSE_CITY_STATUS[cityId] === "active" ? COPY[locale].pulseActive : COPY[locale].pulseGrowing
 }
 
@@ -533,7 +533,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
             {KOREA_ATLAS_LANDMASS_PATHS.map((path, index) => <path key={`land-${index}`} className={styles.atlasLandmass} d={path} />)}
             <path className={styles.atlasRoute} data-testid="ondo-b-atlas-route" d={atlasRoute} />
             {cityNodes.map(({ id, coordinates }) => <circle key={`stop-${id}`} className={styles.atlasStop} data-atlas-stop={id} cx={coordinates.x} cy={coordinates.y} r="4.5" />)}
-            {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 2 : 1.65} />)}
+            {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 1.55 : 1.2} />)}
           </svg>
           {cityNodes.map((cityNode) => (
             <button
@@ -543,6 +543,7 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
               data-city={cityNode.id}
               data-region-role={cityNode.regionRole}
               data-signal-state={cityNode.signalState}
+              data-label-side={cityNode.labelOffset.x < 0 ? "left" : "right"}
               data-temperature-score={cityNode.signalState === "limited" ? "none" : undefined}
               data-official-count={cityNode.officialCount}
               data-directory-source={cityNode.directorySource}
@@ -634,7 +635,7 @@ function toPulseFeatureCollection(
   }
 }
 
-function toEditorialPlaceFeatureCollection(locale: OndoBLocale, selectedEditorialPlaceId: string | null = null, enabled = true): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: EditorialPlaceB["category"]; selected: boolean }> {
+function toEditorialPlaceFeatureCollection(locale: OndoBLocale, selectedEditorialPlaceId: string | null = null, enabled = true): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: EditorialPlaceB["category"]; selected: boolean; signalKind: "verified-editorial" }> {
   return {
     type: "FeatureCollection",
     features: enabled ? JEJU_EDITORIAL_PLACES.map((place) => ({
@@ -646,6 +647,7 @@ function toEditorialPlaceFeatureCollection(locale: OndoBLocale, selectedEditoria
         name: place.name[locale],
         category: place.category,
         selected: place.id === selectedEditorialPlaceId,
+        signalKind: "verified-editorial",
       },
     })) : [],
   }
@@ -1266,8 +1268,20 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-selected-pulse-capsule-warming", type: "symbol", source: "ondo-pulse", filter: selectedWarmingPulseFilter, layout: selectedCapsuleLayout, paint: { ...selectedCapsulePaint, "text-translate": warmingTranslate, "icon-translate": warmingTranslate, "text-translate-anchor": "viewport", "icon-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
-          instance.addLayer({ id: "ondo-editorial-selected-halo", type: "circle", source: "ondo-editorial-places", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "#171717", "circle-radius": 19, "circle-opacity": 0.12, "circle-stroke-width": 0 } })
-          instance.addLayer({ id: "ondo-editorial-points", type: "circle", source: "ondo-editorial-places", paint: { "circle-color": ["case", ["==", ["get", "selected"], true], "#171717", "#ffffff"], "circle-radius": ["case", ["==", ["get", "selected"], true], 7, 5], "circle-stroke-color": "#171717", "circle-stroke-width": 2, "circle-opacity": 0.98 } })
+          instance.addLayer({
+            id: "ondo-editorial-temperature-aura",
+            type: "circle",
+            source: "ondo-editorial-places",
+            paint: {
+              "circle-color": "#c04c3d",
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 8.5, 17, 12, 27, 16, 38],
+              "circle-blur": 0.84,
+              "circle-opacity": 0.28,
+              "circle-stroke-width": 0,
+            },
+          })
+          instance.addLayer({ id: "ondo-editorial-selected-halo", type: "circle", source: "ondo-editorial-places", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "#7a2048", "circle-radius": 22, "circle-blur": 0.56, "circle-opacity": 0.3, "circle-stroke-width": 0 } })
+          instance.addLayer({ id: "ondo-editorial-points", type: "circle", source: "ondo-editorial-places", paint: { "circle-color": ["case", ["==", ["get", "selected"], true], "#7a2048", "#c24f3e"], "circle-radius": ["case", ["==", ["get", "selected"], true], 7.5, 5.5], "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 1.5, "circle-opacity": 0.98, "circle-blur": 0.02 } })
           instance.addLayer({ id: "ondo-editorial-hit", type: "circle", source: "ondo-editorial-places", paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0 } })
           instance.addLayer({ id: "ondo-editorial-selected-label", type: "symbol", source: "ondo-editorial-places", filter: ["==", ["get", "selected"], true], layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12, "text-offset": [0, 1.55], "text-anchor": "top", "text-allow-overlap": true }, paint: { "text-color": "#171717", "text-halo-color": "rgba(255,255,255,.94)", "text-halo-width": 2 } })
 
@@ -1466,14 +1480,18 @@ export function MapEntryB() {
     }
     if (map.getLayer("ondo-points")) map.setPaintProperty("ondo-points", "circle-color", after19ThemeActive ? "#a7a1af" : "#716d67")
     if (map.getLayer("ondo-editorial-selected-halo")) {
-      map.setPaintProperty("ondo-editorial-selected-halo", "circle-color", after19ThemeActive ? "#ff72b8" : "#171717")
-      map.setPaintProperty("ondo-editorial-selected-halo", "circle-opacity", after19ThemeActive ? 0.24 : 0.12)
+      map.setPaintProperty("ondo-editorial-selected-halo", "circle-color", after19ThemeActive ? "#ff72b8" : "#7a2048")
+      map.setPaintProperty("ondo-editorial-selected-halo", "circle-opacity", after19ThemeActive ? 0.38 : 0.3)
+    }
+    if (map.getLayer("ondo-editorial-temperature-aura")) {
+      map.setPaintProperty("ondo-editorial-temperature-aura", "circle-color", after19ThemeActive ? "#ff3fa4" : "#c04c3d")
+      map.setPaintProperty("ondo-editorial-temperature-aura", "circle-opacity", after19ThemeActive ? 0.42 : 0.28)
     }
     if (map.getLayer("ondo-editorial-points")) {
       map.setPaintProperty("ondo-editorial-points", "circle-color", after19ThemeActive
-        ? ["case", ["==", ["get", "selected"], true], "#ff72b8", "#211d29"]
-        : ["case", ["==", ["get", "selected"], true], "#171717", "#ffffff"])
-      map.setPaintProperty("ondo-editorial-points", "circle-stroke-color", after19ThemeActive ? "#ffd1e8" : "#171717")
+        ? ["case", ["==", ["get", "selected"], true], "#ff72b8", "#ff9142"]
+        : ["case", ["==", ["get", "selected"], true], "#7a2048", "#c24f3e"])
+      map.setPaintProperty("ondo-editorial-points", "circle-stroke-color", after19ThemeActive ? "#fff1f8" : "rgba(255,255,255,.96)")
     }
     if (map.getLayer("ondo-editorial-selected-label")) {
       map.setPaintProperty("ondo-editorial-selected-label", "text-color", after19ThemeActive ? "#fff7fb" : "#171717")
@@ -1643,6 +1661,8 @@ export function MapEntryB() {
         data-source-date={city === "jeju" ? undefined : SOURCE_DATE}
         data-city-record-count={city === "jeju" ? undefined : MAP_VENUES.filter((venue) => venue.cityId === city).length}
         data-editorial-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : undefined}
+        data-editorial-temperature-mode={city === "jeju" ? "editorial-coverage" : undefined}
+        data-editorial-temperature-score={city === "jeju" ? "none" : undefined}
         data-result-count={venues.length}
         data-map-state={mapState}
         data-map-attempt={retryToken + 1}
@@ -1652,6 +1672,7 @@ export function MapEntryB() {
         data-cluster-grammar={city === "jeju" ? undefined : "official-record-count"}
         data-pulse-map-grammar={city === "jeju" ? undefined : "aura-over-official-groups"}
         data-pulse-visual-grammar={city === "jeju" ? undefined : "aura-scale-selection-label"}
+        data-temperature-visual-grammar={city === "jeju" ? "uniform-editorial-aura-selection-label" : "scored-aura-scale-selection-label"}
         data-pulse-motion={city === "jeju" ? undefined : "one-shot-bloom-reduced-safe"}
         data-selected-pulse-grammar={city === "jeju" ? undefined : "one-shot-halo-place-capsule"}
         data-curated-pulse-count={city === "jeju" ? undefined : curatedPulseVenues.length}
@@ -1701,6 +1722,18 @@ export function MapEntryB() {
         {!editorialOpen && effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{city === "jeju" ? copy.editorialMapLoading : copy.mapLoading}</p> : null}
 
         <div className={styles.mapUtilityCluster} data-testid="ondo-b-map-utility-cluster" data-editorial-open={editorialOpen ? "true" : "false"}>
+          {city === "jeju" && effectiveView === "map" && mapState !== "error" ? (
+            <aside
+              className={`${styles.mapKey} ${styles.editorialTemperatureKey}`}
+              data-testid="ondo-b-map-key"
+              data-editorial-temperature-key="limited"
+              aria-label={`${TEMPERATURE_NAME[locale]} · ${cityPulseStatus("jeju", locale)}`}
+            >
+              <span aria-hidden="true"><i /><i /><i /></span>
+              <b>{TEMPERATURE_NAME[locale]}</b>
+              <small className={styles.srOnly}>{cityPulseStatus("jeju", locale)}</small>
+            </aside>
+          ) : null}
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
             <details
               className={styles.locationMessage}

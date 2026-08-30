@@ -15,6 +15,7 @@ test("JP-MAP-FIRST-001 Korea overview owns Seoul, Busan, and truthful Jeju ancho
   expect(map).toContain("editorialCount: JEJU_EDITORIAL_PLACES.length")
   expect(map).toContain('data-editorial-candidate-count={cityNode.id === "jeju" ? JEJU_EDITORIAL_SEEDS.length - JEJU_EDITORIAL_PLACES.length : undefined}')
   expect(map).toContain('data-signal-state={cityNode.signalState}')
+  expect(map).toContain('data-label-side={cityNode.labelOffset.x < 0 ? "left" : "right"}')
   expect(map).toContain("cityNodes.map")
   expect(map).toContain('<i aria-hidden="true" />')
   expect(map).toContain('data-atlas-pin="true"')
@@ -94,5 +95,20 @@ test("JP-MAP-FIRST-004 only place-page-verified Jeju research becomes an editori
   const map = source("features/ondo/map/map-entry-b.tsx")
   expect(map).toContain("function toEditorialPlaceFeatureCollection")
   expect(map).toContain('instance.addSource("ondo-editorial-places"')
+  expect(map).toContain('signalKind: "verified-editorial"')
+  expect(map).toContain('id: "ondo-editorial-temperature-aura"')
+  expect(map).toContain('data-editorial-temperature-mode={city === "jeju" ? "editorial-coverage" : undefined}')
+  expect(map).toContain('data-editorial-temperature-score={city === "jeju" ? "none" : undefined}')
+  expect(map).toContain('data-editorial-temperature-key="limited"')
   expect(map).toContain('data-editorial-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : undefined}')
+})
+
+test("JP-MAP-FIRST-005 atlas hover never replaces geographic translation", () => {
+  const css = source("features/ondo/map/map-b.module.css")
+  const shell = source("features/ondo/app/ondo-shell.module.css")
+
+  expect(css).toMatch(/\.koreaAtlas \.cityNode:hover,[\s\S]*transform:\s*translate\(-50%, -50%\)/)
+  expect(css).toContain('.cityNode[data-label-side="left"] span')
+  expect(shell).toContain(':not([data-atlas-pin="true"]):hover')
+  expect(shell).toContain('button[data-atlas-pin="true"] { transform: translate(-50%, -50%) !important; }')
 })

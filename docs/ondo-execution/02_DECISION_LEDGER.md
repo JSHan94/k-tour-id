@@ -149,6 +149,14 @@
 - 영향: `REQ-001`, `REQ-002`, `REQ-015`; `FL-001`, `FL-002`, `FL-013`.
 - 재검토 조건: 제주에 검증 가능한 production temperature driver, freshness, confidence와 집계 방법론이 승인된 경우에만 scored state 승격을 검토한다.
 
+#### D-14-A1 · 제주 상세 지도의 editorial temperature layer
+
+- 제주 상세 지도는 서울·부산의 aura·halo·selection label 시각 문법을 재사용하되 의미는 `editorial-coverage`로 한정한다.
+- 좌표와 장소 페이지가 검증된 `JEJU_EDITORIAL_PLACES`만 동일 가중치의 온도 aura로 표시한다. story 수·장소 수·겹침을 인기, 혼잡, 온도 점수로 환산하지 않는다.
+- `score=null`, `level=limited`, `pulseEligible=false`, `officialRecord=false`를 유지하며 숫자·`Hot`·`Peak` 표현을 금지한다.
+- 좌표가 없는 editorial candidate에는 임의 좌표를 부여하지 않으며 지도에 렌더링하지 않는다.
+- light·After 19 모두 같은 geometry와 hit target을 유지하고 색·halo만 각 테마에 맞게 전환한다.
+
 ## 3. 충돌 해소 표
 
 | 충돌 | 승인된 해소 |

@@ -358,15 +358,15 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .stage[data-variant="B"] button:not(:disabled) {
+  .stage[data-variant="B"] button:not(:disabled):not([data-atlas-pin="true"]) {
     cursor: pointer;
     transition: filter 120ms ease, transform 120ms ease;
   }
-  .stage[data-variant="B"] button:not(:disabled):hover {
+  .stage[data-variant="B"] button:not(:disabled):not([data-atlas-pin="true"]):hover {
     filter: brightness(.97);
     transform: translateY(-1px);
   }
-  .stage[data-variant="B"] button:not(:disabled):active {
+  .stage[data-variant="B"] button:not(:disabled):not([data-atlas-pin="true"]):active {
     filter: brightness(.8);
     transform: translateY(1px) scale(.985);
   }
@@ -382,8 +382,9 @@
   .nav button, .nav button::after, .navIcon, .toast { transition: none; }
   .navActive { animation: none; }
   .stage[data-variant="B"] button { transition: none !important; }
-  .stage[data-variant="B"] button:hover,
-  .stage[data-variant="B"] button:active { transform: none !important; }
+  .stage[data-variant="B"] button:not([data-atlas-pin="true"]):hover,
+  .stage[data-variant="B"] button:not([data-atlas-pin="true"]):active { transform: none !important; }
+  .stage[data-variant="B"] button[data-atlas-pin="true"] { transform: translate(-50%, -50%) !important; }
 }
 
 /* A desktop app gets desktop navigation. The rail owns a quiet, fixed lane;
