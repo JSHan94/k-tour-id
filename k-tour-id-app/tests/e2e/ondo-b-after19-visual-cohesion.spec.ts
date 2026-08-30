@@ -87,6 +87,24 @@ test.describe("After 19 visual cohesion", () => {
     })
   }
 
+  test("selected Seoul place stays on one night surface instead of leaking its daytime identity card", async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await seedB(page, { locale: "en", session: ACTIVE_SESSION })
+    await page.goto("/?city=seoul&view=map&venueId=mois-02d77be9fc4b43fbb360", { waitUntil: "domcontentloaded" })
+    const root = page.getByTestId("ondo-b-map-entry")
+    await expect(root).toHaveAttribute("data-after19-active", "true")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    const peek = page.getByTestId("canonical-place-peek")
+    const identity = peek.getByTestId("canonical-place-identity-stage")
+    await expect(peek).toBeVisible()
+    await expectDarkSurface(peek)
+    await expectDarkSurface(identity)
+    await expect(identity.getByRole("heading")).toHaveCSS("color", "rgb(255, 249, 252)")
+    await expect(peek.getByTestId("canonical-place-source-summary").locator("summary small")).toHaveCSS("color", "rgb(170, 166, 176)")
+    expect(await peek.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+    await page.screenshot({ path: testInfo.outputPath("after19-place-peek-phone.png"), animations: "disabled" })
+  })
+
   for (const viewport of [
     { label: "compact-phone", width: 320, height: 720 },
     { label: "phone", width: 390, height: 844 },
