@@ -57,8 +57,9 @@ const COPY = {
     localSignal: "Add a Local Signal",
     localSignalPosted: "Update Local Signal on this device",
     localSignalBoundary: "Choose a quick observation and optional photo in this open, device-local flow. Only saved selections and time enter history; the photo is discarded.",
-    demoOffer: "See ONDO meal benefit",
-    demoOfferBody: "See an ONDO meal benefit for this place.",
+    demoOffer: "K-Tour ID benefit",
+    demoOfferBody: "₩22,000 · save ₩3,000",
+    demoOfferPrice: "₩19,000",
     close: "Close place",
     back: "Back to place summary",
     saveFailed: "This device could not save the place. The selected place remains open.",
@@ -125,8 +126,9 @@ const COPY = {
     localSignal: "로컬 시그널 남기기",
     localSignalPosted: "이 기기의 로컬 시그널 업데이트",
     localSignalBoundary: "이 기기에서 열린 흐름에 짧은 관찰과 선택 사진을 더하세요. 선택한 관찰과 시각만 기록에 남고 사진은 폐기됩니다.",
-    demoOffer: "ONDO 식사 혜택 보기",
-    demoOfferBody: "이 장소에서 쓸 수 있는 ONDO 식사 혜택을 확인하세요.",
+    demoOffer: "K-Tour ID 혜택",
+    demoOfferBody: "₩22,000 · ₩3,000 혜택",
+    demoOfferPrice: "₩19,000",
     close: "장소 닫기",
     back: "장소 요약으로",
     saveFailed: "이 기기에 장소를 저장하지 못했어요. 선택한 장소 화면은 그대로 유지됩니다.",
@@ -193,8 +195,9 @@ const COPY = {
     localSignal: "ローカルシグナルを追加",
     localSignalPosted: "この端末のローカルシグナルを更新",
     localSignalBoundary: "この端末で開いている操作に短い観察と任意の写真を加えます。選んだ内容と時刻だけが履歴に残り、写真は破棄されます。",
-    demoOffer: "ONDOの食事特典を見る",
-    demoOfferBody: "この場所で使えるONDOの食事特典を確認できます。",
+    demoOffer: "K-Tour ID特典",
+    demoOfferBody: "₩22,000・₩3,000お得",
+    demoOfferPrice: "₩19,000",
     close: "場所を閉じる",
     back: "場所の概要に戻る",
     saveFailed: "この端末に場所を保存できませんでした。選択中の場所は開いたままです。",
@@ -698,6 +701,7 @@ export function CanonicalPlaceOverlay() {
             <button type="button" onClick={() => actions.openMealBenefitFromPlace(currentVenueId)} data-testid="canonical-meal-benefit-open">
               <WalletCards size={18} aria-hidden="true" />
               <span><strong>{copy.demoOffer}</strong><small>{copy.demoOfferBody}</small></span>
+              <b className={styles.offerPrice}>{copy.demoOfferPrice}</b>
               <ChevronRight size={17} aria-hidden="true" />
             </button>
           </section>

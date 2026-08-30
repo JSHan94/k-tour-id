@@ -6,9 +6,12 @@ import { createPortal } from "react-dom"
 import {
   ArrowLeft,
   BadgeCheck,
+  Banknote,
   ChevronRight,
   CircleDollarSign,
   Clock3,
+  Coins,
+  CreditCard,
   Gift,
   Info,
   Link2,
@@ -40,7 +43,7 @@ import {
   type BCheckoutActionReturn,
 } from "../identity-b/action-gate-contract-b"
 import { openSavedBDiscoveryVenue } from "../map/b-discovery-history"
-import { useOndoB, type OndoBCommerceWalletStatus } from "../shared/state/ondo-b-provider"
+import { useOndoB, type OndoBCommerceFundingSource, type OndoBCommerceWalletStatus } from "../shared/state/ondo-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { readQaRuntime } from "../shared/ui/use-qa-controls"
@@ -68,6 +71,79 @@ type QaRuntime = { wallet?: "failure"; payment?: QaPayment; benefit?: QaBenefit;
 const FOCUSABLE = "button:not([disabled]),input:not([disabled]),[href],summary,[tabindex]:not([tabindex='-1'])"
 const NUMBER_LOCALE: Record<Locale, string> = { en: "en-US", ko: "ko-KR", ja: "ja-JP" }
 const TEST_DISPLAY_KRW_PER_OOKRW = 1_000
+const DISPLAY_KRW_PER_USD = 1_350
+
+const FUNDING_COPY = {
+  en: {
+    sheet: "Payment method",
+    title: "How would you like to pay?",
+    body: "Choose how you want to fund this purchase.",
+    selected: "Payment method",
+    change: "Change",
+    chooseAvailable: "Choose an available method",
+    done: "Use this method",
+    ready: "Ready on this device",
+    setup: "Set up Travel Wallet first",
+    provider: "Not connected",
+    balance: "Travel Wallet",
+    balanceBody: "Use your KRW travel balance",
+    bank: "Korean bank",
+    bankBody: "For eligible Korean and resident accounts",
+    card: "Apple Pay or card",
+    cardBody: "A familiar option for visitors",
+    digital: "Digital-dollar wallet",
+    digitalBody: "Convert a supported digital dollar to KRW",
+    unavailable: "A payment provider is not connected for this route yet. Choose Travel Wallet to continue.",
+    technical: "Technical asset details",
+    technicalBody: "The local ledger uses OOKRW internally. A digital-dollar funding route may use USDC or USDT. These identifiers never replace the KRW amount you confirm.",
+  },
+  ko: {
+    sheet: "결제수단",
+    title: "어떻게 결제할까요?",
+    body: "이번 결제에 사용할 자금 경로를 선택하세요.",
+    selected: "결제수단",
+    change: "변경",
+    chooseAvailable: "사용 가능한 수단 선택",
+    done: "이 수단 사용",
+    ready: "이 기기에서 사용 가능",
+    setup: "여행 지갑을 먼저 설정하세요",
+    provider: "연결 안 됨",
+    balance: "여행 지갑",
+    balanceBody: "KRW 여행 잔액 사용",
+    bank: "한국 은행",
+    bankBody: "내국인과 이용 가능한 장기체류 계좌",
+    card: "Apple Pay 또는 카드",
+    cardBody: "방문객에게 익숙한 결제 방식",
+    digital: "디지털 달러 지갑",
+    digitalBody: "지원되는 디지털 달러를 KRW로 전환",
+    unavailable: "이 경로에는 아직 결제 제공자가 연결되지 않았어요. 계속하려면 여행 지갑을 선택하세요.",
+    technical: "기술 자산 상세",
+    technicalBody: "기기 내 원장은 OOKRW를 내부 단위로 사용합니다. 디지털 달러 자금 경로는 USDC 또는 USDT를 사용할 수 있습니다. 이 식별자들은 사용자가 확인하는 KRW 금액을 대신하지 않습니다.",
+  },
+  ja: {
+    sheet: "支払い方法",
+    title: "どの方法で支払いますか？",
+    body: "今回の支払いに使う資金ルートを選択してください。",
+    selected: "支払い方法",
+    change: "変更",
+    chooseAvailable: "利用できる方法を選択",
+    done: "この方法を使う",
+    ready: "この端末で利用可能",
+    setup: "先にトラベルウォレットを設定",
+    provider: "未接続",
+    balance: "トラベルウォレット",
+    balanceBody: "KRWの旅行残高を利用",
+    bank: "韓国の銀行",
+    bankBody: "利用資格のある韓国人・長期滞在者向け",
+    card: "Apple Payまたはカード",
+    cardBody: "旅行者に使い慣れた支払い方法",
+    digital: "デジタルドル・ウォレット",
+    digitalBody: "対応するデジタルドルをKRWへ変換",
+    unavailable: "このルートには決済事業者がまだ接続されていません。続けるにはトラベルウォレットを選択してください。",
+    technical: "技術アセットの詳細",
+    technicalBody: "端末内台帳ではOOKRWを内部単位として使用します。デジタルドルの資金ルートではUSDCまたはUSDTを使用できます。これらの識別子は、利用者が確認するKRW金額に代わるものではありません。",
+  },
+} as const
 
 function formatNumber(value: number, locale: Locale) {
   return new Intl.NumberFormat(NUMBER_LOCALE[locale], { maximumFractionDigits: 0 }).format(value)
@@ -82,17 +158,27 @@ function formatKrw(value: number, locale: Locale) {
   }).format(value)
 }
 
-function formatOokrw(value: number, locale: Locale) {
-  return `${formatNumber(value, locale)} OOKRW`
-}
-
 function formatSignedOokrw(value: number, locale: Locale) {
   const sign = value > 0 ? "+" : value < 0 ? "−" : ""
   return `${sign}${formatNumber(Math.abs(value), locale)} OOKRW`
 }
 
-function formatTestDisplayKrw(value: number, locale: Locale) {
-  return `≈ ${formatKrw(value * TEST_DISPLAY_KRW_PER_OOKRW, locale)}`
+function formatKrwFromSettlementUnits(value: number, locale: Locale) {
+  return formatKrw(value * TEST_DISPLAY_KRW_PER_OOKRW, locale)
+}
+
+function formatUsdFromKrw(value: number, locale: Locale) {
+  return new Intl.NumberFormat(NUMBER_LOCALE[locale], {
+    style: "currency",
+    currency: "USD",
+    currencyDisplay: "narrowSymbol",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value / DISPLAY_KRW_PER_USD).replace(/^\$/, "US$")
+}
+
+function formatUsdFromSettlementUnits(value: number, locale: Locale) {
+  return formatUsdFromKrw(value * TEST_DISPLAY_KRW_PER_OOKRW, locale)
 }
 
 const COPY = {
@@ -102,10 +188,10 @@ const COPY = {
     body: "Your travel balance, meal benefits and receipts — ready when you choose to use them.",
     balance: "Travel balance",
     balanceEmpty: "Set up when you want to use an offer",
-    testAsset: "About this balance",
+    testAsset: "Technical balance details",
     balanceReady: "Ready on this device",
     balanceFailed: "Setup needs another try",
-    balanceEquivalent: "Display only · no money or stablecoin moves",
+    balanceEquivalent: "Estimated in USD",
     connect: "Set up travel wallet",
     connectCompact: "Continue",
     reconnect: "Try setup again",
@@ -130,7 +216,7 @@ const COPY = {
     activityPlace: "Open exact place",
     privacy: "Payment privacy",
     privacyBody: "Only wallet readiness and your benefit choice are used for an offer. Your name, age, identity and address are not shared.",
-    testTruth: "OOKRW is a device-only product balance. It does not move money and is not a stablecoin or on-chain asset.",
+    testTruth: "Amounts are shown to you in KRW and estimated USD. The device ledger uses OOKRW internally. USDC or USDT may appear here only when selected as a funding source. No bank, card, wallet or payment provider is connected yet, so no money or digital asset moves.",
     linkDialog: "Set up travel wallet",
     linkTitle: "Set up your K-Tour ID wallet",
     linkBody: "Keep your travel balance and ONDO meal benefits together for this trip.",
@@ -149,10 +235,10 @@ const COPY = {
     body: "여행 잔액과 식사 혜택, 영수증을 한곳에서 확인하고 원할 때만 사용하세요.",
     balance: "여행 잔액",
     balanceEmpty: "오퍼를 사용할 때 설정하세요",
-    testAsset: "이 잔액에 관하여",
+    testAsset: "기술적인 잔액 상세",
     balanceReady: "이 기기에서 사용 가능",
     balanceFailed: "설정을 다시 시도해 주세요",
-    balanceEquivalent: "표시용 · 실제 금액이나 스테이블코인이 이동하지 않음",
+    balanceEquivalent: "USD 예상 금액",
     connect: "여행 지갑 설정",
     connectCompact: "계속",
     reconnect: "설정 다시 시도",
@@ -177,7 +263,7 @@ const COPY = {
     activityPlace: "이 장소 열기",
     privacy: "결제 개인정보",
     privacyBody: "오퍼에는 지갑 준비 상태와 혜택 선택만 사용합니다. 이름·나이·신원·주소는 공유하지 않아요.",
-    testTruth: "OOKRW는 이 기기에서만 작동하는 제품용 잔액입니다. 돈을 이동하지 않으며 스테이블코인이나 온체인 자산이 아닙니다.",
+    testTruth: "금액은 KRW와 예상 USD로 표시합니다. 기기 내 원장은 OOKRW를 내부 단위로 사용하며, USDC나 USDT는 사용자가 자금 출처로 선택한 경우에만 이 상세에서 보여줍니다. 아직 은행·카드·지갑·결제 제공자가 연결되지 않아 실제 금액이나 디지털 자산은 이동하지 않습니다.",
     linkDialog: "여행 지갑 설정",
     linkTitle: "K-Tour ID 지갑 설정",
     linkBody: "이번 여행의 잔액과 ONDO 식사 혜택을 한곳에 모아두세요.",
@@ -196,10 +282,10 @@ const COPY = {
     body: "旅の残高、食事特典、レシートをまとめて確認し、使うときだけ準備できます。",
     balance: "旅の残高",
     balanceEmpty: "オファーを使うときに設定",
-    testAsset: "この残高について",
+    testAsset: "残高の技術情報",
     balanceReady: "この端末で利用可能",
     balanceFailed: "設定をもう一度お試しください",
-    balanceEquivalent: "表示専用・実際のお金やステーブルコインは移動しません",
+    balanceEquivalent: "USDでの概算",
     connect: "旅のウォレットを設定",
     connectCompact: "続ける",
     reconnect: "設定をもう一度試す",
@@ -224,7 +310,7 @@ const COPY = {
     activityPlace: "このお店を開く",
     privacy: "決済時のプライバシー",
     privacyBody: "オファーには、ウォレットの準備状況と特典の選択だけを使用します。名前、年齢、本人情報、住所は共有しません。",
-    testTruth: "OOKRWはこの端末だけで動く製品内残高です。実際のお金を動かさず、ステーブルコインやオンチェーン資産ではありません。",
+    testTruth: "金額はKRWとUSDの概算で表示します。端末内台帳ではOOKRWを内部単位として使用し、USDCやUSDTは資金元として選択した場合にだけこの詳細に表示します。銀行、カード、ウォレット、決済事業者はまだ接続されていないため、実際のお金やデジタル資産は移動しません。",
     linkDialog: "旅のウォレットを設定",
     linkTitle: "K-Tour IDウォレットを設定",
     linkBody: "旅の残高とONDOの食事特典を、この旅行のためにまとめて管理できます。",
@@ -242,18 +328,18 @@ const COPY = {
 const OFFER_COPY = {
   en: {
     eyebrow: "ONDO MEAL BENEFIT",
-    title: "A better meal, one tap away",
+    title: "Your meal benefit",
     from: "Meal offer at",
     venueBoundaryPrefix: "ONDO on-device offer at",
     venueBoundarySuffix: "· not offered or accepted by the venue · no wallet/provider contacted · no money moves",
     price: "Meal",
-    testQuote: "Travel balance",
+    testQuote: "Price in USD",
     benefit: "ONDO benefit",
     total: "You pay",
-    asset: "OOKRW",
+    asset: "KRW",
     voucher: "Your meal benefit",
     voucherBody: (minimum: string) => `${minimum} minimum met · valid through Sep 30`,
-    fixedQuote: "Fixed product quote · not an exchange rate or 1:1 value guarantee",
+    fixedQuote: "Display estimate · ₩1,350 = US$1 · provider rate and fees unavailable",
     recommendation: "Recommended for this meal",
     applied: "Applied",
     apply: "Apply benefit",
@@ -266,12 +352,12 @@ const OFFER_COPY = {
     consentTitle: "Pay privately",
     consentBody: "Only wallet readiness and this benefit choice are used. Your name, identity, age, address and original documents stay private.",
     consent: "I agree to use my travel balance for this offer",
-    pay: "Confirm payment",
+    pay: (amount: string) => `Confirm ${amount}`,
     connectToPay: "Set up travel wallet to continue",
     back: "Back to place",
     close: "Close and return to place",
-    processing: "Saving payment…",
-    processingBody: "Saving this result on your device. No venue or payment provider is contacted.",
+    processing: "Saving your choice…",
+    processingBody: "Keeping this meal benefit and balance record on this device.",
     failed: "Payment didn’t complete",
     failedBody: "Nothing was debited and your benefit is still available.",
     insufficient: "Not enough travel balance",
@@ -280,31 +366,31 @@ const OFFER_COPY = {
     gateStorageError: "Could not open the Payment check. The offer and device balance are unchanged — try again.",
     refundStorageError: "Could not save this on-device refund record. The original payment record is unchanged — try again.",
     retry: "Try again",
-    receipt: "Payment saved",
-    receiptBody: "Your ONDO meal benefit is reflected in this device-only receipt. No purchase occurred.",
-    receiptWithoutBenefit: "This device-only receipt was saved without the ONDO benefit. No purchase occurred.",
-    paid: "Payment",
+    receipt: "Saved to Travel Wallet",
+    receiptBody: "Your meal benefit and balance are now together in your Travel Wallet.",
+    receiptWithoutBenefit: "Your balance choice is now saved in your Travel Wallet.",
+    paid: "Amount",
     remaining: "Balance left",
     receiptId: "Receipt",
     originalPayment: "Original payment",
     paymentReceipt: "Payment receipt",
     refundReference: "Refund reference",
     refundedAmount: "Refunded",
-    refund: "Undo payment",
-    support: "Refund & support",
-    supportBody: "This on-device action restores the balance and one-use benefit. No refund is sent.",
-    refunded: "Payment undone",
-    refundedBody: "Your device balance and meal benefit were restored. No refund was sent.",
-    refundedWithoutBenefit: "Your device balance was restored and the unused benefit remains available. No refund was sent.",
+    refund: "Restore balance",
+    support: "Restore this record",
+    supportBody: "Restore the travel balance and one-use benefit saved on this device.",
+    refunded: "Balance restored",
+    refundedBody: "Your travel balance and meal benefit are available again.",
+    refundedWithoutBenefit: "Your travel balance is available again and the unused benefit remains available.",
     return: "Return to place",
     returnToPlace: (venue: string) => `Return to ${venue}`,
     crossVenueReceipt: (receiptVenue: string, returnVenue: string) => `This device already has a receipt for ${receiptVenue}. It is not a transaction at ${returnVenue}.`,
-    testMode: "How it works",
-    demoNote: "Device balance · no external wallet, venue order or money movement",
+    testMode: "Payment details",
+    demoNote: "Saved on this device",
     providerOrder: "Place order",
     providerNotConnected: "Not connected",
     providerNotConnectedBody: "No order was placed with the venue. This receipt records only the ONDO device balance.",
-    testTruth: "OOKRW here is a device-only display balance, not money, a stablecoin or an on-chain asset. The benefit recommendation runs on this device with no AI or provider call. The fixed quote is not an exchange rate, redemption promise or 1:1 guarantee. No wallet, merchant, stablecoin network or payment provider is contacted.",
+    testTruth: "Customer amounts use KRW and estimated USD. The device ledger uses OOKRW internally. If a visitor chooses a digital-dollar funding route, its source may be USDC or USDT. No wallet, merchant, stablecoin network or payment provider is currently connected.",
     settlement: "Balance record",
     operation: "Operation",
     holderChange: "Your balance",
@@ -314,18 +400,18 @@ const OFFER_COPY = {
   },
   ko: {
     eyebrow: "ONDO 식사 혜택",
-    title: "한 번의 탭으로 더 좋은 식사",
+    title: "나의 식사 혜택",
     from: "식사 오퍼 장소",
     venueBoundaryPrefix: "ONDO 기기 내 오퍼 장소",
     venueBoundarySuffix: "· 매장에서 제공하거나 접수하지 않음 · 지갑·공급자 연결 없음 · 돈 이동 없음",
     price: "식사",
-    testQuote: "여행 잔액",
+    testQuote: "USD 예상 금액",
     benefit: "ONDO 혜택",
     total: "결제 금액",
-    asset: "OOKRW",
+    asset: "KRW",
     voucher: "나의 식사 혜택",
     voucherBody: (minimum: string) => `${minimum} 최소 금액 충족 · 9월 30일까지`,
-    fixedQuote: "제품용 고정 견적 · 환율이나 1:1 가치 보장이 아님",
+    fixedQuote: "표시용 예상값 · ₩1,350 = US$1 · 실제 환율과 수수료는 제공자 연결 후 확인",
     recommendation: "이번 식사 추천 혜택",
     applied: "적용됨",
     apply: "혜택 적용",
@@ -338,12 +424,12 @@ const OFFER_COPY = {
     consentTitle: "개인정보를 지키는 결제",
     consentBody: "지갑 준비 상태와 이 혜택 선택만 사용합니다. 이름·신원·나이·주소·원본 문서는 비공개로 유지돼요.",
     consent: "이 오퍼에 여행 잔액을 사용하는 데 동의합니다",
-    pay: "결제 확인",
+    pay: (amount: string) => `${amount} 확인`,
     connectToPay: "여행 지갑을 설정하고 계속",
     back: "장소로 돌아가기",
     close: "닫고 장소로 돌아가기",
-    processing: "결제를 저장하는 중…",
-    processingBody: "이 기기에 결과를 저장합니다. 매장이나 결제 공급자에는 연결하지 않아요.",
+    processing: "선택을 저장하는 중…",
+    processingBody: "식사 혜택과 잔액 기록을 이 기기에 보관하고 있어요.",
     failed: "결제를 완료하지 못했어요",
     failedBody: "차감된 잔액은 없고 혜택도 그대로 사용할 수 있어요.",
     insufficient: "여행 잔액이 부족해요",
@@ -352,31 +438,31 @@ const OFFER_COPY = {
     gateStorageError: "결제 확인을 열지 못했어요. 오퍼와 기기 내 잔액은 그대로입니다. 다시 시도하세요.",
     refundStorageError: "이 기기에 환불 기록을 저장하지 못했어요. 원 결제 기록은 그대로입니다. 다시 시도하세요.",
     retry: "다시 시도",
-    receipt: "결제 저장 완료",
-    receiptBody: "이 기기의 영수증에 ONDO 식사 혜택을 반영했어요. 실제 구매는 없었습니다.",
-    receiptWithoutBenefit: "ONDO 혜택 없이 이 기기에 영수증을 저장했어요. 실제 구매는 없었습니다.",
-    paid: "결제",
+    receipt: "여행 지갑에 저장됨",
+    receiptBody: "식사 혜택과 잔액을 여행 지갑에서 함께 확인할 수 있어요.",
+    receiptWithoutBenefit: "선택한 잔액 기록을 여행 지갑에 저장했어요.",
+    paid: "금액",
     remaining: "남은 잔액",
     receiptId: "영수증",
     originalPayment: "원 결제",
     paymentReceipt: "결제 영수증",
     refundReference: "환불 참조",
     refundedAmount: "환불 금액",
-    refund: "결제 되돌리기",
-    support: "환불과 지원",
-    supportBody: "이 기기 내 동작은 잔액과 1회 혜택을 즉시 복원합니다. 외부로 환불을 보내지 않습니다.",
-    refunded: "결제 되돌리기 완료",
-    refundedBody: "기기 내 잔액과 식사 혜택을 복원했어요. 외부로 환불을 보내지 않았습니다.",
-    refundedWithoutBenefit: "기기 내 잔액을 복원했고 사용하지 않은 혜택은 남아 있어요. 외부로 환불을 보내지 않았습니다.",
+    refund: "잔액 복원",
+    support: "이 기록 복원",
+    supportBody: "이 기기에 저장된 여행 잔액과 1회 혜택을 다시 사용할 수 있게 복원합니다.",
+    refunded: "잔액 복원 완료",
+    refundedBody: "여행 잔액과 식사 혜택을 다시 사용할 수 있어요.",
+    refundedWithoutBenefit: "여행 잔액을 복원했고 사용하지 않은 혜택은 그대로 남아 있어요.",
     return: "장소로 돌아가기",
     returnToPlace: (venue: string) => `장소로 돌아가기 · ${venue}`,
     crossVenueReceipt: (receiptVenue: string, returnVenue: string) => `이 로컬 동작에는 이미 ${receiptVenue} 영수증이 있어요. ${returnVenue} 거래가 아닙니다.`,
-    testMode: "작동 방식",
-    demoNote: "기기 내 잔액 · 외부 지갑·매장 주문·실제 금액 이동 없음",
+    testMode: "결제 상세",
+    demoNote: "이 기기에 저장됨",
     providerOrder: "매장 주문",
     providerNotConnected: "연결되지 않음",
     providerNotConnectedBody: "매장 주문은 접수되지 않았습니다. 이 영수증은 ONDO 기기 내 잔액만 기록합니다.",
-    testTruth: "여기서 OOKRW는 돈·스테이블코인·온체인 자산이 아닌 기기 내 표시 잔액입니다. 혜택 추천은 AI나 외부 공급자 호출 없이 이 기기에서 실행됩니다. 고정 견적은 환율·상환 약속·1:1 보장을 뜻하지 않으며 외부 지갑·가맹점·네트워크·결제 공급자에 연결하지 않습니다.",
+    testTruth: "사용자 금액은 KRW와 예상 USD로 표시하고, 기기 내 원장은 OOKRW를 내부 단위로 사용합니다. 방문자가 디지털 달러 자금 경로를 선택하는 경우 출처는 USDC 또는 USDT일 수 있습니다. 현재 외부 지갑·가맹점·스테이블코인 네트워크·결제 제공자는 연결되어 있지 않습니다.",
     settlement: "잔액 기록",
     operation: "작업 번호",
     holderChange: "내 잔액",
@@ -386,18 +472,18 @@ const OFFER_COPY = {
   },
   ja: {
     eyebrow: "ONDOの食事特典",
-    title: "タップひとつで、食事をもっとお得に",
+    title: "食事特典",
     from: "食事オファー対象店",
     venueBoundaryPrefix: "ONDO端末内オファー対象店",
     venueBoundarySuffix: "· お店での提供・受付なし · ウォレット・事業者への接続なし · お金の移動なし",
     price: "食事代",
-    testQuote: "旅の残高",
+    testQuote: "USDでの概算",
     benefit: "ONDO特典",
     total: "使用する残高",
-    asset: "OOKRW",
+    asset: "KRW",
     voucher: "食事特典",
     voucherBody: (minimum: string) => `最低金額${minimum}を達成 · 9月30日まで有効`,
-    fixedQuote: "端末内の固定換算 · 為替レートでも1:1の価値保証でもありません",
+    fixedQuote: "表示用の概算・₩1,350 = US$1・実際のレートと手数料は事業者接続後に確認",
     recommendation: "この食事におすすめ",
     applied: "適用済み",
     apply: "特典を適用",
@@ -410,12 +496,12 @@ const OFFER_COPY = {
     consentTitle: "必要な情報だけで支払いを確認",
     consentBody: "使うのはウォレットの準備状況とこの特典の選択だけです。名前、本人情報、年齢、住所、元の書類は非公開のままです。",
     consent: "このオファーに旅の残高を使うことに同意します",
-    pay: "支払いを確認",
+    pay: (amount: string) => `${amount}を確認`,
     connectToPay: "旅のウォレットを設定して続ける",
     back: "お店の画面に戻る",
     close: "閉じてお店の画面に戻る",
-    processing: "支払いを保存しています…",
-    processingBody: "この端末に結果を保存します。お店や決済事業者には接続しません。",
+    processing: "選択を保存しています…",
+    processingBody: "食事特典と残高記録をこの端末に保存しています。",
     failed: "支払いを完了できませんでした",
     failedBody: "残高は引かれておらず、特典も引き続き利用できます。",
     insufficient: "旅の残高が不足しています",
@@ -424,31 +510,31 @@ const OFFER_COPY = {
     gateStorageError: "支払い確認を開けませんでした。オファーと端末内残高は変わっていません。もう一度お試しください。",
     refundStorageError: "この端末に返金記録を保存できませんでした。元の支払い記録は変わっていません。もう一度お試しください。",
     retry: "もう一度試す",
-    receipt: "支払いを保存しました",
-    receiptBody: "この端末のレシートに食事特典を反映しました。実際の購入は発生していません。",
-    receiptWithoutBenefit: "ONDO特典なしでこの端末にレシートを保存しました。実際の購入は発生していません。",
-    paid: "支払い",
+    receipt: "トラベルウォレットに保存",
+    receiptBody: "食事特典と残高をトラベルウォレットでまとめて確認できます。",
+    receiptWithoutBenefit: "選択した残高記録をトラベルウォレットに保存しました。",
+    paid: "金額",
     remaining: "残りの残高",
     receiptId: "レシート番号",
     originalPayment: "元の支払い記録",
     paymentReceipt: "決済レシート",
     refundReference: "返金参照番号",
     refundedAmount: "戻した残高",
-    refund: "支払いを取り消す",
-    support: "返金・サポート",
-    supportBody: "この端末内の操作で残高と1回限りの特典を元に戻します。外部への返金は送信しません。",
-    refunded: "支払いを取り消しました",
-    refundedBody: "端末内残高と食事特典を元に戻しました。外部への返金は送信していません。",
-    refundedWithoutBenefit: "端末内残高を元に戻しました。未使用の食事特典はそのまま利用できます。外部への返金は送信していません。",
+    refund: "残高を復元",
+    support: "この記録を復元",
+    supportBody: "この端末に保存した旅の残高と1回限りの特典を、もう一度使える状態に戻します。",
+    refunded: "残高を復元しました",
+    refundedBody: "旅の残高と食事特典をもう一度利用できます。",
+    refundedWithoutBenefit: "旅の残高を復元し、未使用の特典はそのまま残っています。",
     return: "同じお店の画面に戻る",
     returnToPlace: (venue: string) => `${venue}に戻る`,
     crossVenueReceipt: (receiptVenue: string, returnVenue: string) => `このローカル操作には${receiptVenue}のレシートがあります。${returnVenue}の取引ではありません。`,
-    testMode: "仕組みについて",
-    demoNote: "端末内残高・外部ウォレット、店舗注文、実際のお金の移動なし",
+    testMode: "決済の詳細",
+    demoNote: "この端末に保存",
     providerOrder: "店舗への注文",
     providerNotConnected: "未接続",
     providerNotConnectedBody: "店舗への注文は送信されていません。このレシートはONDOの端末内残高だけを記録します。",
-    testTruth: "ここでのOOKRWは、お金・ステーブルコイン・オンチェーン資産ではなく、端末内だけの表示残高です。特典のおすすめはAIや外部サービスを呼び出さず、この端末内で判定します。固定換算は為替レート、償還の約束、1:1の価値保証ではなく、外部ウォレット、加盟店、ネットワーク、決済事業者には接続しません。",
+    testTruth: "利用者向けの金額はKRWとUSDの概算で表示し、端末内台帳ではOOKRWを内部単位として使用します。旅行者がデジタルドルの資金ルートを選ぶ場合、資金元はUSDCまたはUSDTです。現在、外部ウォレット、加盟店、ステーブルコインネットワーク、決済事業者は接続されていません。",
     settlement: "残高の記録",
     operation: "操作番号",
     holderChange: "自分の残高",
@@ -540,15 +626,74 @@ function WalletConnectSheet({ locale, boundarySeen, onAcknowledge, onClose, onRe
   )
 }
 
-function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, originVenueName, crossVenueReceipt, walletStatus, onConnect, onClose }: { locale: Locale; venueId: string; venueName: string; originVenueId: string; originVenueName: string; crossVenueReceipt: boolean; walletStatus: OndoBCommerceWalletStatus; onConnect(): void; onClose(): void }) {
+function fundingSourceLabel(locale: Locale, source: OndoBCommerceFundingSource) {
+  const copy = FUNDING_COPY[locale]
+  if (source === "krw_bank") return copy.bank
+  if (source === "card_wallet") return copy.card
+  if (source === "digital_dollar") return copy.digital
+  return copy.balance
+}
+
+function FundingSourceSheet({ locale, source, walletReady, onSelect, onClose }: {
+  locale: Locale
+  source: OndoBCommerceFundingSource
+  walletReady: boolean
+  onSelect(source: OndoBCommerceFundingSource): void
+  onClose(): void
+}) {
+  const copy = FUNDING_COPY[locale]
+  const rootRef = useRef<HTMLDivElement>(null)
+  useModalIsolation(true, rootRef)
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => rootRef.current?.querySelector<HTMLElement>("[data-funding-focus]")?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+  const methods = [
+    { id: "travel_balance" as const, Icon: WalletCards, title: copy.balance, body: copy.balanceBody, status: walletReady ? copy.ready : copy.setup },
+    { id: "krw_bank" as const, Icon: Banknote, title: copy.bank, body: copy.bankBody, status: copy.provider },
+    { id: "card_wallet" as const, Icon: CreditCard, title: copy.card, body: copy.cardBody, status: copy.provider },
+    { id: "digital_dollar" as const, Icon: Coins, title: copy.digital, body: copy.digitalBody, status: copy.provider },
+  ]
+  return createPortal(
+    <div className={styles.sheetBackdrop}>
+      <div ref={rootRef} className={`${styles.sheet} ${styles.fundingSheet}`} role="dialog" aria-modal="true" aria-labelledby="funding-source-title" data-testid="funding-source-sheet" data-modal-layer-priority="210" onKeyDown={(event) => trapFocus(event, rootRef.current, onClose)}>
+        <div className={styles.grabber} aria-hidden="true" />
+        <header><span>{copy.sheet}</span><button type="button" data-funding-focus aria-label={COPY[locale].close} onClick={onClose}><X size={20} aria-hidden="true" /></button></header>
+        <div className={styles.fundingSheetBody}>
+          <h2 id="funding-source-title">{copy.title}</h2>
+          <p>{copy.body}</p>
+          <fieldset className={styles.fundingOptions}>
+            <legend className={styles.srOnly}>{copy.sheet}</legend>
+            {methods.map(({ id, Icon, title, body, status }) => (
+              <label key={id} data-selected={source === id} data-connected={id === "travel_balance" && walletReady}>
+                <input type="radio" name="funding-source" value={id} checked={source === id} onChange={() => onSelect(id)} />
+                <span className={styles.fundingIcon}><Icon size={20} aria-hidden="true" /></span>
+                <span><strong>{title}</strong><small>{body}</small></span>
+                <em>{status}</em>
+              </label>
+            ))}
+          </fieldset>
+          {source !== "travel_balance" ? <p className={styles.fundingUnavailable} role="status"><Info size={16} aria-hidden="true" />{copy.unavailable}</p> : null}
+          <details className={styles.truth}><summary>{copy.technical}</summary><p>{copy.technicalBody}</p></details>
+          <button type="button" className={styles.primary} onClick={onClose}>{copy.done}</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
+function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, originVenueName, crossVenueReceipt, walletStatus, fundingSource, onConnect, onOpenFunding, onClose }: { locale: Locale; venueId: string; venueName: string; originVenueId: string; originVenueName: string; crossVenueReceipt: boolean; walletStatus: OndoBCommerceWalletStatus; fundingSource: OndoBCommerceFundingSource; onConnect(): void; onOpenFunding(): void; onClose(): void }) {
   const { state, actions } = useOndoB()
   const copy = OFFER_COPY[locale]
+  const fundingCopy = FUNDING_COPY[locale]
   const rootRef = useRef<HTMLElement>(null)
   const pendingRef = useRef(false)
   const consumedCheckoutRef = useRef<BCheckoutActionReturn | null>(null)
   const preserveReturnToRef = useRef(false)
   const commerce = state.commerceSession
   const [view, setView] = useState<PaymentView>(() => commerce.status === "paid" ? "receipt" : commerce.status === "refunded" ? "refunded" : "review")
+  const previousViewRef = useRef<PaymentView>(view)
   const [consent, setConsent] = useState(false)
   const [benefitQa, setBenefitQa] = useState<QaBenefit | undefined>()
   const [storageError, setStorageError] = useState<"gate" | "payment" | "refund" | null>(null)
@@ -557,6 +702,10 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
   const breakdown = stableCommerceBreakdownB(commerce)
   const debit = stableCommerceQuoteDebitB(commerce)
   const benefitSelected = commerce.voucher === "selected" || commerce.voucher === "consumed"
+  const fundingAvailable = fundingSource === "travel_balance" && walletStatus === "ready"
+  const fundingStatus = fundingSource === "travel_balance"
+    ? walletStatus === "ready" ? fundingCopy.ready : fundingCopy.setup
+    : fundingCopy.provider
   const settlementKind = view === "refunded" ? "REFUND" : "PAYMENT"
   const settlementEntries = commerce.ledger.filter((entry) => entry.kind === settlementKind)
   const holderEntry = settlementEntries.find((entry) => entry.side === "holder")
@@ -579,6 +728,12 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
 
   useEffect(() => {
     rootRef.current?.scrollTo({ top: 0, behavior: "auto" })
+    if (previousViewRef.current === view) return
+    previousViewRef.current = view
+    const frame = window.requestAnimationFrame(() => {
+      rootRef.current?.querySelector<HTMLElement>(`[data-payment-view-focus="${view}"]`)?.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
   }, [view])
   useEffect(() => {
     if (!consent) return
@@ -791,11 +946,16 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
           {benefitPolicy.status === "recommended" ? <>
           <section className={styles.quote} aria-label={copy.total} data-flow8-object="quote">
             <div><span>{copy.price}</span><strong>{formatKrw(STABLE_B_KRW_PRICE, locale)}</strong></div>
-            <div><span>{copy.testQuote}</span><strong>{formatOokrw(STABLE_B_OOKRW_PRICE, locale)}</strong></div>
-            <div className={styles.discount} data-flow8-benefit-delta={benefitSelected ? "applied" : "available"}><span>{copy.benefit}</span><strong>{benefitSelected ? `−${formatOokrw(STABLE_B_VOUCHER_VALUE, locale)}` : copy.available}</strong></div>
-            <div className={styles.quoteTotal}><span>{copy.total}</span><strong>{formatNumber(debit, locale)} <small>{copy.asset}</small></strong></div>
+            <div><span>{copy.testQuote}</span><strong>≈ {formatUsdFromKrw(STABLE_B_KRW_PRICE, locale)}</strong></div>
+            <div className={styles.discount} data-flow8-benefit-delta={benefitSelected ? "applied" : "available"}><span>{copy.benefit}</span><strong>{benefitSelected ? `−${formatKrwFromSettlementUnits(STABLE_B_VOUCHER_VALUE, locale)}` : copy.available}</strong></div>
+            <div className={styles.quoteTotal}><span>{copy.total}</span><strong>{formatKrwFromSettlementUnits(debit, locale)} <small>{copy.asset}</small></strong></div>
           </section>
           <p className={styles.demoNote} data-testid="commerce-device-balance-boundary"><ShieldCheck size={15} aria-hidden="true" />{copy.demoNote}</p>
+
+          <section className={styles.fundingSummary} data-testid="commerce-funding-source" data-funding-source={fundingSource} data-provider-connected={fundingAvailable}>
+            <div><WalletCards size={20} aria-hidden="true" /><span><small>{fundingCopy.selected}</small><strong>{fundingSourceLabel(locale, fundingSource)}</strong><em>{fundingStatus}</em></span></div>
+            <button type="button" onClick={onOpenFunding}>{fundingCopy.change}</button>
+          </section>
 
           <section className={styles.offerBenefit} data-testid="commerce-voucher" data-voucher-state={commerce.voucher} data-benefit-recommendation={commerce.benefitRecommendation}>
             <div className={styles.benefitIcon}><TicketCheck size={22} aria-hidden="true" /></div>
@@ -822,7 +982,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
           </details>
           {storageError === "gate" ? <p className={styles.storageError} data-testid="payment-gate-storage-error" role="alert">{copy.gateStorageError}</p> : null}
           <div className={styles.offerDecision} data-flow8-decision="payment">
-            <button type="button" className={styles.payButton} data-testid="payment-confirm" disabled={walletStatus === "ready" && !consent} onClick={walletStatus === "ready" ? pay : onConnect}><CircleDollarSign size={19} aria-hidden="true" />{walletStatus === "ready" ? copy.pay : copy.connectToPay}</button>
+            <button type="button" className={styles.payButton} data-testid="payment-confirm" disabled={fundingAvailable && !consent} onClick={fundingSource !== "travel_balance" ? onOpenFunding : walletStatus === "ready" ? pay : onConnect}><CircleDollarSign size={19} aria-hidden="true" />{fundingSource !== "travel_balance" ? fundingCopy.chooseAvailable : walletStatus === "ready" ? copy.pay(formatKrwFromSettlementUnits(debit, locale)) : copy.connectToPay}</button>
             <button type="button" className={styles.quietButton} data-testid="payment-cancel" onClick={closeOffer}>{copy.back}</button>
           </div>
           </> : (
@@ -837,11 +997,11 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
       ) : null}
 
       {view === "processing" ? (
-        <div className={styles.paymentStatus} data-testid="payment-processing" aria-live="polite"><LoaderCircle className={styles.spinner} size={36} aria-hidden="true" /><h2>{copy.processing}</h2><p>{copy.processingBody}</p></div>
+        <div className={styles.paymentStatus} data-testid="payment-processing" data-payment-view-focus="processing" tabIndex={-1} aria-live="polite"><LoaderCircle className={styles.spinner} size={36} aria-hidden="true" /><h2>{copy.processing}</h2><p>{copy.processingBody}</p></div>
       ) : null}
 
       {view === "failure" || view === "insufficient" ? (
-        <div className={styles.paymentStatus} data-testid="payment-recovery" data-recovery={view} aria-live="polite">
+        <div className={styles.paymentStatus} data-testid="payment-recovery" data-payment-view-focus={view} data-recovery={view} tabIndex={-1} aria-live="polite">
           <div className={styles.issueMark}>{view === "failure" ? <RefreshCcw size={30} aria-hidden="true" /> : <WalletCards size={30} aria-hidden="true" />}</div>
           <h2>{view === "failure" ? copy.failed : copy.insufficient}</h2>
           {storageError === "payment"
@@ -853,7 +1013,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
       ) : null}
 
       {view === "receipt" || view === "refunded" ? (
-        <div className={styles.receiptWrap} data-testid="payment-receipt" data-refunded={view === "refunded"} data-storage-error={storageError ?? "none"} data-completion-kind={view} data-flow8-object="receipt" aria-live="polite">
+        <div className={styles.receiptWrap} data-testid="payment-receipt" data-payment-view-focus={view} data-refunded={view === "refunded"} data-storage-error={storageError ?? "none"} data-completion-kind={view} data-flow8-object="receipt" tabIndex={-1} aria-live="polite">
           <div className={styles.receiptMark}>{view === "refunded" ? <RotateCcw size={31} aria-hidden="true" /> : <BadgeCheck size={33} aria-hidden="true" />}</div>
           <p className={styles.receiptEyebrow}>{venueName}</p>
           <h2>{view === "refunded" ? copy.refunded : copy.receipt}</h2>
@@ -861,13 +1021,12 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
             ? commerce.voucherApplied ? copy.refundedBody : copy.refundedWithoutBenefit
             : commerce.voucherApplied ? copy.receiptBody : copy.receiptWithoutBenefit}</p>
           <section className={styles.receiptCard}>
-            <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{formatOokrw(commerce.chargedDebit, locale)}</strong></div>
-            {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{formatOokrw(commerce.chargedDebit, locale)}</strong></div> : null}
-            <div><span>{copy.benefit}</span><strong>{formatOokrw(breakdown.benefit, locale)}</strong></div>
-            <div><span>{copy.remaining}</span><strong>{formatOokrw(balance, locale)}</strong></div>
+            <div><span>{view === "refunded" ? copy.originalPayment : copy.paid}</span><strong>{formatKrwFromSettlementUnits(commerce.chargedDebit, locale)}</strong></div>
+            {view === "refunded" ? <div><span>{copy.refundedAmount}</span><strong>{formatKrwFromSettlementUnits(commerce.chargedDebit, locale)}</strong></div> : null}
+            <div><span>{copy.benefit}</span><strong>{formatKrwFromSettlementUnits(breakdown.benefit, locale)}</strong></div>
+            <div><span>{copy.remaining}</span><strong>{formatKrwFromSettlementUnits(balance, locale)}</strong></div>
             <div><span>{view === "refunded" ? copy.paymentReceipt : copy.receiptId}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
             {view === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
-            <div data-testid="commerce-provider-status" data-provider-order={commerce.providerOrder}><span>{copy.providerOrder}</span><strong>{copy.providerNotConnected}</strong></div>
           </section>
           {holderEntry && merchantEntry ? (
             <details className={styles.settlementDetails} data-testid="commerce-settlement-details">
@@ -876,6 +1035,7 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
               <div data-testid="commerce-holder-delta"><span>{copy.holderChange}</span><strong>{formatSignedOokrw(holderEntry.amount, locale)}</strong></div>
               <div data-testid="commerce-merchant-delta"><span>{copy.merchantChange}</span><strong>{formatSignedOokrw(merchantEntry.amount, locale)}</strong></div>
               <div data-testid="commerce-settlement-total"><span>{copy.combinedChange}</span><strong>{formatSignedOokrw(settlementTotal, locale)}</strong></div>
+              <div data-testid="commerce-provider-status" data-provider-order={commerce.providerOrder}><span>{copy.providerOrder}</span><strong>{copy.providerNotConnected}</strong></div>
               <p><ShieldCheck size={15} aria-hidden="true" />{copy.recordedOnly}</p>
             </details>
           ) : null}
@@ -894,8 +1054,10 @@ function CanonicalCommerceOfferB({ locale, venueId, venueName, originVenueId, or
 export function IdWalletCommerceB() {
   const { state, actions } = useOndoB()
   const [linkOpen, setLinkOpen] = useState(false)
+  const [fundingOpen, setFundingOpen] = useState(false)
   const [activityStorageError, setActivityStorageError] = useState(false)
   const linkButtonRef = useRef<HTMLButtonElement>(null)
+  const fundingButtonRef = useRef<HTMLButtonElement>(null)
   const locale = state.locale
   const copy = COPY[locale]
   const walletStatus = state.commerceWalletStatus
@@ -908,11 +1070,22 @@ export function IdWalletCommerceB() {
   const receiptVenueName = receiptVenue ? venueDisplayName(receiptVenue.name.ko, venueLocale) : null
   const hasTerminalReceipt = commerce.status === "paid" || commerce.status === "refunded"
   const crossVenueReceipt = Boolean(hasTerminalReceipt && originVenue && receiptVenue && originVenue.id !== receiptVenue.id)
+  const fundingCopy = FUNDING_COPY[locale]
 
   function closeLink() {
     setLinkOpen(false)
     window.requestAnimationFrame(() => {
       const target = state.commerceOrigin ? document.querySelector<HTMLElement>("[data-testid='payment-confirm']") : linkButtonRef.current
+      target?.focus({ preventScroll: true })
+    })
+  }
+
+  function closeFunding() {
+    setFundingOpen(false)
+    window.requestAnimationFrame(() => {
+      const target = state.commerceOrigin
+        ? document.querySelector<HTMLElement>("[data-testid='commerce-funding-source'] button")
+        : fundingButtonRef.current
       target?.focus({ preventScroll: true })
     })
   }
@@ -929,14 +1102,16 @@ export function IdWalletCommerceB() {
   }
 
   const linkSheet = linkOpen ? <WalletConnectSheet locale={locale} boundarySeen={state.commerceLocalBoundarySeen} onAcknowledge={actions.acknowledgeCommerceLocalBoundary} onClose={closeLink} onReturn={(status) => { actions.setCommerceWalletStatus(status); closeLink() }} /> : null
+  const fundingSheet = fundingOpen ? <FundingSourceSheet locale={locale} source={state.commerceFundingSource} walletReady={walletStatus === "ready"} onSelect={actions.setCommerceFundingSource} onClose={closeFunding} /> : null
 
   if (state.commerceOrigin?.kind === "canonical_place" && originName) {
     const transactionVenue = crossVenueReceipt && receiptVenue && receiptVenueName
       ? { id: receiptVenue.id, name: receiptVenueName }
       : { id: state.commerceOrigin.venueId, name: originName }
     return <>
-      <CanonicalCommerceOfferB locale={locale} venueId={transactionVenue.id} venueName={transactionVenue.name} originVenueId={state.commerceOrigin.venueId} originVenueName={originName} crossVenueReceipt={crossVenueReceipt} walletStatus={walletStatus} onConnect={() => setLinkOpen(true)} onClose={() => actions.returnFromCommerceOrigin()} />
+      <CanonicalCommerceOfferB locale={locale} venueId={transactionVenue.id} venueName={transactionVenue.name} originVenueId={state.commerceOrigin.venueId} originVenueName={originName} crossVenueReceipt={crossVenueReceipt} walletStatus={walletStatus} fundingSource={state.commerceFundingSource} onConnect={() => setLinkOpen(true)} onOpenFunding={() => setFundingOpen(true)} onClose={() => actions.returnFromCommerceOrigin()} />
       {linkSheet}
+      {fundingSheet}
     </>
   }
 
@@ -947,8 +1122,8 @@ export function IdWalletCommerceB() {
       <section className={styles.balanceCard} data-testid="wallet-balance" data-flow8-object="wallet" data-wallet-state={walletStatus}>
         <div className={styles.balanceTop}><span>{copy.balance}</span>{walletStatus !== "disconnected" ? <small data-status={walletStatus}>{walletStatus === "ready" ? copy.balanceReady : copy.balanceFailed}</small> : null}</div>
         <div className={styles.balanceAmount}>
-          <strong data-testid="wallet-display-equivalent">{walletStatus === "ready" ? formatTestDisplayKrw(balance, locale) : "—"}</strong>
-          <span data-testid="wallet-test-balance">{walletStatus === "ready" ? formatOokrw(balance, locale) : copy.balanceEmpty}</span>
+          <strong data-testid="wallet-display-equivalent">{walletStatus === "ready" ? formatKrwFromSettlementUnits(balance, locale) : "—"}</strong>
+          <span data-testid="wallet-test-balance">{walletStatus === "ready" ? `≈ ${formatUsdFromSettlementUnits(balance, locale)}` : copy.balanceEmpty}</span>
         </div>
         <div className={styles.balanceFooter}>
           {walletStatus === "ready" ? <p>{copy.balanceEquivalent}</p> : null}
@@ -963,15 +1138,24 @@ export function IdWalletCommerceB() {
       <div className={styles.dashboardGrid}>
         <section className={styles.benefitCard} data-testid="wallet-benefit">
           <div className={styles.cardHeading}><Gift size={20} aria-hidden="true" /><span>{copy.benefits}</span><small>{commerce.status === "paid" && commerce.voucherApplied ? copy.benefitUsed : copy.benefitState}</small></div>
-          <h3>{copy.benefitTitle(formatTestDisplayKrw(STABLE_B_VOUCHER_VALUE, locale))}</h3><p>{copy.benefitBody}</p>
+          <h3>{copy.benefitTitle(formatKrwFromSettlementUnits(STABLE_B_VOUCHER_VALUE, locale))}</h3><p>{copy.benefitBody}</p>
           <button type="button" onClick={() => actions.setTab("ondo")}><MapPin size={16} aria-hidden="true" />{copy.explore}<ChevronRight size={16} aria-hidden="true" /></button>
+        </section>
+
+        <section className={styles.methodCard} data-testid="wallet-payment-method" data-funding-source={state.commerceFundingSource}>
+          <div className={styles.cardHeading}><CreditCard size={20} aria-hidden="true" /><span>{fundingCopy.selected}</span></div>
+          <h3>{fundingSourceLabel(locale, state.commerceFundingSource)}</h3>
+          <p>{state.commerceFundingSource === "travel_balance"
+            ? walletStatus === "ready" ? fundingCopy.ready : fundingCopy.setup
+            : fundingCopy.provider}</p>
+          <button ref={fundingButtonRef} type="button" onClick={() => setFundingOpen(true)}>{fundingCopy.change}<ChevronRight size={16} aria-hidden="true" /></button>
         </section>
 
         <section className={styles.activityCard} data-testid="wallet-activity">
           <div className={styles.cardHeading}><Clock3 size={20} aria-hidden="true" /><span>{copy.activity}</span></div>
           {commerce.status === "paid" || commerce.status === "refunded" ? (
             <details className={styles.activityReceipt} data-testid="wallet-activity-receipt">
-              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? `${copy.refundedActivity} ${formatOokrw(commerce.chargedDebit, locale)}` : `${copy.paidActivity} ${formatOokrw(commerce.chargedDebit, locale)}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
+              <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? `${copy.refundedActivity} ${formatKrwFromSettlementUnits(commerce.chargedDebit, locale)}` : `${copy.paidActivity} ${formatKrwFromSettlementUnits(commerce.chargedDebit, locale)}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
               <div><span>{commerce.status === "refunded" ? copy.originalPayment : copy.activityReceipt}</span><code>{STABLE_B_RECEIPT_ID}</code></div>
               {commerce.status === "refunded" ? <div><span>{copy.refundReference}</span><code>{STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
               {commerce.status === "paid" ? <button type="button" data-testid="wallet-activity-refund" onClick={refundFromActivity}><RotateCcw size={16} aria-hidden="true" />{OFFER_COPY[locale].refund}</button> : null}
@@ -985,6 +1169,7 @@ export function IdWalletCommerceB() {
       <details className={styles.privacy} data-testid="wallet-privacy"><summary><ShieldCheck size={17} aria-hidden="true" />{copy.privacy}</summary><p>{copy.privacyBody}</p><p><Info size={15} aria-hidden="true" />{copy.testTruth}</p></details>
 
       {linkSheet}
+      {fundingSheet}
     </section>
   )
 }

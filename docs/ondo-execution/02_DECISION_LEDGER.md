@@ -129,6 +129,26 @@
 - 영향: 19개 REQ 전체와 release gate.
 - 재검토 조건: 시간·환경·외부 의존성이 확대되면 이름을 올리는 대신 범위를 줄인다.
 
+### D-13 · 소비자 통화 표기와 frontend payment demo 경계
+
+- 상태: `Approved`
+- 결정: Hero wallet·장소 오퍼·checkout·receipt의 기본 소비자 통화는 `KRW`로 표시하고, `USD`는 출처·기준·시각을 함께 설명할 수 있는 보조 예상값으로만 표시한다. `OOKRW`, `USDC`, `USDT`, network, settlement 단위는 정상 화면에서 숨기고 사용자가 여는 `결제 상세` 또는 Labs에서만 공개한다. 다음 릴리스는 실제 돈이 움직이는 MVP가 아니라 정직하고 완성도 높은 frontend product demo다.
+- 보존: `OOKRW` 내부 fixture ledger와 `USDC`·`USDT` Labs 자산 분리, Payment KYC 독립성, 실패 시 자산 불변, exact `returnTo`, provider 미연결 truth는 유지한다.
+- 배제: 미연결 provider를 실제 은행·카드·Apple Pay·VASP·가맹점 결제로 표현, 실제 환율·수수료·승인·정산·환불을 발명, 기술 ticker를 소비자 결제수단처럼 전면 노출.
+- UX 경계: `simulation`, `test`, `preview` 같은 제작자 언어는 정상 소비자 화면에 쓰지 않는다. 대신 `이 기기에 저장됨`, `결제 제공자 연결 안 됨`, `실제 금액 이동 없음`처럼 사용자가 알아야 할 상태를 `결제 상세`에서 직접 설명한다.
+- 영향: `REQ-006`, `REQ-011`; `FL-004`, `FL-017`, `FL-018`; `PAY-*`, `PKY-*`, `WAL-*`, `BRG-*`.
+- 재검토 조건: 실제 provider 계약·sandbox·quote source·merchant acceptance·refund lifecycle이 확정된 경우 live payment amendment로 승격한다.
+
+### D-14 · Korea intro의 공통 온도 비콘과 제주 truth 경계
+
+- 상태: `Approved`
+- 결정: Korea intro는 별도 도시 카드 flow를 만들지 않고 기존 지도 선택 구조 안에서 서울·부산·제주를 하나의 `CityTemperatureBeacon` 문법으로 표시한다. 좌표에는 44px 비콘만 두고 도시명은 짧은 인접 라벨로 표시해 지형을 가리지 않는다.
+- 시각 상태: 서울은 `active` 이중 halo, 부산은 `growing` 단일 halo, 제주는 `limited` 점선 halo다. 색 외에도 ring 수와 선 형태로 상태를 구분한다.
+- 데이터 경계: 제주 editorial 장소 수·후보 수·story 수를 온도 점수로 환산하지 않는다. production temperature evidence가 없으므로 제주 `score=null`을 유지하고 숫자·`Hot`·실시간 혼잡 표현을 금지한다.
+- 보존: 서울·부산 LOCALDATA 기록과 제주 VISITKOREA editorial place의 source domain, 기존 city→map→place→story/save/directions flow, KO/EN/JA, Back focus restoration을 유지한다.
+- 영향: `REQ-001`, `REQ-002`, `REQ-015`; `FL-001`, `FL-002`, `FL-013`.
+- 재검토 조건: 제주에 검증 가능한 production temperature driver, freshness, confidence와 집계 방법론이 승인된 경우에만 scored state 승격을 검토한다.
+
 ## 3. 충돌 해소 표
 
 | 충돌 | 승인된 해소 |
@@ -164,4 +184,4 @@ Approved by:
 Implemented by commit:
 ```
 
-현재 amendment: `없음`.
+현재 amendment: `D-13`은 `REQ-006`·`REQ-011`의 소비자 표시와 frontend demo 경계를, `D-14`는 `REQ-001`·`REQ-002`·`REQ-015`의 intro 지도 표현을 확장한다. 기존 asset·settlement·source truth 비범위는 유지한다.

@@ -141,6 +141,16 @@ Labs fixture는 `LABS · SIMULATED`와 대상 네트워크를 분리해 표시�
 
 미판정 요구는 허용하지 않는다. 목표 등급이 바뀌면 [결정 원장](./02_DECISION_LEDGER.md)에 새 결정과 영향을 기록한다.
 
+### REQ-011-A1 · 소비자 통화·funding presentation 확장
+
+- 목표는 실제 돈이 움직이는 MVP가 아니라 정직하고 완성도 높은 frontend product demo다.
+- wallet·장소 오퍼·checkout·receipt의 주 금액은 `KRW`, 보조 예상 금액은 `USD`로 표현한다.
+- `OOKRW`, `USDC`, `USDT`, network, settlement ledger는 기본 화면에 노출하지 않고 사용자가 직접 여는 `결제 상세` 또는 Labs에 둔다.
+- `OOKRW` fixture ledger는 기존 `REQ-011`의 내부 상태·실패·중복방지 검증을 위해 보존하며 KRW나 상환 가능한 원화로 재정의하지 않는다.
+- 은행·Apple Pay·카드·USDC·USDT funding UI는 provider availability와 분리한다. provider 미연결 상태에서 실제 입금·환전·승인·정산·환불 성공을 표시하지 않는다.
+- 소비자 화면은 `simulation`, `test`, `preview` 대신 `이 기기에 저장됨`, `결제 제공자 연결 안 됨`, `실제 금액 이동 없음`처럼 사용자가 알아야 할 사건을 설명한다.
+- Payment KYC 독립성, action별 JIT gate, 실패 시 잔액·혜택 불변, 정확한 장소·지도·CTA 복귀를 유지한다.
+
 ## 7. 핵심 화면
 
 | Surface ID | 화면 | 필수 내용 |

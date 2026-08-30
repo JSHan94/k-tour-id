@@ -15,13 +15,15 @@ test("B-EXPLORE-V3-001 Korea overview is a geographic living atlas rather than a
   expect(map).toContain('regionRole: "official-directory"')
   expect(map).toContain('regionRole: "editorial-collection"')
   expect(map).toContain("officialCount: 200")
-  expect(map).toContain("editorialCount: 10")
+  expect(map).toContain("editorialCount: JEJU_EDITORIAL_PLACES.length")
+  expect(map).toContain('signalState: "limited"')
   expect(map).toContain("data-region-role={cityNode.regionRole}")
   expect(map).toContain("data-official-count={cityNode.officialCount}")
   expect(map).toContain("data-editorial-count={cityNode.editorialCount}")
   expect(map).toContain('data-atlas-pin="true"')
   expect(map).not.toContain("data-region-kind-label")
-  expect(mapCss).toContain("Nation regions are map pins, not destination cards")
+  expect(mapCss).toContain("Living Thermal Atlas")
+  expect(mapCss).toContain(".koreaAtlas .atlasLandmass")
 })
 
 test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and official-record grammars", () => {

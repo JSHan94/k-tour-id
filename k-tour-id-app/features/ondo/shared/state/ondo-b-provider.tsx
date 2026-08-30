@@ -78,6 +78,7 @@ export type OndoBLocalSignalDraft = {
 }
 export type OndoBCommerceOrigin = { kind: "canonical_place"; venueId: string }
 export type OndoBCommerceWalletStatus = "disconnected" | "failed" | "ready"
+export type OndoBCommerceFundingSource = "travel_balance" | "krw_bank" | "card_wallet" | "digital_dollar"
 export type OndoBCommerceReceipt = {
   receiptId: string
   refundReceiptId: string | null
@@ -114,6 +115,7 @@ export type OndoBState = {
   commerceLocalBoundarySeen: boolean
   commerceOrigin: OndoBCommerceOrigin | null
   commerceWalletStatus: OndoBCommerceWalletStatus
+  commerceFundingSource: OndoBCommerceFundingSource
   commerceSession: StableCommerceBState
   commerceReceiptVenueId: string | null
   commerceReceipts: OndoBCommerceReceipt[]
@@ -154,6 +156,7 @@ export type OndoBActions = {
   completeIdentitySetup(method: OndoBIdentityMethod): void
   acknowledgeCommerceLocalBoundary(): boolean
   setCommerceWalletStatus(status: OndoBCommerceWalletStatus): void
+  setCommerceFundingSource(source: OndoBCommerceFundingSource): boolean
   dispatchCommerce(action: StableCommerceBAction): boolean
   recordCommerceReceipt(receipt: OndoBCommerceReceipt): boolean
   openMealBenefitFromPlace(venueId: string): boolean
@@ -177,6 +180,7 @@ type OndoBDeviceState = {
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB>
   localInteractionBoundarySeen: boolean
   commerceLocalBoundarySeen: boolean
+  commerceFundingSource: OndoBCommerceFundingSource
   commerceReceipts: OndoBCommerceReceipt[]
 }
 
@@ -188,6 +192,7 @@ const ONDO_B_PERSONAS = new Set(ONDO_B_PERSONA_IDS)
 const B_LOCAL_SIGNAL_TAGS = new Set<OndoBLocalSignalTag>(["calm_now", "lively_now", "quick_stop", "welcoming"])
 const B_LOCAL_SIGNAL_NOTE_MAX_LENGTH = 240
 const B_COMMERCE_RECEIPT_LIMIT = 8
+const B_COMMERCE_FUNDING_SOURCES = new Set<OndoBCommerceFundingSource>(["travel_balance", "krw_bank", "card_wallet", "digital_dollar"])
 
 export function sanitizeCommerceReceipts(value: unknown): OndoBCommerceReceipt[] {
   if (!Array.isArray(value)) return []
@@ -303,6 +308,7 @@ function initialState(): OndoBState {
     commerceLocalBoundarySeen: false,
     commerceOrigin: null,
     commerceWalletStatus: "disconnected",
+    commerceFundingSource: "travel_balance",
     commerceSession: createStableCommerceBState(),
     commerceReceiptVenueId: null,
     commerceReceipts: [],
@@ -368,6 +374,9 @@ function restoreBDeviceState(value: unknown): OndoBDeviceState {
     localPulseEvidenceByVenue: boundedLocalPulseEvidenceByVenue,
     localInteractionBoundarySeen: record.localInteractionBoundarySeen === true,
     commerceLocalBoundarySeen: record.commerceLocalBoundarySeen === true,
+    commerceFundingSource: B_COMMERCE_FUNDING_SOURCES.has(record.commerceFundingSource as OndoBCommerceFundingSource)
+      ? record.commerceFundingSource as OndoBCommerceFundingSource
+      : "travel_balance",
     commerceReceipts,
   }
 }
@@ -388,6 +397,7 @@ function deviceState(state: OndoBState): OndoBDeviceState {
     localPulseEvidenceByVenue: state.localPulseEvidenceByVenue,
     localInteractionBoundarySeen: state.localInteractionBoundarySeen,
     commerceLocalBoundarySeen: state.commerceLocalBoundarySeen,
+    commerceFundingSource: state.commerceFundingSource,
     commerceReceipts: state.commerceReceipts,
   })
 }
@@ -751,6 +761,9 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     })),
     acknowledgeCommerceLocalBoundary: () => commit((current) => ({ ...current, commerceLocalBoundarySeen: true })),
     setCommerceWalletStatus: (commerceWalletStatus) => commitEphemeral((current) => ({ ...current, commerceWalletStatus })),
+    setCommerceFundingSource: (commerceFundingSource) => B_COMMERCE_FUNDING_SOURCES.has(commerceFundingSource)
+      ? commit((current) => ({ ...current, commerceFundingSource }))
+      : false,
     dispatchCommerce: (action) => {
       const current = stateRef.current
       const commerceSession = stableCommerceBReducer(current.commerceSession, action)
@@ -882,6 +895,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         commerceLocalBoundarySeen: false,
         commerceOrigin: null,
         commerceWalletStatus: "disconnected",
+        commerceFundingSource: "travel_balance",
         commerceSession: createStableCommerceBState(),
         commerceReceiptVenueId: null,
         commerceReceipts: [],

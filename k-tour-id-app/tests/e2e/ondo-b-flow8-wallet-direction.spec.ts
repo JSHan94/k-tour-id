@@ -281,8 +281,8 @@ test("FLOW8-VIS-001B 320 and 390 keep disconnected and ready wallet decisions in
     await setup.click()
     await connectWallet(page, "en")
     await expect(wallet).toHaveAttribute("data-wallet-state", "ready")
-    await expect(amount).toHaveText("≈ ₩60,000")
-    await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("60 OOKRW")
+    await expect(amount).toHaveText("₩60,000")
+    await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("≈ US$44.44")
     const readyStyle = await wallet.evaluate((element) => getComputedStyle(element).backgroundImage)
     expect(readyStyle).toContain("rgb(16, 16, 18)")
     const readyAction = wallet.getByRole("button", { name: "Reset travel wallet", exact: true })
@@ -293,6 +293,58 @@ test("FLOW8-VIS-001B 320 and 390 keep disconnected and ready wallet decisions in
     await expectNoHorizontalOverflow(wallet)
     await context.close()
   }
+})
+
+test("FLOW8-CURRENCY-002 KRW and USD stay primary while funding rails and technical assets remain honest", async ({ page }) => {
+  mkdirSync(ARTIFACT_DIR, { recursive: true })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seed(page)
+  await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expect(page.getByTestId("nav-id")).toBeVisible()
+  await page.getByTestId("nav-id").click()
+  await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
+  const wallet = page.getByTestId("wallet-balance")
+  await wallet.getByTestId("wallet-link-open").click()
+  await connectWallet(page, "en")
+  await expect(wallet.getByTestId("wallet-display-equivalent")).toHaveText("₩60,000")
+  await expect(wallet.getByTestId("wallet-test-balance")).toHaveText("≈ US$44.44")
+  expect(await page.getByTestId("ondo-b-id-wallet-commerce").innerText()).not.toMatch(/OOKRW|USDC|USDT/)
+
+  const methodCard = page.getByTestId("wallet-payment-method")
+  await methodCard.getByRole("button", { name: "Change", exact: true }).click()
+  const fundingSheet = page.getByTestId("funding-source-sheet")
+  await expect(fundingSheet).toBeVisible()
+  await page.setViewportSize({ width: 320, height: 720 })
+  await expectNoHorizontalOverflow(fundingSheet)
+  await expectControls(fundingSheet)
+  await fundingSheet.screenshot({ path: `${ARTIFACT_DIR}/funding-sheet-320.png`, animations: "disabled", caret: "hide" })
+  expect(await fundingSheet.innerText()).not.toMatch(/OOKRW|USDC|USDT/)
+  await fundingSheet.getByRole("radio", { name: /Digital-dollar wallet/ }).check()
+  await expect(fundingSheet.getByRole("status")).toContainText("payment provider")
+  expect(await fundingSheet.innerText()).not.toMatch(/OOKRW|USDC|USDT/)
+  await fundingSheet.getByText("Technical asset details", { exact: true }).click()
+  await expect(fundingSheet).toContainText("OOKRW")
+  await expect(fundingSheet).toContainText("USDC or USDT")
+  await fundingSheet.getByRole("radio", { name: /Travel Wallet/ }).check()
+  await fundingSheet.getByRole("button", { name: "Use this method", exact: true }).click()
+  await expect(methodCard.getByRole("button", { name: "Change", exact: true })).toBeFocused()
+  await methodCard.screenshot({ path: `${ARTIFACT_DIR}/funding-method-320.png`, animations: "disabled" })
+
+  const { offer } = await navigateToOfferFromExplore(page)
+  await expect(offer.locator('[data-flow8-object="quote"]')).toContainText("₩22,000")
+  await expect(offer.locator('[data-flow8-object="quote"]')).toContainText("US$16.30")
+  await offer.getByTestId("benefit-accept").click()
+  await expect(offer.locator('[data-flow8-object="quote"]')).toContainText("−₩3,000")
+  await expect(offer.locator('[data-flow8-object="quote"]')).toContainText("₩19,000")
+  await expect(offer.getByTestId("payment-confirm")).toContainText("₩19,000")
+  expect(await offer.innerText()).not.toMatch(/OOKRW|USDC|USDT/)
+  await offer.screenshot({ path: `${ARTIFACT_DIR}/checkout-krw-usd-320.png`, animations: "disabled", caret: "hide" })
+  const details = offer.getByTestId("commerce-payment-details")
+  await details.locator("summary").click()
+  await expect(details).toContainText("OOKRW")
+  await expect(details).toContainText("USDC or USDT")
+  await expectNoHorizontalOverflow(offer)
+  await offer.screenshot({ path: `${ARTIFACT_DIR}/checkout-technical-320.png`, animations: "disabled", caret: "hide" })
 })
 
 test("FLOW8-WALLET-002 disconnected, linking, failure, retry, and ready preserve one modal decision", async ({ page }) => {
@@ -637,9 +689,9 @@ test("FLOW8-INDEPENDENCE-009 Account, Person, 19+, Wallet, payment, refund, and 
 
 test("FLOW8-TRUTH-010 every locale moves non-live truth into setup and commerce actions contact no external service", async ({ browser }) => {
   const setupTruth = {
-    en: /ONDO travel balance on this device|does not move money/i,
-    ko: /외부 지갑 연결 없이|돈을 이동하지 않으며/,
-    ja: /外部ウォレットに接続せず|実際のお金を動かさず/,
+    en: /no money or digital asset moves/i,
+    ko: /실제 금액이나 디지털 자산은 이동하지 않습니다/,
+    ja: /実際のお金やデジタル資産は移動しません/,
   } as const
   const providerTruth = {
     en: { label: "Place orderNot connected", body: "No order was placed with the venue" },

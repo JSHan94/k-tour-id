@@ -60,18 +60,18 @@ test.describe("map-first Korea and Jeju integration", () => {
           const pinStyle = getComputedStyle(pin)
           return plotStyle.position === "absolute"
             && pinStyle.position === "absolute"
-            && pinStyle.display === "grid"
-            && Number.parseFloat(pinStyle.width) >= 148
-            && Number.parseFloat(pinStyle.minHeight) >= 52
+            && pinStyle.display === "block"
+            && Number.parseFloat(pinStyle.width) >= 44
+            && Number.parseFloat(pinStyle.minHeight) >= 44
         })
         await page.evaluate(() => document.fonts.ready)
         await expect.poll(() => atlas.locator("[data-city]").evaluateAll((nodes) => nodes.every((node) => (
-          (node as HTMLElement).offsetHeight >= 52
+          (node as HTMLElement).offsetHeight >= 44
             && node.getAnimations().every((animation) => animation.playState !== "running")
         )))).toBe(true)
         await page.waitForTimeout(100)
         await expect.poll(() => atlas.locator("[data-city]").evaluateAll((nodes) => nodes.every((node) => (
-          (node as HTMLElement).offsetHeight >= 52
+          (node as HTMLElement).offsetHeight >= 44
         )))).toBe(true)
         await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveCount(0)
         const atlasBox = await box(atlas)
@@ -140,18 +140,16 @@ test.describe("map-first Korea and Jeju integration", () => {
         await expect(atlas.locator("details")).toHaveCount(0)
         expect(await atlas.evaluate((element) => getComputedStyle(element, "::after").content)).toMatch(/none|normal|^""$/)
         await expect(atlas.locator("[data-city='jeju']")).toHaveAttribute("data-truth-kind", "editorial-region")
+        await expect(atlas.locator("[data-city='jeju']")).toHaveAttribute("data-signal-state", "limited")
+        await expect(atlas.locator("[data-city='jeju']")).toHaveAttribute("data-temperature-score", "none")
         await expect(atlas.locator("[data-city='jeju']")).not.toHaveAttribute("data-official-count", /.+/)
-        await expect(atlas.locator("[data-city] svg.lucide-map-pin")).toHaveCount(3)
+        await expect(atlas.locator("[data-city] svg.lucide-map-pin")).toHaveCount(0)
         await expect(atlas.locator("svg.lucide-sparkles")).toHaveCount(0)
         await expect(atlas).not.toContainText(/\bExplore\b|탐색|探す/)
         for (const city of ["seoul", "busan", "jeju"] as const) {
           const node = atlas.locator(`[data-city='${city}']`)
           await expect(node).not.toContainText(/\d|official|공식|record|기록|active|growing|운영|확장/i)
-          const [wellBox, iconBox] = await Promise.all([box(node.locator("i")), box(node.locator("i svg"))])
-          expect(iconBox.x).toBeGreaterThanOrEqual(wellBox.x)
-          expect(iconBox.y).toBeGreaterThanOrEqual(wellBox.y)
-          expect(iconBox.x + iconBox.width).toBeLessThanOrEqual(wellBox.x + wellBox.width)
-          expect(iconBox.y + iconBox.height).toBeLessThanOrEqual(wellBox.y + wellBox.height)
+          await expect(node.locator("i")).toHaveCount(1)
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1)
 

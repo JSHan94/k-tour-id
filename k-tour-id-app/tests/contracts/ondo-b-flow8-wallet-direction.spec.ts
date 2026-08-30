@@ -36,9 +36,9 @@ test("FLOW8-OBJECT-002 Pass and wallet keep first-frame copy consumer-shaped whi
   const passCss = source(PASS_CSS)
 
   for (const truth of [
-    "does not move money",
-    "not a stablecoin or on-chain asset",
+    "no money or digital asset moves",
     "No provider, credential or live money service is connected",
+    "No bank, card, wallet or payment provider is connected yet",
   ]) expect(`${commerce}\n${pass}`).toContain(truth)
 
   expect(passCss).toContain("--flow8-object-radius")
@@ -73,7 +73,9 @@ test("FLOW8-OFFER-003 quote owns the foreground, benefit shows a visible delta, 
   expect(css).toMatch(/\.discount[\s\S]*color:/)
   expect(commerce).toContain('data-testid="commerce-fixed-quote-boundary"')
   expect(commerce).toContain('data-testid="commerce-payment-details"')
-  expect(commerce).toContain("not an exchange rate or 1:1 value guarantee")
+  expect(commerce).toContain("provider rate and fees unavailable")
+  expect(commerce).toContain("formatKrwFromSettlementUnits")
+  expect(commerce).toContain("formatUsdFromSettlementUnits")
   expect(commerce).toContain("Only wallet readiness and this benefit choice are used.")
   expect(commerce).not.toContain("This local walkthrough uses only wallet-ready and benefit-selected.")
 })
@@ -179,8 +181,8 @@ test("FLOW8-TRUTH-009 Wallet and My activity expose non-live truth plus an exact
 
   expect(commerce).toContain('data-testid="wallet-activity-place"')
   expect(my).toContain('data-testid="my-korea-receipt-place"')
-  expect(commerce).toContain("Payment saved")
-  expect(commerce).toContain("Payment undone")
+  expect(commerce).toContain("Saved to Travel Wallet")
+  expect(commerce).toContain("Balance restored")
   expect(commerce).not.toContain('explore: "Find eligible places"')
   expect(commerce).not.toContain('explore: "대상 장소 찾기"')
   expect(commerce).not.toContain('explore: "対象のお店を探す"')

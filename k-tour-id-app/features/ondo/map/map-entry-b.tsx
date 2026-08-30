@@ -20,7 +20,7 @@ import {
   type PulseFreshnessB,
   type PulseLocalEvidenceB,
 } from "../pulse-b/pulse-model-b"
-import { editorialPlaceById, JEJU_EDITORIAL_PLACES, PULSE_COMPOSITION_DISCLOSURE, PULSE_PRODUCTION_DRIVER_DISCLOSURE, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
+import { editorialPlaceById, JEJU_EDITORIAL_PLACES, JEJU_EDITORIAL_SEEDS, PULSE_COMPOSITION_DISCLOSURE, PULSE_PRODUCTION_DRIVER_DISCLOSURE, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { OndoBrandLockupB } from "../shared/ui/ondo-brand-lockup-b"
@@ -433,6 +433,21 @@ const KOREA_DOTS = (() => {
   return result
 })()
 
+function atlasPoint(longitude: number, latitude: number) {
+  return {
+    x: 26 + ((longitude - DOT_BOUNDS.minLon) / (DOT_BOUNDS.maxLon - DOT_BOUNDS.minLon)) * 248,
+    y: 15 + ((DOT_BOUNDS.maxLat - latitude) / (DOT_BOUNDS.maxLat - DOT_BOUNDS.minLat)) * 320,
+  }
+}
+
+const KOREA_ATLAS_LANDMASS_PATHS = KOREA_OUTLINE_COORDINATES.flatMap((polygon) => polygon.map((ring) => {
+  if (!ring.length) return ""
+  return `${ring.map(([longitude, latitude], index) => {
+    const point = atlasPoint(longitude, latitude)
+    return `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`
+  }).join(" ")} Z`
+})).filter(Boolean)
+
 function resultCount(count: number, locale: OndoBLocale) {
   if (locale === "ko") return `장소 ${count}곳`
   if (locale === "ja") return `${count}か所`
@@ -440,7 +455,7 @@ function resultCount(count: number, locale: OndoBLocale) {
 }
 
 function cityPulseStatus(cityId: CityId, locale: OndoBLocale) {
-  if (cityId === "jeju") return COPY[locale].jejuStatus
+  if (cityId === "jeju") return locale === "ko" ? "온도 신호 수집 중" : locale === "ja" ? "温度シグナルを収集中" : "Temperature signals collecting"
   return PULSE_CITY_STATUS[cityId] === "active" ? COPY[locale].pulseActive : COPY[locale].pulseGrowing
 }
 
@@ -464,36 +479,44 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
   const copy = COPY[locale]
   const cityNodes: Array<{
     id: CityId
+    signalState: "active" | "growing" | "limited"
     regionRole: "official-directory" | "editorial-collection"
     officialCount?: number
     directorySource?: string
     editorialCount?: number
     truthKind?: "editorial-region"
     accessibleTruth: string
+    labelOffset: { x: number; y: number }
     coordinates: { latitude: number; longitude: number; x: number; y: number }
   }> = [
     {
       id: "seoul",
+      signalState: "active",
       regionRole: "official-directory",
       officialCount: 200,
       directorySource: SOURCE_ID,
-      accessibleTruth: resultCount(200, locale),
+      accessibleTruth: cityPulseStatus("seoul", locale),
+      labelOffset: { x: -72, y: -18 },
       coordinates: KOREA_ATLAS_CITY_COORDINATES.seoul,
     },
     {
       id: "busan",
+      signalState: "growing",
       regionRole: "official-directory",
       officialCount: 200,
       directorySource: SOURCE_ID,
-      accessibleTruth: resultCount(200, locale),
+      accessibleTruth: cityPulseStatus("busan", locale),
+      labelOffset: { x: 28, y: -18 },
       coordinates: KOREA_ATLAS_CITY_COORDINATES.busan,
     },
     {
       id: "jeju",
+      signalState: "limited",
       regionRole: "editorial-collection",
-      editorialCount: 10,
+      editorialCount: JEJU_EDITORIAL_PLACES.length,
       truthKind: "editorial-region",
-      accessibleTruth: `${copy.jejuStatus} · ${copy.jejuTruth}`,
+      accessibleTruth: cityPulseStatus("jeju", locale),
+      labelOffset: { x: 28, y: -18 },
       coordinates: KOREA_ATLAS_CITY_COORDINATES.jeju,
     },
   ]
@@ -506,7 +529,8 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
           <h1>{copy.title}</h1>
         </div>
         <div className={styles.atlasPlot} data-testid="ondo-b-atlas-plot">
-          <svg viewBox="0 0 300 350" preserveAspectRatio="none" role="img" aria-label={MAP_UI[locale].atlas}>
+          <svg viewBox="0 0 300 350" preserveAspectRatio="xMidYMid meet" role="img" aria-label={MAP_UI[locale].atlas}>
+            {KOREA_ATLAS_LANDMASS_PATHS.map((path, index) => <path key={`land-${index}`} className={styles.atlasLandmass} d={path} />)}
             <path className={styles.atlasRoute} data-testid="ondo-b-atlas-route" d={atlasRoute} />
             {cityNodes.map(({ id, coordinates }) => <circle key={`stop-${id}`} className={styles.atlasStop} data-atlas-stop={id} cx={coordinates.x} cy={coordinates.y} r="4.5" />)}
             {KOREA_DOTS.map((dot, index) => <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r={index % 5 === 0 ? 2 : 1.65} />)}
@@ -518,22 +542,28 @@ function NationDirectory({ locale, onSelect }: { locale: OndoBLocale; onSelect(c
               className={styles.cityNode}
               data-city={cityNode.id}
               data-region-role={cityNode.regionRole}
+              data-signal-state={cityNode.signalState}
+              data-temperature-score={cityNode.signalState === "limited" ? "none" : undefined}
               data-official-count={cityNode.officialCount}
               data-directory-source={cityNode.directorySource}
               data-editorial-count={cityNode.editorialCount}
+              data-editorial-candidate-count={cityNode.id === "jeju" ? JEJU_EDITORIAL_SEEDS.length - JEJU_EDITORIAL_PLACES.length : undefined}
               data-truth-kind={cityNode.truthKind}
               data-atlas-pin="true"
               data-atlas-latitude={cityNode.coordinates.latitude}
               data-atlas-longitude={cityNode.coordinates.longitude}
               data-atlas-x={cityNode.coordinates.x}
               data-atlas-y={cityNode.coordinates.y}
-              style={{ "--atlas-x": `${cityNode.coordinates.x / 3}%`, "--atlas-y": `${cityNode.coordinates.y / 3.5}%` } as CSSProperties}
+              style={{
+                "--atlas-x": `${cityNode.coordinates.x / 3}%`,
+                "--atlas-y": `${cityNode.coordinates.y / 3.5}%`,
+                "--atlas-label-x": `${cityNode.labelOffset.x}px`,
+                "--atlas-label-y": `${cityNode.labelOffset.y}px`,
+              } as CSSProperties}
               onClick={() => onSelect(cityNode.id)}
               aria-label={`${CITY[cityNode.id].label[locale]} · ${cityNode.accessibleTruth} · ${copy.openMap}`}
             >
-              <i aria-hidden="true">
-                <MapPin size={18} />
-              </i>
+              <i aria-hidden="true" />
               <span>
                 <strong>{CITY[cityNode.id].label[locale]}</strong>
               </span>
@@ -743,6 +773,7 @@ export function MapEntryB() {
   const after19ActiveRef = useRef(false)
   const after19BrowseSnapshotRef = useRef<After19BrowseSnapshot | null>(null)
   const pendingCityFocusRef = useRef<CityId | null>(null)
+  const pendingNationFocusRef = useRef<CityId | null>(null)
   const [city, setCity] = useState<CityId | null>(null)
   const [view, setView] = useState<ViewMode>("map")
   const [query, setQuery] = useState("")
@@ -786,6 +817,16 @@ export function MapEntryB() {
     }
     focusEnteredCity()
     window.requestAnimationFrame(focusEnteredCity)
+  }, [city])
+
+  useLayoutEffect(() => {
+    if (city || !pendingNationFocusRef.current) return
+    const returningCity = pendingNationFocusRef.current
+    pendingNationFocusRef.current = null
+    const focusReturnedCity = () => document.querySelector<HTMLElement>(`[data-testid='ondo-b-nation'] [data-city='${returningCity}']`)?.focus({ preventScroll: true })
+    focusReturnedCity()
+    const frame = window.requestAnimationFrame(focusReturnedCity)
+    return () => window.cancelAnimationFrame(frame)
   }, [city])
 
   useEffect(() => {
@@ -906,6 +947,7 @@ export function MapEntryB() {
       const guardedEntry = after19ActiveRef.current && entry.city && entry.city !== "jeju" && entry.category !== "night"
         ? { ...entry, category: "night" as const }
         : entry
+      if (guardedEntry.level === "nation" && guardedEntry.focus?.kind === "city") pendingNationFocusRef.current = guardedEntry.focus.city
       setCity(guardedEntry.city ?? null)
       setView(guardedEntry.view)
       setQuery(guardedEntry.query)
@@ -1626,7 +1668,14 @@ export function MapEntryB() {
         <p id="ondo-b-map-instruction" className={styles.srOnly} aria-hidden={editorialOpen ? true : undefined}>{city === "jeju" ? copy.editorialMapA11y : copy.mapA11y}</p>
         <header className={styles.cityHeader} data-testid="ondo-b-city-header">
           <div className={styles.topline}>
-            <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => { mapRef.current?.remove(); mapRef.current = null; if (!goBackFromBDiscovery("city")) setCity(null) }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
+            <button type="button" className={styles.back} data-testid="ondo-b-city-back" aria-label={copy.back} onClick={() => {
+              mapRef.current?.remove()
+              mapRef.current = null
+              if (!goBackFromBDiscovery("city")) {
+                pendingNationFocusRef.current = city
+                setCity(null)
+              }
+            }}><ArrowLeft size={18} /><span>{copy.back}</span></button>
             <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small className={styles.srOnly} data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
             <button type="button" className={styles.language} data-testid="ondo-b-language" aria-label={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} title={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} data-language-target={NEXT_LOCALE[locale]} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} aria-hidden="true" />{NEXT_LOCALE_LABEL[locale]}</button>
           </div>

@@ -75,10 +75,11 @@ test("destructive copy and contextual benefit copy state their exact device and 
   const settings = source("features/ondo/settings/settings-entry-b.tsx")
   const place = source("features/ondo/place/canonical-place-overlay.tsx")
 
-  expect(settings).toContain("OOKRW Test receipts")
-  expect(settings).toContain("OOKRW Test 영수증")
-  expect(place).toContain("See an ONDO meal benefit for this place.")
-  expect(place).toContain("이 장소에서 쓸 수 있는 ONDO 식사 혜택을 확인하세요.")
+  expect(settings).toContain("Travel Wallet receipts")
+  expect(settings).toContain("여행 지갑 영수증")
+  expect(place).toContain('demoOffer: "K-Tour ID benefit"')
+  expect(place).toContain('demoOfferBody: "₩22,000 · save ₩3,000"')
+  expect(place).toContain('demoOfferPrice: "₩19,000"')
   expect(place).not.toContain("Confirm payment support with the venue")
 })
 
