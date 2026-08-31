@@ -33,7 +33,8 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
 
     expect(map).toContain('data-testid="ondo-b-pulse-city-status"')
     expect(map).toContain('className={styles.srOnly}')
-    expect(map).toContain('data-pulse-visual-grammar={city === "jeju" ? undefined : "aura-scale-selection-label"}')
+    expect(map).toContain('data-pulse-visual-grammar="aura-scale-selection-capsule"')
+    expect(map).toContain('data-temperature-visual-grammar="shared-field-aura-core-scale-selection-capsule"')
     expect(map).not.toContain("pulseMarkerLabel:")
     expect(map).not.toContain('id: "ondo-pulse-labels"')
     expect(map).toContain('"text-field": ["get", "selectedMarkerLabel"]')

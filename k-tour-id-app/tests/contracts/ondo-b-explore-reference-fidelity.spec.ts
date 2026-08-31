@@ -26,8 +26,10 @@ test("B-EXPLORE-V3-001 Korea overview is a geographic living atlas rather than a
   expect(mapCss).toContain(".koreaAtlas .atlasLandmass")
 })
 
-test("B-EXPLORE-V3-002 city map and list preserve the approved Pulse and official-record grammars", () => {
-  expect(map).toContain('data-pulse-visual-grammar={city === "jeju" ? undefined : "aura-scale-selection-label"}')
+test("B-EXPLORE-V3-002 every city shares one temperature grammar while official records stay scoped", () => {
+  expect(map).toContain('data-pulse-visual-grammar="aura-scale-selection-capsule"')
+  expect(map).toContain('data-temperature-visual-grammar="shared-field-aura-core-scale-selection-capsule"')
+  expect(map).toContain('data-temperature-model={city === "jeju" ? "editorial-unscored" : "curated-scored"}')
   expect(map).toContain('data-cluster-grammar={city === "jeju" ? undefined : "official-record-count"}')
   expect(map).toContain('data-testid="ondo-b-view-toggle"')
   expect(map).toContain('data-testid="ondo-b-map-key"')

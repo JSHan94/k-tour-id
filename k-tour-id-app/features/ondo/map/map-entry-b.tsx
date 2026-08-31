@@ -337,7 +337,7 @@ const MAP_VENUES = Object.freeze([...CANONICAL_MAP_VENUES_COMPACT].sort((left, r
 
 const PULSE_RANK = Object.freeze({ limited: 0, low: 1, warming: 2, rising: 3, hot: 4, peak: 5 } as const)
 const PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
-  "match", ["get", "pulseRank"],
+  "match", ["get", "visualRank"],
   5, "#7A2048",
   4, "#C94832",
   3, "#E6843B",
@@ -346,7 +346,7 @@ const PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
   "#CFCAC0",
 ]
 const AFTER19_PULSE_LEVEL_EXPRESSION: ExpressionSpecification = [
-  "match", ["get", "pulseRank"],
+  "match", ["get", "visualRank"],
   5, "#FF3FA4",
   4, "#FF604D",
   3, "#FF9A3D",
@@ -601,12 +601,56 @@ function toFeatureCollection(
   }
 }
 
-function toPulseFeatureCollection(
+type TemperatureFeatureProperties = {
+  id: string
+  entryKind: "venue" | "editorial"
+  pulseLevel: string
+  pulseRank: number
+  layoutRank: number
+  visualRank: number
+  heatWeight: number
+  pulseScore: number
+  mapAnchor: boolean
+  selectedMarkerLabel: string
+  selected: boolean
+  signalKind: "curated-place" | "verified-editorial"
+}
+
+function toTemperatureFeatureCollection(
+  city: CityId,
   venues: readonly CanonicalMapVenue[],
   localPulseEvidenceByVenue: Record<string, PulseLocalEvidenceB> = {},
   locale: OndoBLocale,
   selectedVenueId: string | null = null,
-): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; pulseLevel: string; pulseRank: number; pulseScore: number; mapAnchor: boolean; selectedMarkerLabel: string; selected: boolean }> {
+  selectedEditorialPlaceId: string | null = null,
+): GeoJSON.FeatureCollection<GeoJSON.Point, TemperatureFeatureProperties> {
+  if (city === "jeju") {
+    return {
+      type: "FeatureCollection",
+      features: JEJU_EDITORIAL_PLACES.map((place) => ({
+        type: "Feature" as const,
+        id: place.id,
+        geometry: { type: "Point" as const, coordinates: [place.location.longitude, place.location.latitude] },
+        properties: {
+          id: place.id,
+          entryKind: "editorial" as const,
+          pulseLevel: "limited",
+          pulseRank: PULSE_RANK.limited,
+          layoutRank: PULSE_RANK.limited,
+          // One shared renderer needs a visible field. This fixed visual rank
+          // communicates verified editorial coverage only; pulseScore stays
+          // -1 and no Jeju place is ranked against another.
+          visualRank: PULSE_RANK.rising,
+          heatWeight: 0.6,
+          pulseScore: -1,
+          mapAnchor: true,
+          selectedMarkerLabel: place.name[locale],
+          selected: place.id === selectedEditorialPlaceId,
+          signalKind: "verified-editorial" as const,
+        },
+      })),
+    }
+  }
   const rows = venues.flatMap((venue) => {
     const pulse = pulseForVenue(venue.id, localPulseEvidenceByVenue[venue.id] ?? null)
     return pulse.score == null && venue.id !== selectedVenueId ? [] : [{ venue, pulse }]
@@ -624,32 +668,19 @@ function toPulseFeatureCollection(
         geometry: { type: "Point" as const, coordinates: [venue.longitude, venue.latitude] },
         properties: {
           id: venue.id,
+          entryKind: "venue" as const,
           pulseLevel: pulse.level,
           pulseRank: PULSE_RANK[pulse.level],
+          layoutRank: PULSE_RANK[pulse.level],
+          visualRank: PULSE_RANK[pulse.level],
+          heatWeight: Math.max(0, PULSE_RANK[pulse.level] / PULSE_RANK.peak),
           pulseScore: pulse.score ?? -1,
           mapAnchor: mapAnchorIds.has(venue.id) || venue.id === selectedVenueId,
           selectedMarkerLabel: venueDisplayName(venue.name.ko, locale),
           selected: venue.id === selectedVenueId,
+          signalKind: "curated-place" as const,
         },
       })),
-  }
-}
-
-function toEditorialPlaceFeatureCollection(locale: OndoBLocale, selectedEditorialPlaceId: string | null = null, enabled = true): GeoJSON.FeatureCollection<GeoJSON.Point, { id: string; name: string; category: EditorialPlaceB["category"]; selected: boolean; signalKind: "verified-editorial" }> {
-  return {
-    type: "FeatureCollection",
-    features: enabled ? JEJU_EDITORIAL_PLACES.map((place) => ({
-      type: "Feature",
-      id: place.id,
-      geometry: { type: "Point", coordinates: [place.location.longitude, place.location.latitude] },
-      properties: {
-        id: place.id,
-        name: place.name[locale],
-        category: place.category,
-        selected: place.id === selectedEditorialPlaceId,
-        signalKind: "verified-editorial",
-      },
-    })) : [],
   }
 }
 
@@ -1116,10 +1147,9 @@ export function MapEntryB() {
           })
           instance.addSource("ondo-pulse", {
             type: "geojson",
-            data: toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId),
+            data: toTemperatureFeatureCollection(city, venues, state.localPulseEvidenceByVenue, locale, selectedVenueId, selectedEditorialPlaceId),
           })
           instance.addSource("ondo-user-location", { type: "geojson", data: toUserLocationFeatureCollection(userLocationRef.current) })
-          instance.addSource("ondo-editorial-places", { type: "geojson", data: toEditorialPlaceFeatureCollection(locale, selectedEditorialPlaceId, city === "jeju") })
           instance.addSource("ondo-night-dim", {
             type: "geojson",
             data: {
@@ -1153,9 +1183,9 @@ export function MapEntryB() {
             },
           })
           instance.addLayer({ id: "ondo-points", type: "circle", source: "ondo-directory", filter: ["all", ["!", ["has", "point_count"]], ["==", ["get", "curatedSignal"], false]], paint: { "circle-color": "#716d67", "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, 2.6, 15, 4.2], "circle-opacity": 0.66, "circle-stroke-width": 0 } })
-          const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "pulseRank"], 3], ["!=", ["get", "pulseRank"], 2]]
-          const risingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 3]
-          const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "pulseRank"], 2]
+          const unshiftedPulseFilter: ExpressionSpecification = ["all", ["!=", ["get", "layoutRank"], 3], ["!=", ["get", "layoutRank"], 2]]
+          const risingPulseFilter: ExpressionSpecification = ["==", ["get", "layoutRank"], 3]
+          const warmingPulseFilter: ExpressionSpecification = ["==", ["get", "layoutRank"], 2]
           const risingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-20, 18]], 12, ["literal", [-20, 18]], 13, ["literal", [0, 0]]]
           const warmingTranslate: ExpressionSpecification = ["interpolate", ["linear"], ["zoom"], 9, ["literal", [-8, -10]], 12, ["literal", [-8, -10]], 13, ["literal", [0, 0]]]
           const pulseOffsetForRank = (rank: number, zoom: number) => {
@@ -1172,7 +1202,7 @@ export function MapEntryB() {
           ]
           const pulsePointPaint: CircleLayerSpecification["paint"] = { "circle-color": PULSE_LEVEL_EXPRESSION, "circle-radius": ["interpolate", ["linear"], ["zoom"], 9, 4.5, 15, 6.2], "circle-opacity": progressivePointOpacity, "circle-stroke-width": 0, "circle-blur": 0.08 }
           pulsePointPaint["circle-radius"] = [
-            "interpolate", ["linear"], ["get", "pulseRank"],
+            "interpolate", ["linear"], ["get", "visualRank"],
             0, 3.5,
             1, 4,
             2, 5,
@@ -1181,7 +1211,7 @@ export function MapEntryB() {
             5, 10,
           ]
           const pulseHaloOpacity: ExpressionSpecification = [
-            "interpolate", ["linear"], ["get", "pulseRank"],
+            "interpolate", ["linear"], ["get", "visualRank"],
             0, 0.06,
             1, 0.11,
             2, 0.18,
@@ -1201,7 +1231,7 @@ export function MapEntryB() {
           const pulseHaloPaint: CircleLayerSpecification["paint"] = {
             "circle-color": PULSE_LEVEL_EXPRESSION,
             "circle-radius": [
-              "interpolate", ["linear"], ["get", "pulseRank"],
+              "interpolate", ["linear"], ["get", "visualRank"],
               0, 11,
               1, 15,
               2, 22,
@@ -1220,7 +1250,7 @@ export function MapEntryB() {
             minzoom: 8,
             maxzoom: 15,
             paint: {
-              "heatmap-weight": ["interpolate", ["linear"], ["get", "pulseRank"], 0, 0, 1, 0.18, 2, 0.36, 3, 0.6, 4, 0.84, 5, 1],
+              "heatmap-weight": ["get", "heatWeight"],
               "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 8, 0.9, 12, 1.3, 15, 0.8],
               "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 8, 34, 12, 60, 15, 78],
               "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.5, 12, 0.68, 15, 0.32],
@@ -1230,9 +1260,9 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-pulse-halo", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: pulseHaloPaint })
           instance.addLayer({ id: "ondo-pulse-halo-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-halo-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { ...pulseHaloPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-points", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: pulsePointPaint })
-          instance.addLayer({ id: "ondo-pulse-points-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { ...pulsePointPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
-          instance.addLayer({ id: "ondo-pulse-points-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, layout: { "circle-sort-key": ["get", "pulseRank"] }, paint: { ...pulsePointPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-points", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, layout: { "circle-sort-key": ["get", "visualRank"] }, paint: pulsePointPaint })
+          instance.addLayer({ id: "ondo-pulse-points-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, layout: { "circle-sort-key": ["get", "visualRank"] }, paint: { ...pulsePointPaint, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
+          instance.addLayer({ id: "ondo-pulse-points-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, layout: { "circle-sort-key": ["get", "visualRank"] }, paint: { ...pulsePointPaint, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-hit", type: "circle", source: "ondo-pulse", filter: unshiftedPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": progressiveHitRadius, "circle-stroke-width": 0 } })
           instance.addLayer({ id: "ondo-pulse-hit-rising", type: "circle", source: "ondo-pulse", filter: risingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": progressiveHitRadius, "circle-stroke-width": 0, "circle-translate": risingTranslate, "circle-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-pulse-hit-warming", type: "circle", source: "ondo-pulse", filter: warmingPulseFilter, paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": progressiveHitRadius, "circle-stroke-width": 0, "circle-translate": warmingTranslate, "circle-translate-anchor": "viewport" } })
@@ -1268,22 +1298,6 @@ export function MapEntryB() {
           instance.addLayer({ id: "ondo-selected-pulse-capsule-warming", type: "symbol", source: "ondo-pulse", filter: selectedWarmingPulseFilter, layout: selectedCapsuleLayout, paint: { ...selectedCapsulePaint, "text-translate": warmingTranslate, "icon-translate": warmingTranslate, "text-translate-anchor": "viewport", "icon-translate-anchor": "viewport" } })
           instance.addLayer({ id: "ondo-user-location-halo", type: "circle", source: "ondo-user-location", paint: { "circle-color": "rgba(32,32,30,0.16)", "circle-radius": 14, "circle-stroke-color": "rgba(255,255,255,0.9)", "circle-stroke-width": 1 } })
           instance.addLayer({ id: "ondo-user-location-point", type: "circle", source: "ondo-user-location", paint: { "circle-color": "#20201e", "circle-radius": 6, "circle-stroke-color": "#ffffff", "circle-stroke-width": 2 } })
-          instance.addLayer({
-            id: "ondo-editorial-temperature-aura",
-            type: "circle",
-            source: "ondo-editorial-places",
-            paint: {
-              "circle-color": "#c04c3d",
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 8.5, 17, 12, 27, 16, 38],
-              "circle-blur": 0.84,
-              "circle-opacity": 0.28,
-              "circle-stroke-width": 0,
-            },
-          })
-          instance.addLayer({ id: "ondo-editorial-selected-halo", type: "circle", source: "ondo-editorial-places", filter: ["==", ["get", "selected"], true], paint: { "circle-color": "#7a2048", "circle-radius": 22, "circle-blur": 0.56, "circle-opacity": 0.3, "circle-stroke-width": 0 } })
-          instance.addLayer({ id: "ondo-editorial-points", type: "circle", source: "ondo-editorial-places", paint: { "circle-color": ["case", ["==", ["get", "selected"], true], "#7a2048", "#c24f3e"], "circle-radius": ["case", ["==", ["get", "selected"], true], 7.5, 5.5], "circle-stroke-color": "rgba(255,255,255,.96)", "circle-stroke-width": 1.5, "circle-opacity": 0.98, "circle-blur": 0.02 } })
-          instance.addLayer({ id: "ondo-editorial-hit", type: "circle", source: "ondo-editorial-places", paint: { "circle-color": "rgba(0,0,0,0.01)", "circle-radius": 22, "circle-stroke-width": 0 } })
-          instance.addLayer({ id: "ondo-editorial-selected-label", type: "symbol", source: "ondo-editorial-places", filter: ["==", ["get", "selected"], true], layout: { "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 12, "text-offset": [0, 1.55], "text-anchor": "top", "text-allow-overlap": true }, paint: { "text-color": "#171717", "text-halo-color": "rgba(255,255,255,.94)", "text-halo-width": 2 } })
 
           if (!initialFilteredVenue && !filteredMapRef.current && cityRootNode.current && venues.length > 0) {
             const rootBox = cityRootNode.current.getBoundingClientRect()
@@ -1347,13 +1361,13 @@ export function MapEntryB() {
             const detailSignalsVisible = instance.getZoom() >= 12.35
             const pulseFeatures = instance.querySourceFeatures("ondo-pulse")
               .filter((feature) => feature.geometry.type === "Point"
-                && Number(feature.properties?.pulseScore ?? -1) >= 0
+                && (feature.properties?.entryKind === "editorial" || Number(feature.properties?.pulseScore ?? -1) >= 0)
                 && (detailSignalsVisible || feature.properties?.mapAnchor === true))
             const allInside = pulseFeatures.length > 0 && pulseFeatures.every((feature) => {
               if (feature.geometry.type !== "Point") return true
               const point = instance.project(feature.geometry.coordinates as [number, number])
               const zoom = instance.getZoom()
-              const offset = pulseOffsetForRank(Number(feature.properties?.pulseRank ?? 0), zoom)
+              const offset = pulseOffsetForRank(Number(feature.properties?.layoutRank ?? 0), zoom)
               return pointIsReadable(point.x + offset.x, point.y + offset.y)
             })
             const zoom = instance.getZoom()
@@ -1393,25 +1407,23 @@ export function MapEntryB() {
         pulseInteractiveLayers.forEach((layerId) => {
           instance.on("click", layerId, (event: MapLayerMouseEvent) => {
             const id = event.features?.[0]?.properties?.id
-            if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
+            const entryKind = event.features?.[0]?.properties?.entryKind
+            if (entryKind === "editorial") {
+              const place = editorialPlaceById(id)
+              if (place) openEditorialPlaceDetail(place)
+            } else if (typeof id === "string" && CANONICAL_MAP_VENUES_COMPACT.some((venue) => venue.id === id)) {
               openBDiscoveryVenue(id)
               if (!actions.recordRecentVenue(id)) actions.notify(copy.recentSaveFailed)
               actions.setSurface({ kind: "venue", venueId: id })
             }
           })
         })
-        instance.on("click", "ondo-editorial-hit", (event: MapLayerMouseEvent) => {
-          const place = editorialPlaceById(event.features?.[0]?.properties?.id)
-          if (place) openEditorialPlaceDetail(place)
-        })
         instance.on("mouseenter", "ondo-clusters", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseenter", "ondo-points", () => { instance.getCanvas().style.cursor = "pointer" })
         pulseInteractiveLayers.forEach((layerId) => instance.on("mouseenter", layerId, () => { instance.getCanvas().style.cursor = "pointer" }))
-        instance.on("mouseenter", "ondo-editorial-hit", () => { instance.getCanvas().style.cursor = "pointer" })
         instance.on("mouseleave", "ondo-clusters", () => { instance.getCanvas().style.cursor = "" })
         instance.on("mouseleave", "ondo-points", () => { instance.getCanvas().style.cursor = "" })
         pulseInteractiveLayers.forEach((layerId) => instance.on("mouseleave", layerId, () => { instance.getCanvas().style.cursor = "" }))
-        instance.on("mouseleave", "ondo-editorial-hit", () => { instance.getCanvas().style.cursor = "" })
         if (filteredMapRef.current) focusFilteredVenues(instance, venues)
         const finishFirstPaint = () => {
           if (disposed || failed) return
@@ -1479,25 +1491,6 @@ export function MapEntryB() {
         : ["step", ["get", "point_count"], "rgba(74,70,65,.30)", 15, "rgba(155,68,52,.38)", 50, "rgba(122,32,72,.48)"])
     }
     if (map.getLayer("ondo-points")) map.setPaintProperty("ondo-points", "circle-color", after19ThemeActive ? "#a7a1af" : "#716d67")
-    if (map.getLayer("ondo-editorial-selected-halo")) {
-      map.setPaintProperty("ondo-editorial-selected-halo", "circle-color", after19ThemeActive ? "#ff72b8" : "#7a2048")
-      map.setPaintProperty("ondo-editorial-selected-halo", "circle-opacity", after19ThemeActive ? 0.38 : 0.3)
-    }
-    if (map.getLayer("ondo-editorial-temperature-aura")) {
-      map.setPaintProperty("ondo-editorial-temperature-aura", "circle-color", after19ThemeActive ? "#ff3fa4" : "#c04c3d")
-      map.setPaintProperty("ondo-editorial-temperature-aura", "circle-opacity", after19ThemeActive ? 0.42 : 0.28)
-    }
-    if (map.getLayer("ondo-editorial-points")) {
-      map.setPaintProperty("ondo-editorial-points", "circle-color", after19ThemeActive
-        ? ["case", ["==", ["get", "selected"], true], "#ff72b8", "#ff9142"]
-        : ["case", ["==", ["get", "selected"], true], "#7a2048", "#c24f3e"])
-      map.setPaintProperty("ondo-editorial-points", "circle-stroke-color", after19ThemeActive ? "#fff1f8" : "rgba(255,255,255,.96)")
-    }
-    if (map.getLayer("ondo-editorial-selected-label")) {
-      map.setPaintProperty("ondo-editorial-selected-label", "text-color", after19ThemeActive ? "#fff7fb" : "#171717")
-      map.setPaintProperty("ondo-editorial-selected-label", "text-halo-color", after19ThemeActive ? "rgba(20,14,24,.88)" : "rgba(255,255,255,.94)")
-      map.setPaintProperty("ondo-editorial-selected-label", "text-halo-width", after19ThemeActive ? 1 : 2)
-    }
     for (const layerId of ["ondo-selected-pulse-capsule", "ondo-selected-pulse-capsule-rising", "ondo-selected-pulse-capsule-warming"]) {
       if (!map.getLayer(layerId)) continue
       map.setPaintProperty(layerId, "text-color", after19ThemeActive ? "#fff7fb" : "#29231f")
@@ -1509,9 +1502,9 @@ export function MapEntryB() {
   useEffect(() => {
     const directorySource = mapRef.current?.getSource("ondo-directory") as GeoJSONSource | undefined
     const pulseSource = mapRef.current?.getSource("ondo-pulse") as GeoJSONSource | undefined
-    if (directorySource) {
+    if (directorySource && city) {
       void directorySource.setData(toFeatureCollection(venues, state.localPulseEvidenceByVenue, selectedVenueId))
-      if (pulseSource) void pulseSource.setData(toPulseFeatureCollection(venues, state.localPulseEvidenceByVenue, locale, selectedVenueId))
+      if (pulseSource) void pulseSource.setData(toTemperatureFeatureCollection(city, venues, state.localPulseEvidenceByVenue, locale, selectedVenueId, selectedEditorialPlaceId))
       const filterSignature = `${city ?? "nation"}:${query.trim()}:${category}`
       const filterChanged = filterCameraSignatureRef.current !== filterSignature
       filterCameraSignatureRef.current = filterSignature
@@ -1522,12 +1515,7 @@ export function MapEntryB() {
   // source does not exist yet and this effect returns early. Re-run once the
   // map reaches `ready` so the source and camera always receive the current
   // filtered collection instead of the load callback's initial closure.
-  }, [category, city, filteredMap, locale, mapState, query, selectedVenueId, state.localPulseEvidenceByVenue, venues])
-
-  useEffect(() => {
-    const editorialSource = mapRef.current?.getSource("ondo-editorial-places") as GeoJSONSource | undefined
-    if (editorialSource) void editorialSource.setData(toEditorialPlaceFeatureCollection(locale, selectedEditorialPlaceId, city === "jeju"))
-  }, [city, locale, selectedEditorialPlaceId])
+  }, [category, city, filteredMap, locale, mapState, query, selectedEditorialPlaceId, selectedVenueId, state.localPulseEvidenceByVenue, venues])
 
   useEffect(() => {
     userLocationRef.current = userLocation
@@ -1670,11 +1658,12 @@ export function MapEntryB() {
         data-location-state={locationState}
         data-user-location={userLocation ? "present" : "absent"}
         data-cluster-grammar={city === "jeju" ? undefined : "official-record-count"}
-        data-pulse-map-grammar={city === "jeju" ? undefined : "aura-over-official-groups"}
-        data-pulse-visual-grammar={city === "jeju" ? undefined : "aura-scale-selection-label"}
-        data-temperature-visual-grammar={city === "jeju" ? "uniform-editorial-aura-selection-label" : "scored-aura-scale-selection-label"}
-        data-pulse-motion={city === "jeju" ? undefined : "one-shot-bloom-reduced-safe"}
-        data-selected-pulse-grammar={city === "jeju" ? undefined : "one-shot-halo-place-capsule"}
+        data-pulse-map-grammar="temperature-field-over-map-context"
+        data-pulse-visual-grammar="aura-scale-selection-capsule"
+        data-temperature-visual-grammar="shared-field-aura-core-scale-selection-capsule"
+        data-temperature-model={city === "jeju" ? "editorial-unscored" : "curated-scored"}
+        data-pulse-motion="one-shot-bloom-reduced-safe"
+        data-selected-pulse-grammar="one-shot-halo-place-capsule"
         data-curated-pulse-count={city === "jeju" ? undefined : curatedPulseVenues.length}
         data-pulse-map-anchor-count={city === "jeju" ? undefined : Math.min(8, curatedPulseVenues.length)}
         data-layout-mode={mapLayoutMode}
@@ -1722,18 +1711,6 @@ export function MapEntryB() {
         {!editorialOpen && effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{city === "jeju" ? copy.editorialMapLoading : copy.mapLoading}</p> : null}
 
         <div className={styles.mapUtilityCluster} data-testid="ondo-b-map-utility-cluster" data-editorial-open={editorialOpen ? "true" : "false"}>
-          {city === "jeju" && effectiveView === "map" && mapState !== "error" ? (
-            <aside
-              className={`${styles.mapKey} ${styles.editorialTemperatureKey}`}
-              data-testid="ondo-b-map-key"
-              data-editorial-temperature-key="limited"
-              aria-label={`${TEMPERATURE_NAME[locale]} · ${cityPulseStatus("jeju", locale)}`}
-            >
-              <span aria-hidden="true"><i /><i /><i /></span>
-              <b>{TEMPERATURE_NAME[locale]}</b>
-              <small className={styles.srOnly}>{cityPulseStatus("jeju", locale)}</small>
-            </aside>
-          ) : null}
           {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
             <details
               className={styles.locationMessage}
@@ -1796,8 +1773,17 @@ export function MapEntryB() {
             )}
           </div>
 
-          {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
-            <aside className={styles.mapKey} data-testid="ondo-b-map-key" data-pulse-key-presentation="compact-gradient" aria-label={`${copy.mapKey}. ${copy.mapKeyBody} ${PULSE_DISCLOSURE[locale]}`}>
+          {effectiveView === "map" && mapState !== "error" ? (
+            <aside
+              className={styles.mapKey}
+              data-testid="ondo-b-map-key"
+              data-pulse-key-presentation="compact-gradient"
+              data-editorial-temperature-key={city === "jeju" ? "unscored" : undefined}
+              data-temperature-model={city === "jeju" ? "editorial-unscored" : "curated-scored"}
+              aria-label={city === "jeju"
+                ? `${TEMPERATURE_NAME[locale]}. ${cityPulseStatus("jeju", locale)}`
+                : `${copy.mapKey}. ${copy.mapKeyBody} ${PULSE_DISCLOSURE[locale]}`}
+            >
               <div className={styles.pulseScale} data-testid="ondo-b-pulse-scale" aria-hidden="true">
                 <i /><b>{TEMPERATURE_NAME[locale]}</b><small>{MAP_UI[locale].pulseRange}</small>
               </div>
@@ -1807,9 +1793,9 @@ export function MapEntryB() {
                   <div className={styles.pulseLegend} data-testid="ondo-b-pulse-legend" aria-label={MAP_UI[locale].pulseLegend}>
                     {(["peak", "hot", "rising", "warming", "low", "limited"] as const).map((level) => <span key={level} data-level={level}><i />{pulseLevelLabel(level, locale)}</span>)}
                   </div>
-                  <small>{copy.mapKeyBody}</small>
-                  <small data-testid="ondo-b-pulse-composition-disclosure">{PULSE_COMPOSITION_DISCLOSURE[locale]}</small>
-                  <details className={styles.methodologyDisclosure} data-testid="ondo-b-pulse-methodology">
+                  <small>{city === "jeju" ? cityPulseStatus("jeju", locale) : copy.mapKeyBody}</small>
+                  <small data-testid="ondo-b-pulse-composition-disclosure">{city === "jeju" ? copy.jejuTruth : PULSE_COMPOSITION_DISCLOSURE[locale]}</small>
+                  {city === "jeju" ? null : <details className={styles.methodologyDisclosure} data-testid="ondo-b-pulse-methodology">
                     <summary>{copy.methodology}<ChevronRight size={15} /></summary>
                     <dl className={styles.pulseCompositionRows} data-testid="ondo-b-pulse-production-drivers">
                       {PULSE_PRODUCTION_DRIVER_DISCLOSURE[locale].map((driver) => (
@@ -1837,7 +1823,7 @@ export function MapEntryB() {
                         </li>
                       ))}
                     </ul>
-                  </details>
+                  </details>}
                 </div>
               </details>
             </aside>
@@ -1865,6 +1851,7 @@ export function MapEntryB() {
           </div>
         ) : null}
         {selectedVenue && selectedPulse ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-marker-status">{`${venueDisplayName(selectedVenue.name.ko, locale)} · ${TEMPERATURE_NAME[locale]} · ${pulseLevelLabel(selectedPulse.level, locale)}`}</span> : null}
+        {selectedEditorialPlace ? <span className={styles.srOnly} role="status" data-testid="ondo-b-selected-editorial-marker-status">{`${selectedEditorialPlace.name[locale]} · ${TEMPERATURE_NAME[locale]} · ${cityPulseStatus("jeju", locale)}`}</span> : null}
         {userLocation ? <span className={styles.srOnly} data-testid="ondo-b-user-location-marker" data-longitude={userLocation.longitude} data-latitude={userLocation.latitude}>{copy.locationReady}</span> : null}
       </section>
     </div>

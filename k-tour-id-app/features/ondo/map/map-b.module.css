@@ -149,9 +149,8 @@
   .mapKey > small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
-/* Jeju editorial places are a separate, source-backed map layer. This compact
-   disclosure keeps every pin keyboard reachable without borrowing official
-   record clusters or the Pulse heat grammar. */
+/* Jeju editorial places keep their source-backed list while sharing the same
+   temperature field, marker and selection grammar as Seoul and Busan. */
 .editorialPlaceList {
   position: absolute;
   z-index: 8;
@@ -2006,7 +2005,7 @@
    controls one tap away without repeating “Explore Jeju” as a fake CTA. */
 .editorialPlaceList {
   top: auto;
-  bottom: 0;
+  bottom: 56px;
   width: 48px;
   min-height: 48px;
   border-radius: 15px;
@@ -3765,39 +3764,6 @@
 .koreaAtlas .cityNode { cursor: pointer; touch-action: manipulation; }
 .koreaAtlas .cityNode:hover i { box-shadow: 0 0 0 3px rgb(255 255 255 / 84%), 0 9px 20px rgb(0 0 0 / 13%); }
 .koreaAtlas .cityNode:focus-visible { outline: 3px solid #171717; outline-offset: 4px; }
-
-.editorialTemperatureKey {
-  display: inline-flex;
-  width: 44px;
-  min-width: 44px;
-  max-width: 44px;
-  min-height: 44px;
-  justify-content: center;
-  align-items: center;
-  gap: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.editorialTemperatureKey > span {
-  position: relative;
-  display: block;
-  width: 24px;
-  height: 24px;
-}
-
-.editorialTemperatureKey > span i {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.editorialTemperatureKey > span i:nth-child(1) { width: 24px; height: 24px; background: rgb(194 79 62 / 13%); }
-.editorialTemperatureKey > span i:nth-child(2) { width: 14px; height: 14px; background: rgb(194 79 62 / 22%); }
-.editorialTemperatureKey > span i:nth-child(3) { width: 6px; height: 6px; background: #c24f3e; }
-.editorialTemperatureKey > b { display: none; }
 
 @media (orientation: landscape) and (max-height: 500px) {
   .atlasPlot {
