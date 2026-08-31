@@ -3,7 +3,7 @@
 import type { CircleLayerSpecification, ExpressionSpecification, GeoJSONSource, Map as MapLibreMap, MapLayerMouseEvent, SymbolLayerSpecification } from "maplibre-gl"
 import type { CSSProperties } from "react"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { ArrowLeft, ChevronRight, Copyright, Info, Languages, List, LocateFixed, Map as MapIcon, MapPin, Search, X } from "lucide-react"
+import { ArrowLeft, ChevronRight, Copyright, Info, Languages, List, LocateFixed, Map as MapIcon, Search, X } from "lucide-react"
 import { KOREA_OUTLINE_COORDINATES } from "@/lib/map/korea-atlas-data"
 import { ondoMapStyle } from "@/lib/ondo/map/ondo-map-style"
 import type { CanonicalMapVenue, VenuePrimaryCategory } from "@/lib/ondo/venues/contracts"
@@ -52,6 +52,7 @@ type ViewMode = "map" | "list"
 type MapLayoutMode = "measuring" | "ultra-short" | "compact-map" | "spacious-map"
 type LocationState = "idle" | "locating" | "ready" | "denied" | "unsupported"
 type UserLocation = { longitude: number; latitude: number }
+type EditorialCategory = "all" | EditorialPlaceB["category"]
 const SEARCH_MAX_LENGTH = 120
 const AFTER19_BROWSE_SNAPSHOT_KEY = "ondo-b.after19.browse-snapshot.v1"
 
@@ -324,6 +325,15 @@ const CATEGORY: Record<BDiscoveryCategory, { en: string; ko: string; ja: string;
   night: { en: "Pubs & cafés", ko: "주점·카페", ja: "パブ・カフェ", compact: { en: "Pubs & cafés", ko: "주점·카페", ja: "パブ・カフェ" }, short: "P" },
   specialty: { en: "Grills & specialty", ko: "구이·횟집·전문점", ja: "焼き物・専門店", compact: { en: "Grills", ko: "구이·횟집", ja: "焼き物・専門" }, short: "S" },
 }
+
+const EDITORIAL_CATEGORY: Record<EditorialCategory, Record<OndoBLocale, string>> = {
+  all: { en: "All", ko: "전체", ja: "すべて" },
+  food: { en: "Food", ko: "먹거리", ja: "グルメ" },
+  market: { en: "Markets", ko: "시장", ja: "市場" },
+  "screen-location": { en: "Screen locations", ko: "촬영지", ja: "ロケ地" },
+  "culture-shopping": { en: "Culture & shopping", ko: "문화·쇼핑", ja: "文化・買い物" },
+}
+const EDITORIAL_CATEGORY_OPTIONS: readonly EditorialCategory[] = ["all", "food", "market", "screen-location"]
 
 const AFTER19_CATEGORY_LABEL: Record<OndoBLocale, string> = {
   en: "Bars & pubs",
@@ -616,6 +626,17 @@ type TemperatureFeatureProperties = {
   signalKind: "curated-place" | "verified-editorial"
 }
 
+function editorialCoverageVisualRank(place: EditorialPlaceB) {
+  const nearbyVerifiedPlaces = JEJU_EDITORIAL_PLACES.filter((candidate) => distanceInMeters(
+    { longitude: place.location.longitude, latitude: place.location.latitude },
+    { longitude: candidate.location.longitude, latitude: candidate.location.latitude },
+  ) <= 13_000).length
+
+  if (nearbyVerifiedPlaces >= 3) return PULSE_RANK.peak
+  if (nearbyVerifiedPlaces >= 2) return PULSE_RANK.hot
+  return PULSE_RANK.rising
+}
+
 function toTemperatureFeatureCollection(
   city: CityId,
   venues: readonly CanonicalMapVenue[],
@@ -623,32 +644,37 @@ function toTemperatureFeatureCollection(
   locale: OndoBLocale,
   selectedVenueId: string | null = null,
   selectedEditorialPlaceId: string | null = null,
+  editorialPlaces: readonly EditorialPlaceB[] = JEJU_EDITORIAL_PLACES,
 ): GeoJSON.FeatureCollection<GeoJSON.Point, TemperatureFeatureProperties> {
   if (city === "jeju") {
     return {
       type: "FeatureCollection",
-      features: JEJU_EDITORIAL_PLACES.map((place) => ({
-        type: "Feature" as const,
-        id: place.id,
-        geometry: { type: "Point" as const, coordinates: [place.location.longitude, place.location.latitude] },
-        properties: {
+      features: editorialPlaces.map((place) => {
+        const coverageRank = editorialCoverageVisualRank(place)
+        return {
+          type: "Feature" as const,
           id: place.id,
-          entryKind: "editorial" as const,
-          pulseLevel: "limited",
-          pulseRank: PULSE_RANK.limited,
-          layoutRank: PULSE_RANK.limited,
-          // One shared renderer needs a visible field. This fixed visual rank
-          // communicates verified editorial coverage only; pulseScore stays
-          // -1 and no Jeju place is ranked against another.
-          visualRank: PULSE_RANK.rising,
-          heatWeight: 0.6,
-          pulseScore: -1,
-          mapAnchor: true,
-          selectedMarkerLabel: place.name[locale],
-          selected: place.id === selectedEditorialPlaceId,
-          signalKind: "verified-editorial" as const,
-        },
-      })),
+          geometry: { type: "Point" as const, coordinates: [place.location.longitude, place.location.latitude] },
+          properties: {
+            id: place.id,
+            entryKind: "editorial" as const,
+            pulseLevel: "limited",
+            pulseRank: PULSE_RANK.limited,
+            layoutRank: PULSE_RANK.limited,
+            // Jeju keeps score/level unscored. The shared colour and size scale
+            // is driven only by spatial density among verified source points,
+            // so the UI reads like the same ONDO field without inventing
+            // popularity, traffic or a place ranking.
+            visualRank: coverageRank,
+            heatWeight: Math.max(0.72, coverageRank / PULSE_RANK.peak),
+            pulseScore: -1,
+            mapAnchor: true,
+            selectedMarkerLabel: place.name[locale],
+            selected: place.id === selectedEditorialPlaceId,
+            signalKind: "verified-editorial" as const,
+          },
+        }
+      }),
     }
   }
   const rows = venues.flatMap((venue) => {
@@ -811,6 +837,7 @@ export function MapEntryB() {
   const [view, setView] = useState<ViewMode>("map")
   const [query, setQuery] = useState("")
   const [category, setCategory] = useState<BDiscoveryCategory>("all")
+  const [editorialCategory, setEditorialCategory] = useState<EditorialCategory>("all")
   const [mapState, setMapState] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [visibleCount, setVisibleCount] = useState(30)
   const [retryToken, setRetryToken] = useState(0)
@@ -842,10 +869,8 @@ export function MapEntryB() {
     if (!city || pendingCityFocusRef.current !== city) return
     pendingCityFocusRef.current = null
     const focusEnteredCity = () => {
-      const target = city === "jeju"
-        ? document.querySelector<HTMLElement>("[data-testid='ondo-b-editorial-collection-marker']")
-          ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-city-back']")
-        : document.querySelector<HTMLInputElement>("[data-testid='ondo-b-search']")
+      const target = document.querySelector<HTMLInputElement>("[data-testid='ondo-b-search']")
+        ?? document.querySelector<HTMLElement>("[data-testid='ondo-b-city-back']")
       target?.focus({ preventScroll: true })
     }
     focusEnteredCity()
@@ -1035,7 +1060,12 @@ export function MapEntryB() {
     const haystack = `${venue.name.ko} ${venue.name.en} ${venueDisplayName(venue.name.ko, "en")} ${categoryCopy.ko} ${categoryCopy.en} ${venue.districtId} ${venueDistrictLabel(venue.cityId, venue.districtId, "en")} ${mapFoodIntentAliases(venue.name.ko).join(" ")}`.toLowerCase()
     return !query.trim() || haystack.includes(query.trim().toLowerCase())
   }), [after19FilterActive, category, city, query])
-  const filteredMap = query.trim().length > 0 || category !== "all"
+  const editorialPlaces = useMemo(() => JEJU_EDITORIAL_PLACES.filter((place) => {
+    if (editorialCategory !== "all" && place.category !== editorialCategory) return false
+    const haystack = `${place.name.en} ${place.name.ko} ${place.name.ja} ${place.address.en} ${place.address.ko} ${place.sourceCollection.en} ${place.sourceCollection.ko} ${place.sourceCollection.ja}`.toLowerCase()
+    return !query.trim() || haystack.includes(query.trim().toLowerCase())
+  }), [editorialCategory, query])
+  const filteredMap = query.trim().length > 0 || (city === "jeju" ? editorialCategory !== "all" : category !== "all")
   const curatedPulseVenues = useMemo(() => venues.flatMap((venue) => {
     const pulse = pulseForVenue(venue.id, state.localPulseEvidenceByVenue[venue.id] ?? null)
     return pulse.score == null ? [] : [{ venue, pulse }]
@@ -1048,12 +1078,21 @@ export function MapEntryB() {
       return nearest == null || distance < nearest.distance ? { venue, distance } : nearest
     }, null)
   }, [userLocation, venues])
+  const nearestEditorialPlace = useMemo(() => {
+    if (!userLocation || city !== "jeju" || !editorialPlaces.length) return null
+    return editorialPlaces.reduce<{ place: EditorialPlaceB; distance: number } | null>((nearest, place) => {
+      const distance = distanceInMeters(userLocation, { longitude: place.location.longitude, latitude: place.location.latitude })
+      return nearest == null || distance < nearest.distance ? { place, distance } : nearest
+    }, null)
+  }, [city, editorialPlaces, userLocation])
   const locationMessage = !online
     ? `${copy.offlineTitle} · ${copy.offlineSource} ${copy.locationDisclosure}`
     : locationState === "idle"
       ? copy.locationDisclosure
       : locationState === "locating"
         ? copy.locating
+      : locationState === "ready" && nearestEditorialPlace
+        ? `${copy.locationReady} · ${nearestEditorialPlace.place.name[locale]} ${displayDistance(nearestEditorialPlace.distance, locale)} · ${copy.nearest}`
         : locationState === "ready" && nearestVenue
           ? `${copy.locationReady} · ${venueDisplayName(nearestVenue.venue.name.ko, locale)} ${displayDistance(nearestVenue.distance, locale)} · ${copy.nearest}`
           : locationState === "ready"
@@ -1147,7 +1186,7 @@ export function MapEntryB() {
           })
           instance.addSource("ondo-pulse", {
             type: "geojson",
-            data: toTemperatureFeatureCollection(city, venues, state.localPulseEvidenceByVenue, locale, selectedVenueId, selectedEditorialPlaceId),
+            data: toTemperatureFeatureCollection(city, venues, state.localPulseEvidenceByVenue, locale, selectedVenueId, selectedEditorialPlaceId, editorialPlaces),
           })
           instance.addSource("ondo-user-location", { type: "geojson", data: toUserLocationFeatureCollection(userLocationRef.current) })
           instance.addSource("ondo-night-dim", {
@@ -1504,8 +1543,8 @@ export function MapEntryB() {
     const pulseSource = mapRef.current?.getSource("ondo-pulse") as GeoJSONSource | undefined
     if (directorySource && city) {
       void directorySource.setData(toFeatureCollection(venues, state.localPulseEvidenceByVenue, selectedVenueId))
-      if (pulseSource) void pulseSource.setData(toTemperatureFeatureCollection(city, venues, state.localPulseEvidenceByVenue, locale, selectedVenueId, selectedEditorialPlaceId))
-      const filterSignature = `${city ?? "nation"}:${query.trim()}:${category}`
+      if (pulseSource) void pulseSource.setData(toTemperatureFeatureCollection(city, venues, state.localPulseEvidenceByVenue, locale, selectedVenueId, selectedEditorialPlaceId, editorialPlaces))
+      const filterSignature = `${city ?? "nation"}:${query.trim()}:${city === "jeju" ? editorialCategory : category}`
       const filterChanged = filterCameraSignatureRef.current !== filterSignature
       filterCameraSignatureRef.current = filterSignature
       if (filteredMap && filterChanged && !selectedVenueId) focusFilteredVenues(mapRef.current!, venues)
@@ -1515,7 +1554,7 @@ export function MapEntryB() {
   // source does not exist yet and this effect returns early. Re-run once the
   // map reaches `ready` so the source and camera always receive the current
   // filtered collection instead of the load callback's initial closure.
-  }, [category, city, filteredMap, locale, mapState, query, selectedEditorialPlaceId, selectedVenueId, state.localPulseEvidenceByVenue, venues])
+  }, [category, city, editorialCategory, editorialPlaces, filteredMap, locale, mapState, query, selectedEditorialPlaceId, selectedVenueId, state.localPulseEvidenceByVenue, venues])
 
   useEffect(() => {
     userLocationRef.current = userLocation
@@ -1645,13 +1684,14 @@ export function MapEntryB() {
         data-testid="ondo-b-map-entry"
         data-hydrated={state.hydrated ? "true" : "false"}
         data-city={city}
+        data-temperature-shell="city-map"
         data-directory-source={city === "jeju" ? undefined : SOURCE_ID}
         data-source-date={city === "jeju" ? undefined : SOURCE_DATE}
         data-city-record-count={city === "jeju" ? undefined : MAP_VENUES.filter((venue) => venue.cityId === city).length}
         data-editorial-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : undefined}
         data-editorial-temperature-mode={city === "jeju" ? "editorial-coverage" : undefined}
         data-editorial-temperature-score={city === "jeju" ? "none" : undefined}
-        data-result-count={venues.length}
+        data-result-count={city === "jeju" ? editorialPlaces.length : venues.length}
         data-map-state={mapState}
         data-map-attempt={retryToken + 1}
         data-connectivity={online ? "online" : "offline"}
@@ -1689,15 +1729,15 @@ export function MapEntryB() {
             <div className={styles.cityTitle}><h1>{CITY[city].label[locale]}</h1><small className={styles.srOnly} data-testid="ondo-b-pulse-city-status" data-pulse-city-status={city === "jeju" ? "editorial-growing" : PULSE_CITY_STATUS[city]}>{cityPulseStatus(city, locale)}</small></div>
             <button type="button" className={styles.language} data-testid="ondo-b-language" aria-label={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} title={NEXT_LOCALE_ACCESSIBLE_LABEL[locale]} data-language-target={NEXT_LOCALE[locale]} onClick={() => actions.setLocale(NEXT_LOCALE[locale])}><Languages size={16} aria-hidden="true" />{NEXT_LOCALE_LABEL[locale]}</button>
           </div>
-          {city !== "jeju" ? <>
-            <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); updateCityContext({ query: "" }) }} aria-label={MAP_UI[locale].clearSearch}><X size={16} /></button> : null}</div>
-            <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
-              {categoryRailItems.map((item) => {
-                const label = after19FilterActive ? AFTER19_CATEGORY_LABEL[locale] : CATEGORY[item][locale]
-                return <button key={item} type="button" aria-label={label} aria-pressed={category === item} onClick={() => { const nextCategory = after19FilterActive ? "night" : item; setCategory(nextCategory); updateCityContext({ category: nextCategory }) }}>{after19FilterActive ? label : mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : label}</button>
-              })}
-            </div>
-          </> : null}
+          <div className={styles.search} role="search" data-testid="ondo-b-search-shell"><Search size={18} /><input data-testid="ondo-b-search" aria-label={copy.search} value={query} maxLength={SEARCH_MAX_LENGTH} onChange={(event) => { const nextQuery = event.target.value.slice(0, SEARCH_MAX_LENGTH); setQuery(nextQuery); if (city !== "jeju") updateCityContext({ query: nextQuery }) }} placeholder={copy.search} />{query ? <button type="button" onClick={() => { setQuery(""); if (city !== "jeju") updateCityContext({ query: "" }) }} aria-label={MAP_UI[locale].clearSearch}><X size={16} /></button> : null}</div>
+          <div className={styles.rail} aria-label={copy.filterLabel} data-testid="ondo-b-category-rail">
+            {city === "jeju" ? EDITORIAL_CATEGORY_OPTIONS.map((item) => (
+              <button key={item} type="button" data-editorial-category={item} aria-label={EDITORIAL_CATEGORY[item][locale]} aria-pressed={editorialCategory === item} onClick={() => setEditorialCategory(item)}>{EDITORIAL_CATEGORY[item][locale]}</button>
+            )) : categoryRailItems.map((item) => {
+              const label = after19FilterActive ? AFTER19_CATEGORY_LABEL[locale] : CATEGORY[item][locale]
+              return <button key={item} type="button" aria-label={label} aria-pressed={category === item} onClick={() => { const nextCategory = after19FilterActive ? "night" : item; setCategory(nextCategory); updateCityContext({ category: nextCategory }) }}>{after19FilterActive ? label : mapLayoutMode === "ultra-short" ? CATEGORY[item].compact[locale] : label}</button>
+            })}
+          </div>
         </header>
 
         <div ref={mapNode} className={styles.map} data-testid="maplibre-map" role="region" aria-label={city === "jeju" ? MAP_UI[locale].editorialRegion : MAP_UI[locale].mapRegion} aria-describedby="ondo-b-map-instruction ondo-b-result-truth" hidden={effectiveView !== "map"} aria-hidden={editorialOpen || effectiveView !== "map" ? true : undefined} inert={editorialOpen ? true : undefined} data-editorial-inert={editorialOpen ? "true" : "false"} />
@@ -1711,7 +1751,7 @@ export function MapEntryB() {
         {!editorialOpen && effectiveView === "map" && (mapState === "idle" || mapState === "loading") ? <p className={styles.mapLoading} role="status" data-testid="ondo-b-map-loading">{city === "jeju" ? copy.editorialMapLoading : copy.mapLoading}</p> : null}
 
         <div className={styles.mapUtilityCluster} data-testid="ondo-b-map-utility-cluster" data-editorial-open={editorialOpen ? "true" : "false"}>
-          {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? (
+          {effectiveView === "map" && mapState !== "error" ? (
             <details
               className={styles.locationMessage}
               data-testid="ondo-b-location-message"
@@ -1722,7 +1762,7 @@ export function MapEntryB() {
               <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
             </details>
           ) : null}
-          {city !== "jeju" && effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
+          {effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}><LocateFixed size={19} /></button> : null}
           <GlobalAfter19B
             locale={locale}
             context={{
@@ -1735,24 +1775,24 @@ export function MapEntryB() {
           />
           {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} presentation={effectiveView === "list" || mapState === "error" ? "list" : "map"} onOpenChange={setEditorialOpen} onSelectEditorialPlace={city === "jeju" ? focusEditorialPlace : undefined} /> : null}
         </div>
-        {city !== "jeju" && effectiveView === "map" && mapState !== "error" && (!online || locationState === "denied" || locationState === "unsupported") ? (
+        {effectiveView === "map" && mapState !== "error" && (!online || locationState === "denied" || locationState === "unsupported") ? (
           <p className={styles.locationFeedback} data-testid="ondo-b-location-feedback" role="alert" aria-live="assertive">{locationMessage}</p>
         ) : null}
 
         <div className={styles.mapChrome} data-testid="ondo-b-map-chrome">
           {city === "jeju" ? <details className={styles.editorialPlaceList} data-testid="ondo-b-editorial-place-list">
-            <summary data-editorial-place-opener={selectedEditorialPlaceId ?? "none"}><MapPin size={17} aria-hidden="true" /><span>{copy.jejuStatus}</span><ChevronRight size={16} aria-hidden="true" /></summary>
-            <div>{JEJU_EDITORIAL_PLACES.map((place) => <button key={place.id} type="button" aria-current={selectedEditorialPlaceId === place.id ? "location" : undefined} onClick={() => openEditorialPlaceDetail(place)}><span>{place.name[locale]}</span><ChevronRight size={15} aria-hidden="true" /></button>)}</div>
+            <summary data-editorial-place-opener={selectedEditorialPlaceId ?? "none"}><List size={17} aria-hidden="true" /><span>{copy.list}</span><ChevronRight size={16} aria-hidden="true" /></summary>
+            <div>{editorialPlaces.map((place) => <button key={place.id} type="button" aria-current={selectedEditorialPlaceId === place.id ? "location" : undefined} onClick={() => openEditorialPlaceDetail(place)}><span>{place.name[locale]}</span><ChevronRight size={15} aria-hidden="true" /></button>)}</div>
           </details> : null}
           <div
             className={styles.resultBar}
             data-testid="ondo-b-result-bar"
             data-chrome-role="view-action"
             data-effective-view={effectiveView}
-            data-result-count={city === "jeju" ? undefined : venues.length}
+            data-result-count={city === "jeju" ? editorialPlaces.length : venues.length}
             data-result-source={city === "jeju" ? "editorial" : SOURCE_ID}
           >
-            <span id="ondo-b-result-truth" className={styles.resultTruth} data-testid="ondo-b-result-truth" role="status" aria-live="polite" aria-atomic="true"><b>{city === "jeju" ? copy.jejuMapTruth : resultCount(venues.length, locale)}</b><small>{city === "jeju" ? copy.jejuTruth : `${copy.source} · ${copy.categoryBasis}`}</small></span>
+            <span id="ondo-b-result-truth" className={styles.resultTruth} data-testid="ondo-b-result-truth" role="status" aria-live="polite" aria-atomic="true"><b>{city === "jeju" ? resultCount(editorialPlaces.length, locale) : resultCount(venues.length, locale)}</b><small>{city === "jeju" ? copy.jejuTruth : `${copy.source} · ${copy.categoryBasis}`}</small></span>
             {city === "jeju" ? null : mapLayoutMode === "ultra-short" ? (
               <span className={styles.forcedListLabel} data-testid="ondo-b-effective-view-label" aria-label={`${copy.list} · ${MAP_UI[locale].shortList}`}><List size={17} /><span>{copy.list}</span></span>
             ) : (

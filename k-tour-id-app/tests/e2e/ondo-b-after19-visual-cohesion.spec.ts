@@ -116,7 +116,8 @@ test.describe("After 19 visual cohesion", () => {
 
       const collection = page.getByTestId("ondo-b-editorial-place-list")
       const collectionBox = await collection.boundingBox()
-      expect(collectionBox?.width ?? 0).toBeLessThanOrEqual(50)
+      expect(collectionBox?.width ?? 0).toBeGreaterThanOrEqual(88)
+      expect(collectionBox?.width ?? 0).toBeLessThanOrEqual(104)
       await expectDarkSurface(collection)
       await expectDarkSurface(page.getByTestId("ondo-b-map-utility-cluster"))
       await expectDarkSurface(page.getByTestId("global-after19-banner"))

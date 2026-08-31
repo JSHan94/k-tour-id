@@ -1748,7 +1748,7 @@
 .root:has(> .mapUtilityCluster[data-editorial-open="true"]) .search,
 .root:has(> .mapUtilityCluster[data-editorial-open="true"]) .rail { display: none; }
 
-.root[data-directory-source]:not(.ultraShort):has(> .mapUtilityCluster[data-editorial-open="true"]) > .cityHeader {
+.root[data-temperature-shell="city-map"]:not(.ultraShort):has(> .mapUtilityCluster[data-editorial-open="true"]) > .cityHeader {
   grid-template-rows: 44px;
 }
 
@@ -1760,40 +1760,40 @@
 /* Header hierarchy: phones keep the familiar three reading rows. Wider maps
    reuse the same controls in two rows, cap their visual span and return the
    remaining canvas to the map. */
-.root[data-directory-source]:not(.ultraShort) > .cityHeader {
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader {
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 44px 44px 48px;
 }
 
-.root[data-directory-source]:not(.ultraShort) > .cityHeader > .topline,
-.root[data-directory-source]:not(.ultraShort) > .cityHeader > .search,
-.root[data-directory-source]:not(.ultraShort) > .cityHeader > .rail {
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .topline,
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .search,
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .rail {
   grid-column: 1;
 }
 
-.root[data-directory-source]:not(.ultraShort) > .cityHeader > .topline { grid-row: 1; }
-.root[data-directory-source]:not(.ultraShort) > .cityHeader > .search { grid-row: 2; }
-.root[data-directory-source]:not(.ultraShort) > .cityHeader > .rail { grid-row: 3; }
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .topline { grid-row: 1; }
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .search { grid-row: 2; }
+.root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .rail { grid-row: 3; }
 
 @container ondo-map-root (min-width: 600px) {
-  .root[data-directory-source]:not(.ultraShort) > .cityHeader {
+  .root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader {
     grid-template-columns: minmax(240px, 360px) minmax(0, 1fr);
     grid-template-rows: 44px 48px;
     column-gap: 8px;
     row-gap: 6px;
   }
 
-  .root[data-directory-source]:not(.ultraShort) > .cityHeader > .topline {
+  .root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .topline {
     grid-row: 1;
     grid-column: 1 / -1;
   }
 
-  .root[data-directory-source]:not(.ultraShort) > .cityHeader > .search {
+  .root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .search {
     grid-row: 2;
     grid-column: 1;
   }
 
-  .root[data-directory-source]:not(.ultraShort) > .cityHeader > .rail {
+  .root[data-temperature-shell="city-map"]:not(.ultraShort) > .cityHeader > .rail {
     grid-row: 2;
     grid-column: 2;
     width: min(100%, 980px);
@@ -1801,7 +1801,7 @@
     justify-self: start;
   }
 
-  .root[data-directory-source]:not(.ultraShort) > .mapUtilityCluster {
+  .root[data-temperature-shell="city-map"]:not(.ultraShort) > .mapUtilityCluster {
     top: calc(118px + env(safe-area-inset-top));
   }
 }
@@ -2005,22 +2005,23 @@
    controls one tap away without repeating “Explore Jeju” as a fake CTA. */
 .editorialPlaceList {
   top: auto;
-  bottom: 56px;
-  width: 48px;
+  right: 52px;
+  bottom: 0;
+  left: auto;
+  width: 96px;
   min-height: 48px;
   border-radius: 15px;
 }
 
 .editorialPlaceList > summary {
-  width: 48px;
+  width: 96px;
   min-height: 48px;
-  grid-template-columns: 1fr;
+  grid-template-columns: 18px minmax(0, 1fr);
   place-items: center;
-  gap: 0;
-  padding: 0;
+  gap: 6px;
+  padding: 0 10px;
 }
 
-.editorialPlaceList:not([open]) > summary > span,
 .editorialPlaceList:not([open]) > summary > svg:last-child {
   position: absolute;
   width: 1px;
@@ -2113,10 +2114,6 @@
   .root[data-directory-source]:not(.ultraShort):has(> .listPanel) > .mapChrome > .resultBar {
     width: 104px;
   }
-}
-
-.root[data-editorial-point-count] > .mapUtilityCluster {
-  top: calc(64px + env(safe-area-inset-top));
 }
 
 /* Bottom chrome has one quiet legal/status lane. Expanded truth stays one

@@ -160,9 +160,9 @@
 #### D-14-A2 · 세 도시 온도 UI 단일화
 
 - 서울·부산·제주는 하나의 지도 온도 renderer와 동일한 `field → aura → core → selected halo → place capsule` 레이어 순서를 사용한다. 제주 전용 점·라벨·범례 renderer는 두지 않는다.
-- 온도 범례의 크기·위치·열림 방식과 장소 선택 hit target도 세 도시에서 동일하게 유지한다. 제주 editorial place list는 출처 접근성을 위해 별도 정보 제어로 남기되 온도 표현을 대신하지 않는다.
+- 온도 범례의 크기·위치·열림 방식과 장소 선택 hit target도 세 도시에서 동일하게 유지한다. 검색·가로 필터·위치·목록 제어도 같은 city-map shell을 쓰며, 제주 필터의 내용만 source-backed editorial category에 맞춘다. 제주 editorial place list는 같은 `List` 위치와 형태로 출처 접근성을 보존한다.
 - 데이터 모델 차이는 화면 구조가 아니라 명시적 state로만 보존한다. 서울·부산은 `curated-scored`, 제주는 `editorial-unscored`이며 제주 `pulseScore=-1`, `level=limited`, `pulseEligible=false`를 유지한다.
-- 제주 heat field는 검증된 editorial 좌표에 동일한 시각 가중치를 적용해 coverage만 보여준다. 장소 간 인기·혼잡·순위 또는 숫자 점수를 암시하는 데이터는 생성하지 않는다.
+- 제주 heat field는 검증된 editorial 좌표의 공간적 밀도를 공통 색·크기 scale에 투영해 coverage만 보여준다. 가까운 검증 좌표가 겹칠수록 field가 짙어지지만 장소 간 인기·혼잡·순위 또는 숫자 점수를 암시하는 데이터는 생성하지 않는다.
 - light·After 19, KO·EN·JA, mobile·desktop에서 동일 geometry와 selection capsule을 사용한다.
 
 ## 3. 충돌 해소 표
