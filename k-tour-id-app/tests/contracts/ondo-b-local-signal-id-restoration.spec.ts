@@ -22,6 +22,7 @@ test("B-P0-SIGNAL-001 canonical place owns a B-native Local Signal entry and exa
 
 test("B-P0-SIGNAL-002 the local walkthrough is truthful, consentful, synchronous, and covers every return", () => {
   const walkthrough = source("features/ondo/identity-b/local-check-walkthrough-b.tsx")
+  const signal = source("features/ondo/local-signal-b/local-signal-layer-b.tsx")
 
   for (const field of ["requester", "purpose", "minimum", "retention", "decline"]) {
     expect(walkthrough).toContain(`${field}:`)
@@ -29,9 +30,12 @@ test("B-P0-SIGNAL-002 the local walkthrough is truthful, consentful, synchronous
   for (const outcome of ['"success"', '"cancel"', '"failure"', '"unavailable"', '"expired"']) {
     expect(walkthrough).toContain(outcome)
   }
-  expect(walkthrough).toContain("No identity provider is connected and no credential is created")
-  expect(walkthrough).toContain("연결된 신원 공급자나 생성되는 자격증명은 없습니다")
-  expect(walkthrough).toContain("No name, document, birth date, profile, or credential is saved")
+  for (const testId of ["consent-minimum", "consent-retention", "consent-requester", "consent-purpose", "local-check-boundary"]) {
+    expect(walkthrough).toContain(`data-testid="${testId}"`)
+  }
+  expect(signal).toContain("Only this place, your picks and the time are kept on this device")
+  expect(signal).toContain("Saving may ask for an account, then a one-time person check")
+  expect(signal).not.toContain("No account, ID, or credential is created")
   expect(walkthrough).toContain("useModalIsolation")
   expect(walkthrough).not.toMatch(/setTimeout|fetch\(|XMLHttpRequest|WebSocket|URLSearchParams|crypto\.|Math\.random|Date\.now/)
   expect(walkthrough).not.toMatch(/from\s+["'][^"']*(?:identity\/identity-entry|identity\/gate-overlay|ondo-provider|services\/mock|mock-data)/)

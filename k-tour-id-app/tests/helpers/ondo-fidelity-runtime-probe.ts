@@ -31,22 +31,24 @@ async function probeMeal() {
   const module = await load("features/ondo/commerce-b/stable-commerce-model-b.ts")
   const create = module.createStableCommerceBState as () => unknown
   const transition = module.stableCommerceBReducer as (state: unknown, action: unknown) => unknown
+  const createLockedQuote = module.createStableCommerceBLockedQuote as (state: unknown, expiresAt: Date) => unknown
   const quote = module.stableCommerceQuoteDebitB as (state: unknown) => unknown
   const balance = module.stableCommerceBalanceB as (state: unknown) => unknown
   const settlement = module.stableCommerceSettlementB as (state: unknown) => unknown
-  if ([create, transition, quote, balance, settlement].some((value) => typeof value !== "function")) {
+  if ([create, transition, createLockedQuote, quote, balance, settlement].some((value) => typeof value !== "function")) {
     throw new Error("Commerce contract exports createStableCommerceBState, stableCommerceBReducer, and quote/balance/settlement helpers")
   }
 
   const snapshot = (state: unknown) => ({ state, quoteDebit: quote(state), holderBalance: balance(state), merchantSettlement: settlement(state) })
   const initial = create()
   const benefitSelected = transition(initial, { type: "SET_VOUCHER", selected: true })
-  const confirmed = transition(benefitSelected, { type: "CONFIRM" })
+  const lockedQuote = createLockedQuote(benefitSelected, new Date(Date.now() + 15 * 60 * 1000))
+  const confirmed = transition(benefitSelected, { type: "CONFIRM", quote: lockedQuote })
   const success = transition(confirmed, { type: "PAYMENT_RETURN", outcome: "success" })
   const successReplay = transition(success, { type: "PAYMENT_RETURN", outcome: "success" })
 
   const failed = transition(confirmed, { type: "PAYMENT_RETURN", outcome: "failure" })
-  const retryConfirmed = transition(failed, { type: "CONFIRM" })
+  const retryConfirmed = transition(failed, { type: "CONFIRM", quote: lockedQuote })
   const retried = transition(retryConfirmed, { type: "PAYMENT_RETURN", outcome: "success" })
   const insufficient = transition(confirmed, { type: "PAYMENT_RETURN", outcome: "insufficient" })
   const refunded = transition(success, { type: "REFUND" })

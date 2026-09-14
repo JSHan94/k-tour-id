@@ -1,456 +1,111 @@
 "use client"
 
-import type { KeyboardEvent } from "react"
-import { useMemo, useEffect, useRef, useState } from "react"
-import { ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Compass, Info, KeyRound, NotebookPen } from "lucide-react"
-import type { OndoBDiscoveryPreference, OndoBLocale, OndoBPersona } from "../shared/state/ondo-b-preferences"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { Check, Compass, House, LocateFixed, MapPin } from "lucide-react"
+import { requestBDiscoveryFocus } from "../map/b-discovery-focus"
+import type { OndoBDiscoveryArea, OndoBDiscoveryIntent, OndoBDiscoveryPreference, OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { ONDO_B_DISCOVERY_PREFERENCES } from "../shared/state/ondo-b-preferences"
 import { useOndoB } from "../shared/state/ondo-b-provider"
-import { OndoBrandLockupB } from "../shared/ui/ondo-brand-lockup-b"
-import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
+import { SheetB } from "../shared/ui/sheet-b"
+import { useSheetPresence } from "../shared/ui/use-sheet-presence"
 import styles from "./official-directory-onboarding.module.css"
 
-type Step = "value" | "intent" | "preferences"
-
-const FOCUSABLE = "a[href],button:not([disabled]),summary,input:not([disabled]):not([type='hidden']),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex='-1'])"
-
-const PERSONAS: ReadonlyArray<{
-  id: OndoBPersona
-  icon: typeof Compass
-  label: Record<OndoBLocale, string>
-  note: Record<OndoBLocale, string>
-}> = [
-  {
-    id: "travelling",
-    icon: Compass,
-    label: { en: "I’m travelling in Korea", ko: "한국을 여행 중이에요", ja: "韓国を旅行中" },
-    note: { en: "Find a useful meal near where you are now.", ko: "지금 머무는 곳 가까이에서 한 끼를 찾아요.", ja: "今いる場所の近くで食事を探します。" },
-  },
-  {
-    id: "preparing",
-    icon: CalendarDays,
-    label: { en: "I’m preparing a Korea trip", ko: "한국 여행을 준비 중이에요", ja: "韓国旅行を準備中" },
-    note: { en: "Explore and save places before you arrive.", ko: "도착 전에 장소를 둘러보고 저장해요.", ja: "出発前に場所を探して保存します。" },
-  },
-  {
-    id: "local_contributor",
-    icon: NotebookPen,
-    label: { en: "I contribute local food knowledge", ko: "로컬 식음료 정보를 나누고 싶어요", ja: "現地の食情報を共有したい" },
-    note: { en: "Start from verified place information and keep your own local notes.", ko: "확인된 장소 정보에서 시작해 나만의 로컬 메모를 남겨요.", ja: "確認済みの場所情報を起点に、自分の現地メモを残します。" },
-  },
-]
-
+type Step = "intent" | "area" | "preferences"
 const COPY = {
-  en: {
-    dialog: "ONDO guest setup",
-    back: "Go back",
-    progress: "Setup progress",
-    eyebrow: "Korea, one meal at a time",
-    title: "Find a meal that feels right for your Korea.",
-    body: "Explore food in Seoul and Busan, plus travel ideas across Jeju, then keep your starting preferences on this device.",
-    categoryLabel: "What the directory knows",
-    category: "Seoul and Busan food categories are organized from LOCALDATA place types.",
-    boundaryLabel: "Coverage boundary",
-    boundary: "Listed in LOCALDATA on Aug 19, 2026. Check current hours, menu, prices and payment support with each place.",
-    sourceSummary: "Official source · what it confirms",
-    start: "Set guest preferences",
-    guest: "Explore without setup",
-    identityTitle: "Set up K-Tour ID",
-    identityNote: "Optional · guest Explore stays open",
-    intentTitle: "What brings you to ONDO?",
-    intentBody: "This choice stays on this device. Every option opens the same guest Explore and does not unlock or restrict features.",
-    continueToPreferences: "Choose food preferences",
-    skip: "Skip and explore",
-    preferenceTitle: "What food and dietary needs are you looking for?",
-    preferenceBody: "Choose anything useful. These preferences keep every place visible, and you can change them later in Settings.",
-    mealGroup: "Food interests",
-    moodGroup: "Mood and timing",
-    dietaryGroup: "Dietary needs",
-    dietaryBoundary: "Dietary support is not confirmed. Check with each place before relying on a selection.",
-    finish: "Open guest Explore",
-    localeFailed: "Language could not be saved on this device.",
-    intentFailed: "Intent could not be saved.",
-    setupFailed: "Setup could not be saved.",
-    guestFailed: "Guest setup could not be saved.",
-  },
-  ko: {
-    dialog: "ONDO 게스트 시작 설정",
-    back: "뒤로",
-    progress: "시작 설정 진행",
-    eyebrow: "한국에서 만나는 나만의 한 끼",
-    title: "지금의 나에게 잘 맞는 한국의 한 끼를 찾아보세요.",
-    body: "서울·부산의 먹거리와 제주 여행 아이디어를 둘러보고, 나만의 취향을 이 기기에 저장해요.",
-    categoryLabel: "디렉터리가 아는 것",
-    category: "서울·부산의 음식점 분류는 LOCALDATA 장소 유형을 바탕으로 정리했어요.",
-    boundaryLabel: "확인 범위",
-    boundary: "2026년 8월 19일 LOCALDATA에 등록된 장소입니다. 오늘의 영업시간·메뉴·가격·결제는 장소에 확인해 주세요.",
-    sourceSummary: "공식 출처 · 확인 범위",
-    start: "게스트 취향 설정",
-    guest: "설정 없이 탐색",
-    identityTitle: "K-Tour ID 설정",
-    identityNote: "선택 사항 · 게스트 탐색은 그대로 열려 있어요",
-    intentTitle: "어떤 목적으로 ONDO를 찾았나요?",
-    intentBody: "선택은 이 기기에만 저장됩니다. 세 선택 모두 같은 게스트 탐색으로 이어지며 기능을 열거나 제한하지 않아요.",
-    continueToPreferences: "음식 취향 고르기",
-    skip: "건너뛰고 탐색",
-    preferenceTitle: "어떤 음식과 식이 조건을 찾고 있나요?",
-    preferenceBody: "필요한 항목을 골라보세요. 모든 장소는 그대로 보이며 나중에 설정에서 바꿀 수 있어요.",
-    mealGroup: "음식 관심사",
-    moodGroup: "분위기와 시간",
-    dietaryGroup: "식이 요구사항",
-    dietaryBoundary: "식이 요구사항 지원 여부는 확인되지 않습니다. 선택에 의존하기 전에 각 장소에 직접 확인해 주세요.",
-    finish: "게스트 탐색 열기",
-    localeFailed: "언어 설정을 이 기기에 저장하지 못했어요.",
-    intentFailed: "이용 목적을 저장하지 못했어요.",
-    setupFailed: "시작 설정을 저장하지 못했어요.",
-    guestFailed: "게스트 시작 설정을 저장하지 못했어요.",
-  },
-  ja: {
-    dialog: "ONDO ゲスト設定",
-    back: "戻る",
-    progress: "設定の進行状況",
-    eyebrow: "場所から、自分らしい旅へ",
-    title: "今の自分にちょうどいい、韓国の一食を見つけよう。",
-    body: "ソウル・釜山の食と済州の旅のアイデアを探し、最初の好みをこの端末に保存できます。",
-    categoryLabel: "このディレクトリで分かること",
-    category: "ソウル・釜山の飲食店分類は、LOCALDATAの場所タイプをもとに整理しています。",
-    boundaryLabel: "確認できる範囲",
-    boundary: "2026年8月19日時点でLOCALDATAに掲載された場所です。現在の営業時間、メニュー、価格、決済は店舗で確認してください。",
-    sourceSummary: "公式出典 · 確認できる範囲",
-    start: "ゲストの好みを設定",
-    guest: "設定せずに見る",
-    identityTitle: "K-Tour IDを設定",
-    identityNote: "任意 · ゲスト利用はそのまま続けられます",
-    intentTitle: "ONDOを使う目的は？",
-    intentBody: "選択内容はこの端末にのみ保存されます。どの選択肢でも同じゲスト向けの「探す」画面が開き、機能の解放や制限には使いません。",
-    continueToPreferences: "食の好みを選ぶ",
-    skip: "スキップして見る",
-    preferenceTitle: "どんな食事や食の希望・制限がありますか？",
-    preferenceBody: "役立つ項目を選んでください。すべての場所はそのまま表示され、後から設定で変更できます。",
-    mealGroup: "食の興味",
-    moodGroup: "雰囲気・時間帯",
-    dietaryGroup: "食の希望・制限",
-    dietaryBoundary: "食の希望・制限への対応は確認されていません。利用前に各店舗へ直接確認してください。",
-    finish: "ゲスト向けの「探す」を開く",
-    localeFailed: "言語設定をこの端末に保存できませんでした。",
-    intentFailed: "利用目的を保存できませんでした。",
-    setupFailed: "初期設定を保存できませんでした。",
-    guestFailed: "ゲスト設定を保存できませんでした。",
-  },
+  en: { label: "Set up your map", intentTitle: "What brings you here?", intentBody: "", short_trip: "Travel in Korea", nearby: "Explore nearby", living: "Living in Korea", areaTitle: "Where should we begin?", areaBody: "", areaOptional: "", seoul: "Seoul", busan: "Busan", jeju: "Jeju", tasteTitle: "What sounds good?", tasteBody: "Places stay visible.", meal: "Food", mood: "Moment", dietary: "Dietary", dietaryHint: "Check dietary needs with each place.", previewMatch: "A taste match", previewNone: "No confirmed taste match yet", previewUnknown: "Dietary details need checking", next: "Next", finish: "Open map", defaults: "Skip for now", error: "Couldn’t save. Try again or skip for now.", selected: "Selected" },
+  ko: { label: "내 지도 설정", intentTitle: "어떤 한국을 찾고 있나요?", intentBody: "", short_trip: "한국 여행", nearby: "내 주변 탐색", living: "한국에서 생활", areaTitle: "어디서 시작할까요?", areaBody: "", areaOptional: "", seoul: "서울", busan: "부산", jeju: "제주", tasteTitle: "지금 끌리는 건?", tasteBody: "장소는 모두 그대로 보여요.", meal: "음식", mood: "분위기", dietary: "식이 조건", dietaryHint: "식이 조건은 방문 전 장소에 확인해 주세요.", previewMatch: "취향과 맞는 곳", previewNone: "확인된 취향 일치는 아직 없어요", previewUnknown: "식이 정보는 확인이 필요해요", next: "다음", finish: "지도 열기", defaults: "건너뛰기", error: "저장하지 못했어요. 다시 시도하거나 건너뛰세요.", selected: "선택됨" },
+  ja: { label: "マップ設定", intentTitle: "どんな韓国を探しますか？", intentBody: "", short_trip: "韓国旅行", nearby: "近くを探す", living: "韓国で暮らす", areaTitle: "どこから始めますか？", areaBody: "", areaOptional: "", seoul: "ソウル", busan: "釜山", jeju: "済州", tasteTitle: "今の気分は？", tasteBody: "すべての場所は表示されます。", meal: "食", mood: "雰囲気", dietary: "食の条件", dietaryHint: "食の条件は訪問前に店舗へ確認してください。", previewMatch: "好みに合う場所", previewNone: "確認できた一致はまだありません", previewUnknown: "食の条件は確認が必要です", next: "次へ", finish: "マップを開く", defaults: "スキップ", error: "保存できませんでした。もう一度試すか、スキップしてください。", selected: "選択済み" },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
-const EDITORIAL_ALT = {
-  en: "Travelers talking on a bright transit walkway",
-  ko: "밝은 이동 통로에서 대화하는 여행자 세 명",
-  ja: "明るい通路で話す旅行者3人",
-} satisfies Record<OndoBLocale, string>
-
-function JapaneseHeading({ phrases }: { phrases: readonly string[] }) {
-  return <>{phrases.map((phrase) => <span className={styles.jaPhrase} key={phrase}>{phrase}</span>)}</>
-}
+const INTENTS: { id: OndoBDiscoveryIntent; icon: typeof Compass }[] = [
+  { id: "short_trip", icon: Compass }, { id: "nearby", icon: LocateFixed }, { id: "living", icon: House },
+]
+const AREAS: Exclude<OndoBDiscoveryArea, null>[] = ["seoul", "busan", "jeju"]
 
 export function OfficialDirectoryOnboardingLayer() {
   const { state, actions } = useOndoB()
-  const [step, setStep] = useState<Step>("value")
+  const rootRef = useRef<HTMLDivElement>(null)
+  const [step, setStep] = useState<Step>("intent")
+  const [intent, setIntent] = useState<OndoBDiscoveryIntent | null>(null)
+  const [area, setArea] = useState<OndoBDiscoveryArea>(null)
   const [preferences, setPreferences] = useState<OndoBDiscoveryPreference[]>([])
-  const [saveError, setSaveError] = useState<string | null>(null)
-  const dialogRef = useRef<HTMLElement>(null)
-  const previousOnboardingRef = useRef(state.onboarding)
-  const focusValueActionRef = useRef(false)
+  const [saveError, setSaveError] = useState(false)
+  const [exiting, setExiting] = useState(false)
+  const previousOnboarding = useRef(state.onboarding)
+  // The map is the first-run experience. Only the explicit Settings setup
+  // action starts this optional wizard; NEW is not a request to open a sheet.
+  const sheetPresence = useSheetPresence(state.hydrated && state.onboarding === "ONB-IN-PROGRESS" ? true : null)
   const copy = COPY[state.locale]
-  const stepIndex = useMemo(() => ({ value: 1, intent: 2, preferences: 3 })[step], [step])
 
   useEffect(() => {
-    focusValueActionRef.current = previousOnboardingRef.current === "ONB-COMPLETE" && state.onboarding === "ONB-NEW"
-    previousOnboardingRef.current = state.onboarding
-    if (state.onboarding !== "ONB-NEW") return
-    setStep("value")
-    setPreferences([])
-    setSaveError(null)
-  }, [state.onboarding])
+    if (previousOnboarding.current !== "ONB-IN-PROGRESS" && state.onboarding === "ONB-IN-PROGRESS") {
+      setStep("intent"); setIntent(state.persona); setArea(state.discoveryArea); setPreferences([...state.discoveryPreferences]); setSaveError(false); setExiting(false)
+      requestBDiscoveryFocus({ city: null, source: "onboarding", motion: "standard" })
+    }
+    previousOnboarding.current = state.onboarding
+  }, [state.discoveryArea, state.discoveryPreferences, state.onboarding, state.persona])
 
-  useEffect(() => {
-    if (state.toast) setSaveError(state.toast)
-  }, [state.toast])
-
-  useEffect(() => {
-    if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return
-    const frame = window.requestAnimationFrame(() => {
-      const dialog = dialogRef.current
-      if (!dialog) return
-      dialog.scrollTop = 0
-      const preferred = dialog.querySelector<HTMLElement>("[data-onboarding-initial-focus]")
-      const dialogBounds = dialog.getBoundingClientRect()
-      const preferredBounds = preferred?.getBoundingClientRect()
-      const preferredIsFullyVisible = Boolean(preferredBounds
-        && preferredBounds.top >= dialogBounds.top
-        && preferredBounds.right <= dialogBounds.right
-        && preferredBounds.bottom <= dialogBounds.bottom
-        && preferredBounds.left >= dialogBounds.left)
-      const resetAction = step === "value" && focusValueActionRef.current && preferredIsFullyVisible ? preferred : null
-      ;(resetAction ?? (step === "value" ? dialog : preferredIsFullyVisible ? preferred : dialog))?.focus({ preventScroll: true })
-      if (step === "value") focusValueActionRef.current = false
-    })
-    return () => window.cancelAnimationFrame(frame)
+  useLayoutEffect(() => {
+    if (!state.hydrated || state.onboarding !== "ONB-IN-PROGRESS") return
+    const scrollOwner = rootRef.current?.querySelector<HTMLElement>('[data-sheet-scroll-owner="true"]')
+    if (scrollOwner) scrollOwner.scrollTop = 0
+    rootRef.current?.querySelector<HTMLElement>(`[data-onboarding-heading="${step}"]`)?.focus({ preventScroll: true })
   }, [state.hydrated, state.onboarding, step])
 
-  if (!state.hydrated || state.onboarding === "ONB-COMPLETE") return null
+  if (!sheetPresence.value) return null
 
-  const focusExplore = () => {
-    focusFirstAvailableDestination([
-      "[data-testid='ondo-b-nation'] [data-city='seoul']",
-      "[data-testid='ondo-b-map-entry'] button",
-      "[data-testid='nav-ondo']",
-    ])
+  const resetMap = () => requestBDiscoveryFocus({ city: null, source: "onboarding", motion: "standard" })
+  const escape = () => {
+    if (exiting) return
+    resetMap()
+    setSaveError(false)
+    setExiting(true)
+    actions.cancelOnboarding()
   }
-
-  const showRecovery = (message: string) => {
-    setSaveError(message)
-    window.requestAnimationFrame(() => dialogRef.current
-      ?.querySelector<HTMLElement>("[data-onboarding-recovery='true']")
-      ?.scrollIntoView({ block: "end" }))
-  }
-
+  const goBack = () => { if (exiting) return; setSaveError(false); if (step === "area") resetMap(); setStep(step === "preferences" ? "area" : "intent") }
   const finish = () => {
-    if (!actions.completeOnboarding(preferences)) {
-      showRecovery(copy.setupFailed)
-      return
-    }
-    focusExplore()
-  }
-
-  const skip = () => {
-    if (!actions.skipOnboarding()) {
-      showRecovery(copy.guestFailed)
-      return
-    }
-    setPreferences([])
-    focusExplore()
-  }
-
-  const changeLocale = (locale: OndoBLocale) => {
-    if (actions.setLocale(locale)) setSaveError(null)
-    else showRecovery(copy.localeFailed)
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.key === "Escape") {
-      event.preventDefault()
-      event.stopPropagation()
-      skip()
-      return
-    }
-    if (event.key !== "Tab") return
-    const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
-      .filter((element) => element.offsetParent !== null)
-    const first = focusable[0]
-    const last = focusable.at(-1)
-    if (!first || !last) {
-      event.preventDefault()
-      dialogRef.current?.focus()
-      return
-    }
-    if (document.activeElement === dialogRef.current) {
-      event.preventDefault()
-      ;(event.shiftKey ? last : first).focus()
-      return
-    }
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault()
-      last.focus()
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault()
-      first.focus()
+    if (!intent || exiting) return
+    if (area) requestBDiscoveryFocus({ city: area, source: "onboarding", motion: "standard" })
+    setSaveError(false)
+    setExiting(true)
+    const result = actions.completeOnboarding({ intent, area, preferences })
+    if (!result.ok) {
+      setExiting(false)
+      setSaveError(true)
     }
   }
+  const next = () => {
+    setSaveError(false)
+    if (step === "intent" && intent) { actions.beginOnboarding(); setStep("area") }
+    else if (step === "area" && (intent === "short_trip" || area)) {
+      setStep("preferences")
+      requestBDiscoveryFocus({ city: area, source: "onboarding", motion: "standard", personalization: { intent: intent ?? "short_trip", preferences } })
+    }
+    else if (step === "preferences") finish()
+  }
+  const toggle = (choice: OndoBDiscoveryPreference) => {
+    const nextPreferences = preferences.includes(choice) ? preferences.filter((item) => item !== choice) : [...preferences, choice]
+    setPreferences(nextPreferences)
+    requestBDiscoveryFocus({ city: area, source: "onboarding", motion: "standard", personalization: { intent: intent ?? "short_trip", preferences: nextPreferences } })
+  }
+  const canContinue = step === "intent" ? Boolean(intent) : step === "area" ? intent === "short_trip" || Boolean(area) : true
+  const primaryLabel = step === "preferences" ? copy.finish : step === "intent"
+    ? state.locale === "ko" ? "지역 고르기" : state.locale === "ja" ? "地域を選ぶ" : "Choose area"
+    : state.locale === "ko" ? "취향 고르기" : state.locale === "ja" ? "好みを選ぶ" : "Choose tastes"
 
-  return (
-    <div className={styles.backdrop} data-testid="ondo-onboarding-backdrop">
-      <section
-        ref={dialogRef}
-        className={styles.layer}
-        data-testid="ondo-onboarding"
-        data-visual-direction="arc-narrative"
-        data-onboarding-step={step}
-        role="dialog"
-        aria-modal="true"
-        aria-label={copy.dialog}
-        tabIndex={-1}
-        onKeyDown={handleKeyDown}
-      >
-        <header className={styles.header}>
-          {step === "value" ? <span /> : (
-            <button
-              type="button"
-              className={styles.iconButton}
-              onClick={() => setStep(step === "preferences" ? "intent" : "value")}
-              aria-label={copy.back}
-            >
-              <ChevronLeft size={20} aria-hidden="true" />
-            </button>
-          )}
-          <div
-            className={styles.progress}
-            role="progressbar"
-            aria-label={copy.progress}
-            aria-valuemin={1}
-            aria-valuemax={3}
-            aria-valuenow={stepIndex}
-          >
-            {[1, 2, 3].map((item) => <i key={item} className={item <= stepIndex ? styles.progressActive : undefined} />)}
-          </div>
-          <div className={styles.language} role="group" aria-label="Language / 언어 / 言語" data-testid="onboarding-language-control">
-            <button type="button" data-locale-choice="en" aria-label="View in English" aria-pressed={state.locale === "en"} onClick={() => changeLocale("en")}>EN</button>
-            <button type="button" data-locale-choice="ko" aria-label="한국어로 보기" aria-pressed={state.locale === "ko"} onClick={() => changeLocale("ko")}>KO</button>
-            <button type="button" data-locale-choice="ja" aria-label="日本語で表示" aria-pressed={state.locale === "ja"} onClick={() => changeLocale("ja")}>JA</button>
-          </div>
-        </header>
-
-        {step === "value" ? (
-          <div className={styles.value} data-testid="onboarding-step-value" data-stage="value">
-            <div className={styles.brandLockup}><OndoBrandLockupB /></div>
-            <p className={styles.eyebrow}>{copy.eyebrow}</p>
-            <h1>{state.locale === "ja"
-              ? <JapaneseHeading phrases={["今の自分に", "ちょうどいい、", "韓国の一食を", "見つけよう。"]} />
-              : copy.title}</h1>
-            <p className={styles.lead}>{copy.body}</p>
-            <figure className={styles.valueEditorial} data-testid="onboarding-editorial-image">
-              <img src="/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg" alt={EDITORIAL_ALT[state.locale]} />
-            </figure>
-            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
-              {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
-              <button
-                type="button"
-                data-onboarding-initial-focus
-                className={styles.primary}
-                    onClick={() => {
-                      setSaveError(null)
-                      actions.beginOnboarding()
-                  setStep("intent")
-                }}
-              >
-                {copy.start}<ArrowRight size={18} aria-hidden="true" />
-              </button>
-              <button type="button" className={styles.secondary} data-testid="onboarding-guest-skip" onClick={skip}>{copy.guest}</button>
-            </div>
-            <button
-              type="button"
-              className={styles.identityEntry}
-              data-testid="k-tour-id-setup-open"
-              onClick={() => actions.openIdentitySetup("onboarding")}
-            >
-              <span data-testid="onboarding-ktour-id-open"><KeyRound size={19} aria-hidden="true" /></span>
-              <span><strong>{copy.identityTitle}</strong><small>{copy.identityNote}</small></span>
-              <ChevronRight size={18} aria-hidden="true" />
-            </button>
-            <details
-              className={styles.sourceIntro}
-              data-testid="onboarding-source-boundary"
-              onBlur={(event) => {
-                if (event.relatedTarget && event.currentTarget.contains(event.relatedTarget)) return
-                event.currentTarget.removeAttribute("open")
-              }}
-            >
-              <summary aria-label={copy.sourceSummary}><span className={styles.srOnly}>{copy.sourceSummary}</span><Info size={16} aria-hidden="true" /></summary>
-              <div className={styles.sourceBody}>
-                <p><strong>{copy.categoryLabel}</strong><span>{copy.category}</span></p>
-                <p><strong>{copy.boundaryLabel}</strong><span>{copy.boundary}</span></p>
-              </div>
-            </details>
-          </div>
-        ) : null}
-
-        {step === "intent" ? (
-          <div className={styles.panel} data-testid="onboarding-step-intent" data-stage="intent">
-            <div className={styles.heading}>
-              <span>02</span>
-              <h1>{copy.intentTitle}</h1>
-              <p>{copy.intentBody}</p>
-            </div>
-            <div className={styles.personas}>
-              {PERSONAS.map((persona) => {
-                const Icon = persona.icon
-                const selected = state.persona === persona.id
-                return (
-                  <button
-                    key={persona.id}
-                    type="button"
-                    data-onboarding-initial-focus={persona.id === "travelling" ? "true" : undefined}
-                    aria-pressed={selected}
-                    className={selected ? styles.personaSelected : styles.persona}
-                    onClick={() => {
-                      if (actions.setPersona(persona.id)) setSaveError(null)
-                      else showRecovery(copy.intentFailed)
-                    }}
-                    data-testid={`persona-${persona.id}`}
-                  >
-                    <span className={styles.personaIcon}><Icon size={20} aria-hidden="true" /></span>
-                    <span><strong>{persona.label[state.locale]}</strong><small>{persona.note[state.locale]}</small></span>
-                    <i aria-hidden="true">{selected ? <Check size={15} /> : null}</i>
-                  </button>
-                )
-              })}
-            </div>
-            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
-              {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
-              <button type="button" className={styles.primary} disabled={!state.persona} onClick={() => setStep("preferences")}>
-                {copy.continueToPreferences}<ArrowRight size={18} aria-hidden="true" />
-              </button>
-              <button type="button" className={styles.secondary} onClick={skip}>{copy.skip}</button>
-            </div>
-          </div>
-        ) : null}
-
-        {step === "preferences" ? (
-          <div className={styles.panel} data-testid="onboarding-step-preferences" data-stage="preferences">
-            <div className={styles.heading}>
-              <span>03</span>
-              <h1>{state.locale === "ja"
-                ? <JapaneseHeading phrases={["どんな食事や", "食の希望・制限が", "ありますか？"]} />
-                : copy.preferenceTitle}</h1>
-              <p>{copy.preferenceBody}</p>
-            </div>
-            <div className={styles.preferenceGroups}>
-              {[
-                { id: "meal", title: copy.mealGroup, items: ONDO_B_DISCOVERY_PREFERENCES.filter((option) => option.group === "meal") },
-                { id: "mood", title: copy.moodGroup, items: ONDO_B_DISCOVERY_PREFERENCES.filter((option) => option.group === "mood") },
-                { id: "dietary", title: copy.dietaryGroup, note: copy.dietaryBoundary, items: ONDO_B_DISCOVERY_PREFERENCES.filter((option) => option.group === "dietary") },
-              ].map((group) => (
-                <section key={group.id} className={styles.preferenceGroup} aria-labelledby={`onboarding-${group.id}`}>
-                  <h2 id={`onboarding-${group.id}`}>{group.title}</h2>
-                  <div className={styles.chips}>
-                    {group.items.map((preference, index) => {
-                      const selected = preferences.includes(preference.id)
-                      return (
-                        <button
-                          key={preference.id}
-                          type="button"
-                          data-onboarding-initial-focus={group.id === "meal" && index === 0 ? "true" : undefined}
-                          aria-pressed={selected}
-                          className={selected ? styles.chipSelected : styles.chip}
-                          onClick={() => setPreferences((current) => selected
-                            ? current.filter((id) => id !== preference.id)
-                            : [...current, preference.id])}
-                        >
-                          {preference.label[state.locale]}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {group.note ? <p className={styles.preferenceNote}>{group.note}</p> : null}
-                </section>
-              ))}
-            </div>
-            <div className={`${styles.actions} ${saveError ? styles.actionsRecovery : ""}`} data-onboarding-recovery={saveError ? "true" : undefined}>
-              {saveError ? <p className={styles.inlineAlert} role="alert" data-testid="onboarding-save-status">{saveError}</p> : null}
-              <button type="button" className={styles.primary} onClick={finish} data-testid="onboarding-finish">
-                {copy.finish}<ArrowRight size={18} aria-hidden="true" />
-              </button>
-              <button type="button" className={styles.secondary} onClick={skip}>{copy.skip}</button>
-            </div>
-          </div>
-        ) : null}
-      </section>
+  return <div ref={rootRef} className={styles.root} data-onboarding-step={step} data-testid="ondo-onboarding-backdrop"><SheetB presenceState={sheetPresence.phase} locale={state.locale} label={copy.label} variant="decision" navigation={step === "intent" ? "close" : "back"} onBack={goBack} onClose={escape} initialFocusSelector={`[data-onboarding-heading="${step}"]`}
+    header={<div className={styles.header}><div className={styles.locales} aria-label={state.locale === "ko" ? "언어" : state.locale === "ja" ? "言語" : "Language"}>{(["en", "ko", "ja"] as const).map((locale) => <button key={locale} type="button" disabled={exiting} aria-pressed={state.locale === locale} onClick={() => { if (!actions.setLocale(locale)) setSaveError(true) }}>{locale.toUpperCase()}</button>)}</div></div>}
+    footer={<div className={styles.footer}>{saveError && <p className={styles.error} role="alert" data-testid="onboarding-save-status">{copy.error}</p>}<button className={styles.primary} type="button" disabled={!canContinue || exiting} onClick={next} data-testid={step === "preferences" ? "onboarding-finish" : "onboarding-continue"}>{primaryLabel}</button><button className={styles.secondary} type="button" disabled={exiting} onClick={escape} data-testid="onboarding-guest-skip">{copy.defaults}</button></div>}>
+    <div key={step} className={styles.content} data-testid="ondo-onboarding" aria-busy={exiting ? "true" : undefined}>
+      {step === "intent" && <section data-testid="onboarding-step-intent"><StageHeading step="intent" title={copy.intentTitle} body={copy.intentBody} /><div className={styles.choiceGrid} role="radiogroup" aria-label={copy.intentTitle}>{INTENTS.map(({ id, icon: Icon }) => <button key={id} type="button" role="radio" aria-checked={intent === id} data-testid={`persona-${id}`} className={styles.choice} onClick={() => setIntent(id)}><Icon aria-hidden="true" /><span>{copy[id]}</span>{intent === id && <Check aria-label={copy.selected} />}</button>)}</div></section>}
+      {step === "area" && <section data-testid="onboarding-step-area"><StageHeading step="area" title={copy.areaTitle} body={intent === "short_trip" ? copy.areaOptional : copy.areaBody} /><div className={styles.areaGrid} role="radiogroup" aria-label={copy.areaTitle}>{AREAS.map((city) => <button key={city} type="button" role="radio" aria-checked={area === city} data-testid={`onboarding-area-${city}`} className={styles.areaChoice} onClick={() => { setArea(city); requestBDiscoveryFocus({ city, source: "onboarding", motion: "standard", personalization: { intent: intent ?? "short_trip", preferences } }) }}><MapPin aria-hidden="true" /><span>{copy[city]}</span>{area === city && <Check aria-label={copy.selected} />}</button>)}</div></section>}
+      {step === "preferences" && <section data-testid="onboarding-step-preferences"><StageHeading step="preferences" title={copy.tasteTitle} body={copy.tasteBody} /><PreferenceGroup group="meal" label={copy.meal} locale={state.locale} preferences={preferences} toggle={toggle} /><details className={styles.dietaryDisclosure} data-testid="onboarding-dietary-disclosure"><summary>{copy.dietary}</summary><PreferenceGroup group="dietary" label={null} locale={state.locale} preferences={preferences} toggle={toggle} /><small>{copy.dietaryHint}</small></details></section>}
     </div>
-  )
+  </SheetB></div>
+}
+
+function StageHeading({ step, title, body }: { step: Step; title: string; body: string }) { return <header className={styles.stageHeading}><h1 tabIndex={-1} data-onboarding-heading={step}>{title}</h1>{body && <p>{body}</p>}</header> }
+
+function PreferenceGroup({ group, label, locale, preferences, toggle }: { group: "meal" | "mood" | "dietary"; label: string | null; locale: OndoBLocale; preferences: OndoBDiscoveryPreference[]; toggle(choice: OndoBDiscoveryPreference): void }) {
+  return <fieldset className={styles.group}>{label && <legend>{label}</legend>}<div className={styles.chips}>{ONDO_B_DISCOVERY_PREFERENCES.filter((item) => item.group === group).map((item) => <button type="button" key={item.id} aria-pressed={preferences.includes(item.id)} data-testid={`onboarding-preference-${item.id}`} onClick={() => toggle(item.id)}>{item.label[locale]}{preferences.includes(item.id) && <Check aria-hidden="true" />}</button>)}</div></fieldset>
 }

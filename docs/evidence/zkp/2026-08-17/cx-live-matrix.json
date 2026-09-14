@@ -1,0 +1,275 @@
+{
+  "evidence_id": "CX-ZKP-LIVE-2026-08-17",
+  "recorded_at_kst": {
+    "primary_matrix": "2026-08-17 13:00:57/13:02:34",
+    "appendix_provider_matrix": "2026-08-17 13:15:31/13:15:45"
+  },
+  "environment": {
+    "name": "OmniOne CX public hackathon endpoint",
+    "base_host": "cx.raonsecure.co.kr:18543",
+    "ux_config_host": "cx.raonsecure.co.kr:17543",
+    "authentication_sent": false,
+    "svc_code_sent": false,
+    "service_id_sent": false
+  },
+  "redaction": {
+    "tokens_retained": false,
+    "transaction_identifiers_retained": false,
+    "qr_or_deep_links_retained": false,
+    "pii_retained": false,
+    "raw_response_bodies_retained": false
+  },
+  "documented_zkp_modes": [
+    "AdultVerify",
+    "GenderVerify"
+  ],
+  "provider_status_snapshot": [
+    {
+      "request_value": "comdl_v1.5",
+      "provider_id": "comdl",
+      "environment": "prod",
+      "status_code": "y",
+      "document_type": "mobile driver's license"
+    },
+    {
+      "request_value": "coidentitydocument_v1.5",
+      "provider_id": "coidentitydocument",
+      "environment": "prod",
+      "status_code": "y",
+      "document_type": "mobile identity document"
+    },
+    {
+      "request_value": "comnh_v1.5 or comnh_prod_v1.5",
+      "provider_id": "comnh",
+      "environment": "prod",
+      "status_code": "n",
+      "document_type": "mobile persons of national merit card"
+    },
+    {
+      "request_value": "comrc_v1.5",
+      "provider_id": "comrc",
+      "environment": "dev",
+      "status_code": "n",
+      "document_type": "mobile resident registration card"
+    },
+    {
+      "request_value": "comrc_prod_v1.5",
+      "provider_id": "comrc",
+      "environment": "prod",
+      "status_code": "n",
+      "document_type": "mobile resident registration card"
+    },
+    {
+      "request_value": "coresidence_v1.5",
+      "provider_id": "coresidence",
+      "environment": "dev",
+      "status_code": "n",
+      "document_type": "mobile residence card"
+    },
+    {
+      "request_value": "coresidence_prod_v1.5",
+      "provider_id": "coresidence",
+      "environment": "prod",
+      "status_code": "n",
+      "document_type": "mobile residence card"
+    }
+  ],
+  "test_groups": [
+    {
+      "test_id": "CX-ACTIVE-COMDL-BASELINE",
+      "provider": "comdl_v1.5",
+      "sign_types": [
+        "ENT_MID"
+      ],
+      "flows": [
+        "QR",
+        "WEB2APP",
+        "APP2APP"
+      ],
+      "zkp_modes": [
+        "omitted"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_SUCCESS/200",
+      "stage": "AFTER_REQUEST",
+      "session_created": true,
+      "holder_completed": false,
+      "proof_verified": false,
+      "interpretation": "Baseline QR, Web2App and App2App session transports were accepted."
+    },
+    {
+      "test_id": "CX-ACTIVE-COMDL-DOCUMENTED-ZKP",
+      "provider": "comdl_v1.5",
+      "sign_types": [
+        "ENT_MID",
+        "ENT_SIMPLE_AUTH"
+      ],
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "AdultVerify",
+        "GenderVerify"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_SUCCESS/200",
+      "stage": "AFTER_REQUEST",
+      "session_created": true,
+      "holder_completed": false,
+      "proof_verified": false,
+      "interpretation": "Documented ZKP modes were accepted at session initiation. This is not proof that the requested ZKP was generated or verified."
+    },
+    {
+      "test_id": "CX-ACTIVE-COIDENTITYDOCUMENT",
+      "provider": "coidentitydocument_v1.5",
+      "sign_types": [
+        "ENT_MID"
+      ],
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "AdultVerify",
+        "GenderVerify"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_SUCCESS/200",
+      "stage": "AFTER_REQUEST",
+      "session_created": true,
+      "holder_completed": false,
+      "proof_verified": false,
+      "interpretation": "Session transport accepted. Provider-specific ZKP semantics and positive result schema remain unverified."
+    },
+    {
+      "test_id": "CX-NEGATIVE-INVALID-ZKP",
+      "provider": "comdl_v1.5",
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "NotARealZkp"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_SUCCESS/200",
+      "stage": "AFTER_REQUEST",
+      "session_created": true,
+      "negative_control_passed": false,
+      "interpretation": "The request stage did not reject an undocumented zkpType. Therefore a successful session cannot be used as evidence of ZKP support."
+    },
+    {
+      "test_id": "CX-NEGATIVE-INVALID-SIGN-TYPE",
+      "provider": "comdl_v1.5",
+      "http_status": 200,
+      "vendor_code": "OACX_INVALID_PARAM_CONTENT_INFO/307",
+      "session_created": false,
+      "interpretation": "Invalid sign type was rejected, but the live code differs from the manual's enumerated code 306."
+    },
+    {
+      "test_id": "CX-UNSIGNED-RESULT",
+      "providers": [
+        "comdl_v1.5",
+        "coidentitydocument_v1.5"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_VERIFIER_ERROR/30020",
+      "stage": "AFTER_RESULT",
+      "holder_completed": false,
+      "proof_verified": false,
+      "interpretation": "Expected boundary without holder approval; it is not evidence of a ZKP failure."
+    },
+    {
+      "test_id": "CX-INACTIVE-CORESIDENCE",
+      "providers": [
+        "coresidence_v1.5",
+        "coresidence_prod_v1.5"
+      ],
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "omitted",
+        "AdultVerify",
+        "GenderVerify",
+        "NotARealZkp"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_NO_PARAM_PROVIDER/303",
+      "session_created": false,
+      "interpretation": "Provider lookup or activation blocks before ZKP can be assessed."
+    },
+    {
+      "test_id": "CX-INACTIVE-COMRC",
+      "providers": [
+        "comrc_v1.5",
+        "comrc_prod_v1.5"
+      ],
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "omitted",
+        "AdultVerify",
+        "GenderVerify",
+        "NotARealZkp"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_NO_PARAM_PROVIDER/303",
+      "session_created": false,
+      "interpretation": "Provider lookup or activation blocks before ZKP can be assessed."
+    },
+    {
+      "test_id": "CX-INACTIVE-COMNH-DOCUMENT-STYLE",
+      "provider": "comnh_v1.5",
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "omitted",
+        "AdultVerify",
+        "GenderVerify",
+        "NotARealZkp"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_SERVER_ERROR/500",
+      "session_created": false,
+      "interpretation": "Inactive or incomplete provider configuration fails before any ZKP-specific assessment."
+    },
+    {
+      "test_id": "CX-INACTIVE-COMNH-LIST-ID-STYLE",
+      "provider": "comnh_prod_v1.5",
+      "flows": [
+        "QR",
+        "WEB2APP"
+      ],
+      "zkp_modes": [
+        "omitted",
+        "AdultVerify",
+        "GenderVerify",
+        "NotARealZkp"
+      ],
+      "http_status": 200,
+      "vendor_code": "OACX_NO_PARAM_PROVIDER/303",
+      "session_created": false,
+      "interpretation": "Provider lookup or activation blocks before ZKP can be assessed."
+    }
+  ],
+  "document_and_sample_discrepancies": [
+    "The manual table fixes signType to ENT_MID, while request examples and sample/event.js use ENT_SIMPLE_AUTH.",
+    "The manual documents zkpType for QR and App requests, while sample/event.js wires it only for QR.",
+    "The manual documents AdultVerify and GenderVerify but gives no provider support matrix, legal adult threshold, gender code semantics, or positive ZKP result schema.",
+    "The only manual result example observed has data.zkp=false."
+  ],
+  "verdict": {
+    "endpoint_reachable": true,
+    "documented_modes_transport_accepted_on_active_providers": true,
+    "actual_holder_proof_verified": false,
+    "foreign_residence_zkp_usable_in_public_environment": false,
+    "request_success_is_zkp_evidence": false
+  }
+}

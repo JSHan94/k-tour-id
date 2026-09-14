@@ -2,12 +2,12 @@
 .walletPane { min-width: 0; container-type: inline-size; }
 .profilePane { min-width: 0; }
 .screen {
-  --paper: #f3ede7;
-  --ink: #231f20;
-  --muted: #746b67;
+  --paper: var(--ondo-canvas, #fff);
+  --ink: var(--ondo-ink, #171717);
+  --muted: var(--ondo-muted, #626262);
   --plum: #503047;
   --wine: #7b405f;
-  --line: rgb(65 48 52 / 12%);
+  --line: var(--ondo-line, rgb(23 23 23 / 11%));
   box-sizing: border-box;
   min-height: 100%;
   padding: max(32px, env(safe-area-inset-top)) 16px calc(44px + env(safe-area-inset-bottom));
@@ -20,8 +20,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 .screen button:focus-visible,
-.screen summary:focus-visible { outline: 3px solid rgb(126 62 95 / 35%); outline-offset: 3px; }
-.header { display: grid; max-width: 670px; gap: 8px; padding: 0 4px; }
+.screen summary:focus-visible { outline: 3px solid var(--ondo-focus, #1d66d1); outline-offset: 3px; }
+.header { display: flex; max-width: 670px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; }
 .header p { margin: 0; color: #874866; font-size: 12px; font-weight: 840; letter-spacing: .14em; text-transform: uppercase; }
 .header h1 { margin: 0; font-size: clamp(39px, 11vw, 60px); font-weight: 790; line-height: .97; letter-spacing: -.064em; }
 .header span { max-width: 620px; color: #6d6460; font-size: 14px; line-height: 1.58; }
@@ -70,7 +70,7 @@
 .sectionHeading p { max-width: 470px; margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 1.55; }
 .sectionHeading > svg { color: #78435e; }
 .statusGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
-.statusCard { display: flex; min-width: 0; min-height: 154px; flex-direction: column; border: 1px solid var(--line); border-radius: 21px; padding: 16px; background: linear-gradient(145deg, rgb(255 254 251 / 94%), rgb(248 242 239 / 86%)); box-shadow: 0 15px 38px rgb(53 37 42 / 7%), inset 0 1px 0 rgb(255 255 255 / 72%); animation: statusEnter .34s cubic-bezier(.2, .8, .2, 1) both; }
+.statusCard { display: flex; min-width: 0; min-height: 118px; flex-direction: column; border: 1px solid var(--line); border-radius: 21px; padding: 16px; background: linear-gradient(145deg, rgb(255 254 251 / 94%), rgb(248 242 239 / 86%)); box-shadow: 0 15px 38px rgb(53 37 42 / 7%), inset 0 1px 0 rgb(255 255 255 / 72%); animation: statusEnter .34s cubic-bezier(.2, .8, .2, 1) both; }
 .statusCard:nth-child(2) { animation-delay: 35ms; }
 .statusCard:nth-child(3) { animation-delay: 70ms; }
 .statusCard:nth-child(4) { animation-delay: 105ms; }
@@ -79,9 +79,9 @@
 .statusTop svg { flex: 0 0 auto; }
 .statusTop span { min-width: 0; overflow: visible; font-size: 12px; font-weight: 780; line-height: 1.35; text-overflow: clip; white-space: normal; }
 .statusCard[data-status="success"] .statusTop,
-.statusCard[data-status="ready"] .statusTop { color: #39705a; }
+.statusCard[data-status="ready"] .statusTop { color: var(--success, #39705a); }
 .statusCard[data-status="failure"] .statusTop,
-.statusCard[data-status="expired"] .statusTop { color: #994e47; }
+.statusCard[data-status="expired"] .statusTop { color: var(--destructive, #994e47); }
 .statusCard h3 { margin: 14px 0 0; font-size: 18px; font-weight: 780; letter-spacing: -.03em; }
 .statusCard p { margin: 6px 0 0; color: #776f6a; font-size: 12px; line-height: 1.46; }
 .statusCard button { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; margin: auto -5px -7px; border: 0; border-radius: 13px; padding: 0 7px; background: transparent; color: #543349; font: inherit; font-size: 12px; font-weight: 800; }
@@ -89,6 +89,8 @@
 .footer details { min-width: 0; flex: 1; color: #726964; }
 .footer summary { min-height: 44px; cursor: pointer; align-content: center; font-size: 12px; font-weight: 760; }
 .footer details p { max-width: 580px; margin: 1px 0 12px; font-size: 12px; line-height: 1.55; }
+.footer details ul { display: grid; gap: 5px; max-width: 640px; margin: 0 0 12px; padding: 0; color: #726964; font-size: 12px; line-height: 1.45; list-style: none; }
+.footer details li strong { color: #393431; }
 .footer > button { display: flex; min-height: 44px; flex: 0 0 auto; align-items: center; gap: 7px; border: 0; background: transparent; color: #574f4b; font: inherit; font-size: 12px; font-weight: 760; }
 
 @media (min-width: 700px) {
@@ -120,17 +122,19 @@
   .readiness { margin-top: 22px; }
   .sectionHeading h2 { font-size: 21px; }
   .sectionHeading p { display: block; margin-top: 5px; overflow: visible; line-height: 1.42; -webkit-line-clamp: none; }
-  .statusGrid { gap: 8px; margin-top: 12px; }
-  .statusCard { min-height: 138px; padding: 13px; border-radius: 19px; }
-  .statusCard h3 { margin-top: 10px; font-size: 16px; }
-  .statusCard p { display: block; margin-top: 4px; overflow: visible; line-height: 1.38; -webkit-line-clamp: none; }
-  .statusCard button { min-height: 44px; margin-bottom: -7px; }
+  .sectionHeading p { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .statusGrid { grid-template-columns: minmax(0, 1fr); gap: 7px; margin-top: 12px; }
+  .statusCard { display: grid; min-height: 66px; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; align-content: center; padding: 11px 13px; border-radius: 18px; }
+  .statusTop { grid-column: 1; grid-row: 2; margin-top: 3px; }
+  .statusCard h3 { grid-column: 1; grid-row: 1; margin: 0; font-size: 16px; }
+  .statusCard button { width: 44px; min-height: 44px; grid-column: 2; grid-row: 1 / 3; justify-content: center; margin: 0; padding: 0; }
+  .statusCard .actionLabel { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 }
 
 @media (max-width: 350px) {
   .screen { padding-inline: 12px; }
   .statusGrid { gap: 7px; }
-  .statusCard { min-height: 148px; padding: 12px; }
+  .statusCard { min-height: 112px; padding: 12px; }
   .pass { min-height: 154px; }
 }
 
@@ -145,7 +149,7 @@
     column-gap: 22px;
     padding: 16px 24px 72px;
   }
-  .header { display: block; grid-column: 1; grid-row: 1; align-self: start; }
+  .header { display: flex; grid-column: 1; grid-row: 1; align-self: start; }
   .header p,
   .header h1,
   .header span { display: block; }
@@ -268,7 +272,7 @@
     radial-gradient(circle at 6% 108%, rgb(146 69 94 / 42%), transparent 43%),
     linear-gradient(145deg, #1e191a 0%, #35242e 52%, #6e394f 100%);
   color: #fff9f5;
-  box-shadow: 0 27px 68px rgb(48 27 38 / 25%), inset 0 1px 0 rgb(255 255 255 / 13%);
+  box-shadow: 0 12px 28px rgb(48 27 38 / 12%), inset 0 1px 0 rgb(255 255 255 / 13%);
   animation: flow8PassIn var(--flow8-motion-emphasis) cubic-bezier(.2, .8, .2, 1) both;
 }
 .pass::before { opacity: .7; background: linear-gradient(108deg, transparent 17%, rgb(255 255 255 / 18%) 43%, transparent 66%); animation: flow8PassGlint var(--flow8-motion-emphasis) 90ms cubic-bezier(.2, .8, .2, 1) both; }
@@ -370,13 +374,100 @@
   .statusCard { animation: none; transition: none; }
 }
 
-/* Final white product canvas; the pass and balance remain the memorable
-   objects instead of tinting the entire ID · Wallet journey. */
-.screen { --paper: #fff; background: #fff; }
-.header p { color: #555; }
-.readiness { border-top-color: rgb(25 25 25 / 10%); }
+/* The pass remains the memorable trip object. The surrounding task follows
+   the app appearance instead of carrying an unrelated paper tint. */
+.screen {
+  --paper: var(--ondo-canvas, #fff);
+  --ink: var(--ondo-ink, #171717);
+  --muted: var(--ondo-muted, #626262);
+  --line: var(--ondo-line, rgb(25 25 25 / 10%));
+  background: var(--paper);
+  color: var(--ink);
+}
+.header p,
+.header span,
+.sectionHeading p,
+.statusTop,
+.statusCard p,
+.footer { color: var(--muted); }
+.readiness { border-top-color: var(--line); }
 .statusCard {
-  border-color: rgb(25 25 25 / 10%);
-  background: #fff;
-  box-shadow: 0 14px 38px rgb(25 25 25 / 6%);
+  border-color: var(--line);
+  background: var(--ondo-surface, #fff);
+  color: var(--ink);
+  box-shadow: var(--ondo-shadow, 0 14px 38px rgb(25 25 25 / 6%));
+}
+.statusCard button { color: var(--ondo-accent, var(--ink)); }
+
+/* Phone hierarchy: the pass, balance and readiness states carry the meaning.
+   Remove the promotional framing and duplicate readiness coaching while
+   retaining every named axis, action, result and the privacy disclosure. */
+@media (max-width: 430px) {
+  .header > p,
+  .header > span,
+  .sectionHeading p,
+  .footer > button { display: none; }
+  .header { gap: 0; }
+  .header h1 { font-size: clamp(30px, 8.7vw, 38px); }
+  .sectionHeading { align-items: center; }
+  .readiness { margin-top: 20px; }
+  .footer { justify-content: stretch; }
+  .footer details { width: 100%; }
+  .passTop { display: none; }
+  .pass { min-height: 136px; }
+  .passMain { margin-top: 0; }
+  .walletPane { margin-top: 20px; }
+  .statusCard button {
+    width: 44px;
+    align-self: flex-end;
+    justify-content: center;
+    margin: auto -7px -7px auto;
+    padding: 0;
+  }
+  .actionLabel { display: none; }
+}
+
+@media (forced-colors: active) {
+  .pass,
+  .statusCard {
+    border: 1px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+    box-shadow: none;
+    forced-color-adjust: auto;
+  }
+  .passTop,
+  .passTop svg,
+  .passMain small,
+  .passMain strong,
+  .passMain > svg,
+  .passBoundary,
+  .statusTop,
+  .sectionHeading > svg { color: CanvasText; }
+  .passBoundary { border-color: CanvasText; background: Canvas; }
+  .statusCard[data-status="success"] .statusTop,
+  .statusCard[data-status="ready"] .statusTop { color: Highlight; }
+  .statusCard button { color: LinkText; }
+}
+
+/* One next step, then the wallet. Axis detail remains on demand and keeps its
+   original controls, result semantics and native keyboard disclosure. */
+.readiness { margin-top: 24px; padding-top: 0; }
+.readiness > summary { min-height: 56px; align-items: center; cursor: pointer; list-style: none; }
+.readiness > summary::-webkit-details-marker { display: none; }
+.readiness > summary h2 { font-size: 17px; line-height: 1.35; letter-spacing: -.025em; }
+.readiness > summary > svg { flex: 0 0 auto; color: var(--muted); }
+.readiness[open] > summary > svg { transform: rotate(90deg); }
+.readinessIntro { margin: 0 4px 14px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.readiness .statusGrid { margin-top: 0; }
+.readiness .statusCard { box-shadow: none; }
+.readiness .statusCard[data-status="success"],
+.readiness .statusCard[data-status="ready"] { background: var(--ondo-surface, #fff); }
+.footer { margin-top: 18px; padding-top: 10px; }
+.footer details, .footer details ul { color: var(--muted); }
+.footer details li strong, .footer > button { color: var(--ink); }
+@media (max-width: 430px) {
+  .walletPane { margin-top: 16px; }
+  .readiness .statusCard { min-height: 72px; }
+  .readiness .statusCard button { align-self: center; margin: 0; }
 }

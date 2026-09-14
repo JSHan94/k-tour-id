@@ -147,7 +147,7 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
       const onboardingBox = await box(page.getByTestId("ondo-onboarding"))
       expect(onboardingBox.width).toBeLessThanOrEqual(430.5)
       expect(Math.abs((onboardingBox.x + onboardingBox.width / 2) - (canvasBox.x + canvasBox.width / 2))).toBeLessThanOrEqual(1)
-      await page.getByRole("button", { name: locale === "ko" ? "설정 없이 탐색" : "Explore without setup" }).click()
+      await page.getByRole("button", { name: locale === "ko" ? "한국 지도 열기" : "Open Korea map" }).click()
 
       await gotoB(page, "?city=seoul&view=list")
       await page.getByTestId("ondo-b-venue-list").getByRole("button").first().click()
@@ -194,7 +194,8 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
       sessionStorage.removeItem("ondo.session.v3")
     })
     await gotoB(page)
-    const primary = page.getByRole("button", { name: "Set guest preferences" })
+    const primary = page.getByRole("button", { name: "Open Korea map" })
+    const personalize = page.getByRole("button", { name: "Personalize in 20 seconds" })
 
     const idle = await primary.evaluate((element) => ({ filter: getComputedStyle(element).filter, transform: getComputedStyle(element).transform }))
     await primary.hover()
@@ -213,9 +214,9 @@ test.describe("SLEEK-R5 retry compact layout and reflow closure", () => {
     await expect.poll(() => primary.evaluate((element) => {
       const style = getComputedStyle(element)
       return [style.outlineWidth, style.outlineStyle, style.outlineColor, style.outlineOffset]
-    })).toEqual(["2px", "solid", "rgb(29, 102, 209)", "2px"])
+    })).toEqual(["2px", "solid", "rgb(23, 23, 23)", "2px"])
 
-    await primary.click()
+    await personalize.click()
     const disabled = page.getByRole("button", { name: "Choose meal preferences" })
     await expect(disabled).toBeDisabled()
     const disabledIdle = await disabled.evaluate((element) => ({ filter: getComputedStyle(element).filter, transform: getComputedStyle(element).transform, opacity: getComputedStyle(element).opacity }))

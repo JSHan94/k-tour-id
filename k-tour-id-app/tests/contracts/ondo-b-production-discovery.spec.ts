@@ -37,10 +37,16 @@ test("PROD-DISCOVERY-003 B discovery source has no preview vocabulary or preview
     const source = readFileSync(path.join(appRoot, relativePath), "utf8")
     if (relativePath === "features/ondo/place/canonical-place-overlay.tsx") {
       expect(source).toContain("canonical-meal-benefit-open")
-      expect(source).toContain("See an ONDO meal benefit for this place")
-      expect(source, relativePath).not.toMatch(/simulat|fixture|locals eat now/i)
+      expect(source).toContain('demoOffer: "Meal benefit"')
+      const gatedReviewOptions = source.match(/qaReviewFixtureOptions\(\)/g) ?? []
+      expect(gatedReviewOptions).toHaveLength(3)
+      const consumerSource = source.replaceAll("qaReviewFixtureOptions", "reviewReceiptAllowance")
+      expect(consumerSource, relativePath).not.toMatch(/simulat|fixture|locals eat now/i)
     } else if (relativePath === "features/ondo/onboarding/official-directory-onboarding.tsx") {
-      expect(source).toContain("Optional · guest Explore stays open")
+      expect(source).toContain('role="radiogroup" aria-label={copy.intentTitle}')
+      expect(source).toContain("actions.completeOnboarding({ intent, area, preferences })")
+      expect(source).toContain("actions.cancelOnboarding()")
+      expect(source).not.toMatch(/K-Tour ID|OmniOne|identity provider|eKYC|registered foreign resident/i)
       expect(source, relativePath).not.toMatch(/\bdemo\b|fixture|locals eat now/i)
     } else {
       expect(source, relativePath).not.toMatch(/\bdemo\b|simulat|fixture|locals eat now/i)

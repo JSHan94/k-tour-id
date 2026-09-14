@@ -109,7 +109,8 @@ test.describe("R3 D5-R3-002 bounded Map food-intent aliases", () => {
     await expect(detailProvenance).toContainText("Official Korean source name")
     await expect(detailProvenance).toContainText("Gopija Sinchon1hojeom")
     await expect(detailProvenance).toContainText("Transliterated for navigation · Generated, not an official English name")
-    await expect(detail.getByText("Menu and prices").locator("..")).toContainText("Not provided by this source")
+    await detail.getByRole("button", { name: /^Menu and prices:/ }).click()
+    await expect(detail.getByTestId("canonical-evidence-sheet")).toContainText("This directory does not include this detail.")
     await expect(detail).not.toContainText("pizza")
   })
 

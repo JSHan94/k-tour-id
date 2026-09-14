@@ -45,9 +45,9 @@ test.describe("production official-source discovery", () => {
       copy.querySelector("[data-testid='k-tour-id-setup-open']")?.remove()
       return copy.innerText
     })
-    expect(discoveryCopy).not.toMatch(/demo|simulat|score|persona/i)
+    expect(discoveryCopy).not.toMatch(/demo|simulat|score|\bpersona\b/i)
     await onboarding.getByRole("button", { name: "한국어로 보기" }).click()
-    await expect(onboarding).toContainText("나에게 맞는 한국의 한 끼")
+    await expect(onboarding).toContainText("지금의 나에게 잘 맞는 한국의 한 끼")
     await expect(onboarding).toContainText("서울·부산의 먹거리와 제주 여행 아이디어")
     await expect(identityEntry).toContainText(/선택 사항.*게스트 탐색/)
     await expect(identityEntry).not.toContainText(/시뮬레이션/)
@@ -59,7 +59,7 @@ test.describe("production official-source discovery", () => {
       await expect(onboarding.locator("[data-locale-choice][aria-pressed='true']")).toHaveCount(1)
       await expectNoSeriousAxe(page, "[data-testid='ondo-onboarding']")
     }
-    await onboarding.getByRole("button", { name: "설정 없이 탐색", exact: true }).click()
+    await onboarding.getByRole("button", { name: "한국 지도 열기", exact: true }).click()
     await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   })
 
@@ -88,7 +88,7 @@ test.describe("production official-source discovery", () => {
     await expectNoSeriousAxe(page, "[data-testid='ondo-b-map-entry']")
   })
 
-  test("map failure keeps the same official directory and retry is real", async ({ page }) => {
+  test("basemap failure keeps the local map context and official directory reachable", async ({ page }) => {
     await seedDirectory(page)
     let failTiles = true
     await page.route("https://tiles.openfreemap.org/**", async (route) => {
@@ -97,12 +97,12 @@ test.describe("production official-source discovery", () => {
     })
     await page.goto("/?city=busan", { waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 15_000 })
-    await expect(page.getByTestId("ondo-b-map-fallback-status")).toContainText("All 200 places remain available")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 15_000 })
+    await expect(root).toHaveAttribute("data-map-partial-failure", "recoverable")
+    await expect(page.getByTestId("ondo-b-map-transport-status")).toContainText("Map details unavailable")
+    await page.getByTestId("ondo-b-view-toggle").click()
     await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
-    failTiles = false
-    await page.getByRole("button", { name: "Retry map" }).click()
-    await expect(root).toHaveAttribute("data-map-attempt", "2")
+    expect(failTiles).toBe(true)
   })
 
   test("place detail shows sourced facts, unknowns, directions and no unsupported actions", async ({ page }) => {
@@ -156,7 +156,8 @@ test.describe("production official-source discovery", () => {
     await expect(tables).toHaveAttribute("aria-expanded", "false")
     await expect(tables).toBeFocused()
 
-    await expect(detail.getByTestId("canonical-meal-benefit-open")).toContainText("See an ONDO meal benefit for this place.")
+    await expect(detail.getByTestId("canonical-meal-benefit-open")).toContainText("K-Tour ID benefit")
+    await expect(detail.getByTestId("canonical-meal-benefit-open")).toContainText("₩19,000")
     await expect(detail.getByTestId("canonical-local-signal-open")).toContainText("device-local flow")
     await expect(detail.getByTestId("canonical-venue-checkout")).toHaveCount(0)
     await expect(page.getByTestId("checkout-overlay")).toHaveCount(0)

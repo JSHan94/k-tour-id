@@ -412,9 +412,10 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
     await page.route(/tiles\.openfreemap\.org/, (route) => route.abort("failed"))
     await page.reload({ waitUntil: "domcontentloaded" })
     const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 12_000 })
-    const fallback = page.getByTestId("ondo-b-map-fallback-status")
-    await expect(fallback).toContainText("The map could not load. All 200 places remain available in the list.")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 12_000 })
+    await expect(root).toHaveAttribute("data-map-partial-failure", "recoverable")
+    await expect(page.getByTestId("ondo-b-map-transport-status")).toContainText("Map details unavailable")
+    await page.getByTestId("ondo-b-view-toggle").click()
     await expect(page.getByTestId("ondo-b-result-bar")).toContainText("LOCALDATA source snapshot · Aug 19, 2026")
   })
 
@@ -490,20 +491,18 @@ test.describe("SLEEK R5 retry history, resilience truth, and recovery focus", ()
     }
   }
 
-  test("R5R-D5-005 successful map retry restores keyboard focus to the recovered discovery controls", async ({ page }) => {
+  test("R5R-D5-005 the List alternate after a recoverable partial keeps keyboard focus on discovery controls", async ({ page }) => {
     await seedB(page)
-    let fail = true
     await page.route(/tiles\.openfreemap\.org/, async (route) => {
-      if (fail) return route.abort("failed")
-      if (route.request().url().endsWith("/planet")) return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(DETERMINISTIC_TILEJSON) })
-      return route.fulfill({ status: 200, contentType: "application/x-protobuf", body: Buffer.alloc(0) })
+      return route.abort("failed")
     })
     await gotoB(page, "?city=seoul")
     const root = page.getByTestId("ondo-b-map-entry")
-    await expect(root).toHaveAttribute("data-map-state", "error", { timeout: 12_000 })
-    fail = false
-    await page.getByRole("button", { name: "Retry map" }).click()
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 12_000 })
+    await expect(root).toHaveAttribute("data-map-partial-failure", "recoverable")
+    await page.getByTestId("ondo-b-view-toggle").click()
     await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    await expect(root).toHaveAttribute("data-effective-view", "list")
     await expect(page.getByTestId("ondo-b-view-toggle")).toBeFocused()
     expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe("BODY")
     const axe = await new AxeBuilder({ page }).include("[data-testid='ondo-b-root']").analyze()

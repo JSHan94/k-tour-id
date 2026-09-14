@@ -5,6 +5,7 @@
 
 /* Seoul after rain — contemporary Korean travel, quiet luxury. */
 :root {
+  color-scheme: light;
   --background: #f7f5f0;
   --foreground: #191816;
   --card: #fbfaf6;
@@ -63,37 +64,80 @@
 
   --font-sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Noto Serif KR", "AppleMyungjo", Georgia, serif;
+
+  /* ONDO app-wide appearance tokens. After19 must not redefine these; its
+     discovery-only palette lives below the Explore owner. */
+  --ondo-canvas: #ffffff;
+  --ondo-surface: #ffffff;
+  --ondo-surface-raised: #ffffff;
+  --ondo-surface-soft: #f3f3f1;
+  --ondo-ink: #171717;
+  --ondo-muted: #626262;
+  --ondo-quiet: #737373;
+  --ondo-line: rgb(23 23 23 / 11%);
+  --ondo-line-strong: rgb(23 23 23 / 34%);
+  --ondo-shadow: 0 14px 36px rgb(0 0 0 / 8%), 0 2px 7px rgb(0 0 0 / 3%);
+  --ondo-control: #171717;
+  --ondo-control-ink: #ffffff;
+  --ondo-accent: #8c244f;
+  --ondo-focus: #1d66d1;
 }
 
-.dark {
-  --background: #f4f1e9;
-  --foreground: #1c1813;
-  --card: #fffdf8;
-  --card-foreground: #1c1813;
-  --popover: #fffdf8;
-  --popover-foreground: #1c1813;
-  --primary: #c2392f;
-  --primary-foreground: #fdf6f0;
-  --secondary: #ece6da;
-  --secondary-foreground: #1c1813;
-  --muted: #ece6da;
-  --muted-foreground: #6f685e;
-  --accent: #b88a3d;
-  --accent-foreground: #1c1813;
-  --destructive: #c2392f;
-  --destructive-foreground: #fdf6f0;
-  --border: #e4ddcf;
-  --input: #e4ddcf;
-  --focus: #1d66d1;
+.dark,
+:root[data-ondo-theme="dark"] {
+  color-scheme: dark;
+  --background: #111214;
+  --foreground: #f4f4f5;
+  --card: #18191d;
+  --card-foreground: #f4f4f5;
+  --popover: #202126;
+  --popover-foreground: #f4f4f5;
+  --primary: #f4f4f5;
+  --primary-foreground: #111214;
+  --secondary: #25262b;
+  --secondary-foreground: #f4f4f5;
+  --muted: #25262b;
+  --muted-foreground: #b7b6bc;
+  --accent: #ff87bf;
+  --accent-foreground: #171217;
+  --destructive: #ff938b;
+  --destructive-foreground: #211010;
+  --border: rgb(255 255 255 / 13%);
+  --input: rgb(255 255 255 / 16%);
+  --focus: #8fb8ff;
   --ring: var(--focus);
-  --sidebar: #fffdf8;
-  --sidebar-foreground: #1c1813;
-  --sidebar-primary: #c2392f;
-  --sidebar-primary-foreground: #fdf6f0;
-  --sidebar-accent: #b88a3d;
-  --sidebar-accent-foreground: #1c1813;
-  --sidebar-border: #e4ddcf;
+  --sidebar: #18191d;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #f4f4f5;
+  --sidebar-primary-foreground: #111214;
+  --sidebar-accent: #ff87bf;
+  --sidebar-accent-foreground: #171217;
+  --sidebar-border: rgb(255 255 255 / 13%);
   --sidebar-ring: var(--focus);
+
+  --ink: #f4f4f5;
+  --navy: #dce4f2;
+  --gold: #dfb96f;
+  --surface-1: #18191d;
+  --surface-2: #25262b;
+  --seal: #ff938b;
+  --success: #78c9a4;
+  --success-surface: #183429;
+
+  --ondo-canvas: #111214;
+  --ondo-surface: #18191d;
+  --ondo-surface-raised: #202126;
+  --ondo-surface-soft: #25262b;
+  --ondo-ink: #f4f4f5;
+  --ondo-muted: #b7b6bc;
+  --ondo-quiet: #918f98;
+  --ondo-line: rgb(255 255 255 / 13%);
+  --ondo-line-strong: rgb(255 255 255 / 34%);
+  --ondo-shadow: 0 18px 42px rgb(0 0 0 / 38%), 0 2px 8px rgb(0 0 0 / 24%);
+  --ondo-control: #f4f4f5;
+  --ondo-control-ink: #111214;
+  --ondo-accent: #ff87bf;
+  --ondo-focus: #8fb8ff;
 }
 
 @theme inline {
@@ -166,6 +210,9 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  body:has([data-testid="ondo-b-root"]) {
+    background: var(--ondo-canvas);
   }
   button,
   a {
@@ -869,38 +916,6 @@
   100% { opacity: 1; transform: translateX(0); }
 }
 
-/* B's Korea atlas and city map share this one named surface. Keeping the
-   document-level pseudo-elements here avoids CSS Module pure-selector errors
-   and leaves every surface without this name—including A—untouched. */
-@keyframes ondo-map-surface-out {
-  from { opacity: 1; transform: scale(1); }
-  to { opacity: 0; transform: scale(1.06); }
-}
-
-@keyframes ondo-map-surface-in {
-  from { opacity: 0; transform: scale(.96); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* View-transition snapshots sit in the top layer. They are visual only: the
-   live map controls underneath must keep receiving pointer input throughout
-   the 240ms atlas-to-city zoom. */
-::view-transition,
-::view-transition-group(ondo-map-surface),
-::view-transition-image-pair(ondo-map-surface),
-::view-transition-old(ondo-map-surface),
-::view-transition-new(ondo-map-surface) {
-  pointer-events: none;
-}
-
-::view-transition-old(ondo-map-surface) {
-  animation: ondo-map-surface-out 220ms cubic-bezier(.22, .8, .3, 1) both;
-}
-
-::view-transition-new(ondo-map-surface) {
-  animation: ondo-map-surface-in 240ms cubic-bezier(.22, .8, .3, 1) both;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -909,10 +924,6 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-  ::view-transition-old(ondo-map-surface),
-  ::view-transition-new(ondo-map-surface) {
-    animation: none !important;
   }
 }
 @import "maplibre-gl/dist/maplibre-gl.css";

@@ -6,7 +6,7 @@ async function openPreferences(page: Page, viewport: { width: number; height: nu
   await page.setViewportSize(viewport)
   await page.addInitScript((key) => localStorage.removeItem(key), DEVICE_KEY)
   await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page.getByRole("button", { name: "Set guest preferences", exact: true }).click()
+  await page.getByRole("button", { name: "Personalize in 20 seconds", exact: true }).click()
   await page.getByTestId("persona-travelling").click()
   await page.getByRole("button", { name: "Choose food preferences", exact: true }).click()
   const preferences = page.getByTestId("onboarding-step-preferences")

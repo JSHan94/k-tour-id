@@ -1,0 +1,185 @@
+.title {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  color: var(--ondo-ink);
+}
+
+.title small {
+  color: var(--ondo-muted);
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.35;
+}
+
+.body {
+  box-sizing: border-box;
+  display: grid;
+  min-width: 0;
+  gap: 24px;
+  padding: 20px 20px 24px;
+  color: var(--ondo-ink);
+}
+
+.section { min-width: 0; }
+.section h2 {
+  margin: 0 0 10px;
+  color: var(--ondo-muted);
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.4;
+}
+
+.categories {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.categories button {
+  box-sizing: border-box;
+  display: inline-flex;
+  min-width: 44px;
+  max-width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border: 1px solid var(--ondo-line);
+  border-radius: 14px;
+  background: var(--ondo-surface-soft);
+  color: var(--ondo-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+}
+.categories button svg { flex: 0 0 auto; }
+.categories button span { min-width: 0; overflow-wrap: anywhere; }
+.categories button[aria-pressed="true"] {
+  border-color: var(--ondo-control);
+  background: var(--ondo-control);
+  color: var(--ondo-control-ink);
+}
+
+.nightNotice {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--ondo-line);
+  border-radius: 16px;
+  background: var(--ondo-surface-soft);
+}
+.nightNotice > svg { color: var(--ondo-accent); }
+.nightNotice strong { font-size: 14px; line-height: 1.4; }
+.nightNotice p {
+  margin: 5px 0 0;
+  color: var(--ondo-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.rows {
+  min-width: 0;
+  border-block: 1px solid var(--ondo-line);
+}
+
+.row {
+  box-sizing: border-box;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ondo-ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 640;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+  list-style: none;
+}
+.rows > * + * { border-top: 1px solid var(--ondo-line); }
+.row > svg:first-child { color: var(--ondo-muted); }
+.row > svg:last-child { color: var(--ondo-muted); }
+.rowCopy { display: grid; min-width: 0; gap: 3px; overflow-wrap: anywhere; }
+.rowCopy small { color: var(--ondo-muted); font-size: 12px; font-weight: 500; line-height: 1.4; }
+.value {
+  max-width: 95px;
+  color: var(--ondo-muted);
+  font-size: 13px;
+  font-weight: 550;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.row[aria-pressed="true"] .value { color: var(--ondo-ink); font-weight: 760; }
+.privacy > summary::-webkit-details-marker { display: none; }
+.privacy[open] > summary > svg:last-child { transform: rotate(180deg); }
+.privacy p {
+  margin: 0;
+  padding: 0 0 14px 32px;
+  color: var(--ondo-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.footer { padding: 12px 20px; }
+.done {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--ondo-control);
+  border-radius: 16px;
+  background: var(--ondo-control);
+  color: var(--ondo-control-ink);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 740;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.done small { font-size: 12px; font-weight: 550; }
+.body button:focus-visible,
+.privacy > summary:focus-visible,
+.done:focus-visible {
+  outline: 2px solid var(--ondo-focus);
+  outline-offset: 3px;
+}
+
+@media (max-width: 350px) {
+  .body { padding-inline: 16px; }
+  .footer { padding-inline: 16px; }
+  .row { gap: 10px; }
+}
+
+@media (forced-colors: active) {
+  .categories button[aria-pressed="true"],
+  .done { border: 2px solid Highlight; }
+  .body button:focus-visible,
+  .privacy > summary:focus-visible,
+  .done:focus-visible { outline-color: Highlight; }
+}

@@ -43,7 +43,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     test(`${locale} mobile Pulse is non-temperature and leaves a contiguous map field`, async ({ page }) => {
       const root = await openSeoul(page, locale, { width: 390, height: 844 })
 
-      await expect.soft(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
+      await expect.soft(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-capsule")
       await expect.soft(root).toHaveAttribute("data-pulse-motion", "one-shot-bloom-reduced-safe")
       await expect.soft(page.getByTestId("ondo-b-pulse-marker-accessible-detail")).not.toContainText("°")
       await expect.soft(page.getByTestId("ondo-b-map-key")).not.toContainText("°")
@@ -129,7 +129,7 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     expect(buttonBoxes).toHaveLength(5)
     for (const bounds of buttonBoxes) expect(Math.min(bounds.width, bounds.height)).toBeGreaterThanOrEqual(44)
 
-    await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
+    await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-capsule")
   })
 
   test("844x390 opens on the compact map and an explicit List remains scrollable", async ({ page }) => {
@@ -168,12 +168,13 @@ test.describe("premium Pulse map and responsive shell lane", () => {
     await page.getByTestId("ondo-b-map-key-details").locator(":scope > summary").click()
     await page.getByTestId("ondo-b-pulse-methodology").locator(":scope > summary").click()
     const hottest = page.getByTestId("ondo-b-map-pulse-places").getByRole("button").first()
-    await expect(hottest).toContainText("94 · PEAK")
+    await expect(hottest).toHaveAttribute("data-temperature-score", /^\d+$/)
+    await expect(hottest).not.toContainText("°")
     const hottestVenueId = await hottest.getAttribute("data-venue-id")
     expect(hottestVenueId).toBeTruthy()
     await hottest.click()
     await expect(root).toHaveAttribute("data-selected-venue-id", hottestVenueId!)
-    await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("ONDO temperature 94 · PEAK")
+    await expect(page.getByTestId("ondo-b-selected-marker-status")).toContainText("ONDO temperature")
     await expect(page.getByTestId("ondo-b-selected-marker-status")).not.toContainText("°")
     await expect(page.getByTestId("canonical-place-peek")).toBeVisible()
   })

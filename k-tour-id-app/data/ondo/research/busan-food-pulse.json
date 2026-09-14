@@ -1,0 +1,227 @@
+[
+  {
+    "id": "research-busan-moemiljip",
+    "city": "busan",
+    "name": { "en": "Moemiljip", "ko": "뫼밀집", "ja": "メミルジプ" },
+    "district": { "en": "Marine City · Haeundae", "ko": "해운대 · 마린시티", "ja": "海雲台・マリンシティ" },
+    "kind": "food",
+    "signature": { "en": "Perilla buckwheat noodles", "ko": "들기름 메밀국수", "ja": "エゴマ油のそば" },
+    "address": "부산광역시 해운대구 마린시티3로 23, 오렌지 프라자 2층",
+    "latitude": 35.15664,
+    "longitude": 129.14696,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000202017001000&uc_seq=2768",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A new 2026 Michelin Bib Gourmand: freshly milled Korean buckwheat for a relaxed Marine City lunch.",
+      "ko": "2026 미쉐린 빕 구르망 신규 선정. 직접 제분한 국산 메밀로 즐기는 마린시티 점심.",
+      "ja": "2026年ミシュランのビブグルマンに新掲載。自家製粉の韓国産そばをマリンシティのランチに。"
+    },
+    "sources": [
+      { "url": "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026", "title": "8 New Bib Gourmands Announced for The MICHELIN Guide Seoul & Busan 2026", "publishedAt": "2026-02-26", "evidence": "award" },
+      { "url": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000202017001000&uc_seq=2768", "title": "Visit Busan — 뫼밀집", "publishedAt": null, "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-songheonjip",
+    "city": "busan",
+    "name": { "en": "Songheonjip", "ko": "송헌집", "ja": "ソンホンジプ" },
+    "district": { "en": "Millak · Suyeong", "ko": "수영 · 민락", "ja": "水営・民楽" },
+    "kind": "food",
+    "signature": { "en": "Charcoal-grilled tteokgalbi set", "ko": "숯불 떡갈비 정식", "ja": "炭火トッカルビ定食" },
+    "address": "부산광역시 수영구 민락로19번길 18",
+    "latitude": 35.15654,
+    "longitude": 129.12146,
+    "coordinateSourceUrl": "https://guide.michelin.com/hk/zh_HK/busan-region/busan_1025838/restaurant/songheonjip",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "New to the 2026 Michelin Bib Gourmand selection, with smoky tteokgalbi in a converted house near Gwangalli.",
+      "ko": "2026 미쉐린 빕 구르망 신규 선정. 광안리 인근 주택에서 맛보는 숯불 떡갈비.",
+      "ja": "2026年ミシュランのビブグルマンに新掲載。広安里近くの一軒家で炭火トッカルビを。"
+    },
+    "sources": [
+      { "url": "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026", "title": "8 New Bib Gourmands Announced for The MICHELIN Guide Seoul & Busan 2026", "publishedAt": "2026-02-26", "evidence": "award" },
+      { "url": "https://guide.michelin.com/hk/zh_HK/busan-region/busan_1025838/restaurant/songheonjip", "title": "Songheonjip — Busan — MICHELIN Guide", "publishedAt": null, "evidence": "award" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-momos-yeongdo",
+    "city": "busan",
+    "name": { "en": "Momos Roastery & Coffee Bar · Yeongdo", "ko": "모모스 로스터리 & 커피바", "ja": "モモス ロースタリー＆コーヒーバー・影島" },
+    "district": { "en": "Bongnae · Yeongdo", "ko": "영도 · 봉래", "ja": "影島・蓬莱" },
+    "kind": "cafe",
+    "signature": { "en": "Specialty coffee at a working roastery", "ko": "항구 로스터리의 스페셜티 커피", "ja": "港のロースタリーで味わうスペシャルティコーヒー" },
+    "address": "부산광역시 영도구 봉래나루로 160",
+    "latitude": 35.095932,
+    "longitude": 129.04263,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?menuCd=DOM_000000202002001000&uc_seq=2158",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A port-side coffee stop where roasting and brewing are part of the visit, featured by Visit Busan.",
+      "ko": "비짓부산이 소개한 항구의 커피 공간. 로스팅과 추출 과정을 함께 경험하는 영도 한 잔.",
+      "ja": "Visit Busan掲載の港のコーヒースポット。焙煎や抽出の風景も楽しめる影島の一杯。"
+    },
+    "sources": [
+      { "url": "https://www.visitbusan.net/index.do?menuCd=DOM_000000202002001000&uc_seq=2158", "title": "Visit Busan — 모모스 로스터리 & 커피바", "publishedAt": null, "evidence": "tourism" },
+      { "url": "https://momos.co.kr/faq", "title": "Momos Coffee — 매장 안내", "publishedAt": null, "evidence": "operator" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-waveon-coffee",
+    "city": "busan",
+    "name": { "en": "Waveon Coffee", "ko": "웨이브온커피", "ja": "ウェーブオンコーヒー" },
+    "district": { "en": "Jangan · Gijang", "ko": "기장 · 장안", "ja": "機張・長安" },
+    "kind": "cafe",
+    "signature": { "en": "Wolnae latte by the sea", "ko": "바다를 보며 마시는 월내라떼", "ja": "海を眺めながら味わうウォルネラテ" },
+    "address": "부산광역시 기장군 장안읍 해맞이로 286",
+    "latitude": 35.32225,
+    "longitude": 129.26979,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=174",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "Visit Busan's sea-view coffee pick for a Gijang coastal detour, with hand-drip coffee and a signature latte.",
+      "ko": "비짓부산이 소개한 기장 오션뷰 카페. 해안 나들이에 더하는 핸드드립과 시그니처 라떼.",
+      "ja": "Visit Busan掲載の機張オーシャンビューカフェ。海岸への寄り道にハンドドリップやラテを。"
+    },
+    "sources": [
+      { "url": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=174", "title": "Visit Busan — Waveon Coffee (웨이브온커피)", "publishedAt": null, "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-sour-yeongdo",
+    "city": "busan",
+    "name": { "en": "Sour Yeongdo", "ko": "사우어 영도", "ja": "サワー影島" },
+    "district": { "en": "Bongnae · Yeongdo", "ko": "영도 · 봉래", "ja": "影島・蓬莱" },
+    "kind": "bar",
+    "signature": { "en": "Wild Wave craft beer with harbour views", "ko": "항구 전망과 와일드웨이브 수제맥주", "ja": "港の眺めとワイルドウェーブのクラフトビール" },
+    "address": "부산광역시 영도구 대교로46번길 46, 끄티봉래 8층",
+    "latitude": 35.095074,
+    "longitude": 129.0427,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2139",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "Wild Wave's Yeongdo dining bar pairs local craft beer with an eighth-floor harbour outlook, featured by Visit Busan.",
+      "ko": "비짓부산이 소개한 와일드웨이브의 영도 다이닝 바. 8층 항구 전망과 로컬 수제맥주를 함께.",
+      "ja": "Visit Busan掲載、ワイルドウェーブの影島ダイニングバー。8階から港を眺めて地元のクラフトビールを。"
+    },
+    "sources": [
+      { "url": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000202012001000&uc_seq=1767", "title": "Visit Busan — 영도 여행·끄티봉래와 사우어 영도", "publishedAt": null, "evidence": "tourism" },
+      { "url": "https://www.wildwavebrew.com/?pageName=sourlocation~service", "title": "Wild Wave — SOUR YEONGDO Location", "publishedAt": null, "evidence": "operator" },
+      { "url": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2139", "title": "Visit Busan — 더휴일X데스커 워케이션 센터 (same building, coordinate evidence only)", "publishedAt": null, "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-living-room-bar",
+    "city": "busan",
+    "name": { "en": "Living Room Bar · Park Hyatt Busan", "ko": "파크 하얏트 부산 리빙룸 바", "ja": "パーク ハイアット釜山 リビングルームバー" },
+    "district": { "en": "Marine City · Haeundae", "ko": "해운대 · 마린시티", "ja": "海雲台・マリンシティ" },
+    "kind": "bar",
+    "signature": { "en": "Bridge-view cocktails", "ko": "광안대교 야경과 시그니처 칵테일", "ja": "広安大橋の夜景とシグネチャーカクテル" },
+    "address": "부산광역시 해운대구 마린시티1로 51, 파크 하얏트 부산 31층",
+    "latitude": 35.156578,
+    "longitude": 129.14195,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2243",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A premium cocktail stop above Marine City, with Gwangan Bridge views. The operator does not accept bar reservations.",
+      "ko": "마린시티 위에서 광안대교를 바라보는 프리미엄 칵테일 바. 운영사 안내상 바 예약은 받지 않습니다.",
+      "ja": "マリンシティから広安大橋を望むプレミアムなカクテルバー。公式案内ではバーの予約は受け付けていません。"
+    },
+    "sources": [
+      { "url": "https://www.hyatt.com/park-hyatt/en-US/busph-park-hyatt-busan/dining", "title": "Busan Hotel Restaurants and Bar — Park Hyatt Busan", "publishedAt": null, "evidence": "operator" },
+      { "url": "https://www.hyatt.com/park-hyatt/en-US/busph-park-hyatt-busan/dining/living-room", "title": "Living Room — Park Hyatt Busan (bar reservation policy)", "publishedAt": null, "evidence": "operator" },
+      { "url": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2243", "title": "Visit Busan — 파크 하얏트 부산 (hotel coordinate evidence)", "publishedAt": null, "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-hapcheon-gukbapjip",
+    "city": "busan",
+    "name": {
+      "en": "Hapcheon Gukbapjip",
+      "ko": "합천국밥집",
+      "ja": "ハプチョングクパプチプ"
+    },
+    "district": {
+      "en": "Yongho · Nam",
+      "ko": "남구 · 용호",
+      "ja": "南区・龍湖"
+    },
+    "kind": "food",
+    "signature": {
+      "en": "Clear-broth dwaeji gukbap",
+      "ko": "맑은 국물의 돼지국밥",
+      "ja": "澄んだスープのテジクッパ"
+    },
+    "address": "부산광역시 남구 용호로 235",
+    "latitude": 35.111244,
+    "longitude": 129.11125,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=1511",
+    "checkedAt": "2026-09-11",
+    "reason": {
+      "en": "Visit Busan's Yongho-dong pick for a lighter, clear-broth take on the city's pork-and-rice soup.",
+      "ko": "부산의 돼지국밥을 맑고 깔끔한 국물로 맛보는 용호동 한 끼. 비짓부산이 소개한 식당이에요.",
+      "ja": "澄んだスープで釜山のテジクッパを味わう龍湖洞の一軒。Visit Busanで紹介されています。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=1511",
+        "title": "Visit Busan — Hapcheon Gukbapjip (합천국밥집)",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-busan-haeundae-amso-galbijip",
+    "city": "busan",
+    "name": {
+      "en": "Haeundae Amso Galbijip",
+      "ko": "해운대암소갈비집",
+      "ja": "海雲台アムソカルビチプ"
+    },
+    "district": {
+      "en": "Jung-dong · Haeundae",
+      "ko": "해운대 · 중동",
+      "ja": "海雲台・中洞"
+    },
+    "kind": "food",
+    "signature": {
+      "en": "Fresh and marinated beef short ribs",
+      "ko": "생갈비와 양념갈비",
+      "ja": "生カルビと味付けカルビ"
+    },
+    "address": "부산광역시 해운대구 해운대해변로 333",
+    "latitude": 35.163258,
+    "longitude": 129.16626,
+    "coordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201002001000&uc_seq=2370",
+    "checkedAt": "2026-09-11",
+    "reason": {
+      "en": "A Haeundae beef-rib restaurant dating to 1964, listed by Visit Busan for its fresh and marinated galbi.",
+      "ko": "1964년부터 이어온 해운대의 갈비집. 비짓부산이 생갈비와 양념갈비를 대표 메뉴로 소개해요.",
+      "ja": "1964年から続く海雲台のカルビ店。Visit Busanでは生カルビと味付けカルビが代表メニューとして紹介されています。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201002001000&uc_seq=2370",
+        "title": "Visit Busan — 해운대암소갈비집",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  }
+]

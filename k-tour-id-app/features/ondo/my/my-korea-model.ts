@@ -1,4 +1,5 @@
 import { isCanonicalVenueId, sanitizeCanonicalVenueIds } from "@/lib/ondo/venues/canonical-allowlist"
+import { isEditorialPlaceId } from "../pulse-b/japan-first-pulse-model-b"
 
 export const MY_KOREA_HISTORY_LIMIT = 12
 
@@ -6,7 +7,17 @@ export const MY_KOREA_TABLE_CATALOG = {
   "table-seoul-night-bites": {
     venueId: "mois-0021cd596bc5b2a922ad",
     title: { en: "Night bites, one shared table", ko: "야식 한 상, 함께 앉는 테이블" },
-    schedule: { en: "Fri, Sep 18 · 20:30 KST", ko: "9월 18일 금요일 · 20:30 KST" },
+    placeKind: "official",
+  },
+  "table-jeju-haenyeo-supper": {
+    venueId: "jeju-haenyeo-kitchen-bukchon",
+    title: { en: "Haenyeo stories over dinner", ko: "해녀 이야기와 함께하는 저녁" },
+    placeKind: "editorial",
+  },
+  "table-busan-gijang-dinner": {
+    venueId: "mois-03041681b54ea5399763",
+    title: { en: "A small dinner in Gijang", ko: "기장에서 나누는 저녁" },
+    placeKind: "official",
   },
 } as const
 
@@ -31,7 +42,10 @@ export function sanitizePlannedTableRefs(value: unknown): OndoBPlannedTableRef[]
     if (!isRecord(candidate) || typeof candidate.tableId !== "string" || typeof candidate.venueId !== "string") continue
     const tableId = candidate.tableId as keyof typeof MY_KOREA_TABLE_CATALOG
     const catalogEntry = MY_KOREA_TABLE_CATALOG[tableId]
-    if (!catalogEntry || catalogEntry.venueId !== candidate.venueId || !isCanonicalVenueId(candidate.venueId) || seen.has(tableId)) continue
+    const placeIsRegistered = catalogEntry?.placeKind === "official"
+      ? isCanonicalVenueId(candidate.venueId)
+      : isEditorialPlaceId(candidate.venueId)
+    if (!catalogEntry || catalogEntry.venueId !== candidate.venueId || !placeIsRegistered || seen.has(tableId)) continue
     seen.add(tableId)
     result.push({ tableId, venueId: candidate.venueId })
     if (result.length === MY_KOREA_HISTORY_LIMIT) break
@@ -54,4 +68,9 @@ export function recordPlannedTable(current: readonly OndoBPlannedTableRef[], tab
 
 export function removePlannedTable(current: readonly OndoBPlannedTableRef[], tableId: string) {
   return sanitizePlannedTableRefs(current.filter((item) => item.tableId !== tableId))
+}
+
+export function resolveSavedRemovalFocusIndex(removedIndex: number, survivingCount: number) {
+  if (!Number.isInteger(removedIndex) || !Number.isInteger(survivingCount) || survivingCount <= 0) return null
+  return Math.min(Math.max(removedIndex, 0), survivingCount - 1)
 }

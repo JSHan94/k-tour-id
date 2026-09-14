@@ -3,6 +3,7 @@ import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
 import {
   createStableCommerceBState,
+  createStableCommerceBLockedQuote,
   stableCommerceBReducer,
 } from "../../features/ondo/commerce-b/stable-commerce-model-b"
 import {
@@ -37,9 +38,8 @@ test("FLOW8-OBJECT-002 Pass and wallet keep first-frame copy consumer-shaped whi
 
   for (const truth of [
     "no money or digital asset moves",
-    "No provider, credential or live money service is connected",
     "No bank, card, wallet or payment provider is connected yet",
-  ]) expect(`${commerce}\n${pass}`).toContain(truth)
+  ]) expect(commerce).toContain(truth)
 
   expect(passCss).toContain("--flow8-object-radius")
   expect(passCss).toContain("--flow8-object-shadow")
@@ -53,8 +53,9 @@ test("FLOW8-OBJECT-002 Pass and wallet keep first-frame copy consumer-shaped whi
   expect(commerce).not.toContain('data-testid="wallet-non-live-boundary"')
   expect(commerce).toContain('connect: "Set up travel wallet"')
   expect(commerce).toContain('connect: "여행 지갑 설정"')
-  expect(commerce).toContain('linkTitle: "Set up your K-Tour ID wallet"')
-  expect(commerce).toContain('linkBody: "Keep your travel balance and ONDO meal benefits together for this trip."')
+  expect(commerce).toContain('linkTitle: "Start with an empty travel wallet"')
+  expect(commerce).toContain('linkBody: "Choose how you’ll add KRW or USD when a provider is connected."')
+  expect(commerce).toContain('localActual("travel_wallet_shell"')
   expect(commerce).toContain('data-testid="wallet-eyebrow"')
   expect(commerceCss).toMatch(/\.heading > p\s*\{[^}]*color:\s*var\(--flow8-plum\)/)
 })
@@ -84,10 +85,12 @@ test("FLOW8-COMPLETE-004 receipt and refund are distinct completion objects with
   const commerce = source(COMMERCE)
   const css = source(COMMERCE_CSS)
 
-  expect(commerce).toContain('data-completion-kind={view}')
+  expect(commerce).toContain('data-completion-kind={renderedView}')
   expect(commerce).toContain("STABLE_B_RECEIPT_ID")
   expect(commerce).toContain("STABLE_B_REFUND_RECEIPT_ID")
   expect(commerce).toContain('data-testid="payment-receipt-return"')
+  expect(commerce).not.toContain('data-testid="commerce-receipt-boundary"')
+  expect(commerce).toContain('data-testid="commerce-settlement-details"')
   expect(commerce).toContain("actions.returnFromCommerceOrigin()")
   expect(commerce).not.toContain("function returnToCommercePlace()")
   expect(css).toContain('.receiptWrap[data-refunded="false"]')
@@ -101,9 +104,15 @@ test("FLOW8-RECOVERY-005 wallet, payment, balance, eligibility, minimum, and exp
 
   for (const state of [
     '"info" | "linking" | "failed"',
-    '"review" | "processing" | "receipt" | "failure" | "insufficient" | "refunded"',
     '"ineligible" | "below_minimum" | "expired"',
   ]) expect(commerce).toContain(state)
+  const paymentView = commerce.match(/type PaymentView = ([^\n]+)/)?.[1]
+  expect(paymentView).toBeDefined()
+  // Approval/capture adds an intermediate operation screen; every original
+  // recovery and final state must still exist independently of union order.
+  expect([...paymentView!.matchAll(/"([^"]+)"/g)].map(match => match[1]).sort()).toEqual([
+    "review", "processing", "operation", "receipt", "failure", "insufficient", "refunded",
+  ].sort())
 
   for (const testId of [
     "wallet-connect-sheet",
@@ -111,6 +120,9 @@ test("FLOW8-RECOVERY-005 wallet, payment, balance, eligibility, minimum, and exp
     "commerce-benefit-recovery",
     "payment-recovery",
     "payment-retry",
+    "payment-operation",
+    "payment-operation-continue",
+    "payment-query-failure",
   ]) expect(commerce).toContain(`data-testid="${testId}"`)
 
   expect(css).toMatch(/\.paymentStatus[\s\S]*min-height:\s*min\(/)
@@ -131,11 +143,15 @@ test("FLOW8-DESKTOP-006 desktop is a composed workspace, not a centered mobile s
 
 test("FLOW8-MOTION-007 staged object motion is 180/240/320ms and reduced motion closes every animation", () => {
   const css = `${source(COMMERCE_CSS)}\n${source(PASS_CSS)}`
+  const commerce = source(COMMERCE)
 
   expect(css).toContain("--flow8-motion-fast: 180ms")
   expect(css).toContain("--flow8-motion-base: 240ms")
   expect(css).toContain("--flow8-motion-emphasis: 320ms")
   expect(css).toMatch(/@media \(prefers-reduced-motion:\s*reduce\)[\s\S]*animation:\s*none/)
+  expect(commerce).toContain("timeout = window.setTimeout(finish, Math.max(0, count * 17 + 34))")
+  expect(commerce).toContain("window.clearTimeout(timeout)")
+  expect(commerce).toContain("if (completed) return")
 })
 
 test("FLOW8-FREEZE-008 the complete PRD action and testid graph stays present", () => {
@@ -181,14 +197,14 @@ test("FLOW8-TRUTH-009 Wallet and My activity expose non-live truth plus an exact
 
   expect(commerce).toContain('data-testid="wallet-activity-place"')
   expect(my).toContain('data-testid="my-korea-receipt-place"')
-  expect(commerce).toContain("Saved to Travel Wallet")
+  expect(commerce).toContain("Balance-use record")
   expect(commerce).toContain("Balance restored")
   expect(commerce).not.toContain('explore: "Find eligible places"')
   expect(commerce).not.toContain('explore: "대상 장소 찾기"')
   expect(commerce).not.toContain('explore: "対象のお店を探す"')
 })
 
-test("FLOW8-DURABLE-010 pay and refund are durable-first and reload reconstructs the exact paired ledgers", () => {
+test("FLOW8-DURABLE-010 mutations are write-checked while review receipts remain session-only and reload fails closed", () => {
   const commerce = source(COMMERCE)
   const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
   const model = source("features/ondo/commerce-b/stable-commerce-model-b.ts")
@@ -202,12 +218,17 @@ test("FLOW8-DURABLE-010 pay and refund are durable-first and reload reconstructs
   expect(provider).toContain("confirmationCount: 1")
   expect(provider).toContain("receiptCount: 1")
   expect(provider).toContain("refundCount: receipt.status === \"refunded\" ? 1 : 0")
+  expect(provider).toContain('executionTruth: "FIXTURE_REVIEW"')
+  expect(provider).toContain("provenanceTruth: REVIEW_PROVENANCE_TRUTH")
+  expect(provider).toContain("Review-fixture results are current-session evidence only")
+  expect(provider).toMatch(/function deviceState[\s\S]*commerceReceipts:\s*\[\]/)
+  expect(provider).toMatch(/const next: OndoBState = \{[\s\S]*commerceReceipts:\s*\[\],[\s\S]*commerceWalletStatus:\s*"disconnected",[\s\S]*commerceSession:\s*createStableCommerceBState\(\)/)
   expect(commerce).toContain('data-testid="commerce-storage-error"')
   expect(model).toContain('type: "CANCEL_CONFIRMATION"')
   expect(model).toContain('case "CANCEL_CONFIRMATION"')
   expect(commerce).toContain("const preserveReturnToRef = useRef(false)")
   expect(commerce).toContain('if (outcome === "success")')
-  expect(commerce).toContain("restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)")
+  expect(commerce).toContain("restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed, new Date(), actionGateSessionOptions())")
   expect(commerce).toContain("if (!preserveReturnToRef.current && pending?.cta === \"START_CHECKOUT\"")
 })
 
@@ -218,7 +239,9 @@ test("FLOW8-PRD-011 readiness snapshots stay independent and no external transpo
   const stored = provider.slice(provider.indexOf("type OndoBDeviceState"), provider.indexOf("const B_DEVICE_KEY"))
 
   for (const state of ["personOutcome", "ageOutcome", "commerceWalletStatus"]) expect(`${pass}\n${provider}`).toContain(state)
-  expect(provider).toContain('commerceWalletStatus: restored.commerceReceipts.length ? "ready" : "disconnected"')
+  expect(provider).toContain('commerceWalletStatus: "disconnected"')
+  expect(provider).toContain("commerceSession: createStableCommerceBState()")
+  expect(provider).toMatch(/function deviceState[\s\S]*commerceReceipts:\s*\[\]/)
   for (const truth of ["Person does not prove 19+", "19+ does not prove identity"]) expect(pass).toContain(truth)
   for (const transport of ["fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "FormData"]) {
     expect(`${commerce}\n${provider}`).not.toContain(transport)
@@ -235,7 +258,8 @@ test("FLOW8-IDEMPOTENT-012 accepted, declined, and refunded operations are exact
   const settle = (accepted: boolean) => {
     let state = createStableCommerceBState()
     state = stableCommerceBReducer(state, { type: accepted ? "ACCEPT_BENEFIT" : "DECLINE_BENEFIT" })
-    for (let index = 0; index < 3; index += 1) state = stableCommerceBReducer(state, { type: "CONFIRM" })
+    const quote = createStableCommerceBLockedQuote(state, new Date("2026-08-28T03:15:00.000Z"))
+    for (let index = 0; index < 3; index += 1) state = stableCommerceBReducer(state, { type: "CONFIRM", quote })
     for (let index = 0; index < 3; index += 1) state = stableCommerceBReducer(state, { type: "PAYMENT_RETURN", outcome: "success" })
     return state
   }
@@ -261,8 +285,45 @@ test("FLOW8-IDEMPOTENT-012 accepted, declined, and refunded operations are exact
   ])
 })
 
+test("FLOW8-JIT-018 action-gate credential issuance and setup closure publish atomically", () => {
+  const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const setup = source("features/ondo/identity-b/ktour-id-setup-b.tsx")
+  const completionStart = provider.indexOf("completeIdentitySetup:")
+  const completionEnd = provider.indexOf("completeAgeProof:", completionStart)
+  const holderStart = setup.indexOf("function finishHolder()")
+  const holderEnd = setup.indexOf("function openPresentation()", holderStart)
+  expect(completionStart).toBeGreaterThanOrEqual(0)
+  expect(completionEnd).toBeGreaterThan(completionStart)
+  expect(holderStart).toBeGreaterThanOrEqual(0)
+  expect(holderEnd).toBeGreaterThan(holderStart)
+  const completion = provider.slice(completionStart, completionEnd)
+  const holderCompletion = setup.slice(holderStart, holderEnd)
+
+  expect(completion).toContain("completeIdentitySetup: (method, options) => {")
+  expect(completion.match(/\bcommitEphemeral\(/g)).toHaveLength(1)
+  expect(completion).toContain("commitEphemeral((current) => ({")
+  expect(completion).toContain("identityCredential: recovered ?? createSimulatedCredentialB(method, Date.now(), current.identityDemoScenario)")
+  const reviewGuard = completion.indexOf("if (options?.sampleRecovery && !qaReviewFixtureOptions().allowReviewFixture) return")
+  const recoveryGuard = completion.indexOf("if (options?.sampleRecovery && (!recovered || recovered.method !== method)) return")
+  const atomicPublish = completion.indexOf("commitEphemeral((current) => ({")
+  expect(reviewGuard).toBeGreaterThanOrEqual(0)
+  expect(recoveryGuard).toBeGreaterThan(reviewGuard)
+  expect(atomicPublish).toBeGreaterThan(recoveryGuard)
+  expect(completion).toContain("recoverSimulatedCredentialB(stateRef.current.identityCredential)")
+  expect(completion).not.toContain("identityDemoScenario:")
+  expect(completion).toContain('current.identitySetupOrigin === "action_gate"')
+  expect(completion).toContain("? null")
+  expect(completion).toContain(": current.identitySetupOrigin")
+  expect(completion).not.toContain("closeIdentitySetup()")
+  expect(holderCompletion).toContain('if (origin === "action_gate") return')
+  expect(holderCompletion).toContain("actions.completeIdentitySetup(method, sampleRecovery ? { sampleRecovery: true } : undefined)")
+  expect(holderCompletion).not.toContain("actions.closeIdentitySetup()")
+})
+
 test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts restore behaviorally exact state", () => {
   const receipt = (status: "paid" | "refunded", benefitOOKRW: 0 | 3): OndoBCommerceReceipt => ({
+    executionTruth: "FIXTURE_REVIEW",
+    provenanceTruth: "SIMULATED",
     receiptId: "ONDO-LOCAL-20260825-001",
     refundReceiptId: status === "refunded" ? "ONDO-LOCAL-REFUND-20260825-001" : null,
     offerId: "meal-offer-gukbap",
@@ -301,6 +362,8 @@ test("FLOW8-RESTORE-013 accepted, declined, refunded, and malformed receipts res
   expect(sanitizeCommerceReceipts([{ ...receipt("paid", 3), refundReceiptId: "made-up" }])).toEqual([])
   expect(sanitizeCommerceReceipts([{ ...receipt("refunded", 3), refundReceiptId: null }])).toEqual([])
   expect(sanitizeCommerceReceipts([{ ...receipt("refunded", 3), refundReceiptId: "made-up" }])).toEqual([])
+  expect(sanitizeCommerceReceipts([{ ...receipt("paid", 3), executionTruth: undefined }])).toEqual([])
+  expect(sanitizeCommerceReceipts([{ ...receipt("paid", 3), provenanceTruth: undefined }])).toEqual([])
   expect(commerceSessionFromReceipts([])).toEqual(createStableCommerceBState())
 })
 
@@ -312,9 +375,9 @@ test("FLOW8-COPY-014 every locale names the on-device venue boundary without con
     "not offered or accepted by the venue",
     "매장에서 제공하거나 접수하지 않음",
     "お店での提供・受付なし",
-    "Getting your wallet ready…",
-    "지갑을 준비하는 중…",
-    "ウォレットを準備しています…",
+    "Creating your wallet…",
+    "지갑을 만드는 중…",
+    "ウォレットを作成しています…",
   ]) expect(commerce).toContain(truth)
   for (const stale of [
     "Connect travel wallet", "Connecting…", "Connect test wallet to pay", "Disconnect",
@@ -332,4 +395,75 @@ test("FLOW8-AXIS-015 Payment gate commits notify every Pass subscriber", () => {
   const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
 
   expect(coordinator).toContain("window.dispatchEvent(new CustomEvent(B_ACTION_AXIS_SESSION_EVENT, { detail: next }))")
+})
+
+test("FLOW8-FUNDING-016 external funding has consented sample rails without faking a provider return", () => {
+  const commerce = source(COMMERCE)
+  const funding = commerce.slice(commerce.indexOf("const FUNDING_COPY"), commerce.indexOf("function CanonicalCommerceOfferB"))
+
+  for (const route of ["krw_bank", "card_wallet", "digital_dollar"]) {
+    expect(funding).toContain(`id: "${route}" as const`)
+  }
+  expect(funding).toContain('data-testid="funding-provider-required"')
+  expect(funding).toContain('unavailable: "Not connected"')
+  expect(funding).toContain('provider: "Connection needed"')
+  expect(funding).toContain('const [draftSource, setDraftSource]')
+  expect(funding).toContain('onChange={() => { if (!closing) { setDraftSource(id); setSaveError(false) } }}')
+  expect(funding).not.toContain('onChange={() => onSelect(id)}')
+  expect(funding).toContain('data-testid="funding-method-save"')
+  expect(funding).toContain('if (draftSource !== "travel_balance") return')
+  expect(funding).toContain('disabled={closing || (draftSource !== "travel_balance" && !reviewMode)}')
+  expect(funding).toContain('if (onSelect(draftSource)) onClose()')
+  expect(funding).toContain('data-testid="funding-sample-open"')
+  expect(funding).toContain('if (!reviewMode && !enterReviewSample())')
+  expect(funding).toContain('if (onSelect("travel_balance")) onClose()')
+  expect(funding).toContain('next.phase !== "settled" || !next.receipt || !qaReviewFixtureOptions().allowReviewFixture')
+  expect(funding).toContain('const committed = actions.creditSampleFunding(execution)')
+  expect(funding).toContain('operationRef.current?.phase !== "settled" || !creditComplete')
+  expect(funding).toContain('data-testid="funding-consent"')
+  expect(funding).toContain('data-testid="funding-check-status"')
+  expect(funding).not.toContain("eligible Korean")
+  expect(funding).not.toContain("long-term")
+  expect(commerce).toContain('const fundingAvailable = reviewMode && fundingSource === "travel_balance" && walletStatus === "ready"')
+  expect(commerce).toContain('if (!reviewMode) return')
+  expect(commerce).toContain('? walletStatus === "ready" ? (event) => openFundingForQuote(event.currentTarget)')
+  const quoteHandoff = commerce.slice(commerce.indexOf("function openFundingForQuote("), commerce.indexOf("function pay("))
+  expect(quoteHandoff).toContain('actions.dispatchCommerce({ type: "PREPARE_QUOTE", quote })')
+  expect(quoteHandoff).toContain("setConsent(false)")
+  expect(quoteHandoff).toContain("onOpenFunding(trigger)")
+  expect(commerce).toContain('const walletPresentationState = walletStatus === "ready" && !reviewMode ? "empty" : walletStatus')
+  expect(commerce).toContain('data-wallet-state={walletPresentationState}')
+  expect(commerce).toContain('reviewMode ? copy.balanceReady : copy.balanceEmptyStatus')
+})
+
+test("FLOW8-FUNDING-017 the child funding portal exits without releasing its parent, scroll, or opener early", () => {
+  const commerce = source(COMMERCE)
+  const css = source(COMMERCE_CSS)
+  const fundingMount = commerce.slice(commerce.indexOf("export function WalletFundingMountB"), commerce.indexOf("export function IdWalletCommerceB"))
+
+  expect(fundingMount).toContain("const presence = useSheetPresence(desiredSubject)")
+  expect(fundingMount).toContain("presence.value ? <FundingSourceSheet")
+  expect(fundingMount).toContain("presenceState={presentedPhase}")
+  expect(commerce).toContain("useModalIsolation(true, rootRef)")
+  expect(commerce).toContain("useDocumentScrollLock(true)")
+  expect(commerce).toContain("data-modal-layer-priority={ONDO_MODAL_PRIORITY.finalCritical}")
+  expect(commerce).toContain('data-funding-presence={presenceState}')
+  expect(commerce).toContain("onClickCapture=")
+  expect(commerce).toContain("onPointerDownCapture=")
+  expect(commerce).toContain("onKeyDownCapture=")
+  expect(fundingMount).toContain("if (closeRequestedRef.current) return")
+  expect(fundingMount).toContain("if (presence.value !== null)")
+  expect(fundingMount).toContain("wasPresentRef.current = true")
+  expect(fundingMount).toContain("if (!wasPresentRef.current) return")
+  expect(fundingMount).toContain("focusReturn?.exact.isConnected && isRenderedFocusable(focusReturn.exact)")
+  expect(fundingMount).toContain("focusFirstAvailableDestination(focusReturn.fallbackSelectors)")
+  expect(fundingMount).not.toMatch(/function close\(\)[\s\S]{0,260}requestAnimationFrame/)
+  expect(commerce).toContain("setDraftSource(source)")
+  expect(commerce).toContain("[source, subject, reviewMode]")
+  expect(commerce).toContain("readFundingRailB(window.sessionStorage.getItem(FUNDING_RAIL_SESSION_KEY_B))")
+  expect(commerce).toContain('if (onSelect(draftSource)) onClose()')
+  expect(css).toContain('.fundingBackdrop[data-funding-presence="closing"]')
+  expect(css).toContain("animation: fundingBackdropExit 260ms")
+  expect(css).toContain("animation: fundingSheetExit 260ms")
+  expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*fundingBackdrop\[data-funding-presence="closing"\][\s\S]*animation: none/)
 })

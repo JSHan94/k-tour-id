@@ -1,5 +1,11 @@
 # ONDO B · 발자취형 제품/QA Source of Truth
 
+> **2026-09-02 mobile continuation:** the `cb4fcd3` tuple and every review
+> receipt below remain immutable history. The current post-tuple product audit,
+> connected mobile-flow inventory, and release blockers live in
+> [`10_MOBILE_RELEASE_CANDIDATE.md`](./10_MOBILE_RELEASE_CANDIDATE.md). Do not
+> reuse this page's historical green gates for the new candidate.
+
 상태: `FINAL AUTOMATED GATES SEALED GREEN · BLIND REVIEW READY · CLEAN 0/2 · NOT DEPLOYED`
 
 | SoT | 현재 값 |

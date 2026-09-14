@@ -1,38 +1,52 @@
 "use client"
 
-import type { KeyboardEvent } from "react"
-import { useEffect, useRef, useState } from "react"
-import { AlertTriangle, ChevronRight, MoonStar, RotateCcw, ShieldCheck, X } from "lucide-react"
+import type { KeyboardEvent, SyntheticEvent } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import { AlertTriangle, ChevronRight, LoaderCircle, MapPin, MoonStar, RotateCcw, X } from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueDisplayName } from "@/lib/ondo/venues/display"
-import { restoreBDiscoveryCityContext, restoreBDiscoveryVenueContext } from "../map/b-discovery-history"
+import { readBDiscoveryHistory, restoreBDiscoveryCityContext, restoreBDiscoveryVenueContext } from "../map/b-discovery-history"
+import {
+  dispatchPlaceReturnUiRestore,
+  type PlaceReturnUiSnapshotB,
+} from "../map/place-return-ui-snapshot-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
-import { useModalIsolation } from "../shared/ui/use-modal-isolation"
-import { readQaRuntime } from "../shared/ui/use-qa-controls"
+import { isRenderedFocusable } from "../shared/ui/is-rendered-focusable"
+import { ONDO_MODAL_PRIORITY } from "../shared/ui/modal-layer-priority"
+import { useDocumentScrollLock, useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { useSheetPresence } from "../shared/ui/use-sheet-presence"
+import { readQaRuntime, useQaControls } from "../shared/ui/use-qa-controls"
+import { createReviewFixtureAuthority, localActual, providerUnavailable, reviewFixture } from "../contracts/execution-mode"
 import {
   canAutoOpenGlobalAfter19B,
-  completeGlobalAfter19AgeB,
+  completeGlobalAfter19LocalConfirmationB,
+  completeGlobalAfter19ReviewB,
   DEFAULT_GLOBAL_AFTER19_PREFERENCE,
   DEFAULT_GLOBAL_AFTER19_SESSION,
   GLOBAL_AFTER19_PREFERENCE_KEY,
   GLOBAL_AFTER19_SESSION_EVENT,
   GLOBAL_AFTER19_SESSION_KEY,
   isGlobalAfter19AgeCurrent,
+  isGlobalAfter19NightViewCurrent,
+  persistGlobalAfter19SessionB,
+  rollbackPersistedGlobalAfter19SessionB,
   restoreGlobalAfter19B,
+  sanitizeGlobalAfter19Session,
   type GlobalAfter19PreferenceB,
   type GlobalAfter19SessionB,
 } from "./after19-global-b-model"
 import {
   completePlaceAfter19Return,
   isPlaceAfter19ReturnPending,
-  persistPlaceAfter19ReturnSession,
   PLACE_AFTER19_RETURN_REQUEST_EVENT,
   renewPlaceAfter19Return,
-  requestPlaceAfter19Return,
+  renewPreparedPlaceAfter19Return,
   restorePlaceAfter19ReturnSession,
   type PlaceAfter19ReturnB,
   type PlaceAfter19ReturnOutcomeB,
 } from "./after19-place-return-b-model"
+import { readGuestAfter19MemoryB, writeGuestAfter19MemoryB } from "./after19-guest-memory-b"
 import styles from "./after19-global-b.module.css"
 
 export type GlobalAfter19ContextB = {
@@ -45,43 +59,86 @@ export type GlobalAfter19ContextB = {
 type GlobalAfter19BProps = {
   locale: OndoBLocale
   context: GlobalAfter19ContextB
+  accountActive?: boolean
   onActiveChange?(active: boolean, activation: GlobalAfter19SessionB["activation"]): void
 }
 
 type Notice = "off" | "expired" | null
-type GateView = "intro" | "failure" | "unavailable" | "expired"
+type GateView = "intro" | "pending" | "failure" | "unavailable" | "expired" | "checkExpired"
+
+type GlobalAfter19GatePresentationB = Readonly<{
+  key: string
+  locale: OndoBLocale
+  context: GlobalAfter19ContextB
+  gateView: GateView
+  placeReturn: PlaceAfter19ReturnB | null
+  preference: GlobalAfter19PreferenceB
+  reviewRequested: boolean
+  reviewResult: boolean
+}>
+
+type GlobalAfter19ExitIntentB =
+  | Readonly<{ kind: "opener"; opener: HTMLElement | null; venueId: string | null }>
+  | Readonly<{ kind: "active-control" }>
+  | Readonly<{
+      kind: "place"
+      returnTo: PlaceAfter19ReturnB
+      exactVenue: boolean
+      uiSnapshot: PlaceReturnUiSnapshotB
+    }>
+
+type GlobalAfter19ExitPlanB = GlobalAfter19ExitIntentB & Readonly<{ serial: number }>
 
 const FOCUSABLE = "button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex='-1'])"
+const REVIEW_CHECK_DELAY_MS = 900
+const EXIT_FOCUS_RETRY_MS = 50
+const EXIT_FOCUS_RETRY_LIMIT = 24
 
 const COPY = {
   en: {
-    chip: "After 19",
+    chip: "19+",
     chipLabel: "Open After 19",
-    active: "After 19 on",
+    active: "After 19",
     activeAuto: "Opened after 19:00 KST",
-    activeManual: "Opened for this tab",
+    activeManual: "On now",
     turnOff: "Turn off After 19 now",
-    header: "19+ · After 19",
-    title: "Turn on After 19?",
-    body: "For this experience, a temporary 19+ result stays on this device. No identity provider is contacted.",
-    truth: "Narrows this map to official business types associated with bars and pubs. Actual alcohol service, entry and age rules are not confirmed.",
-    jejuTruth: "Jeju keeps its editorial places and stories; ONDO does not infer pubs or cafés from those sources.",
+    title: "Night view",
+    body: "See places that fit a night out on this map.",
+    checkingTitle: "Opening night view",
+    checkingBody: "One moment…",
+    close: "Close 19+ check",
+    jejuBody: "Switch this Jeju map to night view.",
+    truth: "Category does not confirm opening hours or alcohol service.",
+    jejuTruth: "Jeju keeps the same places and stories in its night view.",
     context: "Return to",
     venue: "Selected place",
     city: "Current map",
-    boundary: "What this changes",
-    boundaryBody: "No OpenDID provider is connected and no credential is issued. The temporary result does not confirm opening hours, alcohol service, admission, or a venue restriction. Your date of birth is never requested or stored.",
-    auto: "Open after 19:00 KST when eligible",
-    primary: "Turn on After 19",
-    cancel: "Stay on this map",
-    failedTitle: "After 19 did not turn on",
-    failedBody: "Your city, selected place, filters, and map position are unchanged.",
-    unavailableTitle: "19+ check is unavailable",
-    unavailableBody: "Nothing changed. Retry the private predicate check or stay on this map.",
+    boundary: "Before you continue",
+    boundaryBody: "This choice opens night view in this tab. Your birth date is not stored.",
+    auto: "Open after 19:00 KST once turned on",
+    primary: "I’m 19 or older",
+    cancel: "Not now",
+    generalMap: "Keep browsing",
+    generalPlace: "View general details",
+    failedTitle: "Couldn't confirm 19+",
+    failedBody: "Your place and map are still here.",
+    unavailableTitle: "19+ isn't available yet",
+    unavailableBody: "You can keep browsing the same place and map.",
+    checkExpiredTitle: "Confirmation expired",
+    checkExpiredBody: "Try again or keep browsing this place.",
     expiredReturnTitle: "This return request expired",
     expiredReturnBody: "Check 19+ again or stay with the restored Place context.",
     missingVenue: "That place is no longer available. Return to the same city discovery view.",
     retry: "Try again",
+    reviewResult: "Review result · no external check",
+    reviewScope: "Review only · no external check",
+    reviewDetailsTitle: "Review details",
+    openReviewDetails: "Open review details",
+    closeReviewDetails: "Close review details",
+    reviewMode: "Mode",
+    reviewReference: "Reference",
+    reviewExpires: "Expires",
+    turnOffAction: "Turn off",
     offNotice: "After 19 is off for this tab and will not reopen automatically.",
     undo: "Turn back on",
     expired: "The 19+ result expired. The same map remains open.",
@@ -89,33 +146,49 @@ const COPY = {
     dismiss: "Dismiss",
   },
   ko: {
-    chip: "After 19",
+    chip: "19+",
     chipLabel: "After 19 열기",
-    active: "After 19 켜짐",
+    active: "After 19",
     activeAuto: "한국 시간 19:00 이후 자동으로 열림",
-    activeManual: "이 탭에서 직접 열림",
+    activeManual: "지금 켜짐",
     turnOff: "After 19 바로 끄기",
-    header: "19+ · After 19",
-    title: "After 19을 켤까요?",
-    body: "이 경험에서는 임시 19+ 결과가 이 기기에만 남아요. 신원확인 기관에는 연결하지 않습니다.",
-    truth: "공식 업태상 주점에 해당하는 장소만 모아 보여줘요. 실제 주류 제공·입장·연령 조건은 확인되지 않았어요.",
-    jejuTruth: "제주는 편집 장소와 여행 이야기를 그대로 보여주며, 해당 출처로 주점·카페를 추정하지 않아요.",
+    title: "밤 지도",
+    body: "지금 지도에서 밤에 어울리는 장소만 모아봐요.",
+    checkingTitle: "밤 지도를 여는 중",
+    checkingBody: "잠시만 기다려 주세요…",
+    close: "19+ 확인 닫기",
+    jejuBody: "제주 지도를 밤 보기로 전환해요.",
+    truth: "영업시간과 주류 제공 여부는 장소에서 확인해 주세요.",
+    jejuTruth: "제주의 장소와 이야기는 밤 보기에서도 그대로 유지돼요.",
     context: "돌아갈 곳",
     venue: "선택한 장소",
     city: "현재 지도",
-    boundary: "바뀌는 내용",
-    boundaryBody: "OpenDID 제공기관에 연결하거나 자격증명을 발급하지 않아요. 임시 결과는 영업시간·주류 제공·입장 가능 여부나 장소 제한을 확인하지 않으며, 생년월일도 요청하거나 저장하지 않습니다.",
-    auto: "조건 충족 시 한국 시간 19:00 이후 자동으로 열기",
-    primary: "After 19 켜기",
-    cancel: "이 지도에 머물기",
-    failedTitle: "After 19을 켜지 못했어요",
-    failedBody: "도시·선택 장소·필터·지도 위치는 그대로 유지됩니다.",
-    unavailableTitle: "19+ 확인을 사용할 수 없어요",
-    unavailableBody: "바뀐 내용은 없어요. 비공개 조건 확인을 다시 시도하거나 이 지도에 머물 수 있어요.",
+    boundary: "계속하기 전에",
+    boundaryBody: "이 선택은 이 탭에서만 밤 지도를 열어요. 생년월일은 저장하지 않아요.",
+    auto: "한 번 켠 뒤 한국 시간 19:00 이후 자동으로 열기",
+    primary: "만 19세 이상이에요",
+    cancel: "나중에",
+    generalMap: "계속 둘러보기",
+    generalPlace: "일반 정보 보기",
+    failedTitle: "19+를 확인하지 못했어요",
+    failedBody: "장소와 지도는 그대로예요.",
+    unavailableTitle: "아직 19+ 확인을 연결할 수 없어요",
+    unavailableBody: "같은 장소와 지도를 계속 둘러볼 수 있어요.",
+    checkExpiredTitle: "확인이 만료됐어요",
+    checkExpiredBody: "다시 확인하거나 이 장소를 계속 둘러보세요.",
     expiredReturnTitle: "장소 복귀 요청이 만료됐어요",
     expiredReturnBody: "19+를 다시 확인하거나 복구된 장소 탐색 화면에 머물 수 있어요.",
     missingVenue: "해당 장소를 더 이상 찾을 수 없어 같은 도시의 탐색 화면으로 돌아갑니다.",
     retry: "다시 시도",
+    reviewResult: "검토용 결과 · 외부 확인 없음",
+    reviewScope: "검토 전용 · 외부 확인 없음",
+    reviewDetailsTitle: "검토 정보",
+    openReviewDetails: "검토 정보 열기",
+    closeReviewDetails: "검토 정보 닫기",
+    reviewMode: "방식",
+    reviewReference: "참조",
+    reviewExpires: "만료",
+    turnOffAction: "끄기",
     offNotice: "이 탭에서 After 19를 껐으며 자동으로 다시 열리지 않습니다.",
     undo: "다시 켜기",
     expired: "19+ 결과가 만료됐어요. 같은 지도는 그대로 열려 있습니다.",
@@ -123,33 +196,49 @@ const COPY = {
     dismiss: "닫기",
   },
   ja: {
-    chip: "After 19",
+    chip: "19+",
     chipLabel: "After 19を開く",
-    active: "After 19 オン",
+    active: "After 19",
     activeAuto: "韓国時間19:00以降に自動で開始",
-    activeManual: "このタブで開始",
+    activeManual: "現在オン",
     turnOff: "After 19を今すぐオフにする",
-    header: "19+ · After 19",
-    title: "After 19をオンにしますか？",
-    body: "この体験では一時的な19歳以上の結果を端末内だけに残します。本人確認事業者には接続しません。",
-    truth: "公式業態で居酒屋・パブに当たる場所だけを表示します。実際の酒類提供、入店、年齢条件は確認していません。",
-    jejuTruth: "済州では編集スポットとストーリーをそのまま表示し、その情報源からパブやカフェを推定しません。",
+    title: "夜の地図",
+    body: "この地図のまま、夜のお出かけに合う場所を表示します。",
+    checkingTitle: "夜の地図を開いています",
+    checkingBody: "少しお待ちください…",
+    close: "19歳以上の確認を閉じる",
+    jejuBody: "済州の地図を夜表示に切り替えます。",
+    truth: "営業時間や酒類提供の有無は各店舗でご確認ください。",
+    jejuTruth: "済州の場所とストーリーは夜表示でもそのまま残ります。",
     context: "戻る場所",
     venue: "選択中の場所",
     city: "現在の地図",
-    boundary: "変更される内容",
-    boundaryBody: "OpenDID事業者には接続せず、資格情報も発行しません。一時的な結果は営業時間、酒類提供、入場可否、施設制限を確認するものではなく、生年月日も要求・保存しません。",
-    auto: "条件を満たす場合、韓国時間19:00以降に自動で開く",
-    primary: "After 19をオンにする",
-    cancel: "この地図にとどまる",
-    failedTitle: "After 19をオンにできませんでした",
-    failedBody: "都市、選択中の場所、フィルター、地図位置は変わっていません。",
-    unavailableTitle: "19歳以上の確認を利用できません",
-    unavailableBody: "変更はありません。非公開の条件確認を再試行するか、この地図にとどまれます。",
+    boundary: "続ける前に",
+    boundaryBody: "この選択は、このタブで夜の地図を開くためだけに使います。生年月日は保存しません。",
+    auto: "一度オンにした後、韓国時間19:00以降に自動で開く",
+    primary: "19歳以上です",
+    cancel: "あとで",
+    generalMap: "このまま見る",
+    generalPlace: "通常情報を見る",
+    failedTitle: "19歳以上を確認できませんでした",
+    failedBody: "場所と地図はそのままです。",
+    unavailableTitle: "現在は19歳以上を確認できません",
+    unavailableBody: "同じ場所と地図をそのまま見られます。",
+    checkExpiredTitle: "確認の有効期限が切れました",
+    checkExpiredBody: "もう一度確認するか、この場所をそのまま見られます。",
     expiredReturnTitle: "場所への復帰リクエストの有効期限が切れました",
     expiredReturnBody: "19歳以上をもう一度確認するか、復元した場所の探索画面にとどまれます。",
     missingVenue: "この場所は利用できなくなったため、同じ都市の探索画面に戻ります。",
     retry: "もう一度試す",
+    reviewResult: "レビュー用結果 · 外部確認なし",
+    reviewScope: "レビュー専用 · 外部確認なし",
+    reviewDetailsTitle: "レビュー情報",
+    openReviewDetails: "レビュー情報を開く",
+    closeReviewDetails: "レビュー情報を閉じる",
+    reviewMode: "方式",
+    reviewReference: "参照",
+    reviewExpires: "有効期限",
+    turnOffAction: "オフにする",
     offNotice: "このタブではAfter 19をオフにし、自動では再開しません。",
     undo: "もう一度オンにする",
     expired: "19+結果の有効期限が切れました。同じ地図は開いたままです。",
@@ -166,7 +255,50 @@ function writeStorage(storage: Storage, key: string, value: unknown) {
   }
 }
 
-export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter19BProps) {
+function removeStorage(storage: Storage, key: string) {
+  try {
+    storage.removeItem(key)
+  } catch {
+    // The in-memory current action remains usable when browser storage is blocked.
+  }
+}
+
+function hasOperableFocus() {
+  const active = document.activeElement
+  return active instanceof HTMLElement
+    && active !== document.body
+    && active !== document.documentElement
+    && active.isConnected
+    && !active.closest("[inert],[aria-hidden='true']")
+}
+
+function isVisibleDestination(element: HTMLElement) {
+  if (!element.isConnected || element.closest("[hidden],[inert],[aria-hidden='true']")) return false
+  const style = window.getComputedStyle(element)
+  return style.display !== "none"
+    && style.visibility !== "hidden"
+    && style.visibility !== "collapse"
+    && element.getClientRects().length > 0
+}
+
+function focusVisibleDestination(element: HTMLElement) {
+  if (!isVisibleDestination(element)) return false
+  const previousTabIndex = element.getAttribute("tabindex")
+  if (element.tabIndex < 0) element.setAttribute("tabindex", "-1")
+  element.focus({ preventScroll: true })
+  if (document.activeElement !== element) {
+    if (previousTabIndex == null) element.removeAttribute("tabindex")
+    else element.setAttribute("tabindex", previousTabIndex)
+    return false
+  }
+  if (previousTabIndex == null) {
+    element.addEventListener("blur", () => element.removeAttribute("tabindex"), { once: true })
+  }
+  return true
+}
+
+export function GlobalAfter19B({ locale, context, accountActive = false, onActiveChange }: GlobalAfter19BProps) {
+  const reviewMode = useQaControls()
   const [hydrated, setHydrated] = useState(false)
   const [preference, setPreference] = useState<GlobalAfter19PreferenceB>(DEFAULT_GLOBAL_AFTER19_PREFERENCE)
   const [session, setSession] = useState<GlobalAfter19SessionB>(DEFAULT_GLOBAL_AFTER19_SESSION)
@@ -175,41 +307,95 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   const [gateView, setGateView] = useState<GateView>("intro")
   const [placeReturn, setPlaceReturn] = useState<PlaceAfter19ReturnB | null>(null)
   const [notice, setNotice] = useState<Notice>(null)
+  const [reviewDetailsOpen, setReviewDetailsOpen] = useState(false)
   const layerRef = useRef<HTMLDivElement | null>(null)
   const dialogRef = useRef<HTMLElement | null>(null)
   const chipRef = useRef<HTMLButtonElement | null>(null)
   const primaryRef = useRef<HTMLButtonElement | null>(null)
+  const headingRef = useRef<HTMLHeadingElement | null>(null)
   const activeOffRef = useRef<HTMLButtonElement | null>(null)
+  const reviewToggleRef = useRef<HTMLButtonElement | null>(null)
+  const reviewDetailsRef = useRef<HTMLElement | null>(null)
+  const reviewDetailsCloseRef = useRef<HTMLButtonElement | null>(null)
+  const reviewContextRef = useRef(`${context.cityId}:${context.venueId ?? "none"}`)
   const openerRef = useRef<HTMLElement | null>(null)
-  const consumedQaOutcomeRef = useRef<"failure" | "unavailable" | null>(null)
+  const pendingTimerRef = useRef<number | null>(null)
+  const gateOpenRef = useRef(gateOpen)
+  const gateLifecycleSerialRef = useRef(0)
+  const gateExitPlanRef = useRef<GlobalAfter19ExitPlanB | null>(null)
   const t = COPY[locale]
+  const reviewReceipt = session.eligibilityReceipt?.issuerType === "REVIEW_FIXTURE"
+    ? session.eligibilityReceipt
+    : null
+  const reviewResult = Boolean(reviewReceipt && isGlobalAfter19AgeCurrent(session, clock))
+  const liveReviewRequested = reviewMode
+    && readQaRuntime<{ after19Global?: "success" | "failure" | "unavailable" | "expired" }>()?.after19Global !== undefined
+  const desiredGatePresentation = useMemo<GlobalAfter19GatePresentationB | null>(() => gateOpen ? {
+    key: placeReturn ? `return:${placeReturn.tokenId}` : `direct:${context.cityId}:${context.venueId ?? "none"}`,
+    locale,
+    context: { ...context },
+    gateView,
+    placeReturn: placeReturn ? { ...placeReturn, gateQueue: ["age"] } : null,
+    preference: { ...preference },
+    reviewRequested: liveReviewRequested,
+    reviewResult,
+  } : null, [context.cityId, context.cityLabel, context.venueId, context.venueLabel, gateOpen, gateView, liveReviewRequested, locale, placeReturn, preference, reviewResult])
+  const gatePresence = useSheetPresence(desiredGatePresentation)
+  const gatePresentation = gatePresence.value
+  const gateClosing = gatePresence.phase === "closing"
 
-  useModalIsolation(gateOpen, layerRef)
+  gateOpenRef.current = gateOpen
+
+  useModalIsolation(Boolean(gatePresentation), layerRef)
+  useDocumentScrollLock(Boolean(gatePresentation))
 
   useEffect(() => {
-    const restored = restoreGlobalAfter19B(window.localStorage, window.sessionStorage, new Date())
+    const now = new Date()
+    const restored = restoreGlobalAfter19B(window.localStorage, accountActive ? window.sessionStorage : null, now, { allowReviewFixture: reviewMode })
     setPreference(restored.preference)
-    setSession(restored.session)
-    setNotice(restored.session.expiryNotice ? "expired" : null)
+    const restoredSession = accountActive
+      ? restored.session
+      : readGuestAfter19MemoryB(now, { allowReviewFixture: reviewMode })
+    setSession(restoredSession)
+    setNotice(restoredSession.expiryNotice ? "expired" : null)
     writeStorage(window.localStorage, GLOBAL_AFTER19_PREFERENCE_KEY, restored.preference)
-    writeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, restored.session)
+    if (accountActive) writeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, restoredSession)
+    else removeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY)
     const restoredReturn = restorePlaceAfter19ReturnSession(window.sessionStorage)
-    persistPlaceAfter19ReturnSession(window.sessionStorage, restoredReturn)
-    if (restoredReturn.pending) {
-      setPlaceReturn(restoredReturn.pending)
-      setGateView(isPlaceAfter19ReturnPending(restoredReturn.pending) ? "intro" : "expired")
+    if (restoredReturn.publicEnvelope) {
+      gateOpenRef.current = true
+      gateLifecycleSerialRef.current += 1
+      gateExitPlanRef.current = null
+      setPlaceReturn(restoredReturn.publicEnvelope)
+      setGateView(isPlaceAfter19ReturnPending(restoredReturn.publicEnvelope) ? "intro" : "expired")
       setGateOpen(true)
     }
     setHydrated(true)
-  }, [])
+  }, [accountActive, reviewMode])
+
+  useEffect(() => {
+    if (!hydrated) return
+    const now = new Date()
+    const next = accountActive
+      ? restoreGlobalAfter19B(window.localStorage, window.sessionStorage, now, { allowReviewFixture: reviewMode }).session
+      : readGuestAfter19MemoryB(now, { allowReviewFixture: reviewMode })
+    setSession(next)
+    if (!accountActive) removeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY)
+  }, [accountActive, hydrated, reviewMode])
 
   useEffect(() => {
     const requested = (event: Event) => {
       const tokenId = event instanceof CustomEvent ? (event.detail as { tokenId?: unknown } | null)?.tokenId : null
-      const restored = restorePlaceAfter19ReturnSession(window.sessionStorage)
-      if (!restored.pending || restored.pending.tokenId !== tokenId) return
-      setPlaceReturn(restored.pending)
-      setGateView(isPlaceAfter19ReturnPending(restored.pending) ? "intro" : "expired")
+      const now = new Date()
+      const restored = restorePlaceAfter19ReturnSession(window.sessionStorage, now)
+      if (!restored.publicEnvelope || restored.publicEnvelope.tokenId !== tokenId) return
+      clearPendingCheck()
+      gateOpenRef.current = true
+      gateLifecycleSerialRef.current += 1
+      gateExitPlanRef.current = null
+      setClock(now)
+      setPlaceReturn(restored.publicEnvelope)
+      setGateView(isPlaceAfter19ReturnPending(restored.publicEnvelope, now) ? "intro" : "expired")
       setNotice(null)
       setGateOpen(true)
     }
@@ -223,17 +409,21 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   }, [])
 
   useEffect(() => {
-    const syncSession = () => {
+    const syncSession = (event: Event) => {
       const now = new Date()
-      const restored = restoreGlobalAfter19B(window.localStorage, window.sessionStorage, now)
+      const detail = event instanceof CustomEvent ? event.detail : null
+      const restoredSession = !accountActive && detail
+        ? writeGuestAfter19MemoryB(detail, now, { allowReviewFixture: reviewMode })
+        : restoreGlobalAfter19B(window.localStorage, accountActive ? window.sessionStorage : null, now, { allowReviewFixture: reviewMode }).session
       setClock(now)
-      setSession(restored.session)
-      setNotice(restored.session.expiryNotice ? "expired" : null)
-      writeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, restored.session)
+      setSession(restoredSession)
+      setNotice(restoredSession.expiryNotice ? "expired" : null)
+      if (accountActive) writeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, restoredSession)
+      else removeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY)
     }
     window.addEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncSession)
     return () => window.removeEventListener(GLOBAL_AFTER19_SESSION_EVENT, syncSession)
-  }, [])
+  }, [accountActive, reviewMode])
 
   useEffect(() => {
     if (!hydrated) return
@@ -242,7 +432,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
 
   useEffect(() => {
     if (!hydrated) return
-    if (session.age === "eligible" && !isGlobalAfter19AgeCurrent(session, clock)) {
+    if (session.age === "eligible" && !isGlobalAfter19NightViewCurrent(session, clock)) {
       commitSession({
         version: 1,
         age: "unverified",
@@ -268,10 +458,17 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   }, [clock, placeReturn])
 
   useEffect(() => {
-    if (!gateOpen) return
-    const frame = window.requestAnimationFrame(() => primaryRef.current?.focus({ preventScroll: true }))
+    if (!gateOpen || gatePresence.phase !== "open" || !gatePresentation) return
+    const frame = window.requestAnimationFrame(() => {
+      const target = gatePresentation.gateView === "intro" ? primaryRef.current : headingRef.current
+      target?.focus({ preventScroll: true })
+    })
     return () => window.cancelAnimationFrame(frame)
-  }, [gateOpen, gateView])
+  }, [gateOpen, gatePresence.phase, gatePresentation?.gateView, gatePresentation?.key])
+
+  useEffect(() => () => {
+    if (pendingTimerRef.current !== null) window.clearTimeout(pendingTimerRef.current)
+  }, [])
 
   useEffect(() => {
     if (!gateOpen) return
@@ -285,10 +482,130 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     return () => document.removeEventListener("keydown", ownEscape, true)
   }, [gateOpen, placeReturn])
 
-  function commitSession(next: GlobalAfter19SessionB) {
-    setSession(next)
-    writeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY, next)
-    window.dispatchEvent(new CustomEvent(GLOBAL_AFTER19_SESSION_EVENT, { detail: next }))
+  useLayoutEffect(() => {
+    if (!gateClosing) return
+    const consumeClosingKey = (event: globalThis.KeyboardEvent) => {
+      const layer = layerRef.current
+      if (!layer || layer.closest("[inert],[aria-hidden='true']")) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    }
+    window.addEventListener("keydown", consumeClosingKey, true)
+    return () => window.removeEventListener("keydown", consumeClosingKey, true)
+  }, [gateClosing])
+
+  useEffect(() => {
+    if (gatePresence.value !== null) return
+    const plan = gateExitPlanRef.current
+    if (!plan || gateOpenRef.current || plan.serial !== gateLifecycleSerialRef.current) return
+    gateExitPlanRef.current = null
+    let frame: number | null = null
+    let timer: number | null = null
+    let attempts = 0
+    let exactUiRestored = false
+
+    const restoreAfterRemoval = () => {
+      frame = null
+      timer = null
+      if (gateOpenRef.current || plan.serial !== gateLifecycleSerialRef.current) return
+
+      if (plan.kind === "place" && plan.exactVenue && !exactUiRestored) {
+        exactUiRestored = true
+        if (dispatchPlaceReturnUiRestore(plan.uiSnapshot, new Date())) return
+      }
+
+      if (hasOperableFocus()) return
+      const exact = plan.kind === "opener"
+        ? plan.opener
+        : plan.kind === "active-control"
+          ? reviewToggleRef.current ?? activeOffRef.current
+          : null
+      if (exact && isRenderedFocusable(exact)) {
+        exact.focus({ preventScroll: true })
+        if (document.activeElement === exact) return
+      }
+
+      const history = readBDiscoveryHistory()
+      const venueSelector = plan.kind === "place"
+        ? `[data-testid='canonical-after19-access'][data-after19-venue-id='${CSS.escape(plan.returnTo.venueId)}']`
+        : plan.kind === "opener" && plan.venueId
+          ? `[data-testid='canonical-after19-access'][data-after19-venue-id='${CSS.escape(plan.venueId)}']`
+          : null
+      const selectors = [
+        venueSelector,
+        plan.kind === "active-control" ? "[data-testid='global-after19-review-toggle']" : null,
+        plan.kind === "active-control" ? "[data-testid='global-after19-banner'] button" : null,
+        "[data-testid='global-after19-toggle']",
+        plan.kind === "place" && history?.view === "list" ? "[data-testid='ondo-b-search']" : "[data-testid='ondo-b-view-toggle']",
+        "[aria-current='page']",
+        "#ondo-active-panel",
+      ].filter((selector): selector is string => Boolean(selector))
+      for (const selector of selectors) {
+        const destination = Array.from(document.querySelectorAll<HTMLElement>(selector)).find(isVisibleDestination)
+        if (destination && focusVisibleDestination(destination)) return
+      }
+
+      attempts += 1
+      if (attempts < EXIT_FOCUS_RETRY_LIMIT) timer = window.setTimeout(restoreAfterRemoval, EXIT_FOCUS_RETRY_MS)
+    }
+
+    frame = window.requestAnimationFrame(restoreAfterRemoval)
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame)
+      if (timer !== null) window.clearTimeout(timer)
+    }
+  }, [gatePresence.value])
+
+  useEffect(() => {
+    if (!reviewDetailsOpen) return
+    const frame = window.requestAnimationFrame(() => reviewDetailsCloseRef.current?.focus({ preventScroll: true }))
+    const ownEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape" || !reviewDetailsRef.current?.contains(document.activeElement)) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      closeReviewDetails(true)
+    }
+    document.addEventListener("keydown", ownEscape, true)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      document.removeEventListener("keydown", ownEscape, true)
+    }
+  }, [reviewDetailsOpen])
+
+  useEffect(() => {
+    const nextContext = `${context.cityId}:${context.venueId ?? "none"}`
+    if (reviewContextRef.current === nextContext) return
+    reviewContextRef.current = nextContext
+    if (!reviewDetailsOpen) return
+    setReviewDetailsOpen(false)
+    window.requestAnimationFrame(() => {
+      const target = reviewToggleRef.current ?? activeOffRef.current ?? chipRef.current
+      target?.focus({ preventScroll: true })
+    })
+  }, [context.cityId, context.venueId])
+
+  useEffect(() => {
+    if (!reviewDetailsOpen || (session.mode === "on" && reviewResult)) return
+    setReviewDetailsOpen(false)
+    window.requestAnimationFrame(() => {
+      const target = reviewToggleRef.current ?? activeOffRef.current ?? chipRef.current
+      target?.focus({ preventScroll: true })
+    })
+  }, [reviewDetailsOpen, reviewResult, session.mode])
+
+  function commitSession(next: GlobalAfter19SessionB, now = new Date(), accountAlreadyPersisted = false) {
+    const canonical = sanitizeGlobalAfter19Session(next, now, { allowReviewFixture: reviewMode })
+    if (JSON.stringify(canonical) !== JSON.stringify(next)) return false
+    if (accountActive && !accountAlreadyPersisted && !persistGlobalAfter19SessionB(window.sessionStorage, canonical, now, { allowReviewFixture: reviewMode })) return false
+    const committed = accountActive
+      ? canonical
+      : writeGuestAfter19MemoryB(canonical, now, { allowReviewFixture: reviewMode })
+    setSession(committed)
+    if (!accountActive) {
+      removeStorage(window.sessionStorage, GLOBAL_AFTER19_SESSION_KEY)
+    }
+    window.dispatchEvent(new CustomEvent(GLOBAL_AFTER19_SESSION_EVENT, { detail: committed }))
+    return true
   }
 
   function commitPreference(next: GlobalAfter19PreferenceB) {
@@ -297,131 +614,223 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
   }
 
   function openGate() {
+    clearPendingCheck()
+    gateOpenRef.current = true
+    gateLifecycleSerialRef.current += 1
+    gateExitPlanRef.current = null
     openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : chipRef.current
     setPlaceReturn(null)
     setGateView("intro")
-    consumedQaOutcomeRef.current = null
     setNotice(null)
     setGateOpen(true)
   }
 
-  function restoreOpener() {
-    window.requestAnimationFrame(() => {
-      const opener = openerRef.current
-      const target = opener?.isConnected && !opener.closest("[inert],[aria-hidden='true']") ? opener : chipRef.current
-      target?.focus({ preventScroll: true })
-    })
+  function beginGateExit(intent: GlobalAfter19ExitIntentB) {
+    clearPendingCheck()
+    gateOpenRef.current = false
+    const serial = gateLifecycleSerialRef.current + 1
+    gateLifecycleSerialRef.current = serial
+    gateExitPlanRef.current = { ...intent, serial } as GlobalAfter19ExitPlanB
+    setGateOpen(false)
+  }
+
+  function openReviewDetails() {
+    setReviewDetailsOpen(true)
+  }
+
+  function closeReviewDetails(restoreFocus: boolean) {
+    setReviewDetailsOpen(false)
+    if (!restoreFocus) return
+    window.requestAnimationFrame(() => reviewToggleRef.current?.focus({ preventScroll: true }))
+  }
+
+  function clearPendingCheck() {
+    if (pendingTimerRef.current === null) return
+    window.clearTimeout(pendingTimerRef.current)
+    pendingTimerRef.current = null
   }
 
   function cancelGate() {
+    clearPendingCheck()
     if (placeReturn) {
       finishPlaceReturn("cancel")
       return
     }
-    setGateOpen(false)
-    restoreOpener()
+    beginGateExit({ kind: "opener", opener: openerRef.current, venueId: context.venueId })
+  }
+
+  function finishConfirmedCheck(nextSession: GlobalAfter19SessionB, completedAt: Date) {
+    if (placeReturn) {
+      const venue = canonicalMapVenueById(placeReturn.venueId)
+      if (!venue) {
+        finishPlaceReturn("cancel", completedAt)
+        return
+      }
+      const accountPersistence = accountActive
+        ? persistGlobalAfter19SessionB(window.sessionStorage, nextSession, completedAt, { allowReviewFixture: reviewMode })
+        : null
+      if (accountActive && !accountPersistence) {
+        setGateView("failure")
+        return
+      }
+      if (!finishPlaceReturn("success", completedAt)) {
+        if (accountPersistence) rollbackPersistedGlobalAfter19SessionB(window.sessionStorage, accountPersistence)
+        return
+      }
+      if (!commitSession(nextSession, completedAt, accountActive)) setGateView("failure")
+      return
+    }
+    if (!commitSession(nextSession, completedAt)) {
+      setGateView("failure")
+      return
+    }
+    beginGateExit({ kind: "active-control" })
   }
 
   function runCheck() {
+    if (gateView === "pending") return
+    const checkSerial = gateLifecycleSerialRef.current
     const now = new Date()
     setClock(now)
     if (placeReturn && !isPlaceAfter19ReturnPending(placeReturn, now)) {
       setGateView("expired")
       return
     }
-    const qa = readQaRuntime<{ after19Global?: "failure" | "unavailable" }>()
+    const qa = readQaRuntime<{ after19Global?: "success" | "failure" | "unavailable" | "expired" }>()
     const qaOutcome = qa?.after19Global
-    if (qaOutcome && consumedQaOutcomeRef.current !== qaOutcome) {
-      consumedQaOutcomeRef.current = qaOutcome
-      setGateView(qaOutcome)
-      return
-    }
-    if (placeReturn) {
-      if (!finishPlaceReturn("success", now)) return
-      commitSession(completeGlobalAfter19AgeB(now))
-    } else {
-      commitSession(completeGlobalAfter19AgeB(now))
-      setGateOpen(false)
-      window.requestAnimationFrame(() => activeOffRef.current?.focus({ preventScroll: true }))
-    }
+    setGateView("pending")
+    clearPendingCheck()
+    pendingTimerRef.current = window.setTimeout(() => {
+      pendingTimerRef.current = null
+      if (!gateOpenRef.current || gateLifecycleSerialRef.current !== checkSerial) return
+      const completedAt = new Date()
+      setClock(completedAt)
+      if (placeReturn && !isPlaceAfter19ReturnPending(placeReturn, completedAt)) {
+        setGateView("expired")
+        return
+      }
+      if (!qaOutcome) {
+        const execution = localActual("age_declaration", { predicate: "AGE_GTE_19" as const, outcome: "eligible" as const })
+        finishConfirmedCheck(completeGlobalAfter19LocalConfirmationB(execution, completedAt), completedAt)
+        return
+      }
+      if (qaOutcome === "unavailable") {
+        const unavailable = providerUnavailable("age")
+        if (unavailable.result === "PROVIDER_UNAVAILABLE") setGateView("unavailable")
+        return
+      }
+      const authority = createReviewFixtureAuthority({
+        qaRuntimeEnabled: reviewMode,
+        explicitlyRequested: reviewMode,
+        fixtureId: "FX-AGE-GLOBAL-001",
+      })
+      if (!authority) {
+        setGateView("unavailable")
+        return
+      }
+      if (qaOutcome !== "success") {
+        const execution = reviewFixture(authority, { outcome: qaOutcome, now: completedAt })
+        setGateView(execution.result === "FIXTURE_FAILURE" ? "failure" : execution.result === "FIXTURE_EXPIRED" ? "checkExpired" : "unavailable")
+        return
+      }
+      const execution = reviewFixture(authority, {
+        outcome: "success",
+        value: { predicate: "AGE_GTE_19" as const, outcome: "eligible" as const },
+        now: completedAt,
+      })
+      const nextSession = completeGlobalAfter19ReviewB(execution, completedAt)
+      finishConfirmedCheck(nextSession, completedAt)
+    }, REVIEW_CHECK_DELAY_MS)
   }
 
   function restorePlaceContext(returnTo: PlaceAfter19ReturnB) {
     const venue = canonicalMapVenueById(returnTo.venueId)
-    const restored = venue?.cityId === returnTo.cityId
+    const history = readBDiscoveryHistory()
+    const fallbackCity = venue?.cityId ?? history?.city ?? context.cityId
+    const fallbackView = history?.city === fallbackCity ? history.view : "map"
+    const fallbackQuery = history?.city === fallbackCity ? history.query : ""
+    const fallbackCategory = history?.city === fallbackCity ? history.category : "all"
+    const exactHistory = venue && history?.city === venue.cityId && history.venueId === returnTo.venueId
+      ? history
+      : null
+    const restored = venue && exactHistory
       ? restoreBDiscoveryVenueContext({
-          city: returnTo.cityId,
-          view: returnTo.view,
-          query: returnTo.query,
-          category: returnTo.category,
+          city: venue.cityId,
+          view: exactHistory.view,
+          query: exactHistory.query,
+          category: exactHistory.category,
           venueId: returnTo.venueId,
-          level: returnTo.level,
+          level: "detail",
         })
       : restoreBDiscoveryCityContext({
-          city: returnTo.cityId,
-          view: returnTo.view,
-          query: returnTo.query,
-          category: returnTo.category,
-          focus: returnTo.view === "list" ? "search" : "view-toggle",
+          city: fallbackCity,
+          view: fallbackView,
+          query: fallbackQuery,
+          category: fallbackCategory,
+          focus: fallbackView === "list" ? "search" : "view-toggle",
         })
     if (restored) window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }))
-    return Boolean(restored && venue?.cityId === returnTo.cityId)
-  }
-
-  function focusPlaceDestination(returnTo: PlaceAfter19ReturnB, exactVenue: boolean, attempt = 0) {
-    const target = exactVenue
-      ? document.querySelector<HTMLElement>(`[data-testid='canonical-after19-access'][data-after19-venue-id='${CSS.escape(returnTo.venueId)}']`)
-      : document.querySelector<HTMLElement>(returnTo.view === "list" ? "[data-testid='ondo-b-search']" : "[data-testid='ondo-b-view-toggle']")
-    if (target?.isConnected && !target.closest("[inert],[aria-hidden='true']")) {
-      target.focus({ preventScroll: true })
-      if (document.activeElement === target) return
-    }
-    if (attempt < 9) window.requestAnimationFrame(() => focusPlaceDestination(returnTo, exactVenue, attempt + 1))
+    return Boolean(restored && venue && exactHistory)
   }
 
   function finishPlaceReturn(outcome: PlaceAfter19ReturnOutcomeB, now = new Date()) {
+    clearPendingCheck()
     if (!placeReturn) return false
-    const exactVenue = restorePlaceContext(placeReturn)
-    const consumed = completePlaceAfter19Return(placeReturn, outcome, now)
-    if (!consumed) {
-      setGateView("expired")
+    // Compare-and-consume the exact canonical envelope before any navigation or
+    // protected state mutation. A same-token payload edit therefore cannot
+    // steer the restore destination.
+    const completed = completePlaceAfter19Return(placeReturn, outcome, now)
+    if (!completed) {
+      setGateView("failure")
       return false
     }
+    const exactVenue = restorePlaceContext(placeReturn)
+    const exitIntent: GlobalAfter19ExitIntentB = {
+      kind: "place",
+      returnTo: placeReturn,
+      exactVenue,
+      uiSnapshot: completed.uiSnapshot,
+    }
     setPlaceReturn(null)
-    setGateOpen(false)
-    window.requestAnimationFrame(() => focusPlaceDestination(placeReturn, exactVenue))
+    beginGateExit(exitIntent)
     return true
   }
 
   function retryExpiredPlaceReturn() {
     if (!placeReturn) return
     const venue = canonicalMapVenueById(placeReturn.venueId)
-    if (!venue || venue.cityId !== placeReturn.cityId) {
+    if (!venue) {
       finishPlaceReturn("cancel")
       return
     }
     const now = new Date()
     setClock(now)
     const renewed = renewPlaceAfter19Return(placeReturn, now)
-    if (!requestPlaceAfter19Return(renewed, now)) {
+    if (!renewPreparedPlaceAfter19Return(window.sessionStorage, placeReturn, renewed, now)) {
       setGateView("failure")
       return
     }
+    gateLifecycleSerialRef.current += 1
+    gateExitPlanRef.current = null
     setPlaceReturn(renewed)
     setGateView("intro")
   }
 
   function turnOff() {
+    closeReviewDetails(false)
     commitSession({ ...session, mode: "manual-off", activation: null, expiryNotice: false })
     setNotice("off")
     window.requestAnimationFrame(() => chipRef.current?.focus({ preventScroll: true }))
   }
 
   function undoOff() {
-    if (isGlobalAfter19AgeCurrent(session, clock)) {
+    if (isGlobalAfter19NightViewCurrent(session, clock)) {
       commitSession({ ...session, mode: "on", activation: "manual", expiryNotice: false })
       setNotice(null)
-      window.requestAnimationFrame(() => activeOffRef.current?.focus({ preventScroll: true }))
+      window.requestAnimationFrame(() => {
+        const target = reviewToggleRef.current ?? activeOffRef.current
+        target?.focus({ preventScroll: true })
+      })
     } else {
       openGate()
     }
@@ -433,7 +842,19 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     window.requestAnimationFrame(() => chipRef.current?.focus({ preventScroll: true }))
   }
 
+  function consumeGateClosingInput(event: SyntheticEvent) {
+    if (!gateClosing) return
+    event.preventDefault()
+    event.stopPropagation()
+    event.nativeEvent.stopImmediatePropagation()
+  }
+
   function handleGateKeyDown(event: KeyboardEvent<HTMLElement>) {
+    if (gateClosing) {
+      event.preventDefault()
+      event.stopPropagation()
+      return
+    }
     if (event.key === "Escape") {
       event.preventDefault()
       event.stopPropagation()
@@ -442,7 +863,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     }
     if (event.key !== "Tab") return
     const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
-      .filter((element) => element.offsetParent !== null)
+      .filter(isRenderedFocusable)
     const first = focusable[0]
     const last = focusable.at(-1)
     if (!first || !last) {
@@ -457,21 +878,96 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
     }
   }
 
-  if (!hydrated) return null
+  function renderGate(presentation: GlobalAfter19GatePresentationB) {
+    const { context, gateView, locale, placeReturn, preference, reviewRequested, reviewResult } = presentation
+    const t = COPY[locale]
+    const returnVenue = placeReturn ? canonicalMapVenueById(placeReturn.venueId) : null
+    const returnVenueLabel = returnVenue ? venueDisplayName(returnVenue.name.ko, locale) : null
+    const returnCityId = returnVenue?.cityId ?? context.cityId
+    const returnCityLabel = placeReturn
+      ? ({
+          en: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" },
+          ko: { seoul: "서울", busan: "부산", jeju: "제주" },
+          ja: { seoul: "ソウル", busan: "釜山", jeju: "済州" },
+        } as const)[locale][returnCityId]
+      : context.cityLabel
+    const contextLabel = returnVenueLabel ?? (placeReturn ? returnCityLabel : context.venueLabel ?? context.cityLabel)
+    const contextKind = returnVenueLabel || (!placeReturn && context.venueLabel) ? t.venue : t.city
+    const returnVenueId = placeReturn?.venueId ?? context.venueId
+    const unavailable = gateView === "unavailable"
+    const returnExpired = gateView === "expired"
+    const checkExpired = gateView === "checkExpired"
+    const expiredWithoutReview = returnExpired && !reviewRequested
+    const escapeOnly = unavailable || expiredWithoutReview
+    const retryable = gateView === "failure" || checkExpired || (returnExpired && reviewRequested)
+    const generalLabel = returnVenueId ? t.generalPlace : t.generalMap
 
-  const returnVenue = placeReturn ? canonicalMapVenueById(placeReturn.venueId) : null
-  const returnVenueLabel = returnVenue ? venueDisplayName(returnVenue.name.ko, locale) : null
-  const returnCityLabel = placeReturn
-    ? ({
-        en: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" },
-        ko: { seoul: "서울", busan: "부산", jeju: "제주" },
-        ja: { seoul: "ソウル", busan: "釜山", jeju: "済州" },
-      } as const)[locale][placeReturn.cityId]
-    : context.cityLabel
-  const contextLabel = returnVenueLabel ?? (placeReturn ? returnCityLabel : context.venueLabel ?? context.cityLabel)
-  const contextKind = returnVenueLabel || (!placeReturn && context.venueLabel) ? t.venue : t.city
-  const returnCityId = placeReturn?.cityId ?? context.cityId
-  const returnVenueId = placeReturn?.venueId ?? context.venueId
+    const gate = (
+      <div
+        ref={layerRef}
+        className={styles.layer}
+        data-testid="global-after19-prompt-layer"
+        data-ondo-layer="fullTask"
+        data-modal-layer-priority={ONDO_MODAL_PRIORITY.fullTask}
+        data-after19-gate-subject={presentation.key}
+        data-after19-gate-presence={gatePresence.phase}
+        aria-busy={gateClosing ? "true" : undefined}
+        onClickCapture={consumeGateClosingInput}
+        onPointerDownCapture={consumeGateClosingInput}
+        onKeyDownCapture={consumeGateClosingInput}
+      >
+        <div className={styles.backdrop} aria-hidden="true" />
+        <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="global-after19-title" tabIndex={-1} data-gate-view={gateView} onKeyDown={handleGateKeyDown}>
+          <header
+            className={styles.dialogHeader}
+            aria-label={`${t.context} · ${contextKind}: ${contextLabel}`}
+            data-testid="global-after19-return-context"
+            data-return-cta={placeReturn?.cta ?? "OPEN_AFTER19"}
+            data-return-city={returnCityId}
+            data-return-venue={returnVenueId ?? "none"}
+            data-return-level={placeReturn ? "detail" : context.venueId ? "detail" : "city"}
+            data-return-focus={placeReturn ? "canonical-after19-access" : "global-after19-toggle"}
+          >
+            <span><MapPin size={18} aria-hidden="true" /><strong>{contextLabel}</strong>{returnVenueLabel || (!placeReturn && context.venueLabel) ? <small>{returnCityLabel}</small> : null}</span>
+            <button type="button" className={styles.dialogClose} data-testid="global-after19-close" aria-label={t.close} onClick={cancelGate}><X size={18} aria-hidden="true" /></button>
+          </header>
+          <div className={styles.body}>
+            {gateView === "pending" ? <LoaderCircle className={styles.heroPending} size={27} aria-hidden="true" /> : gateView === "failure" || unavailable || checkExpired ? <AlertTriangle className={styles.heroFailure} size={27} aria-hidden="true" /> : <span className={styles.hero} aria-hidden="true">19+</span>}
+            <h2 ref={headingRef} id="global-after19-title" tabIndex={gateView === "intro" ? undefined : -1}>{gateView === "pending" ? t.checkingTitle : gateView === "failure" ? t.failedTitle : unavailable ? t.unavailableTitle : returnExpired ? t.expiredReturnTitle : checkExpired ? t.checkExpiredTitle : t.title}</h2>
+            <p className={styles.lead} role={gateView === "pending" || unavailable ? "status" : gateView !== "intro" ? "alert" : undefined} aria-live={gateView === "pending" || unavailable ? "polite" : undefined} aria-atomic={gateView === "intro" ? undefined : true} data-testid={gateView === "intro" ? undefined : "global-after19-status"}>{gateView === "pending" ? t.checkingBody : gateView === "failure" ? t.failedBody : unavailable ? t.unavailableBody : returnExpired ? t.expiredReturnBody : checkExpired ? t.checkExpiredBody : context.cityId === "jeju" ? t.jejuBody : t.body}</p>
+            {reviewRequested && !reviewResult ? <p className={styles.reviewScope} data-testid="global-after19-review-scope">{t.reviewScope}</p> : null}
+            {placeReturn && !returnVenue ? <p className={styles.missingVenue}>{t.missingVenue}</p> : null}
+            {gateView === "intro" ? (
+              <>
+                <details className={styles.boundary}><summary>{t.boundary}<ChevronRight size={16} aria-hidden="true" /></summary><div className={styles.boundaryBody}><p>{t.boundaryBody}<span>{context.cityId === "jeju" ? t.jejuTruth : t.truth}</span></p><button type="button" role="switch" aria-checked={preference.autoOpen} className={styles.autoSetting} onClick={() => commitPreference({ version: 1, autoOpen: !preference.autoOpen })}><span>{t.auto}</span><i aria-hidden="true"><b /></i></button></div></details>
+              </>
+            ) : null}
+            <div className={styles.actions} data-single-action={gateView === "pending" || escapeOnly ? "true" : "false"}>
+              {gateView === "pending" ? (
+                <button type="button" className={styles.secondary} data-testid="global-after19-cancel" onClick={cancelGate}>{t.cancel}</button>
+              ) : (
+                <>
+                  <button ref={primaryRef} type="button" className={styles.primary} data-testid={escapeOnly ? "global-after19-general" : retryable ? "global-after19-retry" : "global-after19-confirm"} onClick={escapeOnly ? cancelGate : returnExpired ? retryExpiredPlaceReturn : runCheck}>
+                    {retryable ? <RotateCcw size={17} aria-hidden="true" /> : escapeOnly ? <MapPin size={17} aria-hidden="true" /> : <span className={styles.inlineAge} aria-hidden="true">19+</span>}
+                    {escapeOnly ? generalLabel : retryable ? t.retry : t.primary}
+                  </button>
+                  {!escapeOnly ? <button type="button" className={styles.secondary} data-testid="global-after19-cancel" onClick={cancelGate}>{retryable ? generalLabel : t.cancel}</button> : null}
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    )
+    // The map controls have their own low stacking context (and can be
+    // hidden in compact/list layouts). Keep only the trigger there: a gate
+    // opened from a place must paint above the retained detail, not behind it.
+    // The canvas also preserves appearance tokens and shared modal isolation.
+    const canvas = typeof document === "undefined" ? null : document.querySelector("[data-testid='ondo-canvas']")
+    return canvas ? createPortal(gate, canvas) : gate
+  }
+
+  if (!hydrated) return null
 
   return (
     <div
@@ -480,9 +976,6 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
       data-after19-mode={session.mode}
       data-after19-activation={session.activation ?? "none"}
       data-after19-age={session.age}
-      data-after19-age-expires-at={session.ageExpiresAt ?? "none"}
-      data-after19-predicate={session.eligibilityReceipt?.predicate ?? "none"}
-      data-after19-issuer-type={session.eligibilityReceipt?.issuerType ?? "none"}
       data-context-city={context.cityId}
       data-context-venue={context.venueId ?? "none"}
     >
@@ -491,10 +984,50 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
           <MoonStar size={17} aria-hidden="true" /><span>{t.chip}</span>
         </button>
       ) : (
-        <section className={styles.banner} data-testid="global-after19-banner" data-activation={session.activation ?? "manual"}>
+        <section className={styles.banner} data-testid="global-after19-banner" data-activation={session.activation ?? "manual"} data-review-result={reviewResult ? "true" : "false"}>
           <MoonStar size={19} aria-hidden="true" />
-          <span role="status"><strong>{t.active}</strong><small>{session.activation === "auto" ? t.activeAuto : t.activeManual} · {context.cityLabel}</small></span>
-          <button ref={activeOffRef} type="button" onClick={turnOff} aria-label={t.turnOff}><MoonStar size={17} aria-hidden="true" /></button>
+          {reviewResult ? (
+            <button
+              ref={reviewToggleRef}
+              type="button"
+              className={styles.reviewToggle}
+              data-testid="global-after19-review-toggle"
+              aria-expanded={reviewDetailsOpen}
+              aria-controls={reviewDetailsOpen ? "global-after19-review-details" : undefined}
+              aria-label={reviewDetailsOpen ? t.closeReviewDetails : t.openReviewDetails}
+              onClick={reviewDetailsOpen ? () => closeReviewDetails(true) : openReviewDetails}
+            >
+              <span className={styles.activeGlyph} aria-hidden="true">19+</span>
+            </button>
+          ) : (
+            <>
+              <span role="status">
+                <strong>{t.chip}</strong>
+                <small>{session.activation === "auto" ? t.activeAuto : t.activeManual} · {context.cityLabel}</small>
+              </span>
+              <button ref={activeOffRef} type="button" onClick={turnOff} aria-label={t.turnOff}><MoonStar size={17} aria-hidden="true" /><span className={styles.activeGlyph} aria-hidden="true">19+</span></button>
+            </>
+          )}
+          {reviewDetailsOpen && reviewResult && reviewReceipt ? (
+            <section
+              ref={reviewDetailsRef}
+              id="global-after19-review-details"
+              className={styles.reviewDetails}
+              aria-labelledby="global-after19-review-details-title"
+              data-testid="global-after19-review-provenance"
+            >
+              <header>
+                <div><MoonStar size={17} aria-hidden="true" /><strong id="global-after19-review-details-title">{t.reviewDetailsTitle}</strong></div>
+                <button ref={reviewDetailsCloseRef} type="button" data-testid="global-after19-review-close" aria-label={t.closeReviewDetails} onClick={() => closeReviewDetails(true)}><X size={18} aria-hidden="true" /></button>
+              </header>
+              <dl>
+                <div><dt>{t.reviewMode}</dt><dd>SIMULATED</dd></div>
+                <div><dt>{t.reviewReference}</dt><dd>{reviewReceipt.fixtureId}</dd></div>
+                <div><dt>{t.reviewExpires}</dt><dd><time dateTime={reviewReceipt.expiresAt}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(reviewReceipt.expiresAt))}</time></dd></div>
+              </dl>
+              <button type="button" className={styles.reviewTurnOff} data-testid="global-after19-turn-off" onClick={turnOff}><MoonStar size={17} aria-hidden="true" /><span>{t.turnOffAction}</span></button>
+            </section>
+          ) : null}
         </section>
       )}
 
@@ -506,41 +1039,7 @@ export function GlobalAfter19B({ locale, context, onActiveChange }: GlobalAfter1
         </section>
       ) : null}
 
-      {gateOpen ? (
-        <div ref={layerRef} className={styles.layer} data-testid="global-after19-prompt-layer">
-          <div className={styles.backdrop} aria-hidden="true" />
-          <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="global-after19-title" tabIndex={-1} data-gate-view={gateView} onKeyDown={handleGateKeyDown}>
-            <header className={styles.dialogHeader}><span><ShieldCheck size={18} aria-hidden="true" />{t.header}</span><i aria-hidden="true" /></header>
-            <div className={styles.body}>
-              {gateView === "failure" || gateView === "unavailable" ? <AlertTriangle className={styles.heroFailure} size={27} aria-hidden="true" /> : <MoonStar className={styles.hero} size={27} aria-hidden="true" />}
-              <h2 id="global-after19-title">{gateView === "failure" ? t.failedTitle : gateView === "unavailable" ? t.unavailableTitle : gateView === "expired" ? t.expiredReturnTitle : t.title}</h2>
-              <p className={styles.lead}>{gateView === "failure" ? t.failedBody : gateView === "unavailable" ? t.unavailableBody : gateView === "expired" ? t.expiredReturnBody : t.body}</p>
-              <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{context.cityId === "jeju" ? t.jejuTruth : t.truth}</p>
-              <section className={styles.returnContext} data-testid="global-after19-return-context" data-return-cta={placeReturn?.cta ?? "OPEN_AFTER19"} data-return-city={returnCityId} data-return-venue={returnVenueId ?? "none"} data-return-level={placeReturn?.level ?? (context.venueId ? "detail" : "city")} data-return-focus={placeReturn?.focusTarget ?? "global-after19-toggle"}>
-                <small>{t.context} · {contextKind}</small>
-                <strong>{contextLabel}</strong>
-                {returnVenueLabel || (!placeReturn && context.venueLabel) ? <span>{returnCityLabel}</span> : null}
-                {placeReturn && !returnVenue ? <span>{t.missingVenue}</span> : null}
-              </section>
-              {gateView === "intro" ? (
-                <>
-                  <details className={styles.boundary}><summary>{t.boundary}<ChevronRight size={16} aria-hidden="true" /></summary><p>{t.boundaryBody}</p></details>
-                  <button type="button" role="switch" aria-checked={preference.autoOpen} className={styles.autoSetting} onClick={() => commitPreference({ version: 1, autoOpen: !preference.autoOpen })}>
-                    <span>{t.auto}</span><i aria-hidden="true"><b /></i>
-                  </button>
-                </>
-              ) : null}
-              <div className={styles.actions}>
-                <button ref={primaryRef} type="button" className={styles.primary} data-testid={gateView === "failure" || gateView === "unavailable" || gateView === "expired" ? "global-after19-retry" : "global-after19-confirm"} onClick={gateView === "expired" ? retryExpiredPlaceReturn : runCheck}>
-                  {gateView === "failure" || gateView === "unavailable" || gateView === "expired" ? <RotateCcw size={17} aria-hidden="true" /> : <ShieldCheck size={17} aria-hidden="true" />}
-                  {gateView === "failure" || gateView === "unavailable" || gateView === "expired" ? t.retry : t.primary}
-                </button>
-                <button type="button" className={styles.secondary} data-testid="global-after19-cancel" onClick={cancelGate}>{t.cancel}</button>
-              </div>
-            </div>
-          </section>
-        </div>
-      ) : null}
+      {gatePresentation ? renderGate(gatePresentation) : null}
     </div>
   )
 }

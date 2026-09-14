@@ -1,0 +1,32 @@
+.section { min-width:0; padding:0 0 20px; border-bottom:1px solid var(--ondo-line); margin:0 0 20px; }
+.section header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 2px 14px; }
+.section h2 { margin:0; font-size:19px; letter-spacing:-.6px; font-weight:780; }
+.section header p { color:var(--ondo-muted); font-size:12px; margin:3px 0 0; }
+.cards { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(158px, 28%); gap:12px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scroll-padding-inline:6px; padding:6px 6px 10px; margin-inline:-6px; touch-action:pan-x pan-y; }
+.card { display:flex; flex-direction:column; padding:0; border:0; border-radius:18px; background:var(--ondo-surface-raised); color:var(--ondo-ink); text-align:left; cursor:pointer; scroll-snap-align:start; min-width:0; }
+.card:focus-visible, .actions :focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }
+.cardCopy { display:flex; flex-direction:column; gap:6px; padding:11px 3px 6px; }
+.cardCopy small { color:var(--ondo-muted); font-size:11px; line-height:1.35; }
+.cardCopy strong { font-size:15px; line-height:1.35; letter-spacing:-.2px; overflow-wrap:anywhere; }
+.cardCopy > span { color:var(--ondo-muted); font-size:12px; line-height:1.45; }
+/* Keep one unusually long offscreen pick from stretching the entire carousel
+   into a blank band. Full names and signatures remain in the place detail. */
+.cardCopy small, .cardCopy strong, .cardCopy > span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+.detail { display:grid; gap:18px; min-width:0; padding:24px 20px; color:var(--ondo-ink); }
+.identity { display:grid; grid-template-columns: minmax(100px, 34%) minmax(0,1fr); align-items:center; gap:16px; }
+.identity small { font-size:11px; color:var(--ondo-muted); }
+.identity h2 { margin:7px 0; font-size:clamp(22px,5vw,30px); line-height:1.16; letter-spacing:-.8px; word-break:keep-all; overflow-wrap:anywhere; }
+.identity p { font-size:13px; line-height:1.45; margin:8px 0; }
+.identity span { font-size:11px; color:var(--ondo-muted); }
+.reason h3 { font-size:14px; margin:0 0 6px; }
+.reason p, .disclosure { font-size:13px; line-height:1.6; color:var(--ondo-muted); margin:0; }
+.disclosure { border-top:1px solid var(--ondo-line); padding-top:14px; }
+.disclosure summary { display:flex; justify-content:space-between; align-items:center; min-height:44px; cursor:pointer; color:var(--ondo-ink); }
+.disclosure summary:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; border-radius:6px; }
+.disclosure[open] summary svg { transform:rotate(90deg); }
+.disclosure a { color:var(--ondo-ink); text-decoration:underline; text-underline-offset:3px; }
+.disclosure li { margin:8px 0; overflow-wrap:anywhere; }
+.actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; }
+.actions a, .actions button { display:flex; justify-content:center; align-items:center; gap:8px; min-height:48px; padding:10px; font-size:14px; font-weight:700; border-radius:18px; border:1px solid var(--ondo-line); background:var(--ondo-surface-raised); color:var(--ondo-ink); text-decoration:none; cursor:pointer; }
+.actions a { background:var(--ondo-surface-raised); color:var(--ondo-ink); }
+@media(max-width:350px) { .identity { grid-template-columns:90px minmax(0,1fr); gap:12px; } .identity h2 { font-size:22px; } .cards { grid-auto-columns:145px; } }

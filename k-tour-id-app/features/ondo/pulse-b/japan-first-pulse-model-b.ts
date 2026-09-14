@@ -62,6 +62,39 @@ export const PULSE_PRODUCTION_DRIVER_DISCLOSURE = Object.freeze({
 
 export const PULSE_EVIDENCE_MAX_AGE_DAYS = 30
 
+// Jeju reuses the same field/aura/core renderer as Seoul and Busan, but its
+// verified VISITKOREA points are editorial coverage rather than scored ONDO
+// evidence. Keep this truth in one contract so map, list and place detail
+// cannot drift into Hot/Peak semantics independently.
+export const JEJU_EDITORIAL_TEMPERATURE = Object.freeze({
+  mode: "editorial-coverage",
+  model: "editorial-unscored",
+  level: "limited",
+  score: null,
+  pulseEligible: false,
+  officialRecord: false,
+} as const)
+
+export const JEJU_EDITORIAL_COVERAGE_LABEL = Object.freeze({
+  en: "Editorial place coverage",
+  ko: "편집 장소 분포",
+  ja: "編集スポットの分布",
+} as const)
+
+export type JejuEditorialCoverageIntensityB = "sparse" | "clustered" | "dense"
+
+export const JEJU_EDITORIAL_COVERAGE_INTENSITY_LABEL = Object.freeze({
+  sparse: { en: "Sparse", ko: "분산", ja: "分散" },
+  clustered: { en: "Grouped", ko: "모임", ja: "まとまり" },
+  dense: { en: "Dense", ko: "밀집", ja: "密集" },
+} satisfies Record<JejuEditorialCoverageIntensityB, Record<"en" | "ko" | "ja", string>>)
+
+export const JEJU_EDITORIAL_UNSCORED_LABEL = Object.freeze({
+  en: "No popularity score",
+  ko: "인기 점수 없음",
+  ja: "人気スコアなし",
+} as const)
+
 function validDate(value: string) {
   return !Number.isNaN(Date.parse(value))
 }
@@ -435,6 +468,29 @@ export const JEJU_EDITORIAL_SEEDS: readonly JejuEditorialSeedB[] = Object.freeze
 export const JEJU_EDITORIAL_PLACES: readonly EditorialPlaceB[] = Object.freeze(
   JEJU_EDITORIAL_SEEDS.filter((item): item is EditorialPlaceB => item.kind === "editorial-place"),
 )
+
+function editorialDistanceInMeters(left: EditorialPlaceB, right: EditorialPlaceB) {
+  const radians = (degrees: number) => degrees * Math.PI / 180
+  const latitudeDelta = radians(right.location.latitude - left.location.latitude)
+  const longitudeDelta = radians(right.location.longitude - left.location.longitude)
+  const leftLatitude = radians(left.location.latitude)
+  const rightLatitude = radians(right.location.latitude)
+  const haversine = Math.sin(latitudeDelta / 2) ** 2
+    + Math.cos(leftLatitude) * Math.cos(rightLatitude) * Math.sin(longitudeDelta / 2) ** 2
+  return 6_371_000 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+}
+
+export function jejuEditorialCoverageIntensity(place: EditorialPlaceB): JejuEditorialCoverageIntensityB {
+  const nearbyVerifiedPlaces = JEJU_EDITORIAL_PLACES.filter((candidate) => editorialDistanceInMeters(place, candidate) <= 13_000).length
+  if (nearbyVerifiedPlaces >= 3) return "dense"
+  if (nearbyVerifiedPlaces >= 2) return "clustered"
+  return "sparse"
+}
+
+export function jejuEditorialCoverageSummary(place: EditorialPlaceB, locale: "en" | "ko" | "ja", temperatureName: string) {
+  const intensity = jejuEditorialCoverageIntensity(place)
+  return `${temperatureName} · ${JEJU_EDITORIAL_COVERAGE_LABEL[locale]}: ${JEJU_EDITORIAL_COVERAGE_INTENSITY_LABEL[intensity][locale]} · ${JEJU_EDITORIAL_UNSCORED_LABEL[locale]}`
+}
 
 const editorialPlaceIds = new Set<string>(JEJU_EDITORIAL_PLACES.map((place) => place.id))
 

@@ -1,4 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
+import { expectBRuntimeClean, installBRuntimeGuard } from "../helpers/ondo-b-qa"
+
+test.beforeEach(({ page }) => installBRuntimeGuard(page))
+test.afterEach(async ({ page }, testInfo) => { await expectBRuntimeClean(page, testInfo) })
 
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 const DEVICE_KEY = "ondo-b.device.v1"
@@ -7,9 +11,9 @@ const LEGACY_KEY = "ondo.session.v3"
 const SEED_KEY = "ondo-b.test.account-save.seeded"
 
 const COPY = {
-  en: { saved: "Remove from Saved", close: "Close place" },
-  ko: { saved: "저장 취소", close: "장소 닫기" },
-  ja: { saved: "保存を解除", close: "場所を閉じる" },
+  en: { saved: "Remove from Saved", close: "Close place", title: "Save this place?" },
+  ko: { saved: "저장 취소", close: "장소 닫기", title: "이 장소를 저장할까요?" },
+  ja: { saved: "保存を解除", close: "場所を閉じる", title: "この場所を保存しますか？" },
 } as const
 
 type Locale = keyof typeof COPY
@@ -34,14 +38,15 @@ async function seed(page: Page, locale: Locale, account: "guest" | "active" = "g
 
 async function openVenue(page: Page, query = "") {
   await page.goto(`/?city=seoul&view=list${query}`, { waitUntil: "domcontentloaded" })
-  const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${VENUE_ID}']`)
+  const row = page.getByTestId("ondo-b-venue-list").locator(`li[data-venue-id='${VENUE_ID}'] > button`)
   await expect(row).toBeVisible({ timeout: 15_000 })
-  await row.locator("button").click()
+  await row.click()
   const peek = page.getByTestId("canonical-place-peek")
   await expect(peek).toBeVisible()
   await page.getByTestId("canonical-place-details").click()
   const detail = page.getByTestId("canonical-place-overlay")
   await expect(detail).toBeVisible()
+  await expect(page).toHaveURL((url) => url.searchParams.get("venueId") === VENUE_ID && url.searchParams.get("detail") === "1")
   await expect(detail.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", /ready|error/)
   return detail
 }
@@ -58,6 +63,9 @@ for (const locale of ["en", "ko", "ja"] as const) {
     await expect(gate).toHaveAttribute("data-account-return-venue", VENUE_ID)
     await expect(gate).toHaveAttribute("data-account-return-level", "detail")
     await expect(gate).toHaveAttribute("data-account-return-draft", "none")
+    await expect(gate.getByTestId("account-return-context")).toBeVisible()
+    await expect(gate.locator("#account-save-session-truth")).toHaveCount(0)
+    await expect(gate.getByTestId("account-start")).toBeFocused()
     expect(await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "{}"), ACCOUNT_KEY)).toMatchObject({
       account: "ACC-GUEST",
       returnTo: { action: "SAVE_VENUE", activeGate: "account", venueId: VENUE_ID, draft: null },
@@ -72,8 +80,6 @@ for (const locale of ["en", "ko", "ja"] as const) {
 
     await page.getByTestId("canonical-venue-save").click()
     await page.getByTestId("account-start").click()
-    await expect(page.getByTestId("account-save-gate")).toHaveAttribute("data-gate-view", "review")
-    await page.getByTestId("account-complete").click()
 
     await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
     await expect(detail).toBeVisible()
@@ -108,11 +114,12 @@ test("B-ACCOUNT-E2E-JA-REFLOW keeps the account gate inside every required portr
   await openVenue(page)
   await page.getByTestId("canonical-venue-save").click()
 
-  for (const width of [320, 360, 390]) {
+  for (const width of [320, 360, 390, 430]) {
     await page.setViewportSize({ width, height: 844 })
     const gate = page.getByTestId("account-save-gate")
     await expect(gate).toBeVisible()
-    await expect(gate.getByRole("heading", { name: "この場所の保存にはアカウントが必要です" })).toBeVisible()
+    await expect(gate.getByRole("heading", { name: COPY.ja.title })).toBeVisible()
+    await expect(gate.locator("#account-save-session-truth")).toHaveCount(0)
     const geometry = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,
@@ -129,10 +136,11 @@ test("B-ACCOUNT-E2E-FAIL explicit QA failure retries the same save task", async 
   await page.getByTestId("canonical-venue-save").click()
   await page.getByTestId("account-simulate-failure").click()
   await expect(page.getByTestId("gate-failure")).toBeVisible()
+  await expect(page.getByTestId("gate-retry")).toBeFocused()
   await page.getByTestId("gate-retry").click()
   await expect(page.getByTestId("account-save-gate")).toHaveAttribute("data-gate-view", "intro")
+  await expect(page.getByTestId("account-start")).toBeFocused()
   await page.getByTestId("account-start").click()
-  await page.getByTestId("account-complete").click()
 
   await expect(page.getByTestId("ondo-gate-overlay")).toHaveCount(0)
   await expect(page.getByTestId("canonical-venue-save")).toContainText("Remove from Saved")

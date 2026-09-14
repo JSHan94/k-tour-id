@@ -1,0 +1,197 @@
+.card {
+  box-sizing: border-box;
+  min-width: 0;
+  container-type: inline-size;
+  overflow: hidden;
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 11%));
+  border-radius: 20px;
+  background: var(--ondo-surface, #fff);
+  color: var(--ondo-ink, #171717);
+}
+
+.open {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card[data-fit="adaptive"] .open {
+  grid-template-columns: var(--memory-card-columns, minmax(0, 1fr));
+  align-items: var(--memory-card-align, normal);
+}
+.card[data-fit="adaptive"] .media {
+  align-self: var(--memory-card-media-align, auto);
+  aspect-ratio: var(--memory-card-aspect, 16 / 10);
+}
+.card[data-fit="adaptive"] .body { padding: var(--memory-card-body-padding, 14px 46px 14px 14px); }
+.card[data-fit="adaptive"] .chevron {
+  right: var(--memory-card-chevron-right, 14px);
+  bottom: var(--memory-card-chevron-bottom, 30px);
+  transform: var(--memory-card-chevron-transform, none);
+}
+
+.media {
+  --memory-crop: 50% 50%;
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--ondo-surface-soft, #f3f4f5);
+}
+
+.media img,
+.thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--memory-crop);
+}
+
+.fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  background: var(--ondo-surface-soft, #f3f4f5);
+  color: var(--ondo-muted, #626262);
+}
+
+.fallback[hidden],
+.thumbnailFallback[hidden] { display: none; }
+.fallback span { font-size: 12px; font-weight: 720; }
+
+.mediaLabel {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  border: 1px solid rgb(255 255 255 / 44%);
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgb(18 18 18 / 70%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 740;
+  line-height: 1.2;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.body {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  padding: 14px 46px 14px 14px;
+}
+
+.source { display: flex; min-width: 0; align-items: center; gap: 6px; }
+.source small {
+  overflow: hidden;
+  color: var(--ondo-muted, #626262);
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sourceGlyph {
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  place-items: center;
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 12%));
+  border-radius: 999px;
+  background: var(--ondo-surface-soft, #f3f4f5);
+  color: var(--ondo-ink, #171717);
+}
+.sourceGlyph[data-source-glyph="editorial_place"] { background: #f6edf2; color: #71314f; }
+.body > strong { overflow-wrap: anywhere; font-size: 18px; font-weight: 790; line-height: 1.18; letter-spacing: -.03em; }
+.subtitle { overflow-wrap: anywhere; color: var(--ondo-muted, #626262); font-size: 12px; line-height: 1.42; }
+.chevron { position: absolute; right: 14px; bottom: 30px; }
+
+.provenance { border-top: 1px solid var(--ondo-line, rgb(23 23 23 / 8%)); color: var(--ondo-muted, #626262); }
+.provenance > summary {
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 17px minmax(0, 1fr) 17px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 12px;
+  font-weight: 700;
+}
+.provenance > summary::-webkit-details-marker { display: none; }
+.provenance > summary > svg:last-child { transition: transform 160ms ease; }
+.provenance[open] > summary > svg:last-child { transform: rotate(90deg); }
+.provenance dl { display: grid; gap: 7px; margin: -2px 14px 12px 38px; }
+.provenance dl > div { display: grid; min-width: 0; grid-template-columns: minmax(76px, auto) minmax(0, 1fr); gap: 9px; }
+.provenance dt,
+.provenance dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 12px; line-height: 1.45; }
+.provenance dt { color: var(--ondo-muted, #77736f); }
+.provenance dd { color: var(--ondo-ink, #4f4c49); font-weight: 680; text-align: right; }
+
+.utilities { min-width: 0; border-top: 1px solid var(--ondo-line, rgb(23 23 23 / 8%)); }
+.utilities[data-empty="true"] { display: none; }
+
+.thumbnail {
+  --memory-crop: 50% 50%;
+  position: relative;
+  display: block;
+  width: 76px;
+  aspect-ratio: 16 / 10;
+  flex: 0 0 76px;
+  overflow: hidden;
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 10%));
+  border-radius: 11px;
+  background: var(--ondo-surface-soft, #f3f4f5);
+}
+.thumbnailFallback { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ondo-muted, #5f5c58); }
+
+.open:focus-visible,
+.provenance > summary:focus-visible {
+  outline: 3px solid var(--ondo-focus, rgb(29 102 209 / 34%));
+  outline-offset: -3px;
+}
+
+@container (min-width: 620px) {
+  .card:is([data-fit="standard"], [data-fit="adaptive"]) .open { grid-template-columns: minmax(220px, 42%) minmax(0, 1fr); align-items: start; }
+  .card:is([data-fit="standard"], [data-fit="adaptive"]) .media { align-self: start; aspect-ratio: 16 / 10; }
+  .card:is([data-fit="standard"], [data-fit="adaptive"]) .body { align-content: center; padding: 18px 52px 18px 18px; }
+  .card:is([data-fit="standard"], [data-fit="adaptive"]) .chevron { right: 18px; bottom: 50%; transform: translateY(50%); }
+}
+
+/* The short-landscape composition owns this fit explicitly. A 390px portrait
+   card never becomes horizontal merely because the global viewport is wide. */
+@container (min-width: 320px) {
+  .card[data-fit="compact-column"] .open { grid-template-columns: minmax(116px, 40%) minmax(0, 1fr); align-items: start; }
+  .card[data-fit="compact-column"] .media { align-self: start; aspect-ratio: 4 / 3; }
+  .card[data-fit="compact-column"] .body { align-content: center; padding: 13px 42px 13px 13px; }
+  .card[data-fit="compact-column"] .chevron { right: 13px; bottom: 50%; transform: translateY(50%); }
+}
+
+@container (max-width: 350px) {
+  .body { padding-inline: 12px 42px; }
+  .chevron { right: 12px; }
+  .provenance dl { margin-left: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .provenance > summary > svg:last-child { transition: none; }
+  .mediaLabel { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

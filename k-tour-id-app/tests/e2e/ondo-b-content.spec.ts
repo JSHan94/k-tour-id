@@ -33,10 +33,10 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       if (item.surface === "onboarding") {
         if (item.locale === "ko") {
           expect(copy).toContain("지금의 나에게 잘 맞는 한국의 한 끼를 찾아보세요.")
-          expect(copy).toContain("서울·부산의 먹거리와 제주 여행 아이디어를 둘러보고, 나만의 취향을 이 기기에 저장해요.")
+          expect(copy).toContain("서울·부산의 먹거리와 제주 여행 아이디어를 내 취향에 맞게 둘러보세요.")
         } else {
           expect(copy).toContain("Find a meal that feels right for your Korea.")
-          expect(copy).toContain("Explore food in Seoul and Busan, plus travel ideas across Jeju, then keep your starting preferences on this device.")
+          expect(copy).toContain("Explore food in Seoul and Busan, plus travel ideas across Jeju, shaped around what you like.")
         }
         expect(copy).not.toMatch(/dense food|early coverage|서울의 촘촘|부산의 초기/i)
       }
@@ -68,10 +68,10 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
         await privacy.locator("summary").click()
         if (item.locale === "ko") {
           await expect(privacy).toContainText("메시지와 사진은 이 테이블에만 남고")
-          await expect(privacy).toContainText("참여한 일정은 이 기기의 My Korea에 저장돼요.")
+          await expect(privacy).toContainText("참여한 일정은 My Korea에 저장돼요.")
         } else {
           await expect(privacy).toContainText("Messages and photos stay with this Table.")
-          await expect(privacy).toContainText("A joined plan is saved to My Korea on this device.")
+          await expect(privacy).toContainText("A joined plan appears in My Korea.")
         }
         await expect(detail).toBeVisible()
         await expect(detail).toHaveAttribute("data-table-id", TABLE_ID)
@@ -80,7 +80,7 @@ test.describe("ONDO B reachable KO/EN content surfaces", () => {
       }
       if (item.surface === "table-chat") {
         await expect(surface).toContainText(item.locale === "ko" ? "20:20에 입구 옆에서 만나요." : "Let’s meet by the entrance at 20:20.")
-        await expect(surface).toContainText(item.locale === "ko" ? "이 기기에만 표시됩니다. 위치나 실제 참석을 확인하지 않습니다." : "Marks this device only. It does not verify your location or attendance.")
+        await expect(surface).toContainText(item.locale === "ko" ? "도착 표시는 비공개이며, 실시간 위치나 실제 참석을 확인하지 않아요." : "Your arrival note is private. It doesn’t verify your live location or attendance.")
       }
     })
   }

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
-import { TABLES, canOpenChat, initialTableRuntime, joinFailureRuntime, toCanonicalMembership } from "../../features/ondo/connect/table-model"
+import { canOpenChat, initialTableRuntime, joinFailureRuntime, toCanonicalMembership } from "../../features/ondo/connect/table-model"
+import { TABLES } from "../../features/ondo/connect/table-fixtures"
 
 test("E2E-FL-003 confirmed membership alone unlocks Table chat", () => {
   const open = TABLES.find((table) => table.id === "table-seongsu-dinner")!

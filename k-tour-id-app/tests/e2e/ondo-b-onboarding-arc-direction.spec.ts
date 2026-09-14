@@ -161,8 +161,8 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await expectNoHorizontalOverflow(page, dialog)
 
         const value = page.getByTestId("onboarding-step-value")
-        const valuePrimary = value.locator("button").first()
-        const valueSecondary = page.getByTestId("onboarding-guest-skip")
+        const valuePrimary = page.getByTestId("onboarding-guest-skip")
+        const valueSecondary = page.getByTestId("onboarding-personalize-start")
         await expectInsideViewport(page, valuePrimary)
         await expectInsideViewport(page, valueSecondary)
         await expectInsideDialog(page, dialog, valuePrimary, 16)
@@ -177,7 +177,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         expect(actionHierarchy[0].weight).toBeGreaterThanOrEqual(actionHierarchy[1].weight)
         await capture(page, locale, profile, "value")
 
-        await valuePrimary.click()
+        await valueSecondary.click()
         const intent = page.getByTestId("onboarding-step-intent")
         await expect(dialog).toHaveAttribute("data-onboarding-step", "intent")
         await expect(intent).toBeVisible()
@@ -266,7 +266,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
 
   test("a device-storage failure keeps the selected draft and retry action legible", async ({ browser }) => {
     const { context, page } = await openFresh(browser, "en", PROFILES[1])
-    await page.getByTestId("onboarding-step-value").locator("button").first().click()
+    await page.getByTestId("onboarding-personalize-start").click()
     await page.getByTestId("persona-travelling").click()
     await page.getByTestId("onboarding-step-intent").getByRole("button", { name: "Choose food preferences", exact: true }).click()
     const preferences = page.getByTestId("onboarding-step-preferences")
@@ -292,9 +292,9 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
 
   test("a repeated device-storage failure keeps one persistent recovery state", async ({ browser }) => {
     const { context, page } = await openFresh(browser, "en", PROFILES[1])
-    await page.getByTestId("onboarding-step-value").locator("button").first().click()
+    await page.getByTestId("onboarding-personalize-start").click()
     await page.getByTestId("persona-travelling").click()
-    await page.getByTestId("onboarding-step-intent").locator("button").nth(3).click()
+    await page.getByTestId("onboarding-continue").click()
     const preferences = page.getByTestId("onboarding-step-preferences")
     const choice = preferences.locator("button[aria-pressed]").first()
     await choice.click()
@@ -314,9 +314,9 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
       for (const profile of PROFILES) {
         const { context, page } = await openFresh(browser, locale, profile)
         const dialog = page.getByTestId("ondo-onboarding")
-        await page.getByTestId("onboarding-step-value").locator("button").first().click()
+        await page.getByTestId("onboarding-personalize-start").click()
         await page.getByTestId("persona-travelling").click()
-        await page.getByTestId("onboarding-step-intent").locator("button").nth(3).click()
+        await page.getByTestId("onboarding-continue").click()
         const preferences = page.getByTestId("onboarding-step-preferences")
         const choice = preferences.locator(".chips button, button[aria-pressed]").first()
         await choice.click()
@@ -328,9 +328,9 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         await expect(choice).toHaveAttribute("aria-pressed", "true")
         await expect(preferences.getByTestId("onboarding-save-status")).toBeVisible()
         await expectInsideViewport(page, preferences.getByTestId("onboarding-save-status"))
-        await expectInsideViewport(page, preferences.locator("button").last())
+        await expectInsideViewport(page, preferences.getByTestId("onboarding-skip"))
         await capture(page, locale, profile, "skip-failure")
-        await preferences.locator("button").last().click()
+        await preferences.getByTestId("onboarding-skip").click()
         await expect(dialog).toHaveCount(0)
         await context.close()
       }
@@ -341,7 +341,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
         const { context, page } = await openCompleted(browser, locale, profile)
         await page.getByTestId("nav-settings").click()
         const disclosure = page.getByTestId("ondo-b-discovery-settings")
-        await disclosure.locator(":scope > summary").click()
+        await disclosure.click()
         const reset = page.getByTestId("ondo-b-onboarding-reset")
         await reset.scrollIntoViewIfNeeded()
         await failNextDeviceWrite(page)
@@ -378,7 +378,7 @@ test.describe("ONDO Arc guest onboarding visual direction", () => {
     await page.addInitScript((key) => localStorage.setItem(key, "{malformed"), DEVICE_KEY)
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await expect(page.locator("html")).toHaveAttribute("lang", "ja")
-    await expect(page.getByTestId("onboarding-step-value")).toContainText("ゲストの好みを設定")
+    await expect(page.getByTestId("onboarding-step-value")).toContainText("20秒で自分向けに")
     await context.close()
   })
 })

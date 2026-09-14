@@ -202,7 +202,7 @@ test.describe("SLEEK-R2 map, place, and After19 issue closure", () => {
           await expect(after19).toHaveAttribute("data-after19-age", "eligible")
           const banner = page.getByTestId("global-after19-banner")
           await expect(banner).toContainText(locale === "ko" ? "After 19 켜짐" : "After 19 on")
-          await expect(banner).toContainText(locale === "ko" ? "이 탭에서 직접 열림 · 서울" : "Opened for this tab · Seoul")
+          await expect(banner).toContainText(locale === "ko" ? "지금 켜짐 · 서울" : "On now · Seoul")
           const turnOff = banner.getByRole("button", { name: locale === "ko" ? "After 19 바로 끄기" : "Turn off After 19 now", exact: true })
           await turnOff.click()
           const notice = page.getByTestId("global-after19-off-notice")

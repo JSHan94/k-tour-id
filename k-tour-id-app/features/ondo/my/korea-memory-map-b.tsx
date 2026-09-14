@@ -7,9 +7,9 @@ import styles from "./korea-memory-map-b.module.css"
 export type KoreaMemoryCityB = "seoul" | "busan" | "jeju"
 
 const COPY = {
-  en: { eyebrow: "ON THIS DEVICE", title: "Your Korea map", item: "place", items: "places", empty: "No mapped places", cities: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" } },
-  ko: { eyebrow: "이 기기", title: "나의 한국 지도", item: "장소", items: "장소", empty: "표시할 장소 없음", cities: { seoul: "서울", busan: "부산", jeju: "제주" } },
-  ja: { eyebrow: "この端末", title: "わたしの韓国マップ", item: "スポット", items: "スポット", empty: "表示するスポットはありません", cities: { seoul: "ソウル", busan: "釜山", jeju: "済州" } },
+  en: { title: "Your Korea map", item: "place", items: "places", empty: "No mapped places", cities: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" } },
+  ko: { title: "나의 한국 지도", item: "장소", items: "장소", empty: "표시할 장소 없음", cities: { seoul: "서울", busan: "부산", jeju: "제주" } },
+  ja: { title: "わたしの韓国マップ", item: "スポット", items: "スポット", empty: "表示するスポットはありません", cities: { seoul: "ソウル", busan: "釜山", jeju: "済州" } },
 } as const
 
 const BOUNDS = { minLon: 125.55, maxLon: 130.05, minLat: 32.9, maxLat: 38.65 }
@@ -72,7 +72,7 @@ export function KoreaMemoryMapB({ locale, cityCounts }: {
         })}
       </svg>
       <figcaption>
-        <span><small>{copy.eyebrow}</small><strong>{copy.title}</strong></span>
+        <span><strong>{copy.title}</strong></span>
         <b>{countLabel}</b>
       </figcaption>
       <ul aria-hidden="true">

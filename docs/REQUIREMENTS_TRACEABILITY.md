@@ -1,5 +1,7 @@
 # 요구사항 추적표
 
+> **역사적 v2 추적표 — 현재 개발 인계 정본 아님.** 아래의 독립 route·Sui 프로그램 조건·우선순위는 당시 기록이다. 현행 목업과 개발 작업은 [개발자 시작 문서](./DEVELOPER_START_HERE.md), [DEPLOYMENT_SPEC Appendix A](./DEPLOYMENT_SPEC.md)의 G/FL/REQ 연결과 [Backend 작업표](./BACKEND_HANDOFF_CHECKLIST_2026-09-09.md)를 따른다. 원문은 이력 보존을 위해 남긴다.
+
 상태: `v2.0 · 제품 요구 → 목업 샘플 → 생산 구현 → 검수 증거`
 
 `목업`은 현재 코드에서 확인 가능한 UX 샘플 상태다. `생산`은 실제 개발 완료 상태가 아니다. 모든 항목은 [개발 명세](./DEVELOPMENT_SPEC.md)의 acceptance를 통과해야 한다.

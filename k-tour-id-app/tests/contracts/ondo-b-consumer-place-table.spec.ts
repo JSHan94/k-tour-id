@@ -12,9 +12,39 @@ test("consumer Place exposes the contextual Table, 19+, Local Signal, and benefi
     "canonical-place-table",
     "canonical-after19-required",
     "canonical-local-signal-open",
-    "canonical-meal-benefit-open",
   ]) expect(place).toContain(`data-testid=\"${testId}\"`)
+  expect(place).toContain('offerTestId="canonical-meal-benefit-open"')
+  expect(source("features/ondo/place/place-service-actions-b.tsx")).toContain('data-testid={offerTestId ?? "place-offer-open"}')
   expect(place).toContain("ONDO_OPEN_TABLE_EVENT")
+})
+
+test("canonical Place keeps source truth nonvisual while preserving field evidence and compact actions", () => {
+  const place = source("features/ondo/place/canonical-place-overlay.tsx")
+  const styles = source("features/ondo/place/canonical-place.module.css")
+
+  expect(place).toContain('data-testid="canonical-place-utilities"')
+  expect(place).toContain('data-testid="canonical-venue-tables" aria-label={copy.browseTables}')
+  expect(place).toContain('data-testid="canonical-local-signal-open" aria-label=')
+  expect(place).not.toContain('data-testid="venue-tables-empty"')
+  expect(place).not.toContain('data-testid="tables-back-to-venue"')
+  expect(place).not.toContain('data-testid="tables-browse-all"')
+
+  expect(place).not.toContain("<details className={styles.sourceEvidence}")
+  expect(place).not.toContain("<details className={styles.source}")
+  expect(place).toContain("data-detail-source={venue.sourceRefId}")
+  expect(place).toContain('data-source-presentation="nonvisual-metadata"')
+  expect(place).toContain('className={styles.srOnly}\n        data-testid="canonical-place-source-summary"')
+  expect(place).toContain('data-testid="canonical-evidence-drawer"')
+
+  expect(place).toContain('data-testid="canonical-place-details-to-check"')
+  for (const field of ["copy.hours", "copy.card", "copy.menu", "copy.language"]) expect(place).toContain(field)
+  for (const label of ["4 details to check", "확인할 정보 4개", "確認する情報 4件"]) expect(place).toContain(label)
+
+  expect(styles).toContain(".utilityActions button")
+  expect(styles).toMatch(/\.utilityActions button \{[\s\S]*?min-width: 44px;[\s\S]*?min-height: 44px;/)
+  expect(styles).toMatch(/@media \(max-width: 430px\)[\s\S]*?\.utilityActions button \{[\s\S]*?width: 48px;/)
+  expect(styles).toContain("@media (forced-colors: active)")
+  expect(styles).toContain("@media (prefers-reduced-motion: reduce)")
 })
 
 test("normal After19 is a single eligibility path and outcome authoring is QA-only", () => {
@@ -25,11 +55,15 @@ test("normal After19 is a single eligibility path and outcome authoring is QA-on
   expect(after19).toContain("readQaRuntime<QaRuntime>()")
   expect(after19).toContain('if (gate === "age" && qa?.after19)')
   expect(after19).toContain("Confirm 19+ and continue")
-  expect(after19).toContain("Not now — return without changing the action")
-  expect(after19).toContain('data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : undefined}')
+  expect(after19).toContain('cancel: "Go back"')
+  expect(after19).toContain("No date of birth is requested or stored. Only a temporary 19+ result returns to this Table; it is not a rule for the venue.")
+  expect(after19).toContain('data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : gate === "payment_kyc" ? "payment-check-walkthrough" : undefined}')
   expect(after19).toContain('data-testid={gate === "person" ? "local-check-boundary-continue" : gate === "age" ? "after19-start" : "action-gate-confirm"}')
-  expect(actionGateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
-  expect(ageModel).toContain("recordGlobalAfter19AgeEligibilityB")
+  expect(actionGateContract).toContain('if (!table) return ["account", "person", "age"]')
+  expect(actionGateContract).toContain('...(table.requiresPerson ? ["person" as const] : [])')
+  expect(ageModel).toContain("recordGlobalAfter19ReviewEligibilityB")
+  expect(after19).toContain('explicitlyRequested: reviewMode')
+  expect(after19).not.toContain("recordGlobalAfter19AgeEligibilityB")
   expect(after19).not.toContain('choices: "Choose an example outcome"')
   expect(after19).not.toContain('data-testid="gate-failure-choice"')
   expect(after19).not.toContain('data-testid="gate-unsupported-choice"')
@@ -75,11 +109,11 @@ test("destructive copy and contextual benefit copy state their exact device and 
   const settings = source("features/ondo/settings/settings-entry-b.tsx")
   const place = source("features/ondo/place/canonical-place-overlay.tsx")
 
-  expect(settings).toContain("Travel Wallet receipts")
-  expect(settings).toContain("여행 지갑 영수증")
-  expect(place).toContain('demoOffer: "K-Tour ID benefit"')
-  expect(place).toContain('demoOfferBody: "₩22,000 · save ₩3,000"')
-  expect(place).toContain('demoOfferPrice: "₩19,000"')
+  expect(settings).toContain("Travel balance records")
+  expect(settings).toContain("여행 잔액 기록")
+  expect(place).toContain('demoOffer: "Meal benefit"')
+  expect(place).toContain('demoOfferBody: "₩22,000 − ₩3,000"')
+  expect(place).toContain('demoOfferPrice: "Pay ₩19,000"')
   expect(place).not.toContain("Confirm payment support with the venue")
 })
 

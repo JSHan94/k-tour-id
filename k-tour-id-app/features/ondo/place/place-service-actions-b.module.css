@@ -1,0 +1,13 @@
+.actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin:16px 0; min-width:0; }
+.actions button { display:grid; grid-template-columns:20px minmax(0,1fr) 16px; align-items:center; gap:8px; padding:14px 12px; min-height:72px; border:1px solid var(--ondo-line); border-radius:17px; font:inherit; text-align:left; cursor:pointer; }
+.actions button:only-child { grid-column:1/-1; }
+.actions button > span { display:grid; min-width:0; gap:5px; }
+.actions strong { font-size:14px; line-height:1.4; font-weight:760; }
+.actions small { font-size:12px; line-height:1.4; word-break:keep-all; overflow-wrap:normal; }
+.primary { color:var(--ondo-control-ink, #fff); background:var(--ondo-control, #171717); }
+.primary small { opacity:.78; }
+.secondary { color:var(--ondo-ink); background:var(--ondo-surface-raised); }
+.secondary small { color:var(--ondo-muted); }
+.actions button:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }
+@media (max-width:360px) { .actions { gap:8px; } .actions button { grid-template-columns:minmax(0,1fr) 16px; padding:12px 10px; } .actions button > svg:first-child { display:none; } .actions strong { font-size:13px; } }
+@media (forced-colors:active) { .actions button { background:Canvas; color:CanvasText; border-color:CanvasText; } }

@@ -27,12 +27,11 @@ export function sanitizeCanonicalVenueIds(value: unknown): CanonicalVenueId[] {
   return sanitized
 }
 
-export function sanitizeCanonicalVenueNotes(value: unknown, savedVenueIds: unknown): Record<string, string> {
+export function sanitizeCanonicalVenueNotes(value: unknown): Record<string, string> {
   if (!isRecord(value)) return {}
-  const saved = new Set<string>(sanitizeCanonicalVenueIds(savedVenueIds))
   const sanitized: Record<string, string> = {}
   for (const [venueId, candidate] of Object.entries(value)) {
-    if (!isCanonicalVenueId(venueId) || !saved.has(venueId) || typeof candidate !== "string") continue
+    if (!isCanonicalVenueId(venueId) || typeof candidate !== "string") continue
     const note = candidate.trim().slice(0, CANONICAL_PRIVATE_NOTE_MAX_LENGTH)
     if (note) sanitized[venueId] = note
   }

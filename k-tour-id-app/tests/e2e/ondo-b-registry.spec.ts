@@ -21,8 +21,8 @@ test("B registry is exact, honest, and contains no synthetic qaCase adapter", ()
   const checkpoints = B_FLOW_CONTRACTS.flatMap((item) => item.checkpoints)
   expect(checkpoints).toHaveLength(18 * 7)
   expect(new Set(checkpoints.map((item) => item.id)).size).toBe(18 * 7)
-  expect(checkpoints.filter((item) => item.disposition === "actual")).toHaveLength(123)
-  expect(checkpoints.filter((item) => item.disposition === "not_applicable")).toHaveLength(3)
+  expect(checkpoints.filter((item) => item.disposition === "actual")).toHaveLength(126)
+  expect(checkpoints.filter((item) => item.disposition === "not_applicable")).toHaveLength(0)
   expect(checkpoints.filter((item) => ["B-E2E-FL-014-ERROR", "B-E2E-FL-014-RETRY"].includes(item.id)).map((item) => item.disposition)).toEqual(["actual", "actual"])
   for (const contract of B_FLOW_CONTRACTS) {
     expect(contract.checkpoints.map((item) => item.checkpoint)).toEqual(B_CHECKPOINTS)
@@ -55,15 +55,10 @@ test("B registry is exact, honest, and contains no synthetic qaCase adapter", ()
   expect(seam).toContain("actual product UI")
 })
 
-test("the honest registry has zero product gaps and every N/A is explicit and reasoned", () => {
+test("the honest registry has zero product gaps and every checkpoint has browser evidence", () => {
   const trace = read("01_TRACE_MATRIX.md")
   const gaps = B_FLOW_CONTRACTS.flatMap((flow) => flow.checkpoints.filter((item) => item.disposition === "gap"))
   expect(gaps).toEqual([])
   const nonActual = B_FLOW_CONTRACTS.flatMap((flow) => flow.checkpoints.filter((item) => item.disposition !== "actual"))
-  expect(nonActual.length).toBeGreaterThan(0)
-  for (const item of nonActual) {
-    expect(item.proof.length).toBeGreaterThan(30)
-    expect(trace).toContain(item.id)
-    expect(trace).toContain("`N/A`")
-  }
+  expect(nonActual).toEqual([])
 })

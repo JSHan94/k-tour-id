@@ -1,25 +1,25 @@
+.sampleInfo { display: grid; gap: 16px; padding: 24px; color: var(--ondo-ink); }
+.sampleInfo h2 { margin: 0; font-size: 24px; line-height: 1.2; letter-spacing: -.04em; }
+.sampleInfo p { margin: 0; color: var(--ondo-muted); font-size: 15px; line-height: 1.6; }
+.sampleInfo button { min-height: 48px; padding: 12px 16px; border: 1px solid var(--ondo-line); border-radius: 16px; background: var(--ondo-control); color: var(--ondo-control-ink); font: inherit; font-weight: 700; }
+.sampleInfo details { color: var(--ondo-muted); font-size: 13px; }
+.sampleInfo summary { padding: 12px 0; cursor: pointer; }
+.sampleInfo details button { margin-top: 12px; background: var(--ondo-surface-soft); color: var(--ondo-ink); font-size: 13px; }
 .stage {
-  --ondo-canvas: #ffffff;
-  --ondo-paper: #f7f7f5;
-  --ondo-surface: #ffffff;
-  --ondo-ink: #171717;
-  --ondo-muted: #626262;
-  --ondo-quiet: #737373;
-  --ondo-line: rgb(23 23 23 / 11%);
+  --ondo-paper: var(--ondo-surface-soft);
   --ondo-heat-warm: #c84936;
   --ondo-night: #5d2947;
-  --ondo-focus: #171717;
   --ondo-phone-edge: 16px;
   --ondo-motion-fast: 180ms;
   --ondo-motion-medium: 240ms;
   --ondo-motion-slow: 320ms;
   --ondo-ease-out: cubic-bezier(.2, .8, .2, 1);
   --ondo-radius-card: 20px;
-  --ondo-shadow-card: 0 14px 36px rgb(0 0 0 / 8%), 0 2px 7px rgb(0 0 0 / 3%);
+  --ondo-shadow-card: var(--ondo-shadow);
   min-height: 100dvh;
   height: 100dvh;
   overflow: hidden;
-  background: #f1f1ef;
+  background: var(--ondo-surface-soft);
   color: var(--ondo-ink);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 }
@@ -44,6 +44,24 @@
   border-left: 1px solid var(--ondo-line);
 }
 
+/* The server cannot know the returning device state. Keep its single
+   pre-hydration frame behind a quiet branded surface instead of briefly
+   exposing the default desktop rail/map composition. The real shell replaces
+   it as soon as local state is restored. */
+.stage[data-hydrated="false"] {
+  background-color: var(--ondo-canvas);
+  background-image: url("/brand/ktour-id-mark-192.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 46px 46px;
+}
+
+.stage[data-hydrated="false"] .canvas {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .skipNav {
   position: absolute;
   z-index: 200;
@@ -52,12 +70,12 @@
   max-width: calc(100% - 20px);
   min-height: 44px;
   align-content: center;
-  border: 2px solid #171717;
+  border: 2px solid var(--ondo-line-strong);
   border-radius: 14px;
   padding: 9px 14px;
-  background: #fff;
-  color: #171717;
-  box-shadow: 0 12px 30px rgb(0 0 0 / 18%);
+  background: var(--ondo-surface-raised);
+  color: var(--ondo-ink);
+  box-shadow: var(--ondo-shadow);
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
@@ -79,7 +97,7 @@
   overscroll-behavior-y: contain;
   scroll-padding-block: 20px;
   background: var(--ondo-canvas);
-  scrollbar-color: rgb(23 23 23 / 34%) transparent;
+  scrollbar-color: var(--ondo-line-strong) transparent;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   touch-action: pan-y;
@@ -89,19 +107,38 @@
 .content:focus-visible { outline: 2px solid var(--ondo-focus); outline-offset: -2px; }
 .content::-webkit-scrollbar { width: 5px; }
 .content::-webkit-scrollbar-track { background: transparent; }
-.content::-webkit-scrollbar-thumb { border-radius: 999px; background: rgb(23 23 23 / 32%); }
+.content::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--ondo-line-strong); }
+.explorePanel,
+.activePanel {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100%;
+}
+.explorePanel { height: 100%; }
+.explorePanel[data-active="false"] {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+.explorePanel[data-active="true"],
+.activePanel[data-active="true"] {
+  animation: tabReveal 180ms cubic-bezier(.2, .8, .2, 1) both;
+}
 .content[data-active-tab="my"],
 .content[data-active-tab="tables"],
 .content[data-active-tab="id"],
 .content[data-active-tab="settings"] { scroll-behavior: auto; }
-.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) {
+.canvas[data-ondo-modal-open="true"] {
   grid-template-rows: minmax(0, 1fr) 0;
 }
-.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) .content { overflow-y: hidden; }
-.canvas:has([aria-modal="true"]:not([aria-hidden="true"]):not([inert])) .nav {
+.canvas[data-ondo-modal-open="true"] .content { overflow-y: hidden; }
+.canvas[data-ondo-modal-open="true"] .nav {
   display: none;
   visibility: hidden;
 }
+.canvas[data-ondo-modal-open="true"] .toast { display: none; }
 
 .nav {
   position: relative;
@@ -118,17 +155,48 @@
   overflow: visible;
   border: 1px solid var(--ondo-line);
   border-radius: 21px;
-  background: rgb(255 255 255 / 97%);
-  box-shadow:
-    0 12px 30px rgb(0 0 0 / 9%),
-    0 2px 8px rgb(0 0 0 / 4%),
-    inset 0 1px 0 rgb(255 255 255 / 90%);
+  background: color-mix(in srgb, var(--ondo-surface-raised) 97%, transparent);
+  box-shadow: var(--ondo-shadow);
   backdrop-filter: blur(20px) saturate(1.25);
   -webkit-backdrop-filter: blur(20px) saturate(1.25);
 }
 
 .nav[data-nav-count="3"] { grid-template-columns: repeat(3, 1fr); }
 .nav[data-nav-count="4"] { grid-template-columns: repeat(4, 1fr); }
+
+.stage[data-variant="B"] .nav > .sampleMode {
+  position: absolute;
+  z-index: 3;
+  /* Keep the review boundary visually adjacent to the dock without sharing
+     any of its five navigation hit areas. The 32px chip now clears the dock
+     by 10px at every phone width. */
+  top: -42px;
+  left: 50%;
+  display: inline-flex;
+  width: auto;
+  min-width: 0;
+  min-height: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--ondo-line-strong);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: color-mix(in srgb, var(--ondo-surface-raised) 96%, transparent);
+  color: var(--ondo-ink);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 820;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px);
+}
+.stage[data-variant="B"] .nav > .sampleMode:hover,
+.stage[data-variant="B"] .nav > .sampleMode:active { transform: translateX(-50%); }
+.stage[data-variant="B"] .nav > .sampleMode:focus-visible { outline-offset: 2px; }
 
 .nav button {
   position: relative;
@@ -143,7 +211,7 @@
   border: 1px solid transparent;
   border-radius: 18px;
   background: transparent;
-  color: #666;
+  color: var(--ondo-muted);
   font: inherit;
   isolation: isolate;
   transition: background-color var(--ondo-motion-fast) ease, border-color var(--ondo-motion-fast) ease, box-shadow var(--ondo-motion-fast) ease, color var(--ondo-motion-fast) ease, transform var(--ondo-motion-fast) var(--ondo-ease-out);
@@ -190,21 +258,21 @@
 }
 
 .navActive {
-  border-color: #171717 !important;
-  background: #171717 !important;
-  color: #fff !important;
+  border-color: var(--ondo-control) !important;
+  background: var(--ondo-control) !important;
+  color: var(--ondo-control-ink) !important;
   box-shadow: 0 7px 18px rgb(0 0 0 / 17%);
   animation: navSettle var(--ondo-motion-medium) var(--ondo-ease-out) both;
 }
-.navActive::after { width: 22px !important; background: #fff !important; }
-.navActive .navIcon { background: transparent; color: #fff; transform: translateY(-1px); }
+.navActive::after { width: 22px !important; background: var(--ondo-control-ink) !important; }
+.navActive .navIcon { background: transparent; color: var(--ondo-control-ink); transform: translateY(-1px); }
 .navActive .navIcon img { filter: invert(1) grayscale(1) brightness(1.08); }
-.nav button[data-state="selected"] { color: #fff; }
+.nav button[data-state="selected"] { color: var(--ondo-control-ink); }
 .nav button:focus-visible {
   z-index: 2;
   outline: 2px solid var(--ondo-focus);
-  outline-offset: -2px;
-  box-shadow: 0 0 0 3px rgb(255 255 255 / 90%);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px var(--ondo-surface-raised);
 }
 .nav i {
   position: absolute;
@@ -224,15 +292,15 @@
 
 .toast {
   position: absolute;
-  z-index: 100;
+  z-index: 70;
   right: 20px;
   bottom: calc(94px + env(safe-area-inset-bottom));
   left: 20px;
   border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 14px;
   padding: 13px 16px;
-  background: #211a14;
-  color: #fffdf8;
+  background: var(--ondo-control);
+  color: var(--ondo-control-ink);
   box-shadow: 0 8px 24px rgb(33 26 20 / 16%);
   font-size: 13px;
   font-weight: 650;
@@ -243,31 +311,50 @@
   .canvas { width: 100vw; border: 0; }
 
   .nav {
-    min-height: 72px;
-    margin-top: 7px;
-    padding: 5px;
-    border-radius: 20px;
+    width: min(calc(100% - 24px), 398px);
+    min-height: 64px;
+    gap: 4px;
+    margin: 6px auto max(8px, env(safe-area-inset-bottom));
+    padding: 6px;
+    border-radius: 22px;
   }
-  .nav button { min-height: 60px; padding: 4px 2px 3px; }
-  .navIcon { width: 26px; height: 26px; }
+  .nav button {
+    width: 52px;
+    min-width: 48px;
+    min-height: 52px;
+    height: 52px;
+    justify-self: center;
+    padding: 0;
+    border-radius: 17px;
+    transition-duration: 120ms;
+  }
+  .nav button::after { display: none; }
+  .navIcon { width: 48px; height: 48px; border-radius: 16px; transition-duration: 120ms; }
+  .navIcon > svg { width: 24px; height: 24px; }
   .navLabel {
-    position: static;
-    display: grid;
-    width: 100%;
-    height: auto;
-    min-height: 12px;
-    place-items: center;
-    overflow: visible;
-    clip: auto;
-    font-size: 12px;
-    letter-spacing: 0;
-    line-height: 1;
-    white-space: normal;
+    display: none;
   }
+  .navActive {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none;
+    animation: none;
+  }
+  .navActive .navIcon {
+    background: var(--ondo-control);
+    color: var(--ondo-control-ink);
+    box-shadow: 0 5px 15px rgb(0 0 0 / 18%);
+    transform: none;
+  }
+  .toast { bottom: calc(78px + env(safe-area-inset-bottom)); }
 }
 
 @media (min-width: 370px) {
   .stage { --ondo-phone-edge: 20px; }
+}
+
+@media (min-width: 390px) and (max-width: 800px) {
+  .nav { width: min(calc(100% - 32px), 398px); }
 }
 
 @media (min-width: 801px) {
@@ -287,10 +374,10 @@
     min-height: 0;
     height: auto !important;
   }
-  .content[data-active-tab="my"] > *,
-  .content[data-active-tab="tables"] > *,
-  .content[data-active-tab="id"] > *,
-  .content[data-active-tab="settings"] > * { width: min(100%, 700px); margin-inline: auto; }
+  .content[data-active-tab="my"] > .activePanel,
+  .content[data-active-tab="tables"] > .activePanel,
+  .content[data-active-tab="id"] > .activePanel,
+  .content[data-active-tab="settings"] > .activePanel { width: min(100%, 700px); margin-inline: auto; }
   .toast { right: 28px; bottom: 24px; left: auto; width: min(360px, calc(100% - 132px)); }
 
   .stage[data-variant="B"] .nav {
@@ -338,7 +425,8 @@
 }
 
 @media (max-width: 759px) {
-  .content > * > [aria-modal="true"] {
+  .activePanel > * > [aria-modal="true"],
+  .explorePanel > * > [aria-modal="true"] {
     height: var(--ondo-scroll-viewport, 100%);
     max-height: var(--ondo-scroll-viewport, 100%);
   }
@@ -355,6 +443,13 @@
     touch-action: pan-x;
   }
   .nav::-webkit-scrollbar { display: none; }
+}
+
+@media (pointer: coarse) {
+  .nav button:active .navIcon {
+    filter: brightness(.9);
+    transform: scale(.92);
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -378,9 +473,14 @@
   100% { transform: none; }
 }
 
+@keyframes tabReveal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nav button, .nav button::after, .navIcon, .toast { transition: none; }
-  .navActive { animation: none; }
+  .navActive, .explorePanel[data-active="true"], .activePanel[data-active="true"] { animation: none; }
   .stage[data-variant="B"] button { transition: none !important; }
   .stage[data-variant="B"] button:not([data-atlas-pin="true"]):hover,
   .stage[data-variant="B"] button:not([data-atlas-pin="true"]):active { transform: none !important; }
@@ -400,7 +500,7 @@
     grid-template-columns: 92px minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr);
     background:
-      linear-gradient(90deg, #f4f4f2 0 92px, var(--ondo-canvas) 92px),
+      linear-gradient(90deg, var(--ondo-surface-soft) 0 92px, var(--ondo-canvas) 92px),
       var(--ondo-canvas);
   }
 
@@ -409,10 +509,10 @@
     grid-row: 1;
   }
 
-  .content[data-active-tab="my"] > *,
-  .content[data-active-tab="tables"] > *,
-  .content[data-active-tab="id"] > *,
-  .content[data-active-tab="settings"] > * {
+  .content[data-active-tab="my"] > .activePanel,
+  .content[data-active-tab="tables"] > .activePanel,
+  .content[data-active-tab="id"] > .activePanel,
+  .content[data-active-tab="settings"] > .activePanel {
     width: min(calc(100% - 64px), 1040px);
     max-width: none;
     margin-inline: auto;
@@ -431,10 +531,15 @@
     gap: 8px;
     margin: 12px 8px;
     padding: 6px;
-    border-color: rgb(23 23 23 / 9%);
+    border-color: var(--ondo-line);
     border-radius: 20px;
-    background: rgb(255 255 255 / 92%);
-    box-shadow: 0 12px 30px rgb(0 0 0 / 8%), inset 0 1px 0 rgb(255 255 255 / 86%);
+    background: color-mix(in srgb, var(--ondo-surface-raised) 92%, transparent);
+    box-shadow: var(--ondo-shadow);
+  }
+
+  .stage[data-variant="B"] .nav > .sampleMode {
+    top: -10px;
+    max-width: 76px;
   }
 
   .stage[data-variant="B"] .nav button {
@@ -458,7 +563,7 @@
   .stage[data-variant="B"] .navActive::after {
     width: 3px !important;
     height: 24px;
-    background: #514d47 !important;
+    background: var(--ondo-muted) !important;
   }
 
   .stage[data-variant="B"] .navIcon { width: 30px; height: 30px; }
@@ -494,93 +599,72 @@
   }
 }
 
-/* Short landscape needs its vertical pixels for the task. Reuse the compact
-   rail grammar at every wide-screen width so five desktop actions never
-   overflow the available block size or hide the current decision. */
+/* Short landscape remains a mobile composition. A compact horizontal dock
+   preserves the same five icon destinations; decision/detail sheets hide it
+   and use the reclaimed height rather than competing with a desktop rail. */
 @media (min-width: 801px) and (max-height: 500px) {
   .stage[data-variant="B"] .canvas {
-    grid-template-columns: 74px minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    background: linear-gradient(90deg, #f4f4f2 0 74px, var(--ondo-canvas) 74px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    background: var(--ondo-canvas);
   }
 
-  .stage[data-variant="B"] .content { grid-column: 2; grid-row: 1; }
+  .stage[data-variant="B"] .content { grid-column: 1; grid-row: 1; }
 
   .stage[data-variant="B"] .nav {
-    width: 64px;
-    max-width: 64px;
-    min-height: 0;
-    height: calc(100% - 12px);
+    width: min(calc(100% - 24px), 398px);
+    max-width: 398px;
+    min-height: 60px;
+    height: auto;
     grid-column: 1;
-    grid-row: 1;
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(5, 54px);
-    align-content: center;
+    grid-row: 2;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: 52px;
+    align-content: stretch;
     gap: 4px;
-    margin: 6px 5px;
+    margin: 4px auto max(4px, env(safe-area-inset-bottom));
     padding: 4px;
-    border-radius: 20px;
+    border-radius: 19px;
   }
 
   .stage[data-variant="B"] .nav button {
-    width: 54px;
-    min-width: 54px;
-    min-height: 54px;
-    height: 54px;
-    padding: 3px 1px;
-    border-radius: 15px;
+    width: 52px;
+    min-width: 48px;
+    min-height: 52px;
+    height: 52px;
+    justify-self: center;
+    padding: 0;
+    border-radius: 17px;
   }
 
   .stage[data-variant="B"] .nav button::after {
-    top: 50%;
-    left: 2px;
-    width: 3px;
-    height: 16px;
-    transform: translateY(-50%);
+    display: none;
   }
-  .stage[data-variant="B"] .navActive::after { width: 3px !important; height: 22px; }
-  .stage[data-variant="B"] .navIcon { width: 23px; height: 23px; }
+  .stage[data-variant="B"] .navIcon { width: 48px; height: 48px; border-radius: 16px; }
+  .stage[data-variant="B"] .navIcon > svg { width: 24px; height: 24px; }
   .stage[data-variant="B"] .navLabel {
-    position: static;
-    display: grid;
-    width: 100%;
-    max-width: 100%;
-    min-height: 14px;
-    place-items: center;
-    padding: 0;
-    font-size: 12px;
-    letter-spacing: 0;
-    line-height: 1;
-    opacity: 1;
+    display: none;
+  }
+  .stage[data-variant="B"] .navActive {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none;
+    animation: none;
+  }
+  .stage[data-variant="B"] .navActive .navIcon {
+    background: var(--ondo-control);
+    color: var(--ondo-control-ink);
+    box-shadow: 0 5px 15px rgb(0 0 0 / 18%);
     transform: none;
   }
 }
 
-/* After 19 is a complete browse presentation, including the app frame. The
-   eligibility result remains scoped to the map feature; this selector only
-   mirrors its current visual state into the surrounding navigation chrome. */
-.stage[data-variant="B"]:has([data-after19-active="true"]) {
-  --ondo-canvas: #0b0b0e;
-  --ondo-ink: #f7f7f8;
-  --ondo-line: rgb(255 255 255 / 13%);
-  --ondo-focus: #ff8fc7;
-  background: #050507;
+@media (forced-colors: active) {
+  .navActive .navIcon {
+    border: 2px solid Highlight;
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: auto;
+  }
+  .nav button:focus-visible { outline-color: Highlight; }
 }
-.stage[data-variant="B"]:has([data-after19-active="true"]) .canvas,
-.stage[data-variant="B"]:has([data-after19-active="true"]) .content {
-  background: #0b0b0e;
-}
-.stage[data-variant="B"]:has([data-after19-active="true"]) .nav {
-  border-color: rgb(255 255 255 / 14%);
-  background: rgb(15 15 21 / 96%);
-  box-shadow: 0 14px 34px rgb(0 0 0 / 38%), inset 0 1px 0 rgb(255 255 255 / 7%);
-}
-.stage[data-variant="B"]:has([data-after19-active="true"]) .nav button { color: #a9a6b2; }
-.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive {
-  border-color: rgb(255 114 184 / 28%);
-  background: linear-gradient(145deg, rgb(43 35 47 / 98%), rgb(25 24 32 / 98%));
-  color: #fff;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 5%) inset, 0 0 26px rgb(255 78 158 / 18%);
-}
-.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive .navIcon { color: #fff; }
-.stage[data-variant="B"]:has([data-after19-active="true"]) .navActive::after { background: #ff72b8 !important; }

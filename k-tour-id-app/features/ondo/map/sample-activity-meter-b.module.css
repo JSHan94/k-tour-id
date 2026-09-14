@@ -1,0 +1,38 @@
+.meter {
+  --sample-color: #ed5960;
+  --sample-position: 50%;
+  display: grid;
+  gap: 7px;
+  padding: 12px 14px;
+  margin: 2px 0 10px;
+  border: 1px solid color-mix(in srgb, var(--sample-color) 17%, var(--ondo-line, #e4e6e8));
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--sample-color) 4%, var(--ondo-surface-raised, #fff));
+  color: var(--ondo-ink, #171717);
+  transition: background-color 900ms linear, border-color 900ms linear;
+}
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.heading > span { font-size: 12px; line-height: 1.3; font-weight: 740; }
+.heading > small { display: flex; gap: 5px; font-size: 10px; font-weight: 550; color: var(--ondo-muted, #62666c); white-space: nowrap; }
+.heading time { font-variant-numeric: tabular-nums; }
+.signal { display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: 10px; }
+.reading { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.reading > svg { color: var(--sample-color); flex: 0 0 auto; transition: color 900ms linear; }
+.reading > strong { font-size: 13px; line-height: 1.3; font-weight: 690; }
+.sparkline { flex: 0 0 96px; width: 96px; height: 28px; overflow: visible; }
+.sparkline polyline { fill: none; stroke: var(--sample-color); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; transition: stroke 900ms linear; }
+.sparkline circle { fill: var(--sample-color); stroke: var(--ondo-surface-raised, #fff); stroke-width: 1; transition: fill 900ms linear; }
+.contributions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 3px 0 5px; }
+.contributions > span { display: flex; align-items: center; justify-content: flex-start; gap: 4px; min-width: 0; }
+.contributions svg { color: var(--ondo-muted); flex: 0 0 auto; }
+.contributions b { font-size: 12px; font-variant-numeric: tabular-nums; }
+.contributions small { font-size: 10px; color: var(--ondo-muted); }
+.contribute { display: flex; justify-content: center; align-items: center; gap: 5px; min-height: 44px; width: 100%; border: 0; border-top: 1px solid var(--ondo-line); padding: 8px 0 0; color: var(--ondo-ink); background: transparent; font-size: 12px; font-weight: 650; cursor: pointer; }
+.contribute:focus-visible { outline: 2px solid var(--ondo-focus-ring, #2563eb); outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 350px) { .contributions > span { flex-wrap: wrap; gap: 3px; } .contributions small { font-size: 9px; } .sparkline { flex-basis: 72px; width: 72px; } }
+.scale { position: relative; display: block; height: 5px; border-radius: 8px; background: linear-gradient(90deg, #4b9fa6, #e6b74d 24%, #f18b43 48%, #ed5960 70%, #b32c79); }
+.scale > i { position: absolute; top: 50%; left: var(--sample-position); width: 10px; height: 10px; border: 2px solid var(--ondo-surface-raised, #fff); border-radius: 50%; background: var(--sample-color); box-shadow: 0 0 0 1px color-mix(in srgb, var(--sample-color) 40%, transparent); transform: translate(-50%, -50%); transition: left 900ms linear, background-color 900ms linear; }
+.meter[data-after19="true"] .scale { background: linear-gradient(90deg, #7cbec1, #f5c766 24%, #ff9a56 48%, #ff7383 70%, #e84d9c); }
+.meter[data-sample-running="false"], .meter[data-sample-running="false"] * { transition: none; }
+@media (prefers-reduced-motion: reduce) { .meter, .meter * { transition: none; } }
+@media (forced-colors: active) { .meter { border-color: CanvasText; background: Canvas; } .scale { border: 1px solid CanvasText; } .scale > i { background: Highlight; border-color: Canvas; } .sparkline polyline { stroke: CanvasText; } .sparkline circle { fill: CanvasText; } }

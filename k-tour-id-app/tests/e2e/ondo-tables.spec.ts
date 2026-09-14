@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
-import { TABLES, initialTableRuntime } from "../../features/ondo/connect/table-model"
+import { initialTableRuntime } from "../../features/ondo/connect/table-model"
+import { TABLES } from "../../features/ondo/connect/table-fixtures"
 
 test("E2E-FL-003 Table fixtures use the four stable venue references", () => {
   const expected = new Set([

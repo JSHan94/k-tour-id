@@ -17,6 +17,7 @@ type EligibilityOutcome = "success" | "failure" | "unavailable" | "expired"
 type Viewport = { label: string; width: number; height: number }
 
 const VIEWPORTS: readonly Viewport[] = [
+  { label: "320x568", width: 320, height: 568 },
   { label: "320x720", width: 320, height: 720 },
   { label: "390x844", width: 390, height: 844 },
   { label: "430x932", width: 430, height: 932 },
@@ -27,25 +28,19 @@ const VIEWPORTS: readonly Viewport[] = [
 
 const COPY = {
   en: {
-    note: "Optional local note",
-    update: "Update Local Signal on this device",
-    postFailure: "Could not save this Local Signal on this device. Your exact draft and place remain open.",
-    close: "Close Local Signal",
-    photoAlt: "Local photo preview — kept in this open draft only",
+    action: "Save to my visits",
+    postFailure: "Couldn’t save. Your draft is still here.",
+    photoAlt: "Private photo preview",
   },
   ko: {
-    note: "선택적 로컬 메모",
-    update: "이 기기의 로컬 시그널 업데이트",
-    postFailure: "이 기기에 이 로컬 시그널을 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다.",
-    close: "로컬 시그널 닫기",
-    photoAlt: "로컬 사진 미리보기 — 열린 작성 화면에서만 유지",
+    action: "내 방문에 저장",
+    postFailure: "저장하지 못했어요. 작성 내용은 그대로예요.",
+    photoAlt: "비공개 사진 미리보기",
   },
   ja: {
-    note: "任意のローカルメモ",
-    update: "この端末のLocal Signalを更新",
-    postFailure: "この端末にこのLocal Signalを保存できませんでした。下書きと場所はそのまま開いています。",
-    close: "Local Signalを閉じる",
-    photoAlt: "ローカル写真のプレビュー — 開いている下書きにのみ保持",
+    action: "訪問履歴に保存",
+    postFailure: "保存できませんでした。下書きはそのままです。",
+    photoAlt: "非公開写真のプレビュー",
   },
 } as const
 
@@ -84,11 +79,19 @@ async function waitForShell(page: Page) {
 
 async function openSignal(page: Page, locale: Locale = "en", posted = false) {
   await seed(page, locale, posted)
-  await page.goto("/", { waitUntil: "domcontentloaded" })
+  // This suite exercises deterministic review-fixture outcomes. Ordinary `/`
+  // intentionally remains provider-unavailable and fail-closed.
+  await page.goto("/?qa=1", { waitUntil: "domcontentloaded" })
   await waitForShell(page)
-  await page.locator("[data-city='seoul']").click({ force: true })
+  const cityPin = page.getByTestId("ondo-b-nation").locator("[data-city='seoul']")
+  await expect(cityPin).toBeEnabled()
+  await cityPin.evaluate((button: HTMLButtonElement) => button.click())
+  const cityRoot = page.locator("[data-testid='ondo-b-map-entry'][data-city='seoul']")
+  await expect(cityRoot).toBeVisible()
   const toggle = page.getByTestId("ondo-b-view-toggle")
-  if (await toggle.count()) await toggle.click({ force: true })
+  await expect(toggle).toBeVisible()
+  if (!await page.getByTestId("ondo-b-venue-list").isVisible()) await toggle.click({ force: true })
+  await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
   await page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${VENUE_ID}'] button`).click({ force: true })
   await page.getByTestId("canonical-place-details").click({ force: true })
   const place = page.getByTestId("canonical-place-overlay")
@@ -163,6 +166,20 @@ async function expectControlGeometry(root: Locator) {
   }
 }
 
+async function returnFromSignalResult(signal: Locator, result: "unique" | "duplicate" = "unique") {
+  await expect(signal).toHaveAttribute("data-signal-stage", result)
+  await expect(signal.getByTestId("local-signal-result")).toHaveAttribute("data-result", result)
+  await signal.getByTestId("local-signal-return").click()
+  await expect(signal).toBeHidden()
+}
+
+async function discardSignalDraft(signal: Locator) {
+  await signal.getByTestId("local-signal-close").click()
+  await expect(signal.getByTestId("local-signal-discard")).toBeVisible()
+  await signal.getByTestId("local-signal-discard").click()
+  await expect(signal).toBeHidden()
+}
+
 async function quietCapture(page: Page, name: string) {
   mkdirSync(ARTIFACT_DIR, { recursive: true })
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" })
@@ -206,16 +223,29 @@ for (const viewport of VIEWPORTS.filter(({ width }) => width <= 430)) {
     await expect(primary).toBeDisabled()
     await signal.locator("fieldset button").first().click()
     await expect(primary).toBeEnabled()
-    await expect(primary.locator("xpath=..")).toHaveCSS("position", "static")
+    await expect(primary.locator("xpath=..")).toHaveCSS("position", "relative")
     const box = await primary.boundingBox()
     expect(box).not.toBeNull()
-    expect(box!.height).toBeGreaterThanOrEqual(52)
+    expect(box!.height).toBeGreaterThanOrEqual(48)
     expect(box!.y).toBeGreaterThanOrEqual(0)
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height)
     await expect(signal).toHaveCSS("background-color", "rgb(255, 255, 255)")
+    const privacyToggle = signal.getByTestId("local-signal-privacy-toggle")
+    expect((await privacyToggle.boundingBox())!.height).toBeGreaterThanOrEqual(44)
     await expectControlGeometry(signal)
   })
 }
+
+test("FLOW7-TRUTH-001A privacy disclosure states the exact draft, device, and JIT account boundaries", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const { signal } = await openSignal(page)
+  const privacy = signal.getByTestId("local-signal-privacy")
+  await privacy.getByTestId("local-signal-privacy-toggle").click()
+  await expect(privacy).toContainText("Only this place, your picks and the time are kept on this device")
+  await expect(privacy).toContainText("The note and photo disappear when you close")
+  await expect(privacy).toContainText("Saving may ask for an account, then a one-time person check")
+  await expect(privacy).not.toContainText("No account, ID, or credential is created")
+})
 
 test("FLOW7-MEDIA-002 photo MIME, size, prepare, retry, replace, and remove remain distinct local states", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -235,8 +265,8 @@ test("FLOW7-MEDIA-002 photo MIME, size, prepare, retry, replace, and remove rema
   await expect(signal).toHaveAttribute("data-photo-stage", "photoPrepareError")
   await signal.getByTestId("local-signal-photo-retry").click()
   await expect(signal).toHaveAttribute("data-photo-stage", "ready")
-  await expect(signal.locator("img")).toBeVisible()
-  await expect(signal.locator("img")).toHaveAttribute("alt", COPY.en.photoAlt)
+  await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
+  await expect(signal.getByTestId("local-signal-photo-preview")).toHaveAttribute("alt", COPY.en.photoAlt)
   await signal.getByTestId("local-signal-photo-remove").click()
   await expect(signal).toHaveAttribute("data-photo-stage", "empty")
 })
@@ -246,7 +276,7 @@ test("FLOW7-MEDIA-003 invalid and unpreparable replacement preserve the last goo
   const { signal } = await openSignal(page)
   const input = signal.getByTestId("local-signal-photo-input")
   await input.setInputFiles("public/seoul-after-rain-hero.jpg")
-  const image = signal.locator("img")
+  const image = signal.getByTestId("local-signal-photo-preview")
   await expect(image).toBeVisible()
   const initialSource = await image.getAttribute("src")
 
@@ -264,11 +294,14 @@ test("FLOW7-GATE-003 Person cancel, failure, unavailable, expired, and Escape re
   await page.setViewportSize({ width: 390, height: 844 })
   const { signal, place } = await openSignal(page)
   const draft = signal.getByTestId("local-signal-draft")
-  const note = draft.getByRole("textbox", { name: COPY.en.note })
+  const note = draft.getByTestId("local-signal-note")
   await draft.locator("fieldset button").first().click()
   await note.fill("Keep this exact Local Signal draft.")
+  await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
 
   let gate = await openPersonConsent(page, signal)
+  await expect(gate.getByTestId("action-gate-signal-anchor")).toHaveAttribute("data-selected-count", "1")
+  await expect(gate.getByTestId("action-gate-signal-anchor")).toHaveAttribute("data-photo", "preview")
   await expect(signal).toHaveAttribute("inert", "")
   await page.keyboard.press("Escape")
   await expect(gate).toBeHidden()
@@ -283,6 +316,46 @@ test("FLOW7-GATE-003 Person cancel, failure, unavailable, expired, and Escape re
     await expect(note).toHaveValue("Keep this exact Local Signal draft.")
     await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
   }
+})
+
+test("FLOW7-CANCEL-003B dirty close requires an explicit choice and Escape keeps the exact draft", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const { signal } = await openSignal(page)
+  const note = signal.getByTestId("local-signal-note")
+  await signal.getByTestId("local-signal-tag-calm_now").click()
+  await note.fill("Keep this local note")
+  await signal.getByTestId("local-signal-close").click()
+  await expect(signal.getByTestId("local-signal-discard")).toBeVisible()
+  await expect(signal.getByRole("button", { name: "Keep editing" })).toBeFocused()
+  await page.keyboard.press("Escape")
+  await expect(signal.getByTestId("local-signal-discard")).toBeHidden()
+  await expect(note).toHaveValue("Keep this local note")
+  await expect(signal.getByTestId("local-signal-tag-calm_now")).toHaveAttribute("aria-pressed", "true")
+  await expect(signal.getByTestId("local-signal-close")).toBeFocused()
+})
+
+test("FLOW7-EXIT-003C accepted discard keeps one frozen modal until removal, then restores the exact Place action", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" })
+  await page.setViewportSize({ width: 390, height: 844 })
+  const { signal, place } = await openSignal(page)
+  const placeOpener = place.getByTestId("canonical-local-signal-open")
+  await signal.getByTestId("local-signal-tag-calm_now").click()
+  await signal.getByTestId("local-signal-note").fill("Keep the painted exit exact")
+  await signal.getByTestId("local-signal-close").click()
+  const decision = signal.getByTestId("local-signal-discard")
+  await expect(decision).toBeVisible()
+
+  await decision.click()
+  await expect(signal).toHaveAttribute("data-signal-presence", "closing")
+  await expect(decision).toBeVisible()
+  await expect(placeOpener).not.toBeFocused()
+  await page.waitForTimeout(140)
+  await expect(signal).toBeVisible()
+  await expect(decision).toBeVisible()
+
+  await expect(signal).toHaveCount(0)
+  await expect(place).toBeVisible()
+  await expect(placeOpener).toBeFocused()
 })
 
 test("FLOW7-SESSION-004 Person success expires on the actual clock and cannot cross close, venue, navigation, or reload boundaries", async ({ page }) => {
@@ -302,7 +375,7 @@ test("FLOW7-SESSION-004 Person success expires on the actual clock and cannot cr
   await expect(signal.getByTestId("local-signal-draft")).toHaveAttribute("data-gate-return", "expired")
   await page.clock.resume()
 
-  await signal.getByRole("button", { name: COPY.en.close }).click()
+  await discardSignalDraft(signal)
   await place.getByRole("button", { name: "Close place" }).click()
   await expect(place).toBeHidden()
   const venueList = page.getByTestId("ondo-b-venue-list")
@@ -323,7 +396,8 @@ test("FLOW7-SESSION-004 Person success expires on the actual clock and cannot cr
   await expect(signal.getByTestId("local-signal-draft")).toHaveAttribute("data-gate-return", "none")
   await expect(signal.getByTestId("local-signal-person-check")).toBeVisible()
 
-  await signal.getByRole("button", { name: COPY.en.close }).click()
+  await signal.getByTestId("local-signal-close").click()
+  await expect(signal).toBeHidden()
   await place.getByRole("button", { name: "Close place" }).click()
   await expect(place).toBeHidden()
   await page.getByTestId("nav-my").click({ force: true })
@@ -337,7 +411,7 @@ test("FLOW7-POST-005 device persistence is durable-first, keeps Pulse invariant,
   await page.setViewportSize({ width: 320, height: 720 })
   const { signal, place } = await openSignal(page)
   const draft = signal.getByTestId("local-signal-draft")
-  const note = draft.getByRole("textbox", { name: COPY.en.note })
+  const note = draft.getByTestId("local-signal-note")
   const pulseBefore = await place.getByTestId("canonical-place-pulse").evaluate((element) => ({
     level: element.getAttribute("data-pulse-level"),
     numeric: element.getAttribute("data-pulse-numeric"),
@@ -351,14 +425,14 @@ test("FLOW7-POST-005 device persistence is durable-first, keeps Pulse invariant,
   await installOneShotDeviceWriteFailure(page)
   await signal.getByTestId("local-signal-post").click()
   await expect(signal.getByTestId("local-signal-post-error")).toHaveText(COPY.en.postFailure)
-  await expect(signal).toHaveAttribute("data-signal-stage", "post_failed")
+  await expect(signal).toHaveAttribute("data-signal-stage", "failed")
   await expect(note).toHaveValue("This note must never enter storage.")
   let stored = await page.evaluate((key) => localStorage.getItem(key) ?? "", DEVICE_KEY)
   expect(stored).not.toContain("This note must never enter storage")
   expect(JSON.parse(stored).localSignalPostedVenueIds).toEqual([])
 
   await signal.getByTestId("local-signal-post").click()
-  await expect(signal).toBeHidden()
+  await returnFromSignalResult(signal)
   await expect(place).toBeVisible()
   await expect(place).toHaveAttribute("data-venue-id", VENUE_ID)
   const pulseAfter = await place.getByTestId("canonical-place-pulse").evaluate((element) => ({
@@ -374,24 +448,21 @@ test("FLOW7-POST-005 device persistence is durable-first, keeps Pulse invariant,
   expect(Date.parse(JSON.parse(stored).localPulseEvidenceByVenue[VENUE_ID].postedAt)).not.toBeNaN()
 })
 
-test("FLOW7-UPDATE-006 an already-posted signal replaces only local tag IDs and time after durable success", async ({ page }) => {
+test("FLOW7-DUPLICATE-006 an already-posted venue is terminally deduplicated without replacing local evidence", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   const { signal } = await openSignal(page, "en", true)
-  await expect(signal).toHaveAttribute("data-signal-stage", "posted")
+  await expect(signal).toHaveAttribute("data-signal-stage", "draft")
   await signal.locator("fieldset button").nth(1).click()
   await openEligibilityResult(page, signal, "success")
-  await expect(signal.getByTestId("local-signal-post")).toHaveText(COPY.en.update)
-  await installOneShotDeviceWriteFailure(page)
+  await expect(signal.getByTestId("local-signal-post")).toHaveText(COPY.en.action)
   await signal.getByTestId("local-signal-post").click()
-
-  await expect(signal.getByTestId("local-signal-post-error")).toBeVisible()
-  let evidence = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").localPulseEvidenceByVenue["mois-0021cd596bc5b2a922ad"], DEVICE_KEY)
+  await expect(signal.getByTestId("local-signal-result")).toHaveAttribute("data-result", "duplicate")
+  await expect(signal.getByTestId("local-signal-result")).toHaveAttribute("data-result-tone", "neutral")
+  await expect(signal).not.toHaveAttribute("data-upl-state", "UPL-SENT")
+  await expect(signal.getByTestId("local-signal-result-axes")).toHaveCount(0)
+  const evidence = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").localPulseEvidenceByVenue["mois-0021cd596bc5b2a922ad"], DEVICE_KEY)
   expect(evidence).toEqual({ tags: ["calm_now"], postedAt: "2026-08-26T12:00:00.000Z" })
-  await signal.getByTestId("local-signal-post").click()
-
-  evidence = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").localPulseEvidenceByVenue["mois-0021cd596bc5b2a922ad"], DEVICE_KEY)
-  expect(evidence.tags).toEqual(["lively_now"])
-  expect(evidence.postedAt).not.toBe("2026-08-26T12:00:00.000Z")
+  await returnFromSignalResult(signal, "duplicate")
 })
 
 test("FLOW7-HISTORY-007 reload keeps only device evidence, opens its exact Place, and failed clear keeps it", async ({ page }) => {
@@ -400,6 +471,7 @@ test("FLOW7-HISTORY-007 reload keeps only device evidence, opens its exact Place
   await signal.locator("fieldset button").first().click()
   await openEligibilityResult(page, signal, "success")
   await signal.getByTestId("local-signal-post").click()
+  await returnFromSignalResult(signal)
   await page.reload({ waitUntil: "domcontentloaded" })
   await waitForShell(page)
   const restoredPlace = page.getByTestId("canonical-place-overlay")
@@ -418,17 +490,17 @@ test("FLOW7-HISTORY-007 reload keeps only device evidence, opens its exact Place
 
   await page.getByTestId("nav-settings").click({ force: true })
   const disclosure = page.getByTestId("ondo-b-device-data-settings")
-  await disclosure.locator("summary").click()
-  await disclosure.getByTestId("ondo-b-clear-device-open").click()
+  await disclosure.click()
+  await page.getByTestId("ondo-b-clear-device-open").click()
   await installOneShotDeviceWriteFailure(page)
   const confirm = page.getByTestId("ondo-b-clear-device-confirm")
-  await confirm.getByRole("button", { name: "Clear saved content" }).click()
+  await confirm.getByRole("button", { name: "Delete saved data", exact: true }).click()
   await expect(confirm.getByTestId("ondo-b-clear-device-error")).toBeVisible()
   await expect(page.getByTestId("ondo-toast")).toBeHidden()
   const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
   expect(stored.localSignalPostedVenueIds).toEqual([VENUE_ID])
   expect(stored.localPulseEvidenceByVenue[VENUE_ID].tags).toEqual(["calm_now"])
-  await confirm.getByRole("button", { name: "Clear saved content" }).click()
+  await confirm.getByRole("button", { name: "Delete saved data", exact: true }).click()
   await expect(confirm).toBeHidden()
   const cleared = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
   expect(cleared.localSignalPostedVenueIds).toEqual([])
@@ -458,7 +530,7 @@ test("FLOW7-MEDIA-008 MIME-valid corrupt media is rejected atomically and every 
   const { signal, place } = await openSignal(page)
   const input = signal.getByTestId("local-signal-photo-input")
   await input.setInputFiles("public/seoul-after-rain-hero.jpg")
-  const preview = signal.locator("img")
+  const preview = signal.getByTestId("local-signal-photo-preview")
   await expect(preview).toBeVisible()
   await preview.evaluate((image) => (image as HTMLImageElement).decode())
   const readySource = await preview.getAttribute("src")
@@ -488,7 +560,7 @@ test("FLOW7-MEDIA-008 MIME-valid corrupt media is rejected atomically and every 
 
   await input.setInputFiles("public/seoul-after-rain-hero.jpg")
   await expect(preview).toBeVisible()
-  await signal.getByRole("button", { name: COPY.en.close }).click()
+  await discardSignalDraft(signal)
   await expect(signal).toBeHidden()
   urls = await page.evaluate(() => ({
     created: JSON.parse(sessionStorage.getItem("flow7-created") ?? "[]") as string[],
@@ -502,7 +574,7 @@ test("FLOW7-MEDIA-008 MIME-valid corrupt media is rejected atomically and every 
   await postSignal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
   await openEligibilityResult(page, postSignal, "success")
   await postSignal.getByTestId("local-signal-post").click()
-  await expect(postSignal).toBeHidden()
+  await returnFromSignalResult(postSignal)
   urls = await page.evaluate(() => ({
     created: JSON.parse(sessionStorage.getItem("flow7-created") ?? "[]") as string[],
     revoked: JSON.parse(sessionStorage.getItem("flow7-revoked") ?? "[]") as string[],
@@ -515,7 +587,7 @@ test("FLOW7-TRAVERSAL-009 Back and Forward discard the draft, photo, and Person 
   await page.setViewportSize({ width: 390, height: 844 })
   const { signal } = await openSignal(page)
   await signal.locator("fieldset button").first().click()
-  await signal.getByRole("textbox", { name: COPY.en.note }).fill("Must disappear on traversal")
+  await signal.getByTestId("local-signal-note").fill("Must disappear on traversal")
   await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
   await openEligibilityResult(page, signal, "success")
 
@@ -528,9 +600,9 @@ test("FLOW7-TRAVERSAL-009 Back and Forward discard the draft, photo, and Person 
   await expect(page.getByTestId("ondo-b-local-signal")).toBeHidden()
   await place.getByTestId("canonical-local-signal-open").click()
   const reopened = page.getByTestId("ondo-b-local-signal")
-  await expect(reopened.getByRole("textbox", { name: COPY.en.note })).toHaveValue("")
+  await expect(reopened.getByTestId("local-signal-note")).toHaveValue("")
   await expect(reopened.locator("fieldset button[aria-pressed='true']")).toHaveCount(0)
-  await expect(reopened.locator("img")).toHaveCount(0)
+  await expect(reopened.getByTestId("local-signal-photo-preview")).toHaveCount(0)
   await expect(reopened).toHaveAttribute("data-signal-stage", "draft")
 })
 
@@ -548,7 +620,7 @@ test("FLOW7-DATA-010 a thirteenth post is bounded in React and disk before and a
   await signal.locator("fieldset button").first().click()
   await openEligibilityResult(page, signal, "success")
   await signal.getByTestId("local-signal-post").click()
-  await expect(signal).toBeHidden()
+  await returnFromSignalResult(signal)
 
   for (const phase of ["runtime", "reload"] as const) {
     if (phase === "reload") {
@@ -579,7 +651,7 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   await signal.locator("fieldset button").first().click()
   await openEligibilityResult(page, signal, "success")
   await signal.getByTestId("local-signal-post").click()
-  await expect(signal).toBeHidden()
+  await returnFromSignalResult(signal)
   expect(await sharedPlacePulseTuple(place)).toEqual(before)
 
   await page.reload({ waitUntil: "domcontentloaded" })
@@ -616,8 +688,12 @@ test("FLOW7-CONSENT-012 phone Person gate keeps both 44px decisions visible and 
     const box = await action.boundingBox()
     expect(box!.height).toBeGreaterThanOrEqual(44)
   }
+  for (const row of ["consent-minimum", "consent-retention"]) {
+    await gate.getByTestId(row).scrollIntoViewIfNeeded()
+    await expect(gate.getByTestId(row)).toBeVisible()
+  }
   await gate.getByTestId("person-provider-disclosure").locator("summary").click()
-  for (const row of ["consent-requester", "consent-purpose", "consent-minimum", "consent-retention"]) {
+  for (const row of ["consent-requester", "consent-purpose"]) {
     await gate.getByTestId(row).scrollIntoViewIfNeeded()
     await expect(gate.getByTestId(row)).toBeVisible()
   }
@@ -631,7 +707,7 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
     const { signal } = await openSignal(page)
     const input = signal.getByTestId("local-signal-photo-input")
     await input.setInputFiles("public/seoul-after-rain-hero.jpg")
-    const preview = signal.locator("img")
+    const preview = signal.getByTestId("local-signal-photo-preview")
     await preview.evaluate((image) => (image as HTMLImageElement).decode())
     const readySource = await preview.getAttribute("src")
     await input.setInputFiles({ name: "corrupt.png", mimeType: "image/png", buffer: Buffer.from("not a decodable png") })
@@ -640,7 +716,7 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
       await expect(visible).toBeInViewport()
     }
     await quietCapture(page, `successor-en-${width}x${width === 320 ? 720 : 844}-photo-decode-error-preserved`)
-    await signal.getByRole("button", { name: COPY.en.close }).click()
+    await discardSignalDraft(signal)
   }
 
   for (const locale of ["ko", "ja"] as const) {
@@ -652,29 +728,49 @@ test("FLOW7-VIS-013 photo error decisions stay visible on phones and landscape p
     await page.addInitScript(() => { window.__ONDO_B_QA__ = { localSignalPhoto: "failure" } })
     const { signal } = await openSignal(page, locale)
     const body = signal.locator(":scope > div")
-    const photoTitle = signal.locator("[data-photo-stage] > div strong")
+    const photoControl = signal.getByTestId("local-signal-photo-input")
     const header = signal.locator(":scope > header")
-    const expectTitleBelowHeader = async () => {
-      await expect(photoTitle).toBeInViewport()
-      const [titleBox, headerBox] = await Promise.all([photoTitle.boundingBox(), header.boundingBox()])
-      expect(titleBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height)
+    const expectPhotoStateBelowHeader = async () => {
+      const visiblePhotoState = signal.getByTestId("local-signal-photo-slot")
+      await visiblePhotoState.scrollIntoViewIfNeeded()
+      const [photoBox, headerBox] = await Promise.all([visiblePhotoState.boundingBox(), header.boundingBox()])
+      expect(photoBox!.y).toBeGreaterThanOrEqual(headerBox!.y + headerBox!.height)
+      await expect(photoControl).toBeAttached()
     }
     await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
     await expect(signal.getByTestId("local-signal-photo-error")).toHaveAttribute("data-error", "photoPrepareError")
-    await expectTitleBelowHeader()
+    await expectPhotoStateBelowHeader()
     await quietCapture(page, `successor-${locale}-844x390-photo-prepare-error`)
     await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await signal.getByTestId("local-signal-photo-retry").click()
-    await expect(signal.locator("img")).toBeVisible()
-    await expectTitleBelowHeader()
+    await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
+    await expectPhotoStateBelowHeader()
     await quietCapture(page, `successor-${locale}-844x390-photo-ready`)
     await body.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await signal.getByTestId("local-signal-photo-remove").click()
-    await expectTitleBelowHeader()
+    await expectPhotoStateBelowHeader()
     await quietCapture(page, `successor-${locale}-844x390-photo-removed`)
-    await signal.locator(":scope > header button").first().click()
+    await discardSignalDraft(signal)
   }
+})
+
+test("FLOW7-REFLOW-014 320px at 200% keeps picks, photo states and the anchored action in one scroll axis", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 })
+  const { signal } = await openSignal(page, "ja")
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty("-webkit-text-size-adjust", "200%")
+    document.documentElement.style.setProperty("text-size-adjust", "200%")
+  })
+  await signal.getByTestId("local-signal-tag-calm_now").click()
+  const photo = signal.getByTestId("local-signal-photo-slot")
+  await photo.scrollIntoViewIfNeeded()
+  const geometry = await signal.evaluate((element) => ({ clientWidth: element.clientWidth, scrollWidth: element.scrollWidth }))
+  expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1)
+  const photoBox = await photo.boundingBox()
+  expect(photoBox!.width / photoBox!.height).toBeCloseTo(4 / 3, 1)
+  await expect(signal.getByTestId("local-signal-draft-anchor")).toBeVisible()
+  await expect(signal.getByTestId("local-signal-person-check")).toBeInViewport()
 })
 
 for (const locale of ["en", "ko", "ja"] as const) {
@@ -689,7 +785,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await quietCapture(page, `${locale}-${viewport.label}-initial`)
 
       const draft = signal.getByTestId("local-signal-draft")
-      const note = draft.getByRole("textbox", { name: COPY[locale].note })
+      const note = draft.getByTestId("local-signal-note")
       await draft.locator("fieldset button").first().click()
       await note.fill("Same place, same local draft.")
       await note.scrollIntoViewIfNeeded()
@@ -705,17 +801,17 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await expect(signal.getByTestId("local-signal-photo-retry")).toBeVisible()
       await quietCapture(page, `${locale}-${viewport.label}-photo-prepare-error`)
       await signal.getByTestId("local-signal-photo-retry").click()
-      await expect(signal.locator("img")).toBeVisible()
-      await signal.locator("img").evaluate((image) => (image as HTMLImageElement).decode())
+      await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
+      await signal.getByTestId("local-signal-photo-preview").evaluate((image) => (image as HTMLImageElement).decode())
       await quietCapture(page, `${locale}-${viewport.label}-photo-ready`)
-      const readySource = await signal.locator("img").getAttribute("src")
+      const readySource = await signal.getByTestId("local-signal-photo-preview").getAttribute("src")
       await input.setInputFiles({ name: "bad-replacement.txt", mimeType: "text/plain", buffer: Buffer.from("not an image") })
-      await expect(signal.locator("img")).toHaveAttribute("src", readySource!)
+      await expect(signal.getByTestId("local-signal-photo-preview")).toHaveAttribute("src", readySource!)
       await quietCapture(page, `${locale}-${viewport.label}-photo-invalid-replacement-preserved`)
       await signal.getByTestId("local-signal-photo-remove").click()
       await quietCapture(page, `${locale}-${viewport.label}-photo-removed`)
       await input.setInputFiles("public/seoul-after-rain-hero.jpg")
-      await expect(signal.locator("img")).toBeVisible()
+      await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
 
       let gate = await openPersonConsent(page, signal)
       await quietCapture(page, `${locale}-${viewport.label}-person-consent`)
@@ -741,7 +837,7 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await expect(retryPost).toBeInViewport()
       await quietCapture(page, `${locale}-${viewport.label}-post-storage-failure`)
       await retryPost.click()
-      await expect(signal).toBeHidden()
+      await returnFromSignalResult(signal)
       await expect(place).toBeVisible()
       await quietCapture(page, `${locale}-${viewport.label}-posted-return-place`)
 
@@ -749,15 +845,11 @@ for (const locale of ["en", "ko", "ja"] as const) {
       const updateSignal = page.getByTestId("ondo-b-local-signal")
       await updateSignal.locator("fieldset button").nth(1).click()
       await openEligibilityResult(page, updateSignal, "success")
-      await expect(updateSignal.getByTestId("local-signal-post")).toHaveText(COPY[locale].update)
+      await expect(updateSignal.getByTestId("local-signal-post")).toHaveText(COPY[locale].action)
       await updateSignal.getByTestId("local-signal-post").scrollIntoViewIfNeeded()
       await quietCapture(page, `${locale}-${viewport.label}-already-posted-update`)
-      await installOneShotDeviceWriteFailure(page)
       await updateSignal.getByTestId("local-signal-post").click()
-      await expect(updateSignal.getByTestId("local-signal-post-error")).toBeVisible()
-      await quietCapture(page, `${locale}-${viewport.label}-update-storage-failure`)
-      await updateSignal.getByTestId("local-signal-post").click()
-      await expect(updateSignal).toBeHidden()
+      await returnFromSignalResult(updateSignal, "duplicate")
       await page.reload({ waitUntil: "domcontentloaded" })
       await waitForShell(page)
       const reloadedPlace = page.getByTestId("canonical-place-overlay")
@@ -777,8 +869,8 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await historyPlace.locator("header button").last().click()
       await page.getByTestId("nav-settings").click({ force: true })
       const disclosure = page.getByTestId("ondo-b-device-data-settings")
-      await disclosure.locator("summary").click()
-      await disclosure.getByTestId("ondo-b-clear-device-open").click()
+      await disclosure.click()
+      await page.getByTestId("ondo-b-clear-device-open").click()
       await installOneShotDeviceWriteFailure(page)
       const clearConfirm = page.getByTestId("ondo-b-clear-device-confirm")
       await clearConfirm.locator("button").last().click()

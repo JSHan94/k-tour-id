@@ -13,7 +13,9 @@ import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { useOndo } from "../shared/state/ondo-provider"
 import { CheckoutOverlay } from "../commerce/checkout-overlay"
 import { LabsEntry } from "../labs/labs-entry-legacy"
-import { TABLES, initialTableRuntime, joinFailureRuntime, tableStatusCopy, toCanonicalMembership, type TableFailureState } from "./table-model"
+import { useSheetPresence } from "../shared/ui/use-sheet-presence"
+import { initialTableRuntime, joinFailureRuntime, tableStatusCopy, toCanonicalMembership, type TableFailureState } from "./table-model"
+import { TABLES } from "./table-fixtures"
 import { tableFixtureTruth, VENUE_NAMES } from "./tables-entry"
 import styles from "./connect.module.css"
 
@@ -90,11 +92,12 @@ function persistChatMessages(tableId: string, messages: ChatItem[]) {
 
 export function ConnectOverlays() {
   const { state } = useOndo()
+  const labsPresence = useSheetPresence(state.surface.kind === "labs" ? true : null)
+  if (labsPresence.value) return <LabsEntry presenceState={labsPresence.phase} />
   if (state.surface.kind === "table") return <TableDetail tableId={state.surface.tableId} />
   if (state.surface.kind === "chat") return <TableChat tableId={state.surface.tableId} />
   if (state.surface.kind === "local_signal") return <LocalSignal venueId={state.surface.venueId} />
   if (state.surface.kind === "checkout") return <CheckoutOverlay venueId={state.surface.venueId} />
-  if (state.surface.kind === "labs") return <LabsEntry />
   return null
 }
 

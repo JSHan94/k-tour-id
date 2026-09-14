@@ -186,7 +186,7 @@ for (const locale of ["en", "ko"] as const) {
       }, locale)
       await page.reload({ waitUntil: "domcontentloaded" })
       const onboarding = page.getByTestId("ondo-onboarding")
-      await onboarding.getByRole("button", { name: locale === "ko" ? "게스트 취향 설정" : "Set guest preferences", exact: true }).click()
+      await onboarding.getByRole("button", { name: locale === "ko" ? "20초 개인화" : "Personalize in 20 seconds", exact: true }).click()
       await onboarding.getByTestId("persona-short_term").click()
       await onboarding.getByRole("button", { name: locale === "ko" ? "한 끼 취향 고르기" : "Choose meal preferences", exact: true }).click()
       const preferences = onboarding.getByTestId("onboarding-step-preferences")

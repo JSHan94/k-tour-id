@@ -246,16 +246,53 @@ export async function setupBProductionVisualCase(page: Page, item: BProductionVi
       await page.waitForTimeout(1_000)
     }
   } else if (item.setup === "offline-fallback") {
+    // This case deliberately supersedes the deterministic online map transport
+    // installed by prepareBProductionVisualPage. Remove those more-specific
+    // handlers first so the catch-all abort can exercise the real fallback.
+    await page.unroute("https://tiles.openfreemap.org/planet")
+    await page.unroute("https://tiles.openfreemap.org/ondo-production-visual-empty/**")
+    await page.unroute("https://tiles.openfreemap.org/fonts/**")
     await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("failed"))
-    await openCity(page)
-    await waitForMap(page, "error")
-    await page.context().setOffline(true)
-    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-connectivity", "offline")
+    const root = await openCity(page)
+    // The local ONDO layers remain useful when basemap transport fails. The
+    // current product classifies that as recoverable instead of discarding the
+    // map, then keeps the sourced list one tap away.
+    await waitForMap(page)
+    await expect(root).toHaveAttribute("data-map-partial-failure", "recoverable")
+    await root.getByTestId("ondo-b-view-toggle").click()
+    await expect(root).toHaveAttribute("data-effective-view", "list")
     await expect(page.getByTestId("ondo-b-venue-list").locator("li[data-venue-id]")).toHaveCount(30)
+    await page.getByTestId("ondo-b-venue-list").locator("img").evaluateAll(async (images) => {
+      const imageElements = images.filter((image): image is HTMLImageElement => image instanceof HTMLImageElement)
+      const visibleImages = imageElements.filter((image) => {
+        const rect = image.getBoundingClientRect()
+        return rect.bottom > 0
+          && rect.top < window.innerHeight
+          && rect.right > 0
+          && rect.left < window.innerWidth
+      })
+      const visibleImagesSettled = Promise.all(visibleImages.map((image) => image.complete
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            image.addEventListener("load", () => resolve(), { once: true })
+            image.addEventListener("error", () => resolve(), { once: true })
+          })))
+      await Promise.race([
+        visibleImagesSettled,
+        new Promise<void>((resolve) => window.setTimeout(resolve, 3_000)),
+      ])
+    })
+    await page.context().setOffline(true)
+    await expect(root).toHaveAttribute("data-connectivity", "offline")
   } else if (item.setup === "saved-empty" || item.setup === "saved-place" || item.setup === "private-note") {
     await page.getByTestId("nav-my").click()
     await expect(page.getByTestId("ondo-b-saved-entry")).toBeVisible()
     if (item.setup === "saved-empty") await expect(page.getByTestId("ondo-b-saved-entry").getByLabel("No saved places")).toBeVisible()
+    if (item.setup === "private-note") {
+      const note = page.getByTestId(`private-note-${CANONICAL_VENUE_ID}`)
+      await note.getByRole("button", { name: /Edit private note:/ }).click()
+      await expect(note.getByRole("textbox")).toBeFocused()
+    }
   } else if (item.setup === "settings" || item.setup === "reset-confirm") {
     await page.getByTestId("nav-settings").click()
     await expect(page.getByTestId("ondo-b-settings-entry")).toBeVisible()

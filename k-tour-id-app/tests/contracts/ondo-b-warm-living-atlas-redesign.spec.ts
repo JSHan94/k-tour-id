@@ -12,34 +12,40 @@ const onboarding = source("features/ondo/onboarding/official-directory-onboardin
 const onboardingStyles = source("features/ondo/onboarding/official-directory-onboarding.module.css")
 const myKorea = source("features/ondo/my/saved-entry-b.tsx")
 const settings = source("features/ondo/settings/settings-entry-b.tsx")
+const settingsStyles = source("features/ondo/settings/settings-entry-b.module.css")
 const personalStyles = source("features/ondo/shared/ui/production-local.module.css")
 const traveler = source("features/ondo/identity-b/traveler-id-entry-b.tsx")
 const travelerStyles = source("features/ondo/identity-b/traveler-id-entry-b.module.css")
 const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
 const commerceStyles = source("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
 
-test("ATLAS-001 onboarding offers direct three-language choice and folds source truth", () => {
-  expect(onboarding).toContain('data-testid="onboarding-language-control"')
-  for (const locale of ["en", "ko", "ja"]) {
-    expect(onboarding, `missing direct ${locale} locale choice`).toContain(`data-locale-choice="${locale}"`)
-  }
-  expect(onboarding).toContain('data-testid="onboarding-source-boundary"')
-  expect(onboarding).toMatch(/<details[^>]+className=\{styles\.sourceIntro\}/)
-  expect(onboardingStyles).toContain("--arc-coral")
+test("ATLAS-001 optional setup offers direct three-language choice without an unsolicited place", () => {
+  expect(onboarding).toContain('(["en", "ko", "ja"] as const).map((locale)')
+  expect(onboarding).toContain("aria-pressed={state.locale === locale}")
+  expect(onboarding).toContain("actions.setLocale(locale)")
+  expect(onboarding).not.toContain("<CanonicalVenueCapsuleB")
+  expect(onboarding).not.toContain('data-testid="onboarding-map-preview"')
+  expect(onboardingStyles).toContain(".locales")
 })
 
-test("ATLAS-002 My Korea starts with the travel plan and carries the Living Atlas direction", () => {
+test("ATLAS-002 My Korea starts with its map and uses one shared visual-memory system", () => {
   expect(myKorea).toContain('data-visual-direction="warm-living-atlas"')
+  expect(myKorea.indexOf("<KoreaMemoryMapB")).toBeGreaterThan(0)
   expect(myKorea.indexOf('data-testid="my-korea-planned"')).toBeGreaterThan(0)
-  expect(myKorea.indexOf('data-testid="my-korea-planned"')).toBeLessThan(myKorea.indexOf('data-testid="ondo-b-saved-entry"'))
-  expect(personalStyles).toContain("--atlas-route")
+  expect(myKorea).toContain('<div className={styles.memoryStage}>')
+  expect(myKorea).toContain('!isEmptyJourney ? <div className={styles.activitySections}>')
+  expect(myKorea).toContain("<MyKoreaMemoryVenueCardB")
+  expect(myKorea).toContain('data-testid="my-korea-empty-explore"')
+  expect(personalStyles).toContain(".memoryStage")
 })
 
-test("ATLAS-003 Settings uses a direct native three-language control without inline layout", () => {
-  expect(settings).toContain('data-visual-direction="warm-living-atlas"')
+test("ATLAS-003 Settings uses a shared-sheet native three-language control without inline layout", () => {
+  expect(settings).toContain('data-visual-direction="quiet-mobile-settings"')
+  expect(settings).toContain('data-testid="settings-language-row"')
   expect(settings).toContain('data-testid="settings-language-control"')
+  expect(settings).toContain('sheetPresence.value === "language" ? <SheetB')
   expect(settings).not.toContain('style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}')
-  expect(personalStyles).toContain("--settings-group-material")
+  expect(settingsStyles).toContain(".languageList")
 })
 
 test("ATLAS-004 Travel Pass and Wallet expose one honest warm wallet material system", () => {

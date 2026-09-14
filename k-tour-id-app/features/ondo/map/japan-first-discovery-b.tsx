@@ -35,6 +35,7 @@ const COPY = {
     viewSource: "View source",
     viewSources: "View sources",
     method: "About these stories",
+    imageCredit: "Image credit: ONDO editorial illustration",
     marker: "Stories",
     language: "App guidance is available in English, Korean and Japanese.",
     sourceBoundary: "Eight place pages and map coordinates were verified on Aug 28, 2026. Two ideas remain link-only.",
@@ -60,6 +61,7 @@ const COPY = {
     viewSource: "원문 보기",
     viewSources: "출처 보기",
     method: "이야기 안내",
+    imageCredit: "이미지 출처: ONDO 편집 일러스트",
     marker: "여행 이야기",
     language: "앱 안내는 한국어·영어·일본어로 제공합니다.",
     sourceBoundary: "장소 페이지와 지도 좌표 8곳을 2026년 8월 28일 확인했습니다. 2곳은 출처 링크만 제공합니다.",
@@ -85,6 +87,7 @@ const COPY = {
     viewSource: "元の情報を見る",
     viewSources: "情報源を見る",
     method: "ストーリーについて",
+    imageCredit: "画像クレジット：ONDO編集イラスト",
     marker: "ストーリー",
     language: "アプリの案内は日本語・英語・韓国語に対応しています。",
     sourceBoundary: "8か所の場所ページと地図座標を2026年8月28日に確認しました。2件は情報源リンクのみです。",
@@ -124,14 +127,14 @@ function Story({ item, copy, locale, compact = false, visualRole = compact ? "co
     <article className={compact ? styles.compactStory : undefined} data-content-id={item.id} data-editorial-role={visualRole} data-verification={item.sourceVerification} data-place-edge={item.placeEdgeVerification}>
       {item.editorialMedia && !compact ? (
         <figure className={styles.storyMedia} data-rights-mode={item.editorialMedia.rightsMode}>
-          <Image
-            alt={item.editorialMedia.alt[locale]}
-            fill
-            sizes="(max-width: 800px) 76vw, 320px"
-            src={item.editorialMedia.src}
-          />
-          <figcaption>{item.editorialMedia.credit[locale]}</figcaption>
-        </figure>
+              <Image
+                alt={item.editorialMedia.alt[locale]}
+                fill
+                sizes="(max-width: 800px) 76vw, 320px"
+                src={item.editorialMedia.src}
+              />
+              <span className={styles.srOnly}>{item.editorialMedia.credit[locale]}</span>
+            </figure>
       ) : <small>{item.sourceReferences[0].label}</small>}
       <div className={styles.storyCopy}>
         <strong>{item.title[locale]}</strong>
@@ -144,7 +147,7 @@ function Story({ item, copy, locale, compact = false, visualRole = compact ? "co
   )
 }
 
-export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpenChange, onSelectEditorialPlace }: { locale: OndoBLocale; city: "seoul" | "jeju"; presentation?: "map" | "list"; onOpenChange?(open: boolean): void; onSelectEditorialPlace?(place: EditorialPlaceB): void }) {
+export function JapanFirstDiscoveryB({ locale, city, presentation = "map", open, compactTrigger = false, returnFocusSelector, onOpenChange, onSelectEditorialPlace }: { locale: OndoBLocale; city: "seoul" | "jeju"; presentation?: "map" | "list"; open?: boolean; compactTrigger?: boolean; returnFocusSelector?: string; onOpenChange?(open: boolean): void; onSelectEditorialPlace?(place: EditorialPlaceB): void }) {
   const rootRef = useRef<HTMLDetailsElement>(null)
   const summaryRef = useRef<HTMLElement>(null)
   const copy = COPY[locale]
@@ -159,8 +162,17 @@ export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpe
   const closePanel = () => {
     if (rootRef.current) rootRef.current.open = false
     onOpenChange?.(false)
-    window.requestAnimationFrame(() => summaryRef.current?.focus({ preventScroll: true }))
+    window.requestAnimationFrame(() => {
+      const target = returnFocusSelector ? document.querySelector<HTMLElement>(returnFocusSelector) : summaryRef.current
+      target?.focus({ preventScroll: true })
+    })
   }
+
+  useEffect(() => {
+    if (!open || !compactTrigger) return
+    const frame = window.requestAnimationFrame(() => rootRef.current?.querySelector<HTMLButtonElement>("[data-story-close]")?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [open, compactTrigger])
 
   useEffect(() => {
     const closeOnEscape = (event: globalThis.KeyboardEvent) => {
@@ -174,7 +186,7 @@ export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpe
   })
 
   return (
-    <details ref={rootRef} className={styles.root} name="ondo-map-disclosure" data-testid="ondo-b-japan-first-discovery" data-city-context={city} data-presentation={presentation} data-truth-kind="editorial-collection" data-geometry-basis={city === "jeju" ? "verified-points" : "region"} data-place-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : 0} onToggle={(event) => onOpenChange?.(event.currentTarget.open)}>
+    <details ref={rootRef} open={open} className={styles.root} name="ondo-map-disclosure" data-testid="ondo-b-japan-first-discovery" data-compact-trigger={compactTrigger ? "true" : "false"} data-city-context={city} data-presentation={presentation} data-truth-kind="editorial-collection" data-geometry-basis={city === "jeju" ? "verified-points" : "region"} data-place-point-count={city === "jeju" ? JEJU_EDITORIAL_PLACES.length : 0} onToggle={(event) => onOpenChange?.(event.currentTarget.open)}>
       <summary ref={summaryRef} data-testid="ondo-b-editorial-collection-marker" aria-label={`${title}. ${summary}`}>
         <span className={styles.mark}><BookOpenText aria-hidden="true" size={20} /><b>{copy.marker}</b></span>
         <span>
@@ -187,11 +199,12 @@ export function JapanFirstDiscoveryB({ locale, city, presentation = "map", onOpe
       <div className={styles.panel}>
         <header>
           <span><BookOpenText aria-hidden="true" size={18} /><strong>{copy.content}</strong></span>
-          <button type="button" className={styles.closePanel} aria-label={copy.close} onClick={closePanel}><X aria-hidden="true" size={18} /></button>
+          <button type="button" className={styles.closePanel} data-story-close aria-label={copy.close} onClick={closePanel}><X aria-hidden="true" size={18} /></button>
           <details className={styles.method}>
             <summary>{copy.method}<ChevronRight aria-hidden="true" size={15} /></summary>
             <p>{copy.body}</p>
             <small>{copy.language}</small>
+            <small>{copy.imageCredit}</small>
           </details>
         </header>
         <div className={styles.contentRail} data-testid="ondo-b-editorial-guide-grid">

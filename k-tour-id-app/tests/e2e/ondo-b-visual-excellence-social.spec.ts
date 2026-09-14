@@ -279,7 +279,7 @@ for (const locale of ["en", "ko"] as const) {
       const tag = signal.locator("fieldset button").first()
       await tag.click()
       await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
-      await expect(signal.locator("img")).toBeVisible()
+      await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
       await signal.getByTestId("local-signal-photo-replace").scrollIntoViewIfNeeded()
       await quietScreenshot(page, `${locale}-${viewport.label}-local-signal`)
       await noHorizontalOverflow(signal)

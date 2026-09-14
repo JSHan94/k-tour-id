@@ -1,0 +1,210 @@
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.noteShell {
+  gap: 0;
+  padding: 0;
+  background: color-mix(in srgb, var(--ondo-surface, #fff) 82%, transparent);
+}
+.noteShell > [role="status"] { padding: 0 12px 10px 53px; }
+
+.savedUtilities {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px;
+  align-items: center;
+  background: var(--ondo-surface, #fff);
+}
+.savedUtilities > .removeAction { align-self: center; margin: 0 4px; }
+.savedUtilities[data-has-note="false"] { grid-template-columns: 52px; justify-content: end; }
+.savedUtilities:has(textarea) { grid-template-columns: minmax(0, 1fr); }
+.savedUtilities:has(textarea) > .removeAction { display: none; }
+
+.noteTrigger {
+  display: grid;
+  width: 100%;
+  min-height: 56px;
+  grid-template-columns: 32px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--ondo-ink, #2b2825);
+  font: inherit;
+  text-align: left;
+}
+
+.noteTriggerIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 11px;
+  background: var(--ondo-surface-soft, #f1f1ef);
+  color: var(--ondo-ink, #45413e);
+}
+
+.noteTrigger > span:nth-child(2) { display: grid; min-width: 0; gap: 2px; }
+.noteTrigger strong { font-size: 13px; font-weight: 760; }
+.noteTrigger small { color: var(--ondo-muted, #6b6662); font-size: 12px; line-height: 1.35; }
+.noteTrigger > svg { color: var(--ondo-muted, #504b47); }
+
+.noteEditor { display: grid; gap: 9px; padding: 0 12px 12px; }
+.noteEditor textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border: 1px solid var(--ondo-line, rgb(35 31 29 / 14%));
+  border-radius: 13px;
+  padding: 11px;
+  background: var(--ondo-surface-soft, #f8f8f6);
+  color: var(--ondo-ink, #24211f);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.noteEditorActions { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
+.noteEditorActions > small { flex: 0 0 auto; color: var(--ondo-muted, #6b6662); font-size: 12px; }
+.noteEditorActions > span { display: flex; min-width: 0; gap: 7px; }
+.noteEditorActions button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 13px;
+  background: var(--ondo-control, #181716);
+  color: var(--ondo-control-ink, #fff);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 740;
+}
+.noteEditorActions .noteCancel {
+  border: 1px solid var(--ondo-line, rgb(35 31 29 / 12%));
+  background: var(--ondo-surface, #fff);
+  color: var(--ondo-ink, #504b47);
+}
+
+.receiptBoundary {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: fit-content;
+  min-height: 28px;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: var(--ondo-surface-soft, #f1f1ef);
+  color: var(--ondo-muted, #55514e);
+  font-size: 12px;
+  font-weight: 690;
+  line-height: 1.3;
+}
+
+.removeLayer {
+  position: fixed;
+  z-index: 160;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  background: rgb(20 18 17 / 54%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.removeDialog {
+  display: grid;
+  width: min(100%, 430px);
+  max-height: calc(100dvh - max(32px, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom) + 16px)));
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0;
+  justify-self: center;
+  overflow: hidden;
+  border: 1px solid var(--ondo-line, rgb(255 255 255 / 42%));
+  border-radius: 24px;
+  padding: 0;
+  background: var(--ondo-surface-raised, #fff);
+  color: var(--ondo-ink, #221f1d);
+  box-shadow: var(--ondo-shadow, 0 28px 80px rgb(0 0 0 / 24%));
+}
+
+.removeScroll {
+  display: grid;
+  min-height: 0;
+  gap: 11px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 20px 20px 13px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.removeDialog h2,
+.removeDialog p { margin: 0; }
+.removeDialog h2 { font-size: 21px; font-weight: 780; letter-spacing: -.035em; }
+.removeDialog p { color: var(--ondo-muted, #625d59); font-size: 13px; line-height: 1.5; }
+.removeDialog [role="alert"] { color: var(--destructive, #963c32); font-weight: 700; }
+.removePreview { display: flex; min-width: 0; align-items: center; gap: 12px; margin-bottom: 2px; }
+.removePreview > span:last-child { display: grid; min-width: 0; gap: 3px; }
+.removePreview strong,
+.removePreview small { overflow-wrap: anywhere; }
+.removePreview strong { color: var(--ondo-ink, #221f1d); font-size: 15px; line-height: 1.25; }
+.removePreview small { color: var(--ondo-muted, #69635f); font-size: 12px; }
+.removeActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  border-top: 1px solid var(--ondo-line, rgb(35 31 29 / 9%));
+  padding: 12px 20px 20px;
+  background: color-mix(in srgb, var(--ondo-surface-raised, #fff) 96%, transparent);
+}
+.removeActions button {
+  min-height: 48px;
+  border: 1px solid var(--ondo-line, rgb(35 31 29 / 13%));
+  border-radius: 14px;
+  background: var(--ondo-surface, #fff);
+  color: var(--ondo-ink, #413d3a);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 740;
+}
+.removeActions button:last-child { border-color: #722e29; background: #722e29; color: #fff; }
+.removeActions button:disabled { opacity: .58; }
+
+@media (min-width: 700px) {
+  .removeLayer { align-items: center; }
+}
+
+@media (min-width: 700px) and (orientation: landscape) and (max-height: 500px) {
+  .removeLayer { align-items: stretch; justify-items: end; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+  .removeDialog { width: min(100%, 430px); height: 100%; max-height: none; justify-self: end; border-radius: 22px; }
+  .removeScroll { padding: 17px 18px 11px; }
+  .removeActions { padding: 10px 18px 17px; }
+}
+
+@media (max-width: 350px) {
+  .noteEditorActions { align-items: stretch; flex-direction: column; }
+  .noteEditorActions > span { width: 100%; }
+  .noteEditorActions button { flex: 1 1 0; padding-inline: 8px; }
+  .removeDialog { border-radius: 21px; }
+  .removeScroll { padding: 17px 17px 11px; }
+  .removeActions { padding: 10px 17px 17px; }
+  .removeActions { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .removeLayer { backdrop-filter: none; -webkit-backdrop-filter: none; }
+}

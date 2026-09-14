@@ -101,7 +101,7 @@ for (const locale of LOCALES) {
         await action.click()
       }
       const credential = page.getByTestId("k-tour-id-credential")
-      await expect(credential).toHaveAttribute("data-status", "simulated_ready")
+      await expect(credential).toHaveAttribute("data-status", "review-draft")
       await expect(credential).toHaveAttribute("data-issuance-count", "1")
       await expectResponsiveTruth(page)
       await testInfo.attach("credential-ready", { body: await page.getByTestId("k-tour-id-setup").screenshot(), contentType: "image/png" })

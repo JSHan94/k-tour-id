@@ -1,13 +1,23 @@
 # ONDO canonical route
 
-Status: current route contract after the B promotion decision on 2026-08-30.
+Status: current route contract, publicly promoted on 2026-09-02.
+
+The post-promotion mobile candidate and its unresolved release evidence are
+tracked in
+[`ondo-baljajwi/10_MOBILE_RELEASE_CANDIDATE.md`](./ondo-baljajwi/10_MOBILE_RELEASE_CANDIDATE.md).
+Historical `/ondo-b` review receipts are not evidence for that newer candidate.
 
 | Route | Contract |
 | --- | --- |
 | `/` | Canonical ONDO product. It mounts the complete former B product directly and owns page metadata, discovery history, and social URLs. |
 | `/ondo-b` | Permanent compatibility redirect to `/`. Only allowlisted discovery parameters are carried forward; private, QA, and unknown parameters are dropped. |
-| `/ondo-a` | Preserved A/control implementation. It is noindex and never enters the canonical B import graph. |
-| `/ondo` | Historical A-compatible entry. It keeps the A implementation reachable for regression tests and existing deep links, while canonicalizing to `/ondo-a`. |
+| `/ondo-a`, `/ondo`, and every retired prototype route | Kept only in the development repository for regression coverage. They are absent from the isolated public artifact and return `404` on the deployed ONDO origin. |
+
+The login-free public share origin is
+`https://ondo-k-tour-id.vercel.app`. The older
+`https://ondo-korea-pulse.vercel.app/ondo-b` address is retained only as a
+compatibility entry and reaches the same promoted product through the canonical
+`/ondo-b` redirect.
 
 The `ondo-b.*` browser-storage keys and `data-testid` values are intentionally
 unchanged. They identify an existing persisted schema and test contract, not a
@@ -29,18 +39,26 @@ dropped before the permanent redirect reaches `/`.
 
 No deployment command may run from this worktree until
 `pnpm guard:deploy:ondo-b` succeeds. The guard requires
-`ONDO_B_DEPLOY_OWNER=woogieboogie-jl`, a new project identity, and either:
+`ONDO_B_DEPLOY_OWNER=woogieboogie-jl`, an unprotected project identity, and either:
 
 - `ONDO_B_DEPLOY_PROVIDER=sites` with a non-placeholder
   `ONDO_B_SITE_PROJECT_ID`; or
-- `ONDO_B_DEPLOY_PROVIDER=vercel` with
-  `ONDO_B_VERCEL_SCOPE=woogieboogie-jl` and a newly linked personal Vercel
-  project.
+- `ONDO_B_DEPLOY_PROVIDER=vercel`, authenticated Vercel user
+  `jaewook-9643`, no explicit `--scope`, and the exact approved personal
+  project `ondo` (`prj_w5rckTz9B1DO55fvVRXjQRy9L5RM`).
 
-The existing protected A project, historical private-B project, local-only
-placeholder, and currently team-linked Vercel project are refused. The operator
-must also verify the authenticated account is `phenixnet.jl@gmail.com`; that
-email identity is intentionally not inferred from a local project JSON file.
+The protected A project, historical private-B project, local-only placeholder,
+any different Vercel project, and every explicit organization scope are
+refused. GitHub publication is likewise limited to
+`woogieboogie-jl/ondo`; the `origin` and Ohayo organization remotes are not
+release targets.
+
+Vercel builds `pnpm build:vercel:ondo-b`, which first prepares the positive
+source allowlist and then builds `.ondo-b-standalone/.next`. A hard artifact
+scan admits only `/`, `/ondo-b`, `/api/ondo/venues/[venueId]`, and Next's
+internal error routes; it also rejects QA seams and retired product text.
+External HTTP probing verifies all retired routes and assets return `404`
+before a candidate can be promoted.
 
 The final noindex deployment is unlisted, not access-controlled. This matches
 the login-free review requirement; `noindex` must never be described as privacy

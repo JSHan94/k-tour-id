@@ -1,21 +1,41 @@
 "use client"
 
-import type { ChangeEvent, KeyboardEvent } from "react"
-import { useEffect, useRef, useState } from "react"
-import { BadgeCheck, ChevronLeft, CircleAlert, ImagePlus, NotebookPen, RotateCcw, Send, ShieldCheck, Trash2, X } from "lucide-react"
+import type { ChangeEvent } from "react"
+import { useEffect, useReducer, useRef, useState } from "react"
+import type { LucideIcon } from "lucide-react"
+import {
+  ArrowRight,
+  Bookmark,
+  Check,
+  CircleAlert,
+  HeartHandshake,
+  ImagePlus,
+  LoaderCircle,
+  MapPin,
+  RotateCcw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  Timer,
+  Trash2,
+  Waves,
+  X,
+} from "lucide-react"
 import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 import { venueNamePresentation } from "@/lib/ondo/venues/display"
+import { canonicalVenueMoodImage } from "../map/canonical-venue-capsule-b"
 import {
   abandonPendingBAction,
+  actionReturnFromBEvent,
   B_ACTION_GATE_CANCEL_EVENT,
   B_ACTION_GATE_COMPLETE_EVENT,
   B_ACTION_GATE_READY_EVENT,
   consumePendingBActionAtMutation,
   createBLocalSignalActionReturn,
-  finalizeConsumedBAction,
+  finalizeConsumedBActionWithMutation,
+  privateContextForBAction,
   requestBActionGate,
   restoreBActionGateSession,
-  restoreConsumedBActionAfterMutationFailure,
   type BLocalSignalActionReturn,
 } from "../identity-b/action-gate-contract-b"
 import { useBActivityProfile } from "../identity-b/activity-profile-b-provider"
@@ -23,11 +43,20 @@ import { B_DISCOVERY_TRAVERSAL_EVENT } from "../map/b-discovery-history"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import type { OndoBLocalSignalTag } from "../shared/state/ondo-b-provider"
 import { useOndoB } from "../shared/state/ondo-b-provider"
-import { useModalIsolation } from "../shared/ui/use-modal-isolation"
-import { readQaRuntime } from "../shared/ui/use-qa-controls"
+import { SheetB } from "../shared/ui/sheet-b"
+import { useSheetPresence } from "../shared/ui/use-sheet-presence"
+import { qaReviewFixtureOptions, readQaRuntime } from "../shared/ui/use-qa-controls"
+import {
+  createLocalSignalDraftBindingB,
+  createLocalSignalMutationPayloadB,
+  INITIAL_LOCAL_SIGNAL_FLOW_STATE_B,
+  reduceLocalSignalFlowB,
+  sameLocalSignalDraftBindingB,
+  type LocalSignalDraftBindingB,
+} from "./local-signal-model-b"
 import styles from "./local-signal-layer-b.module.css"
 
-const FOCUSABLE = "button:not([disabled]),input:not([disabled]),textarea:not([disabled]),[href],[tabindex]:not([tabindex='-1'])"
+const actionGateSessionOptions = qaReviewFixtureOptions
 export const MAX_LOCAL_SIGNAL_PHOTO_BYTES = 10 * 1024 * 1024
 const LOCAL_SIGNAL_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
 type PhotoError = "photoTypeError" | "photoSizeError" | "photoPrepareError"
@@ -48,181 +77,173 @@ async function decodeLocalSignalPhoto(url: string) {
   if (candidateImage.naturalWidth < 1 || candidateImage.naturalHeight < 1) throw new Error("Photo has no decodable pixels")
 }
 
-const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag } & Record<SocialLocale, string>> = [
-  { id: "calm_now", en: "Calm right now", ko: "지금은 여유로워요", ja: "今は落ち着いています" },
-  { id: "lively_now", en: "Lively right now", ko: "지금은 활기차요", ja: "今はにぎやかです" },
-  { id: "quick_stop", en: "Good for a quick stop", ko: "빠르게 들르기 좋아요", ja: "短時間で立ち寄りやすい" },
-  { id: "welcoming", en: "Welcoming service", ko: "친절하게 맞아줘요", ja: "親しみやすい接客" },
+const TAGS: ReadonlyArray<{ id: OndoBLocalSignalTag; icon: LucideIcon } & Record<SocialLocale, string>> = [
+  { id: "calm_now", icon: Waves, en: "Easygoing", ko: "여유로워요", ja: "落ち着く" },
+  { id: "lively_now", icon: Sparkles, en: "Lively", ko: "활기차요", ja: "にぎやか" },
+  { id: "quick_stop", icon: Timer, en: "Quick stop", ko: "금방 들러요", ja: "さっと寄れる" },
+  { id: "welcoming", icon: HeartHandshake, en: "Welcoming", ko: "친절해요", ja: "親しみやすい" },
 ]
 
 const COPY = {
   en: {
-    close: "Close Local Signal",
-    dismiss: "Dismiss Local Signal",
-    eyebrow: "AT THIS PLACE",
-    title: "Add a Local Signal",
-    body: "Capture what this place feels like right now as a private, on-device observation.",
-    choose: "What did you notice?",
-    chooseHelp: "Choose one or more. This is your observation, not the place source information.",
-    note: "Optional local note",
-    notePlaceholder: "A short detail for this local observation",
-    noteHelp: "The note stays in this draft only and is discarded after posting or closing.",
-    boundary: "Privacy & availability",
-    boundaryBody: "Tags and post time stay on this device. Your note and photo are discarded when this screen closes; nothing is uploaded.",
-    personBoundary: "A session-only confirmation unlocks saving. No account, ID, or credential is created.",
-    person: "Confirm for this action",
-    retry: "Try confirmation again",
-    post: "Save Local Signal on this device",
-    update: "Update Local Signal on this device",
-    posted: "Local Signal saved on this device. Your selections and time stay in Local Signal history; the public ONDO temperature score, count, level, and ranking do not change.",
-    updated: "Local Signal updated on this device. Your selections and time were replaced; the public ONDO temperature score, count, level, and ranking do not change.",
-    postError: "Could not save this Local Signal on this device. Your exact draft and place remain open.",
-    success: "Confirmation complete. Your Local Signal is ready to save on this device.",
-    cancel: "You declined. Your exact draft and place are unchanged.",
-    failure: "Confirmation did not complete. Your draft and place are unchanged.",
-    unavailable: "Confirmation is unavailable. Your draft and place are unchanged.",
-    expired: "Confirmation expired. Your draft and place are unchanged.",
-    alreadyPosted: "A Local Signal for this place is already saved on this device. Saving again replaces its selections and time; the public ONDO temperature stays unchanged.",
-    photo: "Add a photo",
-    photoHelp: "JPEG, PNG, or WebP · up to 10 MB",
-    replacePhoto: "Replace photo",
-    removePhoto: "Remove photo",
-    photoTypeError: "Choose a JPEG, PNG, or WebP photo.",
-    photoSizeError: "Choose a photo that is 10 MB or smaller.",
-    photoPrepareError: "The photo could not be prepared.",
-    photoRetry: "Retry photo",
-    photoChooseAnother: "Choose another photo",
-    photoAlt: "Local photo preview — kept in this open draft only",
+    close: "Close place signal", header: "Place signal", eyebrow: "Right now", title: "What’s it like here?",
+    choose: "Choose what fits", note: "Anything else?", notePlaceholder: "Optional note", photo: "Add photo",
+    replacePhoto: "Replace", removePhoto: "Remove", photoTypeError: "Choose a JPEG, PNG, or WebP photo.",
+    photoSizeError: "Choose a photo that is 10 MB or smaller.", photoPrepareError: "That photo didn’t open.",
+    photoRetry: "Try again", photoChooseAnother: "Choose another", photoAlt: "Private photo preview", photoLoading: "Preparing photo",
+    privateLine: "Note and photo stay private", boundary: "What is kept",
+    boundaryBody: "Only this place, your picks and the time are kept on this device. The note and photo disappear when you close. This never changes the public temperature.",
+    personBoundary: "Saving may ask for an account, then a one-time person check.", action: "Continue to save", confirmAction: "Save to my visits",
+    retry: "Try again", postError: "Couldn’t save. Your draft is still here.",
+    abandonError: "Couldn’t update yet. Your draft is still here. Try again.",
+    cancel: "Check cancelled. Your draft is unchanged.", failure: "Check didn’t finish. Your draft is unchanged.",
+    unavailable: "Check unavailable. Your draft is unchanged.", expired: "Check expired. Your draft is unchanged.",
+    savedTitle: "Added to your visits", duplicateTitle: "Already in your visits",
+    savedBody: "This private signal is on your device.", duplicateBody: "Nothing new was added.", privateResult: "No public post was created",
+    categoryImage: "Category illustration", selected: "selected",
+    backToPlace: "Back to place", discardTitle: "Discard this draft?",
+    discardBody: "Your picks, note and photo will disappear.", keepEditing: "Keep editing", discard: "Discard",
+    visit: "Visit", contribution: "Contribution",
   },
   ko: {
-    close: "로컬 시그널 닫기",
-    dismiss: "로컬 시그널 화면 닫기",
-    eyebrow: "이 장소에서",
-    title: "로컬 시그널 남기기",
-    body: "지금 이 장소의 분위기를 이 기기에만 남는 관찰로 기록하세요.",
-    choose: "무엇을 발견했나요?",
-    chooseHelp: "하나 이상 골라주세요. 장소 출처 정보가 아닌 나의 관찰입니다.",
-    note: "선택적 로컬 메모",
-    notePlaceholder: "이 로컬 관찰을 위한 짧은 메모",
-    noteHelp: "메모는 작성 중에만 남고 게시하거나 닫으면 폐기됩니다.",
-    boundary: "개인정보와 이용 범위",
-    boundaryBody: "태그와 게시 시각만 기기에 남아요. 메모와 사진은 화면을 닫으면 폐기되며 업로드하지 않습니다.",
-    personBoundary: "이 화면에서만 유지되는 확인 결과로 저장을 진행합니다. 계정·ID·자격증명을 만들지 않습니다.",
-    person: "이 작업 확인",
-    retry: "다시 확인",
-    post: "이 기기에 로컬 시그널 저장",
-    update: "이 기기의 로컬 시그널 업데이트",
-    posted: "이 기기에 로컬 시그널을 저장했어요. 선택한 관찰과 시각은 로컬 시그널 기록에만 남고 공개 온도 점수·신호 수·단계·순위는 바뀌지 않습니다.",
-    updated: "이 기기의 로컬 시그널을 업데이트했어요. 선택한 관찰과 시각만 교체되며 공개 온도 점수·신호 수·단계·순위는 바뀌지 않습니다.",
-    postError: "이 기기에 이 로컬 시그널을 저장하지 못했어요. 정확한 작성 내용과 장소는 그대로 열려 있습니다.",
-    success: "확인을 마쳤어요. 이 기기에 로컬 시그널을 저장할 수 있어요.",
-    cancel: "거절했어요. 정확한 작성 내용과 장소는 그대로입니다.",
-    failure: "확인을 완료하지 못했어요. 작성 내용과 장소는 그대로입니다.",
-    unavailable: "확인을 이용할 수 없어요. 작성 내용과 장소는 그대로입니다.",
-    expired: "확인이 만료됐어요. 작성 내용과 장소는 그대로입니다.",
-    alreadyPosted: "이 장소의 로컬 시그널이 이미 기기에 저장되어 있어요. 다시 저장하면 선택한 관찰과 시각만 교체되며 공개 온도는 바뀌지 않습니다.",
-    photo: "사진 추가",
-    photoHelp: "JPEG, PNG, WebP · 최대 10MB",
-    replacePhoto: "사진 교체",
-    removePhoto: "사진 삭제",
-    photoTypeError: "JPEG, PNG 또는 WebP 사진을 선택해 주세요.",
-    photoSizeError: "10 MB 이하의 사진을 선택해 주세요.",
-    photoPrepareError: "사진을 준비하지 못했어요.",
-    photoRetry: "사진 다시 시도",
-    photoChooseAnother: "다른 사진 선택",
-    photoAlt: "로컬 사진 미리보기 — 열린 작성 화면에서만 유지",
+    close: "장소 느낌 닫기", header: "장소 느낌", eyebrow: "지금", title: "이곳 분위기는 어때요?",
+    choose: "느낌을 골라주세요", note: "더 남길 말이 있나요?", notePlaceholder: "선택 메모", photo: "사진 추가",
+    replacePhoto: "교체", removePhoto: "삭제", photoTypeError: "JPEG, PNG 또는 WebP 사진을 골라주세요.",
+    photoSizeError: "10MB 이하 사진을 골라주세요.", photoPrepareError: "사진을 열지 못했어요.",
+    photoRetry: "다시 시도", photoChooseAnother: "다른 사진", photoAlt: "비공개 사진 미리보기", photoLoading: "사진 준비 중",
+    privateLine: "메모와 사진은 공개되지 않아요", boundary: "기기에 남는 것",
+    boundaryBody: "이 장소와 선택한 느낌, 시각만 기기에 남아요. 메모와 사진은 닫을 때 사라지고 공개 온도는 바뀌지 않아요.",
+    personBoundary: "저장할 때 계정 생성 후 일회성 본인 확인을 요청할 수 있어요.", action: "저장하러 가기", confirmAction: "내 방문에 저장",
+    retry: "다시 시도", postError: "저장하지 못했어요. 작성 내용은 그대로예요.",
+    abandonError: "아직 변경하지 못했어요. 작성 내용은 그대로예요. 다시 시도해 주세요.",
+    cancel: "확인을 취소했어요. 작성 내용은 그대로예요.", failure: "확인을 마치지 못했어요. 작성 내용은 그대로예요.",
+    unavailable: "지금은 확인할 수 없어요. 작성 내용은 그대로예요.", expired: "확인 시간이 지났어요. 작성 내용은 그대로예요.",
+    savedTitle: "내 방문에 담았어요", duplicateTitle: "이미 내 방문에 있어요",
+    savedBody: "이 비공개 느낌은 내 기기에만 남아요.", duplicateBody: "새로 추가된 내용은 없어요.", privateResult: "공개 게시물은 만들어지지 않았어요",
+    categoryImage: "카테고리 일러스트", selected: "개 선택",
+    backToPlace: "장소로 돌아가기", discardTitle: "작성 내용을 버릴까요?",
+    discardBody: "고른 느낌과 메모, 사진이 사라져요.", keepEditing: "계속 작성", discard: "버리기",
+    visit: "방문", contribution: "참여",
   },
   ja: {
-    close: "Local Signalを閉じる",
-    dismiss: "Local Signal画面を閉じる",
-    eyebrow: "この場所で",
-    title: "Local Signalを追加",
-    body: "今この場所がどんな雰囲気か、この端末だけの観察として記録します。",
-    choose: "何に気づきましたか？",
-    chooseHelp: "1つ以上選んでください。場所の出典情報ではなく、あなた自身の観察です。",
-    note: "任意のローカルメモ",
-    notePlaceholder: "このローカル観察のための短いメモ",
-    noteHelp: "メモは下書き中だけ保持され、投稿または画面を閉じると破棄されます。",
-    boundary: "プライバシーと利用範囲",
-    boundaryBody: "タグと投稿時刻だけがこの端末に残ります。メモと写真は画面を閉じると破棄され、アップロードされません。",
-    personBoundary: "この画面だけで有効な確認結果で保存を続けます。アカウント、ID、資格情報は作成されません。",
-    person: "この操作を確認",
-    retry: "もう一度確認",
-    post: "この端末にLocal Signalを保存",
-    update: "この端末のLocal Signalを更新",
-    posted: "この端末にLocal Signalを保存しました。選んだ内容と時刻はLocal Signal履歴だけに残り、公開ONDO温度のスコア・件数・レベル・順位は変わりません。",
-    updated: "この端末のLocal Signalを更新しました。選んだ内容と時刻だけが置き換わり、公開ONDO温度のスコア・件数・レベル・順位は変わりません。",
-    postError: "この端末にこのLocal Signalを保存できませんでした。下書きと場所はそのまま開いています。",
-    success: "確認が完了しました。この端末にLocal Signalを保存できます。",
-    cancel: "確認を見送りました。下書きと場所はそのままです。",
-    failure: "確認を完了できませんでした。下書きと場所はそのままです。",
-    unavailable: "確認を利用できません。下書きと場所はそのままです。",
-    expired: "確認の有効期限が切れました。下書きと場所はそのままです。",
-    alreadyPosted: "この場所のLocal Signalはすでにこの端末に保存されています。もう一度保存すると選んだ内容と時刻だけが置き換わり、公開ONDO温度は変わりません。",
-    photo: "写真を追加",
-    photoHelp: "JPEG、PNG、WebP・最大10 MB",
-    replacePhoto: "写真を変更",
-    removePhoto: "写真を削除",
-    photoTypeError: "JPEG、PNG、WebPの写真を選んでください。",
-    photoSizeError: "10 MB以下の写真を選んでください。",
-    photoPrepareError: "写真を準備できませんでした。",
-    photoRetry: "写真をもう一度処理",
-    photoChooseAnother: "別の写真を選ぶ",
-    photoAlt: "ローカル写真のプレビュー — 開いている下書きにのみ保持",
+    close: "スポットの印象を閉じる", header: "スポットの印象", eyebrow: "今", title: "ここはどんな雰囲気？",
+    choose: "近いものを選ぶ", note: "ほかにありますか？", notePlaceholder: "任意のメモ", photo: "写真を追加",
+    replacePhoto: "変更", removePhoto: "削除", photoTypeError: "JPEG、PNG、WebPの写真を選んでください。",
+    photoSizeError: "10MB以下の写真を選んでください。", photoPrepareError: "写真を開けませんでした。",
+    photoRetry: "もう一度", photoChooseAnother: "別の写真", photoAlt: "非公開写真のプレビュー", photoLoading: "写真を準備中",
+    privateLine: "メモと写真は公開されません", boundary: "端末に残るもの",
+    boundaryBody: "この場所、選んだ印象、時刻だけが端末に残ります。メモと写真は閉じると消え、公開温度は変わりません。",
+    personBoundary: "保存時にアカウント作成後、一度だけ本人確認を求める場合があります。", action: "保存へ進む", confirmAction: "訪問履歴に保存",
+    retry: "もう一度", postError: "保存できませんでした。下書きはそのままです。",
+    abandonError: "まだ変更できませんでした。下書きはそのままです。もう一度お試しください。",
+    cancel: "確認をやめました。下書きはそのままです。", failure: "確認を完了できませんでした。下書きはそのままです。",
+    unavailable: "現在確認できません。下書きはそのままです。", expired: "確認時間が過ぎました。下書きはそのままです。",
+    savedTitle: "訪問履歴に追加しました", duplicateTitle: "すでに訪問履歴にあります",
+    savedBody: "この非公開の印象は端末だけに残ります。", duplicateBody: "新しく追加された内容はありません。", privateResult: "公開投稿は作成されていません",
+    categoryImage: "カテゴリーイラスト", selected: "件選択",
+    backToPlace: "スポットに戻る", discardTitle: "下書きを破棄しますか？",
+    discardBody: "選択、メモ、写真が消えます。", keepEditing: "編集を続ける", discard: "破棄",
+    visit: "訪問", contribution: "参加",
   },
 } as const satisfies Record<SocialLocale, Record<string, string>>
 
 export function LocalSignalLayerB() {
   const { state, actions } = useOndoB()
   const { actions: activityActions } = useBActivityProfile()
-  const [draftNonce, setDraftNonce] = useState("")
+  const [flow, sendFlow] = useReducer(reduceLocalSignalFlowB, INITIAL_LOCAL_SIGNAL_FLOW_STATE_B)
+  const [draftRevision, setDraftRevision] = useState("")
   const [gateSession, setGateSession] = useState<LocalSignalGateSession | null>(null)
-  const [postFailed, setPostFailed] = useState(false)
+  const [gateBinding, setGateBinding] = useState<LocalSignalDraftBindingB | null>(null)
+  const [gateOpen, setGateOpen] = useState(false)
+  const [closeDecision, setCloseDecision] = useState(false)
+  const [abandonError, setAbandonError] = useState(false)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState<PhotoError | null>(null)
   const [photoCanRetry, setPhotoCanRetry] = useState(false)
   const [photoFailedOnce, setPhotoFailedOnce] = useState(false)
-  const layerRef = useRef<HTMLElement>(null)
+  const [photoPreparing, setPhotoPreparing] = useState(false)
+  const revisionSerialRef = useRef(0)
   const checkRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const keepEditingRef = useRef<HTMLButtonElement>(null)
+  const photoAddRef = useRef<HTMLButtonElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const photoUrlRef = useRef<string | null>(null)
   const photoPreparationRef = useRef(0)
   const photoSectionRef = useRef<HTMLElement>(null)
   const photoErrorRef = useRef<HTMLParagraphElement>(null)
   const postErrorRef = useRef<HTMLParagraphElement>(null)
+  const abandonErrorRef = useRef<HTMLParagraphElement>(null)
   const draft = state.localSignalDraft
   const venue = draft ? canonicalMapVenueById(draft.venueId) : undefined
   const locale = state.locale
-  const socialLocale: SocialLocale = locale
-  const copy = COPY[socialLocale]
+  const copy = COPY[locale]
   const open = state.tab === "ondo" && Boolean(draft && venue && state.surface.kind === "venue" && state.surface.venueId === draft.venueId)
-  const activeVenueId = open && draft && venue ? venue.id : null
-  useModalIsolation(open, layerRef)
+  const sheetPresence = useSheetPresence(open && draft && venue ? draft : null)
+  const presentedDraft = sheetPresence.value
+  const presentedVenue = presentedDraft ? canonicalMapVenueById(presentedDraft.venueId) : undefined
+  const activeVenueId = presentedVenue?.id ?? null
+  // The domain subject clears one render before useSheetPresence commits its
+  // retained exit phase. Mark that interim frame as closing so SheetB freezes
+  // the accepted discard decision, rather than an apparently live draft,
+  // while its outer layer owns the painted exit interval.
+  const presentedSignalPhase = open && sheetPresence.phase === "open" ? "open" : "closing"
+
+  function nextDraftRevision(venueId: string) {
+    revisionSerialRef.current += 1
+    return `draft:${venueId}:${revisionSerialRef.current}`
+  }
+
+  function releasePhotoUrl() {
+    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
+    photoUrlRef.current = null
+    setPhotoUrl(null)
+  }
 
   useEffect(() => {
     photoPreparationRef.current += 1
     setGateSession(null)
-    setPostFailed(false)
+    setGateBinding(null)
+    setGateOpen(false)
+    setCloseDecision(false)
+    setAbandonError(false)
     setPhotoFile(null)
     setPhotoError(null)
     setPhotoCanRetry(false)
     setPhotoFailedOnce(false)
+    setPhotoPreparing(false)
     if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
     photoUrlRef.current = null
     setPhotoUrl(null)
-    setDraftNonce(activeVenueId ? `${activeVenueId}:${Date.now()}:${Math.random().toString(36).slice(2)}` : "")
+    setDraftRevision(activeVenueId ? nextDraftRevision(activeVenueId) : "")
+    sendFlow({ type: "reset" })
   }, [activeVenueId])
 
   useEffect(() => {
     function returnFromGate(event: Event, outcome: LocalSignalGateSession["outcome"]) {
-      const detail = event instanceof CustomEvent ? event.detail as BLocalSignalActionReturn & { gateOutcome?: Exclude<LocalSignalGateSession["outcome"], "success"> } : null
+      const payload = event instanceof CustomEvent
+        ? event.detail as BLocalSignalActionReturn & { gateOutcome?: Exclude<LocalSignalGateSession["outcome"], "success"> }
+        : null
+      const detail = actionReturnFromBEvent(payload)
       if (!detail || detail.cta !== "SUBMIT_LOCAL_SIGNAL" || detail.venueId !== activeVenueId) return
-      setDraftNonce(detail.draftNonce)
-      const restored = restoreBActionGateSession(window.sessionStorage)
+      const context = privateContextForBAction(detail)
+      if (!context || context.cta !== "SUBMIT_LOCAL_SIGNAL") return
+      const restored = restoreBActionGateSession(window.sessionStorage, new Date(), actionGateSessionOptions())
       const expiresAt = restored.person.expiresAt ? Date.parse(restored.person.expiresAt) : Date.now()
-      setGateSession({ origin: "local_signal", venueId: detail.venueId, draftNonce: detail.draftNonce, issuedAt: Date.now(), expiresAt, outcome: detail.gateOutcome ?? outcome })
+      const gateOutcome = payload?.gateOutcome ?? outcome
+      const returnedBinding = createLocalSignalDraftBindingB({
+        venueId: detail.venueId,
+        revision: context.draftNonce,
+        tags: context.tags,
+        note: context.note,
+        photo: photoUrlRef.current ? "preview" : "none",
+      })
+      setDraftRevision(context.draftNonce)
+      setGateBinding(returnedBinding)
+      setGateSession({ origin: "local_signal", venueId: detail.venueId, draftNonce: context.draftNonce, issuedAt: Date.now(), expiresAt, outcome: gateOutcome })
+      setGateOpen(false)
+      sendFlow({ type: gateOutcome === "success" ? "gate_ready" : "gate_returned" })
       window.requestAnimationFrame(() => checkRef.current?.focus({ preventScroll: true }))
     }
     const complete = (event: Event) => returnFromGate(event, "success")
@@ -237,38 +258,53 @@ export function LocalSignalLayerB() {
 
   useEffect(() => {
     if (!open) return
-    const discardOnTraversal = () => {
-      discardPendingSignalAction()
+    const discardOnTraversal = (event: Event) => {
+      if (!discardPendingSignalAction()) {
+        // This capture listener runs before the map's traversal consumer. Keep
+        // the exact draft mounted when its durable gate record cannot be
+        // retired; the user can retry after storage becomes available again.
+        event.preventDefault()
+        event.stopImmediatePropagation()
+        return
+      }
       actions.closeLocalSignal()
     }
-    window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal)
-    return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal)
-  }, [actions, activeVenueId, draftNonce, open])
+    window.addEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal, { capture: true })
+    return () => window.removeEventListener(B_DISCOVERY_TRAVERSAL_EVENT, discardOnTraversal, { capture: true })
+  }, [actions, activeVenueId, draftRevision, gateBinding, gateOpen, gateSession, open])
 
   useEffect(() => {
     if (!gateSession || gateSession.outcome !== "success") return
     const remaining = gateSession.expiresAt - Date.now()
     if (remaining <= 0) {
       setGateSession((current) => current ? { ...current, outcome: "expired" } : null)
+      sendFlow({ type: "gate_returned" })
       return
     }
     const timer = window.setTimeout(() => {
       setGateSession((current) => current?.outcome === "success" ? { ...current, outcome: "expired" } : current)
+      sendFlow({ type: "gate_returned" })
     }, remaining)
     return () => window.clearTimeout(timer)
   }, [gateSession])
 
   useEffect(() => {
-    if (!open) return
-    const frame = window.requestAnimationFrame(() => layerRef.current?.focus({ preventScroll: true }))
+    if (!closeDecision) return
+    const frame = window.requestAnimationFrame(() => keepEditingRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
-  }, [open])
+  }, [closeDecision])
 
   useEffect(() => {
-    if (!postFailed) return
-    const frame = window.requestAnimationFrame(() => postErrorRef.current?.scrollIntoView({ block: "nearest" }))
+    if (flow.outcome !== "failed") return
+    const frame = window.requestAnimationFrame(() => postErrorRef.current?.focus({ preventScroll: true }))
     return () => window.cancelAnimationFrame(frame)
-  }, [postFailed])
+  }, [flow.outcome])
+
+  useEffect(() => {
+    if (!abandonError) return
+    const frame = window.requestAnimationFrame(() => abandonErrorRef.current?.focus({ preventScroll: true }))
+    return () => window.cancelAnimationFrame(frame)
+  }, [abandonError])
 
   useEffect(() => () => {
     photoPreparationRef.current += 1
@@ -276,87 +312,120 @@ export function LocalSignalLayerB() {
     photoUrlRef.current = null
   }, [])
 
-  if (!open || !draft || !venue) return null
-  const activeDraft = draft
-  const activeVenue = venue
-  const name = venueNamePresentation(venue.name.ko, locale)
-  const alreadyPosted = state.localSignalPostedVenueIds.includes(venue.id)
-  const photoFailed = photoError !== null
+  if (!presentedDraft || !presentedVenue) return null
+  const activeDraft = presentedDraft
+  const activeVenue = presentedVenue
+  const name = venueNamePresentation(presentedVenue.name.ko, locale)
+  const currentBinding = createLocalSignalDraftBindingB({
+    venueId: activeVenue.id,
+    revision: draftRevision,
+    tags: activeDraft.tags,
+    note: activeDraft.note,
+    photo: photoUrl ? "preview" : "none",
+  })
   const exactGateSession = gateSession
     && gateSession.origin === "local_signal"
     && gateSession.venueId === activeVenue.id
-    && gateSession.draftNonce === draftNonce
+    && gateSession.draftNonce === draftRevision
+    && sameLocalSignalDraftBindingB(gateBinding, currentBinding)
       ? gateSession
       : null
   const gateReturn = exactGateSession?.outcome ?? null
   const personReady = exactGateSession?.outcome === "success" && exactGateSession.expiresAt > Date.now()
-  const signalStage = postFailed ? "post_failed" : personReady ? "ready" : alreadyPosted ? "posted" : gateReturn ?? "draft"
-  const photoStage = photoError ?? (photoUrl ? "ready" : "empty")
+  const dirty = activeDraft.tags.length > 0 || activeDraft.note.length > 0 || Boolean(photoUrl)
+  const terminal = flow.outcome === "unique" || flow.outcome === "duplicate"
+  const photoStage = photoPreparing ? "loading" : photoError ?? (flow.upload === "UPL-PREVIEW" || photoUrl ? "ready" : "empty")
 
-  function discardPendingSignalAction() {
-    const latest = restoreBActionGateSession(window.sessionStorage)
+  function discardPendingSignalAction(expectedRevision = draftRevision) {
+    const latest = restoreBActionGateSession(window.sessionStorage, new Date(), actionGateSessionOptions())
     const pending = latest.pending
+    const context = pending ? privateContextForBAction(pending) : null
+    const expectsPendingAction = gateOpen
+      || (gateBinding?.revision === expectedRevision && gateSession?.outcome === "success")
     if (pending?.cta === "SUBMIT_LOCAL_SIGNAL"
       && pending.venueId === activeVenueId
-      && pending.draftNonce === draftNonce) {
-      abandonPendingBAction(window.sessionStorage, pending)
+      && context?.cta === "SUBMIT_LOCAL_SIGNAL"
+      && context.draftNonce === expectedRevision) {
+      if (!abandonPendingBAction(window.sessionStorage, pending, new Date(), actionGateSessionOptions())) {
+        setAbandonError(true)
+        return false
+      }
+      setAbandonError(false)
+      return true
     }
+    if (expectsPendingAction) {
+      setAbandonError(true)
+      return false
+    }
+    setAbandonError(false)
+    return true
   }
 
-  function returnToPlace() {
-    discardPendingSignalAction()
-    removePhoto()
-    setGateSession(null)
+  function finishAndReturnToPlace() {
+    if (!discardPendingSignalAction(gateBinding?.revision ?? draftRevision)) return
+    // Keep the exact last-painted draft/result visible for SheetB's retained
+    // exit. Volatile photo and gate state are cleared by the activeVenueId
+    // lifecycle only after the retained presentation has actually unmounted.
     actions.closeLocalSignal()
-    window.requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-testid='canonical-local-signal-open']")?.focus({ preventScroll: true }))
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLElement>) {
-    if (event.key === "Escape") {
-      event.preventDefault()
-      returnToPlace()
+  function requestClose() {
+    if (closeDecision) {
+      keepDraftEditing()
       return
     }
-    if (event.key !== "Tab") return
-    const focusable = Array.from(layerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
-      .filter((element) => element.offsetParent !== null)
-    const first = focusable[0]
-    const last = focusable.at(-1)
-    if (!first || !last) return
-    if (document.activeElement === layerRef.current) {
-      event.preventDefault()
-      ;(event.shiftKey ? last : first).focus()
-      return
-    }
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus() }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus() }
+    if (terminal || !dirty) finishAndReturnToPlace()
+    else setCloseDecision(true)
+  }
+
+  function keepDraftEditing() {
+    setCloseDecision(false)
+    window.requestAnimationFrame(() => closeRef.current?.focus({ preventScroll: true }))
+  }
+
+  function invalidateGateBinding() {
+    const oldRevision = gateBinding?.revision ?? draftRevision
+    if (!discardPendingSignalAction(oldRevision)) return false
+    setGateSession(null)
+    setGateBinding(null)
+    setGateOpen(false)
+    setDraftRevision(nextDraftRevision(activeVenue.id))
+    sendFlow({ type: "gate_returned" })
+    return true
   }
 
   function toggleTag(tag: OndoBLocalSignalTag) {
-    setPostFailed(false)
+    if (!invalidateGateBinding()) return
     actions.updateLocalSignalDraft({
       tags: activeDraft.tags.includes(tag) ? activeDraft.tags.filter((item) => item !== tag) : [...activeDraft.tags, tag],
       note: activeDraft.note,
     })
   }
 
+  function updateNote(note: string) {
+    if (!invalidateGateBinding()) return
+    actions.updateLocalSignalDraft({ tags: activeDraft.tags, note })
+  }
+
   function revealPhotoState() {
     window.requestAnimationFrame(() => {
-      if (window.matchMedia("(orientation: landscape) and (max-height: 500px)").matches) {
-        photoSectionRef.current?.scrollIntoView({ block: "start" })
-      } else {
-        photoSectionRef.current?.scrollIntoView({ block: "nearest" })
-        photoErrorRef.current?.scrollIntoView({ block: "nearest" })
+      photoSectionRef.current?.scrollIntoView({ block: "nearest" })
+      if (photoErrorRef.current) {
+        photoErrorRef.current.scrollIntoView({ block: "nearest" })
+        photoErrorRef.current.focus({ preventScroll: true })
       }
     })
   }
 
   async function preparePhoto(file: File, allowQaFailure = true) {
     const preparation = ++photoPreparationRef.current
+    setPhotoPreparing(false)
+    const preservedPreview = Boolean(photoUrlRef.current)
     if (!LOCAL_SIGNAL_PHOTO_TYPES.has(file.type)) {
       setPhotoFile(file)
       setPhotoCanRetry(false)
       setPhotoError("photoTypeError")
+      sendFlow({ type: "photo_failed", preservePreview: preservedPreview })
       revealPhotoState()
       return
     }
@@ -364,6 +433,7 @@ export function LocalSignalLayerB() {
       setPhotoFile(file)
       setPhotoCanRetry(false)
       setPhotoError("photoSizeError")
+      sendFlow({ type: "photo_failed", preservePreview: preservedPreview })
       revealPhotoState()
       return
     }
@@ -372,17 +442,21 @@ export function LocalSignalLayerB() {
       setPhotoFailedOnce(true)
       setPhotoCanRetry(true)
       setPhotoError("photoPrepareError")
+      sendFlow({ type: "photo_failed", preservePreview: preservedPreview })
       revealPhotoState()
       return
     }
+    setPhotoPreparing(true)
     const previousUrl = photoUrlRef.current
     let candidateUrl: string
     try {
       candidateUrl = URL.createObjectURL(file)
     } catch {
+      if (preparation === photoPreparationRef.current) setPhotoPreparing(false)
       setPhotoFile(file)
       setPhotoCanRetry(false)
       setPhotoError("photoPrepareError")
+      sendFlow({ type: "photo_failed", preservePreview: preservedPreview })
       revealPhotoState()
       return
     }
@@ -391,9 +465,11 @@ export function LocalSignalLayerB() {
     } catch {
       URL.revokeObjectURL(candidateUrl)
       if (preparation !== photoPreparationRef.current) return
+      setPhotoPreparing(false)
       setPhotoFile(file)
       setPhotoCanRetry(false)
       setPhotoError("photoPrepareError")
+      sendFlow({ type: "photo_failed", preservePreview: preservedPreview })
       revealPhotoState()
       return
     }
@@ -401,12 +477,19 @@ export function LocalSignalLayerB() {
       URL.revokeObjectURL(candidateUrl)
       return
     }
+    if (!invalidateGateBinding()) {
+      URL.revokeObjectURL(candidateUrl)
+      setPhotoPreparing(false)
+      return
+    }
+    setPhotoPreparing(false)
     setPhotoFile(file)
     setPhotoCanRetry(false)
     setPhotoError(null)
     photoUrlRef.current = candidateUrl
     setPhotoUrl(candidateUrl)
     if (previousUrl) URL.revokeObjectURL(previousUrl)
+    sendFlow({ type: "photo_ready" })
     revealPhotoState()
   }
 
@@ -417,157 +500,286 @@ export function LocalSignalLayerB() {
   }
 
   function removePhoto() {
+    if (!invalidateGateBinding()) return
     photoPreparationRef.current += 1
     setPhotoFile(null)
     releasePhotoUrl()
     setPhotoCanRetry(false)
     setPhotoError(null)
-    revealPhotoState()
-  }
-
-  function releasePhotoUrl() {
-    if (photoUrlRef.current) URL.revokeObjectURL(photoUrlRef.current)
-    photoUrlRef.current = null
-    setPhotoUrl(null)
+    setPhotoPreparing(false)
+    sendFlow({ type: "photo_removed" })
+    window.requestAnimationFrame(() => photoAddRef.current?.focus({ preventScroll: true }))
   }
 
   function beginGate() {
-    setPostFailed(false)
-    const envelope = createBLocalSignalActionReturn({ venueId: activeVenue.id, draftNonce, tags: activeDraft.tags, note: activeDraft.note })
-    if (!requestBActionGate(envelope)) {
+    if (!currentBinding || activeDraft.tags.length === 0 || photoPreparing) return
+    if (!discardPendingSignalAction(gateBinding?.revision ?? draftRevision)) return
+    setGateBinding(currentBinding)
+    setGateSession(null)
+    sendFlow({ type: "gate_requested" })
+    const envelope = createBLocalSignalActionReturn({
+      venueId: activeVenue.id,
+      draftNonce: currentBinding.revision,
+      tags: currentBinding.tags,
+      note: currentBinding.note,
+      photoPreviewUrl: photoUrl,
+    })
+    setGateOpen(true)
+    if (!requestBActionGate(envelope, actionGateSessionOptions())) {
       const issuedAt = Date.now()
-      setGateSession({ origin: "local_signal", venueId: activeVenue.id, draftNonce, issuedAt, expiresAt: issuedAt, outcome: "failure" })
+      setGateOpen(false)
+      setGateSession({ origin: "local_signal", venueId: activeVenue.id, draftNonce: currentBinding.revision, issuedAt, expiresAt: issuedAt, outcome: "failure" })
+      sendFlow({ type: "gate_returned" })
     }
   }
 
   function post() {
+    if (!currentBinding || !sameLocalSignalDraftBindingB(gateBinding, currentBinding)) {
+      sendFlow({ type: "save_failed" })
+      return
+    }
     if (!exactGateSession || exactGateSession.expiresAt <= Date.now()) {
       setGateSession((current) => current ? { ...current, outcome: "expired" } : null)
+      sendFlow({ type: "gate_returned" })
       return
     }
     if (exactGateSession.outcome !== "success" || activeDraft.tags.length === 0) return
-    const actionSession = restoreBActionGateSession(window.sessionStorage)
+    const actionSession = restoreBActionGateSession(window.sessionStorage, new Date(), actionGateSessionOptions())
     const pending = actionSession.pending
-    if (!pending || pending.cta !== "SUBMIT_LOCAL_SIGNAL" || pending.venueId !== activeVenue.id || pending.draftNonce !== draftNonce) {
-      setPostFailed(true)
+    const context = pending ? privateContextForBAction(pending) : null
+    if (!pending
+      || pending.cta !== "SUBMIT_LOCAL_SIGNAL"
+      || pending.venueId !== activeVenue.id
+      || context?.cta !== "SUBMIT_LOCAL_SIGNAL"
+      || context.draftNonce !== currentBinding.revision
+      || context.note !== currentBinding.note
+      || context.tags.length !== currentBinding.tags.length
+      || !context.tags.every((tag, index) => tag === currentBinding.tags[index])) {
+      sendFlow({ type: "save_failed" })
+      return
+    }
+    const payload = createLocalSignalMutationPayloadB({ venueId: activeVenue.id, tags: activeDraft.tags })
+    if (!payload) {
+      sendFlow({ type: "save_failed" })
       return
     }
     const satisfied = new Set<"account" | "person">()
     if (state.account === "ACC-ACTIVE") satisfied.add("account")
     if (actionSession.person.status === "eligible" && actionSession.person.expiresAt && Date.parse(actionSession.person.expiresAt) > Date.now()) satisfied.add("person")
-    const consumed = consumePendingBActionAtMutation(window.sessionStorage, pending, satisfied)
+    const consumed = consumePendingBActionAtMutation(window.sessionStorage, pending, satisfied, new Date(), { ...actionGateSessionOptions(), credential: state.identityCredential })
     if (!consumed) {
-      setPostFailed(true)
+      sendFlow({ type: "save_failed" })
       return
     }
-    if (!actions.markLocalSignalPosted(activeVenue.id)) {
-      restoreConsumedBActionAfterMutationFailure(window.sessionStorage, consumed)
-      setPostFailed(true)
+    sendFlow({ type: "save_requested" })
+    const knownDuplicate = state.localSignalPostedVenueIds.includes(activeVenue.id)
+    let mutationResult: "accepted" | "duplicate" | null = null
+    const finalized = finalizeConsumedBActionWithMutation(
+      window.sessionStorage,
+      consumed,
+      () => {
+        // The coarse, device-persisted venue key survives the session-only
+        // activity receipt. Do not mutate either store a second time when the
+        // same device account has already contributed for this venue.
+        if (knownDuplicate) {
+          mutationResult = "duplicate"
+          return true
+        }
+        const result = activityActions.recordActivityAxes(
+          payload.evidenceId,
+          payload.axes,
+          () => actions.markLocalSignalPosted(activeVenue.id),
+        )
+        if (result === "accepted" || result === "duplicate") mutationResult = result
+        return result === "accepted" || result === "duplicate"
+      },
+      new Date(),
+      actionGateSessionOptions(),
+    )
+    if (!finalized) {
+      sendFlow({ type: "save_failed" })
       return
     }
-    setPostFailed(false)
-    activityActions.recordContribution(`contribution:${activeVenue.id}:${draftNonce}`)
-    finalizeConsumedBAction(window.sessionStorage, consumed)
+    if (!mutationResult) {
+      sendFlow({ type: "save_failed" })
+      return
+    }
+    setGateSession(null)
+    setGateBinding(null)
+    photoPreparationRef.current += 1
+    releasePhotoUrl()
+    setPhotoFile(null)
+    setPhotoError(null)
+    setPhotoPreparing(false)
+    sendFlow({ type: mutationResult === "accepted" ? "save_unique" : "save_duplicate" })
     window.dispatchEvent(new CustomEvent(B_ACTION_GATE_COMPLETE_EVENT, { detail: consumed }))
-    removePhoto()
-    actions.closeLocalSignal()
-    actions.notify(alreadyPosted ? copy.updated : copy.posted)
-    window.requestAnimationFrame(() => document.querySelector<HTMLElement>("[data-testid='canonical-local-signal-open']")?.focus({ preventScroll: true }))
   }
 
-  return (
-    <>
-      <div className={styles.backdrop}>
-        <section
-          ref={layerRef}
-          className={styles.layer}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="local-signal-title"
-          tabIndex={-1}
-          data-testid="ondo-b-local-signal"
-          data-modal-layer-priority="50"
-          data-venue-id={venue.id}
-          data-visual-direction="apple-contribution-strava"
-          data-signal-stage={signalStage}
-          data-photo-stage={photoStage}
-          onKeyDown={handleKeyDown}
-        >
-          <header>
-            <button ref={closeRef} type="button" onClick={returnToPlace} aria-label={copy.close}><ChevronLeft size={20} aria-hidden="true" /></button>
-            <strong>Local Signal</strong>
-            <button type="button" onClick={returnToPlace} aria-label={copy.dismiss}><X size={20} aria-hidden="true" /></button>
-          </header>
-          <div className={styles.body}>
-            <div className={styles.intro}>
-              <div className={styles.mark}><NotebookPen size={24} aria-hidden="true" /></div>
-              <p className={styles.eyebrow}>{copy.eyebrow}</p>
-              <h2 id="local-signal-title">{copy.title}</h2>
-              <p className={styles.place}>{name.officialName}<span>{name.transliteration}</span></p>
-              <p className={styles.lead}>{copy.body}</p>
-            </div>
+  const notice = flow.outcome === "failed" ? copy.postError : gateReturn && gateReturn !== "success" ? copy[gateReturn] : null
 
-            <div className={styles.draft} data-testid="local-signal-draft" data-gate-return={gateReturn ?? "none"}>
-              <div className={styles.observation}>
+  return (
+    <SheetB
+      locale={locale}
+      label={copy.header}
+      onClose={requestClose}
+      navigation="none"
+      variant="full-task"
+      size="full"
+      presenceState={sheetPresence.phase}
+      suspended={gateOpen}
+      initialFocusSelector="[data-testid='local-signal-tag-calm_now']"
+    >
+      <section
+        className={styles.layer}
+        tabIndex={-1}
+        data-testid="ondo-b-local-signal"
+        data-signal-presence={presentedSignalPhase}
+        data-venue-id={activeVenue.id}
+        data-visual-direction="apple-contribution-strava"
+        data-flow-direction="visual-draft-local-result"
+        data-signal-stage={flow.outcome}
+        data-photo-stage={photoStage}
+        data-upl-state={flow.upload}
+      >
+        <header>
+          <span className={styles.headerPlace}><MapPin size={16} aria-hidden="true" />{name.officialName}</span>
+          <strong>{copy.header}</strong>
+          <button ref={closeRef} type="button" data-testid="local-signal-close" onClick={requestClose} aria-label={copy.close}><X size={20} aria-hidden="true" /></button>
+        </header>
+
+        <div className={styles.body} data-testid="local-signal-draft" data-gate-return={gateReturn ?? "none"}>
+          {abandonError ? <p ref={abandonErrorRef} tabIndex={-1} className={`${styles.notice} ${styles.abandonNotice}`} role="alert" data-testid="local-signal-abandon-error"><CircleAlert size={17} aria-hidden="true" />{copy.abandonError}</p> : null}
+          {closeDecision ? (
+            <section className={styles.closeDecision} aria-labelledby="local-signal-discard-title" aria-describedby="local-signal-discard-body">
+              <div className={styles.decisionIcon}><Trash2 size={25} aria-hidden="true" /></div>
+              <h2 id="local-signal-discard-title">{copy.discardTitle}</h2>
+              <p id="local-signal-discard-body">{copy.discardBody}</p>
+              <div className={styles.decisionActions}>
+                <button ref={keepEditingRef} type="button" className={styles.primary} onClick={keepDraftEditing}>{copy.keepEditing}</button>
+                <button type="button" className={styles.secondaryDanger} data-testid="local-signal-discard" onClick={finishAndReturnToPlace}>{copy.discard}</button>
+              </div>
+            </section>
+          ) : terminal ? (
+            <section className={styles.result} data-testid="local-signal-result" data-result={flow.outcome} data-result-tone={flow.outcome === "unique" ? "success" : "neutral"}>
+              <div className={styles.resultAnnouncement} role="status" aria-live="polite">
+                <div className={styles.resultMark} data-testid="local-signal-result-mark">{flow.outcome === "unique" ? <Check size={30} strokeWidth={2.4} aria-hidden="true" /> : <Bookmark size={28} strokeWidth={2.1} aria-hidden="true" />}</div>
+                <p className={styles.eyebrow}>{name.officialName}</p>
+                <h2>{flow.outcome === "unique" ? copy.savedTitle : copy.duplicateTitle}</h2>
+                <p>{flow.outcome === "unique" ? copy.savedBody : copy.duplicateBody}</p>
+                {flow.outcome === "unique" ? <div className={styles.resultAxes} data-testid="local-signal-result-axes" aria-label={`${copy.visit}, ${copy.contribution}`}>
+                  <span><MapPin size={17} aria-hidden="true" />{copy.visit}</span>
+                  <span><Sparkles size={17} aria-hidden="true" />{copy.contribution}</span>
+                </div> : null}
+                <p className={styles.resultTruth}><ShieldCheck size={17} aria-hidden="true" />{copy.privateResult}</p>
+              </div>
+              <button type="button" className={styles.primary} data-testid="local-signal-return" onClick={finishAndReturnToPlace}>{copy.backToPlace}<ArrowRight size={18} aria-hidden="true" /></button>
+            </section>
+          ) : (
+            <>
+              <div className={styles.intro}>
+                <figure className={styles.venueThumb} data-image-kind="category-mood" data-photo-kind="category-illustration" data-source-class="category_illustration">
+                  <img src={canonicalVenueMoodImage(activeVenue)} alt="" loading="lazy" decoding="async" />
+                  <figcaption role="img" aria-label={copy.categoryImage}><Sparkles size={14} aria-hidden="true" /></figcaption>
+                </figure>
+                <div>
+                  <p className={styles.eyebrow}>{copy.eyebrow}</p>
+                  <h2 id="local-signal-title">{copy.title}</h2>
+                  {name.transliteration ? <p className={styles.place}>{name.transliteration}</p> : null}
+                </div>
+              </div>
+
+              <div className={styles.draft}>
                 <fieldset>
                   <legend>{copy.choose}</legend>
-                  <p>{copy.chooseHelp}</p>
                   <div className={styles.tags}>
-                    {TAGS.map((tag) => (
-                      <button key={tag.id} type="button" aria-pressed={draft.tags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>{tag[socialLocale]}</button>
-                    ))}
+                    {TAGS.map((tag) => {
+                      const TagIcon = tag.icon
+                      const selected = activeDraft.tags.includes(tag.id)
+                      return (
+                        <button key={tag.id} type="button" data-testid={`local-signal-tag-${tag.id}`} aria-pressed={selected} onClick={() => toggleTag(tag.id)}>
+                          <TagIcon size={18} strokeWidth={1.9} aria-hidden="true" />
+                          <span>{tag[locale]}</span>
+                          {selected ? <Check className={styles.selectionMark} size={15} strokeWidth={2.6} aria-hidden="true" /> : null}
+                        </button>
+                      )
+                    })}
                   </div>
                 </fieldset>
 
                 <label className={styles.note}>
                   <span>{copy.note}</span>
                   <textarea
+                    data-testid="local-signal-note"
                     maxLength={240}
-                    value={draft.note}
+                    value={activeDraft.note}
                     aria-label={copy.note}
                     placeholder={copy.notePlaceholder}
-                    onChange={(event) => actions.updateLocalSignalDraft({ tags: draft.tags, note: event.target.value })}
+                    onChange={(event) => updateNote(event.target.value)}
                   />
-                  <small>{copy.noteHelp} · {draft.note.length}/240</small>
+                  {activeDraft.note.length > 0 ? <small aria-live="polite">{activeDraft.note.length}/240</small> : null}
                 </label>
-              </div>
 
-              <div className={styles.completion}>
-                <section ref={photoSectionRef} className={styles.photo} data-photo-stage={photoStage}>
-                <div><strong>{copy.photo}</strong><small>{copy.photoHelp}</small></div>
-                <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" tabIndex={-1} onChange={selectPhoto} />
-                {photoUrl ? <figure role="status"><img src={photoUrl} alt={copy.photoAlt} /><figcaption><button type="button" data-testid="local-signal-photo-replace" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.replacePhoto}</button><button type="button" data-testid="local-signal-photo-remove" onClick={removePhoto}><Trash2 size={16} aria-hidden="true" />{copy.removePhoto}</button></figcaption></figure> : null}
-                    {photoError ? <p ref={photoErrorRef} role="alert" data-testid="local-signal-photo-error" data-error={photoError}>{copy[photoError]}{photoError === "photoPrepareError" && photoCanRetry ? <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) void preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button> : <button type="button" data-testid="local-signal-photo-choose-another" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.photoChooseAnother}</button>}</p> : null}
-                {!photoUrl && !photoFailed ? <button type="button" className={styles.photoAdd} onClick={() => photoInputRef.current?.click()}><ImagePlus size={17} aria-hidden="true" />{copy.photo}</button> : null}
+                <section ref={photoSectionRef} className={styles.photo} data-testid="local-signal-photo-slot" data-photo-stage={photoStage} data-has-preview={photoUrl ? "true" : "false"}>
+                  <input ref={photoInputRef} className={styles.photoInput} type="file" accept="image/jpeg,image/png,image/webp" aria-label={copy.photo} data-testid="local-signal-photo-input" tabIndex={-1} onChange={selectPhoto} />
+                  {photoUrl ? (
+                    <figure role="status">
+                      <img data-testid="local-signal-photo-preview" src={photoUrl} alt={copy.photoAlt} />
+                      <figcaption>
+                        <button type="button" data-testid="local-signal-photo-replace" aria-label={copy.replacePhoto} onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" /><span>{copy.replacePhoto}</span></button>
+                        <button type="button" data-testid="local-signal-photo-remove" aria-label={copy.removePhoto} onClick={removePhoto}><Trash2 size={16} aria-hidden="true" /><span>{copy.removePhoto}</span></button>
+                      </figcaption>
+                    </figure>
+                  ) : null}
+                  {photoPreparing ? <p className={styles.photoLoading} role="status"><LoaderCircle size={18} aria-hidden="true" /><span>{copy.photoLoading}</span></p> : null}
+                  {photoError ? (
+                    <p ref={photoErrorRef} tabIndex={-1} role="alert" data-testid="local-signal-photo-error" data-error={photoError}>
+                      <CircleAlert size={17} aria-hidden="true" />
+                      <span>{copy[photoError]}</span>
+                      {photoError === "photoPrepareError" && photoCanRetry ? (
+                        <button type="button" data-testid="local-signal-photo-retry" onClick={() => { if (photoFile) void preparePhoto(photoFile, false) }}><RotateCcw size={16} aria-hidden="true" />{copy.photoRetry}</button>
+                      ) : (
+                        <button type="button" data-testid="local-signal-photo-choose-another" onClick={() => photoInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" />{copy.photoChooseAnother}</button>
+                      )}
+                    </p>
+                  ) : null}
+                  {!photoUrl && !photoError && !photoPreparing ? <button ref={photoAddRef} type="button" className={styles.photoAdd} onClick={() => photoInputRef.current?.click()}><ImagePlus size={18} aria-hidden="true" />{copy.photo}</button> : null}
                 </section>
 
-                <section className={styles.truth}>
-                  <ShieldCheck size={18} aria-hidden="true" />
-                  <span><strong>{copy.boundary}</strong><small>{copy.boundaryBody}</small></span>
-                </section>
+                <details className={styles.truth} data-testid="local-signal-privacy">
+                  <summary data-testid="local-signal-privacy-toggle"><ShieldCheck size={18} aria-hidden="true" /><strong>{copy.boundary}</strong></summary>
+                  <div><p>{copy.boundaryBody}</p><p>{copy.personBoundary}</p></div>
+                </details>
 
-                <p className={styles.personBoundary}>{copy.personBoundary}</p>
-
-                {alreadyPosted ? <p className={styles.already}>{copy.alreadyPosted}</p> : null}
-                {gateReturn ? <p className={personReady ? styles.gateSuccess : styles.gateNotice} role="status"><CircleAlert size={16} aria-hidden="true" />{copy[gateReturn]}</p> : null}
-                {postFailed ? <p ref={postErrorRef} className={styles.error} role="alert" data-testid="local-signal-post-error">{copy.postError}</p> : null}
-
-                <div className={styles.actions}>
-                  {personReady ? (
-                    <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-post" disabled={draft.tags.length === 0} onClick={post}><Send size={18} aria-hidden="true" />{alreadyPosted ? copy.update : copy.post}</button>
-                  ) : (
-                    <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-person-check" disabled={draft.tags.length === 0} onClick={beginGate}>
-                      {gateReturn ? <RotateCcw size={17} aria-hidden="true" /> : <BadgeCheck size={18} aria-hidden="true" />}
-                      {gateReturn ? copy.retry : copy.person}
-                    </button>
-                  )}
-                </div>
+                {notice ? <p ref={postErrorRef} tabIndex={-1} className={styles.notice} role={flow.outcome === "failed" ? "alert" : "status"} data-testid={flow.outcome === "failed" ? "local-signal-post-error" : undefined}><CircleAlert size={17} aria-hidden="true" />{notice}</p> : null}
               </div>
+            </>
+          )}
+        </div>
+
+        {!closeDecision && !terminal ? (
+          <footer>
+            <div className={styles.draftAnchor} data-testid="local-signal-draft-anchor" aria-label={`${activeDraft.tags.length} ${copy.selected}`}>
+              <span className={styles.anchorGlyphs} aria-hidden="true">
+                {activeDraft.tags.slice(0, 3).map((tagId) => {
+                  const TagIcon = TAGS.find((tag) => tag.id === tagId)?.icon ?? Sparkles
+                  return <i key={tagId}><TagIcon size={14} /></i>
+                })}
+              </span>
+              <strong>{activeDraft.tags.length}</strong>
+              <span className={styles.anchorPrivacy}><ShieldCheck size={15} aria-hidden="true" /><span>{copy.privateLine}</span></span>
+              {photoUrl ? <img src={photoUrl} alt={copy.photoAlt} data-testid="local-signal-anchor-photo" /> : null}
             </div>
-          </div>
-        </section>
-      </div>
-
-    </>
+            {personReady ? (
+              <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-post" disabled={activeDraft.tags.length === 0 || flow.outcome === "saving" || photoPreparing} onClick={post}><Send size={18} aria-hidden="true" />{copy.confirmAction}</button>
+            ) : (
+              <button ref={checkRef} type="button" className={styles.primary} data-testid="local-signal-person-check" disabled={activeDraft.tags.length === 0 || gateOpen || photoPreparing} onClick={beginGate}>
+                {gateReturn ? <RotateCcw size={17} aria-hidden="true" /> : <Send size={18} aria-hidden="true" />}
+                {gateReturn ? copy.retry : copy.action}
+              </button>
+            )}
+          </footer>
+        ) : null}
+      </section>
+    </SheetB>
   )
 }

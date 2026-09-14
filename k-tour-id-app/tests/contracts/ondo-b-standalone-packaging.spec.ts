@@ -8,6 +8,9 @@ import { expect, test } from "@playwright/test"
 const APP_ROOT = process.cwd()
 const PROTECTED_A_PROJECT = "appgprj_6a69e0a4fff48191892ff4022ebf08b2"
 const PROTECTED_HISTORICAL_B_PROJECT = "appgprj_6a85de65d6148191aa042ae9c2787dd2"
+const PERSONAL_VERCEL_PROJECT = "prj_w5rckTz9B1DO55fvVRXjQRy9L5RM"
+const PERSONAL_VERCEL_ORG = "team_6kJAloQ9WlswvMtbbCmGI7Er"
+const PERSONAL_VERCEL_NAME = "ondo"
 const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
 
 function filesBelow(root: string, prefix = ""): string[] {
@@ -24,21 +27,60 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
   test.describe.configure({ mode: "serial" })
 
   test("B-STANDALONE-001 declares a deterministic build, scan, and probe lane", () => {
-    const manifest = JSON.parse(readFileSync(resolve(APP_ROOT, "package.json"), "utf8")) as { scripts?: Record<string, string> }
+    const manifest = JSON.parse(readFileSync(resolve(APP_ROOT, "package.json"), "utf8")) as { packageManager?: string; scripts?: Record<string, string> }
     const buildRunner = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/build.mjs"), "utf8")
+    const sourcePreparer = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/prepare.mjs"), "utf8")
     expect(manifest.scripts).toMatchObject({
       "prepare:sites:ondo-b": "node scripts/ondo-b-standalone/prepare.mjs",
       "build:sites:ondo-b": "node scripts/ondo-b-standalone/build.mjs",
       "scan:sites:ondo-b": "node scripts/ondo-b-standalone/scan-artifact.mjs",
       "probe:sites:ondo-b": "node scripts/ondo-b-standalone/probe-http.mjs",
       "guard:deploy:ondo-b": "node scripts/ondo-b-standalone/assert-deploy-target.mjs",
+      "build:vercel:ondo-b": "pnpm prepare:sites:ondo-b && cd .ondo-b-standalone && ../node_modules/.bin/next build --webpack && cd .. && pnpm scan:vercel:ondo-b",
+      "scan:vercel:ondo-b": "ONDO_B_NEXT_SOURCE_ROOT=.ondo-b-standalone ONDO_B_NEXT_ROOT=.ondo-b-standalone/.next node scripts/ondo-b-next-client-artifact.mjs",
     })
+    const vercel = JSON.parse(readFileSync(resolve(APP_ROOT, "vercel.json"), "utf8"))
+    expect(vercel).toMatchObject({
+      framework: "nextjs",
+      buildCommand: "pnpm build:vercel:ondo-b",
+      outputDirectory: ".ondo-b-standalone/.next",
+    })
+    expect(manifest.packageManager).toBe("pnpm@10.8.0")
+    const vercelIgnore = readFileSync(resolve(APP_ROOT, "../.vercelignore"), "utf8")
+    expect(vercelIgnore).toContain("k-tour-id-app/public/og-modern-atlas.png")
+    expect(vercelIgnore).toContain("k-tour-id-app/public/og-ondo.png")
+    expect(vercelIgnore).toContain("k-tour-id-app/tests")
     expect(manifest.scripts?.["test:visual:b"]).toContain("test:visual:b:current && pnpm test:visual:b:production && pnpm test:visual:b:legacy")
     expect(manifest.scripts?.["test:visual:b:production"]).toContain("playwright.production-visual.config.ts")
     expect(manifest.scripts?.["qa:b"]).toContain("test:e2e:a-regression")
     expect(manifest.scripts?.["qa:b"]).toContain("probe:sites:ondo-b")
     expect(buildRunner).toContain('child.once("close"')
     expect(buildRunner).not.toContain('child.once("exit"')
+    expect(sourcePreparer).toContain("metadataBase: new URL(metadataOrigin)")
+    expect(sourcePreparer).toContain("https://ondo-k-tour-id.vercel.app")
+  })
+
+  test("B-STANDALONE-001B isolated source declares its remote-build runtime", () => {
+    const sourcePreparer = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/prepare.mjs"), "utf8")
+    expect(sourcePreparer).toContain('scripts: { build: "next build" }')
+    for (const dependency of ["next", "react", "react-dom", "maplibre-gl", "lucide-react", "typescript", "@types/node", "@types/react", "@types/react-dom"]) {
+      expect(sourcePreparer).toContain(dependency)
+    }
+    expect(sourcePreparer).toContain('exclude: ["node_modules", "dist", "vite.config.ts", "worker"]')
+  })
+
+  test("B-STANDALONE-001A Vercel uploads every public asset required by the isolated build", async () => {
+    const { PUBLIC_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    const ignoredPaths = readFileSync(resolve(APP_ROOT, "../.vercelignore"), "utf8")
+      .split(/\r?\n/)
+      .map((line) => line.trim().replace(/\/$/, ""))
+      .filter((line) => line && !line.startsWith("#") && !line.startsWith("!"))
+    const blockedInputs = PUBLIC_FILES.filter((asset) => {
+      const uploadPath = `k-tour-id-app/${asset}`
+      return ignoredPaths.some((ignored) => uploadPath === ignored || uploadPath.startsWith(`${ignored}/`))
+    })
+
+    expect(blockedInputs).toEqual([])
   })
 
   test("B-STANDALONE-002 keeps both existing hosting identities protected", async () => {
@@ -56,7 +98,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     await expect(prepareStandaloneSource({ projectId: PROTECTED_HISTORICAL_B_PROJECT })).rejects.toThrow("existing protected project identity")
   })
 
-  test("B-STANDALONE-002A deployment guard requires the personal owners and rejects placeholders, protected projects, and the linked Vercel target", async () => {
+  test("B-STANDALONE-002A deployment guard allows only the exact approved personal Vercel target", async () => {
     const { assertStandaloneDeploymentTarget } = await import("../../scripts/ondo-b-standalone/assert-deploy-target.mjs")
     await expect(assertStandaloneDeploymentTarget({ provider: "sites", owner: "organization", sitesProjectId: "appgprj_new" })).rejects.toThrow("personal woogieboogie-jl owner boundary")
     await expect(assertStandaloneDeploymentTarget({ provider: "sites", owner: "woogieboogie-jl", sitesProjectId: "appgprj_local_only_ondo_b_artifact" })).rejects.toThrow("local-only placeholder")
@@ -65,15 +107,32 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
 
     const fixtureRoot = await mkdtemp(resolve(tmpdir(), "ondo-b-vercel-target-"))
     try {
-      const linkedProject = resolve(fixtureRoot, "linked.json")
-      await writeFile(linkedProject, JSON.stringify({ projectId: "prj_w5rckTz9B1DO55fvVRXjQRy9L5RM", orgId: "team_6kJAloQ9WlswvMtbbCmGI7Er", projectName: "ondo" }))
-      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelConfigPath: linkedProject })).rejects.toThrow("currently linked protected project")
+      const approved = resolve(fixtureRoot, "approved.json")
+      await writeFile(approved, JSON.stringify({ projectId: PERSONAL_VERCEL_PROJECT, orgId: PERSONAL_VERCEL_ORG, projectName: PERSONAL_VERCEL_NAME }))
+      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "wrong-user", vercelConfigPath: approved })).rejects.toThrow("personal jaewook-9643 user boundary")
+      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelScope: "some-team", vercelConfigPath: approved })).rejects.toThrow("with --scope")
+      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelConfigPath: approved })).resolves.toEqual({
+        provider: "vercel",
+        owner: "woogieboogie-jl",
+        user: "jaewook-9643",
+        projectId: PERSONAL_VERCEL_PROJECT,
+        orgId: PERSONAL_VERCEL_ORG,
+        projectName: PERSONAL_VERCEL_NAME,
+      })
 
-      const personal = resolve(fixtureRoot, "personal.json")
-      await writeFile(personal, JSON.stringify({ projectId: "prj_personal_ondo", orgId: "team_6kJAloQ9WlswvMtbbCmGI7Er", projectName: "k-tour-id-ondo" }))
-      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "wrong-user", vercelConfigPath: personal })).rejects.toThrow("personal jaewook-9643 user boundary")
-      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelScope: "some-team", vercelConfigPath: personal })).rejects.toThrow("with --scope")
-      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelConfigPath: personal })).resolves.toMatchObject({ provider: "vercel", owner: "woogieboogie-jl", user: "jaewook-9643", projectId: "prj_personal_ondo" })
+      for (const [name, identity] of [
+        ["other-project", { projectId: "prj_other", orgId: PERSONAL_VERCEL_ORG, projectName: PERSONAL_VERCEL_NAME }],
+        ["other-owner", { projectId: PERSONAL_VERCEL_PROJECT, orgId: "team_other", projectName: PERSONAL_VERCEL_NAME }],
+        ["renamed-project", { projectId: PERSONAL_VERCEL_PROJECT, orgId: PERSONAL_VERCEL_ORG, projectName: "other-name" }],
+      ] as const) {
+        const candidate = resolve(fixtureRoot, `${name}.json`)
+        await writeFile(candidate, JSON.stringify(identity))
+        await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelConfigPath: candidate })).rejects.toThrow("outside the approved personal ondo project identity")
+      }
+
+      const protectedVercel = resolve(fixtureRoot, "protected.json")
+      await writeFile(protectedVercel, JSON.stringify({ projectId: PROTECTED_A_PROJECT, orgId: PERSONAL_VERCEL_ORG, projectName: PERSONAL_VERCEL_NAME }))
+      await expect(assertStandaloneDeploymentTarget({ provider: "vercel", owner: "woogieboogie-jl", vercelUser: "jaewook-9643", vercelConfigPath: protectedVercel })).rejects.toThrow("separate unprotected project identity")
     } finally {
       await rm(fixtureRoot, { recursive: true, force: true })
     }
@@ -114,6 +173,18 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "public/brand/ondo-mark-inverse.svg",
       "public/brand/ondo-mark-micro-24.svg",
       "public/brand/ondo-mark.svg",
+      "public/editorial/food/coffee-croissant-illustration-v1.jpg",
+      "public/editorial/food/ondo-category-casual-v1.jpg",
+      "public/editorial/food/ondo-category-chinese-v1.jpg",
+      "public/editorial/food/ondo-category-global-v1.jpg",
+      "public/editorial/food/ondo-category-japanese-v1.jpg",
+      "public/editorial/food/ondo-category-korean-v1.jpg",
+      "public/editorial/food/ondo-category-night-v1.jpg",
+      "public/editorial/food/ondo-category-night-v2.jpg",
+      "public/editorial/food/ondo-category-night-v3.jpg",
+      "public/editorial/food/ondo-category-specialty-v1.jpg",
+      "public/editorial/food/perilla-noodles-illustration-v1.jpg",
+      "public/editorial/food/tteokgalbi-illustration-v1.jpg",
       "public/editorial/japan-first-c01-sesame-oil.jpg",
       "public/editorial/japan-first-c03-seoul-eight-hours.jpg",
       "public/editorial/japan-first-c06-beauty-research.jpg",
@@ -127,7 +198,10 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
     expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
     expect(files).toContain("features/ondo/local-signal-b/local-signal-layer-b.tsx")
+    expect(files).toContain("features/ondo/shared/state/ondo-b-window.d.ts")
+    expect(files).toContain("features/ondo/shared/state/ondo-b-appearance.ts")
     const stagedLayout = readFileSync(resolve(STAGE_ROOT, "app/layout.tsx"), "utf8")
+    const stagedGlobals = readFileSync(resolve(STAGE_ROOT, "app/globals.css"), "utf8")
     const stagedRoot = readFileSync(resolve(STAGE_ROOT, "app/page.tsx"), "utf8")
     const stagedLegacy = readFileSync(resolve(STAGE_ROOT, "app/ondo-b/page.tsx"), "utf8")
     expect(stagedRoot).toContain("<OndoProductB />")
@@ -137,7 +211,13 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(stagedLayout).toContain('url: "/brand/ktour-id-mark-32.png"')
     expect(stagedLayout).toContain('url: "/og-map-first.png"')
     expect(stagedLayout).toContain("robots: { index: false, follow: false }")
+    expect(stagedLayout).toContain("ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT")
+    expect(stagedLayout).toContain('data-ondo-theme="light"')
+    expect(stagedLayout).toContain('data-ondo-theme-preference="system"')
+    expect(stagedGlobals).toContain("--ondo-canvas: #ffffff")
+    expect(stagedGlobals).toContain(':root[data-ondo-theme="dark"]')
     for (const file of [
+      "features/ondo/contracts/execution-mode.ts",
       "features/ondo/after19/after19-global-b-model.ts",
       "features/ondo/after19/after19-global-b.tsx",
       "features/ondo/after19/after19-global-b.module.css",
@@ -148,15 +228,26 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/identity-b/activity-profile-b-provider.tsx",
       "features/ondo/identity-b/profile-reputation-b.tsx",
       "features/ondo/identity-b/profile-reputation-b.module.css",
+      "features/ondo/local-signal-b/local-signal-model-b.ts",
       "features/ondo/pulse-b/pulse-model-b.ts",
       "features/ondo/commerce-b/stable-commerce-model-b.ts",
+      "features/ondo/commerce-b/funding-rail-model-b.ts",
+      "features/ondo/commerce-b/stablecoin-funding-b.tsx",
+      "features/ondo/commerce-b/stablecoin-funding-b.module.css",
       "features/ondo/commerce-b/id-wallet-commerce-b.tsx",
       "features/ondo/commerce-b/id-wallet-commerce-b.module.css",
       "features/ondo/commerce-b/visit-stamp-receipt-b.tsx",
       "features/ondo/commerce-b/visit-stamp-receipt-b.module.css",
       "features/ondo/labs/labs-entry.tsx",
+      "features/ondo/labs/labs-review-truth-b.ts",
       "features/ondo/labs/labs-model.ts",
       "features/ondo/labs/labs.module.css",
+      "features/ondo/shared/ui/modal-layer-priority.ts",
+      "features/ondo/shared/ui/use-sheet-presence.ts",
+      "features/ondo/shared/state/private-note-draft-memory.ts",
+      "features/ondo/shared/state/ondo-b-appearance.ts",
+      "features/ondo/settings/settings-entry-b.module.css",
+      "features/ondo/settings/settings-model-b.ts",
       "features/ondo/place/editorial-place-mount-b.tsx",
       "features/ondo/place/editorial-place-overlay-b.tsx",
       "features/ondo/place/editorial-place-overlay-b.module.css",
@@ -175,15 +266,17 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       .map((file) => readFileSync(resolve(STAGE_ROOT, file), "utf8"))
       .join("\n")
 
+    expect(sourceFiles).not.toContain("features/ondo/connect/table-fixtures.ts")
+    expect(source).not.toContain("table-fixtures")
     expect(source).not.toMatch(/AppProvider|LangProvider|LocationProvider|WalletProvider|useOndo\b|ondo-provider|demo-journey|mock-data|features\/ondo\/(?:commerce\/|identity\/|rewards\/|trust\/|fixtures\/)/i)
-    expect(source).toContain("export function LabsEntryB()")
+    expect(source).toMatch(/export function LabsEntryB\s*\(/)
     expect(source).not.toContain("export function LabsEntry()")
     expect(source).toContain("export function SheetB(")
     expect(source).not.toContain("export function Sheet(")
     expect(source).not.toMatch(/(?:^|["'`])\/(?:demo|wallet|ondo|ask|chat|connect|partner|profile|services|pass|present|journey|benefits|architecture|evidence)(?:[/?"'`]|$)/im)
-    expect(visibleSource).toContain("OOKRW is a device-only product balance")
-    expect(visibleSource).toContain("No wallet, merchant, stablecoin network or payment provider is contacted")
-    expect(visibleSource).toContain("See an ONDO meal benefit for this place")
+    expect(visibleSource).toContain("The device ledger uses OOKRW internally")
+    expect(visibleSource).toContain("No wallet, merchant, stablecoin network or payment provider is currently connected")
+    expect(visibleSource).toContain('demoOffer: "Meal benefit"')
   })
 
   test("B-STANDALONE-005 scanner rejects exact compiled legacy UI identifiers while source-only truth types remain allowed", async () => {
@@ -197,11 +290,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "demo-journey",
       "WalletProvider",
       "k-tour-id.wallet",
+      "ondo-after19-layer",
     ]
     for (const sample of blocked) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(sample)), sample).toBe(true)
     }
-    for (const requiredTruth of ["K-Tour ID ready", "Passport eKYC"]) {
+    for (const requiredTruth of ["K-Tour ID ready", "Passport eKYC", "ondo-after19-lens"]) {
       expect(LEGACY_ARTIFACT_TEXT.some((pattern: RegExp) => pattern.test(requiredTruth)), requiredTruth).toBe(false)
     }
 
@@ -209,13 +303,17 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(contracts).toContain("simulation: null")
   })
 
-  test("B-STANDALONE-005A production package replaces every QA injection seam with a no-op stub", async () => {
+  test("B-STANDALONE-005A production package keeps the public sample path while QA injection remains disabled", async () => {
     const { FORBIDDEN_QA_ARTIFACT_TEXT } = await import("../../scripts/ondo-b-standalone/policy.mjs")
     await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_artifact" })
     const stub = readFileSync(resolve(STAGE_ROOT, "features/ondo/shared/ui/use-qa-controls.ts"), "utf8")
     expect(stub).toContain("QA_RUNTIME_ENABLED = false")
     expect(stub).toContain("readQaScenario() { return null }")
-    expect(stub).toContain("useQaControls() { return false }")
+    expect(stub).toContain("export function enterReviewSample()")
+    expect(stub).toContain("export function exitReviewSample()")
+    expect(stub).toContain("export function useReviewSampleSession()")
+    expect(stub).toContain("window.sessionStorage.setItem(REVIEW_ENABLED_KEY, \"1\")")
+    expect(stub).toContain("export function useQaControls()")
     expect(stub).toContain("readQaRuntime<T extends object>(): T | undefined { return undefined }")
     for (const pattern of FORBIDDEN_QA_ARTIFACT_TEXT as readonly RegExp[]) {
       expect(pattern.test(stub), `${pattern} must not survive in the production stub`).toBe(false)
@@ -225,10 +323,10 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
   test("B-STANDALONE-006 prepared onboarding CSS contains the B-native guest setup and no false-provider surface", async () => {
     await (await import("../../scripts/ondo-b-standalone/prepare.mjs")).prepareStandaloneSource({ projectId: "appgprj_local_ondo_b_artifact" })
     const css = readFileSync(resolve(STAGE_ROOT, "features/ondo/onboarding/official-directory-onboarding.module.css"), "utf8")
-    expect(css).toContain(".sourceIntro")
-    expect(css).toContain(":global([data-variant=\"B\"]) .layer")
-    expect(css).toContain(".personaSelected")
-    expect(css).toContain(".preferenceGroups")
+    expect(css).toContain('.root :global([data-sheet-layer="true"])')
+    expect(css).toContain('.root[data-onboarding-step="intent"]')
+    expect(css).toContain('.choice[aria-checked="true"]')
+    expect(css).toContain(".group")
     expect(css).not.toMatch(/(?:KYC|payment|chat|reward|Labs|After19|demo|simulation)/i)
     const details = readFileSync(resolve(STAGE_ROOT, "data/ondo-venues/canonical-venues.json"), "utf8")
     expect(details).not.toMatch(/"simulation"\s*:/i)
@@ -283,15 +381,20 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
   test("B-STANDALONE-008 current closure ships B-native Pulse Table, After19, and exact return modules", async () => {
     const { SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
     for (const path of [
+      "features/ondo/contracts/execution-mode.ts",
       "features/ondo/connect/tables-entry-b.tsx",
       "features/ondo/connect/pulse-table-b.module.css",
       "features/ondo/after19/after19-global-b-model.ts",
+      "features/ondo/after19/after19-guest-memory-b.ts",
       "features/ondo/after19/after19-global-b.tsx",
       "features/ondo/after19/after19-place-return-b-model.ts",
+      "features/ondo/map/place-return-ui-snapshot-b.ts",
       "features/ondo/identity-b/action-gate-contract-b.ts",
       "features/ondo/identity-b/action-gate-coordinator-b.tsx",
       "features/ondo/identity-b/action-gate-coordinator-b.module.css",
       "features/ondo/contracts/return-to-b.ts",
+      "features/ondo/contracts/return-to.ts",
+      "features/ondo/contracts/return-to-integrity.ts",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })
 
@@ -302,6 +405,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/identity-b/local-check-walkthrough-b.module.css",
       "features/ondo/identity-b/traveler-id-entry-b.tsx",
       "features/ondo/identity-b/traveler-id-entry-b.module.css",
+      "features/ondo/identity-b/traveler-id-status-b.ts",
       "features/ondo/local-signal-b/local-signal-layer-b.tsx",
       "features/ondo/local-signal-b/local-signal-layer-b.module.css",
       "features/ondo/after19/after19-global-b-model.ts",
@@ -330,6 +434,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/identity-b/ktour-id-setup-b.tsx",
       "features/ondo/identity-b/ktour-id-setup-b.module.css",
       "features/ondo/identity-b/ktour-id-setup-model-b.ts",
+      "features/ondo/shared/ui/ktour-id-mark.tsx",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
     for (const path of [
       "public/brand/ondo-lockup.svg",
@@ -368,10 +473,13 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/contracts/domain.ts",
       "features/ondo/contracts/evidence.ts",
       "features/ondo/labs/labs-entry.tsx",
+      "features/ondo/labs/labs-review-truth-b.ts",
       "features/ondo/labs/labs-model.ts",
       "features/ondo/labs/labs.module.css",
       "features/ondo/shared/ui/sheet-b.tsx",
       "features/ondo/shared/ui/ui.module.css",
+      "features/ondo/shared/ui/modal-layer-priority.ts",
+      "features/ondo/shared/ui/use-sheet-presence.ts",
       "features/ondo/shared/ui/use-qa-controls.ts",
     ]
     expect(REQUIRED_B_NATIVE_LABS_FILES).toEqual(required)

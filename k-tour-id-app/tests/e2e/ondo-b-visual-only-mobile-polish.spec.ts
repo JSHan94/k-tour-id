@@ -185,12 +185,11 @@ test.describe("visual-only mobile product polish", () => {
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-my").click()
     const planned = page.getByTestId("my-korea-planned")
-    const saved = page.getByTestId("ondo-b-saved-entry")
-    expect((await box(planned)).y).toBeLessThan((await box(saved)).y)
-    const emptyCopy = page.getByTestId("my-korea-recent-empty").locator("p")
-    const emptyBox = await box(emptyCopy)
-    expect(emptyBox.width).toBeGreaterThan(120)
-    expect(emptyBox.height).toBeLessThan(44)
+    const memoryMap = page.getByTestId("my-korea-map-memory")
+    await expect(planned).toBeVisible()
+    expect((await box(memoryMap)).y).toBeLessThan((await box(planned)).y)
+    await expect(page.getByTestId("ondo-b-saved-entry")).toHaveCount(0)
+    await expect(page.getByTestId("my-korea-recent")).toHaveCount(0)
   })
 
   test("Place decision order keeps Table and meal benefit ahead of optional contribution", async ({ page }) => {

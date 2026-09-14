@@ -699,12 +699,12 @@ export async function setupBVisualCase(page: Page, item: BVisualCase): Promise<L
     await seedFreshOnboarding(page, locale)
     await gotoB(page)
     if (state !== "ONBOARDING-VALUE") {
-      await page.getByTestId("onboarding-step-value").locator("button").first().click()
+      await page.getByTestId("onboarding-personalize-start").click()
       await expect(page.getByTestId("onboarding-step-intent")).toBeVisible()
     }
     if (state === "ONBOARDING-PREFERENCES") {
       await page.getByTestId("persona-travelling").click()
-      await page.getByTestId("onboarding-step-intent").locator("button").filter({ has: page.locator("svg") }).last().click()
+      await page.getByTestId("onboarding-continue").click()
       await expect(page.getByTestId("onboarding-step-preferences")).toBeVisible()
       await page.getByTestId("onboarding-step-preferences").locator("button").nth(1).click()
     }

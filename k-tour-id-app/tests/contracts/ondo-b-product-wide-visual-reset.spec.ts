@@ -14,18 +14,24 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
   test("RESET-001 shared shell owns neutral tokens and concise localized wayfinding", () => {
     const app = source("features/ondo/app/ondo-app-b.tsx")
     const css = source("features/ondo/app/ondo-shell.module.css")
+    const globals = source("app/globals.css")
 
-    expect(css).toContain("--ondo-canvas: #ffffff")
-    expect(css).toContain("--ondo-paper: #f7f7f5")
-    expect(css).toContain("--ondo-ink: #171717")
+    expect(css).toContain("--ondo-paper: var(--ondo-surface-soft)")
+    expect(css).toContain("background: var(--ondo-surface-soft)")
+    expect(css).toContain("color: var(--ondo-ink)")
     expect(css).toContain("--ondo-phone-edge: 16px")
-    expect(app).toContain('data-nav-presentation="labeled-universal-icons"')
+    expect(app).toContain('data-nav-presentation="icon-only-mobile-labeled-desktop"')
     expect(app).toContain("B_NAV_DISPLAY_COPY[state.locale][id]")
     expect(app).toContain('aria-hidden="true"')
     expect(css).toContain(".nav button[data-state=\"selected\"]")
     expect(css).toContain(".stage[data-variant=\"B\"] .navLabel")
+    expect(css).toContain(".navLabel {\n    display: none;")
     expect(css).toContain("opacity: 1")
     expect(css).toContain("@media (prefers-reduced-motion: reduce)")
+    expect(globals).toContain('body:has([data-testid="ondo-b-root"])')
+    expect(globals).toContain("--ondo-canvas: #ffffff")
+    expect(globals).toContain(':root[data-ondo-theme="dark"]')
+    expect(globals).toContain("background: var(--ondo-canvas)")
   })
 
   test("RESET-002 city chrome removes visible active-status copy and keeps heat aura-first", () => {
@@ -49,7 +55,8 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
 
     expect(map).toContain('data-chrome-role="view-action"')
     expect(map).toContain('data-testid="ondo-b-result-truth"')
-    expect(map).toContain('data-pulse-key-presentation="compact-gradient"')
+    expect(map).toContain('data-pulse-key-presentation={city === "jeju" ? "compact-coverage" : "compact-gradient"}')
+    expect(map).toContain('data-editorial-temperature-key={city === "jeju" ? "unscored" : undefined}')
     expect(map).toContain('data-testid="ondo-b-pulse-methodology"')
     expect(map).toContain('data-attribution-presentation="compact-legal"')
     expect(map).toContain("OpenFreeMap")
@@ -60,7 +67,7 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
     expect(css).toContain("--map-edge: var(--ondo-phone-edge, 16px)")
   })
 
-  test("RESET-004 atlas keeps truth in attributes while Place retains progressive source evidence", () => {
+  test("RESET-004 atlas and Place keep source truth in nonvisual metadata while facts remain progressive", () => {
     const map = source("features/ondo/map/map-entry-b.tsx")
     const place = source("features/ondo/place/canonical-place-overlay.tsx")
 
@@ -69,26 +76,28 @@ test.describe("ONDO B product-wide white/ink visual reset", () => {
     expect(map).toContain("data-editorial-count={cityNode.editorialCount}")
     expect(map).toContain("accessibleTruth")
     expect(place).toContain('data-testid="canonical-place-source-summary"')
-    expect(place).toContain('data-source-presentation="compact-ribbon"')
+    expect(place).toContain('data-source-presentation="nonvisual-metadata"')
+    expect(place).toContain("data-detail-source={venue.sourceRefId}")
     expect(place).toContain('data-testid="canonical-source-evidence"')
-    expect(place).toContain('data-source-presentation="progressive-details"')
-    for (const truth of ["copy.sourceBoundary", "copy.sourceBody", "copy.sourceSnapshot", "copy.sourceRecord", "copy.sourceReference"]) {
-      expect(place).toContain(truth)
-    }
+    expect(place).toContain('data-testid="canonical-evidence-drawer"')
+    expect(place).toContain("copy.sourceBoundary")
+    expect(place).not.toContain("<details className={styles.sourceEvidence}")
   })
 
   test("RESET-005 personal settings and the offer canvas finish in neutral ONDO material", () => {
     const settings = source("features/ondo/settings/settings-entry-b.tsx")
+    const settingsCss = source("features/ondo/settings/settings-entry-b.module.css")
     const personal = source("features/ondo/shared/ui/production-local.module.css")
     const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
 
-    expect(settings).toContain('src="/brand/ondo-mark-micro-24.svg"')
+    expect(settings).not.toMatch(/ondo-mark|brandMark|<img/)
+    expect(settings).toContain('data-visual-direction="quiet-mobile-settings"')
     expect(settings).toContain('data-testid="settings-language-control"')
+    expect(settingsCss).toContain("background: var(--ondo-canvas)")
     expect(personal).toContain('grid-template-columns: repeat(3, minmax(0, 1fr))')
-    expect(personal).toContain('.screen[data-testid="ondo-b-settings-entry"] { background: #fff; }')
-    expect(commerce).toContain('.offerOverlay { background: #fff; color: #20201f; }')
-    expect(commerce.lastIndexOf('.offerOverlay { background: #fff; color: #20201f; }'))
-      .toBeGreaterThan(commerce.lastIndexOf('linear-gradient(180deg, #fffaf6 0%, #f0e7df 100%)'))
+    expect(personal).toContain('background: var(--ondo-canvas, #fff)')
+    expect(commerce).toContain("background: var(--ondo-surface-raised, var(--ondo-surface, #fff))")
+    expect(commerce).toContain("color: var(--ondo-ink, #171717)")
   })
 
   test("RESET-006 map paint receipts follow the redesigned mobile occlusion contract", () => {

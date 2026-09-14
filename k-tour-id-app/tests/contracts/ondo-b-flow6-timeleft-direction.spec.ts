@@ -14,19 +14,22 @@ test("FLOW6-DIR-001 Tables, detail, and 19+ expose one stateful Timeleft directi
   expect(gate).toContain('data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined}')
   expect(gate).toContain("data-gate-view={resolvedView}")
   expect(gate).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
-  expect(gateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
+  expect(gateContract).toContain('const table = ondoBTablePolicyById(context?.tableId)')
+  expect(gateContract).toContain('if (!table) return ["account", "person", "age"]')
+  expect(gateContract).toContain('...(table.requiresPerson ? ["person" as const] : [])')
+  expect(gateContract).toContain('...(table.alcohol ? ["age" as const] : [])')
 
   for (const truth of [
-    "Messages and photos stay with this Table.",
-    "No identity provider is connected and no credential is created.",
-    "Only an eligibility result and expiry are kept in this tab.",
-    "Messages and photos remain in this tab.",
+    "Your saved plan, notes and photos stay on this device.",
+    "No identity provider is connected. Identity data is not sent and no credential is created.",
+    "No date of birth is requested or stored. Only a temporary 19+ result returns to this Table; it is not a rule for the venue.",
+    "Local meal plan only · no seat or venue booking is sent.",
   ]) expect(`${tables}\n${gate}`).toContain(truth)
 
   expect(tables).toContain('<details className={styles.tablePrivacy} data-testid="tables-truth-notice">')
   expect(tables).not.toContain("Nothing is booked, sent to the venue, or charged.")
 
-  expect(`${tables}\n${gate}`).not.toMatch(/booking confirmed|reservation confirmed|matched with|live host|live chat|payment completed/i)
+  expect(`${tables}\n${gate}`).not.toMatch(/booking confirmed|reservation confirmed|matched with|live host|live chat|payment completed|joined · \d+ left/i)
 })
 
 test("FLOW6-DIR-002 the social visual system has an explicit warm-atlas palette, staged motion, and reduced-motion closure", () => {
@@ -73,7 +76,8 @@ test("FLOW6-RETURN-004 expired 19+ retry owns a fresh exact return path", () => 
   const gate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
   const returnContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
 
-  expect(gate).toContain("renewBActionReturnTo")
+  expect(gate).toContain("renewExpiredPendingBAction")
+  expect(returnContract).toContain("A failed write leaves the original mounted")
   for (const evidence of ["tableId", "venueId", "draft", "B_ACTION_GATE_TTL_MS", "consumeBActionReturnTo"]) {
     expect(`${tables}\n${gate}\n${returnContract}`).toContain(evidence)
   }

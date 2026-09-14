@@ -27,7 +27,25 @@ async function seedGlobalAfter19(page: Page, {
     preferenceKey: PREFERENCE_KEY,
     sessionKey: SESSION_KEY,
     preference: { version: 1, autoOpen },
-    session: { version: 1, age, ageExpiresAt, mode, activation, expiryNotice: false },
+    session: {
+      version: 1,
+      age,
+      ageExpiresAt,
+      eligibilityReceipt: age === "eligible" && ageExpiresAt ? {
+        schema: "review-age-predicate.v1",
+        predicate: "AGE_GTE_19",
+        outcome: "eligible",
+        issuerType: "REVIEW_FIXTURE",
+        provenanceTruth: "SIMULATED",
+        fixtureId: "FX-AGE-GLOBAL-001",
+        issuedAt: new Date(Date.parse(ageExpiresAt) - 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: ageExpiresAt,
+        disclosure: "predicate_only",
+      } : null,
+      mode,
+      activation,
+      expiryNotice: false,
+    },
   })
 }
 
@@ -65,8 +83,7 @@ test.describe("ONDO B global Manual and Auto After19", () => {
     await expect(gate).toBeVisible()
     await expect(gate.getByTestId("global-after19-return-context")).toHaveAttribute("data-return-city", "seoul")
     await expect(gate.getByTestId("global-after19-return-context")).toContainText("Seoul")
-    await expect(gate).toContainText("Narrows this map to official business types associated with bars and pubs.")
-    await expect(gate).toContainText("No OpenDID provider is connected and no credential is issued")
+    await expect(gate).toContainText("See places that fit a night out on this map.")
     await expect(gate.getByTestId("global-after19-confirm")).toBeFocused()
     await expect(page.getByTestId("maplibre-map")).toHaveAttribute("inert", "")
     await expect(page.getByTestId("ondo-main-nav")).toHaveAttribute("inert", "")
@@ -84,54 +101,108 @@ test.describe("ONDO B global Manual and Auto After19", () => {
     })
     await page.getByTestId("global-after19-confirm").click()
     await expect(gate.locator("[data-gate-view='failure']")).toBeVisible()
-    await expect(gate).toContainText("filters, and map position are unchanged")
+    await expect(gate).toContainText("place and map are still here")
+    await page.getByTestId("global-after19-retry").click()
+    await expect(gate.locator("[data-gate-view='failure']")).toBeVisible()
+    await page.evaluate(() => {
+      ;(window as Window & { __ONDO_B_QA__?: Record<string, string> }).__ONDO_B_QA__ = { after19Global: "success" }
+    })
     await page.getByTestId("global-after19-retry").click()
 
     const banner = page.getByTestId("global-after19-banner")
     await expect(banner).toBeVisible()
-    await expect(banner.getByRole("button", { name: "Turn off After 19 now" })).toBeFocused()
+    const reviewToggle = banner.getByTestId("global-after19-review-toggle")
+    await expect(reviewToggle).toBeFocused()
     await expect(map).toHaveAttribute("data-after19-active", "true")
     await expect(search).toHaveValue("barbecue")
-    await expect.poll(() => page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "{}"), SESSION_KEY)).toMatchObject({
-      age: "eligible",
-      mode: "on",
-      activation: "manual",
-      eligibilityReceipt: {
-        schema: "opendid-age-predicate.v1",
-        predicate: "AGE_GTE_19",
-        outcome: "eligible",
-        issuerType: "SIMULATED_OPENDID_PROVIDER",
-        disclosure: "predicate_only",
-      },
-    })
+    await expect(banner).toHaveAttribute("data-review-result", "true")
+    await expect(page.getByTestId("global-after19-review-provenance")).toHaveCount(0)
+    await expect(page.getByText("SIMULATED", { exact: true })).toHaveCount(0)
+    await reviewToggle.click()
+    const reviewDetails = page.getByTestId("global-after19-review-provenance")
+    await expect(reviewDetails).toBeVisible()
+    await expect(reviewDetails).toContainText("SIMULATED")
+    await expect(reviewDetails).toContainText("FX-AGE-GLOBAL-001")
+    await expect(reviewDetails.locator("time")).toBeVisible()
+    await expect(reviewDetails.getByTestId("global-after19-review-close")).toBeFocused()
+    await page.keyboard.press("Escape")
+    await expect(reviewDetails).toHaveCount(0)
+    await expect(reviewToggle).toBeFocused()
+    await reviewToggle.click()
+    await page.getByTestId("global-after19-review-close").click()
+    await expect(page.getByTestId("global-after19-review-provenance")).toHaveCount(0)
+    await expect(reviewToggle).toBeFocused()
+    await expect.poll(() => page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull()
 
     await page.getByTestId("nav-id").click()
     await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
     await page.getByTestId("nav-ondo").click()
     await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-active", "true")
 
-    await banner.getByRole("button", { name: "Turn off After 19 now" }).click()
+    await reviewToggle.click()
+    await page.getByTestId("global-after19-turn-off").click()
     await expect(map).toHaveAttribute("data-after19-active", "false")
     await expect(search).toHaveValue("barbecue")
     await expect.poll(() => page.evaluate((key) => sessionStorage.getItem(key), BROWSE_SNAPSHOT_KEY)).toBeNull()
     await expect(page.getByTestId("global-after19-off-notice")).toBeVisible()
-    await expect.poll(() => page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "{}").mode, SESSION_KEY)).toBe("manual-off")
+    await expect.poll(() => page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull()
   })
 
-  test("FL-013 unavailable and failure outcomes each recover through one visible retry", async ({ page }) => {
+  test("FL-013 normal route uses an explicit tab-only declaration and opens night view", async ({ page }) => {
     await seedGlobalAfter19(page)
     await seedB(page, { locale: "en", local: { autoNight: false } })
     await openSeoul(page)
     await page.getByTestId("global-after19-toggle").click()
-    await page.evaluate(() => {
-      ;(window as Window & { __ONDO_B_QA__?: { after19Global?: string } }).__ONDO_B_QA__ = { after19Global: "unavailable" }
-    })
-    await page.getByTestId("global-after19-confirm").click()
     const gate = page.getByTestId("global-after19-prompt-layer")
-    await expect(gate.getByRole("dialog")).toHaveAttribute("data-gate-view", "unavailable")
-    await expect(gate).toContainText("19+ check is unavailable")
-    await page.getByTestId("global-after19-retry").click()
+    await expect(gate.getByRole("heading", { name: "Night view" })).toBeVisible()
+    await expect(gate.getByTestId("global-after19-confirm")).toHaveAccessibleName("I’m 19 or older")
+    await page.getByTestId("global-after19-confirm").click()
+    await expect(gate).toHaveCount(0)
+    const banner = page.getByTestId("global-after19-banner")
+    await expect(banner).toBeVisible()
+    await expect(banner).toHaveAttribute("data-review-result", "false")
+    await expect(page.getByTestId("global-after19-review-toggle")).toHaveCount(0)
+    await expect(page.getByText("SIMULATED", { exact: true })).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-active", "true")
+    await expect.poll(() => page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull()
+    await banner.getByRole("button", { name: "Turn off After 19 now" }).click()
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-active", "false")
+  })
+
+  test("FL-013 closing releases the gate even when animation frames are throttled", async ({ page }) => {
+    await seedGlobalAfter19(page)
+    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await openSeoul(page)
+    await page.getByTestId("global-after19-toggle").click()
+    const gate = page.getByTestId("global-after19-prompt-layer")
+    await expect(gate.getByRole("heading", { name: "Night view" })).toBeVisible()
+    await gate.getByTestId("global-after19-confirm").click()
+    await page.evaluate(() => {
+      let frameId = 1_000_000
+      window.requestAnimationFrame = () => frameId++
+      window.cancelAnimationFrame = () => undefined
+    })
+
+    await expect(gate).toHaveCount(0, { timeout: 3_000 })
     await expect(page.getByTestId("global-after19-banner")).toBeVisible()
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-active", "true")
+  })
+
+  test("FL-013 Guest review stays in this document but returns locked after reload", async ({ page }) => {
+    await seedGlobalAfter19(page)
+    await seedB(page, { locale: "en", local: { autoNight: false } })
+    await openSeoul(page)
+    await page.evaluate(() => {
+      ;(window as Window & { __ONDO_B_QA__?: Record<string, string> }).__ONDO_B_QA__ = { after19Global: "success" }
+    })
+    await page.getByTestId("global-after19-toggle").click()
+    await page.getByTestId("global-after19-confirm").click()
+    await expect(page.getByTestId("global-after19-banner")).toBeVisible()
+    await expect.poll(() => page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull()
+
+    await page.reload({ waitUntil: "domcontentloaded" })
+    await expect(page.getByTestId("global-after19-banner")).toHaveCount(0)
+    await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-after19-active", "false")
   })
 
   test("FL-014 auto guard opens a compact banner and manual-off survives reload in the same tab", async ({ page }) => {
@@ -140,16 +211,19 @@ test.describe("ONDO B global Manual and Auto After19", () => {
       age: "eligible",
       ageExpiresAt: "2026-08-20T20:30:00+09:00",
     })
-    await seedB(page, { locale: "en", local: { autoNight: true } })
+    await seedB(page, { locale: "en", session: { account: "ACC-ACTIVE" }, local: { autoNight: true } })
     await openSeoul(page)
     const map = page.getByTestId("ondo-b-map-entry")
     const banner = page.getByTestId("global-after19-banner")
     await expect(banner).toBeVisible()
-    await expect(banner).toContainText("Opened after 19:00 KST")
+    await expect(banner).toHaveAttribute("data-activation", "auto")
+    await expect(banner).toHaveAttribute("data-review-result", "true")
+    await expect(page.getByTestId("global-after19-review-provenance")).toHaveCount(0)
     await expect(map).toHaveAttribute("data-after19-active", "true")
     await expect(page.getByTestId("ondo-b-after19-global")).toHaveAttribute("data-after19-activation", "auto")
 
-    await banner.getByRole("button", { name: "Turn off After 19 now" }).click()
+    await banner.getByTestId("global-after19-review-toggle").click()
+    await page.getByTestId("global-after19-turn-off").click()
     await expect(page.getByTestId("global-after19-off-notice")).toBeVisible()
     await page.reload({ waitUntil: "domcontentloaded" })
     await expect.poll(() => page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "{}").mode, SESSION_KEY)).toBe("manual-off")
@@ -159,10 +233,10 @@ test.describe("ONDO B global Manual and Auto After19", () => {
     await expect(page.getByTestId("ondo-b-after19-global")).toHaveAttribute("data-after19-mode", "manual-off")
   })
 
-  for (const [locale, city, title, localTruth, providerTruth] of [
-    ["en", "Seoul", "Turn on After 19?", "temporary 19+ result stays on this device", "No OpenDID provider is connected"],
-    ["ko", "서울", "After 19을 켤까요?", "임시 19+ 결과가 이 기기에만 남아요", "OpenDID 제공기관에 연결하거나 자격증명을 발급하지 않아요"],
-    ["ja", "ソウル", "After 19をオンにしますか？", "一時的な19歳以上の結果を端末内だけに残します", "OpenDID事業者には接続せず、資格情報も発行しません"],
+  for (const [locale, city, title, visibleTruth, foldedTruth] of [
+    ["en", "Seoul", "Night view", "places that fit a night out", "opens night view in this tab"],
+    ["ko", "서울", "밤 지도", "밤에 어울리는 장소", "이 탭에서만 밤 지도를"],
+    ["ja", "ソウル", "夜の地図", "夜のお出かけに合う場所", "このタブで夜の地図を"],
   ] as const) {
     test(`FL-013 ${locale.toUpperCase()} prompt keeps its copy and 44px mobile controls`, async ({ page }) => {
       await seedGlobalAfter19(page)
@@ -171,10 +245,10 @@ test.describe("ONDO B global Manual and Auto After19", () => {
       await page.getByTestId("global-after19-toggle").click()
       const gate = page.getByTestId("global-after19-prompt-layer")
       await expect(gate.getByRole("heading", { name: title })).toBeVisible()
-      await expect(gate).toContainText(localTruth)
+      await expect(gate).toContainText(visibleTruth)
       const boundary = gate.locator("details")
       await boundary.locator("summary").click()
-      await expect(boundary).toContainText(providerTruth)
+      await expect(boundary).toContainText(foldedTruth)
       await expect(gate.getByTestId("global-after19-return-context")).toContainText(city)
       for (const control of await gate.locator("button:visible, summary:visible").all()) {
         const box = await control.boundingBox()
@@ -183,14 +257,59 @@ test.describe("ONDO B global Manual and Auto After19", () => {
     })
   }
 
-  test("legacy state migrates once into strict B keys without writing age to device storage", async ({ page }) => {
+  for (const [locale, detailsTitle, openLabel, closeLabel, expiresLabel] of [
+    ["en", "Review details", "Open review details", "Close review details", "Expires"],
+    ["ko", "검토 정보", "검토 정보 열기", "검토 정보 닫기", "만료"],
+    ["ja", "レビュー情報", "レビュー情報を開く", "レビュー情報を閉じる", "有効期限"],
+  ] as const) {
+    test(`FL-013 ${locale.toUpperCase()} review provenance is disclosed on demand and returns focus exactly`, async ({ page }) => {
+      const expiresAt = "2026-08-20T20:30:00+09:00"
+      await seedGlobalAfter19(page, {
+        age: "eligible",
+        ageExpiresAt: expiresAt,
+        mode: "on",
+        activation: "manual",
+      })
+      await seedB(page, { locale, session: { account: "ACC-ACTIVE" }, local: { autoNight: false } })
+      await openSeoul(page)
+
+      const toggle = page.getByTestId("global-after19-review-toggle")
+      await expect(toggle).toHaveAccessibleName(openLabel)
+      await expect(toggle).toHaveAttribute("aria-expanded", "false")
+      await expect(toggle).not.toHaveAttribute("aria-controls", /.+/)
+      await expect(page.getByTestId("global-after19-review-provenance")).toHaveCount(0)
+      await expect(page.getByText("SIMULATED", { exact: true })).toHaveCount(0)
+      expect((await toggle.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44)
+
+      await toggle.click()
+      const details = page.getByTestId("global-after19-review-provenance")
+      await expect(details).toBeVisible()
+      await expect(details.getByText(detailsTitle, { exact: true })).toBeVisible()
+      await expect(details.getByText(expiresLabel, { exact: true })).toBeVisible()
+      await expect.poll(async () => Date.parse(await details.locator("time").getAttribute("datetime") ?? "")).toBe(Date.parse(expiresAt))
+      const close = details.getByTestId("global-after19-review-close")
+      await expect(close).toHaveAccessibleName(closeLabel)
+      await expect(close).toBeFocused()
+      await expect(toggle).toHaveAttribute("aria-expanded", "true")
+      await expect(toggle).toHaveAttribute("aria-controls", "global-after19-review-details")
+      await expectNoBlockingAxe(page, details)
+
+      await page.keyboard.press("Escape")
+      await expect(details).toHaveCount(0)
+      await expect(toggle).toBeFocused()
+      await expect(toggle).toHaveAccessibleName(openLabel)
+      await expect(toggle).toHaveAttribute("aria-expanded", "false")
+    })
+  }
+
+  test("legacy unproven age fails closed without writing age to device storage", async ({ page }) => {
     await seedB(page, {
       locale: "en",
       local: { autoNight: true },
       session: { age: "AGE-VERIFIED", ageExpiresAt: "2026-08-20T20:30:00+09:00", after19: "A19-ON" },
     })
     await openSeoul(page)
-    await expect(page.getByTestId("global-after19-banner")).toBeVisible()
+    await expect(page.getByTestId("global-after19-banner")).toHaveCount(0)
     const stored = await page.evaluate(({ preferenceKey, sessionKey }) => ({
       preference: JSON.parse(localStorage.getItem(preferenceKey) ?? "{}"),
       session: JSON.parse(sessionStorage.getItem(sessionKey) ?? "{}"),
@@ -198,7 +317,8 @@ test.describe("ONDO B global Manual and Auto After19", () => {
       deviceAge: JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}").age,
     }), { preferenceKey: PREFERENCE_KEY, sessionKey: SESSION_KEY })
     expect(stored.preference).toEqual({ version: 1, autoOpen: true })
-    expect(stored.session).toMatchObject({ version: 1, age: "eligible", mode: "on" })
+    expect(stored.session).toEqual({})
+    expect(await page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull()
     expect(stored.deviceAge).toBeUndefined()
     expect(stored.deviceAfter19).toBeUndefined()
   })
@@ -212,16 +332,31 @@ test.describe("ONDO B global Manual and Auto After19", () => {
         version: 1,
         age: "eligible",
         ageExpiresAt: "2026-08-20T20:30:00+09:00",
+        eligibilityReceipt: {
+          schema: "review-age-predicate.v1",
+          predicate: "AGE_GTE_19",
+          outcome: "eligible",
+          issuerType: "REVIEW_FIXTURE",
+          provenanceTruth: "SIMULATED",
+          fixtureId: "FX-AGE-GLOBAL-001",
+          issuedAt: "2026-08-19T20:30:00+09:00",
+          expiresAt: "2026-08-20T20:30:00+09:00",
+          disclosure: "predicate_only",
+        },
         mode: "off",
         activation: null,
         expiryNotice: false,
       }))
-      window.dispatchEvent(new Event(eventName))
+      window.dispatchEvent(new CustomEvent(eventName, {
+        detail: JSON.parse(sessionStorage.getItem(key) ?? "{}"),
+      }))
+      sessionStorage.removeItem(key)
     }, { key: SESSION_KEY, eventName: SESSION_EVENT })
     const global = page.getByTestId("ondo-b-after19-global")
     await expect(global).toHaveAttribute("data-after19-age", "eligible")
     await expect(global).toHaveAttribute("data-after19-mode", "off")
     await expect(page.getByTestId("global-after19-banner")).toHaveCount(0)
+    await expect.poll(() => page.evaluate((key) => sessionStorage.getItem(key), SESSION_KEY)).toBeNull()
   })
 
   test("the first useful prompt frame stays inside compact portrait, tablet, and landscape viewports", async ({ page }) => {

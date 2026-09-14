@@ -108,7 +108,7 @@ test("a limited place returns from Local Signal with device evidence and no inve
   await page.getByTestId("local-signal-post").click()
 
   await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", venueId)
-  await expect(page.getByTestId("pulse-local-device-evidence")).toContainText("On this device")
+  await expect(page.getByTestId("pulse-local-device-evidence")).toContainText("Your recent signal")
   await expect(pulse.locator("summary")).toHaveAccessibleName("ONDO temperature · LIMITED")
   await expect(pulse.getByTestId("pulse-score")).toHaveCount(0)
   await expect(pulse.getByTestId("pulse-signal-count")).toHaveCount(0)

@@ -90,8 +90,10 @@ sheet and card.
   and selected state.
 - Desktop rail may become icon-first with localized hover/focus tooltips and
   programmatic names. Selected context must remain unmistakable.
-- Mobile labels are removed only when recognition tests prove the icon is
-  unambiguous; familiar bottom navigation cannot become an icon guessing game.
+- Mobile bottom navigation is icon-only by explicit product decision. Localized
+  accessible names, one unmistakable selected tile, 44px minimum targets and
+  recognition tests prevent the compact dock from becoming an icon guessing
+  game. Desktop may retain visible labels or focus/hover help.
 - Replace duplicated information buttons with contextual key or source actions.
 
 ## 4. Direct response to the ten supplied screenshots

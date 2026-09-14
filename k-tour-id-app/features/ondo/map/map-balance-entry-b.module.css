@@ -1,0 +1,4 @@
+.entry { display:inline-flex; flex:0 0 auto; width:auto; min-width:84px; min-height:44px; align-items:center; justify-content:center; gap:6px; padding:0 10px; border:1px solid var(--ondo-line); border-radius:14px; background:var(--ondo-surface-raised); color:var(--ondo-ink); font:inherit; font-size:12px; font-weight:760; white-space:nowrap; cursor:pointer; font-variant-numeric:tabular-nums; }
+.entry:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }
+.entry svg { flex:0 0 auto; }
+@media (max-width:360px) { .entry { min-width:76px; gap:4px; padding-inline:7px; font-size:12px; } }

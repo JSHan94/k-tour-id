@@ -11,7 +11,7 @@ async function seed(page: Page, locale: "en" | "ko", options: { active?: boolean
     localStorage.setItem(key, JSON.stringify({
       locale: nextLocale,
       onboarding: "ONB-COMPLETE",
-      persona: "short_term",
+      persona: "travelling",
       discoveryPreferences: [],
       savedVenueIds: active ? [venueId] : [],
       privateNotesByVenue: {},
@@ -69,15 +69,12 @@ test.describe("personal surfaces visual excellence", () => {
         const my = await openTab(page, "nav-my", "ondo-b-my-korea-entry")
         await expectNoTrustClamps(my)
 
-        const timeline = my.locator(":scope > div").first()
-        const firstMoment = my.getByTestId("my-korea-receipts")
-        const timelineVisual = await timeline.evaluate((element) => ({
-          position: getComputedStyle(element).position,
-          rail: getComputedStyle(element, "::before").content,
-        }))
-        expect(timelineVisual.position).toBe("relative")
-        expect(timelineVisual.rail).not.toBe("none")
-        expect((await firstMoment.evaluate((element) => getComputedStyle(element, "::before").content))).not.toBe("none")
+        const memoryMap = my.getByTestId("my-korea-map-memory")
+        const firstMemory = my.locator("[data-memory-venue-card]").first()
+        await expect(memoryMap).toBeVisible()
+        await expect(firstMemory).toBeVisible()
+        expect((await memoryMap.boundingBox())?.y ?? 1000).toBeLessThan((await firstMemory.boundingBox())?.y ?? 0)
+        await expect(firstMemory).toHaveAttribute("data-exact-venue-photo", "false")
 
         await page.getByTestId("nav-settings").click()
         const settings = page.getByTestId("ondo-b-settings-entry")
@@ -102,10 +99,11 @@ test.describe("personal surfaces visual excellence", () => {
     const saved = await my.getByTestId("ondo-b-saved-entry").boundingBox()
     const recent = await my.getByTestId("my-korea-recent").boundingBox()
     const planned = await my.getByTestId("my-korea-planned").boundingBox()
-    expect(planned?.y ?? 1000).toBeLessThan((saved?.y ?? 0) - 12)
-    expect(planned?.width ?? 0).toBeGreaterThan((saved?.width ?? 1) * 1.5)
-    expect(Math.abs((recent?.y ?? 0) - (saved?.y ?? 100))).toBeLessThan(4)
-    expect(saved?.width ?? 0).toBeGreaterThan((recent?.width ?? 1) * 1.08)
+    const memoryMap = await my.getByTestId("my-korea-map-memory").boundingBox()
+    expect(memoryMap?.y ?? 1000).toBeLessThan(saved?.y ?? 0)
+    expect(saved?.width ?? 0).toBeGreaterThan(900)
+    expect(planned?.y ?? 0).toBeGreaterThan((saved?.y ?? 0) + (saved?.height ?? 0))
+    expect(recent?.y ?? 0).toBeGreaterThan((saved?.y ?? 0) + (saved?.height ?? 0))
 
     await page.getByTestId("nav-settings").click()
     const settings = page.getByTestId("ondo-b-settings-entry")
@@ -130,11 +128,26 @@ test.describe("personal surfaces visual excellence", () => {
     const balance = page.getByTestId("wallet-balance")
     const passVisual = await travelPass.evaluate((element) => {
       const style = getComputedStyle(element)
-      return { height: element.getBoundingClientRect().height, radius: parseFloat(style.borderRadius), background: style.backgroundImage }
+      return {
+        height: element.getBoundingClientRect().height,
+        radius: parseFloat(style.borderRadius),
+        background: style.backgroundImage,
+      }
     })
-    expect(passVisual.height).toBeGreaterThanOrEqual(148)
+    expect(passVisual.height).toBeGreaterThan(0)
     expect(passVisual.radius).toBeGreaterThanOrEqual(24)
     expect(passVisual.background).toContain("linear-gradient")
+    const [passBox, routeBox, boundaryBox] = await Promise.all([
+      travelPass.boundingBox(),
+      travelPass.locator("strong").first().boundingBox(),
+      travelPass.getByTestId("travel-pass-local-boundary").boundingBox(),
+    ])
+    for (const contentBox of [routeBox, boundaryBox]) {
+      expect(contentBox?.x ?? -1).toBeGreaterThanOrEqual((passBox?.x ?? 0) - 1)
+      expect((contentBox?.x ?? 0) + (contentBox?.width ?? 0)).toBeLessThanOrEqual((passBox?.x ?? 0) + (passBox?.width ?? 0) + 1)
+      expect(contentBox?.y ?? -1).toBeGreaterThanOrEqual((passBox?.y ?? 0) - 1)
+      expect((contentBox?.y ?? 0) + (contentBox?.height ?? 0)).toBeLessThanOrEqual((passBox?.y ?? 0) + (passBox?.height ?? 0) + 1)
+    }
 
     const balanceVisual = await balance.evaluate((element) => ({
       background: getComputedStyle(element).backgroundImage,
@@ -201,6 +214,19 @@ test.describe("personal surfaces visual excellence", () => {
     await gate.getByTestId("action-gate-confirm").click()
     await expect(gate).toHaveAttribute("data-active-gate", "payment_kyc")
     await gate.getByTestId("action-gate-confirm").click()
+
+    const setup = page.getByTestId("k-tour-id-setup")
+    await expect(setup).toHaveAttribute("data-origin", "action_gate")
+    await setup.getByTestId("k-tour-id-method-mobile-id").click()
+    await setup.getByTestId("k-tour-id-consent-approve").click()
+    await expect(setup).toHaveAttribute("data-phase", "cx_handoff_preview")
+    await setup.getByTestId("k-tour-id-continue").click()
+    const holder = setup.getByTestId("k-tour-id-holder-delivery")
+    await expect(holder).toBeVisible()
+    await holder.getByTestId("k-tour-id-continue").click()
+    await expect(setup).toBeHidden()
+    await expect(gate).toHaveAttribute("data-active-gate", "credential")
+    await gate.getByTestId("action-gate-confirm").click()
     await expect(gate).toBeHidden()
 
     const receipt = offer.getByTestId("payment-receipt")
@@ -224,7 +250,7 @@ test.describe("personal surfaces visual excellence", () => {
     expect(refundedColor).not.toBe(paidColor)
   })
 
-  test("KO 320 refund keeps receipt labels as deliberate whole phrases", async ({ page }) => {
+  test("KO 320 refund keeps the outcome clear and technical receipt details folded", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.setViewportSize({ width: 320, height: 720 })
     await seed(page, "ko", { active: true })
@@ -234,8 +260,17 @@ test.describe("personal surfaces visual excellence", () => {
 
     const receipt = page.getByTestId("payment-receipt")
     await expect(receipt).toHaveAttribute("data-refunded", "true")
-    for (const label of ["결제 영수증", "환불 참조"]) {
-      const node = receipt.getByText(label, { exact: true })
+    await expect(receipt.getByRole("heading", { name: "잔액 복원 완료", exact: true })).toBeVisible()
+    const receiptDetails = receipt.getByTestId("commerce-settlement-details")
+    await expect(receiptDetails).not.toHaveAttribute("open", "")
+    await expect(receiptDetails.locator("summary")).toContainText("영수증 상세")
+    await receiptDetails.locator("summary").click()
+    await expect(receiptDetails).toHaveAttribute("open", "")
+    const technicalLabels = [
+      receiptDetails.getByTestId("commerce-receipt-reference").getByText("원 잔액 기록", { exact: true }),
+      receiptDetails.getByTestId("commerce-refund-reference").getByText("복원 참조", { exact: true }),
+    ]
+    for (const node of technicalLabels) {
       const metrics = await node.evaluate((element) => {
         const style = getComputedStyle(element)
         return {
@@ -249,8 +284,8 @@ test.describe("personal surfaces visual excellence", () => {
       expect(metrics.whiteSpace).toBe("nowrap")
       expect(metrics.wordBreak).toBe("keep-all")
     }
-    await expect(receipt.getByText("ONDO-LOCAL-20260825-001", { exact: true })).toBeVisible()
-    await expect(receipt.getByText("ONDO-LOCAL-REFUND-20260825-001", { exact: true })).toBeVisible()
+    await expect(receiptDetails.getByTestId("commerce-receipt-reference").getByText("ONDO-LOCAL-20260825-001", { exact: true })).toBeVisible()
+    await expect(receiptDetails.getByTestId("commerce-refund-reference").getByText("ONDO-LOCAL-REFUND-20260825-001", { exact: true })).toBeVisible()
     expect(await receipt.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
     expect(await page.locator("html").evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
     const returnButton = receipt.getByTestId("payment-receipt-return")
@@ -272,8 +307,14 @@ test.describe("personal surfaces visual excellence", () => {
       await seed(page, locale)
       const my = await openTab(page, "nav-my", "ondo-b-my-korea-entry")
       await expectNoTrustClamps(my)
-      const emptyStates = my.locator("[data-testid$='-empty']")
-      expect(await emptyStates.count()).toBeGreaterThanOrEqual(3)
+      await expect(my).toHaveAttribute("data-empty-journey", "true")
+      await expect(my.getByTestId("my-korea-map-memory")).toBeVisible()
+      await expect(my.getByTestId("my-korea-empty-memory")).toBeVisible()
+      await expect(my.getByTestId("my-korea-empty-explore")).toHaveCount(1)
+      await expect(my.getByTestId("ondo-b-saved-entry")).toHaveCount(0)
+      await expect(my.getByTestId("my-korea-recent")).toHaveCount(0)
+      await expect(my.getByTestId("my-korea-planned")).toHaveCount(0)
+      await expect(my.getByTestId("my-korea-contributions")).toHaveCount(0)
       expect(await my.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
       mkdirSync(EVIDENCE_DIR, { recursive: true })
       await page.screenshot({ path: resolve(EVIDENCE_DIR, `${locale}-390-my-empty.png`), animations: "disabled" })

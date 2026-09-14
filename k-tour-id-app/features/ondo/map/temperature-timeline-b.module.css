@@ -1,0 +1,72 @@
+.controls {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 44px;
+  gap: 0;
+  color: inherit;
+}
+
+.disclosure { min-width: 0; flex: 1; }
+.disclosure > summary {
+  position: relative;
+  display: flex;
+  min-width: 44px;
+  min-height: 44px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  padding: 0 4px;
+  list-style: none;
+  cursor: pointer;
+  border-radius: 9px;
+}
+.disclosure > summary::-webkit-details-marker { display: none; }
+.disclosure > summary small { font-size: 9px; font-weight: 650; line-height: 1.2; white-space: nowrap; }
+.disclosure > summary time { font-size: 14px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.thermalTrace { position: absolute; right: 5px; bottom: 1px; left: 4px; height: 2px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, currentColor 10%, transparent); }
+.thermalTrace b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #eeb35e, #ed714c 55%, #a82b66); transition: width 900ms linear; }
+.controls[data-running="false"] .thermalTrace b { transition: none; }
+
+.play {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  place-items: center;
+  padding: 0;
+  color: inherit;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+}
+.play:hover { background: color-mix(in srgb, currentColor 7%, transparent); }
+.play:focus-visible,
+.disclosure > summary:focus-visible { outline: 2px solid var(--ondo-focus, #3168bd); outline-offset: 1px; }
+
+.panel {
+  position: absolute;
+  z-index: 6;
+  bottom: calc(100% + 10px);
+  left: 0;
+  box-sizing: border-box;
+  width: min(294px, calc(100cqw - 28px));
+  max-height: min(280px, calc(100cqh - 240px));
+  overflow-y: auto;
+  padding: 17px 18px;
+  border: 1px solid var(--ondo-line, #e4e6e8);
+  border-radius: 18px;
+  color: var(--ondo-ink, #171717);
+  background: var(--ondo-surface-raised, #fff);
+  box-shadow: var(--ondo-shadow, 0 10px 30px rgb(0 0 0 / 10%));
+}
+.panel strong { font-size: 14px; font-weight: 750; }
+.panel input { display: block; width: 100%; height: 44px; margin: 3px 0 0; accent-color: var(--ondo-accent, #8c244f); cursor: ew-resize; }
+.ticks { display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; font-variant-numeric: tabular-nums; color: var(--ondo-muted, #666a70); }
+.panel p { margin: 12px 0 0; color: var(--ondo-muted, #666a70); font-size: 12px; line-height: 1.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  .thermalTrace b { transition: none; }
+}

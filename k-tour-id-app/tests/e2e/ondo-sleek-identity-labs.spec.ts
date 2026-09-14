@@ -125,6 +125,78 @@ test("SLK-009 exact / Labs contains no QA author controls or phrases", async ({ 
   await expect(labs).not.toContainText(/fixture|Advance fixture phase|View quote mismatch example|Simulate signer connection/i)
 })
 
+test("SLK-009 public Labs boundary starts one session-only sample and completes the existing reviewed route", async ({ page }) => {
+  await seedB(page, { session: READY_SESSION })
+  await seedCurrentActivity(page, 10)
+  await gotoB(page)
+  await activateTab(page, "My Korea", "ondo-b-my-korea-entry")
+  const milestone = page.getByTestId("open-labs-milestone")
+  if (await milestone.isVisible().catch(() => false)) await milestone.click()
+  else await page.getByTestId("open-labs").click()
+
+  const targetTruth = page.getByTestId("labs-target-truth")
+  await expect(targetTruth).toContainText("Balances stay unchanged")
+  expect(await targetTruth.innerText()).not.toMatch(/USDC|USDT|OOKRW|Testnet|fixture|simulated|preview/i)
+  await page.getByTestId("labs-acknowledge").click()
+  await expect(page).toHaveURL(/(?:\?|&)review=1(?:&|$)/)
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.review.flow.v1"))).toBe("1")
+
+  const labs = page.getByTestId("labs-overlay")
+  await labs.getByTestId("labs-connect-wallet").click()
+  await expect(labs).toHaveAttribute("data-wallet-state", "WAL-READY")
+  await expect(labs.getByTestId("labs-consumer-balances")).toContainText("USD")
+  await expect(labs.getByTestId("labs-consumer-balances")).toContainText("KRW")
+  expect(await labs.getByTestId("labs-consumer-balances").innerText()).not.toMatch(/USDC|USDT|OOKRW|Testnet|fixture|simulated/i)
+  const exchangeCard = labs.getByRole("region", { name: "Exchange route" })
+  await expect(exchangeCard).toContainText("USD $13.50")
+  await expect(exchangeCard).toContainText("KRW ₩13,460")
+  expect(await exchangeCard.innerText()).not.toMatch(/USDC|USDT|OOKRW|Testnet|fixture|simulated/i)
+  await labs.getByTestId("labs-bridge-quote").click()
+  await labs.getByTestId("labs-bridge-confirm").click()
+  await labs.getByTestId("labs-bridge-submit").click()
+  for (let index = 0; index < 3; index += 1) await labs.getByTestId("labs-bridge-advance").click()
+  await expect(labs.getByTestId("labs-bridge-receipt")).toContainText("balances and transactions unchanged")
+  expect(await labs.getByTestId("labs-bridge-receipt").innerText()).not.toMatch(/USDC|USDT|OOKRW|Testnet|fixture|simulated/i)
+
+  const trait = labs.getByTestId("trait-seongsu-card")
+  await trait.getByTestId("trait-retry-seongsu-card").click()
+  await expect(trait).toHaveAttribute("data-trait-state", "eligible")
+
+  // Serialized visit counts are intentionally non-authoritative. Prepare the
+  // public sample history, then record a distinct tenth visit before opting in.
+  await labs.getByTestId("labs-sample-visit-setup").locator("summary").click()
+  await labs.getByTestId("labs-load-sample-visits").click()
+  await expect(labs.getByTestId("visit-stamp-receipt")).toHaveAttribute("data-stamp-count", "9")
+  await labs.getByTestId("visit-proof-check").click()
+  await expect(labs.getByTestId("labs-visit-milestone")).toBeVisible()
+  await labs.getByLabel("Use only place activity in the public badge.").check()
+  await labs.getByTestId("labs-badge-mint").click()
+
+  // The sample keeps the production gate intact: a first-time traveler still
+  // chooses a person-check route, then the exact pending badge action resumes.
+  const badgeGate = page.getByTestId("ondo-b-action-gate")
+  await expect(badgeGate).toHaveAttribute("data-return-cta", "MINT_BADGE")
+  await badgeGate.getByTestId("person-route-choice-mobile_id_cx").click()
+  await badgeGate.getByTestId("local-check-boundary-continue").click()
+  await expect(badgeGate).toBeHidden()
+
+  await expect(labs).toHaveAttribute("data-mint-state", "NFT-MINTED")
+  await expect(labs.getByTestId("labs-badge-result")).toContainText("Nothing was published.")
+
+  for (const viewport of [
+    { width: 320, height: 720 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+  ]) {
+    await page.setViewportSize(viewport)
+    await expect.poll(() => labs.evaluate((root) => root.scrollWidth <= root.clientWidth + 1)).toBe(true)
+    await expect(labs.getByTestId("labs-back")).toBeInViewport()
+  }
+
+  await labs.getByTestId("labs-back").click()
+  await expect(page.getByTestId("ondo-b-my-korea-entry")).toBeVisible()
+})
+
 test("SLK-009 ?qa=1 exposes the deterministic Labs seam", async ({ page }) => {
   await seedAcknowledgedLabs(page, "?qa=1")
   await activateTab(page, "My Korea", "ondo-my-entry")
@@ -152,27 +224,34 @@ test("SLK-009 Japanese B Labs localizes the boundary, decisions, failures, retri
     },
   })
   await seedCurrentActivity(page, 10)
-  await gotoB(page, "?qa=1&scenario=labs-wallet-fail")
+  await gotoB(page, "?qa=1&review=1")
   await expect.poll(async () => {
     await page.getByTestId("nav-my").click({ force: true }).catch(() => undefined)
     return page.getByTestId("ondo-b-my-korea-entry").isVisible().catch(() => false)
   }, { timeout: 30_000 }).toBe(true)
   await page.getByTestId("open-labs").click({ force: true })
 
-  const boundary = page.getByRole("dialog", { name: "技術ラボ" })
-  await expect(boundary).toContainText("ウォレット準備、経路確認、旅の記念ツール")
-  await expect(boundary).toContainText("お金・アカウント・プロバイダー・ネットワークには接続しません")
-  await expect(boundary.getByTestId("labs-acknowledge")).toHaveAccessibleName("内容を確認して見る")
-  await expect(boundary).not.toContainText(/This is an experimental area|I understand|Wallet, balance, bridge/i)
+  const boundary = page.getByRole("dialog", { name: "Labs" })
+  await expect(boundary).toContainText("ウォレット、経路、旅の記念機能を試せます")
+  const targetTruth = boundary.getByTestId("labs-target-truth")
+  await expect(targetTruth).toContainText("USD → KRW サンプル")
+  await expect(targetTruth).toContainText("残高は変更されません")
+  expect(await targetTruth.innerText()).not.toMatch(/USDC|USDT|OOKRW|Testnet|fixture|シミュレーション|プレビュー/i)
+  await expect(boundary.getByTestId("labs-acknowledge")).toHaveAccessibleName("Labsを開く")
+  await expect.poll(() => boundary.getByTestId("labs-boundary-disclosure").evaluate((node) => (node as HTMLDetailsElement).open)).toBe(false)
   await boundary.getByTestId("labs-acknowledge").click()
 
   const labs = page.getByTestId("labs-overlay")
-  await expect(labs).toContainText("資産別残高")
-  await expect(labs).toContainText("チェーン経路チェック")
+  await expect(labs).toContainText("資産")
+  await expect(labs).toContainText("交換ルート")
   await expect(labs).toContainText("店舗の利用条件")
   await expect(labs).toContainText("2026年8月1日")
-  await expect(labs).not.toContainText(/Balances by asset|Bridge hypothesis simulation|Merchant access conditions|Souvenir badge simulation|Target network:|Checked at|Retry this condition|シミュレーション|プレビュー/i)
+  expect(await labs.getByTestId("labs-consumer-balances").innerText()).not.toMatch(/USDC|USDT|OOKRW|Testnet|fixture|シミュレーション|プレビュー/i)
 
+  await page.evaluate(() => {
+    sessionStorage.setItem("ondo.qa.controls.v1", "1")
+    sessionStorage.setItem("ondo.qa.scenario.v1", "labs-wallet-fail")
+  })
   await labs.getByTestId("labs-connect-wallet").click()
   await expect(labs.getByTestId("labs-wallet-outcome")).toContainText("署名の準備を完了できませんでした")
   await expect(labs.getByTestId("labs-connect-wallet")).toHaveAccessibleName("もう一度試す")
@@ -185,8 +264,8 @@ test("SLK-009 Japanese B Labs localizes the boundary, decisions, failures, retri
   await labs.getByTestId("labs-bridge-confirm").click()
   await labs.getByTestId("labs-bridge-submit").click()
   for (let index = 0; index < 3; index += 1) await labs.getByTestId("labs-bridge-advance").click()
-  await expect(labs.getByTestId("labs-bridge-receipt")).toContainText("推定前後 · 閲覧のみ")
-  await expect(labs.getByTestId("labs-bridge-receipt")).toContainText("実際の残高や取引は変更されていません")
+  await expect(labs.getByTestId("labs-bridge-receipt")).toContainText("サンプル結果")
+  await expect(labs.getByTestId("labs-bridge-receipt")).toContainText("サンプルのみ・残高と取引は変更なし")
 
   const trait = labs.getByTestId("trait-seongsu-card")
   await expect(trait).toContainText("聖水テジクッパ")
@@ -194,22 +273,46 @@ test("SLK-009 Japanese B Labs localizes the boundary, decisions, failures, retri
   await page.evaluate(() => sessionStorage.setItem("ondo.qa.scenario.v1", "trait-retry-fail"))
   await trait.getByTestId("trait-retry-seongsu-card").click()
   await expect(trait).toHaveAttribute("data-trait-state", "failed")
-  await expect(trait).toContainText("引き続き確認できません")
+  await expect(trait).toContainText("再確認できませんでした。店舗の最新情報をご確認ください")
   await page.evaluate(() => sessionStorage.removeItem("ondo.qa.scenario.v1"))
   await trait.getByTestId("trait-retry-seongsu-card").click()
   await expect(trait).toHaveAttribute("data-trait-state", "eligible")
-  await expect(trait).toContainText("条件を満たしています")
+  await expect(trait).toContainText("この利用条件は満たしています")
 
+  await labs.getByTestId("labs-sample-visit-setup").locator("summary").click()
+  await labs.getByTestId("labs-load-sample-visits").click()
+  await expect(labs.getByTestId("visit-stamp-receipt")).toHaveAttribute("data-stamp-count", "9")
+  await labs.getByTestId("visit-proof-check").click()
+  await expect(labs.getByTestId("labs-visit-milestone")).toBeVisible()
   const consent = labs.getByLabel("公開バッジには場所のアクティビティだけを使います。")
   await consent.check()
   await page.evaluate(() => sessionStorage.setItem("ondo.qa.scenario.v1", "mint-failed"))
   await labs.getByTestId("labs-badge-mint").click()
+  const badgeGate = page.getByTestId("ondo-b-action-gate")
+  await expect(badgeGate).toHaveAttribute("data-return-cta", "MINT_BADGE")
+  await badgeGate.getByTestId("person-route-choice-mobile_id_cx").click()
+  await page.evaluate(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.set("qa", "1")
+    url.searchParams.set("review", "1")
+    url.searchParams.set("scenario", "mint-failed")
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`)
+    sessionStorage.setItem("ondo.qa.controls.v1", "1")
+    sessionStorage.setItem("ondo.qa.scenario.v1", "mint-failed")
+  })
+  await badgeGate.getByTestId("local-check-boundary-continue").click()
+  await expect(badgeGate).toBeHidden()
   await expect(labs).toHaveAttribute("data-mint-state", "NFT-FAILED")
   await expect(labs).toContainText("バッジ情報を準備できませんでした")
-  await page.evaluate(() => sessionStorage.removeItem("ondo.qa.scenario.v1"))
+  await page.evaluate(() => {
+    const url = new URL(window.location.href)
+    url.searchParams.delete("scenario")
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`)
+    sessionStorage.removeItem("ondo.qa.scenario.v1")
+  })
   await labs.getByTestId("labs-badge-mint").click()
   await expect(labs).toHaveAttribute("data-mint-state", "NFT-MINTED")
-  await expect(labs).toContainText("NFTや取引は作成されていません")
+  await expect(labs).toContainText("公開された内容はありません")
 })
 
 test("SLK-009 B Labs isolates its session from A and cannot restore a badge without the local milestone", async ({ page }) => {
@@ -253,7 +356,7 @@ test("SLK-009 B Labs isolates its session from A and cannot restore a badge with
   await activateTab(page, "My Korea", "ondo-b-my-korea-entry")
   await page.getByTestId("open-labs").click()
   const labs = page.getByTestId("labs-overlay")
-  await expect(labs).toHaveAttribute("data-wallet-state", "WAL-READY")
+  await expect(labs).toHaveAttribute("data-wallet-state", "WAL-DISCONNECTED")
   await expect(labs).toHaveAttribute("data-bridge-state", "BRG-IDLE")
   await expect(labs).toHaveAttribute("data-mint-state", "NFT-LOCKED")
   await expect(labs.getByTestId("labs-badge-mint")).toHaveCount(0)
@@ -304,7 +407,7 @@ test("SLK-009 B Labs rejects incoherent stored bridge and phase tuples", async (
   await expect(labs.getByTestId("labs-bridge-receipt")).toHaveCount(0)
 })
 
-test("SLK-009 B Labs remains usable in memory when session storage writes are blocked", async ({ page }) => {
+test("SLK-009 B Labs sample fails closed when session storage writes are blocked", async ({ page }) => {
   const runtimeErrors: string[] = []
   page.on("pageerror", (error) => runtimeErrors.push(error.message))
   await seedB(page)
@@ -320,10 +423,8 @@ test("SLK-009 B Labs remains usable in memory when session storage writes are bl
     })
   })
   await acknowledge.click()
-  const labs = page.getByTestId("labs-overlay")
-  await expect(labs).toBeVisible()
-  await labs.getByTestId("labs-connect-wallet").click()
-  await expect(labs).toHaveAttribute("data-wallet-state", "WAL-READY")
+  await expect(acknowledge).toBeVisible()
+  await expect(page.getByTestId("labs-overlay")).toHaveCount(0)
   expect(runtimeErrors.filter((message) => !message.includes("Internal Next.js error: Router action dispatched before initialization"))).toEqual([])
 })
 

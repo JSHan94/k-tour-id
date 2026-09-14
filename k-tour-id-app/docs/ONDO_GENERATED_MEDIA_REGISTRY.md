@@ -15,6 +15,15 @@ proof that a depicted event occurred.
 | `public/brand/ondo-mark-micro-16.svg` | 16 px interface and favicon mark | Code-native optical master, 2026-08-27 | Brand mark only; not a government, identity, credential, official, verified or payment seal. |
 | `public/brand/ondo-mark-micro-20.svg` | 20 px interface mark | Code-native optical master, 2026-08-27 | Brand mark only; not a government, identity, credential, official, verified or payment seal. |
 | `public/brand/ondo-mark-micro-24.svg` | 24 px interface and app-icon source mark | Code-native optical master, 2026-08-27 | Brand mark only; not a government, identity, credential, official, verified or payment seal. |
+| `public/editorial/food/ondo-category-korean-v1.jpg` | Venue-list Korean category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue or a dish it serves. |
+| `public/editorial/food/ondo-category-casual-v1.jpg` | Venue-list quick-service category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue or a dish it serves. |
+| `public/editorial/food/ondo-category-japanese-v1.jpg` | Venue-list Japanese category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue or a dish it serves. |
+| `public/editorial/food/ondo-category-chinese-v1.jpg` | Venue-list Chinese category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue or a dish it serves. |
+| `public/editorial/food/ondo-category-global-v1.jpg` | Venue-list international category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue or a dish it serves. |
+| `public/editorial/food/ondo-category-night-v1.jpg` | Venue-list pub and café category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue, menu, availability or age eligibility. |
+| `public/editorial/food/ondo-category-night-v2.jpg` | Venue-list pub and café category mood variant | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue, menu, availability or age eligibility. |
+| `public/editorial/food/ondo-category-night-v3.jpg` | Venue-list pub and café category mood variant | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue, menu, availability or age eligibility. |
+| `public/editorial/food/ondo-category-specialty-v1.jpg` | Venue-list grill and specialty category mood | OpenAI ImageGen, 2026-09-01 | Synthetic category illustration only; never claim this is the named venue or a dish it serves. |
 
 ## Usage constraints
 
@@ -26,6 +35,9 @@ proof that a depicted event occurred.
   credential surfaces.
 - Use the three people images only as wide, shallow editorial bands with copy
   outside the bitmap. Do not derive avatars or portrait identity crops.
+- Keep food category images decorative (`alt=""`) beside the canonical venue
+  name and visible category label. They are not venue photography, menu facts,
+  popularity evidence or proof that a depicted dish is served.
 - Retain the original generated files outside the repository. Product copies are
   versioned, non-destructive derivatives.
 - Any future replacement receives a new filename and registry row so sealed

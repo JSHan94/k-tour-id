@@ -57,7 +57,6 @@ async function completeAccountGate(page: Page, parent: Locator) {
   await expect(gate).toBeVisible()
   await expectNestedModalIsolation(page, parent)
   await gate.getByTestId("account-start").click()
-  await gate.getByTestId("account-complete").click()
   await expect(gate).toHaveCount(0)
   await expectParentRestored(parent)
 }
@@ -181,8 +180,7 @@ async function accumulateAccountPersonAgePaymentAndVisit(page: Page, locale: Loc
   await openExpandedVenueFromPeek(page)
   const emptyDetail = page.getByTestId("canonical-place-overlay")
   await expect(emptyDetail).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
-  await emptyDetail.getByTestId("canonical-venue-tables").click()
-  await expect(emptyDetail.getByTestId("venue-tables-empty")).toBeVisible()
+  await expect(emptyDetail.getByTestId("canonical-place-utilities")).toHaveAttribute("data-utility-layout", "standalone")
   await expect.poll(async () => sessionState(page)).toMatchObject({
     account: "ACC-ACTIVE",
     person: "PER-VERIFIED",
@@ -192,30 +190,30 @@ async function accumulateAccountPersonAgePaymentAndVisit(page: Page, locale: Loc
   })
 }
 
-async function expectInteractiveVenueScope(page: Page, locale: Locale) {
+async function expectInteractiveVenueUtilities(page: Page, locale: Locale) {
   const copy = COPY[locale]
   const detail = page.getByTestId("canonical-place-overlay")
-  const scope = detail.getByTestId("venue-table-scope")
+  const utilities = detail.getByTestId("canonical-place-utilities")
   const nav = page.getByTestId("ondo-main-nav")
   await expect(detail).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
-  await expect(scope).toHaveAttribute("data-empty-state", "open")
+  await expect(utilities).toHaveAttribute("data-utility-layout", "standalone")
   await expect(nav).toHaveAttribute("inert", "")
   await expect(nav).toHaveAttribute("aria-hidden", "true")
   await expect(nav.locator(":scope > button")).toHaveCount(5)
 
-  const back = detail.getByTestId("tables-back-to-venue")
-  const browse = detail.getByTestId("tables-browse-all")
-  await expect(back).toHaveAccessibleName(copy.back)
+  const browse = utilities.getByTestId("canonical-venue-tables")
+  const signal = utilities.getByTestId("canonical-local-signal-open")
   await expect(browse).toHaveAccessibleName(copy.browse)
-  await expect(back).toBeEnabled()
+  await expect(signal).toHaveAccessibleName(locale === "ko" ? "지금 분위기 남기기" : "Add a place note")
   await expect(browse).toBeEnabled()
+  await expect(signal).toBeEnabled()
 
-  await back.focus()
-  await expect(back).toBeFocused()
-  await page.keyboard.press("Tab")
+  await browse.focus()
   await expect(browse).toBeFocused()
+  await page.keyboard.press("Tab")
+  await expect(signal).toBeFocused()
   await page.keyboard.press("Shift+Tab")
-  await expect(back).toBeFocused()
+  await expect(browse).toBeFocused()
 
   await expectNoSeriousAxe(page, "[data-testid='canonical-place-overlay']")
 }
@@ -238,13 +236,10 @@ for (const profile of PROFILES) {
     test.skip(testInfo.project.name !== profile.project, `owned by ${profile.project}`)
     await page.setViewportSize({ width: profile.width, height: profile.height })
     await accumulateAccountPersonAgePaymentAndVisit(page, profile.locale)
-    await expectInteractiveVenueScope(page, profile.locale)
+    await expectInteractiveVenueUtilities(page, profile.locale)
 
-    // Both venue-scoped recovery actions work without a reload.
-    await page.getByTestId("tables-back-to-venue").click()
-    await expect(page.getByTestId("venue-table-scope")).toHaveAttribute("data-empty-state", "closed")
+    // The compact utility opens all Tables without an intervening negative card.
     await page.getByTestId("canonical-venue-tables").click()
-    await page.getByTestId("tables-browse-all").click()
     await expect(page.getByTestId("tables-entry")).toBeVisible()
     await expect(page.getByTestId("nav-tables")).toHaveAttribute("aria-current", "page")
     await expect(page.getByTestId("ondo-main-nav")).not.toHaveAttribute("inert", "")
@@ -265,8 +260,7 @@ for (const profile of PROFILES) {
 
     await page.getByTestId("nav-ondo").click()
     await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
-    await page.getByTestId("canonical-venue-tables").click()
-    await expectInteractiveVenueScope(page, profile.locale)
+    await expectInteractiveVenueUtilities(page, profile.locale)
     await expect(page).toHaveURL(new RegExp(`venueId=${EMPTY_TABLE_VENUE_ID}`))
   })
 }
@@ -293,7 +287,7 @@ test("D5-R3-004 wallet portal owns lower-priority dialogs mounted before and aft
 
   await offer.getByTestId("payment-confirm").click()
   const wallet = page.getByTestId("wallet-connect-sheet")
-  await expect(wallet).toHaveAttribute("data-modal-layer-priority", "200")
+  await expect(wallet).toHaveAttribute("data-modal-layer-priority", "161")
   const before = page.getByTestId("modal-priority-probe-before")
   await expect(before).toHaveAttribute("inert", "")
   await expect(before).toHaveAttribute("aria-hidden", "true")

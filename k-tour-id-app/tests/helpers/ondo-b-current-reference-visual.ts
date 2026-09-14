@@ -1,11 +1,5 @@
 import { expect, type Locator, type Page } from "@playwright/test"
 
-const SYNTHETIC_PASSPORT_IMAGE = {
-  name: "passport-visual-audit.png",
-  mimeType: "image/png",
-  buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
-}
-
 export type CurrentReferenceLocale = "en" | "ko" | "ja"
 export type CurrentReferenceViewport = {
   width: 320 | 390 | 844 | 1440
@@ -13,15 +7,13 @@ export type CurrentReferenceViewport = {
 }
 
 export type CurrentReferenceState =
-  | "onboarding-value"
   | "onboarding-intent"
+  | "onboarding-area"
   | "onboarding-preferences"
   | "opendid-initial"
   | "opendid-consent"
   | "opendid-document"
   | "opendid-face"
-  | "opendid-evidence"
-  | "opendid-issuance"
   | "opendid-holder-delivery"
   | "opendid-credential-ready"
   | "nation-atlas"
@@ -74,13 +66,13 @@ type RuntimeEvidence = {
 const runtimeEvidence = new WeakMap<Page, RuntimeEvidence>()
 
 export const CURRENT_REFERENCE_VISUAL_CASES: readonly CurrentReferenceVisualCase[] = [
-  { id: "CR-PX-001-ONBOARDING-VALUE-EN", locale: "en", viewport: { width: 320, height: 720 }, state: "onboarding-value", surfaceTestId: "onboarding-step-value" },
+  { id: "CR-PX-001-ONBOARDING-AREA-EN", locale: "en", viewport: { width: 320, height: 720 }, state: "onboarding-area", surfaceTestId: "onboarding-step-area" },
   { id: "CR-PX-002-ONBOARDING-INTENT-EN", locale: "en", viewport: { width: 390, height: 844 }, state: "onboarding-intent", surfaceTestId: "onboarding-step-intent" },
   { id: "CR-PX-003-ONBOARDING-PREFERENCES-EN", locale: "en", viewport: { width: 1440, height: 1000 }, state: "onboarding-preferences", surfaceTestId: "onboarding-step-preferences" },
-  { id: "CR-PX-004-ONBOARDING-VALUE-KO", locale: "ko", viewport: { width: 390, height: 844 }, state: "onboarding-value", surfaceTestId: "onboarding-step-value" },
+  { id: "CR-PX-004-ONBOARDING-AREA-KO", locale: "ko", viewport: { width: 390, height: 844 }, state: "onboarding-area", surfaceTestId: "onboarding-step-area" },
   { id: "CR-PX-005-ONBOARDING-INTENT-KO", locale: "ko", viewport: { width: 844, height: 390 }, state: "onboarding-intent", surfaceTestId: "onboarding-step-intent" },
   { id: "CR-PX-006-ONBOARDING-PREFERENCES-KO", locale: "ko", viewport: { width: 320, height: 720 }, state: "onboarding-preferences", surfaceTestId: "onboarding-step-preferences" },
-  { id: "CR-PX-007-ONBOARDING-VALUE-JA", locale: "ja", viewport: { width: 1440, height: 1000 }, state: "onboarding-value", surfaceTestId: "onboarding-step-value" },
+  { id: "CR-PX-007-ONBOARDING-AREA-JA", locale: "ja", viewport: { width: 1440, height: 1000 }, state: "onboarding-area", surfaceTestId: "onboarding-step-area" },
   { id: "CR-PX-008-ONBOARDING-INTENT-JA", locale: "ja", viewport: { width: 320, height: 720 }, state: "onboarding-intent", surfaceTestId: "onboarding-step-intent" },
   { id: "CR-PX-009-ONBOARDING-PREFERENCES-JA", locale: "ja", viewport: { width: 844, height: 390 }, state: "onboarding-preferences", surfaceTestId: "onboarding-step-preferences" },
   { id: "CR-PX-010-OPENDID-INITIAL", locale: "en", viewport: { width: 390, height: 844 }, state: "opendid-initial", surfaceTestId: "k-tour-id-setup" },
@@ -98,8 +90,6 @@ export const CURRENT_REFERENCE_VISUAL_CASES: readonly CurrentReferenceVisualCase
   { id: "CR-PX-022-OPENDID-CONSENT-JA", locale: "ja", viewport: { width: 320, height: 720 }, state: "opendid-consent", surfaceTestId: "k-tour-id-consent" },
   { id: "CR-PX-023-OPENDID-DOCUMENT-EN", locale: "en", viewport: { width: 390, height: 844 }, state: "opendid-document", surfaceTestId: "k-tour-id-passport-document" },
   { id: "CR-PX-024-OPENDID-FACE-KO", locale: "ko", viewport: { width: 844, height: 390 }, state: "opendid-face", surfaceTestId: "k-tour-id-passport-face" },
-  { id: "CR-PX-025-OPENDID-EVIDENCE-JA", locale: "ja", viewport: { width: 1440, height: 1000 }, state: "opendid-evidence", surfaceTestId: "k-tour-id-evidence-preview" },
-  { id: "CR-PX-026-OPENDID-ISSUANCE-EN", locale: "en", viewport: { width: 320, height: 720 }, state: "opendid-issuance", surfaceTestId: "k-tour-id-issuance-preview" },
   { id: "CR-PX-027-OPENDID-HOLDER-KO", locale: "ko", viewport: { width: 390, height: 844 }, state: "opendid-holder-delivery", surfaceTestId: "k-tour-id-holder-delivery" },
   { id: "CR-PX-028-TABLE-JOINED-KO", locale: "ko", viewport: { width: 390, height: 844 }, state: "table-joined", surfaceTestId: "table-detail" },
   { id: "CR-PX-029-MY-KOREA-TABLE-LINKAGE-KO", locale: "ko", viewport: { width: 320, height: 720 }, state: "my-korea-table-linkage", surfaceTestId: "ondo-b-my-korea-entry" },
@@ -114,38 +104,49 @@ export const CURRENT_REFERENCE_VISUAL_CASES: readonly CurrentReferenceVisualCase
 
 const REAL_MAP_STATES = new Set<CurrentReferenceState>(["jeju-editorial", "seoul-map"])
 
+const REVIEW_IDENTITY_STATES = new Set<CurrentReferenceState>([
+  "opendid-consent",
+  "opendid-document",
+  "opendid-face",
+  "opendid-holder-delivery",
+  "opendid-credential-ready",
+])
+
+const REVIEW_TABLE_SUCCESS_STATES = new Set<CurrentReferenceState>([
+  "table-joined",
+  "my-korea-table-linkage",
+])
+
 const KEY_COPY_BY_CASE_ID: Readonly<Record<string, string>> = {
-  "CR-PX-001-ONBOARDING-VALUE-EN": "Find a meal that feels right for your Korea.",
-  "CR-PX-002-ONBOARDING-INTENT-EN": "What brings you to ONDO?",
-  "CR-PX-003-ONBOARDING-PREFERENCES-EN": "What food and dietary needs are you looking for?",
-  "CR-PX-004-ONBOARDING-VALUE-KO": "지금의 나에게 잘 맞는 한국의 한 끼를 찾아보세요.",
-  "CR-PX-005-ONBOARDING-INTENT-KO": "어떤 목적으로 ONDO를 찾았나요?",
-  "CR-PX-006-ONBOARDING-PREFERENCES-KO": "어떤 음식과 식이 조건을 찾고 있나요?",
-  "CR-PX-007-ONBOARDING-VALUE-JA": "今の自分にちょうどいい、韓国の一食を見つけよう。",
-  "CR-PX-008-ONBOARDING-INTENT-JA": "ONDOを使う目的は？",
-  "CR-PX-009-ONBOARDING-PREFERENCES-JA": "どんな食事や食の希望・制限がありますか？",
-  "CR-PX-010-OPENDID-INITIAL": "Set up a private K-Tour ID",
-  "CR-PX-011-OPENDID-CREDENTIAL-READY": "K-Tour ID 준비 완료",
+  "CR-PX-001-ONBOARDING-AREA-EN": "Where should we begin?",
+  "CR-PX-002-ONBOARDING-INTENT-EN": "What brings you here?",
+  "CR-PX-003-ONBOARDING-PREFERENCES-EN": "What sounds good?",
+  "CR-PX-004-ONBOARDING-AREA-KO": "어디서 시작할까요?",
+  "CR-PX-005-ONBOARDING-INTENT-KO": "어떤 한국을 찾고 있나요?",
+  "CR-PX-006-ONBOARDING-PREFERENCES-KO": "지금 끌리는 건?",
+  "CR-PX-007-ONBOARDING-AREA-JA": "どこから始めますか？",
+  "CR-PX-008-ONBOARDING-INTENT-JA": "どんな韓国を探しますか？",
+  "CR-PX-009-ONBOARDING-PREFERENCES-JA": "今の気分は？",
+  "CR-PX-010-OPENDID-INITIAL": "Choose a method",
+  "CR-PX-011-OPENDID-CREDENTIAL-READY": "여행 패스 초안을 저장했어요",
   "CR-PX-012-NATION-ATLAS": "Seoul",
   "CR-PX-013-JEJU-JAPAN-EDITORIAL": "済州のストーリー",
   "CR-PX-014-SEOUL-MAP-PULSE": "서울",
   "CR-PX-015-SEOUL-LIST-PULSE": "Map",
-  "CR-PX-016-TABLES-INDEX": "ソウルで開催予定",
+  "CR-PX-016-TABLES-INDEX": "これからの食事",
   "CR-PX-017-TABLE-DETAIL": "Night bites, one shared table",
   "CR-PX-018-MY-KOREA-EMPTY": "マイ韓国",
   "CR-PX-019-MY-KOREA-ACTIVE": "내 한국",
   "CR-PX-020-ID-WALLET": "Travel Pass",
   "CR-PX-021-SETTINGS-JA": "設定",
-  "CR-PX-022-OPENDID-CONSENT-JA": "依頼内容を確認",
-  "CR-PX-023-OPENDID-DOCUMENT-EN": "Choose one passport image",
-  "CR-PX-024-OPENDID-FACE-KO": "얼굴·라이브니스",
-  "CR-PX-025-OPENDID-EVIDENCE-JA": "最小限の証拠を確認",
-  "CR-PX-026-OPENDID-ISSUANCE-EN": "Prepare OpenDID delivery",
+  "CR-PX-022-OPENDID-CONSENT-JA": "続ける前に確認",
+  "CR-PX-023-OPENDID-DOCUMENT-EN": "Check the passport page",
+  "CR-PX-024-OPENDID-FACE-KO": "얼굴 확인",
   "CR-PX-027-OPENDID-HOLDER-KO": "여행 패스에 담기",
-  "CR-PX-028-TABLE-JOINED-KO": "참여했어요",
+  "CR-PX-028-TABLE-JOINED-KO": "계획을 저장했어요",
   "CR-PX-029-MY-KOREA-TABLE-LINKAGE-KO": "식사 계획",
-  "CR-PX-030-LABS-BOUNDARY-JA": "この端末内だけで動作し、お金・アカウント・プロバイダー・ネットワークには接続しません。",
-  "CR-PX-031-LABS-READY-JA": "Sui zkLogin · 署名方式",
+  "CR-PX-030-LABS-BOUNDARY-JA": "ウォレット、経路、旅の記念機能を試せます。",
+  "CR-PX-031-LABS-READY-JA": "ウォレット署名",
   "CR-PX-032-SEOUL-LIST-PULSE-JA": "地図",
   "CR-PX-033-NATION-ATLAS-MOBILE-JA": "ソウル",
   "CR-PX-034-PLACE-DETAIL-MOBILE-JA": "로바",
@@ -223,7 +224,7 @@ export async function prepareCurrentReferenceVisualPage(page: Page, item: Curren
 }
 
 async function seedDevice(page: Page, item: CurrentReferenceVisualCase) {
-  const isOnboarding = item.state.startsWith("onboarding-") || item.state === "opendid-initial"
+  const isOnboarding = item.state.startsWith("onboarding-")
   const isActiveMyKorea = item.state === "my-korea-active"
   const isEditorialMyKorea = item.state === "my-korea-editorial"
   await page.addInitScript(({ key, locale, onboarding, active, editorialActive, venueId, editorialPlaceId, tableId }) => {
@@ -258,7 +259,10 @@ async function seedDevice(page: Page, item: CurrentReferenceVisualCase) {
 
 async function gotoCurrentB(page: Page, item: CurrentReferenceVisualCase) {
   await seedDevice(page, item)
-  await page.goto("/", { waitUntil: "domcontentloaded" })
+  // Successful identity and gated table captures are authored only through
+  // the explicit QA seam. Ordinary providerless entry remains fail-closed.
+  const reviewFixture = REVIEW_IDENTITY_STATES.has(item.state) || REVIEW_TABLE_SUCCESS_STATES.has(item.state)
+  await page.goto(reviewFixture ? "/?qa=1" : "/", { waitUntil: "domcontentloaded" })
   const root = page.getByTestId("ondo-b-root")
   await expect(root).toBeVisible()
   await expect(root).toHaveAttribute("data-variant", "B")
@@ -268,15 +272,19 @@ async function gotoCurrentB(page: Page, item: CurrentReferenceVisualCase) {
 }
 
 async function moveOnboardingTo(page: Page, state: CurrentReferenceState) {
-  if (state === "onboarding-value") return
-  const value = page.getByTestId("onboarding-step-value")
-  await value.locator("[data-onboarding-initial-focus]").click()
+  const onboarding = page.getByTestId("ondo-onboarding-backdrop")
   const intent = page.getByTestId("onboarding-step-intent")
   await expect(intent).toBeVisible()
   if (state === "onboarding-intent") return
-  await intent.getByTestId("persona-travelling").click()
-  await expect(intent.getByTestId("persona-travelling")).toHaveAttribute("aria-pressed", "true")
-  await intent.locator("button").filter({ has: page.locator("svg") }).last().click()
+  await intent.getByTestId("persona-short_trip").click()
+  await expect(intent.getByTestId("persona-short_trip")).toHaveAttribute("aria-checked", "true")
+  await onboarding.getByTestId("onboarding-continue").click()
+  const area = page.getByTestId("onboarding-step-area")
+  await expect(area).toBeVisible()
+  if (state === "onboarding-area") return
+  await area.getByTestId("onboarding-area-seoul").click()
+  await expect(area.getByTestId("onboarding-area-seoul")).toHaveAttribute("aria-checked", "true")
+  await onboarding.getByTestId("onboarding-continue").click()
   await expect(page.getByTestId("onboarding-step-preferences")).toBeVisible()
 }
 
@@ -295,13 +303,16 @@ async function waitForMapReady(page: Page) {
   await expect(page.getByTestId("maplibre-map")).toBeVisible()
 }
 
-async function openIdentitySetupFromTraveler(page: Page) {
+async function openIdentitySetupFromTraveler(page: Page, mode: "normal" | "review") {
   await page.getByTestId("nav-id").click()
   const traveler = page.getByTestId("ondo-b-traveler-id")
   await expect(traveler).toBeVisible()
   await traveler.getByTestId("traveler-id-ktour-id-open").click()
   const setup = page.getByTestId("k-tour-id-setup")
   await expect(setup).toBeVisible()
+  await expect(setup).toHaveAttribute("data-execution-mode", mode)
+  if (mode === "review") await expect(setup.getByTestId("k-tour-id-review-scope")).toBeVisible()
+  else await expect(setup.getByTestId("k-tour-id-review-scope")).toHaveCount(0)
   return setup
 }
 
@@ -309,24 +320,41 @@ async function advanceIdentityUntil(setup: Locator, testId: string, limit = 14) 
   const target = setup.getByTestId(testId)
   for (let attempt = 0; attempt < limit; attempt += 1) {
     if (await target.isVisible().catch(() => false)) return target
-    const passportDocument = setup.getByTestId("k-tour-id-passport-document")
-    if (await passportDocument.isVisible().catch(() => false)) {
-      await passportDocument.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-      await expect(passportDocument).toHaveAttribute("data-ocr-stage", "preview")
-      await passportDocument.getByTestId("passport-ocr-start").click()
-      await expect(passportDocument).toHaveAttribute("data-ocr-stage", "review")
-      await passportDocument.getByTestId("k-tour-id-continue").click()
+
+    // Processing screens advance on their own. Waiting on the generic Continue
+    // locator races the requested holder surface and can click straight through
+    // it as soon as that button mounts.
+    if (await setup.getAttribute("data-phase") === "provider_processing_preview") {
+      await expect(setup).not.toHaveAttribute("data-phase", "provider_processing_preview")
       continue
     }
+
+    const passportDocument = setup.getByTestId("k-tour-id-passport-document")
+    if (await passportDocument.isVisible().catch(() => false)) {
+      const ocrStage = await passportDocument.getAttribute("data-ocr-stage")
+      if (ocrStage === "sample") {
+        await expect(passportDocument.getByTestId("passport-ocr-preview")).toBeVisible()
+        await passportDocument.getByTestId("passport-ocr-start").click()
+      } else if (ocrStage === "checking") {
+        await expect(passportDocument).toHaveAttribute("data-ocr-stage", "review")
+      } else if (ocrStage === "review") {
+        await passportDocument.getByTestId("k-tour-id-continue").click()
+      } else {
+        throw new Error(`unsupported passport OCR stage before ${testId}: ${String(ocrStage)}`)
+      }
+      continue
+    }
+
     const advance = setup.getByTestId("k-tour-id-continue")
     await expect(advance, `no continuation action before ${testId}`).toBeVisible()
+    if (await target.isVisible().catch(() => false)) return target
     await advance.click()
   }
   await expect(target, `identity journey did not reach ${testId}`).toBeVisible()
   return target
 }
 
-async function reachSimulatedCredentialReady(setup: Locator) {
+async function reachCredentialReady(setup: Locator) {
   await setup.getByTestId("k-tour-id-method-passport-ekyc").click()
   const consent = setup.getByTestId("k-tour-id-consent")
   await expect(consent).toBeVisible()
@@ -334,11 +362,9 @@ async function reachSimulatedCredentialReady(setup: Locator) {
   await consent.getByTestId("k-tour-id-consent-approve").click()
   await advanceIdentityUntil(setup, "k-tour-id-passport-document")
   await advanceIdentityUntil(setup, "k-tour-id-passport-face")
-  await advanceIdentityUntil(setup, "k-tour-id-evidence-preview")
-  await advanceIdentityUntil(setup, "k-tour-id-issuance-preview")
   await advanceIdentityUntil(setup, "k-tour-id-holder-delivery")
   const credential = await advanceIdentityUntil(setup, "k-tour-id-credential")
-  await expect(credential).toHaveAttribute("data-status", "simulated_ready")
+  await expect(credential).toHaveAttribute("data-status", "review-draft")
   return credential
 }
 
@@ -346,8 +372,6 @@ const IDENTITY_STAGE_TARGET: Partial<Record<CurrentReferenceState, string>> = {
   "opendid-consent": "k-tour-id-consent",
   "opendid-document": "k-tour-id-passport-document",
   "opendid-face": "k-tour-id-passport-face",
-  "opendid-evidence": "k-tour-id-evidence-preview",
-  "opendid-issuance": "k-tour-id-issuance-preview",
   "opendid-holder-delivery": "k-tour-id-holder-delivery",
 }
 
@@ -386,6 +410,9 @@ async function joinCurrentTable(page: Page, locale: CurrentReferenceLocale) {
   const gate = page.getByTestId("ondo-b-action-gate")
   await expect(gate).toBeVisible()
   await gate.getByTestId("action-gate-confirm").click()
+  await expect(gate).toHaveAttribute("data-active-gate", "age")
+  await expect(gate).toHaveAttribute("data-execution-mode", "review")
+  await expect(gate.getByTestId("age-review-scope")).toBeVisible()
   await gate.getByTestId("after19-start").click()
   await expect(gate).toHaveCount(0)
   const confirmation = detail.getByTestId("table-join-confirmation")
@@ -405,15 +432,19 @@ export async function setupCurrentReferenceVisualCase(page: Page, item: CurrentR
     await expect(page.getByTestId("ondo-onboarding")).toBeVisible()
     await moveOnboardingTo(page, item.state)
   } else if (item.state === "opendid-initial") {
-    await page.getByTestId("k-tour-id-setup-open").click()
-    const setup = page.getByTestId("k-tour-id-setup")
+    const setup = await openIdentitySetupFromTraveler(page, "normal")
     await expect(setup).toHaveAttribute("data-phase", "method_select")
     await expect(setup).toHaveAttribute("data-environment", "simulated")
+    const methods = setup.getByTestId("k-tour-id-methods").getByRole("button")
+    await expect(methods).toHaveCount(3)
+    for (let index = 0; index < await methods.count(); index += 1) {
+      await expect(methods.nth(index)).toHaveAttribute("data-availability", "unavailable")
+    }
   } else if (item.state === "opendid-credential-ready") {
-    const setup = await openIdentitySetupFromTraveler(page)
-    await reachSimulatedCredentialReady(setup)
+    const setup = await openIdentitySetupFromTraveler(page, "review")
+    await reachCredentialReady(setup)
   } else if (item.state in IDENTITY_STAGE_TARGET) {
-    const setup = await openIdentitySetupFromTraveler(page)
+    const setup = await openIdentitySetupFromTraveler(page, "review")
     await reachIdentityStage(setup, item.state)
   } else if (item.state === "nation-atlas") {
     const atlas = page.getByTestId("ondo-b-korea-atlas")
@@ -519,7 +550,14 @@ export async function setupCurrentReferenceVisualCase(page: Page, item: CurrentR
     await page.getByTestId("nav-settings").click()
     const settings = page.getByTestId("ondo-b-settings-entry")
     await expect(settings).toBeVisible()
-    await expect(settings.getByTestId("settings-language-control").getByRole("button", { name: "日本語", exact: true })).toHaveAttribute("aria-pressed", "true")
+    const languageRow = settings.getByTestId("settings-language-row")
+    await expect(languageRow).toContainText("日本語")
+    await languageRow.click()
+    const languageSheet = page.getByRole("dialog", { name: "言語", exact: true })
+    await expect(languageSheet).toBeVisible()
+    const languageControl = languageSheet.getByTestId("settings-language-control")
+    await expect(languageControl).toBeVisible()
+    await expect(languageControl.getByRole("radio", { name: "日本語", exact: true })).toHaveAttribute("aria-checked", "true")
   } else if (item.state === "labs-boundary-ja" || item.state === "labs-ready-ja") {
     await page.getByTestId("nav-my").click()
     const my = page.getByTestId("ondo-b-my-korea-entry")
@@ -527,11 +565,19 @@ export async function setupCurrentReferenceVisualCase(page: Page, item: CurrentR
     await my.getByTestId("open-labs").click()
     const acknowledge = page.getByTestId("labs-acknowledge")
     await expect(acknowledge).toBeVisible()
-    await expect(page.getByRole("dialog")).toContainText("技術ラボ")
+    const labsDialog = page.getByRole("dialog", { name: "Labs", exact: true })
+    await expect(labsDialog).toBeVisible()
+    await expect(labsDialog.getByRole("heading", { name: "Labs", exact: true })).toBeVisible()
+    const boundary = labsDialog.getByTestId("labs-boundary-disclosure")
+    await expect(boundary).toBeVisible()
+    await expect(boundary.locator("summary")).toContainText("Labsについて")
+    await expect(boundary).not.toHaveAttribute("open", "")
+    await expect(boundary.getByTestId("labs-boundary-details")).toBeHidden()
     if (item.state === "labs-ready-ja") {
       await acknowledge.click()
       const labs = page.getByTestId("labs-overlay")
       await expect(labs).toBeVisible()
+      await expect(labs.getByRole("heading", { name: "ウォレット署名", exact: true })).toBeVisible()
       await expect(labs).toHaveAttribute("data-wallet-state", "WAL-DISCONNECTED")
       await expect(labs).toHaveAttribute("data-bridge-state", "BRG-IDLE")
     }
@@ -557,6 +603,10 @@ export async function stabilizeCurrentReferenceVisual(page: Page) {
     ])
     await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))))
   })
+  // The list setup ends with a pointer click. Park the pointer on the inert
+  // viewport corner so a responsive card cannot inherit a screenshot-only
+  // hover treatment when its final grid position settles underneath it.
+  await page.mouse.move(0, 0)
   await page.waitForTimeout(120)
 }
 
@@ -653,13 +703,15 @@ async function expectFocusOwnership(page: Page) {
 async function expectImagesLoaded(page: Page) {
   const failed = await page.getByTestId("ondo-b-root").locator("img:visible").evaluateAll((images) => images.flatMap((image) => {
     const item = image as HTMLImageElement
+    const box = item.getBoundingClientRect()
+    const intersectsViewport = box.bottom > 0 && box.right > 0 && box.top < window.innerHeight && box.left < window.innerWidth
+    if (!intersectsViewport) return []
     return item.complete && item.naturalWidth > 0 ? [] : [{ src: item.currentSrc || item.src, alt: item.alt }]
   }))
   expect(failed, "visible editorial/brand images must load").toEqual([])
 }
 
 const EXPECTED_IMAGE_SELECTOR: Partial<Record<CurrentReferenceState, string>> = {
-  "onboarding-value": "[data-testid='onboarding-editorial-image'] img",
   "jeju-editorial": "[data-testid='ondo-b-editorial-guide-grid'] img",
   "tables-index": "[data-testid='tables-editorial-image'] img",
   "my-korea-empty": "[data-testid='my-korea-empty-inspiration'] img",
@@ -728,8 +780,10 @@ export async function expectCurrentReferenceVisualGuards(page: Page, item: Curre
   }
   if (item.state.startsWith("onboarding-")) {
     const onboarding = page.getByTestId("ondo-onboarding")
-    await expect(onboarding).toHaveAttribute("aria-modal", "true")
-    await expect(onboarding).toHaveAttribute("data-onboarding-step", item.state.replace("onboarding-", ""))
+    const onboardingRoot = page.getByTestId("ondo-onboarding-backdrop")
+    const dialog = page.getByTestId("ondo-sheet").filter({ has: onboarding })
+    await expect(dialog).toHaveAttribute("aria-modal", "true")
+    await expect(onboardingRoot).toHaveAttribute("data-onboarding-step", item.state.replace("onboarding-", ""))
   }
 }
 

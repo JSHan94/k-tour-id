@@ -32,11 +32,24 @@ async function seed(page: Page, locale: Locale, stamps = 0) {
     }
     if (sessionStorage.getItem(accountKey) == null) sessionStorage.setItem(accountKey, JSON.stringify({ account: "ACC-ACTIVE", returnTo: null }))
     if (sessionStorage.getItem(actionKey) == null) {
+      const issuedAt = new Date(Date.now() - 1_000).toISOString()
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+      const axis = (gate: "person" | "payment_kyc") => ({
+        status: "eligible",
+        expiresAt,
+        reviewReceipt: {
+          issuer: "ONDO_REVIEW_FIXTURE",
+          executionTruth: "FIXTURE_REVIEW",
+          provenanceTruth: "SIMULATED",
+          fixtureId: gate === "person" ? "FX-PER-PROFILE-SEED" : "FX-PKY-PROFILE-SEED",
+          issuedAt,
+          expiresAt,
+        },
+      })
       sessionStorage.setItem(actionKey, JSON.stringify({
         version: 1,
-        person: { status: "eligible", expiresAt },
-        payment: { status: "eligible", expiresAt },
+        person: axis("person"),
+        payment: axis("payment_kyc"),
         pending: null,
         lastConsumed: null,
         outcome: null,
@@ -50,10 +63,17 @@ async function seed(page: Page, locale: Locale, stamps = 0) {
           livesIn: { value: "", consent: false },
           languages: { value: [], consent: false },
         },
-        reputation: { visit: stampCount ? "repeat" : "new", contribution: "new", meetup: "new" },
-        stamps: stampCount,
-        acceptedEvidenceIds: Array.from({ length: stampCount }, (_, index) => `visit:seed-${index + 1}`),
       }))
+    }
+    if (stampCount > 0) {
+      window.__ONDO_B_QA__ = {
+        ...(window.__ONDO_B_QA__ ?? {}),
+        profileActivityEvents: Array.from({ length: stampCount }, (_, index) => ({
+          evidenceId: `visit:qa-memory-${index + 1}`,
+          axes: ["visit" as const],
+          addVisitStamp: true,
+        })),
+      }
     }
   }, {
     deviceKey: DEVICE_KEY,
@@ -76,14 +96,37 @@ async function openTravelPass(page: Page, locale: Locale, query = "") {
 
 async function openOffer(page: Page) {
   await page.locator("[data-city='seoul']").click()
-  const toggle = page.getByTestId("ondo-b-view-toggle")
-  if (await toggle.count()) await toggle.click()
-  const venue = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${VENUE_ID}'] button`)
+  await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-city", "seoul")
+  const venueList = page.getByTestId("ondo-b-venue-list")
+  if (!await venueList.isVisible()) {
+    const toggle = page.getByTestId("ondo-b-view-toggle")
+    await expect(toggle).toBeVisible()
+    await toggle.click()
+    await expect(venueList).toBeVisible()
+  }
+  const venue = venueList.locator(`[data-venue-id='${VENUE_ID}'] button`)
   await venue.scrollIntoViewIfNeeded()
   await venue.click()
   await page.getByTestId("canonical-place-details").click()
   await page.getByTestId("canonical-meal-benefit-open").click()
   return page.getByTestId("ondo-b-id-wallet-commerce")
+}
+
+async function completeCheckoutCredentialPresentation(page: Page) {
+  const setup = page.getByTestId("k-tour-id-setup")
+  await expect(setup).toHaveAttribute("data-origin", "action_gate")
+  await setup.getByTestId("k-tour-id-method-mobile-id").click()
+  await setup.getByTestId("k-tour-id-consent-approve").click()
+  await expect(setup).toHaveAttribute("data-phase", "cx_handoff_preview")
+  await setup.getByTestId("k-tour-id-continue").click()
+  const holder = setup.getByTestId("k-tour-id-holder-delivery")
+  await expect(holder).toBeVisible()
+  await holder.getByTestId("k-tour-id-continue").click()
+  await expect(setup).toBeHidden()
+
+  const gate = page.getByTestId("ondo-b-action-gate")
+  await expect(gate).toHaveAttribute("data-active-gate", "credential")
+  await gate.getByTestId("action-gate-confirm").click()
 }
 
 for (const locale of ["en", "ko", "ja"] as const) {
@@ -129,16 +172,20 @@ test("profile consent, failure retry, and reload persistence keep previous data 
   await openTravelPass(page, "en")
   const profile = page.getByTestId("ondo-profile-panel")
   await profile.getByRole("button", { name: "Edit", exact: true }).click()
-  const inputs = profile.locator("input")
-  await inputs.nth(0).fill("Mina Park")
-  await inputs.nth(1).fill("Canada")
-  await inputs.nth(2).fill("Seoul")
-  await inputs.nth(3).fill("English, 日本語")
-  await profile.getByRole("switch", { name: /From/ }).click()
-  await profile.getByRole("switch", { name: /Languages/ }).click()
+  const nameInput = profile.getByRole("textbox", { name: "Display name", exact: true })
+  const fromInput = profile.getByRole("textbox", { name: "From", exact: true })
+  const livesInput = profile.getByRole("textbox", { name: "Lives in", exact: true })
+  const languagesInput = profile.getByRole("textbox", { name: "Languages", exact: true })
+  await nameInput.fill("Mina Park")
+  await fromInput.fill("Canada")
+  await livesInput.fill("Seoul")
+  await languagesInput.fill("English, 日本語")
+  await profile.getByRole("button", { name: /From/, pressed: false }).click()
+  await profile.getByRole("button", { name: /Languages/, pressed: false }).click()
   await profile.getByRole("button", { name: "Save profile" }).click()
   await expect(profile.getByRole("alert")).toBeVisible()
-  await expect(inputs.nth(0)).toHaveValue("Mina Park")
+  await expect(nameInput).toHaveValue("Mina Park")
+  await expect(languagesInput).toHaveValue("English, 日本語")
   await profile.getByRole("button", { name: "Try saving again" }).click()
   await expect(profile).toContainText("Mina Park")
   await expect(profile).toContainText("Canada")
@@ -161,14 +208,24 @@ test("payment alone never adds a stamp; a unique visit reaches 10 once and opens
   await offer.getByTestId("benefit-accept").click()
   await offer.getByTestId("payment-minimum-consent").locator("input").check()
   await offer.getByTestId("payment-confirm").click()
+  await completeCheckoutCredentialPresentation(page)
   await expect(offer.getByTestId("payment-receipt")).toBeVisible()
   const visit = offer.getByTestId("visit-stamp-receipt")
   await expect(visit).toHaveAttribute("data-stamp-count", "9")
-  expect(await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null").stamps, ACTIVITY_KEY)).toBe(9)
+  expect(await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null"), ACTIVITY_KEY)).not.toHaveProperty("stamps")
+
+  const visitDetails = visit.getByTestId("visit-stamp-details")
+  const visitTruth = "This front-end check uses local place evidence. No live venue or location provider is connected."
+  await expect(visitDetails).not.toHaveAttribute("open", "")
+  await expect(visitDetails.getByText(visitTruth, { exact: true })).toBeHidden()
+  await visitDetails.locator("summary").click()
+  await expect(visitDetails.getByText(visitTruth, { exact: true })).toBeVisible()
 
   await visit.getByTestId("visit-proof-check").click()
   await expect(visit).toHaveAttribute("data-stamp-count", "10")
-  expect(await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null").stamps, ACTIVITY_KEY)).toBe(10)
+  const persistedActivity = await page.evaluate((key) => JSON.parse(sessionStorage.getItem(key) ?? "null"), ACTIVITY_KEY)
+  expect(persistedActivity).not.toHaveProperty("stamps")
+  expect(persistedActivity).not.toHaveProperty("evidenceReceipts")
   await expect(visit.getByTestId("visit-proof-check")).toHaveCount(0)
   await visit.getByTestId("checkout-stamp-milestone").click()
   await expect(page.getByTestId("labs-acknowledge")).toBeVisible()
@@ -188,9 +245,9 @@ test("clear saved content tombstones every B session axis without reviving legac
   await page.goto("/", { waitUntil: "domcontentloaded" })
   await page.getByTestId("nav-settings").click()
   const settings = page.getByTestId("ondo-b-device-data-settings")
-  await settings.locator("summary").click()
+  await settings.click()
   await page.getByTestId("ondo-b-clear-device-open").click()
-  await page.getByTestId("ondo-b-clear-device-confirm").getByRole("button", { name: "Clear saved content" }).click()
+  await page.getByTestId("ondo-b-clear-device-confirm").getByRole("button", { name: "Delete saved data", exact: true }).click()
   const state = await page.evaluate(({ accountKey, actionKey, activityKey, preferenceKey, sessionKey }) => ({
     account: JSON.parse(sessionStorage.getItem(accountKey) ?? "null"),
     action: JSON.parse(sessionStorage.getItem(actionKey) ?? "null"),
@@ -234,10 +291,10 @@ test("clear saved content rolls back every session key when a mid-transaction to
 
   await page.getByTestId("nav-settings").click()
   const settings = page.getByTestId("ondo-b-device-data-settings")
-  await settings.locator("summary").click()
+  await settings.click()
   await page.getByTestId("ondo-b-clear-device-open").click()
   const dialog = page.getByTestId("ondo-b-clear-device-confirm")
-  await dialog.getByRole("button", { name: "Clear saved content" }).click()
+  await dialog.getByRole("button", { name: "Delete saved data", exact: true }).click()
   await expect(page.getByTestId("ondo-b-clear-device-error")).toBeVisible()
   const afterFailure = await page.evaluate(({ deviceKey, accountKey, actionKey, activityKey, preferenceKey, sessionKey }) => ({
     device: localStorage.getItem(deviceKey),
@@ -250,6 +307,6 @@ test("clear saved content rolls back every session key when a mid-transaction to
   }), { deviceKey: DEVICE_KEY, accountKey: ACCOUNT_KEY, actionKey: ACTION_KEY, activityKey: ACTIVITY_KEY, preferenceKey: AFTER19_PREFERENCE_KEY, sessionKey: AFTER19_SESSION_KEY })
   expect(afterFailure).toEqual(before)
 
-  await dialog.getByRole("button", { name: "Clear saved content" }).click()
+  await dialog.getByRole("button", { name: "Delete saved data", exact: true }).click()
   await expect(dialog).toHaveCount(0)
 })

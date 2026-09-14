@@ -1,4 +1,5 @@
-import { expect, type Locator, type Page, type Request } from "@playwright/test"
+import { expect, type Locator, type Page, type Request, type TestInfo } from "@playwright/test"
+import { writeFile } from "node:fs/promises"
 
 export const B_ROUTE = "/"
 export const CANONICAL_VENUE_ID = "mois-0021cd596bc5b2a922ad"
@@ -58,7 +59,6 @@ function flow(
 }
 
 const A = (proof: string) => ["actual", proof] as const
-const N = (proof: string) => ["not_applicable", proof] as const
 
 /**
  * Honest flow registry. `actual` means a browser interaction on `/` proves it.
@@ -69,7 +69,7 @@ const N = (proof: string) => ["not_applicable", proof] as const
 export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   flow("FL-001", "Guest Discover", {
     ENTRY: A("real / nation surface"), DECISION: A("Seoul compact-count/list/place selection"), CANCEL: A("close place and preserve city"),
-    ERROR: A("dedicated map-truth route abort latches data-map-state=error and keeps the sourced list usable"), RETRY: A("Retry map starts a fresh attempt and increments data-map-attempt to 2"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
+    ERROR: A("basemap transport failure keeps the local temperature field visible with an explicit recoverable status"), RETRY: A("the one-tap List alternate keeps the sourced directory reachable while the basemap is limited"), TERMINAL: A("official-source place detail"), RETURN: A("same Seoul discovery context"),
   }),
   flow("FL-002", "Age proof to exact After19 venue", {
     ENTRY: A("locked compact 19+ access inside the exact canonical venue"), DECISION: A("strict tab-scoped OPEN_AFTER19 token preserves exact city, map, query, category, venue and detail context"), CANCEL: A("prompt cancel returns to the same locked venue detail and clears the token"),
@@ -86,7 +86,7 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   }),
   flow("FL-005", "Korean CX", {
     ENTRY: A("Local Signal Person gate opens without inferring identity from discovery intent"), DECISION: A("the user explicitly selects the B-native mobile_id_cx / OmniOne CX route"), CANCEL: A("gate cancel preserves exact signal draft"),
-    ERROR: A("simulated CX failure"), RETRY: A("same gate retry"), TERMINAL: A("PER-VERIFIED only"), RETURN: A("original local-signal sheet"),
+    ERROR: A("explicit review fixture renders a failed CX result without mutating Person"), RETRY: A("the failed CX result retries inside the same anchored Person gate"), TERMINAL: A("successful review evidence changes only Person to PER-VERIFIED"), RETURN: A("original local-signal sheet"),
   }),
   flow("FL-006", "Residence Card", {
     ENTRY: A("Local Signal Person gate opens without inferring identity from discovery intent"), DECISION: A("the user explicitly selects mobile_residence_card before it resolves unavailable"), CANCEL: A("gate cancel preserves the exact signal draft"),
@@ -94,51 +94,51 @@ export const B_FLOW_CONTRACTS: readonly BFlowContract[] = [
   }),
   flow("FL-007", "Short-term onboarding", {
     ENTRY: A("first-run guest setup"), DECISION: A("travelling persona and preferences"), CANCEL: A("Explore without setup"),
-    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: N("The canonical onboarding contract falls back to a usable guest Explore; retry is not a required user checkpoint."), TERMINAL: A("ONB-COMPLETE travelling guest"), RETURN: A("real B nation/map shell"),
+    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: A("the same visible finish action retries the preserved onboarding decision after device storage recovers"), TERMINAL: A("ONB-COMPLETE travelling guest"), RETURN: A("real B nation/map shell"),
   }),
   flow("FL-008", "Korean local onboarding", {
     ENTRY: A("first-run guest setup"), DECISION: A("local_contributor persona"), CANCEL: A("Explore without setup"),
-    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: N("The canonical onboarding contract falls back to guest Explore and does not start or retry CX during setup."), TERMINAL: A("map without prematurely opening CX"), RETURN: A("real B nation/map shell"),
+    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: A("the same visible finish action retries only the preserved discovery choice and never starts CX"), TERMINAL: A("map without prematurely opening CX"), RETURN: A("real B nation/map shell"),
   }),
   flow("FL-009", "Resident onboarding", {
-    ENTRY: A("first-run guest setup"), DECISION: A("preparing persona"), CANCEL: A("Explore without setup"),
-    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: N("The canonical onboarding contract falls back to guest Explore and does not start or retry Residence checks during setup."), TERMINAL: A("map without prematurely opening Residence route"), RETURN: A("real B nation/map shell"),
+    ENTRY: A("first-run guest setup"), DECISION: A("the user explicitly chooses the preparing-for-life discovery intent"), CANCEL: A("Explore without setup"),
+    ERROR: A("injected B-device persistence failure keeps setup open"), RETRY: A("the same visible finish action retries only the preserved discovery choice and never starts a Residence check"), TERMINAL: A("map without prematurely opening Residence route"), RETURN: A("real B nation/map shell"),
   }),
   flow("FL-010", "Account gate", {
     ENTRY: A("Save on canonical venue"), DECISION: A("account explanation/start"), CANCEL: A("Escape preserves selected venue"),
-    ERROR: A("simulated account failure"), RETRY: A("same save task retry"), TERMINAL: A("ACC-ACTIVE and one saved venue"), RETURN: A("same canonical venue"),
+    ERROR: A("simulated account failure"), RETRY: A("the visible retry resumes the same unconsumed save task"), TERMINAL: A("ACC-ACTIVE and one saved venue"), RETURN: A("the flow restores the same canonical venue and selected place context"),
   }),
   flow("FL-011", "Save and My Korea", {
-    ENTRY: A("canonical venue Save"), DECISION: A("local save starts without losing venue context"), CANCEL: A("visible local-save error can be dismissed while remaining unsaved"),
+    ENTRY: A("the canonical venue exposes the unsaved bookmark action"), DECISION: A("local save starts without losing venue context"), CANCEL: A("visible local-save error can be dismissed while remaining unsaved"),
     ERROR: A("save-failed fixture exposes a visible local-save failure while preserving the venue and CTA"), RETRY: A("Retry save reaches the persisted Saved state"), TERMINAL: A("saved card persists through reload into My Korea"), RETURN: A("saved card returns to exact venue"),
   }),
   flow("FL-012", "Local signal first mission", {
-    ENTRY: A("B-native venue Local Signal"), DECISION: A("tag/note/photo draft"), CANCEL: A("Escape discards draft and returns to detail"),
+    ENTRY: A("B-native venue Local Signal"), DECISION: A("the user edits a venue-scoped tag, note, and optional photo draft"), CANCEL: A("Escape discards draft and returns to detail"),
     ERROR: A("device-write failure preserves exact draft"), RETRY: A("same post action succeeds after storage recovery"), TERMINAL: A("Contribution only; no payment or visit inference"), RETURN: A("exact canonical detail remains mounted"),
   }),
   flow("FL-013", "Manual 19+ proof", {
-    ENTRY: A("global 19+ chip"), DECISION: A("venue/city-scoped minimum confirmation"), CANCEL: A("prompt cancel to normal ONDO"),
-    ERROR: A("injected global proof failure"), RETRY: A("same prompt retry"), TERMINAL: A("eligible/on global session"), RETURN: A("B map remains available"),
+    ENTRY: A("the global map exposes the compact manual 19+ control"), DECISION: A("venue/city-scoped minimum confirmation"), CANCEL: A("prompt cancel to normal ONDO"),
+    ERROR: A("injected global proof failure"), RETRY: A("the failure action retries the same 19+ prompt and map context"), TERMINAL: A("valid review evidence enables A19-ON for the current session only"), RETURN: A("B map remains available"),
   }),
   flow("FL-014", "Auto After19", {
-    ENTRY: A("fixed KST evening resume"), DECISION: A("four guards cause banner"), CANCEL: A("manual off"),
-    ERROR: A("an expired-proof reason status explains why the main map returned"), RETRY: A("Check 19+ again reopens the age-check recovery path"), TERMINAL: A("A19-ON"), RETURN: A("same-session manual-off survives reload"),
+    ENTRY: A("fixed KST evening resume"), DECISION: A("four guards cause banner"), CANCEL: A("the explicit off action sets the session-scoped manual-off override"),
+    ERROR: A("an expired-proof reason status explains why the main map returned"), RETRY: A("Check 19+ again reopens the age-check recovery path"), TERMINAL: A("all four guards enable A19-ON without changing another readiness axis"), RETURN: A("same-session manual-off survives reload"),
   }),
   flow("FL-015", "Optional public profile", {
-    ENTRY: A("ID public profile"), DECISION: A("per-field public consent"), CANCEL: A("cancel keeps prior fields"),
-    ERROR: A("profile=failure keeps prior fields"), RETRY: A("Try save again"), TERMINAL: A("only selected fields public"), RETURN: A("ID with four-axis trust panel"),
+    ENTRY: A("the ID surface opens the optional public profile editor"), DECISION: A("per-field public consent"), CANCEL: A("cancel keeps prior fields"),
+    ERROR: A("profile=failure keeps prior fields"), RETRY: A("the inline recovery retries the same preserved profile draft"), TERMINAL: A("only selected fields public"), RETURN: A("ID with four-axis trust panel"),
   }),
   flow("FL-016", "Evidence and merchant trait", {
     ENTRY: A("venue facts and Labs trait section"), DECISION: A("canonical truth labels"), CANCEL: A("sheet close to venue/My"),
-    ERROR: A("unknown/stale and ineligible trait"), RETRY: A("trait retry fixture"), TERMINAL: A("limited eligibility, never safety guarantee"), RETURN: A("same venue or Labs parent"),
+    ERROR: A("unknown/stale and ineligible trait"), RETRY: A("the explicit review fixture retries the same scoped merchant trait"), TERMINAL: A("limited eligibility, never safety guarantee"), RETURN: A("same venue or Labs parent"),
   }),
   flow("FL-017", "Payment KYC", {
     ENTRY: A("B-native meal benefit payment decision"), DECISION: A("separate payment_kyc action axis"), CANCEL: A("gate cancel to same origin-scoped offer"),
     ERROR: A("injected payment-axis failure"), RETRY: A("same checkout token retry"), TERMINAL: A("payment eligible independently, then receipt"), RETURN: A("receipt returns to exact canonical origin"),
   }),
   flow("FL-018", "Labs wallet and bridge", {
-    ENTRY: A("My Korea Labs opt-in"), DECISION: A("acknowledge/signer/quote"), CANCEL: A("bridge cancel changes no assets"),
-    ERROR: A("expiry and ordered bridge failure"), RETRY: A("fresh quote"), TERMINAL: A("simulated receipt and opt-in badge"), RETURN: A("reload persistence and My Korea close"),
+    ENTRY: A("My Korea opens Labs only after the explicit opt-in boundary"), DECISION: A("acknowledge/signer/quote"), CANCEL: A("bridge cancel changes no assets"),
+    ERROR: A("expiry and ordered bridge failure"), RETRY: A("retry creates a fresh quote without mutating either asset balance"), TERMINAL: A("simulated receipt and opt-in badge"), RETURN: A("reload persistence and My Korea close"),
   }),
 ]
 
@@ -155,13 +155,33 @@ export const B_CONTENT_CASES = [
   locale,
 })))
 
-type RuntimeEvidence = { product: string[]; externalMap: string[]; externalAsset: string[]; navigationAbort: string[] }
+type RuntimeEvidence = { product: string[]; externalMap: string[]; externalAsset: string[]; externalPreview: string[]; navigationAbort: string[] }
 type PendingNextNavigationAbort = { item: string; requestUrl: string; targetUrl: string; sequence: number }
 type NextNavigationAbortState = { pending: PendingNextNavigationAbort[]; sequence: number }
 const runtimeEvidence = new WeakMap<Page, RuntimeEvidence>()
 const nextNavigationAbortState = new WeakMap<Page, NextNavigationAbortState>()
 const EXTERNAL_MAP_HOSTS = new Set(["tiles.openfreemap.org"])
 const EXTERNAL_ASSET_HOSTS = new Set(["fonts.googleapis.com", "fonts.gstatic.com"])
+const VERCEL_PREVIEW_TOOLBAR_URL = "https://vercel.live/_next-live/feedback/feedback.js"
+// This exact Chromium message is platform toolbar injection blocked by the
+// unchanged production CSP. A different URL, directive, or error stays product
+// evidence, even if it happens to mention Vercel.
+const VERCEL_PREVIEW_TOOLBAR_CSP = `Loading the script '${VERCEL_PREVIEW_TOOLBAR_URL}' violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline'". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback. The action has been blocked.`
+
+function isVercelPreviewPage(page: Page) {
+  try {
+    const target = new URL(page.url())
+    return target.protocol === "https:" && target.hostname.endsWith(".vercel.app")
+      && !target.username && !target.password && !target.port
+  } catch {
+    return false
+  }
+}
+
+function isBlockedVercelPreviewScript(page: Page, request: Request, reason: string) {
+  return isVercelPreviewPage(page) && request.url() === VERCEL_PREVIEW_TOOLBAR_URL
+    && request.method() === "GET" && request.resourceType() === "script" && reason === "csp"
+}
 
 function isExternalMapUrl(raw: string | undefined) {
   if (!raw) return false
@@ -196,14 +216,15 @@ function strictNextNavigationAbort(
 }
 
 export function installBRuntimeGuard(page: Page) {
-  const evidence: RuntimeEvidence = { product: [], externalMap: [], externalAsset: [], navigationAbort: [] }
+  const evidence: RuntimeEvidence = { product: [], externalMap: [], externalAsset: [], externalPreview: [], navigationAbort: [] }
   runtimeEvidence.set(page, evidence)
   nextNavigationAbortState.set(page, { pending: [], sequence: 0 })
   page.on("console", (message) => {
     if (message.type() !== "error") return
     const location = message.location().url
     const item = `console: ${message.text()}${location ? ` @ ${location}` : ""}`
-    if (isExternalMapUrl(location) || message.text().includes("tiles.openfreemap.org")) evidence.externalMap.push(item)
+    if (isVercelPreviewPage(page) && message.text() === VERCEL_PREVIEW_TOOLBAR_CSP) evidence.externalPreview.push(item)
+    else if (isExternalMapUrl(location) || message.text().includes("tiles.openfreemap.org")) evidence.externalMap.push(item)
     else if (isExternalAssetUrl(location) || [...EXTERNAL_ASSET_HOSTS].some((host) => message.text().includes(host))) evidence.externalAsset.push(item)
     else evidence.product.push(item)
   })
@@ -211,7 +232,8 @@ export function installBRuntimeGuard(page: Page) {
   page.on("requestfailed", (request) => {
     const reason = request.failure()?.errorText ?? "request failed"
     const item = `requestfailed: ${request.url()} · ${reason}`
-    if (isExternalMapUrl(request.url())) evidence.externalMap.push(item)
+    if (isBlockedVercelPreviewScript(page, request, reason)) evidence.externalPreview.push(item)
+    else if (isExternalMapUrl(request.url())) evidence.externalMap.push(item)
     else if (isExternalAssetUrl(request.url())) evidence.externalAsset.push(item)
     else {
       evidence.product.push(item)
@@ -298,8 +320,19 @@ export function allowBNextNavigationAbort(
   }
 }
 
-export async function expectBRuntimeClean(page: Page) {
-  expect(getBRuntimeEvidence(page).product, "product runtime errors (external OpenFreeMap failures are classified separately)").toEqual([])
+export async function expectBRuntimeClean(page: Page, testInfo?: Pick<TestInfo, "attach"> & Partial<Pick<TestInfo, "outputPath">>) {
+  const evidence = getBRuntimeEvidence(page)
+  if (testInfo) {
+    const body = JSON.stringify(evidence, null, 2)
+    const path = testInfo.outputPath?.("runtime.json")
+    if (path) {
+      // Preserve the full evidence even with the line-only reporter used for
+      // isolated public checks, where an inline attachment is not persisted.
+      await writeFile(path, body)
+      await testInfo.attach("runtime.json", { path, contentType: "application/json" })
+    } else await testInfo.attach("runtime.json", { body, contentType: "application/json" })
+  }
+  expect(evidence.product, "product runtime errors (classified external evidence is retained separately)").toEqual([])
 }
 
 export type BSessionSeed = Record<string, unknown> & {
@@ -328,14 +361,16 @@ export async function prepareBPage(page: Page) {
 
 export async function seedB(
   page: Page,
-  { locale = "en", session = {}, local = {}, clearFeatures = true }: {
+  { locale = "en", session = {}, local = {}, clearFeatures = true, after19ReviewFixture = false, after19LocalDeclaration = false }: {
     locale?: BLocale
     session?: BSessionSeed
     local?: Record<string, unknown>
     clearFeatures?: boolean
+    after19ReviewFixture?: boolean
+    after19LocalDeclaration?: boolean
   } = {},
 ) {
-  await page.addInitScript(({ nextLocale, nextSession, nextLocal, shouldClear }) => {
+  await page.addInitScript(({ nextLocale, nextSession, nextLocal, shouldClear, seedAfter19ReviewFixture, seedAfter19LocalDeclaration }) => {
     const legacySession: Record<string, unknown> & {
       onboarding: string
       persona: string
@@ -386,24 +421,64 @@ export async function seedB(
       ...nextLocal,
     }))
 
-    const axisExpiresAt = "2026-08-20T11:30:00.000Z"
+    const axisIssuedAt = new Date(Date.now() - 1_000).toISOString()
+    const axisExpiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    const reviewAxis = (gate: "person" | "payment_kyc") => ({
+      status: "eligible",
+      expiresAt: axisExpiresAt,
+      reviewReceipt: {
+        issuer: "ONDO_REVIEW_FIXTURE",
+        executionTruth: "FIXTURE_REVIEW",
+        provenanceTruth: "SIMULATED",
+        fixtureId: gate === "person" ? "FX-PER-E2E-SEED" : "FX-PKY-E2E-SEED",
+        issuedAt: axisIssuedAt,
+        expiresAt: axisExpiresAt,
+      },
+    })
     if (!sessionStorage.getItem("ondo-b.account.v1")) sessionStorage.setItem("ondo-b.account.v1", JSON.stringify({
       account: legacySession.account === "ACC-ACTIVE" ? "ACC-ACTIVE" : "ACC-GUEST",
       returnTo: null,
     }))
     if (!sessionStorage.getItem("ondo-b.action-gates.v1")) sessionStorage.setItem("ondo-b.action-gates.v1", JSON.stringify({
       version: 1,
-      person: legacySession.person === "PER-VERIFIED" ? { status: "eligible", expiresAt: axisExpiresAt } : { status: "unverified", expiresAt: null },
-      payment: legacySession.paymentKyc === "PKY-VERIFIED" ? { status: "eligible", expiresAt: axisExpiresAt } : { status: "unverified", expiresAt: null },
+      person: legacySession.person === "PER-VERIFIED" ? reviewAxis("person") : { status: "unverified", expiresAt: null },
+      payment: legacySession.paymentKyc === "PKY-VERIFIED" ? reviewAxis("payment_kyc") : { status: "unverified", expiresAt: null },
       pending: null,
       lastConsumed: null,
       outcome: null,
     }))
     const ageEligible = legacySession.age === "AGE-VERIFIED"
+    const after19AgeExpiresAt = ageEligible ? (legacySession.ageExpiresAt ?? axisExpiresAt) : null
+    const after19AgeExpiryTime = after19AgeExpiresAt ? Date.parse(after19AgeExpiresAt) : Number.NaN
+    const after19EligibilityReceipt = seedAfter19LocalDeclaration && Number.isFinite(after19AgeExpiryTime)
+      ? {
+        schema: "local-age-declaration.v1",
+        predicate: "AGE_GTE_19",
+        outcome: "eligible",
+        issuerType: "LOCAL_DECLARATION",
+        provenanceTruth: "SELF_DECLARED",
+        issuedAt: new Date(after19AgeExpiryTime - 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(after19AgeExpiryTime).toISOString(),
+        disclosure: "night_view_only",
+      }
+      : seedAfter19ReviewFixture && Number.isFinite(after19AgeExpiryTime)
+        ? {
+        schema: "review-age-predicate.v1",
+        predicate: "AGE_GTE_19",
+        outcome: "eligible",
+        issuerType: "REVIEW_FIXTURE",
+        provenanceTruth: "SIMULATED",
+        fixtureId: "FX-AGE-E2E-SEED",
+        issuedAt: new Date(after19AgeExpiryTime - 24 * 60 * 60 * 1000).toISOString(),
+        expiresAt: new Date(after19AgeExpiryTime).toISOString(),
+        disclosure: "predicate_only",
+        }
+        : null
     if (!sessionStorage.getItem("ondo-b.after19.session.v1")) sessionStorage.setItem("ondo-b.after19.session.v1", JSON.stringify({
       version: 1,
       age: ageEligible ? "eligible" : "unverified",
-      ageExpiresAt: ageEligible ? (legacySession.ageExpiresAt ?? axisExpiresAt) : null,
+      ageExpiresAt: after19AgeExpiresAt,
+      eligibilityReceipt: after19EligibilityReceipt,
       mode: legacySession.after19 === "A19-ON" ? "on" : legacySession.after19 === "A19-MANUAL-OFF" ? "manual-off" : "off",
       activation: legacySession.after19 === "A19-ON" ? "manual" : null,
       expiryNotice: false,
@@ -423,7 +498,14 @@ export async function seedB(
       sessionStorage.removeItem("ondo.accepted-visits.v2")
       sessionStorage.setItem("ondo.qa.b-seed-cleared", "1")
     }
-  }, { nextLocale: locale, nextSession: session, nextLocal: local, shouldClear: clearFeatures })
+  }, {
+    nextLocale: locale,
+    nextSession: session,
+    nextLocal: local,
+    shouldClear: clearFeatures,
+    seedAfter19ReviewFixture: after19ReviewFixture,
+    seedAfter19LocalDeclaration: after19LocalDeclaration,
+  })
 }
 
 export async function seedFreshOnboarding(page: Page, locale: BLocale = "en") {
@@ -516,7 +598,7 @@ export async function finishAccountGate(page: Page) {
   const saveGate = page.getByTestId("account-save-gate")
   if (await saveGate.isVisible().catch(() => false)) {
     await saveGate.getByTestId("account-start").click()
-    await saveGate.getByTestId("account-complete").click()
+    await expect(saveGate).toHaveCount(0)
     return
   }
   await page.getByTestId("ondo-b-action-gate").getByTestId("action-gate-confirm").click()

@@ -130,6 +130,7 @@ test("B-PULSE-HOT-006 the Next client scan allows only curated Pulse ids above c
   expect(scanner).toContain("pulseVenueIds")
   expect(scanner).toContain("unexpectedElevatedVenueIds")
   expect(scanner).toContain("minimumVenueIdMultiplicity")
+  expect(scanner).toContain("MAX_CURATED_PULSE_MULTIPLICITY = 7")
   expect(scanner).not.toContain("client.venueIdOccurrences !== 800")
 })
 
@@ -174,13 +175,17 @@ test("B-PULSE-HOT-007 only an exact current place can canonically transition to 
     expect(history.state).toMatchObject({
       preserved: "outer-state",
       __ondoBDiscovery: {
-        v: 3,
+        v: 4,
         documentId: "pulse-alternative-contract",
         level: "peek",
         city: "seoul",
         view: "list",
         query: "late dinner",
         category: "korean",
+        editorialCategory: "all",
+        layer: "standard",
+        sheetSnap: "peek",
+        listScroll: 0,
         venueId: alternativeVenueId,
       },
     })

@@ -63,6 +63,17 @@ test("B-HISTORY-PRIVACY raw private and non-canonical history is always replaced
   try {
     const first = normalizeBDiscoveryHistoryForActiveDocument()
     expect(first).not.toBeNull()
+    expect(first).toMatchObject({
+      v: 4,
+      city: "seoul",
+      view: "list",
+      query: "",
+      category: "all",
+      editorialCategory: "all",
+      layer: "standard",
+      sheetSnap: "closed",
+      listScroll: 0,
+    })
     expect(history.replaceCalls).toBe(1)
     expect((history.state as Record<string, unknown>).nextInternal).toBe(nextInternal)
 
@@ -85,7 +96,19 @@ test("B-HISTORY-PRIVACY raw private and non-canonical history is always replaced
     expect(history.replaceCalls).toBe(2)
     const sanitized = (history.state as Record<string, unknown>).__ondoBDiscovery as Record<string, unknown>
     expect(sanitized.query).toBe(safeQuery)
-    expect(Reflect.ownKeys(sanitized).sort()).toEqual(["category", "city", "documentId", "level", "query", "v", "view"])
+    expect(Reflect.ownKeys(sanitized).sort()).toEqual([
+      "category",
+      "city",
+      "documentId",
+      "editorialCategory",
+      "layer",
+      "level",
+      "listScroll",
+      "query",
+      "sheetSnap",
+      "v",
+      "view",
+    ])
     expect(JSON.stringify(history.state)).not.toContain("PRIVATE-TAIL")
     expect(JSON.stringify(history.state)).not.toContain("privateDraft")
     expect(JSON.stringify(history.state)).not.toContain("accessToken")
@@ -129,6 +152,31 @@ test("B-HISTORY-PRIVACY raw private and non-canonical history is always replaced
       category: "night",
       focus: "search",
     })).toMatchObject({ level: "city", city: "seoul", focus: { kind: "search" } })
+
+    expect(restoreBDiscoveryCityContext({
+      city: "jeju",
+      view: "list",
+      query: "udon",
+      category: "japanese",
+      editorialCategory: "food",
+      layer: "after19",
+      listScroll: 732,
+      camera: { longitude: 126.5312, latitude: 33.4996, zoom: 12.75, bearing: 3, pitch: 24 },
+      focus: "view-toggle",
+    })).toMatchObject({
+      v: 4,
+      level: "city",
+      city: "jeju",
+      view: "list",
+      query: "udon",
+      category: "japanese",
+      editorialCategory: "food",
+      layer: "after19",
+      sheetSnap: "closed",
+      listScroll: 732,
+      camera: { longitude: 126.5312, latitude: 33.4996, zoom: 12.75, bearing: 3, pitch: 24 },
+      focus: { kind: "view-toggle" },
+    })
   } finally {
     if (previousWindow) Object.defineProperty(globalThis, "window", previousWindow)
     else Reflect.deleteProperty(globalThis, "window")

@@ -1,0 +1,104 @@
+{
+  "evidence_id": "OPENDID-ZKP-LOCAL-2026-08-17",
+  "scope": "OpenDID ZKP offline SDK verification",
+  "workspace_modified_by_test_harness": false,
+  "test_workspace": "temporary directory, removed from committed evidence",
+  "runtime": {
+    "os": "macOS",
+    "java": "Eclipse Temurin 21.0.12",
+    "gradle": "8.13",
+    "android_emulator": "NOT_AVAILABLE",
+    "ios_xctest": "NOT_AVAILABLE"
+  },
+  "commits": {
+    "zkp_server_sdk": "d1ba7410f7bebff7b743f94f6547306301e8dce7",
+    "android_wallet_sdk": "58c5582014908d47f1ce62340ce672727c6a1172",
+    "ios_wallet_sdk": "1f2b58da6775c3847020db88d1681cd837bc80d1",
+    "issuer_server": "3b2e950462c5d14348c629b8cec4f6ffb09225da",
+    "verifier_server": "8027086e20714971c24c34546cc2353684fa2b73",
+    "ta_server": "b8a41be7350c7962bc25d0656a958502ce132729",
+    "release_guide": "9de71fbb8b8c133d6c961af6ba3aad119e15b91c"
+  },
+  "build": {
+    "zkp_server_sdk": "PASS",
+    "issuer_server": "PASS_WITH_TESTS_EXCLUDED",
+    "verifier_server": "PASS_WITH_TESTS_EXCLUDED",
+    "official_zkp_sdk_tests": "NO_SOURCE"
+  },
+  "offline_full_cycle": {
+    "fixture_data": "SYNTHETIC",
+    "schema_and_definition": "PASS",
+    "credential_offer": "PASS",
+    "blinded_credential_request": "PASS",
+    "credential_issuance": "PASS",
+    "holder_signature_correctness_verification": "PASS",
+    "attribute_proof": "PASS",
+    "predicate_proof": "PASS",
+    "server_proof_verification": "PASS",
+    "revealed_attribute": "city",
+    "birth_attribute_revealed": false
+  },
+  "predicates": {
+    "GE": {
+      "search": "PASS",
+      "proof_generation": "PASS",
+      "server_verification": "PASS"
+    },
+    "GT": {
+      "search": "PASS",
+      "proof_generation": "PASS",
+      "server_verification": "PASS"
+    },
+    "LE": {
+      "search": "PASS",
+      "proof_generation": "PASS",
+      "server_verification": "PASS"
+    },
+    "LT": {
+      "search": "PASS",
+      "proof_generation": "PASS",
+      "server_verification": "PASS"
+    },
+    "EQ": {
+      "android_low_level_builder": "PASS",
+      "server_verification": "PASS",
+      "android_high_level_search": "FAIL_NOT_SELECTED",
+      "ios_enum": "NOT_IMPLEMENTED",
+      "product_verdict": "PARTIAL_DO_NOT_PROMISE_CROSS_PLATFORM"
+    },
+    "false_inequality": "REJECTED_BY_HOLDER",
+    "false_equality": "REJECTED_BY_LOW_LEVEL_BUILDER"
+  },
+  "nonce_binding": {
+    "credential_request_wrong_nonce": "REJECTED",
+    "proof_wrong_nonce": "REJECTED"
+  },
+  "request_binding_observation": {
+    "changed_predicate": "UNEXPECTED_PASS",
+    "changed_credential_definition_restriction": "UNEXPECTED_PASS",
+    "missing_requested_referent": "UNEXPECTED_PASS",
+    "scope": "Direct call to ZKP Server SDK v2.0.0 verifyProof",
+    "production_http_service_impact": "UNVERIFIED",
+    "required_action": "Vendor confirmation and explicit application-layer request-policy binding before access-control use"
+  },
+  "http_e2e": {
+    "status": "NOT_RUN",
+    "reason": "No public hosted OpenDID trust domain; PostgreSQL, Besu, TA/entity registration, membership certificates, wallet and issuance/verifier state are required",
+    "api_key_required_by_docs": false
+  },
+  "not_tested_or_not_provided": [
+    "real mobile Holder application approval",
+    "K-Tour application integration",
+    "public hosted OpenDID environment",
+    "ZKP credential revocation or non-revocation proof",
+    "passport authenticity, NFC chip, face match or liveness",
+    "production traffic or security certification"
+  ],
+  "privacy": {
+    "private_keys_included": false,
+    "nonces_included": false,
+    "proof_payload_included": false,
+    "credential_payload_included": false,
+    "personal_data_included": false
+  }
+}

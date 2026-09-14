@@ -7,6 +7,7 @@ import type { BReturnToEnvelope } from "../contracts/return-to-b"
 import { consumeBReturnTo } from "../contracts/return-to-b"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { focusFirstAvailableDestination } from "../shared/ui/focus-destination"
+import { isRenderedFocusable } from "../shared/ui/is-rendered-focusable"
 import { useModalIsolation } from "../shared/ui/use-modal-isolation"
 import { readQaRuntime } from "../shared/ui/use-qa-controls"
 import styles from "./after19-jit-b.module.css"
@@ -149,7 +150,7 @@ export function After19JitB({ open, locale, returnTo, tableTitle, venueLabel, on
     }
     if (event.key !== "Tab") return
     const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
-      .filter((element) => element.offsetParent !== null)
+      .filter(isRenderedFocusable)
     const first = focusable[0]
     const last = focusable.at(-1)
     if (!first || !last) return

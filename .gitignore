@@ -86,3 +86,4 @@ tmp/
 # Internal review notes (kept local, not for the public repo)
 docs/FEEDBACK.md
 docs/DESIGN_DIAGNOSIS.md
+.vercel

@@ -1,0 +1,38 @@
+{
+  "jejuAccountGate": {
+    "box": {
+      "top": 705,
+      "right": 367,
+      "bottom": 757,
+      "left": 23
+    },
+    "hitTestId": "account-start",
+    "gateOwnsHit": true,
+    "gateOpacity": "1",
+    "gateVisibility": "visible",
+    "layerDisplay": "grid",
+    "layerZ": "1540"
+  },
+  "preferenceBadge": {
+    "count": "3",
+    "fontSize": 12,
+    "width": 20,
+    "height": 20
+  },
+  "ktourConsent": {
+    "x": 409.03125,
+    "y": 221.21875,
+    "width": 220.90625,
+    "height": 48
+  },
+  "tableJoin": {
+    "x": 405.25,
+    "y": 330.52801513671875,
+    "width": 403.75,
+    "height": 54
+  },
+  "reducedMotion": {
+    "pulseMotion": "static",
+    "movingCss": 0
+  }
+}

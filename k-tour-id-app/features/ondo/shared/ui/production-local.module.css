@@ -1,21 +1,18 @@
 .screen {
-  --feature-paper: #f4efe8;
-  --feature-ink: #241f1d;
-  --feature-accent: #b34b39;
+  --feature-paper: var(--ondo-canvas, #fff);
+  --feature-ink: var(--ondo-ink, #171717);
+  --feature-accent: var(--ondo-accent, #8c244f);
   --feature-plum: #68344f;
   --feature-green: #2d745e;
-  --feature-card: rgb(255 253 249 / 88%);
-  --feature-border: rgb(69 51 41 / 12%);
-  --feature-hairline: rgb(69 51 41 / 9%);
-  --feature-shadow: 0 20px 52px rgb(53 36 26 / 9%);
+  --feature-card: var(--ondo-surface, #fff);
+  --feature-border: var(--ondo-line, rgb(23 23 23 / 11%));
+  --feature-hairline: var(--ondo-line, rgb(23 23 23 / 9%));
+  --feature-shadow: var(--ondo-shadow, 0 14px 36px rgb(0 0 0 / 8%));
   box-sizing: border-box;
   min-height: 100%;
   padding: max(32px, env(safe-area-inset-top)) 18px calc(40px + env(safe-area-inset-bottom));
   overflow-x: clip;
-  background:
-    radial-gradient(circle at 96% 0, rgb(192 78 58 / 12%), transparent 29%),
-    radial-gradient(circle at 3% 45%, rgb(222 165 101 / 9%), transparent 28%),
-    linear-gradient(180deg, #fcf9f5 0%, var(--feature-paper) 67%, #efe8e0 100%);
+  background: var(--feature-paper);
   color: var(--feature-ink);
   -webkit-tap-highlight-color: transparent;
 }
@@ -23,103 +20,92 @@
 .screen button:focus-visible,
 .screen textarea:focus-visible,
 .confirmLayer button:focus-visible {
-  outline: 3px solid rgb(178 78 59 / 38%);
+  outline: 3px solid var(--ondo-focus, rgb(29 102 209 / 38%));
   outline-offset: 3px;
 }
 
 .header { display: grid; max-width: 660px; gap: 8px; position: relative; z-index: 1; }
 .header p { margin: 0; color: var(--feature-accent); font-size: 12px; font-weight: 820; letter-spacing: .14em; text-transform: uppercase; }
 .header h1 { margin: 0; font-size: clamp(35px, 9vw, 48px); font-weight: 770; line-height: 1; letter-spacing: -.058em; }
-.header span { display: block; max-width: 610px; margin-top: 2px; color: #6d645d; font-size: 14px; line-height: 1.58; }
+.header span { display: block; max-width: 610px; margin-top: 2px; color: var(--ondo-muted, #626262); font-size: 14px; line-height: 1.58; }
 
-/* My Korea is a journey, not a stack of admin boxes. */
-.screen:has(.activitySections)::before {
-  position: absolute;
-  right: 0;
-  top: 76px;
-  width: 136px;
-  height: 210px;
-  border: 1px solid rgb(180 88 62 / 10%);
-  border-right: 0;
-  border-radius: 50% 0 0 50%;
-  content: "";
-  pointer-events: none;
-}
+.localPrivacy { max-width: 660px; margin-top: 14px; border-top: 1px solid var(--feature-hairline); color: var(--ondo-muted, #655e58); }
+.localPrivacy > summary { display: grid; min-height: 44px; grid-template-columns: 18px minmax(0, 1fr) 18px; align-items: center; gap: 8px; cursor: pointer; list-style: none; font-size: 12px; font-weight: 730; }
+.localPrivacy > summary::-webkit-details-marker { display: none; }
+.localPrivacy > summary > svg:last-child { transition: transform 180ms ease; }
+.localPrivacy[open] > summary > svg:last-child { transform: rotate(90deg); }
+.localPrivacy > p { margin: 0 0 10px 26px; color: var(--ondo-muted, #6d655f); font-size: 12px; line-height: 1.55; }
+
+/* My Korea is a visual memory surface. Static lanes use spacing and
+   hairlines; elevation is reserved for media and decisions. */
 .screen:has(.activitySections) { position: relative; isolation: isolate; }
-.activitySections { position: relative; display: grid; gap: 14px; margin-top: 24px; padding-left: 17px; }
-.activitySections::before {
-  position: absolute;
-  z-index: -1;
-  top: 24px;
-  bottom: 24px;
-  left: 5px;
-  width: 2px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #b84e3b 0%, #c8875b 34%, #8c5671 68%, #507c69 100%);
-  box-shadow: 0 0 0 5px rgb(255 252 248 / 74%);
-  content: "";
+.memoryStage { display: grid; min-width: 0; gap: 14px; }
+.memoryEmpty {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 10px;
+  border-top: 1px solid var(--ondo-line, rgb(23 23 23 / 10%));
+  padding-top: 14px;
 }
+.memoryEmpty > svg { grid-column: 1; grid-row: 1; color: var(--ondo-ink, #1d1d1b); }
+.memoryEmpty strong { grid-column: 2; grid-row: 1; font-size: 15px; letter-spacing: -.02em; }
+.memoryEmpty button {
+  display: flex;
+  min-height: 48px;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 14px;
+  padding: 0 16px;
+  background: var(--ondo-control, #171717);
+  color: var(--ondo-control-ink, #fff);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 760;
+}
+.activitySections { display: grid; min-width: 0; gap: 24px; margin-top: 6px; }
 .activitySection {
   position: relative;
   display: grid;
   min-width: 0;
   gap: 12px;
-  border: 1px solid rgb(255 255 255 / 76%);
-  border-radius: 22px;
-  padding: 17px;
-  background:
-    linear-gradient(145deg, rgb(255 254 251 / 96%), rgb(249 244 237 / 90%));
-  box-shadow: 0 16px 42px rgb(54 38 29 / 8%), inset 0 0 0 1px rgb(69 51 41 / 5%);
-  backdrop-filter: blur(20px);
-  animation: cardEnter .36s cubic-bezier(.2, .8, .2, 1) both;
+  border-top: 1px solid var(--ondo-line, rgb(23 23 23 / 10%));
+  padding-top: 18px;
 }
-.activitySection::before {
-  position: absolute;
-  top: 23px;
-  left: -24px;
-  width: 10px;
-  height: 10px;
-  border: 3px solid #fffaf5;
-  border-radius: 50%;
-  background: var(--feature-accent);
-  box-shadow: 0 3px 12px rgb(95 45 34 / 22%);
-  content: "";
-}
-.activitySection:nth-child(2) { animation-delay: 40ms; }
-.activitySection:nth-child(3) { animation-delay: 80ms; }
-.activitySection:nth-child(4) { animation-delay: 120ms; }
-.activitySection[data-testid="my-korea-planned"]::before { background: #ca8850; }
-.activitySection[data-testid="my-korea-receipts"]::before { background: var(--feature-plum); }
-.activitySection[data-testid="my-korea-contributions"]::before { background: var(--feature-green); }
-.activityHeading { display: grid; grid-template-columns: 36px minmax(0, 1fr); align-items: start; gap: 11px; color: #403a35; }
-.activityHeading > svg { box-sizing: content-box; border-radius: 12px; padding: 8px; background: linear-gradient(145deg, #f3ebe3, #ebe3db); color: #55483f; box-shadow: inset 0 0 0 1px rgb(65 48 38 / 5%); }
+.activitySection:first-child { border-top: 0; padding-top: 0; }
+.activityHeading { display: grid; grid-template-columns: 32px minmax(0, 1fr); align-items: start; gap: 10px; color: var(--ondo-ink, #2d2d2b); }
+.activityHeading > svg { box-sizing: content-box; border-radius: 11px; padding: 6px; background: var(--ondo-surface-soft, #f3f4f5); color: var(--feature-ink); }
 .activityHeading > span { display: grid; min-width: 0; gap: 4px; }
 .activityHeading h2,
 .activityHeading p { margin: 0; }
 .activityHeading h2 { font-size: 18px; font-weight: 760; letter-spacing: -.035em; }
-.activityHeading p { color: #71675f; font-size: 12px; line-height: 1.55; }
-.compactEmpty { display: grid; justify-items: start; gap: 6px; border: 0; border-top: 1px solid var(--feature-hairline); border-radius: 0; padding: 12px 0 0; background: transparent; color: #55504b; }
+.activityHeading p { color: var(--ondo-muted, #626262); font-size: 12px; line-height: 1.55; }
+.compactEmpty { display: grid; justify-items: start; gap: 6px; border: 0; border-top: 1px solid var(--feature-hairline); border-radius: 0; padding: 12px 0 0; background: transparent; color: var(--ondo-ink, #55504b); }
 .compactEmpty h3,
 .compactEmpty p { margin: 0; }
 .compactEmpty h3 { font-size: 14px; font-weight: 730; }
-.compactEmpty p { color: #756c65; font-size: 12px; line-height: 1.5; }
-.compactEmpty button { min-height: 44px; margin-top: 4px; border: 0; border-radius: 12px; padding: 0 15px; background: #2b2724; color: #fff; font: inherit; font-size: 12px; font-weight: 750; box-shadow: 0 10px 24px rgb(45 34 26 / 14%); }
+.compactEmpty p { color: var(--ondo-muted, #756c65); font-size: 12px; line-height: 1.5; }
+.compactEmpty button { min-height: 44px; margin-top: 4px; border: 0; border-radius: 12px; padding: 0 15px; background: var(--ondo-control, #20201f); color: var(--ondo-control-ink, #fff); font: inherit; font-size: 12px; font-weight: 750; }
 .referenceList { display: grid; gap: 8px; }
-.referenceCard { display: grid; width: 100%; min-height: 72px; grid-template-columns: 34px minmax(0, 1fr) 20px; align-items: center; gap: 10px; border: 1px solid var(--feature-hairline); border-radius: 15px; padding: 12px; background: rgb(255 255 255 / 74%); color: var(--feature-ink); font: inherit; text-align: left; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.referenceCard > svg:first-child { box-sizing: content-box; border-radius: 11px; padding: 7px; background: #f3ece5; }
+.referenceCard { display: grid; width: 100%; min-height: 72px; grid-template-columns: 34px minmax(0, 1fr) 20px; align-items: center; gap: 10px; border: 1px solid var(--feature-border); border-radius: 15px; padding: 12px; background: var(--feature-card); color: var(--feature-ink); font: inherit; text-align: left; transition: border-color .2s ease, background .2s ease; }
+.referenceCard > svg:first-child { box-sizing: content-box; border-radius: 11px; padding: 7px; background: var(--ondo-surface-soft, #f3f4f5); }
 .referenceCard > span { display: grid; min-width: 0; gap: 3px; }
 .referenceCard strong,
 .referenceCard small { overflow-wrap: anywhere; }
 .referenceCard strong { font-size: 14px; }
 .referenceCard small { color: #6b635d; font-size: 12px; line-height: 1.45; }
-.planReference { position: relative; display: grid; gap: 9px; overflow: hidden; border: 1px solid rgb(177 119 71 / 20%); border-radius: 17px; padding: 16px; background: linear-gradient(145deg, #fffdf9 0%, #fff5e7 72%, #f9e9d3 100%); box-shadow: 0 12px 28px rgb(104 70 39 / 7%); }
-.planReference::after { position: absolute; top: -38px; right: -35px; width: 112px; height: 112px; border: 1px solid rgb(168 100 54 / 12%); border-radius: 50%; content: ""; }
+.planReference { position: relative; display: grid; gap: 9px; overflow: hidden; border: 1px solid var(--feature-border); border-radius: 17px; padding: 16px; background: var(--feature-card); }
 .planReference h3,
 .planReference p { position: relative; z-index: 1; margin: 0; }
 .planReference h3 { font-size: 18px; font-weight: 770; letter-spacing: -.03em; }
-.planReference p { color: #6b6159; font-size: 12px; line-height: 1.52; }
-.planReference button { position: relative; z-index: 1; display: flex; min-height: 44px; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 12px; background: #2b2724; color: #fff; font: inherit; font-size: 12px; font-weight: 750; }
-.localBadge { position: relative; z-index: 1; width: fit-content; border-radius: 999px; padding: 6px 9px; background: #f1dfd4; color: #78483f; font-size: 12px; font-weight: 800; letter-spacing: .035em; }
+.planReference p { color: var(--ondo-muted, #6b6159); font-size: 12px; line-height: 1.52; }
+.planReference button { position: relative; z-index: 1; display: flex; min-height: 44px; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 12px; background: var(--ondo-control, #2b2724); color: var(--ondo-control-ink, #fff); font: inherit; font-size: 12px; font-weight: 750; }
+.localBadge { position: relative; z-index: 1; width: fit-content; border-radius: 999px; padding: 6px 9px; background: var(--ondo-surface-soft, #ededeb); color: var(--ondo-ink, #343432); font-size: 12px; font-weight: 800; letter-spacing: .035em; }
 
 .empty { display: grid; justify-items: start; gap: 10px; margin-top: 28px; border: 1px solid var(--feature-border); border-radius: 22px; padding: 20px; background: var(--feature-card); box-shadow: var(--feature-shadow); color: #55504b; }
 .empty h2,
@@ -128,28 +114,34 @@
 .empty p { color: #706861; font-size: 13px; line-height: 1.55; }
 .empty button { min-height: 44px; border: 0; border-radius: 12px; padding: 0 14px; background: #2b2724; color: #fff; font: inherit; font-size: 13px; font-weight: 730; }
 .savedList { display: grid; gap: 10px; }
-.savedCard { overflow: hidden; border: 1px solid var(--feature-hairline); border-radius: 17px; background: rgb(255 255 255 / 76%); }
+.savedCard { overflow: hidden; border: 1px solid var(--feature-border); border-radius: 17px; background: var(--feature-card); }
 .savedOpen { display: grid; width: 100%; min-height: 92px; grid-template-columns: 32px minmax(0, 1fr) 22px; align-items: center; gap: 10px; border: 0; border-bottom: 1px solid var(--feature-hairline); padding: 14px; background: transparent; color: var(--feature-ink); font: inherit; text-align: left; }
-.savedOpen > svg:first-child { box-sizing: content-box; border-radius: 11px; padding: 7px; background: #f3ece5; }
+.savedOpen > svg:first-child { box-sizing: content-box; border-radius: 11px; padding: 7px; background: var(--ondo-surface-soft, #f3f4f5); }
 .savedOpen > span { display: grid; min-width: 0; gap: 3px; }
 .savedOpen strong,
 .savedOpen small { overflow-wrap: anywhere; }
 .savedOpen strong { font-size: 15px; }
-.savedOpen small { color: #625b56; font-size: 12px; line-height: 1.45; }
-.savedOpen small b { color: #3f3935; font-weight: 730; }
-.note { display: grid; gap: 10px; padding: 14px; background: rgb(255 252 248 / 82%); }
-.noteHeading { display: flex; align-items: center; gap: 7px; color: #403a35; }
+.savedOpen small { color: var(--ondo-muted, #625b56); font-size: 12px; line-height: 1.45; }
+.savedOpen small b { color: var(--ondo-ink, #3f3935); font-weight: 730; }
+.note { display: grid; gap: 10px; padding: 14px; background: var(--ondo-surface-soft, #f3f4f5); }
+.noteHeading { display: flex; align-items: center; gap: 7px; color: var(--ondo-ink, #403a35); }
 .noteHeading label { font-size: 13px; font-weight: 750; }
-.note p { margin: 0; color: #625c56; font-size: 12px; line-height: 1.5; }
-.note textarea { box-sizing: border-box; width: 100%; min-height: 86px; resize: vertical; border: 1px solid var(--feature-border); border-radius: 13px; padding: 11px; background: #f8f4ef; color: var(--feature-ink); font: inherit; font-size: 13px; line-height: 1.5; }
+.note p { margin: 0; color: var(--ondo-muted, #625c56); font-size: 12px; line-height: 1.5; }
+.note textarea { box-sizing: border-box; width: 100%; min-height: 86px; resize: vertical; border: 1px solid var(--feature-border); border-radius: 13px; padding: 11px; background: var(--feature-card); color: var(--feature-ink); font: inherit; font-size: 13px; line-height: 1.5; }
 .noteActions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.noteActions small { color: #625c56; font-size: 12px; }
-.noteActions button { min-height: 44px; border: 0; border-radius: 12px; padding: 0 14px; background: #2b2724; color: #fff; font: inherit; font-size: 12px; font-weight: 730; }
+.noteActions small { color: var(--ondo-muted, #625c56); font-size: 12px; }
+.noteActions button { min-height: 44px; border: 0; border-radius: 12px; padding: 0 14px; background: var(--ondo-control, #2b2724); color: var(--ondo-control-ink, #fff); font: inherit; font-size: 12px; font-weight: 730; }
 .noteReceipt,
 .noteError { font-size: 12px; line-height: 1.45; }
-.noteReceipt { color: #3f624f; }
-.noteError { color: #a43f32; }
-.remove { display: flex; width: 100%; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border: 0; border-top: 1px solid var(--feature-hairline); background: #faf5ef; color: #81473d; font: inherit; font-size: 12px; font-weight: 710; }
+.noteReceipt { color: var(--success, #3f624f); }
+.noteError { color: var(--destructive, #a43f32); }
+.remove { display: grid; width: 44px; height: 44px; place-items: center; margin: 8px 10px 10px auto; border: 1px solid color-mix(in srgb, var(--destructive, #81473d) 28%, var(--ondo-line, transparent)); border-radius: 12px; background: color-mix(in srgb, var(--destructive, #81473d) 9%, var(--ondo-surface, #fff)); color: var(--destructive, #81473d); font: inherit; }
+.receiptDetails { position: relative; z-index: 1; border-top: 1px solid rgb(104 70 39 / 12%); padding-top: 8px; }
+.receiptDetails > summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer; list-style: none; color: var(--ondo-muted, #5f5751); font-size: 12px; font-weight: 740; }
+.receiptDetails > summary::-webkit-details-marker { display: none; }
+.receiptDetails > summary > svg { transition: transform 180ms ease; }
+.receiptDetails[open] > summary > svg { transform: rotate(90deg); }
+.receiptDetails > p { overflow-wrap: anywhere; padding-top: 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12px; }
 
 /* Settings uses quiet native groups and reserves elevation for dialogs. */
 .screen:has(.settingsSection) { background: linear-gradient(180deg, #fbf9f6 0%, #f3eee7 58%, #efe9e2 100%); }
@@ -160,7 +152,7 @@
 .sectionHeading > svg { box-sizing: content-box; border-radius: 10px; padding: 6px; background: #eee9e3; color: #514a44; }
 .sectionHeading h2 { margin: 0; font-size: 18px; font-weight: 760; letter-spacing: -.035em; }
 .settingsSection > p { margin: 11px 0 0; color: #706861; font-size: 12px; line-height: 1.6; }
-.segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 15px; border-radius: 14px; padding: 4px; background: #eae5df; box-shadow: inset 0 1px 2px rgb(67 49 40 / 5%); }
+.segmented { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 15px; border-radius: 14px; padding: 4px; background: #eae5df; box-shadow: inset 0 1px 2px rgb(67 49 40 / 5%); }
 .segmented button { min-height: 44px; border: 0; border-radius: 11px; background: transparent; color: #55504b; font: inherit; font-size: 13px; font-weight: 720; }
 .segmented button[aria-pressed="true"] { background: #fffdf9; color: #2c2825; box-shadow: 0 5px 15px rgb(52 38 27 / 9%); }
 .settingsDisclosure { margin-top: 10px; border-top: 1px solid var(--feature-hairline); }
@@ -215,17 +207,15 @@
 .confirmCard button:last-child { border-color: #81473d; background: #81473d; color: #fff; }
 
 @media (hover: hover) {
-  .referenceCard:hover { transform: translateY(-2px); border-color: rgb(178 78 59 / 22%); box-shadow: 0 14px 28px rgb(52 38 27 / 9%); }
+  .referenceCard:hover { border-color: rgb(23 23 23 / 18%); background: #f6f6f3; }
   .preferenceChips button:hover { border-color: rgb(48 43 39 / 28%); }
 }
 
 @media (min-width: 700px) {
   .screen { width: min(100%, 1040px); max-width: 1040px; margin: 0 auto; padding: 52px 36px 72px; }
   .screen:has(.activitySections) .header { max-width: 700px; }
-  .activitySections { grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr); grid-auto-flow: dense; align-items: start; gap: 16px; margin-top: 32px; padding-left: 20px; }
-  .activitySections::before { left: 6px; }
+  .activitySections { grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr); grid-auto-flow: dense; align-items: start; gap: 24px 16px; margin-top: 0; }
   .activitySection:first-child { grid-column: 1 / -1; }
-  .activitySection::before { left: -27px; }
   .confirmCard { width: min(100%, 520px); margin: auto; }
   .confirmLayer { align-items: center; }
   .settingsSection:nth-of-type(3) .settingsDisclosureBody {
@@ -244,122 +234,32 @@
   .screen:has(.settingsSection) > .settingsSection:nth-of-type(3) { grid-column: 1 / -1; grid-row: 3; }
 }
 
-/* Modern white personal surfaces. Journey color lives in real content and
-   semantic state; the application canvas itself stays white and quiet. */
+/* Personal surfaces stay modern white; content carries the color. */
 .screen[data-testid="ondo-b-my-korea-entry"],
-.screen[data-testid="ondo-b-settings-entry"] {
-  background: #fff;
+.screen[data-testid="ondo-b-settings-entry"] { background: var(--ondo-canvas, #fff); }
+.screen[data-testid="ondo-b-my-korea-entry"] {
+  --feature-ink: var(--ondo-ink, #171717);
+  --feature-hairline: var(--ondo-line, rgb(23 23 23 / 9%));
 }
-
 .screen[data-testid="ondo-b-my-korea-entry"]::before { display: none; }
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before {
-  background: #d6d6d3;
-  box-shadow: 0 0 0 6px #fff;
-}
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection,
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] {
-  border-color: rgb(25 25 25 / 10%);
-  background: #fff;
-  box-shadow: 0 14px 38px rgb(25 25 25 / 6%);
-}
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] .activityHeading > svg,
-.screen[data-testid="ondo-b-my-korea-entry"] .activityHeading > svg {
-  background: #f1f1ef;
-  color: #333;
-}
+.screen[data-testid="ondo-b-my-korea-entry"] > .header { max-width: none; }
+.screen[data-testid="ondo-b-my-korea-entry"] > .header h1 { font-size: clamp(31px, 8vw, 42px); }
+.screen[data-testid="ondo-b-my-korea-entry"] .activityHeading,
+.screen[data-testid="ondo-b-my-korea-entry"] .noteHeading,
+.screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty,
+.screen[data-testid="ondo-b-my-korea-entry"] .referenceCard,
+.screen[data-testid="ondo-b-my-korea-entry"] .savedOpen { color: var(--ondo-ink, #171717); }
+.screen[data-testid="ondo-b-my-korea-entry"] .activityHeading p,
+.screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty p,
+.screen[data-testid="ondo-b-my-korea-entry"] .referenceCard small,
+.screen[data-testid="ondo-b-my-korea-entry"] .savedOpen small,
+.screen[data-testid="ondo-b-my-korea-entry"] .note p,
+.screen[data-testid="ondo-b-my-korea-entry"] .noteActions small,
+.screen[data-testid="ondo-b-my-korea-entry"] .receiptDetails { color: var(--ondo-muted, #626262); }
 .screen[data-testid="ondo-b-settings-entry"] .settingsSection,
 .screen[data-testid="ondo-b-settings-entry"] .segmented,
 .screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg {
-  background: #f7f7f5;
-}
-
-.journeyInspiration {
-  position: relative;
-  width: min(100%, 780px);
-  aspect-ratio: 1.62 / 1;
-  margin: 24px 0 0;
-  overflow: hidden;
-  border: 1px solid rgb(25 25 25 / 10%);
-  border-radius: 22px;
-  background: #f3f3f1;
-}
-.journeyInspiration img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: 69% 55%;
-}
-.journeyInspiration figcaption {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  max-width: calc(100% - 16px);
-  border-radius: 999px;
-  padding: 5px 8px;
-  background: rgb(20 20 20 / 72%);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.25;
-  backdrop-filter: blur(10px);
-}
-
-@media (min-width: 700px) {
-  .journeyInspiration { aspect-ratio: 1.82 / 1; }
-  .journeyInspiration img { object-position: 62% 52%; }
-}
-
-@media (min-width: 1100px) {
-  .journeyInspiration {
-    height: 240px;
-    aspect-ratio: auto;
-  }
-}
-
-/* A short landscape viewport is a task surface, not an image viewer. Keep
-   the empty-journey meaning and Explore decision visible together while the
-   remaining preserved sections continue below. */
-@media (min-width: 700px) and (orientation: landscape) and (max-height: 500px) {
-  .screen[data-testid="ondo-b-my-korea-entry"] { padding: 18px 24px 32px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .header { gap: 4px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .header h1 { font-size: 32px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .header span { max-width: 760px; font-size: 12px; line-height: 1.35; }
-  .journeyInspiration { display: none; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 12px;
-    padding-left: 0;
-  }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before,
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection::before { display: none; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection {
-    grid-column: auto;
-    gap: 8px;
-    padding: 12px;
-    border-radius: 18px;
-  }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="ondo-b-saved-entry"] { order: -2; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] { order: -1; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading { grid-template-columns: 30px minmax(0, 1fr); gap: 8px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading > svg { padding: 5px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading h2 { font-size: 15px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading p { line-height: 1.35; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty {
-    grid-template-columns: minmax(0, 1fr);
-    align-items: center;
-    gap: 4px 8px;
-    padding-top: 8px;
-  }
-  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty:has(button) {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty button {
-    grid-column: 2;
-    grid-row: 1 / span 2;
-    margin: 0;
-  }
+  background: var(--ondo-surface-soft, #f3f4f5);
 }
 
 @media (max-width: 430px) {
@@ -367,8 +267,9 @@
   .header { gap: 6px; }
   .header h1 { font-size: clamp(33px, 9vw, 41px); }
   .header span { display: block; overflow: visible; font-size: 13px; line-height: 1.48; -webkit-line-clamp: none; }
-  .activitySections { gap: 12px; margin-top: 19px; }
-  .activitySection { gap: 10px; padding: 14px; border-radius: 19px; }
+  .activitySections { gap: 22px; margin-top: 4px; }
+  .activitySection { gap: 10px; border-radius: 0; padding: 16px 0 0; }
+  .activitySection:first-child { padding-top: 0; }
   .activityHeading { grid-template-columns: 32px minmax(0, 1fr); gap: 9px; }
   .activityHeading > svg { padding: 6px; }
   .activityHeading h2 { font-size: 16px; }
@@ -378,23 +279,35 @@
   .compactEmpty:has(button) { grid-template-columns: minmax(0, 1fr) auto; }
   .compactEmpty h3 { font-size: 13px; }
   .compactEmpty button { grid-column: 2; grid-row: 1 / span 2; margin: 0; padding-inline: 11px; }
-  .activitySection[data-testid="my-korea-receipts"] { order: -4; }
-  .activitySection[data-testid="my-korea-planned"]:has(.planReference) { order: -3; }
-  .activitySection[data-testid="my-korea-contributions"]:has(.referenceCard) { order: -2; }
-  .activitySection[data-testid="ondo-b-saved-entry"]:has(.savedCard),
-  .activitySection[data-testid="my-korea-recent"]:has(.referenceCard) { order: -1; }
   .settingsSection { margin-top: 12px; padding: 15px; border-radius: 18px; }
   .segmented { margin-top: 11px; }
   .settingsDisclosure { margin-top: 8px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] > .header > p,
+  .screen[data-testid="ondo-b-my-korea-entry"] > .header > span,
+  .screen[data-testid="ondo-b-settings-entry"] > .settingsHeader > span,
+  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading p,
+  .screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty p { display: none; }
 }
 
 @media (max-width: 350px) {
-  .screen { padding-inline: 14px; }
-  .activitySection,
+  .screen { padding-inline: 16px; }
+  .activitySection { padding-inline: 0; }
   .settingsSection { padding: 13px; }
   .preferenceChips { gap: 6px; }
   .preferenceChips button { padding-inline: 12px; }
   .settingsDisclosure > summary small { white-space: normal; }
+}
+
+.screen[data-testid="ondo-b-my-korea-entry"] .memoryStage > figure { margin-top: 14px; }
+.screen[data-testid="ondo-b-my-korea-entry"] > .localPrivacy { margin-top: 18px; }
+.screen[data-testid="ondo-b-my-korea-entry"] > .labsEntry { margin-top: 14px; }
+
+@media (max-width: 360px) {
+  .screen[data-testid="ondo-b-my-korea-entry"] { padding-inline: 16px; }
+}
+
+@media (min-width: 361px) and (max-width: 430px) {
+  .screen[data-testid="ondo-b-my-korea-entry"] { padding-inline: 20px; }
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -404,6 +317,35 @@
   .header h1 { grid-column: 1; }
   .header span { grid-column: 2; grid-row: 1 / span 2; }
   .confirmLayer { align-items: center; padding: 10px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] { padding: 16px 22px calc(28px + env(safe-area-inset-bottom)); }
+  .screen[data-testid="ondo-b-my-korea-entry"] > .header { display: block; }
+  .screen[data-testid="ondo-b-my-korea-entry"] > .header h1 { font-size: 30px; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .memoryStage {
+    grid-template-columns: minmax(250px, .8fr) minmax(0, 1.2fr);
+    align-items: start;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .memoryStage > figure {
+    height: 190px;
+    margin-top: 0;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections {
+    --memory-card-columns: minmax(116px, 40%) minmax(0, 1fr);
+    --memory-card-align: start;
+    --memory-card-media-align: start;
+    --memory-card-aspect: 4 / 3;
+    --memory-card-body-padding: 13px 42px 13px 13px;
+    --memory-card-chevron-right: 13px;
+    --memory-card-chevron-bottom: 50%;
+    --memory-card-chevron-transform: translateY(50%);
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    margin-top: 0;
+  }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection { grid-column: auto; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .activityHeading p { display: none; }
+  .screen[data-testid="ondo-b-my-korea-entry"] .memoryEmpty { align-self: center; border-top: 0; padding-top: 0; }
 }
 
 @keyframes cardEnter { from { transform: translateY(10px); } }
@@ -415,57 +357,14 @@
   .settingsSection,
   .confirmCard { animation: none; }
   .referenceCard,
+  .receiptDetails > summary > svg,
   .preferenceChips button,
   .settingsDisclosure > summary > svg { transition: none; }
   .confirmLayer { backdrop-filter: none; }
 }
 
-/* Warm Living Atlas personal surfaces. My Korea reads as a trip route and
-   Settings as calm native groups rather than nested administration cards. */
-.screen {
-  --atlas-route: linear-gradient(180deg, #bb513d 0%, #de9b5d 38%, #74415c 70%, #3f7863 100%);
-  --settings-group-material: rgb(255 253 249 / 88%);
-  --atlas-ceramic-shadow: 0 18px 46px rgb(58 39 28 / 8%);
-}
-
-.screen[data-testid="ondo-b-my-korea-entry"] {
-  background:
-    radial-gradient(circle at 92% 7%, rgb(222 135 80 / 15%), transparent 24%),
-    radial-gradient(circle at 2% 76%, rgb(113 58 85 / 8%), transparent 28%),
-    linear-gradient(180deg, #fffaf5 0%, #f5ede4 62%, #eee5dc 100%);
-}
-
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before {
-  width: 3px;
-  background: var(--atlas-route);
-  box-shadow: 0 0 0 6px rgb(255 250 245 / 72%);
-}
-
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection {
-  border-color: rgb(255 255 255 / 84%);
-  background: linear-gradient(150deg, rgb(255 254 251 / 97%), rgb(248 242 235 / 92%));
-  box-shadow: var(--atlas-ceramic-shadow), inset 0 0 0 1px rgb(79 55 42 / 4%);
-}
-
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] {
-  border-color: rgb(203 121 67 / 17%);
-  background:
-    radial-gradient(circle at 94% 8%, rgb(229 162 91 / 23%), transparent 32%),
-    linear-gradient(145deg, #fffaf1, #f7eadb);
-  box-shadow: 0 22px 52px rgb(93 56 34 / 11%), inset 0 1px 0 rgb(255 255 255 / 92%);
-}
-
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] .activityHeading > svg {
-  background: #322924;
-  color: #fff8ef;
-}
-
-.screen[data-testid="ondo-b-my-korea-entry"] .compactEmpty,
-.screen[data-testid="ondo-b-my-korea-entry"] .savedCard,
-.screen[data-testid="ondo-b-my-korea-entry"] .referenceCard {
-  border-color: rgb(76 55 44 / 9%);
-  background: rgb(255 255 255 / 56%);
-}
+/* Settings keeps a quiet grouped material. */
+.screen { --settings-group-material: rgb(255 253 249 / 88%); }
 
 .screen[data-testid="ondo-b-settings-entry"] {
   background:
@@ -520,11 +419,6 @@
 }
 
 @media (max-width: 430px) {
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySections { padding-left: 15px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection { border-radius: 20px; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="ondo-b-saved-entry"]:has(.compactEmpty button) { order: -6; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] { order: -5; }
-  .screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-receipts"] { order: -4; }
   .screen[data-testid="ondo-b-settings-entry"] .settingsSection { border-radius: 20px; }
 }
 
@@ -537,25 +431,8 @@
   .screen[data-testid="ondo-b-settings-entry"] > .settingsSection:nth-of-type(1) { grid-row: 2 / span 2; }
 }
 
-/* Final neutral material override; keep after the historical Atlas layer. */
-.screen[data-testid="ondo-b-my-korea-entry"],
+/* Final neutral settings material. */
 .screen[data-testid="ondo-b-settings-entry"] { background: #fff; }
-.screen[data-testid="ondo-b-my-korea-entry"]::before { display: none; }
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySections::before {
-  background: #d6d6d3;
-  box-shadow: 0 0 0 6px #fff;
-}
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection,
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] {
-  border-color: rgb(25 25 25 / 10%);
-  background: #fff;
-  box-shadow: 0 14px 38px rgb(25 25 25 / 6%);
-}
-.screen[data-testid="ondo-b-my-korea-entry"] .activitySection[data-testid="my-korea-planned"] .activityHeading > svg,
-.screen[data-testid="ondo-b-my-korea-entry"] .activityHeading > svg {
-  background: #f1f1ef;
-  color: #333;
-}
 .screen[data-testid="ondo-b-settings-entry"] .settingsSection,
 .screen[data-testid="ondo-b-settings-entry"] .segmented,
 .screen[data-testid="ondo-b-settings-entry"] .sectionHeading > svg { background: #f7f7f5; }
@@ -575,7 +452,7 @@
   height: 46px;
   grid-column: 1;
   grid-row: 1 / span 2;
-  border: 1px solid rgb(25 25 25 / 10%);
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 12%));
   border-radius: 15px;
   padding: 10px;
   background: #f4f4f2;
@@ -659,11 +536,11 @@
   align-items: center;
   gap: 10px;
   margin-top: 18px;
-  border: 1px solid rgb(25 25 25 / 10%);
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 12%));
   border-radius: 16px;
   padding: 8px 12px;
-  background: #fafaf8;
-  color: #2b2927;
+  background: var(--ondo-surface, #fff);
+  color: var(--ondo-ink, #171717);
   font: inherit;
   text-align: left;
 }
@@ -673,11 +550,11 @@
   height: 30px;
   padding: 6px;
   border-radius: 10px;
-  background: #efefec;
+  background: var(--ondo-surface-soft, #f3f3f1);
 }
 .labsEntry > span:not(.srOnly) { display: grid; min-width: 0; gap: 1px; }
 .labsEntry strong { font-size: 13px; }
-.labsEntry small { overflow: hidden; color: #6c6864; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.labsEntry small { overflow: hidden; color: var(--ondo-muted, #626262); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .srOnly {
   position: absolute;
   width: 1px;

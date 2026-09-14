@@ -56,7 +56,7 @@ test("B-JEJU-EDITORIAL-004 internal editorial detail preserves the reduced truth
   expect(detail).not.toMatch(/canonical-place-table|checkout|Local Signal|after19|meal benefit/i)
   expect(saved).toContain("savedEditorialPlaceIds")
   expect(saved).toContain("recentEditorialPlaceIds")
-  expect(saved).toContain("openSavedBDiscoveryEditorialPlace")
+  expect(saved).toContain("openMyKoreaSavedBDiscoveryEditorialPlace")
   expect(history).toContain('kind: "editorial-place"')
   expect(history).toContain("editorialPlaceId")
 })

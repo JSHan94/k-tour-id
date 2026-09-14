@@ -13,8 +13,12 @@ import {
 const ROOT_LAYOUT = `import type React from "react"
 import type { Metadata, Viewport } from "next"
 import "./globals.css"
+import { ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT } from "@/features/ondo/shared/state/ondo-b-appearance"
+
+const metadataOrigin = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN ?? "https://ondo-k-tour-id.vercel.app"
 
 export const metadata: Metadata = {
+  metadataBase: new URL(metadataOrigin),
   applicationName: "K-TOUR ID",
   title: "K-TOUR ID | ONDO 溫圖",
   description: "A map-first Korea travel experience by ONDO 溫圖—discover Seoul, Busan, and Jeju with a privacy-minded K-TOUR ID travel pass.",
@@ -47,16 +51,71 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ko" className="antialiased"><body>{children}</body></html>
+  return (
+    <html
+      lang="ko"
+      className="antialiased"
+      data-ondo-theme="light"
+      data-ondo-theme-preference="system"
+      suppressHydrationWarning
+    >
+      <head>
+        <script
+          id="ondo-appearance-bootstrap"
+          dangerouslySetInnerHTML={{ __html: ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT }}
+        />
+      </head>
+      <body>{children}</body>
+    </html>
+  )
 }
 `
 
 const GLOBALS = `@import "maplibre-gl/dist/maplibre-gl.css";
 
-:root { --focus: #1d66d1; color-scheme: light; }
+:root {
+  --focus: #1d66d1;
+  color-scheme: light;
+  --ondo-canvas: #ffffff;
+  --ondo-surface: #ffffff;
+  --ondo-surface-raised: #ffffff;
+  --ondo-surface-soft: #f3f3f1;
+  --ondo-ink: #171717;
+  --ondo-muted: #626262;
+  --ondo-quiet: #737373;
+  --ondo-line: rgb(23 23 23 / 11%);
+  --ondo-line-strong: rgb(23 23 23 / 34%);
+  --ondo-shadow: 0 14px 36px rgb(0 0 0 / 8%), 0 2px 7px rgb(0 0 0 / 3%);
+  --ondo-control: #171717;
+  --ondo-control-ink: #ffffff;
+  --ondo-accent: #8c244f;
+  --ondo-focus: #1d66d1;
+  --success: #326451;
+  --success-surface: #e8eee9;
+}
+.dark,
+:root[data-ondo-theme="dark"] {
+  color-scheme: dark;
+  --ondo-canvas: #111214;
+  --ondo-surface: #18191d;
+  --ondo-surface-raised: #202126;
+  --ondo-surface-soft: #25262b;
+  --ondo-ink: #f4f4f5;
+  --ondo-muted: #b7b6bc;
+  --ondo-quiet: #918f98;
+  --ondo-line: rgb(255 255 255 / 13%);
+  --ondo-line-strong: rgb(255 255 255 / 34%);
+  --ondo-shadow: 0 18px 42px rgb(0 0 0 / 38%), 0 2px 8px rgb(0 0 0 / 24%);
+  --ondo-control: #f4f4f5;
+  --ondo-control-ink: #111214;
+  --ondo-accent: #ff87bf;
+  --ondo-focus: #8fb8ff;
+  --success: #78c9a4;
+  --success-surface: #183429;
+}
 * { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
-body { background: #efefed; color: #1f1e1c; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+body { background: var(--ondo-canvas); color: var(--ondo-ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
@@ -64,10 +123,94 @@ button { cursor: pointer; }
 
 const QA_CONTROLS_STUB = `"use client"
 
+import { useEffect, useState } from "react"
+import { SAMPLE_ENVIRONMENT_ENABLED } from "../../contracts/sample-environment"
+
+const REVIEW_ENABLED_KEY = "ondo.review.flow.v1"
+export const REVIEW_FLOW_CHANGE_EVENT = "ondo-review-flow-change"
+let capturedForDocument = false
+let capturedPath: string | null = null
+
 export const QA_RUNTIME_ENABLED = false
-export function captureQaControls(_search: string) {}
+export function hasReviewSessionOptIn() {
+  if (typeof window === "undefined") return false
+  const requested = new URLSearchParams(window.location.search).get("review")
+  if (requested === "0") return false
+  if (requested === "1") return true
+  try {
+    const stored = window.sessionStorage.getItem(REVIEW_ENABLED_KEY)
+    if (stored === "1") return true
+    if (stored === "0") return false
+  } catch {}
+  return SAMPLE_ENVIRONMENT_ENABLED
+}
+export function hasQaSessionOptIn() { return hasReviewSessionOptIn() }
+export function qaReviewFixtureOptions() { return { allowReviewFixture: hasQaSessionOptIn() } as const }
+export function enterReviewSample() {
+  if (typeof window === "undefined") return false
+  try {
+    window.sessionStorage.setItem(REVIEW_ENABLED_KEY, "1")
+    const url = new URL(window.location.href)
+    url.searchParams.set("review", "1")
+    window.history.replaceState(window.history.state, "", \`\${url.pathname}\${url.search}\${url.hash}\`)
+    window.dispatchEvent(new Event(REVIEW_FLOW_CHANGE_EVENT))
+    return true
+  } catch { return false }
+}
+export function exitReviewSample() {
+  if (typeof window === "undefined") return false
+  try {
+    window.sessionStorage.setItem(REVIEW_ENABLED_KEY, "0")
+    const url = new URL(window.location.href)
+    url.searchParams.set("review", "0")
+    window.dispatchEvent(new Event(REVIEW_FLOW_CHANGE_EVENT))
+    window.location.replace(\`\${url.pathname}\${url.search}\${url.hash}\`)
+    return true
+  } catch { return false }
+}
+export function captureQaControls(search: string) {
+  if (typeof window === "undefined") return
+  const params = new URLSearchParams(search)
+  const currentPath = window.location.pathname
+  if (capturedForDocument && capturedPath === currentPath && !params.has("review")) return
+  capturedForDocument = true
+  capturedPath = currentPath
+  try {
+    const requestedReview = params.get("review")
+    if (requestedReview === "1") window.sessionStorage.setItem(REVIEW_ENABLED_KEY, "1")
+    else if (requestedReview !== null) window.sessionStorage.setItem(REVIEW_ENABLED_KEY, "0")
+  } catch {}
+}
 export function readQaScenario() { return null }
-export function useQaControls() { return false }
+export function useQaControls() {
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    captureQaControls(window.location.search)
+    const sync = () => setEnabled(hasQaSessionOptIn())
+    sync()
+    window.addEventListener(REVIEW_FLOW_CHANGE_EVENT, sync)
+    window.addEventListener("popstate", sync)
+    return () => {
+      window.removeEventListener(REVIEW_FLOW_CHANGE_EVENT, sync)
+      window.removeEventListener("popstate", sync)
+    }
+  }, [])
+  return enabled
+}
+export function useReviewSampleSession() {
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    const sync = () => setEnabled(hasReviewSessionOptIn())
+    sync()
+    window.addEventListener(REVIEW_FLOW_CHANGE_EVENT, sync)
+    window.addEventListener("popstate", sync)
+    return () => {
+      window.removeEventListener(REVIEW_FLOW_CHANGE_EVENT, sync)
+      window.removeEventListener("popstate", sync)
+    }
+  }, [])
+  return enabled
+}
 export function readQaRuntime<T extends object>(): T | undefined { return undefined }
 `
 
@@ -217,13 +360,34 @@ const TSCONFIG = JSON.stringify({
     paths: { "@/*": ["./*"] },
   },
   include: ["**/*.ts", "**/*.tsx"],
-  exclude: ["node_modules", "dist"],
+  // Next/Vercel and vinext/Cloudflare share this isolated source tree but do
+  // not share build-time configuration modules. Keep the Next typecheck on
+  // every product file while leaving the alternate builder entry points to
+  // their own compiler.
+  exclude: ["node_modules", "dist", "vite.config.ts", "worker"],
 }, null, 2) + "\n"
 
 const PACKAGE = JSON.stringify({
   name: "ondo-b-production-site",
   private: true,
   type: "module",
+  scripts: { build: "next build" },
+  dependencies: {
+    "lucide-react": "^0.454.0",
+    "maplibre-gl": "^5.7.1",
+    "qrcode-generator": "2.0.4",
+    next: "16.2.6",
+    react: "19.2.6",
+    "react-dom": "19.2.6",
+    vinext: "0.0.50",
+    vite: "8.0.13",
+  },
+  devDependencies: {
+    "@types/node": "^22",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    typescript: "5.9.3",
+  },
 }, null, 2) + "\n"
 
 const VENUE_INDEX = `export type {

@@ -220,7 +220,7 @@ test("SOC-DIR-004 JA desktop photo composer remains above its own backdrop", asy
   await signal.locator("fieldset button").first().click()
   await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
 
-  const photo = signal.locator("img")
+  const photo = signal.getByTestId("local-signal-photo-preview")
   const replace = signal.getByTestId("local-signal-photo-replace")
   const remove = signal.getByTestId("local-signal-photo-remove")
   await replace.scrollIntoViewIfNeeded()
@@ -234,9 +234,9 @@ test("SOC-DIR-004 JA desktop photo composer remains above its own backdrop", asy
     const body = root.querySelector<HTMLElement>(":scope > div")
     const bodyBox = body?.getBoundingClientRect()
     const draftBox = root.querySelector<HTMLElement>("[data-testid='local-signal-draft']")?.getBoundingClientRect()
-    const figureBox = root.querySelector<HTMLElement>("figure")?.getBoundingClientRect()
-    const photoBox = root.querySelector<HTMLElement>("img")?.getBoundingClientRect()
-    const targets = [root.querySelector(":scope > header"), root.querySelector("img"), ...root.querySelectorAll("figcaption button")]
+    const figureBox = root.querySelector<HTMLElement>("[data-testid='local-signal-photo-slot'] figure")?.getBoundingClientRect()
+    const photoBox = root.querySelector<HTMLElement>("[data-testid='local-signal-photo-preview']")?.getBoundingClientRect()
+    const targets = [root.querySelector(":scope > header"), root.querySelector("[data-testid='local-signal-photo-preview']"), ...root.querySelectorAll("[data-testid='local-signal-photo-slot'] figcaption button")]
     const occluded = targets.flatMap((target) => {
       if (!(target instanceof HTMLElement)) return ["missing target"]
       const box = target.getBoundingClientRect()
@@ -271,7 +271,7 @@ test("SOC-DIR-004 JA desktop photo composer remains above its own backdrop", asy
   expect(geometry.figureBox!.right).toBeLessThanOrEqual(geometry.draftBox!.right)
   expect(geometry.photoBox!.right).toBeLessThanOrEqual(geometry.figureBox!.right)
   expect(geometry.photoBox!.width).toBeLessThanOrEqual(600)
-  expect(geometry.photoBox!.height).toBe(210)
+  expect(geometry.photoBox!.width / geometry.photoBox!.height).toBeCloseTo(4 / 3, 1)
   expect(geometry.occluded).toEqual([])
 })
 
@@ -313,8 +313,8 @@ for (const locale of ["en", "ko", "ja"] as const) {
       await captureSurface(page, signal, `${locale}-${viewport.label}-local-signal`)
 
       await signal.getByTestId("local-signal-photo-input").setInputFiles("public/seoul-after-rain-hero.jpg")
-      await expect(signal.locator("img")).toBeVisible()
-      await signal.locator("img").evaluate((image) => (image as HTMLImageElement).decode())
+      await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
+      await signal.getByTestId("local-signal-photo-preview").evaluate((image) => (image as HTMLImageElement).decode())
       await signal.getByTestId("local-signal-photo-replace").scrollIntoViewIfNeeded()
       await captureSurface(page, signal, `${locale}-${viewport.label}-local-signal-photo`)
     })

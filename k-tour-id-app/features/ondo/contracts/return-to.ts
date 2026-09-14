@@ -1,4 +1,11 @@
 import type { GateKind, ReturnToCta, ReturnToEnvelope } from "./domain"
+import {
+  createDeterministicReturnToToken,
+  hasExactOwnKeys,
+  hashReturnToSnapshot,
+  type CanonicalSnapshotValue,
+  type ReturnToSnapshotHash,
+} from "./return-to-integrity"
 
 export const RETURN_TO_TTL_MS = 15 * 60 * 1000
 export const RETURN_TO_CTAS = [
@@ -15,6 +22,9 @@ export const RETURN_TO_GATES = ["account", "person", "age", "payment_kyc"] as co
 const RETURN_TO_CTA_ALLOWLIST = new Set<string>(RETURN_TO_CTAS)
 const RETURN_TO_GATE_ALLOWLIST = new Set<string>(RETURN_TO_GATES)
 const PUBLIC_CONTEXT_ID = /^[a-z0-9][a-z0-9-]{0,127}$/
+const SENSITIVE_KEY = /(credential|birth|dob|nationality|passport|photo|blob|private|secret|access.?token|payment.?instrument|provider.?response)/i
+const BASE_KEYS = ["tokenId", "cta", "gateQueue", "activeGate", "createdAt", "expiresAt"] as const
+
 type ContextRequirement = "required" | "optional" | "forbidden"
 type ReturnToRule = {
   gateSequences: readonly (readonly GateKind[])[]
@@ -40,14 +50,119 @@ export const RETURN_TO_RULES = {
   MINT_BADGE: { gateSequences: [["person"]], venueId: "forbidden", tableId: "forbidden" },
 } as const satisfies Record<ReturnToCta, ReturnToRule>
 
-function hasAllowedContext(value: string | undefined, requirement: ContextRequirement) {
-  if (requirement === "required") return typeof value === "string" && PUBLIC_CONTEXT_ID.test(value)
-  if (requirement === "forbidden") return value === undefined
-  return value === undefined || PUBLIC_CONTEXT_ID.test(value)
+export type ReturnToSafeReason = "missing" | "invalid" | "private_field" | "expired" | "consumed" | "mismatch"
+export type ReturnToSafeReturn = {
+  kind: "safe_return"
+  reason: ReturnToSafeReason
+  discardToken: true
+  surface: { kind: "map" }
+}
+export type ReturnToResume = {
+  kind: "resume"
+  envelope: ReturnToEnvelope
+  snapshotHash: ReturnToSnapshotHash
+}
+export type ReturnToResolution = ReturnToSafeReturn | ReturnToResume
+export type ReturnToConsumptionExpectation = Readonly<{ tokenId: string; snapshotHash: ReturnToSnapshotHash }>
+export type ReturnToConsumptionResult = ReturnToSafeReturn | {
+  kind: "consumed"
+  envelope: ReturnToEnvelope & { consumedAt: string }
+  previousSnapshotHash: ReturnToSnapshotHash
+}
+
+function safe(reason: ReturnToSafeReason): ReturnToSafeReturn {
+  return { kind: "safe_return", reason, discardToken: true, surface: { kind: "map" } }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false
+  const prototype = Object.getPrototypeOf(value)
+  return prototype === Object.prototype || prototype === null
 }
 
 function matchesGateSequence(actual: readonly GateKind[], expected: readonly GateKind[]) {
   return actual.length === expected.length && actual.every((gate, index) => gate === expected[index])
+}
+
+function requiredContextKeys(rule: ReturnToRule) {
+  return [
+    ...(rule.venueId === "required" ? ["venueId"] : []),
+    ...(rule.tableId === "required" ? ["tableId"] : []),
+  ]
+}
+
+function optionalContextKeys(rule: ReturnToRule) {
+  return [
+    ...(rule.venueId === "optional" ? ["venueId"] : []),
+    ...(rule.tableId === "optional" ? ["tableId"] : []),
+    "consumedAt",
+  ]
+}
+
+function canonicalIso(value: unknown) {
+  if (typeof value !== "string") return null
+  const milliseconds = Date.parse(value)
+  return Number.isFinite(milliseconds) && new Date(milliseconds).toISOString() === value ? milliseconds : null
+}
+
+function hasPublicContext(value: unknown, requirement: ContextRequirement) {
+  if (requirement === "required") return typeof value === "string" && PUBLIC_CONTEXT_ID.test(value)
+  if (requirement === "forbidden") return value === undefined
+  return value === undefined || (typeof value === "string" && PUBLIC_CONTEXT_ID.test(value))
+}
+
+type ParsedReturnTo = {
+  envelope: ReturnToEnvelope
+  createdAt: number
+  expiresAt: number
+  consumedAt: number | null
+}
+
+function parseReturnTo(value: unknown): ParsedReturnTo | null {
+  if (!isRecord(value) || typeof value.cta !== "string" || !RETURN_TO_CTA_ALLOWLIST.has(value.cta)) return null
+  const cta = value.cta as ReturnToCta
+  const rule = RETURN_TO_RULES[cta]
+  if (!hasExactOwnKeys(value, [...BASE_KEYS, ...requiredContextKeys(rule)], optionalContextKeys(rule))) return null
+  if (
+    typeof value.tokenId !== "string"
+    || !Array.isArray(value.gateQueue)
+    || typeof value.activeGate !== "string"
+    || value.gateQueue.length === 0
+    || !value.gateQueue.every((gate) => typeof gate === "string" && RETURN_TO_GATE_ALLOWLIST.has(gate))
+  ) return null
+  const gateQueue = value.gateQueue as GateKind[]
+  if (!rule.gateSequences.some((expected) => matchesGateSequence(gateQueue, expected))) return null
+  if (value.activeGate !== gateQueue[0]) return null
+  if (!hasPublicContext(value.venueId, rule.venueId) || !hasPublicContext(value.tableId, rule.tableId)) return null
+
+  const createdAt = canonicalIso(value.createdAt)
+  const expiresAt = canonicalIso(value.expiresAt)
+  if (createdAt === null || expiresAt === null || expiresAt - createdAt !== RETURN_TO_TTL_MS) return null
+  if (value.tokenId !== createDeterministicReturnToToken(cta, createdAt)) return null
+  const consumedAt = value.consumedAt === undefined ? null : canonicalIso(value.consumedAt)
+  if (value.consumedAt !== undefined && consumedAt === null) return null
+  if (consumedAt !== null && (consumedAt < createdAt || consumedAt > expiresAt)) return null
+
+  return {
+    envelope: {
+      tokenId: value.tokenId,
+      cta,
+      gateQueue: [...gateQueue],
+      activeGate: value.activeGate as GateKind,
+      ...(typeof value.venueId === "string" ? { venueId: value.venueId } : {}),
+      ...(typeof value.tableId === "string" ? { tableId: value.tableId } : {}),
+      createdAt: value.createdAt as string,
+      expiresAt: value.expiresAt as string,
+      ...(typeof value.consumedAt === "string" ? { consumedAt: value.consumedAt } : {}),
+    },
+    createdAt,
+    expiresAt,
+    consumedAt,
+  }
+}
+
+export function isReturnToStructurallyValid(value: unknown): value is ReturnToEnvelope {
+  return parseReturnTo(value) !== null
 }
 
 export function createReturnTo(input: {
@@ -58,65 +173,86 @@ export function createReturnTo(input: {
   now?: Date
 }): ReturnToEnvelope {
   const now = input.now ?? new Date()
-  return {
-    tokenId: `RT-${input.cta}-${now.getTime()}`,
+  const createdAt = now.toISOString()
+  const envelope: ReturnToEnvelope = {
+    tokenId: createDeterministicReturnToToken(input.cta, now),
     cta: input.cta,
-    gateQueue: input.gateQueue,
+    gateQueue: [...input.gateQueue],
     activeGate: input.gateQueue[0],
-    venueId: input.venueId,
-    tableId: input.tableId,
-    createdAt: now.toISOString(),
+    ...(input.venueId !== undefined ? { venueId: input.venueId } : {}),
+    ...(input.tableId !== undefined ? { tableId: input.tableId } : {}),
+    createdAt,
     expiresAt: new Date(now.getTime() + RETURN_TO_TTL_MS).toISOString(),
+  }
+  if (!isReturnToStructurallyValid(envelope)) throw new Error("Invalid return context")
+  return envelope
+}
+
+export function snapshotReturnTo(envelope: ReturnToEnvelope): CanonicalSnapshotValue | null {
+  const parsed = parseReturnTo(envelope)
+  if (!parsed) return null
+  const value = parsed.envelope
+  return {
+    activeGate: value.activeGate,
+    createdAt: value.createdAt,
+    cta: value.cta,
+    expiresAt: value.expiresAt,
+    gateQueue: [...value.gateQueue],
+    ...(value.tableId !== undefined ? { tableId: value.tableId } : {}),
+    tokenId: value.tokenId,
+    ...(value.venueId !== undefined ? { venueId: value.venueId } : {}),
+    ...(value.consumedAt !== undefined ? { consumedAt: value.consumedAt } : {}),
   }
 }
 
+export function hashReturnTo(envelope: ReturnToEnvelope): ReturnToSnapshotHash | null {
+  const snapshot = snapshotReturnTo(envelope)
+  return snapshot ? hashReturnToSnapshot(snapshot) : null
+}
+
+export function resolveReturnTo(value: unknown, now = new Date()): ReturnToResolution {
+  if (value == null) return safe("missing")
+  if (isRecord(value)) {
+    const unknownKeys = Reflect.ownKeys(value).filter((key) => typeof key !== "string" || ![
+      ...BASE_KEYS, "venueId", "tableId", "consumedAt",
+    ].includes(key as string))
+    if (unknownKeys.some((key) => typeof key === "string" && SENSITIVE_KEY.test(key))) return safe("private_field")
+  }
+  const parsed = parseReturnTo(value)
+  if (!parsed) return safe("invalid")
+  if (parsed.consumedAt !== null) return safe("consumed")
+  if (parsed.createdAt > now.getTime()) return safe("invalid")
+  if (parsed.expiresAt <= now.getTime()) return safe("expired")
+  return { kind: "resume", envelope: parsed.envelope, snapshotHash: hashReturnTo(parsed.envelope)! }
+}
+
 export function isReturnToUsable(envelope: ReturnToEnvelope | null, now = new Date()): envelope is ReturnToEnvelope {
-  if (!envelope || typeof envelope !== "object") return false
-  if (
-    typeof envelope.tokenId !== "string"
-    || typeof envelope.cta !== "string"
-    || !Array.isArray(envelope.gateQueue)
-    || typeof envelope.activeGate !== "string"
-    || typeof envelope.createdAt !== "string"
-    || typeof envelope.expiresAt !== "string"
-    || envelope.venueId === null
-    || envelope.tableId === null
-    || (envelope.venueId !== undefined && typeof envelope.venueId !== "string")
-    || (envelope.tableId !== undefined && typeof envelope.tableId !== "string")
-  ) return false
-  const createdAt = new Date(envelope.createdAt).getTime()
-  const expiresAt = new Date(envelope.expiresAt).getTime()
-  if (!RETURN_TO_CTA_ALLOWLIST.has(envelope.cta)) return false
-  const rule = RETURN_TO_RULES[envelope.cta]
-  return envelope.consumedAt == null
-    && envelope.tokenId === `RT-${envelope.cta}-${createdAt}`
-    && envelope.gateQueue.length > 0
-    && envelope.gateQueue.every((gate) => RETURN_TO_GATE_ALLOWLIST.has(gate))
-    && rule.gateSequences.some((expected) => matchesGateSequence(envelope.gateQueue, expected))
-    && RETURN_TO_GATE_ALLOWLIST.has(envelope.activeGate)
-    && envelope.gateQueue.includes(envelope.activeGate)
-    && Number.isFinite(createdAt)
-    && Number.isFinite(expiresAt)
-    && createdAt <= now.getTime() + 60_000
-    && expiresAt > now.getTime()
-    && expiresAt - createdAt === RETURN_TO_TTL_MS
-    && hasAllowedContext(envelope.venueId, rule.venueId)
-    && hasAllowedContext(envelope.tableId, rule.tableId)
+  return resolveReturnTo(envelope, now).kind === "resume"
 }
 
 export function restoreReturnTo(value: unknown, now = new Date()): ReturnToEnvelope | null {
-  if (!value || typeof value !== "object") return null
-  const candidate = value as ReturnToEnvelope
-  if (!isReturnToUsable(candidate, now)) return null
+  const resolution = resolveReturnTo(value, now)
+  return resolution.kind === "resume" ? resolution.envelope : null
+}
+
+export function createReturnToConsumptionExpectation(envelope: ReturnToEnvelope): ReturnToConsumptionExpectation | null {
+  const snapshotHash = hashReturnTo(envelope)
+  return snapshotHash ? { tokenId: envelope.tokenId, snapshotHash } : null
+}
+
+/** Persist the returned consumed envelope before applying the protected mutation. */
+export function consumeReturnToOnce(
+  current: unknown,
+  expected: ReturnToConsumptionExpectation,
+  now = new Date(),
+): ReturnToConsumptionResult {
+  const resolution = resolveReturnTo(current, now)
+  if (resolution.kind === "safe_return") return resolution
+  if (resolution.envelope.tokenId !== expected.tokenId || resolution.snapshotHash !== expected.snapshotHash) return safe("mismatch")
   return {
-    tokenId: candidate.tokenId,
-    cta: candidate.cta,
-    gateQueue: [...candidate.gateQueue],
-    activeGate: candidate.activeGate,
-    venueId: candidate.venueId,
-    tableId: candidate.tableId,
-    createdAt: candidate.createdAt,
-    expiresAt: candidate.expiresAt,
+    kind: "consumed",
+    envelope: { ...resolution.envelope, consumedAt: now.toISOString() },
+    previousSnapshotHash: resolution.snapshotHash,
   }
 }
 
@@ -139,8 +275,7 @@ export function areRequiredReturnToGatesSatisfied(
 }
 
 export function advanceReturnTo(envelope: ReturnToEnvelope, completedGate: GateKind): ReturnToEnvelope {
-  if (envelope.activeGate !== completedGate) return envelope
-  const index = envelope.gateQueue.indexOf(completedGate)
-  const next = envelope.gateQueue[index + 1]
-  return next ? { ...envelope, activeGate: next } : envelope
+  if (envelope.activeGate !== completedGate || envelope.gateQueue[0] !== completedGate) return envelope
+  const remaining = envelope.gateQueue.slice(1)
+  return remaining.length ? { ...envelope, gateQueue: remaining, activeGate: remaining[0] } : envelope
 }

@@ -10,35 +10,32 @@ const selectorDeclarations = (css: string, selector: string) => {
   return match?.[1] ?? ""
 }
 
-test("B-VISUAL-FEATURE-001 Tables uses the same warm-paper sans display system as the other product roots", () => {
+test("B-VISUAL-FEATURE-001 Tables uses the same appearance-aware sans display system as the other product roots", () => {
   const tables = source("features/ondo/connect/pulse-table-b.module.css")
 
   expect(tables).not.toContain("var(--font-noto-serif-kr)")
-  expect(tables).toContain("--feature-paper: #f6f2eb")
-  expect(tables).toContain("--feature-ink: #24211e")
-  expect(tables).toContain("--feature-accent: #b24e3b")
+  expect(tables).toContain("--feature-paper: var(--ondo-canvas, #fff)")
+  expect(tables).toContain("--feature-ink: var(--ondo-ink, #191919)")
+  expect(tables).toContain("--feature-accent: #4f4f4f")
   expect(tables).toContain("padding: max(32px, env(safe-area-inset-top)) 18px")
   expect(tables).toContain("padding-bottom: calc(36px + env(safe-area-inset-bottom))")
   expect(tables).not.toMatch(/padding-bottom:\s*calc\((?:9[0-9]|1[0-9]{2})px/)
 })
 
-test("B-VISUAL-FEATURE-002 feature cards share premium border, radius, and elevation semantics", () => {
+test("B-VISUAL-FEATURE-002 feature cards share appearance-aware border, radius, and elevation semantics", () => {
   const tables = source("features/ondo/connect/pulse-table-b.module.css")
   const commerce = source("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
   const local = source("features/ondo/shared/ui/production-local.module.css")
 
   for (const css of [tables, commerce]) {
-    expect(css).toContain("--feature-card: rgb(255 253 249 / 92%)")
-    expect(css).toContain("--feature-border: rgb(65 52 42 / 12%)")
-    expect(css).toContain("--feature-shadow: 0 18px 48px rgb(52 38 27 / 9%)")
+    expect(css).toContain("--feature-card: var(--ondo-surface, #fff)")
+    expect(css).toMatch(/--feature-border:\s*var\(--ondo-line,/)
+    expect(css).toMatch(/--feature-shadow:\s*var\(--ondo-shadow,/)
     expect(css).toContain("border-radius: 22px")
   }
-  // My Korea and Settings retain the same warm material semantics while using
-  // their slightly quieter journey surface; freeze that intentional variant
-  // instead of forcing a stale byte-for-byte token copy.
-  expect(local).toContain("--feature-card: rgb(255 253 249 / 88%)")
-  expect(local).toContain("--feature-border: rgb(69 51 41 / 12%)")
-  expect(local).toContain("--feature-shadow: 0 20px 52px rgb(53 36 26 / 9%)")
+  expect(local).toContain("--feature-card: var(--ondo-surface, #fff)")
+  expect(local).toContain("--feature-border: var(--ondo-line,")
+  expect(local).toContain("--feature-shadow: var(--ondo-shadow,")
   expect(local).toContain("border-radius: 22px")
 })
 
@@ -72,7 +69,7 @@ test("B-VISUAL-FEATURE-004 controls retain accessible touch and focus states wit
 
   expect(css.match(/min-height: 44px/g)?.length ?? 0).toBeGreaterThanOrEqual(8)
   expect(css.match(/:focus-visible/g)?.length ?? 0).toBeGreaterThanOrEqual(4)
-  expect(css).toContain("outline: 3px solid rgb(178 78 59 / 38%)")
+  expect(css).toContain("outline: 3px solid var(--ondo-focus, #1d66d1)")
   expect(css).toContain("-webkit-tap-highlight-color: transparent")
   expect(after19).toContain(".dialog button")
   expect(shell).toMatch(/\.stage :focus-visible\s*\{[^}]*outline:\s*2px solid var\(--ondo-focus\)/)
@@ -90,6 +87,8 @@ test("B-VISUAL-FEATURE-005 feature roots leave navigation reservation to the sha
 })
 
 test("B-VISUAL-FEATURE-006 owned feature CSS never renders visible product copy below 12px", () => {
+  const productionLocal = source("features/ondo/shared/ui/production-local.module.css")
+  const savedEntry = source("features/ondo/my/saved-entry-b.tsx")
   const ownedCss = [
     "features/ondo/connect/pulse-table-b.module.css",
     "features/ondo/identity-b/action-gate-coordinator-b.module.css",
@@ -98,8 +97,17 @@ test("B-VISUAL-FEATURE-006 owned feature CSS never renders visible product copy 
     "features/ondo/identity-b/traveler-id-entry-b.module.css",
     "features/ondo/identity-b/ktour-id-setup-b.module.css",
     "features/ondo/labs/labs.module.css",
-    "features/ondo/shared/ui/production-local.module.css",
+    "features/ondo/my/saved-entry-b.module.css",
+    "features/ondo/map/map-balance-entry-b.module.css",
+    "features/ondo/place/place-service-actions-b.module.css",
   ].map(source).join("\n")
 
   expect(ownedCss).not.toMatch(/font-size:\s*(?:[0-9](?:\.[0-9]+)?|1[01](?:\.[0-9]+)?)px/)
+  expect(savedEntry).toContain('<details className={styles.receiptDetails} data-testid="my-korea-receipt-details">')
+  expect(selectorDeclarations(productionLocal, ".receiptDetails > summary")).toContain("min-height: 44px")
+  // The only sub-12px exception is a user-opened, monospaced receipt identifier,
+  // never first-frame product copy. Freeze that narrow exception explicitly.
+  const foldedReceiptReference = selectorDeclarations(productionLocal, ".receiptDetails > p")
+  expect(foldedReceiptReference).toContain("font-family: ui-monospace")
+  expect(foldedReceiptReference).toContain("font-size: 12px")
 })

@@ -1,0 +1,286 @@
+[
+  {
+    "id": "research-jeju-woojin-haejangguk",
+    "city": "jeju",
+    "name": { "en": "Woojin Haejangguk", "ko": "우진해장국", "ja": "ウジンヘジャングク" },
+    "district": { "en": "Jeju Old Town", "ko": "제주 원도심", "ja": "済州旧市街" },
+    "kind": "food",
+    "signature": { "en": "Bracken and pork soup", "ko": "고사리육개장", "ja": "ワラビと豚肉のスープ" },
+    "address": "제주특별자치도 제주시 서사로 11",
+    "latitude": 33.5114884,
+    "longitude": 126.5200864,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018375",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "VisitJeju introduces this old-town stop for Jeju-style bracken and pork soup.",
+      "ko": "비짓제주가 고사리육개장을 소개하는 제주 원도심 향토음식점.",
+      "ja": "VisitJejuが紹介する、ワラビと豚肉の郷土スープを味わう旧市街の店。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018375",
+        "title": "VisitJeju — 우진해장국",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-gozip-dolwurock-jungmun",
+    "city": "jeju",
+    "name": { "en": "Gozip Dolwurock Jungmun", "ko": "고집돌우럭 중문점", "ja": "コジプトルウロク 中文店" },
+    "district": { "en": "Jungmun", "ko": "중문", "ja": "中文" },
+    "kind": "food",
+    "signature": { "en": "Braised rockfish set", "ko": "우럭조림 한 상", "ja": "魚の煮付け定食" },
+    "address": "제주특별자치도 서귀포시 일주서로 879",
+    "latitude": 33.25799,
+    "longitude": 126.41676,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000021950",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "VisitJeju recommends a regional rockfish meal near the Jungmun resort area.",
+      "ko": "비짓제주가 소개하는 중문 관광단지 인근의 제주식 우럭조림 식사.",
+      "ja": "VisitJejuが紹介する、中文観光団地近くで楽しむ済州式魚料理。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000021950",
+        "title": "VisitJeju — 고집돌우럭 중문점",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://www.gozipfish.com/",
+        "title": "고집돌우럭 — official branches and menu",
+        "publishedAt": null,
+        "evidence": "operator"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-azulejo",
+    "city": "jeju",
+    "name": { "en": "Azulejo", "ko": "아줄레주", "ja": "アジュレジュ" },
+    "district": { "en": "Seongsan", "ko": "성산", "ja": "城山" },
+    "kind": "cafe",
+    "signature": { "en": "Egg tarts and seasonal fruit drinks", "ko": "에그타르트와 제철 과일 음료", "ja": "エッグタルトと季節のフルーツドリンク" },
+    "address": "제주특별자치도 서귀포시 성산읍 신풍하동로19번길 59",
+    "latitude": 33.3668229,
+    "longitude": 126.8391408,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000008044",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "VisitJeju highlights this tiled café for egg tarts and seasonal fruit drinks.",
+      "ko": "비짓제주가 에그타르트와 계절 과일 음료를 소개하는 타일 장식 카페.",
+      "ja": "VisitJejuがエッグタルトと季節の果物を紹介する、タイル装飾のカフェ。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000008044",
+        "title": "VisitJeju — 아줄레주",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://www.visitjeju.net/en/detail/view?contentsid=CNTS_200000000008044",
+        "title": "VisitJeju — Azulejo",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-moasi",
+    "city": "jeju",
+    "name": { "en": "Moasi", "ko": "모아시", "ja": "モアシ" },
+    "district": { "en": "Daejeong", "ko": "대정", "ja": "大静" },
+    "kind": "cafe",
+    "signature": { "en": "Specialty coffee and Moasi Blanc", "ko": "스페셜티 커피와 모아시블랑", "ja": "スペシャルティコーヒーとモアシブラン" },
+    "address": "제주특별자치도 서귀포시 대정읍 무릉중앙로24번길 16",
+    "latitude": 33.2708619,
+    "longitude": 126.1989831,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_300000000013818",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "VisitJeju recommends a quiet coffee stop with concrete architecture and a water courtyard.",
+      "ko": "비짓제주가 콘크리트 건축과 물길 중정이 있는 조용한 커피 공간으로 소개.",
+      "ja": "VisitJejuが紹介する、コンクリート建築と水の中庭がある静かなカフェ。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_300000000013818",
+        "title": "VisitJeju — 모아시",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-delmoondo-hamdeok",
+    "city": "jeju",
+    "name": { "en": "Delmoondo Hamdeok", "ko": "델문도 함덕", "ja": "デルムンド 咸徳" },
+    "district": { "en": "Hamdeok · Jocheon", "ko": "함덕 · 조천", "ja": "咸徳・朝天" },
+    "kind": "cafe",
+    "signature": { "en": "Seafront coffee and bakery", "ko": "바다 앞 커피와 베이커리", "ja": "海辺のコーヒーとベーカリー" },
+    "address": "제주특별자치도 제주시 조천읍 조함해안로 519-10",
+    "latitude": 33.54379,
+    "longitude": 126.668846,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000001501",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A 2025 VisitJeju feature recommends its seafront café and evening Beachwave pub.",
+      "ko": "2025년 비짓제주 추천 기사에 소개된 바다 앞 카페와 저녁 비치웨이브 펍.",
+      "ja": "2025年のVisitJeju特集が紹介する、海辺のカフェと夜のBeachwaveパブ。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000001501",
+        "title": "VisitJeju — 델문도",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://visitjeju.net/kr/themtour/view?contentsid=CNTS_300000000013659&menuId=DOM_000002000000000221",
+        "title": "VisitJeju — 추천 음식점: 델문도 / 인생카페",
+        "publishedAt": "2025-08-29",
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://www.delmoondo.com/",
+        "title": "Delmoondo — official café and coffee site",
+        "publishedAt": null,
+        "evidence": "operator"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-magpie-tapdong",
+    "city": "jeju",
+    "name": { "en": "Magpie Tapdong", "ko": "맥파이 탑동점", "ja": "マグパイ 塔洞店" },
+    "district": { "en": "Tapdong", "ko": "탑동", "ja": "塔洞" },
+    "kind": "bar",
+    "signature": { "en": "Jeju craft beer and pizza", "ko": "제주 수제맥주와 피자", "ja": "済州クラフトビールとピザ" },
+    "address": "제주특별자치도 제주시 탑동로2길 7 2층",
+    "latitude": 33.5183337,
+    "longitude": 126.5224034,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012588",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "VisitJeju recommends the downtown craft-beer pub; the operator also lists this Tapdong branch.",
+      "ko": "비짓제주가 소개하는 원도심 수제맥주 펍으로, 운영사도 탑동점을 안내한다.",
+      "ja": "VisitJejuが紹介する旧市街のクラフトビールパブ。運営元も塔洞店を掲載。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012588",
+        "title": "VisitJeju — 맥파이 탑동점",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://www.magpiebrewing.com/",
+        "title": "Magpie Brewing Co. — Tapdong location",
+        "publishedAt": null,
+        "evidence": "operator"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-oneunjeong-gimbap",
+    "city": "jeju",
+    "name": {
+      "en": "Oneunjeong Gimbap",
+      "ko": "오는정김밥",
+      "ja": "オヌンジョンキンパ"
+    },
+    "district": {
+      "en": "Central Seogwipo",
+      "ko": "서귀포시내",
+      "ja": "西帰浦市街"
+    },
+    "kind": "food",
+    "signature": {
+      "en": "Fried-tofu gimbap",
+      "ko": "유부튀김 김밥",
+      "ja": "揚げ豆腐入りキンパ"
+    },
+    "address": "제주특별자치도 서귀포시 동문동로 2",
+    "latitude": 33.249676,
+    "longitude": 126.56757,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020123",
+    "checkedAt": "2026-09-11",
+    "reason": {
+      "en": "A takeaway stop for gimbap with a distinctive fried-tofu filling; confirm pickup arrangements before visiting.",
+      "ko": "유부튀김을 넣은 김밥을 포장해 즐기는 곳. 방문 전 주문·수령 방법을 확인하세요.",
+      "ja": "揚げ豆腐入りキンパの持ち帰り店。訪問前に注文・受取方法をご確認ください。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020123",
+        "title": "VisitJeju · 오는정김밥",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://visitjeju.net/en/detail/view?contentsid=CNTS_300000000013865",
+        "title": "VisitJeju · Top 5 Gimbap Restaurants in Jeju",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-jeju-yaksuteo-olle-market",
+    "city": "jeju",
+    "name": {
+      "en": "Jeju Yaksuteo · Olle Market",
+      "ko": "제주약수터 올레시장점",
+      "ja": "チェジュヤクスト オルレ市場店"
+    },
+    "district": {
+      "en": "Seogwipo · Olle Market",
+      "ko": "서귀포 · 올레시장",
+      "ja": "西帰浦・オルレ市場"
+    },
+    "kind": "bar",
+    "signature": {
+      "en": "Jeju craft beers",
+      "ko": "제주 수제맥주",
+      "ja": "済州クラフトビール"
+    },
+    "address": "제주특별자치도 서귀포시 중앙로48번길 10",
+    "latitude": 33.2490102,
+    "longitude": 126.5627984,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012730",
+    "checkedAt": "2026-09-11",
+    "reason": {
+      "en": "Compare beers from Jeju breweries near Olle Market, with market takeaway food alongside.",
+      "ko": "올레시장 근처에서 제주 양조장의 맥주를 비교하고 시장 포장 음식과 곁들이는 곳.",
+      "ja": "オルレ市場近くで済州のビールを飲み比べ、市場の持ち帰り料理と楽しめる店。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012730",
+        "title": "VisitJeju · 제주약수터 올레시장점",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  }
+]

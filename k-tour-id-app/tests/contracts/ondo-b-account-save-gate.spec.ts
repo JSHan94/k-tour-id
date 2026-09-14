@@ -23,12 +23,15 @@ test("B-ACCOUNT-001 Save owns a B-native Account gate with exact one-shot venue 
     "draft: null",
     "consumeBAccountReturnTo",
     "isCanonicalVenueId",
-    "B_RETURN_TO_TTL_MS",
+    "isEditorialPlaceId",
+    "RT-B-SAVE_EDITORIAL_PLACE",
+    "B_ACCOUNT_RETURN_TO_TTL_MS",
   ]) expect(returnTo).toContain(evidence)
-  for (const evidence of ["ondo-gate-overlay", "account-return-context", "account-start", "account-complete", "gate-cancel", "gate-failure", "gate-retry"]) {
+  for (const evidence of ["ondo-gate-overlay", "account-return-context", "account-boundary", "account-start", "gate-cancel", "account-gate-close", "gate-failure", "gate-retry"]) {
     expect(gate).toContain(evidence)
   }
-  expect(css).toContain("background: #fff")
+  expect(gate).not.toContain('data-testid="account-complete"')
+  expect(css).toContain("background: var(--ondo-surface-raised")
   expect(css).toContain("min-height: 52px")
   expect(css).toContain("@media (max-width: 520px)")
 })
@@ -45,7 +48,11 @@ test("B-ACCOUNT-002 Account is session-only, migrates only the legacy Account ax
   expect(provider).toContain('legacy?.account')
   expect(provider).toContain('current.account !== "ACC-ACTIVE"')
   expect(provider).toContain("beginAccountSave(venueId)")
+  expect(provider).toContain("beginEditorialAccountSave(editorialPlaceId)")
+  expect(provider).toContain("return beginEditorialAccountSave(editorialPlaceId)")
   expect(provider).toContain("activateAccount(): boolean")
+  expect(provider).toContain('if (stateRef.current.account === "ACC-CREATING") return true')
+  expect(provider).toContain('if (stateRef.current.account !== "ACC-CREATING") return false')
   expect(provider).toContain("persistBAccountSession({ account: \"ACC-ACTIVE\", returnTo: null })")
   for (const forbidden of ["account:", "accountReturnTo", "person:", "age:", "paymentKyc:", "profile:"]) {
     expect(deviceType).not.toContain(forbidden)
@@ -55,21 +62,58 @@ test("B-ACCOUNT-002 Account is session-only, migrates only the legacy Account ax
 
 test("B-ACCOUNT-003 the walkthrough is localized, provider-neutral, and keeps identity/payment axes separate", () => {
   const gate = source("features/ondo/identity-b/account-save-gate-b.tsx")
+  const css = source("features/ondo/identity-b/account-save-gate-b.module.css")
+  const intro = gate.slice(gate.indexOf('{view === "intro" ? ('), gate.indexOf('{view === "processing" ? ('))
   const traveler = source("features/ondo/identity-b/traveler-id-entry-b.tsx")
   const policy = source("scripts/ondo-b-standalone/policy.mjs")
 
   for (const locale of ["en", "ko", "ja"]) expect(gate).toContain(`${locale}: {`)
   for (const truth of [
-    "No account provider is connected",
-    "Person, 19+, and payment checks remain separate and incomplete",
-    "연결된 계정 제공기관이나 생성되는 자격증명은 없고",
-    "本人、19歳以上、決済の確認は別で、完了しません",
+    "Your account stays in this tab. Person, 19+, and payment are checked separately only when an action needs them.",
+    "계정은 이 탭에만 유지돼요. 본인·19+·결제는 행동에 필요할 때 각각 따로 확인합니다.",
+    "アカウントはこのタブだけに保持されます。本人、19歳以上、決済は操作に必要な時だけ個別に確認します。",
   ]) expect(gate).toContain(truth)
+  expect(gate).toContain('localActual("account", { action: "save_place" as const, tokenId: returnTo.tokenId })')
+  expect(gate).toContain('execution.result !== "LOCAL_COMMITTED"')
   expect(gate).toContain("useModalIsolation")
   expect(gate).toContain("focusFirstAvailableDestination")
+  expect(gate).toContain('[href],summary,[tabindex]')
+  expect(intro.indexOf('data-testid="account-return-context"')).toBeLessThan(intro.indexOf('id="account-save-title"'))
+  expect(intro).not.toContain('id="account-save-session-truth"')
+  expect(intro).toMatch(/<details className=\{styles\.boundary\} data-testid="account-boundary"><summary>/)
+  for (const visibleScope of ["For this visit · this tab only", "이번 방문 · 이 탭에서만", "今回の滞在・このタブのみ"]) {
+    expect(gate).toContain(visibleScope)
+  }
+  expect(gate).toContain('[closing, returnTo.tokenId, view]')
+  expect(gate).toContain('ref={retryRef}')
+  expect(gate).toContain('data-testid="account-gate-processing"')
+  expect(gate).toContain('role="status" aria-live="polite" aria-busy="true"')
+  expect(gate).toContain('data-testid="account-gate-close" aria-label={t.cancel} disabled={closing} onClick={cancel}')
+  expect(gate).toContain("useDocumentScrollLock")
+  expect(css).toContain("width: 44px")
+  expect(css).toContain("max-width: 100%")
+  expect(css).toContain("overflow-wrap: anywhere")
+  expect(css).not.toContain(".sessionTruth")
   expect(gate).not.toMatch(/OndoProvider|GateOverlay|fetch\(|XMLHttpRequest|WebSocket|credentialPayload|dateOfBirth/)
   expect(traveler).toContain('state.account === "ACC-ACTIVE"')
   expect(traveler).toContain('data-testid="traveler-id-account"')
   expect(policy).toContain('"features/ondo/identity-b/account-save-gate-b.tsx"')
   expect(policy).toContain('"features/ondo/identity-b/account-save-gate-b.module.css"')
+})
+
+test("B-ACCOUNT-004 Account exposes one duplicate-locked pending state before either commit path", () => {
+  const provider = source("features/ondo/shared/state/ondo-b-provider.tsx")
+  const saveGate = source("features/ondo/identity-b/account-save-gate-b.tsx")
+  const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+
+  expect(provider).toContain('"ACC-GUEST" | "ACC-CREATING" | "ACC-ACTIVE"')
+  expect(provider).toContain('if (stateRef.current.account === "ACC-CREATING") return true')
+  expect(provider).toContain('if (current.account !== "ACC-CREATING" || !returnTo) return "account_failed"')
+  expect(saveGate).toContain('else setView("processing")')
+  expect(saveGate).toContain('data-testid="account-gate-processing"')
+  expect(saveGate).toContain('role="status" aria-live="polite" aria-busy="true"')
+  expect(coordinator).toContain('if (!actions.beginAccountActivation()) { fail(activeGate, "failure"); return }')
+  expect(coordinator).toContain('activeGate !== "account" || view !== "processing"')
+  expect(coordinator).toContain('data-testid={resolvedView === "processing" ? gate === "account" ? "account-gate-processing"')
+  expect(coordinator).toContain('aria-busy={resolvedView === "processing" ? true : undefined}')
 })

@@ -1,0 +1,150 @@
+[
+  {
+    "locale": "ko",
+    "width": 320,
+    "height": 720,
+    "stage": "method",
+    "visibleControls": [
+      {
+        "testid": "k-tour-id-cancel",
+        "text": "",
+        "top": 39,
+        "bottom": 83
+      },
+      {
+        "testid": "ktour-id-route-mobile-id",
+        "text": "한국인 모바일 신분증\n한국 국적자 · OmniOne CX",
+        "top": 339,
+        "bottom": 409
+      },
+      {
+        "testid": "ktour-id-route-residence-card",
+        "text": "모바일 외국인등록증\n외국인등록을 마친 거주자 · OmniOne CX",
+        "top": 417,
+        "bottom": 495
+      },
+      {
+        "testid": "ktour-id-route-passport",
+        "text": "여권 eKYC\n단기 여행자 · 별도 NFC / OCR, 얼굴·라이브니스 제공자",
+        "top": 503,
+        "bottom": 581
+      },
+      {
+        "testid": null,
+        "text": "동의 내용 보기",
+        "top": 632,
+        "bottom": 680
+      },
+      {
+        "testid": null,
+        "text": "나중에 — 게스트로 계속",
+        "top": 688,
+        "bottom": 736
+      }
+    ]
+  },
+  {
+    "locale": "ko",
+    "width": 320,
+    "height": 720,
+    "stage": "consent",
+    "controls": [
+      {
+        "testid": null,
+        "text": "",
+        "top": 39,
+        "bottom": 83,
+        "inViewport": true
+      },
+      {
+        "testid": "k-tour-id-cancel",
+        "text": "",
+        "top": 39,
+        "bottom": 83,
+        "inViewport": true
+      },
+      {
+        "testid": "k-tour-id-consent-approve",
+        "text": "동의하고 계속",
+        "top": 476,
+        "bottom": 524,
+        "inViewport": true
+      },
+      {
+        "testid": null,
+        "text": "거절하고 돌아가기",
+        "top": 532,
+        "bottom": 580,
+        "inViewport": true
+      }
+    ]
+  },
+  {
+    "locale": "ja",
+    "width": 844,
+    "height": 390,
+    "stage": "method",
+    "visibleControls": [
+      {
+        "testid": "k-tour-id-cancel",
+        "text": "",
+        "top": 15,
+        "bottom": 59
+      },
+      {
+        "testid": "ktour-id-route-mobile-id",
+        "text": "韓国人向けモバイル身分証\n韓国籍の方 · OmniOne CX",
+        "top": 279,
+        "bottom": 383
+      },
+      {
+        "testid": "ktour-id-route-residence-card",
+        "text": "モバイル在留カード\n外国人登録済みの居住者 · OmniOne CX",
+        "top": 279,
+        "bottom": 383
+      },
+      {
+        "testid": "ktour-id-route-passport",
+        "text": "パスポートeKYC\n短期旅行者 · 別のNFC / OCR、顔・ライブネス事業者",
+        "top": 279,
+        "bottom": 383
+      }
+    ]
+  },
+  {
+    "locale": "ja",
+    "width": 844,
+    "height": 390,
+    "stage": "consent",
+    "controls": [
+      {
+        "testid": null,
+        "text": "",
+        "top": 15,
+        "bottom": 59,
+        "inViewport": true
+      },
+      {
+        "testid": "k-tour-id-cancel",
+        "text": "",
+        "top": 15,
+        "bottom": 59,
+        "inViewport": true
+      },
+      {
+        "testid": "k-tour-id-consent-approve",
+        "text": "同意して続ける",
+        "top": 359,
+        "bottom": 407,
+        "inViewport": true
+      },
+      {
+        "testid": null,
+        "text": "拒否して戻る",
+        "top": 359,
+        "bottom": 407,
+        "inViewport": true
+      }
+    ]
+  }
+]

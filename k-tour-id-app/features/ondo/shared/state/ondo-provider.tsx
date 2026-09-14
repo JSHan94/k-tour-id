@@ -30,7 +30,7 @@ import {
   restoreReturnTo,
 } from "../../contracts/return-to"
 import { applyActivityEvents, type ActivityEvent } from "../../contracts/activity"
-import { TABLES } from "../../connect/table-model"
+import { TABLES } from "../../connect/table-fixtures"
 
 export type TableMembershipState = "none" | "requesting" | "confirmed" | "checked_in" | "completed" | "left" | "failed"
 

@@ -80,7 +80,7 @@ async function expectPeakVisualMeter(pulse: Locator, meter: Locator) {
 
 async function openPeakPlace(page: Page) {
   await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
-  const row = page.getByTestId("ondo-b-venue-list").locator(`[data-venue-id='${PEAK_VENUE_ID}']`)
+  const row = page.getByTestId("ondo-b-venue-list").locator(`li[data-venue-id='${PEAK_VENUE_ID}']`)
   await expect(row).toBeVisible()
   await row.locator("button").click()
   return page.getByTestId("canonical-place-peek")
@@ -104,7 +104,7 @@ for (const locale of ["en", "ko"] as const) {
       await expect(peek.getByTestId("canonical-place-details")).toHaveCSS("outline-style", "none")
       await page.keyboard.press("Tab")
       await expect(peek.locator("button").first()).toBeFocused()
-      await expect(peek.locator("button").first()).toHaveCSS("outline-color", "rgb(23, 23, 23)")
+      await expect(peek.locator("button").first()).toHaveCSS("outline-color", "rgb(29, 102, 209)")
       await expectVisibleDirectTextAtLeast12(peek)
       await expectActionsAtLeast44(peek)
 
@@ -125,7 +125,7 @@ for (const locale of ["en", "ko"] as const) {
       await expect(back).not.toBeFocused()
       await page.keyboard.press("Tab")
       await expect(back).toBeFocused()
-      await expect(back).toHaveCSS("outline-color", "rgb(23, 23, 23)")
+      await expect(back).toHaveCSS("outline-color", "rgb(29, 102, 209)")
       await expect(pulse).toHaveAttribute("data-pulse-level", "peak")
       const detailMeter = pulse.locator("summary span[aria-hidden='true']")
       await expectPeakVisualMeter(pulse, detailMeter)

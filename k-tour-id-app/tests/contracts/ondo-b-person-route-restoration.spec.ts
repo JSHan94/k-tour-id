@@ -4,6 +4,7 @@ import { resolve } from "node:path"
 import {
   abandonPendingBAction,
   B_ACTION_GATE_SESSION_KEY,
+  clearBActionGateSession,
   consumePendingBActionAtMutation,
   createBLocalSignalActionReturn,
   DEFAULT_B_ACTION_GATE_SESSION,
@@ -12,6 +13,7 @@ import {
 } from "../../features/ondo/identity-b/action-gate-contract-b"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
+test.afterEach(() => { clearBActionGateSession({ getItem() { return null }, removeItem() {} } as unknown as Storage) })
 const NOW = new Date("2026-08-28T03:00:00.000Z")
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
 
@@ -25,6 +27,7 @@ class MemoryStorage {
 
 test("FL-005/006 Person route restoration stays inside the common exact-return gate", () => {
   const coordinator = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
+  const contract = source("features/ondo/identity-b/action-gate-contract-b.ts")
   const alternate = coordinator.slice(coordinator.indexOf("function usePassportAlternative"), coordinator.indexOf("function releaseReady"))
 
   expect(coordinator).not.toContain("personRouteForPersona")
@@ -33,15 +36,21 @@ test("FL-005/006 Person route restoration stays inside the common exact-return g
   expect(coordinator).toContain('data-person-route={gate === "person" ? personRoute ?? "unselected" : undefined}')
   expect(coordinator).toContain('data-testid={`person-route-choice-${route}`}')
   expect(coordinator).toContain('data-testid="local-check-passport-alternate"')
-  expect(coordinator).toContain('fail(activeGate, gateOutcome(activeGate) ?? "unavailable")')
-  expect(alternate).toContain('personRoute: { tokenId: pending.tokenId, route: "passport_ekyc" }')
+  expect(coordinator).toContain('if (!reviewMode) return { execution: providerUnavailable("person"), unavailableStatus: "unavailable" }')
+  expect(coordinator).toContain("createReviewFixtureAuthority({")
+  expect(coordinator).toContain('reviewFixture<{ axis: "person"; route: BPersonRouteB }>(authority, { outcome: "success", value: { axis: "person", route } })')
+  expect(alternate).toContain('selectPersonRoute("passport_ekyc")')
   expect(alternate).not.toMatch(/pending\s*:/)
-  expect(coordinator).toContain("const renewedRoute = personRoute ? { tokenId: renewed.tokenId, route: personRoute } : null")
-  expect(coordinator).toContain("pending: null, personRoute: null, outcome: null")
-  expect(coordinator).toContain('person: readyAxis(clock)')
-  expect(coordinator).toContain("No identity provider is connected and no credential is created")
-  expect(coordinator).toContain("OmniOne CX가 아닌 별도의 공급자 중립 경로")
-  expect(coordinator).toContain("OmniOne CXとは別の事業者中立経路")
+  expect(coordinator).toContain("renewExpiredPendingBAction")
+  expect(contract).toContain("const personRoute = latest.personRoute")
+  expect(contract).toContain("pending: null, personRoute: null, presentation: null, lastConsumed: null, outcome: null")
+  expect(contract).toContain("const personRoute = sanitizePersonRoute(record.personRoute, pending)")
+  expect(contract).toMatch(/pending,\s*personRoute,\s*presentation:/)
+  expect(contract).toContain("presentation: sanitizePresentation(record.presentation, pending)")
+  expect(coordinator).toContain('createBActionReviewAxis("person", staged.execution, now)')
+  expect(coordinator).toContain("No identity provider is connected. Identity data is not sent and no credential is created.")
+  expect(coordinator).toContain('passportNote: "연결되면 별도의 여권 확인 경로를 사용해요."')
+  expect(coordinator).toContain('passportNote: "接続時は別のパスポート確認を利用します。"')
 })
 
 test("FL-005/006 route card preserves the mobile type and touch floors", () => {

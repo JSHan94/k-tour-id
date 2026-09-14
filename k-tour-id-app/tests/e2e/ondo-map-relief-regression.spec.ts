@@ -1,0 +1,40 @@
+import { mkdirSync } from "node:fs"
+import { resolve } from "node:path"
+import { expect, test } from "@playwright/test"
+
+const evidence = resolve("artifacts/qa/map-relief-20260909")
+
+test("cities start in shallow perspective, retain flat choice and use real building relief nearby", async ({ browser, baseURL }) => {
+  test.setTimeout(90_000)
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "no-preference", colorScheme: "light" })
+  await context.addInitScript(() => localStorage.setItem("ondo-b.device.v1", JSON.stringify({ locale: "en", onboarding: "ONB-COMPLETE", appearancePreference: "light" })))
+  const page = await context.newPage()
+  const errors: string[] = []
+  page.on("pageerror", error => errors.push(error.message))
+  await page.goto(`${baseURL}/?city=busan`, { waitUntil: "domcontentloaded" })
+  const map = page.getByTestId("maplibre-map")
+  await expect(map).toHaveAttribute("data-map-state", "ready", { timeout: 25_000 })
+  await expect(map).toHaveAttribute("data-map-pitch", "28.0")
+  await expect(map).toHaveAttribute("data-building-relief", "fill-extrusion")
+  const canvas = await page.locator(".maplibregl-canvas").elementHandle()
+  const perspective = page.getByTestId("ondo-b-map-perspective")
+  await expect(perspective).toHaveAttribute("aria-pressed", "true")
+  await perspective.click()
+  await expect(map).toHaveAttribute("data-map-pitch", "0.0")
+  await perspective.click()
+  await expect(map).toHaveAttribute("data-map-pitch", "28.0")
+  await page.getByTestId("ondo-b-search").fill("다미복국")
+  await expect.poll(async () => Number(await map.getAttribute("data-map-zoom"))).toBeGreaterThanOrEqual(14)
+  await expect.poll(async () => Number(await map.getAttribute("data-visible-building-relief-count")), { timeout: 25_000 }).toBeGreaterThan(0)
+  mkdirSync(evidence, { recursive: true })
+  await page.screenshot({ path: resolve(evidence, "busan-390-real-relief.png") })
+  await page.getByTestId("ondo-b-city-back").click()
+  await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
+  await expect(map).toHaveAttribute("data-map-pitch", "0.0")
+  await page.getByTestId("ondo-b-nation").locator("[data-city=seoul]").click()
+  await expect(map).toHaveAttribute("data-map-pitch", "28.0")
+  expect(await canvas!.evaluate(element => element.isConnected && document.querySelector(".maplibregl-canvas") === element)).toBe(true)
+  await page.screenshot({ path: resolve(evidence, "seoul-390-default-perspective.png") })
+  expect(errors).toEqual([])
+  await context.close()
+})

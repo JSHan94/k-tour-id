@@ -90,7 +90,7 @@ test.describe("ONDO B mobile R2 independent audit", () => {
         {
           id: "settings",
           surface: "ondo-b-settings-entry",
-          target: () => page.getByTestId("ondo-b-discovery-settings").locator("summary"),
+          target: () => page.getByTestId("ondo-b-discovery-settings"),
         },
       ] as const
 
@@ -235,13 +235,17 @@ test.describe("ONDO B mobile R2 independent audit", () => {
     const banner = page.getByTestId("global-after19-banner")
     await expect(banner).toBeVisible()
     await expect(map).toHaveAttribute("data-after19-active", "true")
-    await expect(map).toHaveCSS("background-color", "rgb(9, 9, 13)")
+    // The city UI stays transparent over the single persistent MapLibre
+    // canvas. Night mode belongs to that canvas, rather than painting an
+    // opaque panel that would flash during map/list transitions.
+    await expect(map).toHaveCSS("background-color", "rgba(0, 0, 0, 0)")
+    await expect(page.getByTestId("maplibre-map")).toHaveCSS("background-color", "rgb(9, 10, 15)")
     const resultToggle = page.getByTestId("ondo-b-view-toggle")
     await expect(resultToggle).toHaveCSS("color", "rgb(255, 255, 255)")
     await expect(nightCategory).toHaveAttribute("aria-pressed", "true")
     await expect(search).toHaveValue("mapo")
     await expect(map).toHaveAttribute("data-requested-view", "list")
-    await expectDiscoveryContext(page, { view: "list", query: "mapo", category: "night" })
+    await expectDiscoveryContext(page, { view: "list", query: "mapo", category: "korean" })
 
     await banner.getByRole("button", { name: "Turn off After 19 now" }).click()
     await expect(map).toHaveAttribute("data-after19-active", "false")

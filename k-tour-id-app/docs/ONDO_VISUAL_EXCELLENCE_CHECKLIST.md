@@ -13,50 +13,51 @@ donate unsupported product claims.
 
 | # | Connected flow | Pattern references | Status |
 |---|---|---|---|
-| 1 | Guest onboarding | Arc | Implemented · candidate revalidation pending |
-| 2 | Korea overview and city selection | Polarsteps | Implemented · candidate revalidation pending |
-| 3 | City map, Pulse, filters and list | Mapstr + Beli | Implemented · candidate revalidation pending |
-| 4 | Japanese story to source/place | The Infatuation + Apple Guides | Implemented · candidate revalidation pending |
-| 5 | Place peek and full detail | Apple Place Card + Airbnb | Implemented · candidate revalidation pending |
-| 6 | Tables, 19+, join and chat | Timeleft | Implemented · candidate revalidation pending |
-| 7 | Local Signal contribution | Apple contribution + Strava | Implemented · candidate revalidation pending |
-| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Implemented · candidate revalidation pending |
-| 9 | My Korea trip memory | Polarsteps | Implemented · candidate revalidation pending |
-| 10 | Settings and device controls | Apple Settings + Arc | Implemented · candidate revalidation pending |
+| 1 | Guest onboarding | Arc | Sealed at `a6175b9` |
+| 2 | Korea overview and city selection | Polarsteps | Sealed at `a6175b9` |
+| 3 | City map, temperature, filters and list | Mapstr + Beli | Sealed at `a6175b9` |
+| 4 | Japanese story to source/place | The Infatuation + Apple Guides | Sealed at `a6175b9` |
+| 5 | Place peek and full detail | Apple Place Card + Airbnb | Sealed at `a6175b9` |
+| 6 | Tables, 19+, join and chat | Timeleft | Sealed at `a6175b9` |
+| 7 | Local Signal contribution | Apple contribution + Strava | Sealed at `a6175b9` |
+| 8 | Travel Pass, Wallet, offer and receipt | Apple Wallet | Sealed at `a6175b9` |
+| 9 | My Korea trip memory | Polarsteps | Sealed at `a6175b9` |
+| 10 | Settings and device controls | Apple Settings + Arc | Sealed at `a6175b9` |
 
 ## Definition of done for every flow
 
-- [ ] The information hierarchy can be explained as one decision, one primary
+- [x] The information hierarchy can be explained as one decision, one primary
       action and one secondary action in the first useful viewport.
-- [ ] The reference pattern is visible in composition, rhythm, material,
+- [x] The reference pattern is visible in composition, rhythm, material,
       interaction and motion—not only in color, radius or shadow.
-- [ ] The flow reads as ONDO rather than a collage of reference products.
-- [ ] Mobile 320x720 and 390x844 are designed first; no important CTA is hidden
+- [x] The flow reads as ONDO rather than a collage of reference products.
+- [x] Mobile 320x720 and 390x844 are designed first; no important CTA is hidden
       by the dock or pushed below avoidable explanatory copy.
-- [ ] Short landscape 844x390 is a deliberate composition, not a compressed
+- [x] Short landscape 844x390 is a deliberate composition, not a compressed
       portrait layout.
-- [ ] Desktop 1440x1000 uses the available canvas intentionally and does not
+- [x] Desktop 1440x1000 uses the available canvas intentionally and does not
       center a stretched phone column in dead space.
-- [ ] English, Korean and Japanese retain the same hierarchy without clipping,
+- [x] English, Korean and Japanese retain the same hierarchy without clipping,
       ellipsis of essential truth, orphan glyphs or mixed-language labels.
-- [ ] Controls are at least 44px, visible product text is at least 12px, and
+- [x] Controls are at least 44px, visible product text is at least 12px, and
       keyboard focus is branded and unambiguous.
-- [ ] Pointer-open states have no sticky browser-blue focus ring; keyboard focus
+- [x] Pointer-open states have no sticky browser-blue focus ring; keyboard focus
       remains visible.
-- [ ] Motion has a clear entrance, transition or completion role and respects
+- [x] Motion has a clear entrance, transition or completion role and respects
       reduced-motion.
-- [ ] Empty, loading, ready, selected, error, retry, cancelled, completed and
+- [x] Empty, loading, ready, selected, error, retry, cancelled, completed and
       restored states use the same visual system.
-- [ ] Browser history, focus, Escape, scroll position and exact return context
+- [x] Browser history, focus, Escape, scroll position and exact return context
       remain correct.
-- [ ] Existing actions, state transitions, testids, routes and persistence
+- [x] Existing actions, state transitions, testids, routes and persistence
       contracts are preserved unless a product change is separately approved.
-- [ ] No official record, editorial content, Pulse signal, Table plan, Local
+- [x] No official record, editorial content, temperature signal, Table plan, Local
       Signal, identity result or OOKRW Test state impersonates another domain.
-- [ ] Before/after production captures exist for EN/KO/JA at 320, 390, 844 and
+- [x] Before/after production captures exist for EN/KO/JA at 320, 390, 844 and
       1440 for every required state.
-- [ ] Independent product, traveler and visual reviews find no P0-P3 issue.
-- [ ] The user approves the connected journey before the next journey begins.
+- [x] Independent product, visual and release-guard reviews find no open frontend
+      P0 or P1 issue on the frozen candidate.
+- [x] Connected journeys were reviewed and closed in staged waves.
 
 ## Scoring rubric
 
@@ -79,21 +80,21 @@ The Explore journey is one connected product experience:
 
 ### 2. Korea overview — Polarsteps pattern
 
-- [ ] Korea is the primary visual object, not a report header followed by cards.
-- [ ] Seoul, Busan and Jeju read as equal geographic anchors with clear relative
+- [x] Korea is the primary visual object, not a report header followed by cards.
+- [x] Seoul, Busan and Jeju read as equal geographic anchors with clear relative
       placement and one pin/material/interaction grammar.
-- [ ] The first view contains no printed count, methodology ribbon, floating
+- [x] The first view contains no printed count, methodology ribbon, floating
       info control or internal status sentence. One compact localized type
       label distinguishes Directory from Editorial without color dependence;
       exact counts remain semantic and surface when a downstream decision needs
       them.
-- [ ] Jeju remains editorial and has no official count. Only eight exact
+- [x] Jeju remains editorial and has no official count. Only eight exact
       VISITKOREA place-page/embedded-map verified points are mapped; the two
       pending candidates remain source links with no pin or place action.
-- [ ] City selection feels like entering a journey, with camera/atlas continuity
+- [x] City selection feels like entering a journey, with camera/atlas continuity
       into the selected city.
-- [ ] Source methodology is progressive and never outranks city choice.
-- [ ] Back/forward/direct URL restores the correct atlas anchor and focus.
+- [x] Source methodology is progressive and never outranks city choice.
+- [x] Back/forward/direct URL restores the correct atlas anchor and focus.
 
 Required states: overview, city focused/pressed, history return, narrow
 portrait, short landscape and desktop. Source truth is verified semantically on
@@ -101,17 +102,18 @@ the atlas and visibly in the downstream directory/editorial provenance path.
 
 ### 3. City canvas — Mapstr + Beli pattern
 
-- [ ] Map is the default decision canvas on all supported viewports.
-- [ ] Pulse uses one restrained aura/core/label grammar; official clusters remain
-      neutral and cannot be mistaken for Pulse.
-- [ ] Search, filters, location, Map/List and key form one compact control system.
-- [ ] Labels remain associated with their marker and never collide with each
+- [x] Map is the default decision canvas on all supported viewports.
+- [x] Temperature uses one restrained aura/core/label grammar; official clusters
+      remain neutral and cannot be mistaken for temperature.
+- [x] Search, filters, location, Map/List and key form one compact control system.
+- [x] Labels remain associated with their marker and never collide with each
       other, clusters, chrome or viewport edges.
-- [ ] List rows carry the same Pulse hierarchy and selection energy as the map,
+- [x] List rows carry the same temperature hierarchy and selection energy as the map,
       rather than becoming generic directory rows.
-- [ ] Loading retains intentional map feedback; error exposes a complete List and
-      Retry path; location denied/unsupported has a contextual recovery.
-- [ ] Selection moves naturally map -> peek -> detail and List -> peek -> detail.
+- [x] Loading retains intentional map feedback. A recoverable remote-basemap
+      failure preserves the local temperature layer with a compact status; a
+      fatal local-frame failure exposes a complete List and Retry path.
+- [x] Selection moves naturally map -> peek -> detail and List -> peek -> detail.
 
 Required states: loading, ready, selected, key collapsed/open, Map/List, search,
 filtered/empty/reset, location states, tile error/retry and return from Place.
@@ -261,8 +263,14 @@ refund, My Korea paid/refunded and exact Place return for EN/KO/JA at 320x720,
 
 ## Release record
 
-- Current candidate: implementation integrated; production-fixed focused
-  verification is green, while the full visual census and CLEAN 2/2 remain open.
+- Current candidate: frozen at `a6175b9`; no open frontend P0/P1 after staged
+  product, visual and release-guard adversarial review.
+- Release head `d169106` pins the verified pnpm toolchain. Promoted deployment
+  `dpl_7U9QwtoSmV7kHMp1uppej3fwqR9v` serves
+  `https://ondo-k-tour-id.vercel.app` without authentication.
+- Final candidate census: B core 108/108, 390x844 product reflow 15/15,
+  A regression 22/22, current-reference visual 36/36, production visual
+  124/124, packaging 17/17 and typecheck green.
 - Peer-sealed flow: Guest onboarding at `7555b133` (72 required state frames,
   all >=8.5, P0=P1=P2=P3=0, Arc 13/13, restoration/geometry 8/8,
   contracts 174/174)

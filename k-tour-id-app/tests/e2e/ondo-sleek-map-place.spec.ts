@@ -172,7 +172,9 @@ test.describe("SLEEK-R1 map and place closure", () => {
     const evidence = evidenceDisclosure.locator("dl")
     await evidence.scrollIntoViewIfNeeded()
     await expect(evidence).toBeVisible()
-    await expect(evidence.locator(":scope > div")).toHaveCount(4)
+    await expect(evidence.locator(":scope > div")).toHaveCount(7)
+    await expect(evidence).toContainText("Source snapshot")
+    await expect(evidence).toContainText("LOCALDATA management ID")
     expect(await evidence.evaluate((node) => node.clientWidth)).toBeGreaterThan(0)
     expect((await evidence.evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(" ").filter(Boolean).length))).toBe(1)
     for (const label of await evidence.locator("dt").all()) {

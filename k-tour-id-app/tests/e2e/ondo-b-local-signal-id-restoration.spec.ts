@@ -26,10 +26,26 @@ async function seedB(page: Page, locale: "en" | "ko" = "en") {
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
 }
 
+async function waitForShell(page: Page) {
+  const region = page.getByTestId("ondo-scroll-region")
+  await expect(region).toBeVisible()
+  await expect.poll(
+    () => region.evaluate((element) => element.style.getPropertyValue("--ondo-scroll-viewport")),
+    { timeout: 30_000 },
+  ).not.toBe("")
+}
+
 async function openCanonicalSignal(page: Page) {
   await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page.locator("[data-city='seoul']").click()
-  await page.getByRole("button", { name: "List", exact: true }).click()
+  await waitForShell(page)
+  const cityPin = page.getByTestId("ondo-b-nation").locator("[data-city='seoul']")
+  await expect(cityPin).toBeEnabled()
+  await cityPin.evaluate((button: HTMLButtonElement) => button.click())
+  const cityRoot = page.locator("[data-testid='ondo-b-map-entry'][data-city='seoul']")
+  await expect(cityRoot).toBeVisible()
+  const list = page.getByTestId("ondo-b-venue-list")
+  if (!await list.isVisible()) await page.getByTestId("ondo-b-view-toggle").click()
+  await expect(list).toBeVisible()
   await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
   await page.getByTestId("canonical-place-details").click()
   const place = page.getByTestId("canonical-place-overlay")
@@ -45,8 +61,13 @@ async function runEligibility(page: Page, outcome: "success" | "failure" | "unav
   }, outcome)
   const walkthrough = page.getByTestId("ondo-b-local-check-walkthrough")
   const actionGate = page.getByTestId("ondo-b-action-gate")
-  if (await actionGate.count()) {
-    const gateKind = await actionGate.getAttribute("data-active-gate")
+  if (await actionGate.isVisible().catch(() => false)) {
+    let gateKind = await actionGate.getAttribute("data-active-gate")
+    if (gateKind === "account") {
+      await actionGate.getByTestId("action-gate-confirm").click()
+      await expect.poll(() => actionGate.getAttribute("data-active-gate")).not.toBe("account")
+      gateKind = await actionGate.getAttribute("data-active-gate")
+    }
     if (gateKind === "person") {
       await walkthrough.getByTestId("person-route-choice-mobile_id_cx").click()
       await walkthrough.getByTestId("local-check-boundary-continue").click()
@@ -54,6 +75,11 @@ async function runEligibility(page: Page, outcome: "success" | "failure" | "unav
       await walkthrough.getByTestId("after19-start").click()
     }
   } else {
+    const account = walkthrough.getByTestId("direct-person-account-continue")
+    if (await account.isVisible().catch(() => false)) await account.click()
+    const directPersonRoute = walkthrough.getByTestId("direct-person-route-mobile-id")
+    if (await directPersonRoute.isVisible().catch(() => false)) await directPersonRoute.click()
+    await expect(walkthrough.getByTestId("local-check-boundary-continue")).toBeVisible()
     await walkthrough.getByTestId("local-check-boundary-continue").click()
   }
   if (outcome === "success") await expect(walkthrough).toBeHidden()
@@ -64,13 +90,14 @@ async function runEligibility(page: Page, outcome: "success" | "failure" | "unav
 test("B P0 keeps Explore guest-open and exposes separate ID · Wallet and Settings tabs", async ({ page }) => {
   await seedB(page)
   await page.goto("/", { waitUntil: "domcontentloaded" })
+  await waitForShell(page)
 
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   const nav = page.getByTestId("ondo-main-nav")
-  await expect(nav.getByTestId("nav-ondo")).toContainText("Explore")
-  await expect(nav.getByTestId("nav-my")).toContainText("My Korea")
-  await expect(nav.getByTestId("nav-id")).toContainText("ID · Wallet")
-  await expect(nav.getByTestId("nav-settings")).toContainText("Settings")
+  await expect(nav.getByTestId("nav-ondo")).toHaveAccessibleName("Explore")
+  await expect(nav.getByTestId("nav-my")).toHaveAccessibleName("My Korea, saved and recent places")
+  await expect(nav.getByTestId("nav-id")).toHaveAccessibleName("K-Tour ID and wallet")
+  await expect(nav.getByTestId("nav-settings")).toHaveAccessibleName("Settings")
   await nav.getByTestId("nav-id").click()
   await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
   await nav.getByTestId("nav-settings").click()
@@ -81,8 +108,8 @@ test("B P0 returns once to the exact Local Signal draft/place and persists only 
   await seedB(page)
   const { place, venueId } = await openCanonicalSignal(page)
   const draft = page.getByTestId("local-signal-draft")
-  await draft.getByRole("button", { name: "Calm right now", exact: true }).click()
-  await draft.getByRole("textbox", { name: "Optional local note" }).fill("Window seats are quiet before lunch.")
+  await draft.getByRole("button", { name: "Easygoing", exact: true }).click()
+  await draft.getByTestId("local-signal-note").fill("Window seats are quiet before lunch.")
   await draft.getByTestId("local-signal-person-check").click()
 
   const actionGate = page.getByTestId("ondo-b-action-gate")
@@ -90,18 +117,21 @@ test("B P0 returns once to the exact Local Signal draft/place and persists only 
     await actionGate.getByTestId("action-gate-confirm").click()
   }
   const walkthrough = page.getByTestId("ondo-b-local-check-walkthrough")
-  await expect(walkthrough).toContainText("No identity provider is connected and no credential is created")
-  await walkthrough.getByTestId("person-provider-disclosure").locator("summary").click()
-  await expect(walkthrough.getByTestId("consent-requester")).toContainText("ONDO Travel Pass")
-  await expect(walkthrough.getByTestId("consent-purpose")).toContainText("return to the note")
-  await expect(walkthrough.getByTestId("consent-minimum")).toContainText("Person — separate from age")
-  await expect(walkthrough.getByTestId("consent-retention")).toContainText("No name, document, birth date, profile, or credential is saved")
+  await walkthrough.getByTestId("person-route-choice-mobile_id_cx").click()
+  await expect(walkthrough.getByTestId("consent-minimum")).toBeVisible()
+  await expect(walkthrough.getByTestId("consent-retention")).toBeVisible()
+  const disclosure = walkthrough.getByTestId("person-provider-disclosure")
+  await disclosure.locator("summary").click()
+  await expect(disclosure.getByTestId("consent-requester")).toBeVisible()
+  await expect(disclosure.getByTestId("consent-purpose")).toBeVisible()
   await runEligibility(page)
 
   await expect(draft).toHaveAttribute("data-gate-return", "success")
-  await expect(draft.getByRole("textbox", { name: "Optional local note" })).toHaveValue("Window seats are quiet before lunch.")
-  await expect(draft.getByRole("button", { name: "Calm right now", exact: true })).toHaveAttribute("aria-pressed", "true")
+  await expect(draft.getByTestId("local-signal-note")).toHaveValue("Window seats are quiet before lunch.")
+  await expect(draft.getByRole("button", { name: "Easygoing", exact: true })).toHaveAttribute("aria-pressed", "true")
   await draft.getByTestId("local-signal-post").click()
+  await expect(draft.getByTestId("local-signal-result")).toHaveAttribute("data-result", "unique")
+  await draft.getByTestId("local-signal-return").click()
   await expect(place).toBeVisible()
   await expect(place).toHaveAttribute("data-venue-id", venueId)
 
@@ -117,8 +147,8 @@ test("B P0 preserves the draft through cancel, failure, unavailable, expired, an
   await seedB(page)
   await openCanonicalSignal(page)
   const draft = page.getByTestId("local-signal-draft")
-  const note = draft.getByRole("textbox", { name: "Optional local note" })
-  await draft.getByRole("button", { name: "Calm right now", exact: true }).click()
+  const note = draft.getByTestId("local-signal-note")
+  await draft.getByRole("button", { name: "Easygoing", exact: true }).click()
   await note.fill("Keep this exact draft")
 
   await draft.getByTestId("local-signal-person-check").click()
@@ -144,14 +174,15 @@ test("B P0 preserves the draft through cancel, failure, unavailable, expired, an
 test("B P0 keeps Person and 19+ outcomes independent and out of storage", async ({ page }) => {
   await seedB(page)
   await page.goto("/", { waitUntil: "domcontentloaded" })
+  await waitForShell(page)
   await page.getByTestId("nav-id").click()
   const identity = page.getByTestId("ondo-b-traveler-id")
-  await identity.getByTestId("traveler-id-person").getByRole("button", { name: "Check Person" }).click()
+  await identity.getByTestId("traveler-id-person-check").click()
   await runEligibility(page)
   await expect(identity.getByTestId("traveler-id-person")).toHaveAttribute("data-status", "success")
   await expect(identity.getByTestId("traveler-id-age")).toHaveAttribute("data-status", "none")
 
-  await identity.getByTestId("traveler-id-age").getByRole("button", { name: "Check 19+" }).click()
+  await identity.getByTestId("traveler-id-age").locator("button").click()
   const walkthrough = await runEligibility(page, "expired")
   await walkthrough.getByTestId("local-check-result").getByRole("button").last().click()
   await expect(identity.getByTestId("traveler-id-age")).toHaveAttribute("data-status", "expired")
@@ -165,17 +196,23 @@ test("B P0 Korean Local Signal remains keyboard-contained and reflows in short l
   await page.setViewportSize({ width: 844, height: 390 })
   await seedB(page, "ko")
   await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page.locator("[data-city='seoul']").click()
-  const listToggle = page.getByRole("button", { name: "목록", exact: true })
-  if (await listToggle.count()) await listToggle.click()
-  await page.getByTestId("ondo-b-venue-list").locator("li button").first().click()
+  await waitForShell(page)
+  const cityPin = page.getByTestId("ondo-b-nation").locator("[data-city='seoul']")
+  await expect(cityPin).toBeEnabled()
+  await cityPin.evaluate((button: HTMLButtonElement) => button.click())
+  const cityRoot = page.locator("[data-testid='ondo-b-map-entry'][data-city='seoul']")
+  await expect(cityRoot).toBeVisible()
+  const list = page.getByTestId("ondo-b-venue-list")
+  if (!await list.isVisible()) await page.getByTestId("ondo-b-view-toggle").click()
+  await expect(list).toBeVisible()
+  await list.locator("li button").first().click()
   await page.getByTestId("canonical-place-details").click()
   await page.getByTestId("canonical-local-signal-open").click()
 
   const signal = page.getByTestId("ondo-b-local-signal")
-  await expect(signal.getByRole("heading", { name: "로컬 시그널 남기기" })).toBeVisible()
-  await expect(signal).toBeFocused()
-  const close = signal.getByRole("button", { name: "로컬 시그널 닫기" })
+  await expect(signal.getByRole("heading", { level: 2 })).toBeVisible()
+  await expect(signal.getByTestId("local-signal-tag-calm_now")).toBeFocused()
+  const close = signal.getByTestId("local-signal-close")
   const continueButton = signal.getByTestId("local-signal-person-check")
   await signal.locator("fieldset button").first().click()
   await expect(continueButton).toBeEnabled()

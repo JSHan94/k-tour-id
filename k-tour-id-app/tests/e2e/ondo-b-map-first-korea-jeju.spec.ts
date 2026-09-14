@@ -7,7 +7,8 @@ async function seed(page: Page, locale: "en" | "ko" | "ja") {
     localStorage.setItem(key, JSON.stringify({
       locale: nextLocale,
       onboarding: "ONB-COMPLETE",
-      persona: "short_term",
+      persona: "short_trip",
+      discoveryArea: null,
       discoveryPreferences: [],
       savedVenueIds: [],
       savedEditorialPlaceIds: [],
@@ -52,6 +53,24 @@ test.describe("map-first Korea and Jeju integration", () => {
         const atlas = page.getByTestId("ondo-b-korea-atlas")
         await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-hydrated", "true")
         await expect(atlas).toBeVisible()
+        const atlasScrim = await atlas.evaluate((element) => {
+          const style = getComputedStyle(element, "::before")
+          return {
+            transform: style.transform,
+            left: style.left,
+            right: style.right,
+            width: style.width,
+            borderWidth: style.borderTopWidth,
+            boxShadow: style.boxShadow,
+          }
+        })
+        expect(atlasScrim.transform, "the map readability scrim must not inherit the retired tilted-paper transform").toBe("none")
+        expect(atlasScrim.left).toBe("0px")
+        expect(atlasScrim.right).toBe("0px")
+        expect(Number.parseFloat(atlasScrim.width)).toBeGreaterThan(0)
+        expect(atlasScrim.borderWidth).toBe("0px")
+        expect(atlasScrim.boxShadow).toBe("none")
+        await expect(page.getByTestId("maplibre-map")).toHaveAttribute("data-map-projection-settled", "true")
         await page.waitForFunction(() => {
           const plot = document.querySelector<HTMLElement>("[data-testid='ondo-b-atlas-plot']")
           const pin = document.querySelector<HTMLElement>("[data-testid='ondo-b-atlas-plot'] [data-city='seoul']")
@@ -79,10 +98,10 @@ test.describe("map-first Korea and Jeju integration", () => {
         expect(atlasBox.height / viewport.height).toBeGreaterThanOrEqual(.52)
         const cityBoxes: Array<Awaited<ReturnType<typeof box>>> = []
         const pinBoxes: Array<Awaited<ReturnType<typeof box>>> = []
-        const atlasCoordinates = {
-          seoul: { latitude: "37.5647", longitude: "126.9874", atlasX: "86.1", atlasY: "77.6", x: .287, y: .22171 },
-          busan: { latitude: "35.1794", longitude: "129.0541", atlasX: "184.1", atlasY: "212.7", x: .61367, y: .60771 },
-          jeju: { latitude: "33.3802", longitude: "126.5404", atlasX: "64.9", atlasY: "314.6", x: .21633, y: .89886 },
+        const cityCoordinates = {
+          seoul: { latitude: "37.5665", longitude: "126.978" },
+          busan: { latitude: "35.1796", longitude: "129.0756" },
+          jeju: { latitude: "33.4996", longitude: "126.5312" },
         } as const
         const cityLabels = {
           en: { seoul: "Seoul", busan: "Busan", jeju: "Jeju" },
@@ -93,10 +112,11 @@ test.describe("map-first Korea and Jeju integration", () => {
           const node = atlas.locator(`[data-city='${city}']`)
           await expect(node).toBeVisible()
           await expect(node).toHaveAttribute("data-atlas-pin", "true")
-          await expect(node).toHaveAttribute("data-atlas-latitude", atlasCoordinates[city].latitude)
-          await expect(node).toHaveAttribute("data-atlas-longitude", atlasCoordinates[city].longitude)
-          await expect(node).toHaveAttribute("data-atlas-x", atlasCoordinates[city].atlasX)
-          await expect(node).toHaveAttribute("data-atlas-y", atlasCoordinates[city].atlasY)
+          await expect(node).toHaveAttribute("data-atlas-latitude", cityCoordinates[city].latitude)
+          await expect(node).toHaveAttribute("data-atlas-longitude", cityCoordinates[city].longitude)
+          await expect(node).not.toHaveAttribute("data-atlas-x", /.+/)
+          await expect(node).not.toHaveAttribute("data-atlas-y", /.+/)
+          await expect(node).toHaveAttribute("data-map-projected", "true")
           await expect(node).toHaveText(cityLabels[locale][city])
           await expect(node.locator("[data-region-kind-label]")).toHaveCount(0)
           await node.focus()
@@ -110,11 +130,12 @@ test.describe("map-first Korea and Jeju integration", () => {
           expect(nodeBox.x + nodeBox.width).toBeLessThanOrEqual(atlasBox.x + atlasBox.width + .5)
           expect(nodeBox.y).toBeGreaterThanOrEqual(atlasBox.y - .5)
           expect(nodeBox.y + nodeBox.height).toBeLessThanOrEqual(atlasBox.y + atlasBox.height + .5)
-          const stopBox = await box(atlas.locator(`[data-atlas-stop='${city}']`))
-          expect(Math.abs(pinBox.x + pinBox.width / 2 - (stopBox.x + stopBox.width / 2))).toBeLessThanOrEqual(12)
-          expect(Math.abs(pinBox.y + pinBox.height / 2 - (stopBox.y + stopBox.height / 2))).toBeLessThanOrEqual(12)
-          expect(Math.abs(pinBox.x + pinBox.width / 2 - (plotBox.x + plotBox.width * atlasCoordinates[city].x))).toBeLessThanOrEqual(12)
-          expect(Math.abs(pinBox.y + pinBox.height / 2 - (plotBox.y + plotBox.height * atlasCoordinates[city].y))).toBeLessThanOrEqual(12)
+          const projected = await node.evaluate((element) => ({
+            x: Number(element.getAttribute("data-map-x")),
+            y: Number(element.getAttribute("data-map-y")),
+          }))
+          expect(Math.abs(pinBox.x + pinBox.width / 2 - (plotBox.x + projected.x))).toBeLessThanOrEqual(2)
+          expect(Math.abs(pinBox.y + pinBox.height / 2 - (plotBox.y + projected.y))).toBeLessThanOrEqual(2)
           expect(intersects(pinBox, labelBox), `${locale} ${viewport.width}x${viewport.height} ${city} label clears its beacon`).toBe(false)
           expect(await node.evaluate((element) => {
             const bounds = element.getBoundingClientRect()
@@ -146,7 +167,7 @@ test.describe("map-first Korea and Jeju integration", () => {
         await expect(atlas.locator("[data-city='jeju']")).toHaveAttribute("data-temperature-score", "none")
         await expect(atlas.locator("[data-city='jeju']")).not.toHaveAttribute("data-official-count", /.+/)
         await expect(atlas.locator("[data-city] svg.lucide-map-pin")).toHaveCount(0)
-        await expect(atlas.locator("svg.lucide-sparkles")).toHaveCount(0)
+        await expect(atlas.locator("[data-city] svg.lucide-sparkles")).toHaveCount(0)
         await expect(atlas).not.toContainText(/\bExplore\b|탐색|探す/)
         for (const city of ["seoul", "busan", "jeju"] as const) {
           const node = atlas.locator(`[data-city='${city}']`)
@@ -163,30 +184,58 @@ test.describe("map-first Korea and Jeju integration", () => {
 
         await atlas.locator("[data-city='jeju']").click()
         await expect(page).toHaveURL(/city=jeju/)
+        const transitionedMap = page.getByTestId("maplibre-map")
+        await expect(transitionedMap).toHaveAttribute("data-city-focus-target", "jeju")
+        await expect(transitionedMap).toHaveAttribute("data-city-focus-duration", "340")
+        expect(Number(await transitionedMap.getAttribute("data-city-focus-start-delay"))).toBeLessThanOrEqual(100)
         const cityRoot = page.getByTestId("ondo-b-map-entry")
         await expect(cityRoot).toHaveAttribute("data-requested-view", "map")
         await expect(cityRoot).toHaveAttribute("data-effective-view", "map")
         await expect(cityRoot).toHaveAttribute("data-editorial-point-count", "8")
         await expect(cityRoot).toHaveAttribute("data-editorial-temperature-mode", "editorial-coverage")
         await expect(cityRoot).toHaveAttribute("data-editorial-temperature-score", "none")
+        await expect(page.getByTestId("ondo-b-pulse-city-status")).toHaveAttribute("data-pulse-city-status", "editorial-limited")
         await expect(cityRoot).toHaveAttribute("data-temperature-visual-grammar", "shared-field-aura-core-scale-selection-capsule")
         await expect(cityRoot).toHaveAttribute("data-temperature-model", "editorial-unscored")
         await expect(cityRoot).toHaveAttribute("data-temperature-shell", "city-map")
+        const accessibleEditorialMarkers = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
+        await expect(accessibleEditorialMarkers).toHaveCount(8)
+        const accessibleEditorialText = await accessibleEditorialMarkers.allTextContents()
+        expect(accessibleEditorialText.every((label) => !/\b(?:peak|hot|rising)\b|피크|핫|상승|ピーク|ホット|上昇/i.test(label))).toBe(true)
         await expect(cityRoot).not.toHaveAttribute("data-city-record-count", /.+/)
         await expect(page.getByTestId("ondo-b-search-shell")).toBeVisible()
         await expect(page.getByTestId("ondo-b-category-rail")).toBeVisible()
         await expect(page.getByTestId("ondo-b-location-message")).toBeVisible()
         await expect(page.getByTestId("ondo-b-locate")).toBeVisible()
-        await expect(page.getByTestId("ondo-b-editorial-place-list").locator(":scope > summary")).toContainText(cityLabels[locale].jeju === "제주" ? "목록" : cityLabels[locale].jeju === "済州" ? "リスト" : "List")
+        await expect(page.getByTestId("ondo-b-view-toggle")).toBeVisible()
         await page.getByTestId("ondo-b-category-rail").locator("[data-editorial-category='food']").click()
         await expect(cityRoot).toHaveAttribute("data-result-count", "3")
         await page.getByTestId("ondo-b-category-rail").locator("[data-editorial-category='all']").click()
         await expect(cityRoot).toHaveAttribute("data-result-count", "8")
         await expect(page.getByTestId("maplibre-map")).toBeVisible()
+        await page.getByTestId("ondo-b-view-toggle").click()
+        await expect(cityRoot).toHaveAttribute("data-effective-view", "list")
+        const editorialList = page.getByTestId("ondo-b-editorial-place-list")
+        await expect(editorialList).toHaveAttribute("data-list-grammar", "shared-place-cards")
+        const editorialRows = editorialList.locator("[data-editorial-place-id]")
+        await expect(editorialRows).toHaveCount(8)
+        expect(await editorialRows.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-pulse-priority")))).toEqual(Array(8).fill("limited"))
+        const editorialPulseNodes = editorialRows.locator("[data-testid='ondo-b-list-pulse']")
+        expect(await editorialPulseNodes.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-pulse-level")))).toEqual(Array(8).fill("limited"))
+        expect(await editorialPulseNodes.evaluateAll((nodes) => nodes.every((node) => node.getAttribute("aria-hidden") === "true" && !node.hasAttribute("role")))).toBe(true)
+        const editorialLabels = await editorialRows.getByRole("button").evaluateAll((buttons) => buttons.map((button) => button.getAttribute("aria-label") ?? ""))
+        expect(editorialLabels.every((label) => !/\b(?:peak|hot|rising)\b|피크|핫|상승|ピーク|ホット|上昇/i.test(label))).toBe(true)
+        await expect(editorialList.locator("[data-photo-kind='editorial-collection']")).toHaveCount(8)
+        await page.getByTestId("ondo-b-view-toggle").click()
+        await expect(cityRoot).toHaveAttribute("data-effective-view", "map")
         const editorialTemperatureKey = page.getByTestId("ondo-b-map-key")
         await expect(editorialTemperatureKey).toHaveAttribute("data-editorial-temperature-key", "unscored")
-        await expect(editorialTemperatureKey).toHaveAttribute("data-pulse-key-presentation", "compact-gradient")
-        await expect(page.getByTestId("ondo-b-pulse-scale")).toBeVisible()
+        await expect(editorialTemperatureKey.getByTestId("ondo-b-pulse-legend").locator("[data-level]")).toHaveCount(0)
+        const editorialLegendCoverage = editorialTemperatureKey.getByTestId("ondo-b-pulse-legend").locator("[data-coverage-intensity]")
+        await expect(editorialLegendCoverage).toHaveCount(3)
+        expect(await editorialLegendCoverage.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-coverage-intensity")))).toEqual(["sparse", "clustered", "dense"])
+        await expect(editorialTemperatureKey).toHaveAttribute("data-pulse-key-presentation", "compact-coverage")
+        await expect(page.getByTestId("ondo-b-pulse-scale")).toHaveAttribute("data-editorial-coverage-scale", "true")
         const editorialTemperatureKeyBox = await box(editorialTemperatureKey)
         expect(editorialTemperatureKeyBox.x).toBeGreaterThanOrEqual(-.5)
         expect(editorialTemperatureKeyBox.x + editorialTemperatureKeyBox.width).toBeLessThanOrEqual(viewport.width + .5)
@@ -231,17 +280,38 @@ test.describe("map-first Korea and Jeju integration", () => {
         await expect(cityRoot).toHaveAttribute("data-map-state", /loading|ready|error/)
         expect(await cityRoot.evaluate((root) => {
           const mapState = root.getAttribute("data-map-state")
-          const hasMap = root.querySelector("[data-testid='maplibre-map']") !== null
+          const hasMap = document.querySelector("[data-testid='maplibre-map']") !== null
           const hasList = root.querySelector("[data-testid='ondo-b-list-panel']") !== null
           const hasFallback = root.querySelector("[data-testid='ondo-b-map-fallback-status']") !== null
+          const hasTransport = root.querySelector("[data-testid='ondo-b-map-transport-status']") !== null
+          const partial = root.getAttribute("data-map-partial-failure")
           return mapState === "error"
             ? hasList && hasFallback
-            : hasMap && !hasList
+            : partial === "recoverable"
+              ? hasMap && hasTransport && !hasList && !hasFallback
+              : hasMap && !hasTransport && !hasList && !hasFallback
         })).toBe(true)
         await expect(page.getByTestId("ondo-b-japan-first-discovery")).toHaveAttribute("data-city-context", "seoul")
       }
     })
   }
+
+  test("the latest same-frame city intent wins and reduced motion jumps", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await seed(page, "en")
+    await page.goto("/", { waitUntil: "domcontentloaded" })
+    await expect(page.getByTestId("maplibre-map")).toHaveAttribute("data-map-projection-settled", "true")
+    await page.evaluate(() => {
+      document.querySelector<HTMLButtonElement>("[data-testid='ondo-b-korea-atlas'] [data-city='seoul']")?.click()
+      document.querySelector<HTMLButtonElement>("[data-testid='ondo-b-korea-atlas'] [data-city='busan']")?.click()
+    })
+    await expect(page).toHaveURL(/city=busan/)
+    const map = page.getByTestId("maplibre-map")
+    await expect(map).toHaveAttribute("data-city-focus-target", "busan")
+    await expect(map).toHaveAttribute("data-city-focus-duration", "0")
+    expect(Number(await map.getAttribute("data-city-focus-start-delay"))).toBeLessThanOrEqual(100)
+  })
 
   test("desktop hover preserves the geographic beacon coordinate", async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== "desktop-chromium")
@@ -249,6 +319,7 @@ test.describe("map-first Korea and Jeju integration", () => {
     await seed(page, "en")
     await page.goto("/", { waitUntil: "domcontentloaded" })
     const beacon = page.getByTestId("ondo-b-korea-atlas").locator("[data-city='seoul']")
+    await expect(page.getByTestId("maplibre-map")).toHaveAttribute("data-map-projection-settled", "true")
     await expect(beacon).toBeVisible()
     const before = await box(beacon)
     await beacon.hover()

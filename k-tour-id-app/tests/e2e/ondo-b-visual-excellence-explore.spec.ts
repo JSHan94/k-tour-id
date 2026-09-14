@@ -145,7 +145,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
         await seedFreshBOnboardingDevice(page, locale)
         await gotoB(page)
 
-        await page.getByTestId("onboarding-step-value").getByRole("button").first().click()
+        await page.getByTestId("onboarding-personalize-start").click()
         const intent = page.getByTestId("onboarding-step-intent")
         await expect(intent).toBeVisible()
         await expectNoPageOverflow(page)
@@ -159,7 +159,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
         await screenshot(page, `explore-onboarding-intent-${locale}-${viewport.id}`)
 
         await intent.getByTestId("persona-travelling").click()
-        await intent.getByRole("button").nth(3).click()
+        await intent.getByTestId("onboarding-continue").click()
         const preferences = page.getByTestId("onboarding-step-preferences")
         await expect(preferences).toBeVisible()
         await expectNoPageOverflow(page)
@@ -173,7 +173,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
       }
     })
 
-    test(`${locale.toUpperCase()} Nation and Seoul list share the same elevated Pulse material grammar`, async ({ page }) => {
+    test(`${locale.toUpperCase()} Nation anchors and Seoul list keep the same readable temperature grammar`, async ({ page }) => {
       await seedB(page, { locale })
       await seedCompletedBDevice(page, locale)
 
@@ -184,28 +184,62 @@ test.describe("ONDO Explore visual-excellence contract", () => {
 
           const nation = page.getByTestId("ondo-b-nation")
           const atlas = nation.getByTestId("ondo-b-korea-atlas")
-          const cityMaterials = await nation.locator("[data-city]").evaluateAll((elements) => elements.map((element) => {
-            const style = getComputedStyle(element)
-            return { radius: Number.parseFloat(style.borderRadius), background: style.backgroundImage, backgroundColor: style.backgroundColor, shadow: style.boxShadow }
+          await expect(atlas).toHaveAttribute("data-visual-object", "living-atlas")
+          const cityAnchors = await nation.locator("button[data-city]").evaluateAll((elements) => elements.map((element) => {
+            const target = element.getBoundingClientRect()
+            const label = element.querySelector("strong")?.getBoundingClientRect()
+            const signal = element.querySelector("i")
+            const signalCore = signal ? getComputedStyle(signal, "::after") : null
+            const signalAura = signal ? getComputedStyle(signal, "::before") : null
+            return {
+              city: element.getAttribute("data-city"),
+              signalState: element.getAttribute("data-signal-state"),
+              latitude: Number(element.getAttribute("data-atlas-latitude")),
+              longitude: Number(element.getAttribute("data-atlas-longitude")),
+              mapX: Number(element.getAttribute("data-map-x")),
+              mapY: Number(element.getAttribute("data-map-y")),
+              projected: element.getAttribute("data-map-projected"),
+              target: { left: target.left, top: target.top, right: target.right, bottom: target.bottom, width: target.width, height: target.height },
+              label: label ? { left: label.left, top: label.top, right: label.right, bottom: label.bottom, width: label.width, height: label.height } : null,
+              labelText: element.querySelector("strong")?.textContent?.trim() ?? "",
+              core: signalCore ? {
+                width: Number.parseFloat(signalCore.width),
+                height: Number.parseFloat(signalCore.height),
+                backgroundColor: signalCore.backgroundColor,
+              } : null,
+              aura: signalAura ? {
+                backgroundColor: signalAura.backgroundColor,
+                borderStyle: signalAura.borderStyle,
+              } : null,
+            }
           }))
-          const atlasScene = await atlas.evaluate((element) => getComputedStyle(element, "::before").backgroundImage)
-          expect(cityMaterials).toHaveLength(3)
-          expect(Math.max(...cityMaterials.map(({ radius }) => radius)) - Math.min(...cityMaterials.map(({ radius }) => radius))).toBeLessThanOrEqual(1)
-          for (const cityMaterial of cityMaterials) {
-            expect(cityMaterial.radius).toBeGreaterThanOrEqual(16)
-            expect(cityMaterial.background !== "none" || cityMaterial.backgroundColor !== "rgba(0, 0, 0, 0)").toBe(true)
-            expect(cityMaterial.shadow).not.toBe("none")
-          }
-          expect(atlasScene).not.toBe("none")
-          if (viewport.width >= 1200) {
-            const atlasBox = await atlas.boundingBox()
-            const seoulBox = await nation.locator("[data-city='seoul']").boundingBox()
-            const busanBox = await nation.locator("[data-city='busan']").boundingBox()
-            expect(atlasBox).not.toBeNull()
-            expect(seoulBox).not.toBeNull()
-            expect(busanBox).not.toBeNull()
-            expect((seoulBox?.x ?? 0) - (atlasBox?.x ?? 0)).toBeGreaterThanOrEqual(24)
-            expect((atlasBox?.x ?? 0) + (atlasBox?.width ?? 0) - ((busanBox?.x ?? 0) + (busanBox?.width ?? 0))).toBeGreaterThanOrEqual(24)
+          expect(cityAnchors.map(({ city }) => city).sort()).toEqual(["busan", "jeju", "seoul"])
+          expect(new Set(cityAnchors.map(({ mapX, mapY }) => `${mapX}:${mapY}`)).size).toBe(3)
+          for (const cityAnchor of cityAnchors) {
+            expect(cityAnchor.target.width).toBeGreaterThanOrEqual(44)
+            expect(cityAnchor.target.height).toBeGreaterThanOrEqual(44)
+            expect(cityAnchor.target.left).toBeGreaterThanOrEqual(-1)
+            expect(cityAnchor.target.top).toBeGreaterThanOrEqual(-1)
+            expect(cityAnchor.target.right).toBeLessThanOrEqual(viewport.width + 1)
+            expect(cityAnchor.target.bottom).toBeLessThanOrEqual(viewport.height + 1)
+            expect(cityAnchor.latitude).toBeGreaterThanOrEqual(33)
+            expect(cityAnchor.latitude).toBeLessThanOrEqual(38)
+            expect(cityAnchor.longitude).toBeGreaterThanOrEqual(126)
+            expect(cityAnchor.longitude).toBeLessThanOrEqual(130)
+            expect(cityAnchor.projected).toBe("true")
+            expect(cityAnchor.mapX).toBeGreaterThan(0)
+            expect(cityAnchor.mapY).toBeGreaterThan(0)
+            expect(cityAnchor.signalState).toMatch(/^(active|growing|limited)$/)
+            expect(cityAnchor.core?.width ?? 0).toBeGreaterThanOrEqual(6)
+            expect(cityAnchor.core?.height ?? 0).toBeGreaterThanOrEqual(6)
+            expect(cityAnchor.core?.backgroundColor).not.toBe("rgba(0, 0, 0, 0)")
+            expect(cityAnchor.aura?.backgroundColor !== "rgba(0, 0, 0, 0)" || cityAnchor.aura?.borderStyle !== "none").toBe(true)
+            expect(cityAnchor.labelText.length).toBeGreaterThan(0)
+            expect(cityAnchor.label).not.toBeNull()
+            expect(cityAnchor.label?.left ?? -1).toBeGreaterThanOrEqual(-1)
+            expect(cityAnchor.label?.right ?? viewport.width + 2).toBeLessThanOrEqual(viewport.width + 1)
+            expect(cityAnchor.label?.top ?? -1).toBeGreaterThanOrEqual(-1)
+            expect(cityAnchor.label?.bottom ?? viewport.height + 2).toBeLessThanOrEqual(viewport.height + 1)
           }
           await expectNoPageOverflow(page)
           await screenshot(page, `explore-nation-${locale}-${viewport.id}`)
@@ -318,7 +352,7 @@ test.describe("ONDO Explore visual-excellence contract", () => {
     await page.setViewportSize({ width: 390, height: 844 })
     await gotoB(page)
     expect(await page.getByTestId("onboarding-step-value").evaluate((element) => getComputedStyle(element).animationName)).toBe("none")
-    await page.getByRole("button", { name: "Explore without setup", exact: true }).click()
+    await page.getByRole("button", { name: "Open Korea map", exact: true }).click()
     await openCanonicalVenue(page, { expanded: false })
     expect(await page.getByTestId("canonical-place-peek").evaluate((element) => getComputedStyle(element).animationName)).toBe("none")
   })

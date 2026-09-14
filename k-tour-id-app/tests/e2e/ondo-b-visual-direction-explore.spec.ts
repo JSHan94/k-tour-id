@@ -128,7 +128,7 @@ test.describe("ONDO Explore approved visual direction", () => {
       const { context, page } = await openSeededPage(browser, profile.locale, profile.width, profile.height, "/?city=seoul")
 
       const root = page.getByTestId("ondo-b-map-entry")
-      await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-label")
+      await expect(root).toHaveAttribute("data-pulse-visual-grammar", "aura-scale-selection-capsule")
       await expect(root).toHaveAttribute("data-cluster-grammar", "official-record-count")
       await expect(root).toHaveAttribute("data-effective-view", "map")
       await expect(root).toHaveAttribute("data-map-state", /ready|error/, { timeout: 45_000 })
@@ -138,7 +138,12 @@ test.describe("ONDO Explore approved visual direction", () => {
       if (mapState === "ready") {
         await expect(page.getByTestId("ondo-b-map-key")).toBeVisible()
         await expect(mapCanvas).toHaveCount(1)
-        expect(await mapCanvas.evaluate((element) => getComputedStyle(element).filter)).toContain("saturate(0.78)")
+        expect(await mapCanvas.evaluate((element) => getComputedStyle(element).filter)).toContain("saturate(0.72)")
+        if (await root.getAttribute("data-map-partial-failure") === "recoverable") {
+          await expect(page.getByTestId("ondo-b-map-transport-status")).toBeVisible()
+          await page.getByTestId("ondo-b-view-toggle").click()
+          await expect(page.getByTestId("ondo-b-venue-list")).toBeVisible()
+        }
       } else {
         await expect(page.getByTestId("ondo-b-map-key")).toHaveCount(0)
         const fallback = page.getByTestId("ondo-b-map-fallback-status")

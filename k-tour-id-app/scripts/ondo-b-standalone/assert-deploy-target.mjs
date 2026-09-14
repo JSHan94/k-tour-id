@@ -2,10 +2,12 @@ import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import {
   APP_ROOT,
-  BLOCKED_LINKED_VERCEL_PROJECT_ID,
   HISTORICAL_B_PROJECT_ID,
   LOCAL_ONLY_PROJECT_ID,
   PERSONAL_DEPLOY_OWNER,
+  PERSONAL_VERCEL_ORG_ID,
+  PERSONAL_VERCEL_PROJECT_ID,
+  PERSONAL_VERCEL_PROJECT_NAME,
   PERSONAL_VERCEL_USER,
 } from "./policy.mjs"
 
@@ -57,13 +59,24 @@ export async function assertStandaloneDeploymentTarget({
       throw new Error("Refusing ONDO Vercel deployment with --scope; the personal account must be used directly")
     }
     const project = await readJson(vercelConfigPath, "Vercel project identity")
-    if (project.projectId === BLOCKED_LINKED_VERCEL_PROJECT_ID) {
-      throw new Error("Refusing ONDO Vercel deployment through the currently linked protected project")
-    }
     if (!project.projectId || protectedIds.has(project.projectId)) {
       throw new Error("Refusing ONDO Vercel deployment without a separate unprotected project identity")
     }
-    return { provider, owner, projectId: project.projectId, user: vercelUser }
+    if (
+      project.projectId !== PERSONAL_VERCEL_PROJECT_ID
+      || project.orgId !== PERSONAL_VERCEL_ORG_ID
+      || project.projectName !== PERSONAL_VERCEL_PROJECT_NAME
+    ) {
+      throw new Error("Refusing ONDO Vercel deployment outside the approved personal ondo project identity")
+    }
+    return {
+      provider,
+      owner,
+      projectId: project.projectId,
+      projectName: project.projectName,
+      orgId: project.orgId,
+      user: vercelUser,
+    }
   }
 
   throw new Error("Set ONDO_B_DEPLOY_PROVIDER to either sites or vercel before deployment")

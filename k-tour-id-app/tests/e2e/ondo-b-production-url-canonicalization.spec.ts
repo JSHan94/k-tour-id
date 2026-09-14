@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { ACTIVE_TABLE_ID } from "../../features/ondo/connect/table-policy-b"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const ALLOWED_QUERY_KEYS = ["category", "city", "detail", "q", "venueId", "view"]
@@ -29,6 +30,24 @@ async function canonicalLocation(page: Page) {
 }
 
 test.describe("ONDO B production discovery URL canonicalization", () => {
+  test("runtime fixtures require tab opt-in and remain available after QA URL canonicalization", async ({ page }) => {
+    await seedDirectory(page, "en")
+    await page.addInitScript(() => {
+      window.__ONDO_B_QA__ = { tableAvailability: "full" }
+    })
+
+    await page.goto("/", { waitUntil: "domcontentloaded" })
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.qa.controls.v1"))).toBeNull()
+    await page.getByTestId("nav-tables").click()
+    await expect(page.getByTestId(`table-card-${ACTIVE_TABLE_ID}`)).toHaveAttribute("data-table-availability", "TAV-OPEN")
+
+    await page.goto("/?qa=1", { waitUntil: "domcontentloaded" })
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.qa.controls.v1"))).toBe("1")
+    await expect.poll(() => new URL(page.url()).searchParams.has("qa")).toBe(false)
+    await page.getByTestId("nav-tables").click()
+    await expect(page.getByTestId(`table-card-${ACTIVE_TABLE_ID}`)).toHaveAttribute("data-table-availability", "TAV-FULL")
+  })
+
   for (const locale of ["en", "ko"] as const) {
     test(`strips every non-discovery key and hash while preserving ${locale.toUpperCase()} discovery history`, async ({ page }) => {
       await seedDirectory(page, locale)

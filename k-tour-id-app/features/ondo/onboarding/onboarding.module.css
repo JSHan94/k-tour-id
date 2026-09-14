@@ -4,7 +4,7 @@
   inset: 0;
   min-height: 100%;
   overflow: hidden;
-  background: var(--ondo-paper, #fbfaf7);
+  background: var(--ondo-canvas, #f7f7f8);
 }
 
 .layer {
@@ -14,8 +14,8 @@
   overflow: auto;
   overscroll-behavior: contain;
   padding: calc(18px + env(safe-area-inset-top)) 24px calc(28px + env(safe-area-inset-bottom));
-  background: var(--ondo-paper, #fbfaf7);
-  color: #171716;
+  background: var(--ondo-canvas, #f7f7f8);
+  color: var(--ondo-ink, #171717);
 }
 .layer :focus-visible { outline: 2px solid var(--ondo-focus, #1d66d1); outline-offset: 2px; }
 
@@ -128,3 +128,55 @@
   .actions { padding-top: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .persona, .personaSelected { transition: none; } }
+
+/* The first-run shell follows the app appearance contract. Persona and preference
+   choices retain hierarchy through state and shape instead of a paper tint. */
+.iconButton,
+.language,
+.seal,
+.signal,
+.sourceIntro,
+.personas,
+.persona,
+.personaSelected,
+.chip,
+.chipSelected { border-color: var(--ondo-line, rgb(23 23 23 / 12%)); }
+.iconButton,
+.language,
+.seal,
+.sourceIntro strong,
+.persona,
+.personaSelected { color: var(--ondo-ink, #171717); }
+.progress i { background: var(--ondo-line, rgb(23 23 23 / 12%)); }
+.progress .progressActive { background: var(--ondo-control, #171717); }
+.eyebrow,
+.lead,
+.sourceIntro span,
+.signal p,
+.secondary,
+.heading > span,
+.heading p,
+.persona small,
+.personaSelected small,
+.boundary,
+.preferenceGroup h2,
+.preferenceNote,
+.chip { color: var(--ondo-muted, #666); }
+.signal span,
+.personaIcon {
+  border-color: var(--ondo-line, rgb(23 23 23 / 12%));
+  background: var(--ondo-surface, #fff);
+  color: var(--ondo-ink, #171717);
+}
+.personaSelected { background: var(--ondo-surface-soft, #f5f5f5); }
+.personaSelected .personaIcon { border-color: var(--ondo-line-strong, rgb(23 23 23 / 24%)); color: var(--ondo-ink, #171717); }
+.persona i,
+.personaSelected i { border-color: var(--ondo-line-strong, rgb(23 23 23 / 20%)); }
+.personaSelected i,
+.chipSelected,
+.primary {
+  border-color: var(--ondo-control, #171717);
+  background: var(--ondo-control, #171717);
+  color: var(--ondo-control-ink, #fff);
+}
+.chip { background: var(--ondo-surface, #fff); }

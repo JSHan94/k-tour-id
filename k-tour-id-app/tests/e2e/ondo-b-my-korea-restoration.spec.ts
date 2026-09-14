@@ -1,5 +1,9 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
+import { expectBRuntimeClean, installBRuntimeGuard } from "../helpers/ondo-b-qa"
+
+test.beforeEach(({ page }) => installBRuntimeGuard(page))
+test.afterEach(async ({ page }, testInfo) => { await expectBRuntimeClean(page, testInfo) })
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const TABLE_ID = "table-seoul-night-bites"
@@ -23,7 +27,7 @@ async function seedDevice(page: Page, locale: "en" | "ko" = "en", extra: Record<
 
 async function gotoB(page: Page, search = "") {
   await page.goto(`/${search}`, { waitUntil: "domcontentloaded" })
-  await expect(page.getByTestId("ondo-b-root")).toBeVisible()
+  await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-hydrated", "true")
 }
 
 async function openMy(page: Page) {
@@ -35,8 +39,11 @@ async function openMy(page: Page) {
 }
 
 async function activate(page: Page, testId: string) {
-  await page.getByTestId(testId).focus()
-  await page.keyboard.press("Enter")
+  await expect(page.getByTestId("ondo-b-root")).toHaveAttribute("data-hydrated", "true")
+  const target = page.getByTestId(testId)
+  await target.focus()
+  await expect(target).toBeFocused()
+  await target.press("Enter")
 }
 
 async function expectNoSeriousAxe(page: Page) {
@@ -52,9 +59,13 @@ test("My Korea starts honestly empty, records an explicit official place open, r
     sessionStorage.setItem("ondo-b.labs.v1", "b-session")
   })
   let my = await openMy(page)
-  await expect(my.getByTestId("my-korea-recent-empty")).toBeVisible()
-  await expect(my.getByTestId("my-korea-planned-empty")).toBeVisible()
-  await expect(my.getByTestId("my-korea-contributions-empty")).toBeVisible()
+  await expect(my).toHaveAttribute("data-empty-journey", "true")
+  await expect(my.getByTestId("my-korea-map-memory")).toBeVisible()
+  await expect(my.getByTestId("my-korea-empty-memory")).toBeVisible()
+  await expect(my.getByTestId("my-korea-empty-explore")).toHaveCount(1)
+  await expect(my.getByTestId("my-korea-recent")).toHaveCount(0)
+  await expect(my.getByTestId("my-korea-planned")).toHaveCount(0)
+  await expect(my.getByTestId("my-korea-contributions")).toHaveCount(0)
   await expectNoSeriousAxe(page)
 
   await activate(page, "nav-ondo")
@@ -67,22 +78,23 @@ test("My Korea starts honestly empty, records an explicit official place open, r
   await expect(venueOpener).toBeFocused()
   my = await openMy(page)
   await expect(my.getByTestId(`recent-venue-${viewedVenueId}`)).toBeVisible()
-  await expect(my).toContainText("Viewed on this device")
+  await expect(my.getByTestId(`recent-card-${viewedVenueId}`)).toHaveAttribute("data-memory-venue-card", "")
 
   await page.reload({ waitUntil: "domcontentloaded" })
   my = await openMy(page)
   await expect(my.getByTestId(`recent-venue-${viewedVenueId}`)).toBeVisible()
 
   await activate(page, "nav-settings")
-  await page.getByTestId("ondo-b-device-data-settings").locator(":scope > summary").click()
+  await page.getByTestId("ondo-b-device-data-settings").click()
   await page.getByTestId("ondo-b-clear-device-open").click()
-  await page.getByRole("button", { name: "Clear saved content" }).click()
+  await page.getByRole("button", { name: "Delete saved data", exact: true }).click()
   await expect(page.getByTestId("ondo-b-clear-device-confirm")).toBeHidden()
-  await expect(page.getByTestId("ondo-b-clear-device-open")).toBeFocused()
+  await expect(page.getByTestId("ondo-b-device-data-settings")).toBeFocused()
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo-b.labs.v1"))).toBeNull()
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.labs.v2"))).toBe("legacy-a-session")
   my = await openMy(page)
-  await expect(my.getByTestId("my-korea-recent-empty")).toBeVisible()
+  await expect(my).toHaveAttribute("data-empty-journey", "true")
+  await expect(my.getByTestId("my-korea-empty-memory")).toBeVisible()
 })
 
 test("device clear leaves saved content and both Labs sessions intact when B session storage cannot be cleared", async ({ page }) => {
@@ -101,19 +113,23 @@ test("device clear leaves saved content and both Labs sessions intact when B ses
     })
   })
   await activate(page, "nav-settings")
-  await page.getByTestId("ondo-b-device-data-settings").locator(":scope > summary").click()
+  await page.getByTestId("ondo-b-device-data-settings").click()
   await page.getByTestId("ondo-b-clear-device-open").click()
   const confirm = page.getByTestId("ondo-b-clear-device-confirm")
-  await confirm.getByRole("button", { name: "Clear saved content" }).click()
+  await page.getByRole("dialog", { name: "Delete saved data?", exact: true }).getByRole("button", { name: "Delete saved data", exact: true }).click()
   await expect(confirm.getByTestId("ondo-b-clear-device-error")).toBeVisible()
   await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}").savedVenueIds ?? [], DEVICE_KEY)).toEqual([VENUE_ID])
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo-b.labs.v1"))).toBe("b-session")
   await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.labs.v2"))).toBe("legacy-a-session")
 })
 
-test("planned meals appear only after the explicit local join confirmation and survive reload", async ({ page }) => {
+test("planned meals appear only after explicit public sample join confirmation and survive reload", async ({ page }) => {
   await seedDevice(page)
   await gotoB(page)
+  await activate(page, "nav-id")
+  await page.getByTestId("kpass-sample-picker").click()
+  await page.getByTestId("kpass-scenario-adult_visitor").click()
+  await expect(page.getByTestId("kpass-scenario-adult_visitor")).toHaveCount(0)
   await activate(page, "nav-tables")
   await page.getByTestId(`table-open-${TABLE_ID}`).click()
   await page.getByTestId("table-join").click()
@@ -128,7 +144,7 @@ test("planned meals appear only after the explicit local join confirmation and s
   await expect(page.getByTestId("table-detail")).toBeHidden()
   await expect(page.getByTestId(`table-open-${TABLE_ID}`)).toBeFocused()
   let my = await openMy(page)
-  await expect(my.getByTestId(`planned-table-${TABLE_ID}`)).toContainText("Saved on this device · no reservation")
+  await expect(my.getByTestId(`planned-table-${TABLE_ID}`)).toContainText("Meal plan")
   await expectNoSeriousAxe(page)
   await page.reload({ waitUntil: "domcontentloaded" })
   my = await openMy(page)
@@ -157,8 +173,7 @@ test("cancel creates no plan while the Local Signal merge contract can render ho
   await expect(page.getByTestId(`table-open-${TABLE_ID}`)).toBeFocused()
 
   const my = await openMy(page)
-  await expect(my.getByTestId("my-korea-planned-empty")).toBeVisible()
-  await expect(my.getByTestId(`contribution-venue-${VENUE_ID}`)).toContainText("이 기기에서 남긴 로컬 시그널")
-  await expect(page.getByTestId("nav-my")).toContainText("저장")
-  await expect(page.getByTestId("nav-my")).toHaveAccessibleName("저장 · 내 한국")
+  await expect(my.getByTestId("my-korea-planned")).toHaveCount(0)
+  await expect(my.getByTestId(`contribution-venue-${VENUE_ID}`)).toContainText("로컬 시그널 남김")
+  await expect(page.getByTestId("nav-my")).toHaveAccessibleName("내 한국, 저장 및 최근 장소")
 })

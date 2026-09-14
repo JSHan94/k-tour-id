@@ -91,7 +91,12 @@ export async function scanStandaloneArtifact() {
       fail("An emitted ONDO editorial image differs from the validated source", [publicPath])
     }
   }
-  const legacyImages = emittedImages.filter((file) => /(?:modern-atlas|ondo-v2|ondo-baljajwi|placeholder|portrait|korean-|demo)/i.test(file))
+  const requiredPublicImage = (file) => PUBLIC_FILES.some((publicFile) => {
+    const publicPath = publicFile.replace(/^public\//, "")
+    return file === publicPath || file.endsWith(`/${publicPath}`)
+  })
+  const legacyImages = emittedImages.filter((file) => !requiredPublicImage(file)
+    && /(?:modern-atlas|ondo-v2|ondo-baljajwi|placeholder|portrait|korean-|demo)/i.test(file))
   if (legacyImages.length) fail("Legacy public imagery was emitted", legacyImages)
 
   const protectedHosting = JSON.parse(await readFile(resolve(APP_ROOT, ".openai/hosting.json"), "utf8"))

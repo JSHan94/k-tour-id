@@ -63,25 +63,20 @@ async function expectNoSeriousAxe(page: Page, include: string) {
   expect(result.violations.filter((violation) => ["serious", "critical"].includes(violation.impact ?? ""))).toEqual([])
 }
 
-test("SLK-005 canonical Place opens a venue-first Table scope with explicit global browse and exact venue return", async ({ page }) => {
+test("SLK-005 canonical Place exposes compact global Tables utility and exact venue return", async ({ page }) => {
   await seed(page)
   await gotoB(page, `?venueId=${EMPTY_TABLE_VENUE_ID}`)
   await page.getByTestId("canonical-place-details").click()
   const place = page.getByTestId("canonical-place-overlay")
   await expect(place).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
   await expect(place.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
-  await place.getByTestId("canonical-venue-tables").click()
-
-  const scope = place.getByTestId("venue-table-scope")
-  await expect(scope).toHaveAttribute("data-empty-state", "open")
-  await expect(place.getByTestId("venue-tables-empty")).toContainText("No open Table here yet")
-  await expect(page.getByTestId("tables-entry")).toHaveCount(0)
-
-  await place.getByTestId("tables-back-to-venue").click()
-  await expect(scope).toHaveAttribute("data-empty-state", "closed")
-  await expect(place).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
-  await place.getByTestId("canonical-venue-tables").click()
-  await place.getByTestId("tables-browse-all").click()
+  const utilities = place.getByTestId("canonical-place-utilities")
+  await expect(utilities).toHaveAttribute("data-utility-layout", "standalone")
+  const browse = utilities.getByTestId("canonical-venue-tables")
+  await expect(browse).toHaveAccessibleName("Browse all Tables")
+  await expect(place.getByTestId("venue-tables-empty")).toHaveCount(0)
+  await expect(place).not.toContainText("No open Table here yet")
+  await browse.click()
 
   const tables = page.getByTestId("tables-entry")
   await expect(tables).toBeVisible()

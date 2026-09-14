@@ -1,0 +1,237 @@
+[
+  {
+    "id": "research-seoul-zest",
+    "city": "seoul",
+    "name": { "en": "Zest", "ko": "제스트", "ja": "ゼスト" },
+    "district": { "en": "Gangnam-gu", "ko": "강남구", "ja": "カンナム区" },
+    "kind": "bar",
+    "signature": { "en": "Korean-ingredient cocktails", "ko": "한국 식재료 칵테일", "ja": "韓国食材のカクテル" },
+    "address": "서울특별시 강남구 도산대로55길 26",
+    "latitude": 37.52526,
+    "longitude": 127.04078,
+    "coordinateSourceUrl": "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Zest.html",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "No. 2 in Asia’s 50 Best Bars 2026; a Korean-ingredient cocktail stop.",
+      "ko": "2026 아시아 베스트 바 2위. 한국 식재료를 칵테일로 만나는 곳.",
+      "ja": "アジアのベストバー2026で2位。韓国食材をカクテルで楽しむ一軒。"
+    },
+    "sources": [
+      { "url": "https://www.the50.com/stories/News/asias-50-best-bars-2026-the-list-revealed.html", "title": "Asia’s 50 Best Bars 2026: the list revealed", "publishedAt": "2026-07-28", "evidence": "award" },
+      { "url": "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Zest.html", "title": "Zest — 50 Best Discovery", "publishedAt": null, "evidence": "award" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-bar-cham",
+    "city": "seoul",
+    "name": { "en": "Bar Cham", "ko": "바 참", "ja": "バー・チャム" },
+    "district": { "en": "Jongno-gu", "ko": "종로구", "ja": "チョンノ区" },
+    "kind": "bar",
+    "signature": { "en": "Korean-spirit cocktails", "ko": "전통주 칵테일", "ja": "韓国伝統酒のカクテル" },
+    "address": "서울특별시 종로구 자하문로7길 34",
+    "latitude": 37.57917,
+    "longitude": 126.97039,
+    "coordinateSourceUrl": "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Bar-Cham.html",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A hanok bar exploring Korean spirits; No. 33 in Asia’s 50 Best Bars 2026.",
+      "ko": "한옥에서 만나는 한국 전통주. 2026 아시아 베스트 바 33위.",
+      "ja": "韓屋で韓国伝統酒を味わう。アジアのベストバー2026で33位。"
+    },
+    "sources": [
+      { "url": "https://www.the50.com/stories/News/asias-50-best-bars-2026-the-list-revealed.html", "title": "Asia’s 50 Best Bars 2026: the list revealed", "publishedAt": "2026-07-28", "evidence": "award" },
+      { "url": "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Bar-Cham.html", "title": "Bar Cham — 50 Best Discovery", "publishedAt": null, "evidence": "award" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-gosari-express",
+    "city": "seoul",
+    "name": { "en": "Gosari Express", "ko": "고사리 익스프레스", "ja": "コサリ・エクスプレス" },
+    "district": { "en": "Jung-gu", "ko": "중구", "ja": "チュン区" },
+    "kind": "food",
+    "signature": { "en": "Vegan gosari noodles", "ko": "비건 고사리 비빔면", "ja": "ヴィーガンのワラビ混ぜ麺" },
+    "address": "서울특별시 중구 퇴계로85길 12-10",
+    "latitude": 37.56626,
+    "longitude": 127.02001,
+    "coordinateSourceUrl": "https://guide.michelin.com/kr/ko/seoul-capital-area/kr-seoul/restaurant/gosari-express",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A new 2026 Bib Gourmand: plant-based noodles in Sindang’s market lanes.",
+      "ko": "2026 빕 구르망 신규 선정. 신당 시장 골목에서 즐기는 채식 국수.",
+      "ja": "2026年ビブグルマン新掲載。新堂の市場路地で楽しむ植物性の麺料理。"
+    },
+    "sources": [
+      { "url": "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026", "title": "8 New Bib Gourmands Announced for The MICHELIN Guide Seoul & Busan 2026", "publishedAt": "2026-02-26", "evidence": "award" },
+      { "url": "https://guide.michelin.com/kr/ko/seoul-capital-area/kr-seoul/restaurant/gosari-express", "title": "고사리 익스프레스 — MICHELIN Guide", "publishedAt": null, "evidence": "award" },
+      { "url": "https://www.badcarrotgroup.com/kr", "title": "BAD CARROT — Gosari Express operator", "publishedAt": null, "evidence": "operator" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-3rd-samgyetang",
+    "city": "seoul",
+    "name": { "en": "3rd Samgyetang", "ko": "3대삼계장인", "ja": "3代サムゲジャンイン" },
+    "district": { "en": "Seocho-gu", "ko": "서초구", "ja": "ソチョ区" },
+    "kind": "food",
+    "signature": { "en": "Pine-nut samgyetang", "ko": "잣 삼계탕", "ja": "松の実のサムゲタン" },
+    "address": "서울특별시 서초구 반포대로28길 56-3",
+    "latitude": 37.49135,
+    "longitude": 127.01155,
+    "coordinateSourceUrl": "https://guide.michelin.com/en/seoul-capital-area/kr-seoul/restaurant/3rd-samgyetang",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "New to the 2026 Bib Gourmand selection, with a nutty take on samgyetang.",
+      "ko": "2026 빕 구르망 신규 선정. 고소한 잣 국물로 즐기는 삼계탕.",
+      "ja": "2026年ビブグルマン新掲載。松の実が香るサムゲタン。"
+    },
+    "sources": [
+      { "url": "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026", "title": "8 New Bib Gourmands Announced for The MICHELIN Guide Seoul & Busan 2026", "publishedAt": "2026-02-26", "evidence": "award" },
+      { "url": "https://guide.michelin.com/en/seoul-capital-area/kr-seoul/restaurant/3rd-samgyetang", "title": "3rd Samgyetang — MICHELIN Guide", "publishedAt": null, "evidence": "award" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-onion-anguk",
+    "city": "seoul",
+    "name": { "en": "Onion Anguk", "ko": "어니언 안국", "ja": "オニオン安国店" },
+    "district": { "en": "Jongno-gu", "ko": "종로구", "ja": "チョンノ区" },
+    "kind": "cafe",
+    "signature": { "en": "Pandoro and vanilla latte", "ko": "팡도르와 바닐라 라테", "ja": "パンドーロとバニララテ" },
+    "address": "서울특별시 종로구 계동길 5",
+    "latitude": 37.57752,
+    "longitude": 126.98668,
+    "coordinateSourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=191156",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A hanok bakery stop for a palace-area walk, featured by VISITKOREA.",
+      "ko": "궁궐 산책에 더하기 좋은 한옥 베이커리. 한국관광공사 소개 장소.",
+      "ja": "宮殿エリアの散策に添える韓屋ベーカリー。韓国観光公社の紹介スポット。"
+    },
+    "sources": [
+      { "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=191156", "title": "Onion Anguk Branch — VISITKOREA", "publishedAt": null, "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-london-bagel-dosan",
+    "city": "seoul",
+    "name": { "en": "London Bagel Museum Dosan", "ko": "런던베이글뮤지엄 도산점", "ja": "ロンドンベーグルミュージアム島山店" },
+    "district": { "en": "Gangnam-gu", "ko": "강남구", "ja": "カンナム区" },
+    "kind": "cafe",
+    "signature": { "en": "Potato-cheese bagel", "ko": "감자 치즈 베이글", "ja": "ポテトチーズベーグル" },
+    "address": "서울특별시 강남구 언주로168길 33",
+    "latitude": 37.52608,
+    "longitude": 127.03644,
+    "coordinateSourceUrl": "https://english.visitseoul.net/restaurants/LondonBagelMuseumDosan/ENPxyqzye",
+    "checkedAt": "2026-09-09",
+    "reason": {
+      "en": "A Dosan-area bagel stop in Seoul Tourism’s May 2026 updated guide.",
+      "ko": "서울관광재단이 2026년 5월 갱신한 도산 지역 베이글 카페.",
+      "ja": "ソウル観光財団が2026年5月に情報更新した、島山エリアのベーグルカフェ。"
+    },
+    "sources": [
+      { "url": "https://english.visitseoul.net/restaurants/LondonBagelMuseumDosan/ENPxyqzye", "title": "London Bagel Museum Dosan — Visit Seoul (edited 2026-05-29)", "publishedAt": "2023-06-28", "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-okdongsik",
+    "city": "seoul",
+    "name": {
+      "en": "Okdongsik",
+      "ko": "옥동식",
+      "ja": "オクドンシク"
+    },
+    "district": {
+      "en": "Seogyo · Mapo",
+      "ko": "마포 · 서교",
+      "ja": "麻浦・西橋"
+    },
+    "kind": "food",
+    "signature": {
+      "en": "Clear pork gomtang",
+      "ko": "맑은 돼지곰탕",
+      "ja": "澄んだ豚コムタン"
+    },
+    "address": "서울특별시 마포구 양화로7길 44-10",
+    "latitude": 37.5526641273966,
+    "longitude": 126.91452530534,
+    "coordinateSourceUrl": "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191592",
+    "checkedAt": "2026-09-11",
+    "reason": {
+      "en": "A focused pork-broth stop near Hapjeong, with thinly sliced pork and kimchi dumplings. Featured by VISITKOREA and the Michelin Guide.",
+      "ko": "합정 인근에서 맑은 돼지곰탕과 김치만두로 즐기는 한 끼. 한국관광공사와 미쉐린 가이드가 소개한 곳이에요.",
+      "ja": "合井近くで澄んだ豚コムタンとキムチ餃子を。韓国観光公社とミシュランガイドが紹介する一軒です。"
+    },
+    "sources": [
+      {
+        "url": "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191592",
+        "title": "VISITKOREA — Okdongsik (옥동식)",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://guide.michelin.com/sg/en/seoul-capital-area/kr-seoul/restaurant/okdongsik",
+        "title": "Okdongsik — MICHELIN Guide",
+        "publishedAt": null,
+        "evidence": "award"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  },
+  {
+    "id": "research-seoul-geumdwaeji-sikdang",
+    "city": "seoul",
+    "name": {
+      "en": "Geumdwaeji Sikdang",
+      "ko": "금돼지식당",
+      "ja": "クムデジシクタン"
+    },
+    "district": {
+      "en": "Sindang · Jung",
+      "ko": "중구 · 신당",
+      "ja": "中区・新堂"
+    },
+    "kind": "food",
+    "signature": {
+      "en": "Grilled pork shoulder and bone-in belly",
+      "ko": "눈꽃목살과 뼈삼겹",
+      "ja": "豚肩ロースと骨付きサムギョプサル"
+    },
+    "address": "서울특별시 중구 다산로 149",
+    "latitude": 37.5570820100183,
+    "longitude": 127.01167403523,
+    "coordinateSourceUrl": "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191564",
+    "checkedAt": "2026-09-11",
+    "reason": {
+      "en": "A Sindang pork-barbecue stop centered on marbled shoulder and bone-in belly, introduced by VISITKOREA and the Michelin Guide.",
+      "ko": "눈꽃목살과 뼈삼겹을 중심으로 즐기는 신당동의 돼지고기 구이. 한국관광공사와 미쉐린 가이드가 소개했어요.",
+      "ja": "霜降りの肩ロースや骨付きサムギョプサルを楽しむ新堂の焼肉店。韓国観光公社とミシュランガイドに掲載されています。"
+    },
+    "sources": [
+      {
+        "url": "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191564",
+        "title": "VISITKOREA — Geumdwaeji Sikdang (금돼지식당)",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://guide.michelin.com/tw/en/seoul-capital-area/kr-seoul/restaurant/geumdwaeji-sikdang",
+        "title": "Geumdwaeji Sikdang — MICHELIN Guide",
+        "publishedAt": null,
+        "evidence": "award"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": null
+  }
+]

@@ -1,375 +1,84 @@
 "use client"
 
-import type { ChangeEvent } from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { ArrowRight, Check, FileImage, RefreshCw, ShieldCheck, Trash2, Upload } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { ArrowRight, BookOpenCheck, Camera, Check, ShieldCheck, Smartphone } from "lucide-react"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import styles from "./passport-ocr-step-b.module.css"
 
-const MAX_PASSPORT_IMAGE_BYTES = 12 * 1024 * 1024
-const PASSPORT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
+type PassportReviewStage = "sample" | "permission" | "denied" | "capture" | "checking" | "review"
 
-type PassportOcrStage = "select" | "decoding" | "preview" | "processing" | "review"
-type PassportOcrError = "type" | "size" | "decode" | null
+const DEMO_COPY = {
+  en: { permission: "Try the camera permission step", permissionBody: "Demo prompt only. No device permission is requested and your camera stays off.", allow: "Allow sample camera step", deny: "Try permission denied", denied: "Sample permission denied", deniedBody: "Nothing was captured. Retry when ready, or go back to your method.", retry: "Try sample again", capture: "Frame the sample page", captureBody: "Check that all four corners of the redacted page are inside the frame.", captureAction: "Capture redacted sample", retake: "Retake sample", nfc: "Try the NFC chip step", nfcBody: "Imagine holding the passport against the back of a phone. Use the prepared chip response; no NFC hardware is accessed.", read: "Read sample chip" },
+  ko: { permission: "카메라 권한 단계를 체험해요", permissionBody: "데모 안내예요. 기기 권한을 요청하지 않고 카메라도 켜지지 않아요.", allow: "샘플 카메라 단계 허용", deny: "권한 거절 체험", denied: "샘플 권한을 거절했어요", deniedBody: "촬영된 내용은 없어요. 준비되면 다시 시도하거나 확인 방법으로 돌아가세요.", retry: "샘플 다시 시도", capture: "샘플 여권 면을 맞춰요", captureBody: "가림 처리된 페이지의 네 모서리가 프레임 안에 있는지 확인하세요.", captureAction: "가림 처리 샘플 촬영", retake: "샘플 다시 촬영", nfc: "NFC 칩 단계를 체험해요", nfcBody: "휴대폰 뒷면에 여권을 대는 단계를 상상해 보세요. 준비된 칩 응답만 사용하며 NFC 기기에 접근하지 않아요.", read: "샘플 칩 읽기" },
+  ja: { permission: "カメラ許可の手順を体験", permissionBody: "デモの案内です。端末の許可は求めず、カメラも起動しません。", allow: "サンプルカメラ手順を許可", deny: "許可の拒否を体験", denied: "サンプルの許可を拒否しました", deniedBody: "撮影された内容はありません。再試行するか、確認方法に戻れます。", retry: "サンプルを再試行", capture: "サンプルのページを合わせる", captureBody: "マスキング済みページの四隅が枠内にあることを確認してください。", captureAction: "マスキング済みサンプルを撮影", retake: "サンプルを撮り直す", nfc: "NFCチップの手順を体験", nfcBody: "スマートフォンの背面にパスポートを当てる手順です。用意されたチップ応答のみを使い、NFC機器にはアクセスしません。", read: "サンプルチップを読む" },
+} as const
 
 const COPY = {
   en: {
-    eyebrow: "ON-DEVICE OCR",
-    title: "Choose one passport image",
-    lead: "Use a JPEG, PNG or WebP image up to 12 MB. It is decoded only in this tab and is never uploaded.",
-    inputLabel: "Passport image file",
-    choose: "Choose image",
-    required: "One image is required before OCR can start.",
-    checking: "Checking the image locally",
-    previewTitle: "Image ready",
-    previewAlt: "Selected passport page",
-    replace: "Replace image",
-    remove: "Remove image",
-    start: "Read image on device",
-    privacy: "The image stays in memory only until you replace, remove, continue or close. No filename, image or metadata is saved or sent.",
-    typeError: "Choose a JPEG, PNG or WebP image.",
-    sizeError: "This image is larger than 12 MB. Choose a smaller image.",
-    decodeError: "This image could not be decoded. Remove it and choose another JPEG, PNG or WebP image.",
-    retry: "Choose another image",
-    processingTitle: "Preparing a minimum local review",
-    processingLead: "OCR formatting runs only on this device. It does not contact a passport, identity or OpenDID provider.",
-    processingSteps: ["Read the image locally", "Mask sensitive fields", "Prepare the minimum review"],
-    pending: "Waiting",
-    current: "In progress",
-    complete: "Complete",
-    reviewEyebrow: "OCR · MASKED RESULT",
-    reviewTitle: "Review the minimum result",
-    reviewLead: "No passport authenticity or identity decision was made.",
-    routeLabel: "Selected route",
-    routeValue: "Passport eKYC",
-    imageLabel: "Image",
-    imageValue: "Decoded locally · released before this review",
-    identifierLabel: "Document identifier",
-    identifierValue: "•••••••• · masked example",
-    personalLabel: "Personal fields",
-    personalValue: "Not extracted or retained",
-    resultLabel: "OCR result",
-    resultValue: "No provider decision",
-    reviewTruth: "No name, passport number, MRZ, birth date, image or metadata continues to the next step.",
-    continue: "Continue to face + liveness",
-    removed: "Image removed. Choose another image to continue.",
+    eyebrow: "PASSPORT", title: "Check the passport page", lead: "Use the redacted sample for this review.",
+    sample: "Redacted review sample", sampleAlt: "Redacted passport sample with no personal information", start: "Check sample",
+    checking: "Checking the sample…", reviewTitle: "Sample check complete", reviewLead: "Continue to the face check.",
+    reviewTruth: "Review result · no external service confirmation", privacy: "No photo or personal details are collected.",
+    privacyDetails: "Review details", technicalPrivacy: "This review uses a bundled redacted sample across the OCR, NFC and face/liveness connector boundaries. Camera and file upload stay unavailable until a passport-check service is connected.",
+    continue: "Continue", unavailableTitle: "Passport check is unavailable", unavailableLead: "Choose another method or return to your trip.",
   },
   ko: {
-    eyebrow: "기기 내 OCR",
-    title: "여권 이미지 한 장 선택",
-    lead: "12MB 이하 JPEG, PNG 또는 WebP 이미지를 사용하세요. 이 탭에서만 해석하며 업로드하지 않습니다.",
-    inputLabel: "여권 이미지 파일",
-    choose: "이미지 선택",
-    required: "OCR을 시작하려면 이미지 한 장이 필요합니다.",
-    checking: "기기에서 이미지 확인 중",
-    previewTitle: "이미지 준비 완료",
-    previewAlt: "선택한 여권 면",
-    replace: "이미지 교체",
-    remove: "이미지 삭제",
-    start: "기기에서 이미지 읽기",
-    privacy: "이미지는 교체·삭제·계속·닫기 전까지만 메모리에 있습니다. 파일명·이미지·메타데이터를 저장하거나 전송하지 않습니다.",
-    typeError: "JPEG, PNG 또는 WebP 이미지를 선택하세요.",
-    sizeError: "이미지가 12MB를 초과합니다. 더 작은 이미지를 선택하세요.",
-    decodeError: "이미지를 해석할 수 없습니다. 삭제한 뒤 다른 JPEG, PNG 또는 WebP 이미지를 선택하세요.",
-    retry: "다른 이미지 선택",
-    processingTitle: "최소 로컬 검토 준비",
-    processingLead: "OCR 처리는 이 기기에서만 진행하며 여권·신원확인·OpenDID 제공자에 연결하지 않습니다.",
-    processingSteps: ["기기에서 이미지 읽기", "민감 필드 마스킹", "최소 검토 결과 준비"],
-    pending: "대기",
-    current: "진행 중",
-    complete: "완료",
-    reviewEyebrow: "OCR · 마스킹 결과",
-    reviewTitle: "최소 결과 확인",
-    reviewLead: "여권 진위 또는 본인확인 판정을 내리지 않았습니다.",
-    routeLabel: "선택 경로",
-    routeValue: "여권 eKYC",
-    imageLabel: "이미지",
-    imageValue: "기기에서 해석 · 검토 전 폐기됨",
-    identifierLabel: "문서 식별자",
-    identifierValue: "•••••••• · 마스킹 예시",
-    personalLabel: "개인 필드",
-    personalValue: "추출하거나 보관하지 않음",
-    resultLabel: "OCR 결과",
-    resultValue: "제공자 판정 없음",
-    reviewTruth: "이름·여권번호·MRZ·생년월일·이미지·메타데이터는 다음 단계로 넘어가지 않습니다.",
-    continue: "얼굴·라이브니스로 계속",
-    removed: "이미지를 삭제했습니다. 계속하려면 다른 이미지를 선택하세요.",
+    eyebrow: "여권", title: "여권 면을 확인해요", lead: "검토용 가림 처리 샘플을 사용합니다.",
+    sample: "가림 처리된 검토 샘플", sampleAlt: "개인정보가 없는 가림 처리 여권 샘플", start: "샘플 확인",
+    checking: "샘플 확인 중…", reviewTitle: "샘플 확인 완료", reviewLead: "얼굴 확인으로 계속하세요.",
+    reviewTruth: "검토용 결과 · 외부 서비스 확인 없음", privacy: "사진이나 개인정보를 수집하지 않아요.",
+    privacyDetails: "검토 상세", technicalPrivacy: "이 검토는 OCR·NFC·얼굴/라이브니스 연결 경계 전반에서 앱에 포함된 가림 처리 샘플만 사용합니다. 여권 확인 서비스가 연결되기 전에는 카메라와 파일 업로드를 제공하지 않습니다.",
+    continue: "계속", unavailableTitle: "여권 확인을 이용할 수 없어요", unavailableLead: "다른 방법을 선택하거나 여행으로 돌아가세요.",
   },
   ja: {
-    eyebrow: "端末内OCR",
-    title: "パスポート画像を1枚選択",
-    lead: "12MB以下のJPEG、PNG、WebP画像を使います。このタブ内だけで読み取り、アップロードしません。",
-    inputLabel: "パスポート画像ファイル",
-    choose: "画像を選択",
-    required: "OCRを始めるには画像が1枚必要です。",
-    checking: "端末内で画像を確認中",
-    previewTitle: "画像の準備完了",
-    previewAlt: "選択したパスポート面",
-    replace: "画像を差し替える",
-    remove: "画像を削除",
-    start: "端末内で画像を読む",
-    privacy: "画像は差し替え、削除、続行、終了までメモリ内だけにあります。ファイル名、画像、メタデータは保存・送信しません。",
-    typeError: "JPEG、PNG、WebP画像を選択してください。",
-    sizeError: "画像が12MBを超えています。より小さい画像を選択してください。",
-    decodeError: "画像を読み取れませんでした。削除して別のJPEG、PNG、WebP画像を選択してください。",
-    retry: "別の画像を選択",
-    processingTitle: "最小限のローカル確認を準備",
-    processingLead: "OCR処理は端末内だけで行い、パスポート、本人確認、OpenDID事業者には接続しません。",
-    processingSteps: ["端末内で画像を読む", "機微な項目をマスク", "最小限の確認結果を準備"],
-    pending: "待機",
-    current: "処理中",
-    complete: "完了",
-    reviewEyebrow: "OCR · マスク済み結果",
-    reviewTitle: "最小限の結果を確認",
-    reviewLead: "パスポートの真正性や本人確認は判定していません。",
-    routeLabel: "選択ルート",
-    routeValue: "パスポートeKYC",
-    imageLabel: "画像",
-    imageValue: "端末内で読み取り · 確認前に解放済み",
-    identifierLabel: "文書識別子",
-    identifierValue: "•••••••• · マスク例",
-    personalLabel: "個人項目",
-    personalValue: "抽出・保持しない",
-    resultLabel: "OCR結果",
-    resultValue: "事業者の判定なし",
-    reviewTruth: "氏名、パスポート番号、MRZ、生年月日、画像、メタデータは次の段階へ渡しません。",
-    continue: "顔・ライブネスへ進む",
-    removed: "画像を削除しました。続けるには別の画像を選択してください。",
+    eyebrow: "パスポート", title: "パスポート面を確認", lead: "検証用のマスキング済みサンプルを使います。",
+    sample: "マスキング済み検証サンプル", sampleAlt: "個人情報を含まないマスキング済みパスポートサンプル", start: "サンプルを確認",
+    checking: "サンプルを確認中…", reviewTitle: "サンプル確認完了", reviewLead: "顔の確認へ進んでください。",
+    reviewTruth: "検証用の結果・外部サービスによる確認なし", privacy: "写真や個人情報は収集しません。",
+    privacyDetails: "検証の詳細", technicalPrivacy: "この検証ではOCR・NFC・顔/ライブネス連携の境界全体で、アプリ内のマスキング済みサンプルだけを使います。パスポート確認サービスが接続されるまで、カメラとファイルアップロードは利用できません。",
+    continue: "続ける", unavailableTitle: "パスポート確認は利用できません", unavailableLead: "別の方法を選ぶか、旅行に戻れます。",
   },
-} as const satisfies Record<OndoBLocale, Record<string, string | readonly string[]>>
+} as const satisfies Record<OndoBLocale, Record<string, string>>
 
-export function PassportOcrStepB({ locale, onComplete }: { locale: OndoBLocale; onComplete: () => void }) {
+export function PassportOcrStepB({ locale, reviewMode, onComplete }: { locale: OndoBLocale; reviewMode: boolean; onComplete: () => void }) {
   const copy = COPY[locale]
-  const [stage, setStage] = useState<PassportOcrStage>("select")
-  const [error, setError] = useState<PassportOcrError>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [processingStep, setProcessingStep] = useState(0)
-  const [announcement, setAnnouncement] = useState<string>(copy.required as string)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const initialActionRef = useRef<HTMLButtonElement>(null)
-  const previewActionRef = useRef<HTMLButtonElement>(null)
-  const replaceActionRef = useRef<HTMLButtonElement>(null)
-  const processingHeadingRef = useRef<HTMLHeadingElement>(null)
-  const reviewActionRef = useRef<HTMLButtonElement>(null)
-  const previewUrlRef = useRef<string | null>(null)
-  const selectionRef = useRef(0)
+  const demo = DEMO_COPY[locale]
+  const [stage, setStage] = useState<PassportReviewStage>("sample")
+  const actionRef = useRef<HTMLButtonElement>(null)
+  const completedRef = useRef(false)
 
-  const revokeObjectUrl = useCallback(() => {
-    if (!previewUrlRef.current) return
-    URL.revokeObjectURL(previewUrlRef.current)
-    previewUrlRef.current = null
-  }, [])
-
-  const clearPreview = useCallback(() => {
-    revokeObjectUrl()
-    setPreviewUrl(null)
-    if (inputRef.current) inputRef.current.value = ""
-  }, [revokeObjectUrl])
-
-  useEffect(() => () => {
-    selectionRef.current += 1
-    revokeObjectUrl()
-  }, [revokeObjectUrl])
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const focusAtDialogTop = (action: HTMLButtonElement | null) => {
-        // Every document-choice state owns the top of the short-landscape
-        // dialog. File chooser errors can otherwise leave the scroll owner
-        // offset far enough for a focused CTA to sit under the sticky header
-        // or below the viewport while `preventScroll` keeps it there.
-        action?.closest<HTMLElement>("[role='dialog']")?.scrollTo({ top: 0, behavior: "auto" })
-        action?.focus({ preventScroll: true })
-      }
-      if (error) focusAtDialogTop(stage === "preview" ? replaceActionRef.current : initialActionRef.current)
-      else if (stage === "select") focusAtDialogTop(initialActionRef.current)
-      else if (stage === "preview") {
-        focusAtDialogTop(previewActionRef.current)
-      }
-      else if (stage === "processing") processingHeadingRef.current?.focus({ preventScroll: true })
-      else if (stage === "review") reviewActionRef.current?.focus({ preventScroll: true })
-    })
-    return () => window.cancelAnimationFrame(frame)
-  }, [error, stage])
-
-  useEffect(() => {
-    if (stage !== "processing") return
-    setProcessingStep(0)
-    const steps = copy.processingSteps as readonly string[]
-    const second = window.setTimeout(() => {
-      setProcessingStep(1)
-      setAnnouncement(steps[1])
-    }, 320)
-    const third = window.setTimeout(() => {
-      setProcessingStep(2)
-      setAnnouncement(steps[2])
-    }, 640)
-    const review = window.setTimeout(() => {
-      setStage("review")
-      setAnnouncement(copy.reviewTitle as string)
-    }, 960)
-    return () => {
-      window.clearTimeout(second)
-      window.clearTimeout(third)
-      window.clearTimeout(review)
-    }
-  }, [copy.reviewTitle, stage])
-
-  async function handleSelection(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.currentTarget.files?.[0]
-    event.currentTarget.value = ""
-    if (!file) return
-
-    const selection = selectionRef.current + 1
-    selectionRef.current = selection
-    const hadPreview = previewUrlRef.current != null
-    setError(null)
-
-    if (!PASSPORT_IMAGE_TYPES.has(file.type)) {
-      setError("type")
-      setStage(hadPreview ? "preview" : "select")
-      setAnnouncement(copy.typeError as string)
-      return
-    }
-    if (file.size > MAX_PASSPORT_IMAGE_BYTES) {
-      setError("size")
-      setStage(hadPreview ? "preview" : "select")
-      setAnnouncement(copy.sizeError as string)
-      return
-    }
-
-    setStage("decoding")
-    setAnnouncement(copy.checking as string)
-    let objectUrl: string
-    try {
-      objectUrl = URL.createObjectURL(file)
-    } catch {
-      setError("decode")
-      setStage(hadPreview ? "preview" : "select")
-      setAnnouncement(copy.decodeError as string)
-      return
-    }
-
-    const decoded = await new Promise<boolean>((resolve) => {
-      const image = new window.Image()
-      image.onload = () => resolve(true)
-      image.onerror = () => resolve(false)
-      image.src = objectUrl
-    })
-    if (selectionRef.current !== selection) {
-      URL.revokeObjectURL(objectUrl)
-      return
-    }
-    if (!decoded) {
-      URL.revokeObjectURL(objectUrl)
-      setError("decode")
-      setStage(hadPreview ? "preview" : "select")
-      setAnnouncement(copy.decodeError as string)
-      return
-    }
-
-    revokeObjectUrl()
-    previewUrlRef.current = objectUrl
-    setPreviewUrl(objectUrl)
-    setStage("preview")
-    setAnnouncement(copy.previewTitle as string)
+  useEffect(() => { actionRef.current?.focus({ preventScroll: true }) }, [stage])
+  function complete() {
+    if (!reviewMode || stage !== "review" || completedRef.current) return
+    completedRef.current = true
+    onComplete()
   }
 
-  function openPicker() {
-    if (!inputRef.current) return
-    inputRef.current.value = ""
-    inputRef.current.click()
-  }
+  if (!reviewMode) return <div className={styles.root} data-testid="k-tour-id-passport-document" data-ocr-stage="unavailable">
+    <span data-testid="ktour-id-passport-document" className={styles.heroIcon}><BookOpenCheck aria-hidden="true" /></span>
+    <p className={styles.eyebrow}>{copy.eyebrow}</p><h1>{copy.unavailableTitle}</h1><p className={styles.lead}>{copy.unavailableLead}</p>
+    <p className={styles.live} data-testid="passport-ocr-status" role="status">{copy.unavailableTitle}</p>
+  </div>
 
-  function removeImage() {
-    selectionRef.current += 1
-    clearPreview()
-    setError(null)
-    setStage("select")
-    setAnnouncement(copy.removed as string)
-  }
-
-  function beginProcessing() {
-    clearPreview()
-    setError(null)
-    setStage("processing")
-    setAnnouncement((copy.processingSteps as readonly string[])[0])
-  }
-
-  const errorMessage = error === "type"
-    ? copy.typeError
-    : error === "size"
-      ? copy.sizeError
-      : error === "decode"
-        ? copy.decodeError
-        : null
-
-  return <div className={styles.root} data-testid="k-tour-id-passport-document" data-ocr-stage={stage} data-ocr-error={error ?? undefined}
-    aria-busy={stage === "decoding" || stage === "processing"}>
-    <span data-testid="ktour-id-passport-document" className={styles.heroIcon}><FileImage aria-hidden="true" /></span>
-    <p className={styles.eyebrow}>{stage === "review" ? copy.reviewEyebrow : copy.eyebrow}</p>
-    <input ref={inputRef} className={styles.fileInput} data-testid="passport-ocr-input" type="file"
-      accept="image/jpeg,image/png,image/webp" capture="environment" aria-label={copy.inputLabel as string}
-      tabIndex={-1} onChange={handleSelection} />
-
-    {stage === "select" || stage === "decoding" ? <>
-      <h1>{copy.title}</h1>
-      <p className={styles.lead}>{copy.lead}</p>
-      {errorMessage ? <p className={styles.error} data-testid="passport-ocr-error" role="alert">{errorMessage}</p> : null}
-      <div className={styles.actions}>
-        <button ref={initialActionRef} type="button" data-identity-initial-focus data-testid={error ? "passport-ocr-retry" : "passport-ocr-choose"}
-          className={styles.primary} onClick={openPicker} disabled={stage === "decoding"}>
-          {stage === "decoding" ? <RefreshCw className={styles.spin} aria-hidden="true" /> : <Upload aria-hidden="true" />}
-          {stage === "decoding" ? copy.checking : error ? copy.retry : copy.choose}
-        </button>
-        <button type="button" data-testid="passport-ocr-start" className={styles.secondary} disabled aria-describedby="passport-ocr-required">{copy.start}</button>
-      </div>
-      <p id="passport-ocr-required" className={styles.truth}><ShieldCheck aria-hidden="true" />{copy.required}</p>
-    </> : null}
-
-    {stage === "preview" && previewUrl ? <>
-      <h1>{copy.previewTitle}</h1>
-      <div className={styles.preview} data-testid="passport-ocr-preview"><img src={previewUrl} alt={copy.previewAlt as string} /></div>
-      {errorMessage ? <p className={styles.error} data-testid="passport-ocr-error" role="alert">{errorMessage}</p> : null}
-      <div className={styles.actions}>
-        <button ref={previewActionRef} type="button" data-identity-initial-focus data-testid="passport-ocr-start" className={styles.primary} onClick={beginProcessing}>{copy.start}<ArrowRight aria-hidden="true" /></button>
-        <button ref={replaceActionRef} type="button" data-testid="passport-ocr-replace" className={styles.secondary} onClick={openPicker}><RefreshCw aria-hidden="true" />{copy.replace}</button>
-        <button type="button" data-testid="passport-ocr-remove" className={styles.danger} onClick={removeImage}><Trash2 aria-hidden="true" />{copy.remove}</button>
-      </div>
+  return <div className={styles.root} data-testid="k-tour-id-passport-document" data-ocr-stage={stage} data-review-stage={stage === "review" ? "ocr-nfc-complete" : stage === "checking" ? "sample-check" : "ocr-nfc"} data-review-fixture="redacted-passport" data-sample-only="true">
+    <span data-testid="ktour-id-passport-document" className={styles.heroIcon}>{stage === "review" ? <Check aria-hidden="true" /> : <BookOpenCheck aria-hidden="true" />}</span>
+    <p className={styles.eyebrow}>{copy.eyebrow}</p>
+    {stage === "sample" ? <>
+      <h1>{copy.title}</h1><p className={styles.lead}>{copy.lead}</p>
+      <div className={styles.sample} data-testid="passport-ocr-preview" role="img" aria-label={copy.sampleAlt}><BookOpenCheck aria-hidden="true" /><span><i /><i /><i /></span><strong>{copy.sample}</strong></div>
       <p className={styles.truth}><ShieldCheck aria-hidden="true" />{copy.privacy}</p>
+      <div className={styles.actions}><button ref={actionRef} type="button" data-identity-initial-focus data-testid="passport-ocr-start" className={styles.primary} onClick={() => setStage("permission")}>{copy.start}<ArrowRight aria-hidden="true" /></button></div>
     </> : null}
-
-    {stage === "processing" ? <>
-      <h1 ref={processingHeadingRef} tabIndex={-1} data-testid="passport-ocr-processing-title">{copy.processingTitle}</h1>
-      <p className={styles.lead}>{copy.processingLead}</p>
-      <ol className={styles.processing} data-testid="passport-ocr-processing">
-        {(copy.processingSteps as readonly string[]).map((label, index) => {
-          const status = index < processingStep ? copy.complete : index === processingStep ? copy.current : copy.pending
-          return <li key={label} data-status={index < processingStep ? "complete" : index === processingStep ? "current" : "pending"}>
-            <span aria-hidden="true">{index < processingStep ? <Check /> : index + 1}</span><strong>{label}</strong><small>{status}</small>
-          </li>
-        })}
-      </ol>
-    </> : null}
-
+    {stage === "permission" ? <><h1>{demo.permission}</h1><p className={styles.lead}>{demo.permissionBody}</p><div className={styles.actions}><button ref={actionRef} type="button" data-identity-initial-focus data-testid="passport-demo-permission-allow" className={styles.primary} onClick={() => setStage("capture")}>{demo.allow}</button><button type="button" className={styles.secondary} data-testid="passport-demo-permission-deny" onClick={() => setStage("denied")}>{demo.deny}</button></div></> : null}
+    {stage === "denied" ? <><h1>{demo.denied}</h1><p className={styles.lead}>{demo.deniedBody}</p><div className={styles.actions}><button ref={actionRef} type="button" data-identity-initial-focus data-testid="passport-demo-retry" className={styles.primary} onClick={() => setStage("permission")}>{demo.retry}</button></div></> : null}
+    {stage === "capture" ? <><h1>{demo.capture}</h1><p className={styles.lead}>{demo.captureBody}</p><div className={styles.sample} data-testid="passport-ocr-preview" data-capture-frame="true" role="img" aria-label={copy.sampleAlt}><BookOpenCheck aria-hidden="true" /><span><i /><i /><i /></span><strong>{copy.sample}</strong></div><div className={styles.actions}><button ref={actionRef} type="button" data-identity-initial-focus data-testid="passport-demo-capture" className={styles.primary} onClick={() => setStage("checking")}><Camera aria-hidden="true" />{demo.captureAction}</button></div></> : null}
+    {stage === "checking" ? <><h1 data-testid="passport-ocr-processing-title">{demo.nfc}</h1><p className={styles.lead}>{demo.nfcBody}</p><div className={styles.checking} data-testid="passport-ocr-processing" aria-hidden="true"><BookOpenCheck /><Smartphone /></div><div className={styles.actions}><button ref={actionRef} type="button" data-identity-initial-focus data-testid="passport-demo-nfc-read" className={styles.primary} onClick={() => setStage("review")}>{demo.read}<ArrowRight aria-hidden="true" /></button><button type="button" className={styles.secondary} data-testid="passport-demo-retake" onClick={() => setStage("capture")}>{demo.retake}</button></div></> : null}
     {stage === "review" ? <>
-      <h1>{copy.reviewTitle}</h1>
-      <p className={styles.lead}>{copy.reviewLead}</p>
-      <dl className={styles.review} data-testid="passport-ocr-review">
-        {[
-          [copy.routeLabel, copy.routeValue],
-          [copy.imageLabel, copy.imageValue],
-          [copy.identifierLabel, copy.identifierValue],
-          [copy.personalLabel, copy.personalValue],
-          [copy.resultLabel, copy.resultValue],
-        ].map(([term, value]) => <div key={term as string}><dt>{term}</dt><dd>{value}</dd></div>)}
-      </dl>
-      <p className={styles.truth}><ShieldCheck aria-hidden="true" />{copy.reviewTruth}</p>
-      <div className={styles.actions}>
-        <button ref={reviewActionRef} type="button" data-identity-initial-focus data-testid="k-tour-id-continue" className={styles.primary} onClick={onComplete}>{copy.continue}<ArrowRight aria-hidden="true" /></button>
-      </div>
+      <h1>{copy.reviewTitle}</h1><p className={styles.lead}>{copy.reviewLead}</p>
+      <p className={styles.reviewTruth} data-testid="passport-ocr-review"><ShieldCheck aria-hidden="true" />{copy.reviewTruth}</p>
+      <div className={styles.actions}><button ref={actionRef} type="button" data-identity-initial-focus data-testid="k-tour-id-continue" className={styles.primary} onClick={complete}>{copy.continue}<ArrowRight aria-hidden="true" /></button><button type="button" className={styles.secondary} data-testid="passport-demo-retake" onClick={() => setStage("capture")}>{demo.retake}</button></div>
     </> : null}
-
-    <p className={styles.live} data-testid="passport-ocr-status" role="status" aria-live="polite" aria-atomic="true">{announcement}</p>
+    {stage !== "checking" ? <details className={styles.details}><summary>{copy.privacyDetails}</summary><p>{copy.technicalPrivacy}</p></details> : null}
+    <p className={styles.live} data-testid="passport-ocr-status" role="status" aria-live="polite" aria-atomic="true">{stage === "sample" ? copy.lead : stage === "permission" ? demo.permission : stage === "denied" ? demo.denied : stage === "capture" ? demo.capture : stage === "checking" ? demo.nfc : copy.reviewTitle}</p>
   </div>
 }

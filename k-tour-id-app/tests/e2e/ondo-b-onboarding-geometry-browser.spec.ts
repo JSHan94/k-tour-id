@@ -51,10 +51,10 @@ test.describe("ONDO B onboarding exit geometry", () => {
   test("Guest and Skip actions are fully actionable before scrolling", async ({ page }) => {
     await resetAndOpenOnboarding(page)
 
-    await expectFullyActionable(page.getByRole("button", { name: "Set guest preferences" }))
-    await expectFullyActionable(page.getByRole("button", { name: "Explore without setup" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Personalize in 20 seconds" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Open Korea map" }))
 
-    await page.getByRole("button", { name: "Set guest preferences" }).click()
+    await page.getByRole("button", { name: "Personalize in 20 seconds" }).click()
     const personas = page.locator("[data-testid^='persona-']")
     await expect(personas).toHaveCount(3)
     for (let index = 0; index < 3; index += 1) await expectFullyActionable(personas.nth(index))
@@ -64,7 +64,7 @@ test.describe("ONDO B onboarding exit geometry", () => {
     await expectFullyActionable(page.getByRole("button", { name: "Skip and explore" }))
 
     await page.getByRole("button", { name: "Choose food preferences", exact: true }).click()
-    await expectFullyActionable(page.getByRole("button", { name: "Open guest Explore", exact: true }))
+    await expectFullyActionable(page.getByRole("button", { name: "Continue", exact: true }))
     await expectFullyActionable(page.getByRole("button", { name: "Skip and explore" }))
   })
 
@@ -83,6 +83,6 @@ test.describe("ONDO B onboarding exit geometry", () => {
 
     await layer.evaluate((element) => element.scrollTo({ top: element.scrollHeight, behavior: "instant" }))
     await expect.poll(() => layer.evaluate((element) => element.scrollTop > 0)).toBe(true)
-    await expectFullyActionable(page.getByRole("button", { name: "Explore without setup" }))
+    await expectFullyActionable(page.getByRole("button", { name: "Open Korea map" }))
   })
 })

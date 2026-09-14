@@ -81,8 +81,8 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
 test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and a reversible refund", async ({ page }) => {
   await seedGoldenCandidate(page, "en")
   const { offer } = await openMealOffer(page)
-  await expect(offer.getByRole("heading", { name: "A better meal, one tap away" })).toBeVisible()
-  await expect(offer).toContainText("OOKRW")
+  await expect(offer.getByRole("heading", { name: "Your meal benefit" })).toBeVisible()
+  await expect(offer.getByTestId("commerce-payment-details")).toContainText("OOKRW")
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-benefit-recommendation", "recommended")
   await offer.getByTestId("benefit-accept").click()
   await expect(offer.getByTestId("commerce-voucher")).toHaveAttribute("data-voucher-state", "selected")
@@ -94,17 +94,18 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
 
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt.getByTestId("commerce-provider-status")).toHaveAttribute("data-provider-order", "NOT_CONNECTED")
-  await expect(receipt.getByTestId("commerce-provider-status")).toHaveText("Place orderNot connected")
+  await expect(receipt.getByTestId("commerce-provider-status")).toHaveText("Venue orderNot placed")
   await expect(receipt).toContainText("ONDO-LOCAL-20260825-001")
-  await expect(receipt).toContainText("19 OOKRW")
+  await expect(receipt).toContainText("₩19,000")
   await expect(offer.locator("[data-operation-kind]")).toHaveCount(0)
-  await receipt.getByText("Refund & support").click()
+  await receipt.getByTestId("commerce-refund-details").locator("summary").click()
   await receipt.getByTestId("payment-refund").click()
   await expect(receipt).toHaveAttribute("data-refunded", "true")
   await expect(receipt).toContainText("Original payment")
-  await expect(receipt).toContainText(/Refunded\s*19 OOKRW/)
-  await expect(receipt).toContainText("ONDO benefit3 OOKRW")
-  await expect(receipt).toContainText("60 OOKRW")
+  await expect(receipt).toContainText(/Refunded\s*₩19,000/)
+  await expect(receipt).toContainText(/ONDO benefit\s*₩3,000/)
+  await expect(receipt.getByTestId("commerce-settlement-details")).toContainText("+19 OOKRW")
+  await expect(receipt).toContainText("₩60,000")
 })
 
 test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-offer return", async ({ browser }) => {
@@ -112,7 +113,7 @@ test("FID-LIVE-003 cancel and session-fixture recovery preserve the exact meal-o
   // recovery contexts. Keep the normal assertion timeouts while giving the
   // full three-context journey enough wall-clock budget on mobile CI.
   test.slow()
-  const expectedReturn = JSON.stringify({ cta: "START_MEAL_PAYMENT", venueId: VENUE_ID, offerId: "meal-offer-gukbap" })
+  const expectedReturn = JSON.stringify({ cta: "START_CHECKOUT", venueId: VENUE_ID })
 
   const cancelContext = await browser.newContext()
   const cancelPage = await cancelContext.newPage()

@@ -1,0 +1,46 @@
+import { expect, test } from "@playwright/test"
+import { expectBRuntimeClean, installBRuntimeGuard } from "../helpers/ondo-b-qa"
+
+test.beforeEach(({ page }) => installBRuntimeGuard(page))
+test.afterEach(async ({ page }, testInfo) => { await expectBRuntimeClean(page, testInfo) })
+
+test("nation ambience pauses without shifting city controls and honors reduced motion", async ({ page }) => {
+  test.setTimeout(45_000)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.emulateMedia({ reducedMotion: "no-preference", colorScheme: "light" })
+  await page.addInitScript(() => localStorage.setItem("ondo-b.device.v1", JSON.stringify({ locale: "en", onboarding: "ONB-COMPLETE" })))
+  await page.goto("/", { waitUntil: "domcontentloaded" })
+  await expect(page.getByTestId("maplibre-map")).toHaveAttribute("data-map-projection-settled", "true", { timeout: 20_000 })
+  const atlas = page.getByTestId("ondo-b-korea-atlas")
+  const motion = page.getByTestId("ondo-b-atlas-motion")
+  const city = atlas.locator("button[data-city='seoul']")
+  await expect(atlas).toHaveAttribute("data-atlas-motion", "playing")
+  await expect(motion).toHaveAccessibleName("Pause map ambience")
+  const anchorBefore = await city.boundingBox()
+  const halo = city.locator("i")
+  expect(await halo.evaluate(node => getComputedStyle(node, "::before").animationIterationCount)).toBe("infinite")
+  expect(await halo.evaluate(node => getComputedStyle(node, "::before").animationPlayState)).toBe("running")
+
+  await motion.click()
+  await expect(atlas).toHaveAttribute("data-atlas-motion", "paused")
+  expect(await halo.evaluate(node => getComputedStyle(node, "::before").animationPlayState)).toBe("paused")
+  expect(await city.boundingBox()).toEqual(anchorBefore)
+  await expect(motion).toHaveAccessibleName("Play map ambience")
+  await motion.click()
+  await expect(atlas).toHaveAttribute("data-atlas-motion", "playing")
+
+  await page.getByTestId("nav-settings").click()
+  await expect(atlas).toHaveAttribute("data-atlas-motion", "paused")
+  await page.getByTestId("nav-ondo").click()
+  await expect(atlas).toHaveAttribute("data-atlas-motion", "playing")
+
+  await page.emulateMedia({ reducedMotion: "reduce" })
+  await expect(atlas).toHaveAttribute("data-atlas-reduced-motion", "true")
+  await expect(atlas).toHaveAttribute("data-atlas-motion", "paused")
+  await expect(motion).toHaveCount(0)
+  expect(await halo.evaluate(node => getComputedStyle(node, "::before").animationName)).toBe("none")
+  await city.focus()
+  await expect(city).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(page.getByTestId("ondo-b-city-back")).toBeVisible()
+})

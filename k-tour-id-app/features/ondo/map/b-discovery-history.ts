@@ -1,9 +1,33 @@
-import { captureQaControls } from "../shared/ui/use-qa-controls"
+import { captureQaControls, hasReviewSessionOptIn } from "../shared/ui/use-qa-controls"
+import { SAMPLE_ENVIRONMENT_ENABLED } from "../contracts/sample-environment"
 import { isEditorialPlaceId, type EditorialPlaceB } from "../pulse-b/japan-first-pulse-model-b"
+import { isCanonicalVenueId, type CanonicalVenueId } from "@/lib/ondo/venues/canonical-allowlist"
+import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
+import {
+  MY_KOREA_PLACE_RETURN_HISTORY_KEY,
+  createMyKoreaPlaceReturnJourneyId,
+  createMyKoreaPlaceReturnOrigin,
+  createMyKoreaPlaceReturnPlace,
+  readMyKoreaPlaceReturnFromHistoryState,
+  sanitizeMyKoreaPlaceReturnReceipt,
+  withMyKoreaPlaceReturnHistoryState,
+  withoutMyKoreaPlaceReturnHistoryState,
+  type MyKoreaPlaceReturnReceiptB,
+} from "../my/my-korea-place-return-b"
 
 export type BDiscoveryCity = "seoul" | "busan" | "jeju"
 export type BDiscoveryView = "map" | "list"
 export type BDiscoveryCategory = "all" | "korean" | "casual" | "japanese" | "chinese" | "global" | "night" | "specialty"
+export type BDiscoveryEditorialCategory = "all" | "screen-location" | "food" | "market" | "culture-shopping"
+export type BDiscoveryLayer = "standard" | "after19"
+export type BDiscoverySheetSnap = "closed" | "peek" | "detail"
+export type BDiscoveryCamera = {
+  longitude: number
+  latitude: number
+  zoom: number
+  bearing: number
+  pitch: number
+}
 
 type BDiscoveryFocus =
   | { kind: "city"; city: BDiscoveryCity }
@@ -14,13 +38,18 @@ type BDiscoveryFocus =
   | { kind: "view-toggle" }
 
 export type BDiscoveryHistoryEntry = {
-  v: 3
+  v: 4
   documentId: string
   level: "nation" | "city" | "peek" | "detail"
   city?: BDiscoveryCity
   view: BDiscoveryView
   query: string
   category: BDiscoveryCategory
+  editorialCategory: BDiscoveryEditorialCategory
+  layer: BDiscoveryLayer
+  sheetSnap: BDiscoverySheetSnap
+  listScroll: number
+  camera?: BDiscoveryCamera
   venueId?: string
   editorialPlaceId?: EditorialPlaceB["id"]
   focus?: BDiscoveryFocus
@@ -29,17 +58,25 @@ export type BDiscoveryHistoryEntry = {
 const HISTORY_KEY = "__ondoBDiscovery"
 export const B_DISCOVERY_ROUTE = "/"
 export const B_DISCOVERY_TRAVERSAL_EVENT = "ondo:b-discovery-traversal"
+export const MY_KOREA_PLACE_RETURN_TRAVERSAL_EVENT = "ondo:b-my-korea-place-return-traversal"
 const MAX_QUERY_LENGTH = 120
+const MAX_LIST_SCROLL = 10_000_000
 const VENUE_ID_PATTERN = /^mois-[a-z0-9]{20}$/
 let activeDocumentId: string | undefined
 let traversalGuardReferences = 0
 let pendingPeekTraversalVenueId: string | undefined
 let traversalFocusVersion = 0
 let cancelTraversalFocus: (() => void) | undefined
+let myKoreaTraversalGuardReferences = 0
+const trustedMyKoreaTraversalEvents = new WeakSet<Event>()
 
 export type BDiscoveryTraversalDetail = {
   entry: BDiscoveryHistoryEntry
   preservedState: unknown
+}
+
+export type MyKoreaPlaceReturnTraversalDetailB = {
+  receipt: MyKoreaPlaceReturnReceiptB
 }
 
 function documentId() {
@@ -65,6 +102,37 @@ function categoryValue(value: unknown): BDiscoveryCategory {
     || value === "global" || value === "night" || value === "specialty"
     ? value
     : "all"
+}
+
+function editorialCategoryValue(value: unknown): BDiscoveryEditorialCategory {
+  return value === "screen-location" || value === "food" || value === "market" || value === "culture-shopping"
+    ? value
+    : "all"
+}
+
+function layerValue(value: unknown): BDiscoveryLayer {
+  return value === "after19" ? "after19" : "standard"
+}
+
+function sheetSnapForLevel(level: BDiscoveryHistoryEntry["level"]): BDiscoverySheetSnap {
+  return level === "detail" ? "detail" : level === "peek" ? "peek" : "closed"
+}
+
+function listScrollValue(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? Math.min(MAX_LIST_SCROLL, Math.round(value))
+    : 0
+}
+
+function cameraValue(value: unknown): BDiscoveryCamera | undefined {
+  if (!isRecord(value)) return undefined
+  const { longitude, latitude, zoom, bearing, pitch } = value
+  if (typeof longitude !== "number" || !Number.isFinite(longitude) || longitude < -180 || longitude > 180
+    || typeof latitude !== "number" || !Number.isFinite(latitude) || latitude < -85 || latitude > 85
+    || typeof zoom !== "number" || !Number.isFinite(zoom) || zoom < 0 || zoom > 24
+    || typeof bearing !== "number" || !Number.isFinite(bearing) || bearing < -360 || bearing > 360
+    || typeof pitch !== "number" || !Number.isFinite(pitch) || pitch < 0 || pitch > 85) return undefined
+  return { longitude, latitude, zoom, bearing, pitch }
 }
 
 function venueValue(value: unknown): string | undefined {
@@ -98,7 +166,7 @@ function focusValue(value: unknown): BDiscoveryFocus | undefined {
 }
 
 function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
-  if (!isRecord(value) || (value.v !== 1 && value.v !== 2 && value.v !== 3)) return null
+  if (!isRecord(value) || (value.v !== 1 && value.v !== 2 && value.v !== 3 && value.v !== 4)) return null
   const level = value.level
   if (level !== "nation" && level !== "city" && level !== "peek" && level !== "detail") return null
   const city = cityValue(value.city)
@@ -108,14 +176,21 @@ function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
   if ((level === "peek" || level === "detail") && (!venueId === !editorialPlaceId)) return null
   if (editorialPlaceId && city !== "jeju") return null
   const focus = focusValue(value.focus)
+  const sheetSnap = sheetSnapForLevel(level)
+  const camera = level === "nation" ? cameraValue(value.camera) : cameraValue(value.camera)
   return {
-    v: 3,
+    v: 4,
     documentId: typeof value.documentId === "string" ? value.documentId.slice(0, 64) : "legacy",
     level,
     city: level === "nation" ? undefined : city,
     view: level === "nation" ? "map" : viewValue(value.view),
     query: level === "nation" ? "" : queryValue(value.query),
     category: level === "nation" || value.v === 1 ? "all" : categoryValue(value.category),
+    editorialCategory: level === "nation" ? "all" : editorialCategoryValue(value.editorialCategory),
+    layer: level === "nation" ? "standard" : layerValue(value.layer),
+    sheetSnap,
+    listScroll: level === "nation" ? 0 : listScrollValue(value.listScroll),
+    ...(camera ? { camera } : {}),
     venueId: level === "peek" || level === "detail" ? venueId : undefined,
     editorialPlaceId: level === "peek" || level === "detail" ? editorialPlaceId : undefined,
     focus: level === "nation"
@@ -126,13 +201,18 @@ function sanitizeEntry(value: unknown): BDiscoveryHistoryEntry | null {
 
 function canonicalEntry(entry: BDiscoveryHistoryEntry, nextDocumentId = entry.documentId): BDiscoveryHistoryEntry {
   return {
-    v: 3,
+    v: 4,
     documentId: nextDocumentId,
     level: entry.level,
     ...(entry.city ? { city: entry.city } : {}),
     view: entry.view,
     query: entry.query,
     category: entry.category,
+    editorialCategory: entry.editorialCategory,
+    layer: entry.layer,
+    sheetSnap: sheetSnapForLevel(entry.level),
+    listScroll: entry.listScroll,
+    ...(entry.camera ? { camera: entry.camera } : {}),
     ...(entry.venueId ? { venueId: entry.venueId } : {}),
     ...(entry.editorialPlaceId ? { editorialPlaceId: entry.editorialPlaceId } : {}),
     ...(entry.focus ? { focus: entry.focus } : {}),
@@ -149,20 +229,14 @@ function exactCanonicalValue(actual: unknown, expected: unknown): boolean {
       && exactCanonicalValue(Reflect.get(actual, key), Reflect.get(expected, key)))
 }
 
-function dispatchBDiscoveryTraversal(event: PopStateEvent) {
+function clearPendingBDiscoveryTraversalFocus() {
   cancelTraversalFocus?.()
-  if (window.location.pathname !== B_DISCOVERY_ROUTE) {
-    pendingPeekTraversalVenueId = undefined
-    traversalFocusVersion += 1
-    return
-  }
-  const entry = readBDiscoveryHistory(event.state)
-  if (!entry) {
-    pendingPeekTraversalVenueId = undefined
-    traversalFocusVersion += 1
-    return
-  }
-  event.stopImmediatePropagation()
+  pendingPeekTraversalVenueId = undefined
+  traversalFocusVersion += 1
+}
+
+function dispatchBDiscoveryEntryTraversal(entry: BDiscoveryHistoryEntry, preservedState: unknown) {
+  cancelTraversalFocus?.()
   pendingPeekTraversalVenueId = entry.level === "peek" ? entry.venueId : undefined
   const focusVersion = ++traversalFocusVersion
   if ((entry.level === "nation" || entry.level === "city") && entry.focus) {
@@ -196,8 +270,66 @@ function dispatchBDiscoveryTraversal(event: PopStateEvent) {
     cancelTraversalFocus = cleanup
   }
   window.dispatchEvent(new CustomEvent<BDiscoveryTraversalDetail>(B_DISCOVERY_TRAVERSAL_EVENT, {
-    detail: { entry, preservedState: event.state },
+    detail: { entry, preservedState },
   }))
+}
+
+function myKoreaPlaceReceiptMatchesDiscoveryEntry(
+  receipt: MyKoreaPlaceReturnReceiptB,
+  entry: BDiscoveryHistoryEntry,
+) {
+  if (receipt.phase !== "place" || (entry.level !== "peek" && entry.level !== "detail")) return false
+  return receipt.sourceKind === "official"
+    ? entry.venueId === receipt.venueId && entry.editorialPlaceId === undefined
+    : entry.editorialPlaceId === receipt.editorialPlaceId && entry.venueId === undefined
+}
+
+export function readMyKoreaPlaceReturnNavigation(state?: unknown) {
+  const source = state === undefined
+    ? typeof window === "undefined" ? null : window.history.state
+    : state
+  const receipt = readMyKoreaPlaceReturnFromHistoryState(source)
+  const entry = readBDiscoveryHistory(source)
+  if (!receipt || !entry || (receipt.phase === "place" && !myKoreaPlaceReceiptMatchesDiscoveryEntry(receipt, entry))) return null
+  return { receipt, entry } as const
+}
+
+function dispatchMyKoreaPlaceReturnTraversal(event: PopStateEvent) {
+  const navigation = readMyKoreaPlaceReturnNavigation(event.state)
+  if (!navigation) return false
+  const { receipt, entry } = navigation
+
+  event.stopImmediatePropagation()
+  const traversalEvent = new CustomEvent<MyKoreaPlaceReturnTraversalDetailB>(MY_KOREA_PLACE_RETURN_TRAVERSAL_EVENT, {
+    detail: { receipt },
+  })
+  trustedMyKoreaTraversalEvents.add(traversalEvent)
+  window.dispatchEvent(traversalEvent)
+
+  // The Explore map remains mounted while another tab is visible, so a place
+  // return still needs the normal discovery traversal (for example detail ->
+  // peek). A cold mount can also initialize from history.state.
+  if (receipt.phase === "place" && traversalGuardReferences > 0) {
+    dispatchBDiscoveryEntryTraversal(entry, event.state)
+  } else {
+    clearPendingBDiscoveryTraversalFocus()
+  }
+  return true
+}
+
+function dispatchBDiscoveryTraversal(event: PopStateEvent) {
+  if (window.location.pathname !== B_DISCOVERY_ROUTE) {
+    clearPendingBDiscoveryTraversalFocus()
+    return
+  }
+  const entry = readBDiscoveryHistory(event.state)
+  if (dispatchMyKoreaPlaceReturnTraversal(event)) return
+  if (!entry) {
+    clearPendingBDiscoveryTraversalFocus()
+    return
+  }
+  event.stopImmediatePropagation()
+  dispatchBDiscoveryEntryTraversal(entry, event.state)
 }
 
 export function consumeBDiscoveryPeekTraversalFocus(venueId: string) {
@@ -209,14 +341,35 @@ export function consumeBDiscoveryPeekTraversalFocus(venueId: string) {
 
 export function installBDiscoveryTraversalGuard() {
   traversalGuardReferences += 1
-  if (traversalGuardReferences === 1) window.addEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+  if (traversalGuardReferences === 1 && myKoreaTraversalGuardReferences === 0) window.addEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
   return () => {
     traversalGuardReferences = Math.max(0, traversalGuardReferences - 1)
-    if (traversalGuardReferences === 0) {
-      pendingPeekTraversalVenueId = undefined
+    if (traversalGuardReferences === 0 && myKoreaTraversalGuardReferences === 0) {
+      clearPendingBDiscoveryTraversalFocus()
       window.removeEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
     }
   }
+}
+
+export function installMyKoreaPlaceReturnTraversalGuard() {
+  myKoreaTraversalGuardReferences += 1
+  if (myKoreaTraversalGuardReferences === 1 && traversalGuardReferences === 0) window.addEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+  return () => {
+    myKoreaTraversalGuardReferences = Math.max(0, myKoreaTraversalGuardReferences - 1)
+    if (myKoreaTraversalGuardReferences === 0 && traversalGuardReferences === 0) {
+      clearPendingBDiscoveryTraversalFocus()
+      window.removeEventListener("popstate", dispatchBDiscoveryTraversal, { capture: true })
+    }
+  }
+}
+
+export function readMyKoreaPlaceReturnTraversal(event: Event) {
+  if (!trustedMyKoreaTraversalEvents.has(event)
+    || !(event instanceof CustomEvent)
+    || event.type !== MY_KOREA_PLACE_RETURN_TRAVERSAL_EVENT
+    || !isRecord(event.detail)) return null
+  const receipt = sanitizeMyKoreaPlaceReturnReceipt(event.detail.receipt)
+  return receipt ? { receipt } satisfies MyKoreaPlaceReturnTraversalDetailB : null
 }
 
 export function readBDiscoveryTraversal(event: Event) {
@@ -225,19 +378,42 @@ export function readBDiscoveryTraversal(event: Event) {
   return entry ? { entry, preservedState: event.detail.preservedState } satisfies BDiscoveryTraversalDetail : null
 }
 
-function mergedState(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
+function mergedState(
+  entry: BDiscoveryHistoryEntry,
+  preservedState?: unknown,
+  preserveOrigin = false,
+  explicitReceipt?: MyKoreaPlaceReturnReceiptB,
+) {
   const preserved = isRecord(preservedState) ? preservedState : {}
   const current = isRecord(window.history.state) ? window.history.state : {}
-  return { ...preserved, ...current, [HISTORY_KEY]: entry }
+  const combined = { ...preserved, ...current }
+  const withoutReceipt = withoutMyKoreaPlaceReturnHistoryState(combined) ?? {}
+  const base = { ...withoutReceipt, [HISTORY_KEY]: entry }
+  const receipt = explicitReceipt ?? readMyKoreaPlaceReturnFromHistoryState(combined)
+  const shouldPreserveReceipt = receipt && (
+    (preserveOrigin && receipt.phase === "origin")
+    || myKoreaPlaceReceiptMatchesDiscoveryEntry(receipt, entry)
+  )
+  return shouldPreserveReceipt
+    ? withMyKoreaPlaceReturnHistoryState(base, receipt) ?? base
+    : base
 }
 
 function entryUrl(entry: BDiscoveryHistoryEntry) {
   const url = new URL(B_DISCOVERY_ROUTE, window.location.origin)
+  const explicitReview = new URLSearchParams(window.location.search).get("review")
+  // A sample build is already a demo: rewriting its first '/' into '?review=1'
+  // needlessly reconciles Next's router during hydration. Keep explicit choices
+  // and session opt-outs without turning the default environment into a URL seam.
+  if (explicitReview === "0" || explicitReview === "1") url.searchParams.set("review", explicitReview)
+  else if (SAMPLE_ENVIRONMENT_ENABLED && !hasReviewSessionOptIn()) url.searchParams.set("review", "0")
+  else if (!SAMPLE_ENVIRONMENT_ENABLED && hasReviewSessionOptIn()) url.searchParams.set("review", "1")
   if (entry.level !== "nation" && entry.city) {
     url.searchParams.set("city", entry.city)
     if (entry.view === "list") url.searchParams.set("view", "list")
     if (entry.query) url.searchParams.set("q", entry.query)
     if (entry.category !== "all") url.searchParams.set("category", entry.category)
+    if (entry.city === "jeju" && entry.editorialCategory !== "all") url.searchParams.set("editorialCategory", entry.editorialCategory)
   }
   if ((entry.level === "peek" || entry.level === "detail") && entry.venueId) {
     url.searchParams.set("venueId", entry.venueId)
@@ -250,26 +426,31 @@ function entryUrl(entry: BDiscoveryHistoryEntry) {
   return `${url.pathname}${url.search}`
 }
 
-function historyStateMatchesCanonical(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
+function historyStateMatchesCanonical(entry: BDiscoveryHistoryEntry, preservedState?: unknown, preserveOrigin = false) {
   const rawState = window.history.state
   if (!isRecord(rawState)) return false
-  const expectedState = mergedState(entry, preservedState)
+  const expectedState = mergedState(entry, preservedState, preserveOrigin)
   const rawKeys = Reflect.ownKeys(rawState)
   const expectedKeys = Reflect.ownKeys(expectedState)
   if (rawKeys.length !== expectedKeys.length || !expectedKeys.every((key) => rawKeys.includes(key))) return false
-  return expectedKeys.every((key) => key === HISTORY_KEY
-    ? exactCanonicalValue(Reflect.get(rawState, key), entry)
+  return expectedKeys.every((key) => key === HISTORY_KEY || key === MY_KOREA_PLACE_RETURN_HISTORY_KEY
+    ? exactCanonicalValue(Reflect.get(rawState, key), key === HISTORY_KEY ? entry : Reflect.get(expectedState, key))
     : Object.is(Reflect.get(rawState, key), Reflect.get(expectedState, key)))
 }
 
-function replaceEntry(entry: BDiscoveryHistoryEntry, preservedState?: unknown) {
+function replaceEntry(
+  entry: BDiscoveryHistoryEntry,
+  preservedState?: unknown,
+  preserveOrigin = false,
+  explicitReceipt?: MyKoreaPlaceReturnReceiptB,
+) {
   const canonical = canonicalEntry(entry)
-  History.prototype.replaceState.call(window.history, mergedState(canonical, preservedState), "", entryUrl(canonical))
+  History.prototype.replaceState.call(window.history, mergedState(canonical, preservedState, preserveOrigin, explicitReceipt), "", entryUrl(canonical))
 }
 
-function pushEntry(entry: BDiscoveryHistoryEntry) {
+function pushEntry(entry: BDiscoveryHistoryEntry, explicitReceipt?: MyKoreaPlaceReturnReceiptB) {
   const canonical = canonicalEntry(entry)
-  History.prototype.pushState.call(window.history, mergedState(canonical), "", entryUrl(canonical))
+  History.prototype.pushState.call(window.history, mergedState(canonical, undefined, false, explicitReceipt), "", entryUrl(canonical))
 }
 
 export function replaceBDiscoveryUrl(url: string) {
@@ -278,7 +459,10 @@ export function replaceBDiscoveryUrl(url: string) {
   const nextUrl = requested.pathname === B_DISCOVERY_ROUTE && current
     ? entryUrl(current)
     : `${requested.pathname}${requested.search}${requested.hash}`
-  History.prototype.replaceState.call(window.history, window.history.state, "", nextUrl)
+  const nextState = current
+    ? mergedState(canonicalEntry(current))
+    : withoutMyKoreaPlaceReturnHistoryState(window.history.state) ?? window.history.state
+  History.prototype.replaceState.call(window.history, nextState, "", nextUrl)
 }
 
 export function readBDiscoveryHistory(state?: unknown): BDiscoveryHistoryEntry | null {
@@ -292,14 +476,16 @@ export function replaceBDiscoveryHistoryForActiveDocument(entry: unknown, preser
   const existing = sanitizeEntry(entry)
   if (!existing) return null
   const current = canonicalEntry(existing, documentId())
+  const preserveOrigin = readMyKoreaPlaceReturnFromHistoryState(preservedState)?.phase === "origin"
+    || (preservedState === undefined && readMyKoreaPlaceReturnFromHistoryState(window.history.state)?.phase === "origin")
   // Next patches the History prototype and treats even an identical
   // replaceState call as a router reconciliation. The traversal stabilizer
   // calls this more than once by design. Only the exact raw allowlisted entry,
   // URL, and preserved outer state may skip the rewrite: comparing sanitized
   // entries here would let private or unknown raw fields survive indefinitely.
   const canonicalUrl = new URL(entryUrl(current), window.location.origin).href
-  if (historyStateMatchesCanonical(current, preservedState) && window.location.href === canonicalUrl) return current
-  replaceEntry(current, preservedState)
+  if (historyStateMatchesCanonical(current, preservedState, preserveOrigin) && window.location.href === canonicalUrl) return current
+  replaceEntry(current, preservedState, preserveOrigin)
   return current
 }
 
@@ -314,6 +500,10 @@ export type BDiscoveryCityContext = {
   view: BDiscoveryView
   query: string
   category: BDiscoveryCategory
+  editorialCategory?: BDiscoveryEditorialCategory
+  layer?: BDiscoveryLayer
+  listScroll?: number
+  camera?: BDiscoveryCamera
   focus?: "search" | "view-toggle"
 }
 
@@ -333,15 +523,21 @@ export function restoreBDiscoveryCityContext(input: unknown) {
     : input.focus === "search" || input.focus === "view-toggle"
       ? { kind: input.focus } as const
       : null
-  if (!city || !view || !category || focus === null || typeof input.query !== "string") return null
+  const camera = input.camera === undefined ? undefined : cameraValue(input.camera)
+  if (!city || !view || !category || focus === null || typeof input.query !== "string" || (input.camera !== undefined && !camera)) return null
   return replaceBDiscoveryHistoryForActiveDocument({
-    v: 3,
+    v: 4,
     documentId: documentId(),
     level: "city",
     city,
-    view: city === "jeju" ? "map" : view,
-    query: city === "jeju" ? "" : queryValue(input.query),
-    category: city === "jeju" ? "all" : category,
+    view,
+    query: queryValue(input.query),
+    category,
+    editorialCategory: editorialCategoryValue(input.editorialCategory),
+    layer: layerValue(input.layer),
+    sheetSnap: "closed",
+    listScroll: listScrollValue(input.listScroll),
+    ...(camera ? { camera } : {}),
     ...(focus ? { focus } : {}),
   } satisfies BDiscoveryHistoryEntry)
 }
@@ -351,6 +547,10 @@ export type BDiscoveryVenueContext = {
   view: BDiscoveryView
   query: string
   category: BDiscoveryCategory
+  editorialCategory?: BDiscoveryEditorialCategory
+  layer?: BDiscoveryLayer
+  listScroll?: number
+  camera?: BDiscoveryCamera
   venueId: string
   level: "peek" | "detail"
 }
@@ -368,15 +568,21 @@ export function restoreBDiscoveryVenueContext(input: unknown) {
     : undefined
   const venueId = venueValue(input.venueId)
   const level = input.level === "peek" || input.level === "detail" ? input.level : undefined
-  if (!city || !view || !category || !venueId || !level || typeof input.query !== "string") return null
+  const camera = input.camera === undefined ? undefined : cameraValue(input.camera)
+  if (!city || !view || !category || !venueId || !level || typeof input.query !== "string" || (input.camera !== undefined && !camera)) return null
   return replaceBDiscoveryHistoryForActiveDocument({
-    v: 3,
+    v: 4,
     documentId: documentId(),
     level,
     city,
     view,
     query: queryValue(input.query),
     category,
+    editorialCategory: editorialCategoryValue(input.editorialCategory),
+    layer: layerValue(input.layer),
+    sheetSnap: sheetSnapForLevel(level),
+    listScroll: listScrollValue(input.listScroll),
+    ...(camera ? { camera } : {}),
     venueId,
   } satisfies BDiscoveryHistoryEntry)
 }
@@ -387,26 +593,34 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
   if (existing) return existing
 
   const url = new URL(window.location.href)
-  const requestedVenueId = venueValue(url.searchParams.get("venueId"))
-  const requestedEditorialPlaceId = editorialPlaceValue(url.searchParams.get("editorialPlaceId"))
+  const rawVenueId = venueValue(url.searchParams.get("venueId"))
+  const rawEditorialPlaceId = editorialPlaceValue(url.searchParams.get("editorialPlaceId"))
+  const ambiguousTarget = Boolean(rawVenueId && rawEditorialPlaceId)
+  const requestedVenueId = ambiguousTarget ? undefined : rawVenueId
+  const requestedEditorialPlaceId = ambiguousTarget ? undefined : rawEditorialPlaceId
   const resolvedVenueCity = requestedVenueId ? venueCity(requestedVenueId) : undefined
   const requestedCity = resolvedVenueCity ?? (requestedEditorialPlaceId ? "jeju" : cityValue(url.searchParams.get("city")))
   const requestedView = viewValue(url.searchParams.get("view"))
   const requestedCategory = categoryValue(url.searchParams.get("category"))
+  const requestedEditorialCategory = editorialCategoryValue(url.searchParams.get("editorialCategory"))
   const requestedQuery = queryValue(url.searchParams.get("q"))
   const wantsDetail = url.searchParams.get("detail") === "1"
-  const nation: BDiscoveryHistoryEntry = { v: 3, documentId: documentId(), level: "nation", view: "map", query: "", category: "all" }
+  const nation: BDiscoveryHistoryEntry = { v: 4, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", editorialCategory: "all", layer: "standard", sheetSnap: "closed", listScroll: 0 }
   replaceEntry(nation)
   if (!requestedCity) return nation
 
   const city: BDiscoveryHistoryEntry = {
-    v: 3,
+    v: 4,
     documentId: documentId(),
     level: "city",
     city: requestedCity,
-    view: requestedCity === "jeju" ? "map" : requestedView,
-    query: requestedCity === "jeju" ? "" : requestedQuery,
-    category: requestedCity === "jeju" ? "all" : requestedCategory,
+    view: requestedView,
+    query: requestedQuery,
+    category: requestedCategory,
+    editorialCategory: requestedCity === "jeju" ? requestedEditorialCategory : "all",
+    layer: "standard",
+    sheetSnap: "closed",
+    listScroll: 0,
     focus: { kind: requestedCity === "jeju" ? "editorial" : "search" },
   }
   pushEntry(city)
@@ -432,22 +646,27 @@ export function initializeBDiscoveryHistory(venueCity: (venueId: string) => BDis
 export function enterBDiscoveryCity(city: BDiscoveryCity) {
   const current = readBDiscoveryHistory()
   if (current?.level === "nation") replaceEntry({ ...current, focus: { kind: "city", city } })
-  const next: BDiscoveryHistoryEntry = { v: 3, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", focus: { kind: city === "jeju" ? "editorial" : "search" } }
+  const next: BDiscoveryHistoryEntry = { v: 4, documentId: documentId(), level: "city", city, view: "map", query: "", category: "all", editorialCategory: "all", layer: "standard", sheetSnap: "closed", listScroll: 0, focus: { kind: city === "jeju" ? "editorial" : "search" } }
   pushEntry(next)
   return next
 }
 
-export function replaceBDiscoveryCityContext(input: Pick<BDiscoveryHistoryEntry, "city" | "view" | "query" | "category"> & { focus?: BDiscoveryFocus }) {
+export function replaceBDiscoveryCityContext(input: Pick<BDiscoveryHistoryEntry, "city" | "view" | "query" | "category"> & Partial<Pick<BDiscoveryHistoryEntry, "editorialCategory" | "layer" | "listScroll" | "camera">> & { focus?: BDiscoveryFocus }) {
   const current = readBDiscoveryHistory()
   if (current?.level !== "city" || !input.city) return current
   const next: BDiscoveryHistoryEntry = {
-    v: 3,
+    v: 4,
     documentId: documentId(),
     level: "city",
     city: input.city,
     view: viewValue(input.view),
     query: queryValue(input.query),
     category: categoryValue(input.category),
+    editorialCategory: editorialCategoryValue(input.editorialCategory ?? current.editorialCategory),
+    layer: layerValue(input.layer ?? current.layer),
+    sheetSnap: "closed",
+    listScroll: listScrollValue(input.listScroll ?? current.listScroll),
+    ...((input.camera ?? current.camera) ? { camera: cameraValue(input.camera ?? current.camera) } : {}),
     focus: input.focus ?? current.focus,
   }
   replaceEntry(next)
@@ -490,6 +709,181 @@ export function openBDiscoveryEditorialPlace(editorialPlaceId: EditorialPlaceB["
   return true
 }
 
+function myKoreaSavedPlacePeek(
+  current: BDiscoveryHistoryEntry,
+  target: { sourceKind: "official"; venueId: CanonicalVenueId; city: BDiscoveryCity }
+    | { sourceKind: "editorial"; editorialPlaceId: EditorialPlaceB["id"]; city: "jeju" },
+): BDiscoveryHistoryEntry {
+  const preserveCityContext = current.city === target.city
+  const base: BDiscoveryHistoryEntry = {
+    v: 4,
+    documentId: documentId(),
+    level: "peek",
+    city: target.city,
+    view: preserveCityContext ? current.view : "map",
+    query: preserveCityContext ? current.query : "",
+    category: preserveCityContext ? current.category : "all",
+    editorialCategory: target.city === "jeju" && preserveCityContext ? current.editorialCategory : "all",
+    layer: preserveCityContext ? current.layer : "standard",
+    sheetSnap: "peek",
+    listScroll: preserveCityContext ? current.listScroll : 0,
+    ...(preserveCityContext && current.camera ? { camera: current.camera } : {}),
+  }
+  return target.sourceKind === "official"
+    ? { ...base, venueId: target.venueId }
+    : { ...base, editorialPlaceId: target.editorialPlaceId }
+}
+
+function discoveryEntryFromCurrentUrl(): BDiscoveryHistoryEntry | null {
+  if (typeof window === "undefined" || window.location.pathname !== B_DISCOVERY_ROUTE) return null
+  const url = new URL(window.location.href)
+  const requestedVenueId = venueValue(url.searchParams.get("venueId"))
+  const requestedEditorialPlaceId = editorialPlaceValue(url.searchParams.get("editorialPlaceId"))
+  if (requestedVenueId && requestedEditorialPlaceId) return null
+  const resolvedVenueCity = requestedVenueId ? canonicalMapVenueById(requestedVenueId)?.cityId : undefined
+  const requestedCity = resolvedVenueCity ?? (requestedEditorialPlaceId ? "jeju" : cityValue(url.searchParams.get("city")))
+  const nation: BDiscoveryHistoryEntry = {
+    v: 4,
+    documentId: documentId(),
+    level: "nation",
+    view: "map",
+    query: "",
+    category: "all",
+    editorialCategory: "all",
+    layer: "standard",
+    sheetSnap: "closed",
+    listScroll: 0,
+  }
+  if (!requestedCity) return nation
+  const city: BDiscoveryHistoryEntry = {
+    ...nation,
+    level: "city",
+    city: requestedCity,
+    view: viewValue(url.searchParams.get("view")),
+    query: queryValue(url.searchParams.get("q")),
+    category: categoryValue(url.searchParams.get("category")),
+    editorialCategory: requestedCity === "jeju" ? editorialCategoryValue(url.searchParams.get("editorialCategory")) : "all",
+  }
+  const wantsDetail = url.searchParams.get("detail") === "1"
+  if (requestedEditorialPlaceId) return {
+    ...city,
+    level: wantsDetail ? "detail" : "peek",
+    sheetSnap: wantsDetail ? "detail" : "peek",
+    editorialPlaceId: requestedEditorialPlaceId,
+  }
+  if (requestedVenueId && resolvedVenueCity) return {
+    ...city,
+    level: wantsDetail ? "detail" : "peek",
+    sheetSnap: wantsDetail ? "detail" : "peek",
+    venueId: requestedVenueId,
+  }
+  return city
+}
+
+function openMyKoreaSavedPlace(
+  scrollTop: number,
+  target: { sourceKind: "official"; venueId: CanonicalVenueId; city: BDiscoveryCity }
+    | { sourceKind: "editorial"; editorialPlaceId: EditorialPlaceB["id"]; city: "jeju" },
+) {
+  if (typeof window === "undefined" || window.location.pathname !== B_DISCOVERY_ROUTE) return false
+  // Next may reconcile a same-document URL after a browser Back and briefly
+  // retain only its private outer state. The already-mounted map still shows
+  // that URL, so recover the public discovery origin from the canonical URL
+  // instead of making the user's saved-place card a no-op.
+  const current = readBDiscoveryHistory() ?? discoveryEntryFromCurrentUrl()
+  const journeyId = createMyKoreaPlaceReturnJourneyId(crypto.randomUUID())
+  if (!current || !journeyId) return false
+  const origin = target.sourceKind === "official"
+    ? createMyKoreaPlaceReturnOrigin({ journeyId, scrollTop, sourceKind: "official", venueId: target.venueId })
+    : createMyKoreaPlaceReturnOrigin({ journeyId, scrollTop, sourceKind: "editorial", editorialPlaceId: target.editorialPlaceId })
+  const place = createMyKoreaPlaceReturnPlace(origin)
+  if (!origin || !place) return false
+  const peek = myKoreaSavedPlacePeek(current, target)
+  const originalState = window.history.state
+  const originalUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+  try {
+    replaceEntry(current, undefined, true, origin)
+    pushEntry(peek, place)
+    // pushState never emits popstate. Notify the mounted Explore map now so a
+    // My Korea card opens its canonical peek before the shell reveals Explore.
+    dispatchBDiscoveryEntryTraversal(peek, window.history.state)
+    return true
+  } catch {
+    try {
+      History.prototype.replaceState.call(window.history, originalState, "", originalUrl)
+    } catch {
+      // The caller receives failure and keeps My Korea mounted. A browser that
+      // also rejects rollback is already outside the History contract.
+    }
+    return false
+  }
+}
+
+/**
+ * My Korea-only entry: exactly one peek child is added above the saved origin.
+ * The caller should then select Explore and present the canonical venue peek.
+ */
+export function openMyKoreaSavedBDiscoveryVenue(
+  venueId: string,
+  venueCity: BDiscoveryCity,
+  savedScrollTop: number,
+) {
+  const safeVenueId = venueValue(venueId)
+  const safeVenueCity = cityValue(venueCity)
+  return Boolean(isCanonicalVenueId(safeVenueId)
+    && safeVenueCity
+    && canonicalMapVenueById(safeVenueId)?.cityId === safeVenueCity
+    && openMyKoreaSavedPlace(savedScrollTop, {
+    sourceKind: "official",
+    venueId: safeVenueId,
+    city: safeVenueCity,
+  }))
+}
+
+/** My Korea-only editorial entry; like official places, it starts at peek. */
+export function openMyKoreaSavedBDiscoveryEditorialPlace(
+  editorialPlaceId: EditorialPlaceB["id"],
+  savedScrollTop: number,
+) {
+  const safeEditorialPlaceId = editorialPlaceValue(editorialPlaceId)
+  return Boolean(safeEditorialPlaceId && openMyKoreaSavedPlace(savedScrollTop, {
+    sourceKind: "editorial",
+    editorialPlaceId: safeEditorialPlaceId,
+    city: "jeju",
+  }))
+}
+
+/**
+ * Clear this journey only; unrelated Next/browser state and the URL survive.
+ *
+ * An origin has one or two forward children carrying the matching place
+ * receipt. Replacing H0 alone would let Forward resurrect an explicitly
+ * abandoned journey. Replace H0 first, then push the same sanitized envelope:
+ * the browser truncates those forward children without changing the URL. The
+ * previous same-URL entry is already cleared, so Back cannot revive it either.
+ */
+export function clearMyKoreaPlaceReturnHistory() {
+  if (typeof window === "undefined" || !isRecord(window.history.state)
+    || !Object.prototype.hasOwnProperty.call(window.history.state, MY_KOREA_PLACE_RETURN_HISTORY_KEY)) return false
+  const originalState = window.history.state
+  const receipt = readMyKoreaPlaceReturnFromHistoryState(window.history.state)
+  const cleared = withoutMyKoreaPlaceReturnHistoryState(originalState)
+  if (!cleared) return false
+  try {
+    History.prototype.replaceState.call(window.history, cleared, "")
+    if (receipt?.phase === "origin") History.prototype.pushState.call(window.history, cleared, "")
+    return true
+  } catch {
+    try {
+      History.prototype.replaceState.call(window.history, originalState, "")
+    } catch {
+      // The caller fails closed. A browser rejecting both mutations is outside
+      // the History contract, but the original in-memory receipt is retained.
+    }
+    return false
+  }
+}
+
 export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryCity) {
   if (typeof window === "undefined" || window.location.pathname !== B_DISCOVERY_ROUTE) return false
   const safeVenueId = venueValue(venueId)
@@ -502,7 +896,7 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
 
   const city: BDiscoveryHistoryEntry = current?.level === "city" && current.city === safeVenueCity
     ? { ...current, focus: { kind: "venue", venueId: safeVenueId } }
-    : { v: 3, documentId: documentId(), level: "city", city: safeVenueCity, view: "map", query: "", category: "all", focus: { kind: "venue", venueId: safeVenueId } }
+    : { v: 4, documentId: documentId(), level: "city", city: safeVenueCity, view: "map", query: "", category: "all", editorialCategory: "all", layer: "standard", sheetSnap: "closed", listScroll: 0, focus: { kind: "venue", venueId: safeVenueId } }
 
   if (current?.level === "nation") {
     replaceEntry({ ...current, focus: { kind: "city", city: safeVenueCity } })
@@ -512,7 +906,7 @@ export function openSavedBDiscoveryVenue(venueId: string, venueCity: BDiscoveryC
   } else if (current) {
     pushEntry(city)
   } else {
-    replaceEntry({ v: 3, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", focus: { kind: "city", city: safeVenueCity } })
+    replaceEntry({ v: 4, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", editorialCategory: "all", layer: "standard", sheetSnap: "closed", listScroll: 0, focus: { kind: "city", city: safeVenueCity } })
     pushEntry(city)
   }
   pushEntry({ ...city, level: "peek", venueId: safeVenueId, focus: undefined })
@@ -528,14 +922,14 @@ export function openSavedBDiscoveryEditorialPlace(editorialPlaceId: EditorialPla
   if (current?.level === "detail" && current.editorialPlaceId === safeEditorialPlaceId) return returnToBDiscoveryEditorialPeek(safeEditorialPlaceId)
   const city: BDiscoveryHistoryEntry = current?.level === "city" && current.city === "jeju"
     ? { ...current, focus: { kind: "editorial-place", editorialPlaceId: safeEditorialPlaceId } }
-    : { v: 3, documentId: documentId(), level: "city", city: "jeju", view: "map", query: "", category: "all", focus: { kind: "editorial-place", editorialPlaceId: safeEditorialPlaceId } }
+    : { v: 4, documentId: documentId(), level: "city", city: "jeju", view: "map", query: "", category: "all", editorialCategory: "all", layer: "standard", sheetSnap: "closed", listScroll: 0, focus: { kind: "editorial-place", editorialPlaceId: safeEditorialPlaceId } }
   if (current?.level === "nation") {
     replaceEntry({ ...current, focus: { kind: "city", city: "jeju" } })
     pushEntry(city)
   } else if (current?.level === "city" && current.city === "jeju") replaceEntry(city)
   else if (current) pushEntry(city)
   else {
-    replaceEntry({ v: 3, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", focus: { kind: "city", city: "jeju" } })
+    replaceEntry({ v: 4, documentId: documentId(), level: "nation", view: "map", query: "", category: "all", editorialCategory: "all", layer: "standard", sheetSnap: "closed", listScroll: 0, focus: { kind: "city", city: "jeju" } })
     pushEntry(city)
   }
   pushEntry({ ...city, level: "peek", editorialPlaceId: safeEditorialPlaceId, focus: undefined })

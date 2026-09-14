@@ -1,21 +1,28 @@
 .root {
   display: inline-flex;
   align-items: center;
-  color: #191817;
+  color: var(--ondo-ink, #191817);
   white-space: nowrap;
 }
 
-.root img {
+.root::before {
   display: block;
+  aspect-ratio: 288 / 64;
+  background: currentColor;
+  content: "";
   height: auto;
   flex: 0 0 auto;
+  -webkit-mask: url("/brand/ondo-lockup.svg") center / contain no-repeat;
+  mask: url("/brand/ondo-lockup.svg") center / contain no-repeat;
 }
+
+.root img { display: none; }
 
 .root i {
   width: 1px;
   align-self: stretch;
   flex: 0 0 auto;
-  background: rgb(25 24 23 / 18%);
+  background: var(--ondo-line-strong, rgb(25 24 23 / 18%));
 }
 
 .root b {
@@ -27,11 +34,11 @@
 }
 
 .root[data-ondo-brand-lockup="compact"] { gap: 7px; }
-.root[data-ondo-brand-lockup="compact"] img { width: 100px; }
+.root[data-ondo-brand-lockup="compact"]::before { width: 100px; }
 .root[data-ondo-brand-lockup="compact"] i { height: 18px; }
 .root[data-ondo-brand-lockup="compact"] b { font-size: 14px; }
 
 .root[data-ondo-brand-lockup="full"] { gap: 8px; }
-.root[data-ondo-brand-lockup="full"] img { width: 108px; }
+.root[data-ondo-brand-lockup="full"]::before { width: 108px; }
 .root[data-ondo-brand-lockup="full"] i { height: 26px; }
 .root[data-ondo-brand-lockup="full"] b { font-size: 20px; }

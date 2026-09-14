@@ -2,12 +2,6 @@ import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Browser, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
-const SYNTHETIC_PASSPORT_IMAGE = {
-  name: "synthetic-passport-placeholder.png",
-  mimeType: "image/png",
-  buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
-}
-
 type Locale = "en" | "ko" | "ja"
 type IdentityMethod = "mobile_id" | "mobile_residence_card" | "passport_ekyc"
 type CredentialFixture = "expired" | "suspended" | "revoked"
@@ -23,15 +17,15 @@ type IdentityQa = {
 
 const COPY = {
   en: {
-    guest: "Explore without setup",
-    environment: "ON-DEVICE",
-    privateCredential: "Private K-Tour service credential · no identity provider or OpenDID service is connected, so no real DID or VC is issued. Not a government ID, visa, residence card, permit or immigration status.",
+    guest: "Skip for now",
+    environment: "K-Tour ID",
+    privateCredential: [/identity (?:service|provider).*connected/i, /no (?:real )?DID or VC is issued/i, /not (?:an identity check or official ID|a government ID)/i],
     mobileRetention: "No Mobile ID payload, name, birth date, signed callback or provider result is stored.",
     residenceRetention: "No residence-card payload, name, birth date, signed callback or provider result is stored.",
-    passportRetention: "No passport fields, face image, provider result, DID or VC payload is stored.",
-    walletConsent: "After K-Tour ID is ready, ONDO prepares a device-only travel balance in this tab.",
+    passportRetention: "No user image, passport field, face image or provider result is collected or stored.",
+    walletSeparate: "Payments stay separate",
     passportProvider: "Passport eKYC uses a separate provider — not OmniOne CX",
-    assuranceChange: "Passport eKYC does not verify registered-resident status and is not an equivalent residence-card check.",
+    assuranceChange: "A passport does not confirm registered-resident status or replace a Residence Card check.",
     presentationRequester: "ONDO Table",
     presentationPurpose: "Minimum trip eligibility for this one request",
     presentationEvidence: "K-Tour travel eligibility · yes/no only",
@@ -40,20 +34,23 @@ const COPY = {
     unchanged: "unchanged",
     backToKTourId: "Back to K-Tour ID",
     returnTraveler: "Return to Travel Pass",
-    ocrTitle: "Choose one passport image",
-    ocrReviewTitle: "Review the minimum result",
-    ocrResult: "No provider decision",
+    ocrEyebrow: "PASSPORT",
+    ocrTitle: "Check the passport page",
+    ocrReviewTitle: "Sample check complete",
+    ocrResult: "Review result · no external service confirmation",
+    ocrPrivacyDetails: "Review details",
+    ocrTechnicalPrivacy: "bundled redacted sample",
   },
   ko: {
-    guest: "설정 없이 탐색",
-    environment: "기기 내",
-    privateCredential: "민간 K-Tour 서비스 자격증명 · 신원확인 기관과 OpenDID 서비스가 연결되지 않아 실제 DID·VC를 발급하지 않습니다. 정부 신분증·비자·외국인등록증·체류허가·체류자격이 아닙니다.",
+    guest: "건너뛰기",
+    environment: "K-Tour ID",
+    privateCredential: [/신원확인 (?:서비스|기관).*연결되지 않/, /DID·VC.*발급하지 않/, /(?:신원 확인이나 공식 신분증|정부 신분증).*아니/],
     mobileRetention: "모바일 신분증 원문·이름·생년월일·서명 콜백·기관 응답은 저장하지 않습니다.",
     residenceRetention: "외국인등록증 원문·이름·생년월일·서명 콜백·기관 응답은 저장하지 않습니다.",
-    passportRetention: "여권 항목·얼굴 이미지·기관 결과·DID·VC 원문은 저장하지 않고",
-    walletConsent: "K-Tour ID 준비가 끝나면 ONDO가 이 탭에 기기 전용 여행 잔액을 준비합니다.",
+    passportRetention: "사용자 이미지·여권 항목·얼굴 이미지·기관 결과를 수집하거나 저장하지 않습니다.",
+    walletSeparate: "결제는 별도로 준비",
     passportProvider: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자",
-    assuranceChange: "여권 eKYC는 등록외국인 체류 자격을 확인하지 않으며 외국인등록증 확인과 동등하지 않습니다.",
+    assuranceChange: "여권은 등록외국인 체류 자격을 확인하거나 외국인등록증 확인을 대신할 수 없어요.",
     presentationRequester: "ONDO 테이블",
     presentationPurpose: "이번 한 번의 요청을 위한 최소 여행 자격 확인",
     presentationEvidence: "K-Tour 여행 자격 · 예/아니오만",
@@ -62,20 +59,23 @@ const COPY = {
     unchanged: "상태 변경 없음",
     backToKTourId: "K-Tour ID로 돌아가기",
     returnTraveler: "여행 패스로 돌아가기",
-    ocrTitle: "여권 이미지 한 장 선택",
-    ocrReviewTitle: "최소 결과 확인",
-    ocrResult: "제공자 판정 없음",
+    ocrEyebrow: "여권",
+    ocrTitle: "여권 면을 확인해요",
+    ocrReviewTitle: "샘플 확인 완료",
+    ocrResult: "검토용 결과 · 외부 서비스 확인 없음",
+    ocrPrivacyDetails: "검토 상세",
+    ocrTechnicalPrivacy: "가림 처리 샘플",
   },
   ja: {
-    guest: "設定せずに見る",
-    environment: "端末内",
-    privateCredential: "民間のK-Tourサービス資格情報 · 本人確認事業者とOpenDIDサービスは未接続のため、実際のDID・VCは発行しません。公的身分証、ビザ、在留カード、在留許可、在留資格ではありません。",
+    guest: "スキップ",
+    environment: "K-Tour ID",
+    privateCredential: [/本人確認(?:サービス|事業者).*接続/, /DID・VC.*発行しません/, /公的身分証.*(?:ではありません|ではなく)/],
     mobileRetention: "モバイルID本文、氏名、生年月日、署名済みコールバック、事業者結果は保存しません。",
     residenceRetention: "在留カード本文、氏名、生年月日、署名済みコールバック、事業者結果は保存しません。",
-    passportRetention: "パスポート項目、顔画像、事業者結果、DID・VC本文は保存せず",
-    walletConsent: "K-Tour IDの準備後、ONDOがこのタブに端末専用の旅行残高を用意します。",
+    passportRetention: "利用者の画像、パスポート項目、顔画像、事業者結果は収集・保存しません。",
+    walletSeparate: "支払いは別に設定",
     passportProvider: "パスポートeKYCはOmniOne CXではなく別の事業者",
-    assuranceChange: "パスポートeKYCは登録居住者の在留資格を確認せず、在留カード確認と同等ではありません。",
+    assuranceChange: "パスポートでは登録外国人としての在留資格を確認できず、在留カード確認の代わりにはなりません。",
     presentationRequester: "ONDOテーブル",
     presentationPurpose: "今回一回の依頼に必要な最小限の旅行資格確認",
     presentationEvidence: "K-Tour旅行資格 · 可否のみ",
@@ -84,9 +84,12 @@ const COPY = {
     unchanged: "状態変更なし",
     backToKTourId: "K-Tour IDに戻る",
     returnTraveler: "トラベルパスに戻る",
-    ocrTitle: "パスポート画像を1枚選択",
-    ocrReviewTitle: "最小限の結果を確認",
-    ocrResult: "事業者の判定なし",
+    ocrEyebrow: "パスポート",
+    ocrTitle: "パスポート面を確認",
+    ocrReviewTitle: "サンプル確認完了",
+    ocrResult: "検証用の結果・外部サービスによる確認なし",
+    ocrPrivacyDetails: "検証の詳細",
+    ocrTechnicalPrivacy: "マスキング済みサンプル",
   },
 } as const
 
@@ -101,18 +104,18 @@ const RAW_PROTOCOL_COPY = /KTourVisitorCredential|\bholder\b|\bDID\b|\bVC\b|\bVP
 const METHOD_EVIDENCE = {
   en: {
     mobile_id: /Mobile ID/i,
-    mobile_residence_card: /Mobile Residence Card/i,
-    passport_ekyc: /NFC\s*\/\s*OCR.*face.*liveness/i,
+    mobile_residence_card: /Residence Card/i,
+    passport_ekyc: /Passport check/i,
   },
   ko: {
     mobile_id: /모바일 신분증/,
-    mobile_residence_card: /모바일 외국인등록증/,
-    passport_ekyc: /NFC\s*\/\s*OCR.*얼굴.*라이브니스/,
+    mobile_residence_card: /체류 카드/,
+    passport_ekyc: /여권 확인/,
   },
   ja: {
-    mobile_id: /モバイル身分証/,
-    mobile_residence_card: /モバイル在留カード/,
-    passport_ekyc: /NFC\s*\/\s*OCR.*顔.*ライブネス/,
+    mobile_id: /モバイルID/,
+    mobile_residence_card: /在留カード/,
+    passport_ekyc: /パスポート確認/,
   },
 } as const
 
@@ -127,6 +130,8 @@ test.describe.configure({ timeout: 120_000 })
 
 async function seedB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-COMPLETE", qa?: IdentityQa) {
   await page.addInitScript(({ key, language, onboardingState, injected }) => {
+    localStorage.clear()
+    sessionStorage.clear()
     localStorage.setItem(key, JSON.stringify({
       locale: language,
       onboarding: onboardingState,
@@ -147,27 +152,39 @@ async function seedB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-CO
   await page.route("https://tiles.openfreemap.org/**", (route) => route.abort("blockedbyclient"))
 }
 
-async function openB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-COMPLETE", qa?: IdentityQa) {
+async function openB(page: Page, locale: Locale, onboarding: "ONB-NEW" | "ONB-COMPLETE", qa?: IdentityQa, review = false) {
   await seedB(page, locale, onboarding, qa)
-  await page.goto("/", { waitUntil: "domcontentloaded" })
+  await page.goto(review ? "/?qa=1" : "/", { waitUntil: "domcontentloaded" })
   await expect(page.locator("html")).toHaveAttribute("lang", locale)
   await expect(page.getByTestId("ondo-b-root")).toBeVisible()
 }
 
-async function openOnboardingSetup(page: Page, locale: Locale = "en") {
-  await openB(page, locale, "ONB-NEW")
+async function completePersonalizedOnboarding(page: Page, locale: Locale = "en") {
+  await openB(page, locale, "ONB-NEW", undefined, true)
+  const onboardingBackdrop = page.getByTestId("ondo-onboarding-backdrop")
   const onboarding = page.getByTestId("ondo-onboarding")
-  const opener = onboarding.getByTestId("k-tour-id-setup-open")
-  await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
-  await expect(opener).toBeVisible()
-  await opener.click()
-  const setup = page.getByTestId("k-tour-id-setup")
-  await expect(setup).toBeVisible()
-  return { onboarding, opener, setup }
+  await expect(onboardingBackdrop).toHaveAttribute("data-onboarding-step", "intent")
+  await expect(onboarding.getByTestId("onboarding-step-intent")).toBeVisible()
+  await expect(onboarding.getByText(/K-Tour ID|OmniOne|identity provider|optional/i)).toHaveCount(0)
+  await expect(onboarding.getByTestId("k-tour-id-setup-open")).toHaveCount(0)
+  await onboarding.getByTestId("persona-short_trip").click()
+  await onboardingBackdrop.getByTestId("onboarding-continue").click()
+  await expect(onboardingBackdrop).toHaveAttribute("data-onboarding-step", "area")
+  await expect(onboarding.getByTestId("onboarding-step-area")).toBeVisible()
+  await onboarding.getByTestId("onboarding-area-seoul").click()
+  await onboardingBackdrop.getByTestId("onboarding-continue").click()
+  await expect(onboardingBackdrop).toHaveAttribute("data-onboarding-step", "preferences")
+  await expect(onboarding.getByTestId("onboarding-step-preferences")).toBeVisible()
+  await onboarding.getByTestId("onboarding-preference-classic").click()
+  await onboardingBackdrop.getByTestId("onboarding-finish").click()
+  await expect(onboardingBackdrop).toHaveCount(0)
+  await expect(page.getByTestId("k-tour-id-setup")).toHaveCount(0)
+  await expect(page.getByTestId("ondo-b-map-entry")).toBeVisible()
+  await expect(page.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-city", "seoul")
 }
 
 async function openTravelerSetup(page: Page, locale: Locale = "en", qa?: IdentityQa) {
-  await openB(page, locale, "ONB-COMPLETE", qa)
+  await openB(page, locale, "ONB-COMPLETE", qa, true)
   await page.getByTestId("nav-id").click()
   const traveler = page.getByTestId("ondo-b-traveler-id")
   await expect(traveler).toBeVisible()
@@ -189,12 +206,49 @@ async function selectMethod(setup: Locator, method: IdentityMethod) {
   for (const testId of [
     "identity-consent-requester",
     "identity-consent-purpose",
-    "identity-consent-provider",
     "identity-consent-evidence",
-    "identity-consent-retention",
-    "identity-consent-wallet",
-  ]) await expect(consent.getByTestId(testId)).not.toBeEmpty()
+  ]) {
+    await expect(consent.getByTestId(testId)).not.toBeEmpty()
+    await expect(consent.getByTestId(testId)).toBeVisible()
+  }
+  const provider = consent.getByTestId("identity-consent-provider")
+  const retention = consent.getByTestId("identity-consent-retention")
+  await expect(provider).not.toBeEmpty()
+  await expect(retention).not.toBeEmpty()
+  await expect(provider).not.toBeVisible()
+  await expect(retention).not.toBeVisible()
+  const providerDetails = provider.locator("xpath=ancestor::details")
+  await expect(providerDetails).not.toHaveAttribute("open", "")
+  await providerDetails.locator(":scope > summary").click()
+  await expect(provider).toBeVisible()
+  await expect(retention).toBeVisible()
+  await providerDetails.locator(":scope > summary").click()
   return consent
+}
+
+async function expectConciseMethodSurface(setup: Locator, locale: Locale) {
+  const heading = locale === "en" ? "Choose a method" : locale === "ko" ? "확인 방법을 선택하세요" : "確認方法を選択"
+  const labels = locale === "en"
+    ? ["Mobile ID", "Residence Card", "Passport"]
+    : locale === "ko"
+      ? ["모바일 신분증", "체류 카드", "여권"]
+      : ["モバイルID", "在留カード", "パスポート"]
+  await expect(setup).toHaveAttribute("data-phase", "method_select")
+  await expect(setup.getByRole("heading", { name: heading, exact: true })).toBeVisible()
+  for (const [index, label] of labels.entries()) await expect(setup.getByTestId(METHOD_TEST_IDS[(["mobile_id", "mobile_residence_card", "passport_ekyc"] as const)[index]]).locator("xpath=ancestor::button")).toContainText(label)
+  for (const technology of [/ON-DEVICE/i, /OmniOne/i, /optional/i, /registered foreign resident/i]) {
+    await expect(setup.getByText(technology)).toHaveCount(0)
+  }
+
+  const protocol = setup.getByTestId("k-tour-id-technical-truth").locator("xpath=ancestor::details")
+  await expect(protocol).not.toHaveAttribute("open", "")
+  await expect(setup.getByTestId("k-tour-id-technical-truth")).not.toBeVisible()
+  await expect(setup.getByTestId("k-tour-id-private-boundary")).not.toBeVisible()
+  await protocol.locator(":scope > summary").click()
+  await expect(setup.getByTestId("k-tour-id-technical-truth")).toBeVisible()
+  const privateBoundary = setup.getByTestId("k-tour-id-private-boundary")
+  for (const truth of COPY[locale].privateCredential) await expect(privateBoundary).toContainText(truth)
+  await protocol.locator(":scope > summary").click()
 }
 
 async function advanceUntil(setup: Locator, testId: string, limit = 14) {
@@ -220,10 +274,10 @@ async function reachPassportDocument(setup: Locator) {
   return advanceUntil(setup, "k-tour-id-passport-document")
 }
 
-async function completeSimulatedPassportOcr(setup: Locator) {
+async function completePassportReview(setup: Locator) {
   const document = setup.getByTestId("k-tour-id-passport-document")
-  await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+  await expect(document).toHaveAttribute("data-ocr-stage", "sample")
+  await expect(document).toHaveAttribute("data-review-fixture", "redacted-passport")
   await expect(document.getByTestId("passport-ocr-preview")).toBeVisible()
   await document.getByTestId("passport-ocr-start").click()
   await expect(document.getByTestId("passport-ocr-processing")).toBeVisible()
@@ -232,38 +286,34 @@ async function completeSimulatedPassportOcr(setup: Locator) {
   await document.getByTestId("k-tour-id-continue").click()
 }
 
-async function reachPassportEvidence(setup: Locator) {
+async function reachPassportProcessing(setup: Locator) {
   await reachPassportDocument(setup)
-  await completeSimulatedPassportOcr(setup)
-  await expect(setup.getByTestId("k-tour-id-passport-face")).toBeVisible()
-  return advanceUntil(setup, "k-tour-id-evidence-preview")
+  await completePassportReview(setup)
+  const face = setup.getByTestId("k-tour-id-passport-face")
+  await expect(face).toBeVisible()
+  await face.getByTestId("k-tour-id-continue").click()
+  const processing = setup.getByTestId("k-tour-id-route-step")
+  await expect(processing).toBeVisible()
+  return processing
 }
 
 async function reachCredential(setup: Locator, rapidIssue = false, consumerLocale?: Exclude<Locale, "en">) {
-  await reachPassportEvidence(setup)
-  const issuance = await advanceUntil(setup, "k-tour-id-issuance-preview")
-  await expect(issuance).toBeVisible()
+  await reachPassportProcessing(setup)
+  const holder = setup.getByTestId("k-tour-id-holder-delivery")
+  await expect(holder).toBeVisible()
+  if (consumerLocale) await expect(holder).not.toContainText(RAW_PROTOCOL_COPY)
+  const issue = holder.getByTestId("k-tour-id-continue")
+  await expect(issue).toBeVisible()
   if (rapidIssue) {
-    const issue = setup.getByTestId("k-tour-id-continue")
-    await expect(issue).toBeVisible()
     await issue.evaluate((button) => {
       for (let attempt = 0; attempt < 10; attempt += 1) (button as HTMLButtonElement).click()
     })
+  } else {
+    await issue.click()
   }
-  const holder = await advanceUntil(setup, "k-tour-id-holder-delivery")
-  await expect(holder).toBeVisible()
-  if (consumerLocale) await expect(holder).not.toContainText(RAW_PROTOCOL_COPY)
-  return advanceUntil(setup, "k-tour-id-credential")
-}
-
-async function reachSuccessfulPresentationResult(setup: Locator) {
-  await reachCredential(setup)
-  await setup.getByTestId("k-tour-id-presentation-open").click()
-  await advanceUntil(setup, "k-tour-id-presentation-consent")
-  await setup.getByTestId("k-tour-id-presentation-approve").click()
-  const result = setup.getByTestId("k-tour-id-presentation-result")
-  await expect(result).toHaveAttribute("data-result", "success")
-  return result
+  const credential = setup.getByTestId("k-tour-id-credential")
+  await expect(credential).toBeVisible()
+  return credential
 }
 
 async function setIdentityQa(page: Page, qa: NonNullable<IdentityQa["identity"]>) {
@@ -307,17 +357,24 @@ async function storageWrites(page: Page) {
 async function newSeededPage(browser: Browser, locale: Locale, qa?: IdentityQa) {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const page = await context.newPage()
-  await openB(page, locale, "ONB-COMPLETE", qa)
+  await openB(page, locale, "ONB-COMPLETE", qa, true)
   return { context, page }
 }
 
 test("OPENDID-E2E-001 guest skip remains ungated and preserves the existing onboarding contract", async ({ page }) => {
   await openB(page, "en", "ONB-NEW")
-  await expect(page.getByTestId("ondo-onboarding")).toBeVisible()
-  await expect(page.getByTestId("onboarding-step-value")).toBeVisible()
-  await page.getByRole("button", { name: COPY.en.guest, exact: true }).click()
+  const onboardingBackdrop = page.getByTestId("ondo-onboarding-backdrop")
+  const onboarding = page.getByTestId("ondo-onboarding")
+  await expect(onboarding).toBeVisible()
+  await expect(onboardingBackdrop).toHaveAttribute("data-onboarding-step", "intent")
+  await expect(onboarding.getByTestId("onboarding-step-intent")).toBeVisible()
+  await expect(onboarding.getByText(/K-Tour ID|OmniOne|identity provider|optional/i)).toHaveCount(0)
+  await expect(onboarding.getByTestId("k-tour-id-setup-open")).toHaveCount(0)
+  const guestSkip = onboardingBackdrop.getByTestId("onboarding-guest-skip")
+  await expect(guestSkip).toHaveText(COPY.en.guest)
+  await guestSkip.click()
 
-  await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+  await expect(onboardingBackdrop).toHaveCount(0)
   await expect(page.getByTestId("k-tour-id-setup")).toHaveCount(0)
   await expect(page.getByTestId("ondo-b-nation")).toBeVisible()
   await expect(page.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
@@ -325,26 +382,64 @@ test("OPENDID-E2E-001 guest skip remains ungated and preserves the existing onbo
   expect(stored).toMatchObject({ onboarding: "ONB-COMPLETE", persona: null, discoveryPreferences: [] })
 })
 
-test("OPENDID-E2E-002 both optional entries open the same simulated setup without replacing frozen testids", async ({ browser }) => {
+test("OPENDID-E2E-002 personalized onboarding keeps identity JIT while Travel Pass makes it explicit", async ({ browser }) => {
   const onboardingContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const onboardingPage = await onboardingContext.newPage()
-  const onboardingEntry = await openOnboardingSetup(onboardingPage)
-  await expect(onboardingEntry.setup.getByTestId("k-tour-id-environment")).toHaveText(COPY.en.environment)
-  await expect(onboardingEntry.setup.getByTestId("k-tour-id-private-boundary")).toHaveText(COPY.en.privateCredential)
-  await onboardingEntry.setup.getByTestId("k-tour-id-cancel").click()
-  await expect(onboardingEntry.setup).toHaveCount(0)
-  await expect(onboardingEntry.opener).toBeFocused()
+  await completePersonalizedOnboarding(onboardingPage)
+  await expect(onboardingPage.getByTestId("nav-ondo")).toHaveAttribute("aria-current", "page")
   await onboardingContext.close()
 
   const travelerContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const travelerPage = await travelerContext.newPage()
   const travelerEntry = await openTravelerSetup(travelerPage)
+  await expectConciseMethodSurface(travelerEntry.setup, "en")
   await expect(travelerEntry.setup.getByTestId("k-tour-id-environment")).toHaveText(COPY.en.environment)
-  await expect(travelerEntry.setup.getByTestId("k-tour-id-private-boundary")).toHaveText(COPY.en.privateCredential)
   await travelerEntry.setup.getByTestId("k-tour-id-cancel").click()
   await expect(travelerEntry.setup).toHaveCount(0)
   await expect(travelerEntry.opener).toBeFocused()
   await travelerContext.close()
+})
+
+test("OPENDID-E2E-002R explicit public review completes all three routes without exposing QA injection", async ({ browser }) => {
+  const routes: readonly [IdentityMethod, Locale][] = [
+    ["mobile_id", "en"],
+    ["mobile_residence_card", "ko"],
+    ["passport_ekyc", "ja"],
+  ]
+  for (const [method, locale] of routes) {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
+    const page = await context.newPage()
+    await seedB(page, locale, "ONB-COMPLETE", { identity: { outcome: "IDENTITY_METHOD_UNAVAILABLE" } })
+    await page.goto("/?review=1", { waitUntil: "domcontentloaded" })
+    await expect.poll(() => new URL(page.url()).search).toBe("?review=1")
+    await expect.poll(() => page.evaluate(() => sessionStorage.getItem("ondo.review.flow.v1"))).toBe("1")
+    await expect(page.locator("html")).toHaveAttribute("lang", locale)
+
+    await page.getByTestId("nav-id").click()
+    await page.getByTestId("traveler-id-ktour-id-open").click()
+    const setup = page.getByTestId("k-tour-id-setup")
+    await expect(setup).toHaveAttribute("data-execution-mode", "review")
+    for (const methodTestId of Object.values(METHOD_TEST_IDS)) {
+      await expect(setup.getByTestId(methodTestId).locator("xpath=ancestor::button")).toHaveAttribute("data-availability", "review")
+    }
+
+    if (method === "passport_ekyc") {
+      await reachCredential(setup)
+    } else {
+      await selectMethod(setup, method)
+      await approveConsent(setup)
+      const handoff = setup.getByTestId("k-tour-id-route-step")
+      await expect(handoff).toBeVisible()
+      await expect(handoff.getByTestId("ktour-id-mobile-handoff")).toBeVisible()
+      await handoff.getByTestId("k-tour-id-continue").click()
+      const holder = setup.getByTestId("k-tour-id-holder-delivery")
+      await expect(holder).toBeVisible()
+      await holder.getByTestId("k-tour-id-continue").click()
+      await expect(setup.getByTestId("k-tour-id-credential")).toBeVisible()
+    }
+    await expect(setup).not.toHaveAttribute("data-phase", "unavailable")
+    await context.close()
+  }
 })
 
 test("OPENDID-E2E-003 EN KO JA expose all three consent/provider truths", async ({ browser }) => {
@@ -354,8 +449,8 @@ test("OPENDID-E2E-003 EN KO JA expose all three consent/provider truths", async 
       await page.getByTestId("nav-id").click()
       await page.getByTestId("traveler-id-ktour-id-open").click()
       const setup = page.getByTestId("k-tour-id-setup")
+      await expectConciseMethodSurface(setup, locale)
       await expect(setup.getByTestId("k-tour-id-environment")).toHaveText(COPY[locale].environment)
-      await expect(setup.getByTestId("k-tour-id-private-boundary")).toHaveText(COPY[locale].privateCredential)
       const consent = await selectMethod(setup, method)
       const provider = consent.getByTestId("identity-consent-provider")
       const evidence = consent.getByTestId("identity-consent-evidence")
@@ -364,13 +459,13 @@ test("OPENDID-E2E-003 EN KO JA expose all three consent/provider truths", async 
       else await expect(provider).toContainText("OmniOne CX")
       await expect(evidence).toContainText(METHOD_EVIDENCE[locale][method])
       await expect(retention).toContainText(COPY[locale][`${method === "passport_ekyc" ? "passport" : method === "mobile_id" ? "mobile" : "residence"}Retention`])
-      await expect(consent.getByTestId("identity-consent-wallet")).toContainText(COPY[locale].walletConsent)
+      await expect(consent.getByTestId("identity-consent-wallet")).toHaveCount(0)
       await context.close()
     }
   }
 })
 
-test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation decision", async ({ browser }) => {
+test("OPENDID-E2E-003B EN KO JA keep requester-free setup separate from presentation", async ({ browser }) => {
   for (const locale of ["en", "ko", "ja"] as const) {
     const { context, page } = await newSeededPage(browser, locale)
     await page.getByTestId("nav-id").click()
@@ -381,34 +476,40 @@ test("OPENDID-E2E-003B EN KO JA localize the complete one-shot presentation deci
     const ready = setup.getByTestId("k-tour-id-credential")
     if (locale !== "en") await expect(ready).not.toContainText(RAW_PROTOCOL_COPY)
 
-    await setup.getByTestId("k-tour-id-presentation-open").click()
-    const request = setup.getByTestId("k-tour-id-presentation-request")
-    if (locale !== "en") await expect(request).not.toContainText(RAW_PROTOCOL_COPY)
-    await expect(request.getByTestId("identity-presentation-requester")).toContainText(COPY[locale].presentationRequester)
-    await expect(request.getByTestId("identity-presentation-purpose")).toContainText(COPY[locale].presentationPurpose)
-    await expect(request.getByTestId("identity-presentation-evidence")).toContainText(COPY[locale].presentationEvidence)
-    await expect(request.getByTestId("identity-presentation-retention")).toContainText(COPY[locale].presentationRetention)
-
-    await setup.getByTestId("k-tour-id-continue").click()
-    const consent = setup.getByTestId("k-tour-id-presentation-consent")
-    await expect(consent).toContainText(COPY[locale].presentationRequester)
-    await expect(consent.getByTestId("identity-presentation-predicate")).toContainText(COPY[locale].presentationEvidence)
-    await setup.getByTestId("k-tour-id-presentation-approve").click()
-    if (locale !== "en") await expect(setup.getByTestId("k-tour-id-presentation-result")).not.toContainText(RAW_PROTOCOL_COPY)
-    await expect(setup.getByTestId("identity-presentation-result-status")).toHaveText(COPY[locale].presentationApproved)
-    await expect(setup.getByTestId("identity-presentation-credential-state")).toContainText(COPY[locale].unchanged)
-    await expect(setup.getByTestId("k-tour-id-result-back")).toHaveText(COPY[locale].backToKTourId)
-    await expect(setup.getByTestId("k-tour-id-return")).toHaveText(COPY[locale].returnTraveler)
-    await setup.getByTestId("k-tour-id-result-back").click()
-    const readyAgain = setup.getByTestId("k-tour-id-credential")
-    await expect(readyAgain).toHaveAttribute("data-status", "simulated_ready")
-    await expect(readyAgain).toHaveAttribute("data-wallet-provisioning", "aa-assumed-local")
-    await expect(readyAgain.getByTestId("k-tour-id-wallet-ready")).toBeVisible()
+    await expect(setup.getByTestId("k-tour-id-presentation-open")).toHaveCount(0)
+    await expect(ready).toHaveAttribute("data-wallet-provisioning", "separate")
+    await expect(ready.getByTestId("k-tour-id-wallet-separate")).toContainText(COPY[locale].walletSeparate)
     await setup.getByTestId("k-tour-id-return").click()
     await expect(setup).toHaveCount(0)
-    await expect(page.getByTestId("ondo-b-id-wallet-commerce")).toHaveAttribute("data-wallet", "ready")
+    await expect(page.getByTestId("ondo-b-id-wallet-commerce")).toHaveAttribute("data-wallet", "disconnected")
     await context.close()
   }
+})
+
+test("OPENDID-E2E-003H onboarding keeps tastes while JIT K-Tour ID and wallet remain independent", async ({ page }) => {
+  await completePersonalizedOnboarding(page)
+  const stored = await page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? "{}"), DEVICE_KEY)
+  expect(stored).toMatchObject({
+    onboarding: "ONB-COMPLETE",
+    persona: "short_trip",
+    discoveryArea: "seoul",
+    discoveryPreferences: ["classic"],
+  })
+
+  await page.getByTestId("nav-id").click()
+  await page.getByTestId("traveler-id-ktour-id-open").click()
+  const setup = page.getByTestId("k-tour-id-setup")
+  await expectConciseMethodSurface(setup, "en")
+  await reachCredential(setup)
+  const ready = setup.getByTestId("k-tour-id-credential")
+  await expect(ready).toHaveAttribute("data-wallet-provisioning", "separate")
+  await expect(ready.getByTestId("k-tour-id-wallet-separate")).toContainText(COPY.en.walletSeparate)
+
+  await setup.getByTestId("k-tour-id-return").click()
+  await expect(setup).toHaveCount(0)
+  await expect(page.getByTestId("ondo-onboarding")).toHaveCount(0)
+  await expect(page.getByTestId("traveler-id-credential")).toHaveAttribute("data-status", "review-draft")
+  await expect(page.getByTestId("ondo-b-id-wallet-commerce")).toHaveAttribute("data-wallet", "disconnected")
 })
 
 test("OPENDID-E2E-003C Japanese consent and progress have no serious accessibility violations", async ({ page }) => {
@@ -421,17 +522,26 @@ test("OPENDID-E2E-003C Japanese consent and progress have no serious accessibili
   expect(result.violations.filter(({ impact }) => impact === "serious" || impact === "critical")).toEqual([])
 })
 
-test("OPENDID-E2E-003F EN KO JA keep the local OCR boundary and masked review explicit", async ({ browser }) => {
+test("OPENDID-E2E-003F EN KO JA keep passport privacy folded and the next step explicit", async ({ browser }) => {
   for (const locale of ["en", "ko", "ja"] as const) {
     const { context, page } = await newSeededPage(browser, locale)
     await page.getByTestId("nav-id").click()
     await page.getByTestId("traveler-id-ktour-id-open").click()
     const setup = page.getByTestId("k-tour-id-setup")
     const document = await reachPassportDocument(setup)
-    await expect(document.getByText(locale === "en" ? "ON-DEVICE OCR" : locale === "ko" ? "기기 내 OCR" : "端末内OCR", { exact: true })).toBeVisible()
+    await expect(document.getByText(COPY[locale].ocrEyebrow, { exact: true })).toBeVisible()
     await expect(document.getByRole("heading", { name: COPY[locale].ocrTitle, exact: true })).toBeVisible()
-    await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-    await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+    await expect(document).toHaveAttribute("data-ocr-stage", "sample")
+    await expect(document).toHaveAttribute("data-review-fixture", "redacted-passport")
+    const privacy = document
+      .getByText(COPY[locale].ocrPrivacyDetails, { exact: true })
+      .locator("xpath=ancestor::details[1]")
+    const technicalPrivacy = privacy.locator(":scope > p")
+    await expect(privacy).not.toHaveAttribute("open", "")
+    await expect(technicalPrivacy).toContainText(COPY[locale].ocrTechnicalPrivacy)
+    await expect(technicalPrivacy).not.toBeVisible()
+    await privacy.locator(":scope > summary").click()
+    await expect(technicalPrivacy).toBeVisible()
     await document.getByTestId("passport-ocr-start").click()
     await expect(document).toHaveAttribute("data-ocr-stage", "review")
     await expect(document.getByRole("heading", { name: COPY[locale].ocrReviewTitle, exact: true })).toBeVisible()
@@ -440,13 +550,12 @@ test("OPENDID-E2E-003F EN KO JA keep the local OCR boundary and masked review ex
   }
 })
 
-for (const viewport of [{ width: 320, height: 720 }, { width: 844, height: 390 }] as const) {
-  test(`OPENDID-E2E-003G ${viewport.width}x${viewport.height} keeps selected passport and on-device OCR action usable together`, async ({ page }) => {
+for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 430, height: 932 }, { width: 844, height: 390 }] as const) {
+  test(`OPENDID-E2E-003G ${viewport.width}x${viewport.height} keeps the redacted passport review action usable`, async ({ page }) => {
     await page.setViewportSize(viewport)
     const { setup } = await openTravelerSetup(page)
     const document = await reachPassportDocument(setup)
-    await document.getByTestId("passport-ocr-input").setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-    await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+    await expect(document).toHaveAttribute("data-ocr-stage", "sample")
     const action = document.getByTestId("passport-ocr-start")
     const preview = document.getByTestId("passport-ocr-preview")
     await expect(preview).toBeVisible()
@@ -459,55 +568,35 @@ for (const viewport of [{ width: 320, height: 720 }, { width: 844, height: 390 }
   })
 }
 
-test("OPENDID-E2E-003D passport OCR requires a decodable bounded image and exposes a masked local-only review", async ({ page }) => {
+test("OPENDID-E2E-003D passport review uses only a bundled redacted sample and exposes the face/liveness boundary", async ({ page }) => {
   const { setup } = await openTravelerSetup(page)
   const document = await reachPassportDocument(setup)
-  const input = document.getByTestId("passport-ocr-input")
-  await expect(input).toHaveAttribute("type", "file")
-  await expect(input).toHaveAttribute("accept", "image/jpeg,image/png,image/webp")
-  await expect(input).toHaveAttribute("capture", "environment")
-  await expect(document.getByTestId("passport-ocr-start")).toBeDisabled()
+  await expect(document.locator('input[type="file"]')).toHaveCount(0)
+  await expect(document).toHaveAttribute("data-review-stage", "ocr-nfc")
+  await expect(document).toHaveAttribute("data-review-fixture", "redacted-passport")
+  await expect(document.getByTestId("passport-ocr-start")).toBeVisible()
+  await expect(document.getByTestId("passport-ocr-preview")).toBeVisible()
   await expect(setup.getByTestId("k-tour-id-passport-face")).toHaveCount(0)
-
-  await input.setInputFiles({ name: "not-an-image.pdf", mimeType: "application/pdf", buffer: Buffer.from("not an image") })
-  await expect(document).toHaveAttribute("data-ocr-error", "type")
-  await expect(document.getByTestId("passport-ocr-error")).toHaveText("Choose a JPEG, PNG or WebP image.")
-  await expect(document.getByTestId("passport-ocr-retry")).toBeFocused()
-
-  await input.setInputFiles({ name: "too-large.png", mimeType: "image/png", buffer: Buffer.alloc(12 * 1024 * 1024 + 1) })
-  await expect(document).toHaveAttribute("data-ocr-error", "size")
-  await expect(document.getByTestId("passport-ocr-error")).toContainText("larger than 12 MB")
-
-  await input.setInputFiles({ name: "cannot-decode.png", mimeType: "image/png", buffer: Buffer.from("invalid png bytes") })
-  await expect(document).toHaveAttribute("data-ocr-error", "decode")
-  await expect(document.getByTestId("passport-ocr-error")).toContainText("could not be decoded")
-
-  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
-  await expect(document.getByTestId("passport-ocr-preview").locator("img")).toBeVisible()
-  await expect(document).not.toContainText(SYNTHETIC_PASSPORT_IMAGE.name)
   await document.getByTestId("passport-ocr-start").click()
   const processing = document.getByTestId("passport-ocr-processing")
   await expect(processing).toBeVisible()
   await expect(processing).not.toContainText("%")
   await expect(document).toHaveAttribute("data-ocr-stage", "review")
   const review = document.getByTestId("passport-ocr-review")
-  await expect(review).toContainText("•••••••• · masked example")
-  await expect(review).toContainText("Not extracted or retained")
-  await expect(review).toContainText("No provider decision")
+  await expect(review).toContainText(COPY.en.ocrResult)
+  await expect(document.locator('input[type="file"]')).toHaveCount(0)
   await expect(document.getByTestId("k-tour-id-continue")).toBeFocused()
   await document.getByTestId("k-tour-id-continue").click()
   await expect(setup.getByTestId("k-tour-id-passport-face")).toBeVisible()
 })
 
-test("OPENDID-E2E-003D2 passport image retry keeps the OCR CTA clear of the sticky header in short landscape", async ({ page }) => {
-  await page.setViewportSize({ width: 667, height: 320 })
-  const { setup } = await openTravelerSetup(page)
-  const documentStep = await reachPassportDocument(setup)
-  const input = documentStep.getByTestId("passport-ocr-input")
-
-  const expectOwnedDocumentAction = async (testId: "passport-ocr-choose" | "passport-ocr-retry" | "passport-ocr-start") => {
-    const action = documentStep.getByTestId(testId)
+test("OPENDID-E2E-003D2 passport sample CTA stays clear of the sticky header in short landscape", async ({ browser }) => {
+  for (const locale of ["en", "ko", "ja"] as const) {
+    const context = await browser.newContext({ viewport: { width: 667, height: 320 } })
+    const page = await context.newPage()
+    const { setup } = await openTravelerSetup(page, locale)
+    const documentStep = await reachPassportDocument(setup)
+    const action = documentStep.getByTestId("passport-ocr-start")
     await expect(action).toBeFocused()
     const receipt = await action.evaluate((button) => {
       const actionBox = button.getBoundingClientRect()
@@ -529,87 +618,25 @@ test("OPENDID-E2E-003D2 passport image retry keeps the OCR CTA clear of the stic
     expect(receipt.actionTop).toBeGreaterThanOrEqual(receipt.headerBottom)
     expect(receipt.actionBottom).toBeLessThanOrEqual(receipt.visibleBottom)
     expect(receipt.hitOwned).toBe(true)
+    await expect(documentStep).toHaveAttribute("data-ocr-stage", "sample")
+    await expect(action).toBeVisible()
+    await context.close()
   }
-
-  await expectOwnedDocumentAction("passport-ocr-choose")
-
-  await input.setInputFiles({ name: "not-an-image.pdf", mimeType: "application/pdf", buffer: Buffer.from("not an image") })
-  const retry = documentStep.getByTestId("passport-ocr-retry")
-  await expectOwnedDocumentAction("passport-ocr-retry")
-  await retry.click()
-  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-
-  const action = documentStep.getByTestId("passport-ocr-start")
-  await expect(documentStep).toHaveAttribute("data-ocr-stage", "preview")
-  await expectOwnedDocumentAction("passport-ocr-start")
-  await expect(action).toBeVisible()
 })
 
-test("OPENDID-E2E-003E passport previews revoke every object URL on replace, remove, close and continue", async ({ page }) => {
-  await page.addInitScript(() => {
-    const target = window as Window & { __PASSPORT_OBJECT_URLS__?: { created: string[]; revoked: string[] } }
-    target.__PASSPORT_OBJECT_URLS__ = { created: [], revoked: [] }
-    const create = URL.createObjectURL.bind(URL)
-    const revoke = URL.revokeObjectURL.bind(URL)
-    URL.createObjectURL = (object: Blob | MediaSource) => {
-      const url = create(object)
-      target.__PASSPORT_OBJECT_URLS__?.created.push(url)
-      return url
-    }
-    URL.revokeObjectURL = (url: string) => {
-      target.__PASSPORT_OBJECT_URLS__?.revoked.push(url)
-      revoke(url)
-    }
-  })
-
-  const firstEntry = await openTravelerSetup(page)
-  let document = await reachPassportDocument(firstEntry.setup)
-  let input = document.getByTestId("passport-ocr-input")
-
-  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
-  const replace = document.getByTestId("passport-ocr-replace")
-  const chooserPromise = page.waitForEvent("filechooser")
-  await replace.click()
-  await chooserPromise
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
-  await expect(document.getByTestId("passport-ocr-preview")).toBeVisible()
-  await expect(replace).toBeFocused()
-
-  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
-  await document.getByTestId("passport-ocr-remove").click()
-  await expect(document).toHaveAttribute("data-ocr-stage", "select")
-  await expect(document.getByTestId("passport-ocr-choose")).toBeFocused()
-
-  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
-  await firstEntry.setup.getByTestId("k-tour-id-cancel").click()
-  await expect(firstEntry.setup).toHaveCount(0)
-  await expect(firstEntry.opener).toBeFocused()
-
-  await firstEntry.opener.click()
-  const secondSetup = page.getByTestId("k-tour-id-setup")
-  await expect(secondSetup).toBeVisible()
-  document = await reachPassportDocument(secondSetup)
-  input = document.getByTestId("passport-ocr-input")
-  await input.setInputFiles(SYNTHETIC_PASSPORT_IMAGE)
-  await expect(document).toHaveAttribute("data-ocr-stage", "preview")
+test("OPENDID-E2E-003E passport sample review collects and persists no raw media", async ({ page }) => {
+  const { setup } = await openTravelerSetup(page)
+  const document = await reachPassportDocument(setup)
+  const before = await storageSnapshot(page)
+  await expect(document.locator('input[type="file"]')).toHaveCount(0)
   await document.getByTestId("passport-ocr-start").click()
-  await expect(document.getByTestId("passport-ocr-processing")).toBeVisible()
-  await expect(document.getByTestId("passport-ocr-processing-title")).toBeFocused()
-
-  const objectUrls = await page.evaluate(() => (window as Window & {
-    __PASSPORT_OBJECT_URLS__?: { created: string[]; revoked: string[] }
-  }).__PASSPORT_OBJECT_URLS__)
-  expect(objectUrls?.created).toHaveLength(4)
-  expect(objectUrls?.revoked).toHaveLength(4)
-  expect(objectUrls?.revoked.sort()).toEqual(objectUrls?.created.sort())
-  const storedText = await page.evaluate(() => `${JSON.stringify(localStorage)} ${JSON.stringify(sessionStorage)}`)
-  expect(storedText).not.toContain(SYNTHETIC_PASSPORT_IMAGE.name)
+  await expect(document).toHaveAttribute("data-ocr-stage", "review")
+  expect(await storageSnapshot(page)).toEqual(before)
+  const storedText = JSON.stringify(await storageSnapshot(page))
+  expect(storedText).not.toMatch(/passport|mrz|faceImage|documentNumber|redacted-passport/i)
 })
 
-test("OPENDID-E2E-004 passport completes evidence, issuance, holder and presentation with zero network/storage and independent axes", async ({ page }) => {
+test("OPENDID-E2E-004 passport review adds one private draft with zero network/storage and independent axes", async ({ page }) => {
   const { traveler, credential, setup } = await openTravelerSetup(page)
   const originalAxes = Object.fromEntries(await Promise.all(EXISTING_AXIS_TEST_IDS.map(async (testId) => [
     testId,
@@ -628,36 +655,33 @@ test("OPENDID-E2E-004 passport completes evidence, issuance, holder and presenta
     if (parsed.origin !== origin || identityNamed) identityRequests.push(url)
   })
 
-  await reachPassportEvidence(setup)
-  const issuance = await advanceUntil(setup, "k-tour-id-issuance-preview")
-  await expect(issuance).toBeVisible()
-  const issue = setup.getByTestId("k-tour-id-continue")
+  const processing = await reachPassportProcessing(setup)
+  await expect(processing).toBeVisible()
+  const holder = setup.getByTestId("k-tour-id-holder-delivery")
+  await expect(holder).toBeVisible()
+  const issue = holder.getByTestId("k-tour-id-continue")
   await expect(issue).toBeVisible()
   await issue.evaluate((button) => {
     for (let attempt = 0; attempt < 10; attempt += 1) (button as HTMLButtonElement).click()
   })
-  await advanceUntil(setup, "k-tour-id-holder-delivery")
-  const ready = await advanceUntil(setup, "k-tour-id-credential")
-  await expect(ready).toHaveAttribute("data-status", "simulated_ready")
+  const ready = setup.getByTestId("k-tour-id-credential")
+  await expect(ready).toBeVisible()
+  await expect(ready).toHaveAttribute("data-status", "review-draft")
   await expect(ready).toHaveAttribute("data-issuance-count", "1")
   await expect(setup.getByTestId("k-tour-id-credential")).toHaveCount(1)
 
   for (const [testId, status] of Object.entries(originalAxes)) {
     await expect(traveler.getByTestId(testId)).toHaveAttribute("data-status", status ?? "")
   }
-  await expect(credential).toHaveAttribute("data-status", "simulated_ready")
+  await expect(credential).toHaveAttribute("data-status", "review-draft")
 
-  await setup.getByTestId("k-tour-id-presentation-open").click()
-  await expect(setup.getByTestId("k-tour-id-presentation-request")).toBeVisible()
-  await advanceUntil(setup, "k-tour-id-presentation-consent")
-  await setup.getByTestId("k-tour-id-presentation-approve").click()
-  await expect(setup.getByTestId("k-tour-id-presentation-result")).toHaveAttribute("data-result", "success")
+  await expect(setup.getByTestId("k-tour-id-presentation-open")).toHaveCount(0)
 
   expect(identityRequests).toEqual([])
   expect(await storageWrites(page)).toEqual([])
   expect(await storageSnapshot(page)).toEqual(beforeStorage)
   const persisted = JSON.stringify(await storageSnapshot(page))
-  expect(persisted).not.toMatch(/passport|credential|presentation|issuerDid|holderDid|liveness|faceImage|documentNumber/i)
+  expect(persisted).not.toMatch(/issuerDid|holderDid|liveness|faceImage|documentNumber|synthetic-passport-placeholder/i)
 })
 
 test("OPENDID-E2E-005 residence unavailable changes to passport only with the assurance-change warning", async ({ browser }) => {
@@ -679,20 +703,12 @@ test("OPENDID-E2E-005 residence unavailable changes to passport only with the as
   }
 })
 
-test("OPENDID-E2E-006 cancel and Escape restore focus to each exact optional entry", async ({ browser }) => {
+test("OPENDID-E2E-006 onboarding reaches Explore without interruption while traveler exits restore the explicit opener", async ({ browser }) => {
   const onboardingContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
   const onboardingPage = await onboardingContext.newPage()
-  const onboardingEntry = await openOnboardingSetup(onboardingPage)
-  await onboardingEntry.setup.getByTestId("k-tour-id-cancel").click()
-  await expect(onboardingEntry.opener).toBeFocused()
-  await onboardingEntry.opener.click()
-  await onboardingPage.keyboard.press("Escape")
-  await expect(onboardingEntry.opener).toBeFocused()
-  await onboardingEntry.opener.click()
-  await reachSuccessfulPresentationResult(onboardingEntry.setup)
-  await onboardingEntry.setup.getByTestId("k-tour-id-return").click()
-  await expect(onboardingEntry.setup).toHaveCount(0)
-  await expect(onboardingEntry.opener).toBeFocused()
+  await completePersonalizedOnboarding(onboardingPage)
+  await expect(onboardingPage.getByTestId("ondo-b-map-entry")).toHaveAttribute("data-city", "seoul")
+  await expect(onboardingPage.getByTestId("ondo-onboarding")).toHaveCount(0)
   await onboardingContext.close()
 
   const travelerContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
@@ -702,7 +718,8 @@ test("OPENDID-E2E-006 cancel and Escape restore focus to each exact optional ent
   await expect(travelerEntry.setup).toHaveCount(0)
   await expect(travelerEntry.opener).toBeFocused()
   await travelerEntry.opener.click()
-  await reachSuccessfulPresentationResult(travelerEntry.setup)
+  await reachCredential(travelerEntry.setup)
+  await expect(travelerEntry.setup.getByTestId("k-tour-id-presentation-open")).toHaveCount(0)
   await travelerEntry.setup.getByTestId("k-tour-id-return").click()
   await expect(travelerEntry.setup).toHaveCount(0)
   await expect(travelerEntry.opener).toBeFocused()
@@ -717,7 +734,7 @@ for (const status of ["expired", "suspended", "revoked"] as const) {
     const ready = await reachCredential(setup)
     await expect(ready).toHaveAttribute("data-status", status)
     await expect(ready).toHaveAttribute("data-code", code)
-    await expect(setup.getByTestId("k-tour-id-presentation-open")).toBeDisabled()
+    await expect(setup.getByTestId("k-tour-id-presentation-open")).toHaveCount(0)
     for (const testId of EXISTING_AXIS_TEST_IDS) {
       const expected = testId === "traveler-id-account" ? "guest" : "none"
       await expect(traveler.getByTestId(testId)).toHaveAttribute("data-status", expected)
@@ -726,38 +743,25 @@ for (const status of ["expired", "suspended", "revoked"] as const) {
 }
 
 for (const outcome of ["PRESENTATION_DENIED", "PRESENTATION_REQUEST_EXPIRED", "PRESENTATION_REPLAY"] as const) {
-  const result = outcome === "PRESENTATION_DENIED" ? "denied" : outcome === "PRESENTATION_REQUEST_EXPIRED" ? "expired" : "replay"
-  const visibleTitle = outcome === "PRESENTATION_DENIED" ? "Not shared" : outcome === "PRESENTATION_REQUEST_EXPIRED" ? "Request expired" : "Request already used"
-  test(`OPENDID-E2E-008 presentation ${result} fixture is explicit and retry-safe`, async ({ page }) => {
+  test(`OPENDID-E2E-008 requester-free setup cannot consume ${outcome} presentation fixture`, async ({ page }) => {
     const { setup } = await openTravelerSetup(page)
     await reachCredential(setup)
     await setIdentityQa(page, { presentationOutcome: outcome })
-    await setup.getByTestId("k-tour-id-presentation-open").click()
-    await expect(setup.getByTestId("k-tour-id-presentation-request")).toBeVisible()
-    await advanceUntil(setup, "k-tour-id-presentation-consent")
-    await setup.getByTestId("k-tour-id-presentation-approve").click()
-    const presentation = setup.getByTestId("k-tour-id-presentation-result")
-    await expect(presentation).toHaveAttribute("data-result", result)
-    await expect(presentation).toHaveAttribute("data-code", outcome)
-    await expect(presentation.getByRole("heading", { level: 1 })).toHaveText(visibleTitle)
-    if (outcome !== "PRESENTATION_DENIED") await expect(presentation.getByTestId("k-tour-id-result-back")).toHaveText("Start a new request")
-    await expect(setup.getByTestId("k-tour-id-credential")).toHaveAttribute("data-issuance-count", "1")
+    await expect(setup.getByTestId("k-tour-id-presentation-open")).toHaveCount(0)
+    await expect(setup.getByTestId("k-tour-id-credential")).toHaveAttribute("data-status", "review-draft")
   })
 }
 
-test("OPENDID-E2E-008B credential expiry during consent blocks the one-shot presentation", async ({ page }) => {
+test("OPENDID-E2E-008B expired credential remains non-shareable without a requester", async ({ page }) => {
   await page.clock.install({ time: new Date("2026-08-29T10:00:00.000Z") })
   const { traveler, setup } = await openTravelerSetup(page)
   await reachCredential(setup)
-  await page.clock.fastForward((119 * 60) * 1_000)
-  await setup.getByTestId("k-tour-id-presentation-open").click()
-  await advanceUntil(setup, "k-tour-id-presentation-consent")
-  await page.clock.fastForward(61_000)
-  await setup.getByTestId("k-tour-id-presentation-approve").click()
+  await page.clock.fastForward((120 * 60 + 1) * 1_000)
 
   const credential = setup.getByTestId("k-tour-id-credential")
   await expect(credential).toHaveAttribute("data-status", "expired")
   await expect(credential).toHaveAttribute("data-code", "CREDENTIAL_EXPIRED")
+  await expect(setup.getByTestId("k-tour-id-presentation-open")).toHaveCount(0)
   await expect(setup.getByTestId("k-tour-id-presentation-result")).toHaveCount(0)
   await setup.getByTestId("k-tour-id-return").click()
   await expect(traveler.getByTestId("traveler-id-credential")).toHaveAttribute("data-status", "expired")

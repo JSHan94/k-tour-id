@@ -3,6 +3,7 @@ import { CANONICAL_VENUE_ID } from "../helpers/ondo-b-qa"
 
 const ORIGIN = new URL(process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3112").origin
 const DEVICE_KEY = "ondo-b.device.v1"
+const ACCOUNT_KEY = "ondo-b.account.v1"
 const AFTER19_SESSION_KEY = "ondo-b.after19.session.v1"
 // The current white-and-ink direction uses the same high-contrast focus token
 // as the product shell; keep this receipt exact so browser-default blue cannot
@@ -283,43 +284,57 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await page.goBack()
     await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("Roba")
-    const selectedCategory = page.getByTestId("ondo-b-category-rail").getByRole("button", { pressed: true })
+    expect((await canonicalReceipt(page)).params.category).toBe("night")
+    await page.getByTestId("ondo-b-map-options-open").click()
+    const selectedCategory = page.getByTestId("ondo-b-map-options-categories").getByRole("button", { pressed: true })
     await expect(selectedCategory).toHaveAccessibleName("Pubs & cafés")
     await context.close()
 
     const onboardingContext = await productionContext(browser, { width: 390, height: 844 }, "en", "ONB-NEW")
     const onboardingPage = await openPage(onboardingContext, detailPath)
-    await expect(onboardingPage.getByTestId("ondo-onboarding")).toBeVisible()
-    await expect(onboardingPage.getByTestId("canonical-place-overlay")).toHaveCount(0)
-    await onboardingPage.getByRole("button", { name: "Set guest preferences" }).click()
-    await onboardingPage.getByTestId("persona-travelling").click()
-    await onboardingPage.getByRole("button", { name: "Choose food preferences" }).click()
-    await onboardingPage.getByTestId("onboarding-finish").click()
+    await expect(onboardingPage.getByTestId("ondo-onboarding")).toHaveCount(0)
     const restored = onboardingPage.getByTestId("canonical-place-overlay")
     await expect(restored).toBeVisible()
     await expect(restored.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
-    expect((await canonicalReceipt(onboardingPage)).level).toBe("detail")
+    expect(await canonicalReceipt(onboardingPage)).toEqual({ keys: ["category", "city", "detail", "q", "venueId", "view"], params: expectedParams, level: "detail" })
+    await onboardingPage.reload({ waitUntil: "domcontentloaded" })
+    await expect(onboardingPage.getByTestId("ondo-onboarding")).toHaveCount(0)
+    await expect(restored).toBeVisible()
+    expect(await canonicalReceipt(onboardingPage)).toEqual({ keys: ["category", "city", "detail", "q", "venueId", "view"], params: expectedParams, level: "detail" })
     await onboardingContext.close()
   })
 
-  test("CLEAN1-AFTER19 keeps the map locked to bars and pubs through URL restore and empty-search reset", async ({ browser }, testInfo) => {
+  test("CLEAN1-AFTER19 derives bars and pubs while preserving URL category through empty-search reset", async ({ browser }, testInfo) => {
     test.skip(testInfo.project.name !== "mobile-chromium", "the mobile project covers the consumer category rail once")
     const context = await productionContext(browser, { width: 390, height: 844 }, "en")
-    await context.addInitScript(({ key }) => {
+    await context.addInitScript(({ key, accountKey }) => {
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+      sessionStorage.setItem(accountKey, JSON.stringify({ account: "ACC-ACTIVE", returnTo: null }))
       sessionStorage.setItem(key, JSON.stringify({
         version: 1,
         age: "eligible",
-        ageExpiresAt: "2026-09-01T20:30:00+09:00",
+        ageExpiresAt: expiresAt,
+        eligibilityReceipt: {
+          schema: "local-age-declaration.v1",
+          predicate: "AGE_GTE_19",
+          outcome: "eligible",
+          issuerType: "LOCAL_DECLARATION",
+          provenanceTruth: "SELF_DECLARED",
+          issuedAt: new Date(Date.now() - 60_000).toISOString(),
+          expiresAt,
+          disclosure: "night_view_only",
+        },
         mode: "on",
         activation: "manual",
         expiryNotice: false,
       }))
-    }, { key: AFTER19_SESSION_KEY })
-    const page = await openPage(context, "/?city=seoul&view=list&category=all")
+    }, { key: AFTER19_SESSION_KEY, accountKey: ACCOUNT_KEY })
+    const page = await openPage(context, "/?city=seoul&view=list&category=korean")
     const root = page.getByTestId("ondo-b-map-entry")
     const rail = page.getByTestId("ondo-b-category-rail")
     await expect(root).toHaveAttribute("data-after19-active", "true")
-    await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("night")
+    await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("korean")
+    await expect(root).toHaveAttribute("data-result-count", "25")
     await expect(rail.getByRole("button")).toHaveCount(1)
     await expect(rail.getByRole("button", { name: "Bars & pubs", pressed: true })).toBeVisible()
     await expect(rail.getByRole("button", { name: "All" })).toHaveCount(0)
@@ -332,7 +347,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await expect(page.getByTestId("ondo-b-search")).toHaveValue("")
     await expect(empty).toHaveCount(0)
     await expect(rail.getByRole("button", { name: "Bars & pubs", pressed: true })).toBeVisible()
-    await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("night")
+    await expect.poll(() => new URL(page.url()).searchParams.get("category")).toBe("korean")
     await context.close()
   })
 
@@ -377,7 +392,7 @@ test.describe("ONDO B production CLEAN1 finding regressions", () => {
     await context.addInitScript(({ key }) => sessionStorage.setItem(key, JSON.stringify({
       version: 1,
       age: "eligible",
-      ageExpiresAt: "2026-09-01T20:30:00+09:00",
+      ageExpiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
       mode: "on",
       activation: "manual",
       expiryNotice: false,

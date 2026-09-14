@@ -165,6 +165,18 @@
 - 제주 heat field는 검증된 editorial 좌표의 공간적 밀도를 공통 색·크기 scale에 투영해 coverage만 보여준다. 가까운 검증 좌표가 겹칠수록 field가 짙어지지만 장소 간 인기·혼잡·순위 또는 숫자 점수를 암시하는 데이터는 생성하지 않는다.
 - light·After 19, KO·EN·JA, mobile·desktop에서 동일 geometry와 selection capsule을 사용한다.
 
+### D-15 · ONDO B 지도 renderer·온도 field·모바일 복구 계약
+
+- 상태: `Approved`
+- 결정: 현재 ONDO B의 소비자 지도 renderer는 `MapLibre`로 고정한다. Leaflet 1.9.x와 raster tile을 정본으로 적은 실행 문서는 역사적 A/v2 기록이며 B 구현을 되돌리는 근거로 사용하지 않는다.
+- 온도 field: 서울·부산의 `curated-scored`, 제주의 `editorial-unscored` 상태를 기존 공통 `field → aura → core → selected halo → place capsule` 문법으로 표현한다. 이 field는 장소 밀도·실시간 인기·혼잡·안전 KDE가 아니며 ONDO의 명시된 simulated 또는 editorial coverage 신호만 사용한다. heat layer를 제거해 점만 남기거나 실제 popularity heatmap으로 승격하지 않는다.
+- 모바일 진입: city 선택 직후 검색 입력을 자동 focus하지 않는다. 지도 surface와 도시 context가 먼저 보이고, 검색은 사용자가 직접 활성화하거나 keyboard modality에서 명시적으로 이동했을 때만 focus한다.
+- 로딩·실패: 즉시 이전 atlas 또는 cached map context를 유지하고, 약 800ms부터 non-blocking progress를 표시하며 5초 안에 ready가 되지 않으면 동일 query·filter·selection을 가진 List를 foreground한다. recoverable tile·glyph·source 오류와 superseded request의 `AbortError`/`ERR_ABORTED`는 전체 제품 실패로 승격하지 않는다. fatal initialization failure만 map unavailable로 전환한다.
+- motion: atlas→city 전환과 one-shot beacon bloom은 최초 1회만 허용한다. `prefers-reduced-motion: reduce`에서는 모든 camera `easeTo`/fly animation과 scale bloom을 `jumpTo` 또는 duration 0으로 바꾼다.
+- 보존: Map/List parity, legal attribution, 실제 좌표, 서울·부산 공식 source와 제주 editorial truth, After 19 geometry, exact Back/Forward/returnTo를 유지한다.
+- 영향: `REQ-007`, `REQ-017`, `REQ-018`, `REQ-019`; `FL-001`, `MAP-*`; current B visual/recovery tests.
+- 재검토 조건: renderer 교체는 모바일 성능·접근성·offline recovery·동일 좌표·모든 visual baseline을 포함한 별도 migration decision과 green evidence가 있을 때만 허용한다.
+
 ## 3. 충돌 해소 표
 
 | 충돌 | 승인된 해소 |
@@ -184,6 +196,8 @@
 | checkout success와 방문 동일시 | `PAY-SIMULATED-SUCCESS`는 stamp를 바꾸지 않으며 중복 방지된 unique visit evidence만 stamp를 증가 |
 | bridge source confirmed와 완료 동일시 | destination finality 확인 전에는 success·잔고 증가를 표시하지 않음 |
 | custom AMM을 9시간 범위로 포함 | quote fixture만 허용하고 AMM·pool·liquidity·swap은 `Deferred` |
+| 역사적 Leaflet 정본 vs 현재 MapLibre 구현 | B는 MapLibre를 정본으로 고정하고 A/v2 Leaflet 문서는 역사 기록으로만 보존 |
+| KDE heatmap 금지 vs 현재 온도 field | 일반 장소 밀도·인기 KDE는 금지하되 source-bounded ONDO field와 제주 editorial coverage field는 D-14/D-15의 공통 geometry로 허용 |
 
 ## 4. 변경 기록 양식
 
@@ -200,4 +214,4 @@ Approved by:
 Implemented by commit:
 ```
 
-현재 amendment: `D-13`은 `REQ-006`·`REQ-011`의 소비자 표시와 frontend demo 경계를, `D-14`는 `REQ-001`·`REQ-002`·`REQ-015`의 intro 지도 표현을 확장한다. 기존 asset·settlement·source truth 비범위는 유지한다.
+현재 amendment: `D-13`은 `REQ-006`·`REQ-011`의 소비자 표시와 frontend demo 경계를, `D-14`는 `REQ-001`·`REQ-002`·`REQ-015`의 intro 지도 표현을, `D-15`는 `REQ-007`·`REQ-017`·`REQ-018`·`REQ-019`의 current B 지도 renderer·loading·motion 계약을 확장한다. 기존 asset·settlement·source truth 비범위는 유지한다.

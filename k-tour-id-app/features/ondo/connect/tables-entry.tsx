@@ -7,7 +7,8 @@ import { venueDisplayName } from "@/lib/ondo/venues/display"
 import type { Locale } from "../contracts/domain"
 import { returnToBDiscoveryPeek } from "../map/b-discovery-history"
 import { useOndo } from "../shared/state/ondo-provider"
-import { TABLES, tableStatusCopy } from "./table-model"
+import { tableStatusCopy } from "./table-model"
+import { TABLES } from "./table-fixtures"
 import styles from "./connect.module.css"
 
 const VENUE_NAMES: Record<string, { en: string; ko: string }> = {

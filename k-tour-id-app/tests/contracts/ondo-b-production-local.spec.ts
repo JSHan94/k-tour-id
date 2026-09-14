@@ -37,7 +37,7 @@ test("B-PROD-LOCAL-002 navigation keeps Tables, ID · Wallet, and Settings as se
 test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlist", () => {
   const provider = appFile("features/ondo/shared/state/ondo-b-provider.tsx")
 
-  expect(provider).toContain('const B_DEVICE_KEY = "ondo-b.device.v1"')
+  expect(provider).toContain("export const B_DEVICE_KEY = ONDO_B_DEVICE_STORAGE_KEY")
   expect(provider).toContain("type OndoBDeviceState")
   expect(provider).toContain("privateNotesByVenue")
   expect(provider).toContain("isProductionPath")
@@ -49,7 +49,7 @@ test("B-PROD-LOCAL-003 device persistence keeps the canonical discovery allowlis
 
   const deviceTypeStart = provider.indexOf("type OndoBDeviceState")
   const deviceType = provider.slice(deviceTypeStart, provider.indexOf("\n}", deviceTypeStart) + 2)
-  for (const field of ["locale", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "savedEditorialPlaceIds", "privateNotesByVenue", "recentVenueIds", "recentEditorialPlaceIds", "plannedTableRefs", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
+  for (const field of ["locale", "appearancePreference", "onboarding", "persona", "discoveryPreferences", "savedVenueIds", "savedEditorialPlaceIds", "privateNotesByVenue", "recentVenueIds", "recentEditorialPlaceIds", "plannedTableRefs", "localSignalPostedVenueIds", "localInteractionBoundarySeen"]) {
     expect(deviceType).toContain(field)
   }
   for (const forbidden of ["account:", "person:", "age:", "paymentKyc:", "gate:", "tableMembershipById:", "reputation:", "stamps:", "profile:"]) {
@@ -75,14 +75,36 @@ test("B-PROD-LOCAL-004 canonical local saves require a separate session Account 
   expect(saveAction).toContain("beginAccountSave(venueId)")
 })
 
-test("B-PROD-LOCAL-005 private notes and reset retain their explicit device boundary", () => {
+test("B-PROD-LOCAL-005 private notes and reset retain their explicit privacy boundary", () => {
+  const provider = appFile("features/ondo/shared/state/ondo-b-provider.tsx")
   const saved = appFile("features/ondo/my/saved-entry-b.tsx")
+  const savedStyles = appFile("features/ondo/my/saved-entry-b.module.css")
   const settings = appFile("features/ondo/settings/settings-entry-b.tsx")
   const note = appFile("features/ondo/my/private-note.tsx")
   expect(note).not.toMatch(/demo|simulation|simulated|fixture|KYC|stamp|trust/i)
-  expect(saved).toContain("Saved on this device · no reservation")
+  for (const boundary of [
+    "No charge made · private record",
+    "실제 결제 없음 · 비공개 기록",
+    "実際の決済なし・非公開の記録",
+  ]) expect(saved).toContain(boundary)
   expect(note).toContain("actions.setPrivateNote")
-  expect(note).toContain("stays only in this browser")
+  expect(note).toContain("Only on this device")
+  expect(note).toContain("この端末にのみ保存")
+  expect(note).toContain("aria-expanded={editing}")
+  expect(saved).toContain("saved-remove-dialog")
+  expect(saved).toContain("useModalIsolation(Boolean(removalTarget), removalLayerRef)")
+  expect(saved).toContain("data-modal-layer-priority={ONDO_MODAL_PRIORITY.critical}")
+  expect(saved).toContain("Nothing changed. Try again.")
+  for (const savedOnlyCopy of [
+    "Only this saved bookmark will be removed. Your private note and activity will stay.",
+    "저장한 북마크만 삭제됩니다. 개인 메모와 활동 기록은 그대로 남아요.",
+    "保存したブックマークだけを削除します。プライベートメモとアクティビティは残ります。",
+  ]) expect(saved).toContain(savedOnlyCopy)
+  const savedMembership = provider.slice(provider.indexOf("const persistCanonicalSavedVenue"), provider.indexOf("const beginAccountSave"))
+  expect(savedMembership).not.toContain("delete privateNotesByVenue[venueId]")
+  expect(provider).toContain("privateNotesByVenue: sanitizeCanonicalVenueNotes(record.privateNotesByVenue)")
+  expect(provider).toContain("privateNotesByVenue: sanitizeCanonicalVenueNotes(input.device.privateNotesByVenue)")
+  expect(savedStyles).toContain("min-height: 44px")
   expect(settings).toContain("visit stamps")
   expect(settings).toContain("방문 스탬프")
   expect(settings).toContain("訪問スタンプ")

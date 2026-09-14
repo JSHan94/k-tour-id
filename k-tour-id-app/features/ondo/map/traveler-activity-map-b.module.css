@@ -1,0 +1,14 @@
+.layer { position: absolute; z-index: 2; inset: 0; pointer-events: none; overflow: hidden; }
+.event { position: absolute; top: 0; left: 0; display: grid; min-width: 48px; min-height: 48px; padding: 6px 7px 5px; gap: 2px; border: 1px solid color-mix(in srgb, #d24873 35%, var(--ondo-line)); border-radius: 15px; background: var(--ondo-surface-raised, #fff); color: var(--ondo-ink, #171717); box-shadow: 0 4px 18px rgb(100 30 60 / 14%); pointer-events: auto; cursor: pointer; }
+.event::after { position: absolute; left: calc(50% - 4px); bottom: -4px; width: 8px; height: 8px; content: ""; background: inherit; transform: rotate(45deg); border-right: 1px solid var(--ondo-line); border-bottom: 1px solid var(--ondo-line); }
+.event[hidden] { display: none; }
+.event:hover, .event:active { transform: none !important; }
+.symbol { display: flex; gap: 3px; justify-content: center; align-items: center; }
+.symbol svg { color: #b32c79; }
+.symbol b { font-size: 10px; }
+.event small { color: var(--ondo-muted); font-size: 8px; font-weight: 600; }
+.event[data-running="true"] .symbol svg { animation: contribution 3s ease-out both; }
+.event:focus-visible { outline: 2px solid var(--ondo-focus-ring, #2563eb); outline-offset: 3px; }
+@keyframes contribution { 0% { transform: scale(.75); opacity: .3; } 22% { transform: scale(1.13); opacity: 1; } 45%,100% { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .event[data-running="true"] .symbol svg { animation: none; } }
+@media (forced-colors: active) { .event { background: Canvas; color: CanvasText; border-color: ButtonText; } .symbol svg, .event small { color: CanvasText; } }

@@ -2,6 +2,8 @@ import { expect, test } from "@playwright/test"
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { transliterateKoreanForJapanese, venueDistrictLabel, venueNamePresentation } from "../../lib/ondo/venues/display"
+import { ONDO_B_JEJU_TABLE } from "../../features/ondo/connect/table-model"
+import { gatePlanForBAction } from "../../features/ondo/identity-b/action-gate-contract-b"
 
 const source = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
 
@@ -16,13 +18,11 @@ test("JA-B-001 Japanese is a complete persisted locale, not a partial visual tog
   expect(preferences).toContain('["en", "ko", "ja"]')
   expect(provider).toContain('record.locale === "ko" || record.locale === "ja" ? record.locale : "en"')
   expect(provider).toContain('startsWith("ja")')
-  expect(onboarding).toContain("const changeLocale = (locale: OndoBLocale) =>")
   expect(onboarding).toContain("actions.setLocale(locale)")
-  for (const locale of ["en", "ko", "ja"]) {
-    expect(onboarding).toContain(`data-locale-choice="${locale}"`)
-    expect(onboarding).toContain(`changeLocale("${locale}")`)
-  }
-  expect(settings).toContain('setLocale("ja")')
+  expect(onboarding).toContain('(["en", "ko", "ja"] as const).map((locale)')
+  expect(onboarding).toContain("aria-pressed={state.locale === locale}")
+  expect(settings).toContain("actions.setLocale(next)")
+  expect(settings).toContain('(["ko", "en", "ja"] as const).map((choice)')
   expect(settings).toContain("日本語")
   expect(app).toContain('data-nav-count="5"')
 })
@@ -30,6 +30,8 @@ test("JA-B-001 Japanese is a complete persisted locale, not a partial visual tog
 test("JA-B-002 every reachable B journey owns Japanese truth copy without changing actions", () => {
   const actionGate = source("features/ondo/identity-b/action-gate-coordinator-b.tsx")
   const actionGateContract = source("features/ondo/identity-b/action-gate-contract-b.ts")
+  const tablePolicy = source("features/ondo/connect/table-policy-b.ts")
+  const tableModel = source("features/ondo/connect/table-model.ts")
   const ageModel = source("features/ondo/after19/after19-global-b-model.ts")
   const sources = [
     "features/ondo/map/map-entry-b.tsx",
@@ -45,20 +47,32 @@ test("JA-B-002 every reachable B journey owns Japanese truth copy without changi
   ].map(source)
 
   for (const item of sources) expect(item).toMatch(/\bja\s*:/)
-  expect(sources.join("\n")).toContain("ステーブルコインやオンチェーン資産")
+  expect(sources.join("\n")).toContain("実際のお金やデジタル資産は移動しません")
+  expect(sources.join("\n")).toContain("USDCやUSDTは資金元として選択した場合にだけこの詳細に表示します")
   expect(sources.join("\n")).toContain("生年月日")
   expect(sources.join("\n")).toContain("公式")
   for (const truth of [
-    "最初にアカウントを準備します。本人、19歳以上、身元、決済の確認は完了しません。",
-    "このテーブルの19歳以上確認",
-    "適格結果と有効期限だけをこのタブに保持します。生年月日や店舗の公式制限は示しません。",
-    "端末内確認 · 外部サービス、資格情報、書類、元の本人情報は使用しません",
+    "このセッションで使うアカウントを作成します。本人、19+、K-Tour ID、決済確認は必要な時だけ個別に行います。",
+    "19歳以上の確認",
+    "生年月日は要求・保存しません。一時的な19歳以上の結果だけがこのTableに戻り、店舗の規則としては表示しません。",
+    "本人確認事業者には接続されていません。本人情報は送信せず、資格情報も作成しません。",
     "テーブルとホストへのメモ",
-    "今回はしない — 操作を変えずに戻る",
+    'cancel: "戻る"',
   ]) expect(actionGate).toContain(truth)
   expect(actionGate).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
-  expect(actionGateContract).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
-  expect(ageModel).toContain("recordGlobalAfter19AgeEligibilityB")
+  expect(actionGateContract).toContain("ondoBTablePolicyById(context?.tableId)")
+  expect(actionGateContract).toContain('if (!table) return ["account", "person", "age"]')
+  expect(actionGateContract).toContain('...(table.requiresPerson ? ["person" as const] : [])')
+  expect(actionGateContract).toContain('...(table.alcohol ? ["age" as const] : [])')
+  expect(tablePolicy).toContain("ONDO_B_TABLES.map((table)")
+  expect(tablePolicy).toContain("requiresPerson: table.requiresPerson")
+  expect(tablePolicy).toContain("alcohol: table.alcohol")
+  expect(tableModel).toMatch(/export const ONDO_B_TABLE[\s\S]*alcohol:\s*true[\s\S]*requiresPerson:\s*false/)
+  expect(tableModel).toContain('id: "table-jeju-haenyeo-supper"')
+  expect(gatePlanForBAction("JOIN_TABLE", { tableId: ONDO_B_JEJU_TABLE.id })).toEqual(["account"])
+  expect(ageModel).toContain("recordGlobalAfter19ReviewEligibilityB")
+  expect(actionGate).toContain('explicitlyRequested: reviewMode')
+  expect(actionGate).not.toContain("recordGlobalAfter19AgeEligibilityB")
 })
 
 test("JA-B-003 Korean official facts remain Korean while Japanese labels explain their boundary", () => {
@@ -86,10 +100,14 @@ test("JA-B-003A Japanese traveler surfaces productize Jeju and OpenDID implement
   expect(editorialPlace).toContain('truth: "済州の旅スポット"')
   expect(editorialPlace).toContain('sourceDetails: "情報源の詳細"')
   expect(editorialPlace).toContain("<details className={styles.sources}")
-  expect(saved).toContain('removeEditorial: "保存した旅スポットを削除"')
+  expect(saved).toContain('removeEditorial: "保存から削除"')
   expect(setup).toContain('holder: "トラベルパスに追加"')
   expect(setup).toContain('presentationRetention: "今回の依頼だけに使用 · 自動で期限切れ · 結果は保存しない"')
-  expect(setup).toContain("meta={[copy.holderLabel, copy.holderMeta]}")
+  expect(setup).toContain("<IdentityHolderStepB locale={state.locale}")
+  const holder = source("features/ondo/identity-b/identity-holder-step-b.tsx")
+  expect(holder).toContain('eyebrow: "トラベルパス"')
+  expect(holder).toContain("K-Tour IDの下書き")
+  expect(holder).toContain("デモ専用です。")
   expect(setup).not.toContain("meta={[CREDENTIAL_TYPE, copy.holderMeta]}")
 })
 

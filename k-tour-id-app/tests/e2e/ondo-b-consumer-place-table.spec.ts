@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const VENUE_ID = "mois-0021cd596bc5b2a922ad"
+const EMPTY_TABLE_VENUE_ID = "mois-18939eecb43c15ab4305"
 const TABLE_ID = "table-seoul-night-bites"
 
 async function seed(page: Page, locale: "en" | "ko" = "en") {
@@ -69,6 +70,44 @@ test("normal Place reaches the exact Table and keeps internal outcome controls o
   await page.screenshot({ path: "artifacts/qa/product/after19-mobile.png", fullPage: true })
   await expect(gate).toHaveCount(0)
   await expect(table.getByTestId("table-join-confirmation")).toBeVisible()
+})
+
+test("ordinary Place keeps secondary actions compact while unknown and source truth remain inspectable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seed(page)
+  await page.goto(`/?city=seoul&view=list&venueId=${EMPTY_TABLE_VENUE_ID}&detail=1`, { waitUntil: "domcontentloaded" })
+  const place = page.getByTestId("canonical-place-overlay")
+  await expect(place).toHaveAttribute("data-venue-id", EMPTY_TABLE_VENUE_ID)
+  await expect(place.locator("[data-detail-state]")).toHaveAttribute("data-detail-state", "ready")
+
+  const utilities = place.getByTestId("canonical-place-utilities")
+  await expect(utilities).toBeVisible()
+  await expect(utilities.getByTestId("canonical-venue-tables")).toHaveAccessibleName("Browse all Tables")
+  await expect(utilities.getByTestId("canonical-local-signal-open")).toHaveAccessibleName("Add a place note")
+  await expect(place.getByTestId("canonical-place-table")).toHaveCount(0)
+  await expect(place).not.toContainText("No open Table here yet")
+  for (const control of await utilities.getByRole("button").all()) {
+    const box = await control.boundingBox()
+    expect(box?.width ?? 0).toBeGreaterThanOrEqual(44)
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44)
+  }
+
+  const detailsToCheck = place.getByTestId("canonical-place-details-to-check")
+  await expect(detailsToCheck).toContainText("Before you go")
+  await expect(detailsToCheck.locator("[data-fact-key]")).toHaveCount(4)
+  for (const label of ["Current opening hours", "Foreign-issued card support", "Menu and prices", "English-language support"]) {
+    await expect(detailsToCheck.getByRole("button", { name: new RegExp(`^${label}:`) })).toBeVisible()
+  }
+
+  const source = place.getByTestId("canonical-source-evidence")
+  await expect(source).toHaveCount(1)
+  await source.locator("summary").click()
+  await expect(source).toContainText("Source snapshot")
+  await expect(source).toContainText("LOCALDATA management ID")
+  await expect(source).toContainText("MOIS LOCALDATA")
+
+  const axe = await new AxeBuilder({ page }).include("[data-testid='canonical-place-overlay']").analyze()
+  expect(axe.violations.filter(({ impact }) => impact === "serious" || impact === "critical")).toEqual([])
 })
 
 test("QA injection drives an After19 failure without authoring controls", async ({ page }) => {
@@ -142,13 +181,13 @@ test("Local Signal supports photo select, replace, remove, and QA retry", async 
   await photo.setInputFiles("public/seoul-after-rain-hero.jpg")
   await expect(signal.getByTestId("local-signal-photo-retry")).toBeVisible()
   await signal.getByTestId("local-signal-photo-retry").click()
-  await expect(signal.locator("img")).toBeVisible()
+  await expect(signal.getByTestId("local-signal-photo-preview")).toBeVisible()
   await signal.getByTestId("local-signal-photo-replace").scrollIntoViewIfNeeded()
   await hideDevelopmentChrome(page)
   await page.screenshot({ path: "artifacts/qa/product/local-signal-photo-mobile.png", fullPage: true })
   await expect(signal.getByTestId("local-signal-photo-replace")).toBeVisible()
   await signal.getByTestId("local-signal-photo-remove").click()
-  await expect(signal.locator("img")).toHaveCount(0)
+  await expect(signal.getByTestId("local-signal-photo-preview")).toHaveCount(0)
 
   const axe = await new AxeBuilder({ page }).include("[data-testid='ondo-b-local-signal']").analyze()
   expect(axe.violations.filter(({ impact }) => impact === "serious" || impact === "critical")).toEqual([])

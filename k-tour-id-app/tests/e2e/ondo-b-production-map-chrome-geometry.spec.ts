@@ -2,6 +2,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test"
 
 const DEVICE_KEY = "ondo-b.device.v1"
 const VIEWPORTS = [
+  { label: "portrait-320", width: 320, height: 720 },
   { label: "portrait-360", width: 360, height: 800 },
   { label: "portrait-390", width: 390, height: 844 },
   { label: "portrait-430", width: 430, height: 932 },
@@ -17,15 +18,16 @@ const VIEWPORTS = [
 ] as const
 
 type Box = NonNullable<Awaited<ReturnType<Locator["boundingBox"]>>>
+type Locale = "en" | "ko" | "ja"
 type Receipt = {
-  locale: "en" | "ko"
+  locale: Locale
   viewport: string
   state: "idle" | "ready"
   boxes: Record<string, Box>
   intersections: Record<string, number>
 }
 
-async function seedProductionDirectory(page: Page, locale: "en" | "ko") {
+async function seedProductionDirectory(page: Page, locale: Locale) {
   await page.addInitScript(({ key, nextLocale }) => {
     window.addEventListener("DOMContentLoaded", () => {
       const style = document.createElement("style")
@@ -89,7 +91,7 @@ async function expectVisibleText(locator: Locator, label: string, viewport: { wi
 
 async function chromeReceipt(
   page: Page,
-  locale: "en" | "ko",
+  locale: Locale,
   viewport: (typeof VIEWPORTS)[number],
   state: "idle" | "ready",
 ) {
@@ -103,10 +105,23 @@ async function chromeReceipt(
   await expect(navButtons).toHaveCount(5)
   await expect(message).toHaveCount(1)
   await expect(message).toHaveAttribute("data-message-kind", state === "idle" ? "disclosure" : "status")
+  await expect(message).toHaveAttribute("data-location-state", state)
+  await expect(message).toHaveAttribute("data-location-recovery", "false")
   await expect(message).toContainText(state === "idle"
     ? "OpenFreeMap"
-    : locale === "en" ? "You’re here" : "현재 위치")
+    : { en: "You’re here", ko: "현재 위치", ja: "現在地" }[locale])
   await expect(locate).toHaveAttribute("aria-describedby", "ondo-b-location-message")
+  await expect(locate).toHaveAttribute("data-location-state", state)
+  await expect(locate).toHaveAttribute("data-online", "true")
+  const compactLocationLabel = message.locator(":scope > summary > span")
+  const compactLabelGeometry = await compactLocationLabel.evaluate((node) => {
+    const element = node as HTMLElement
+    const style = getComputedStyle(element)
+    return { width: element.getBoundingClientRect().width, height: element.getBoundingClientRect().height, position: style.position }
+  })
+  expect(compactLabelGeometry.position).toBe("absolute")
+  expect(compactLabelGeometry.width).toBeLessThanOrEqual(1.5)
+  expect(compactLabelGeometry.height).toBeLessThanOrEqual(1.5)
   const keyDetails = key.getByTestId("ondo-b-map-key-details")
   await keyDetails.locator("summary").click()
   const keyTruth = keyDetails.locator(":scope > div > small")
@@ -158,7 +173,38 @@ async function chromeReceipt(
 test.describe("ONDO B production map chrome geometry", () => {
   test.describe.configure({ timeout: 240_000 })
 
-  for (const locale of ["en", "ko"] as const) {
+  test("keeps normal location copy compact and reveals concise recovery copy on denial", async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== "desktop-chromium", "The explicit 320px state check has one Chromium owner.")
+    await page.setViewportSize({ width: 320, height: 720 })
+    await seedProductionDirectory(page, "en")
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "geolocation", {
+        configurable: true,
+        value: {
+          getCurrentPosition(_success: PositionCallback, failure: PositionErrorCallback) {
+            failure({ code: 1, message: "denied", PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError)
+          },
+        },
+      })
+    })
+    await page.goto("/?city=seoul", { waitUntil: "domcontentloaded" })
+    const root = page.getByTestId("ondo-b-map-entry")
+    await expect(root).toHaveAttribute("data-map-state", "ready", { timeout: 20_000 })
+    const message = page.getByTestId("ondo-b-location-message")
+    await expect(message).toHaveAttribute("data-location-recovery", "false")
+    await page.getByTestId("ondo-b-locate").click()
+    await expect(root).toHaveAttribute("data-location-state", "denied")
+    await expect(message).toHaveAttribute("data-location-recovery", "true")
+    const summary = message.locator(":scope > summary")
+    await expect(summary).toContainText("Location off · Search still works")
+    const [summaryBox, rootBox] = await Promise.all([summary.boundingBox(), root.boundingBox()])
+    expect(summaryBox).not.toBeNull()
+    expect(rootBox).not.toBeNull()
+    expect(summaryBox!.x).toBeGreaterThanOrEqual(rootBox!.x)
+    expect(summaryBox!.x + summaryBox!.width).toBeLessThanOrEqual(rootBox!.x + rootBox!.width)
+  })
+
+  for (const locale of ["en", "ko", "ja"] as const) {
     test(`${locale.toUpperCase()} keeps truthful map chrome independent across production viewports`, async ({ context, page }, testInfo) => {
       test.skip(testInfo.project.name !== "desktop-chromium", "The explicit viewport matrix has one Chromium owner.")
       await context.grantPermissions(["geolocation"])

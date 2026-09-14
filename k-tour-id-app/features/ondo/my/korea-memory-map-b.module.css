@@ -5,13 +5,11 @@
   height: 176px;
   margin: 20px 0 0;
   overflow: hidden;
-  border: 1px solid rgb(23 23 23 / 10%);
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 10%));
   border-radius: 22px;
-  background:
-    radial-gradient(circle at 78% 26%, rgb(255 255 255 / 92%), transparent 22%),
-    linear-gradient(145deg, #f7f7f5, #eeeeeb);
-  color: #171717;
-  box-shadow: 0 16px 40px rgb(23 23 23 / 6%);
+  background: var(--ondo-surface-soft, #f3f4f5);
+  color: var(--ondo-ink, #171717);
+  box-shadow: var(--ondo-shadow, 0 16px 40px rgb(23 23 23 / 6%));
 }
 .memory::after {
   position: absolute;
@@ -19,7 +17,7 @@
   bottom: -68px;
   width: 190px;
   height: 190px;
-  border: 1px solid rgb(23 23 23 / 7%);
+  border: 1px solid var(--ondo-line, rgb(23 23 23 / 7%));
   border-radius: 50%;
   content: "";
   pointer-events: none;
@@ -33,7 +31,7 @@
   overflow: visible;
 }
 .outline {
-  fill: rgb(255 255 255 / 88%);
+  fill: var(--ondo-surface, #fff);
   fill-rule: evenodd;
   stroke: rgb(23 23 23 / 23%);
   stroke-linejoin: round;
@@ -56,9 +54,9 @@
   gap: 8px;
 }
 .memory figcaption > span { display: grid; gap: 2px; }
-.memory figcaption small { color: #756d67; font-size: 12px; font-weight: 780; letter-spacing: .09em; }
+.memory figcaption small { color: var(--ondo-muted, #626262); font-size: 12px; font-weight: 780; letter-spacing: .09em; }
 .memory figcaption strong { font-size: 20px; font-weight: 780; letter-spacing: -.04em; line-height: 1.05; }
-.memory figcaption > b { width: fit-content; border-radius: 999px; padding: 6px 9px; background: #171717; color: #fff; font-size: 12px; font-weight: 740; }
+.memory figcaption > b { width: fit-content; border-radius: 999px; padding: 6px 9px; background: var(--ondo-control, #171717); color: var(--ondo-control-ink, #fff); font-size: 12px; font-weight: 740; }
 .memory ul {
   position: absolute;
   z-index: 2;
@@ -72,7 +70,7 @@
   padding: 0;
   list-style: none;
 }
-.memory li { display: flex; min-height: 28px; align-items: center; gap: 5px; border: 1px solid rgb(23 23 23 / 8%); border-radius: 999px; padding: 0 8px; background: rgb(255 255 255 / 86%); font-size: 12px; font-weight: 690; }
+.memory li { display: flex; min-height: 28px; align-items: center; gap: 5px; border: 1px solid var(--ondo-line, rgb(23 23 23 / 8%)); border-radius: 999px; padding: 0 8px; background: var(--ondo-surface, #fff); font-size: 12px; font-weight: 690; }
 .memory li i { width: 7px; height: 7px; border-radius: 50%; background: #b24937; }
 .memory li i[data-city="busan"] { background: #d98543; }
 .memory li i[data-city="jeju"] { background: #70314f; }

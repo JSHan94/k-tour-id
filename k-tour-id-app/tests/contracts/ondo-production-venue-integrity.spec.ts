@@ -245,7 +245,7 @@ test("VENUE-PROD-005 persistence sanitizers accept canonical ids and notes only"
 
   const isCanonicalVenueId = exports.isCanonicalVenueId as (value: unknown) => boolean
   const sanitizeCanonicalVenueIds = exports.sanitizeCanonicalVenueIds as (value: unknown) => string[]
-  const sanitizeCanonicalVenueNotes = exports.sanitizeCanonicalVenueNotes as (value: unknown, savedVenueIds: unknown) => Record<string, string>
+  const sanitizeCanonicalVenueNotes = exports.sanitizeCanonicalVenueNotes as (value: unknown) => Record<string, string>
   const [first, second] = data.venues.map((venue) => venue.id)
   expect(isCanonicalVenueId(first)).toBeTruthy()
   expect(isCanonicalVenueId("mois-00000000000000000000")).toBeFalsy()
@@ -254,11 +254,11 @@ test("VENUE-PROD-005 persistence sanitizers accept canonical ids and notes only"
   expect(sanitizeCanonicalVenueIds("not-an-array")).toEqual([])
   expect(sanitizeCanonicalVenueNotes({
     [first]: "  quiet corner  ",
-    [second]: "canonical but not saved",
+    [second]: "  canonical note survives an unsave  ",
     [LEGACY_VENUE_IDS[0]]: "must be dropped",
     "mois-00000000000000000000": "must be dropped",
-  }, [first])).toEqual({ [first]: "quiet corner" })
-  expect(sanitizeCanonicalVenueNotes(null, [first])).toEqual({})
+  })).toEqual({ [first]: "quiet corner", [second]: "canonical note survives an unsave" })
+  expect(sanitizeCanonicalVenueNotes(null)).toEqual({})
 })
 
 test("VENUE-PROD-006 canonical / production graph contains no fictional legacy venue ids", () => {

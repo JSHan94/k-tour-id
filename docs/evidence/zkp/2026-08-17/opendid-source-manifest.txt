@@ -1,0 +1,34 @@
+OpenDID ZKP Server SDK v2.0.0
+commit: d1ba7410f7bebff7b743f94f6547306301e8dce7
+source: https://github.com/OmniOneID/did-zkp-sdk-server/tree/d1ba7410f7bebff7b743f94f6547306301e8dce7
+
+OpenDID Android Wallet SDK v2.0.1
+commit: 58c5582014908d47f1ce62340ce672727c6a1172
+source: https://github.com/OmniOneID/did-client-sdk-aos/tree/58c5582014908d47f1ce62340ce672727c6a1172
+
+OpenDID iOS Wallet SDK
+commit: 1f2b58da6775c3847020db88d1681cd837bc80d1
+source: https://github.com/OmniOneID/did-client-sdk-ios/tree/1f2b58da6775c3847020db88d1681cd837bc80d1
+
+OpenDID Issuer Server
+commit: 3b2e950462c5d14348c629b8cec4f6ffb09225da
+source: https://github.com/OmniOneID/did-issuer-server/tree/3b2e950462c5d14348c629b8cec4f6ffb09225da
+
+OpenDID Verifier Server
+commit: 8027086e20714971c24c34546cc2353684fa2b73
+source: https://github.com/OmniOneID/did-verifier-server/tree/8027086e20714971c24c34546cc2353684fa2b73
+
+OpenDID TA Server
+commit: b8a41be7350c7962bc25d0656a958502ce132729
+source: https://github.com/OmniOneID/did-ta-server/tree/b8a41be7350c7962bc25d0656a958502ce132729
+
+OpenDID v2.0 Release Guide
+commit: 9de71fbb8b8c133d6c961af6ba3aad119e15b91c
+source: https://github.com/OmniOneID/did-release/tree/9de71fbb8b8c133d6c961af6ba3aad119e15b91c
+
+Runtime used for local reproduction:
+- Eclipse Temurin OpenJDK 21.0.12
+- Gradle 8.13
+- macOS
+
+No DID, credential, key, nonce, proof, token, QR payload or PII is included in this manifest.

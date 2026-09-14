@@ -2,6 +2,7 @@
 
 import { MapEntryB } from "../map/map-entry-b"
 import { PulseTablesEntryB } from "../connect/tables-entry-b"
+import { CommerceOfferMountB, WalletFundingMountB } from "../commerce-b/id-wallet-commerce-b"
 import { TravelerIdEntryB } from "../identity-b/traveler-id-entry-b"
 import { KTourIdSetupB } from "../identity-b/ktour-id-setup-b"
 import { AccountSaveGateMountB } from "../identity-b/account-save-gate-b"
@@ -15,6 +16,7 @@ import { CanonicalPlaceMount } from "../place/canonical-place-mount"
 import { EditorialPlaceMountB } from "../place/editorial-place-mount-b"
 import { SettingsEntryB } from "../settings/settings-entry-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
+import { useSheetPresence } from "../shared/ui/use-sheet-presence"
 import { OndoAppB } from "./ondo-app-b"
 
 export function OndoProductB() {
@@ -26,7 +28,7 @@ export function OndoProductB() {
         tables: <PulseTablesEntryB />,
         travelerId: <TravelerIdEntryB />,
         settings: <SettingsEntryB />,
-        overlays: <><CanonicalPlaceMount /><EditorialPlaceMountB /><AccountSaveGateMountB /><LocalSignalLayerB /><OfficialDirectoryOnboardingLayer /><KTourIdSetupB /><BActionGateCoordinator /><LabsEntryMountB /></>,
+        overlays: <><CanonicalPlaceMount /><EditorialPlaceMountB /><CommerceOfferMountB /><WalletFundingMountB /><AccountSaveGateMountB /><LocalSignalLayerB /><OfficialDirectoryOnboardingLayer /><KTourIdSetupB /><BActionGateCoordinator /><LabsEntryMountB /></>,
       }} />
     </BActivityProfileProvider>
   )
@@ -34,5 +36,6 @@ export function OndoProductB() {
 
 function LabsEntryMountB() {
   const { state } = useOndoB()
-  return state.surface.kind === "labs" ? <LabsEntryB /> : null
+  const presence = useSheetPresence(state.surface.kind === "labs" ? true : null)
+  return presence.value ? <LabsEntryB presenceState={presence.phase} /> : null
 }

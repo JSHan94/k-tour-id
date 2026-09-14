@@ -12,8 +12,8 @@ import {
 
 const COPY = {
   en: {
-    start: "Set guest preferences",
-    guest: "Explore without setup",
+    start: "Personalize in 20 seconds",
+    guest: "Open Korea map",
     preferences: "Choose meal preferences",
     fallback: "Open map with defaults",
     accountStart: "Create account · Simulated",
@@ -26,8 +26,8 @@ const COPY = {
     after19Prompt: "Confirm 19+",
   },
   ko: {
-    start: "게스트 취향 설정",
-    guest: "설정 없이 탐색",
+    start: "20초 개인화",
+    guest: "한국 지도 열기",
     preferences: "한 끼 취향 고르기",
     fallback: "기본 설정으로 지도 열기",
     accountStart: "계정 만들기 · 시뮬레이션",

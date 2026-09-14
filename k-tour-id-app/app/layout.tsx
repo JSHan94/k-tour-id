@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import "leaflet/dist/leaflet.css"
 import "./globals.css"
 import { AppProviders } from "./app-providers"
+import { ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT } from "@/features/ondo/shared/state/ondo-b-appearance"
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -43,8 +44,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ko" className="antialiased">
+    <html
+      lang="ko"
+      className="antialiased"
+      data-ondo-theme="light"
+      data-ondo-theme-preference="system"
+      suppressHydrationWarning
+    >
       <head>
+        <script
+          id="ondo-appearance-bootstrap"
+          dangerouslySetInnerHTML={{ __html: ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

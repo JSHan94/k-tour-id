@@ -1,0 +1,74 @@
+[
+  {
+    "city": "seoul",
+    "mapState": "ready",
+    "pulseStatus": "온도 · 선별 식음료 신호",
+    "editorialCount": null,
+    "navBox": {
+      "x": 10,
+      "y": 764,
+      "width": 370,
+      "height": 72,
+      "right": 380,
+      "bottom": 836
+    },
+    "activeBox": {
+      "x": 16,
+      "y": 770,
+      "width": 69.1875,
+      "height": 60,
+      "right": 85.1875,
+      "bottom": 830
+    },
+    "activeAfter": "",
+    "controls": []
+  },
+  {
+    "city": "busan",
+    "mapState": "ready",
+    "pulseStatus": "온도 · 신호 범위 확장 중",
+    "editorialCount": null,
+    "navBox": {
+      "x": 10,
+      "y": 764,
+      "width": 370,
+      "height": 72,
+      "right": 380,
+      "bottom": 836
+    },
+    "activeBox": {
+      "x": 16,
+      "y": 770,
+      "width": 69.1875,
+      "height": 60,
+      "right": 85.1875,
+      "bottom": 830
+    },
+    "activeAfter": "",
+    "controls": []
+  },
+  {
+    "city": "jeju",
+    "mapState": "ready",
+    "pulseStatus": "편집 장소 온도 레이어 · 수치 점수 없음",
+    "editorialCount": "8",
+    "navBox": {
+      "x": 10,
+      "y": 764,
+      "width": 370,
+      "height": 72,
+      "right": 380,
+      "bottom": 836
+    },
+    "activeBox": {
+      "x": 16,
+      "y": 770,
+      "width": 69.1875,
+      "height": 60,
+      "right": 85.1875,
+      "bottom": 830
+    },
+    "activeAfter": "",
+    "controls": []
+  }
+]

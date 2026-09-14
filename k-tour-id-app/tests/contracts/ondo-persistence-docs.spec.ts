@@ -4,10 +4,15 @@ import { expect, test } from "@playwright/test"
 import type { GateKind, ReturnToCta } from "../../features/ondo/contracts/domain"
 import {
   areRequiredReturnToGatesSatisfied,
+  consumeReturnToOnce,
+  createReturnToConsumptionExpectation,
   createReturnTo,
+  hashReturnTo,
   hasExactReturnToGatePlan,
   isReturnToUsable,
+  resolveReturnTo,
   restoreReturnTo,
+  snapshotReturnTo,
 } from "../../features/ondo/contracts/return-to"
 
 const appFile = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8")
@@ -56,18 +61,27 @@ test("CONTRACT-DATA-018 return envelope identifiers and shape stay aligned with 
   const adapters = canonicalDoc("05_DATA_ADAPTER_CONTRACTS.md")
   const now = new Date("2026-08-19T10:00:00.000Z")
 
-  for (const cta of RETURN_TO_CTAS) {
-    const envelope = createReturnTo({ cta, gateQueue: ["account"], venueId: "public-venue", now })
-    expect(envelope).toEqual({
-      tokenId: `RT-${cta}-${now.getTime()}`,
-      cta,
-      gateQueue: ["account"],
-      activeGate: "account",
-      venueId: "public-venue",
-      tableId: undefined,
+  const cases = [
+    { cta: "SAVE_VENUE", gateQueue: ["account"], venueId: "public-venue" },
+    { cta: "JOIN_TABLE", gateQueue: ["account", "person", "age"], venueId: "public-venue", tableId: "public-table" },
+    { cta: "OPEN_CHAT", gateQueue: ["account"], tableId: "public-table" },
+    { cta: "SUBMIT_LOCAL_SIGNAL", gateQueue: ["account", "person"], venueId: "public-venue" },
+    { cta: "START_CHECKOUT", gateQueue: ["account", "payment_kyc"], venueId: "public-venue" },
+    { cta: "OPEN_AFTER19", gateQueue: ["age"] },
+    { cta: "MINT_BADGE", gateQueue: ["person"] },
+  ] as const
+  for (const input of cases) {
+    const envelope = createReturnTo({ ...input, gateQueue: [...input.gateQueue], now })
+    expect(envelope.tokenId).toBe(`RT-${input.cta}-${now.getTime()}`)
+    expect(envelope).toMatchObject({
+      cta: input.cta,
+      gateQueue: input.gateQueue,
+      activeGate: input.gateQueue[0],
       createdAt: now.toISOString(),
       expiresAt: "2026-08-19T10:15:00.000Z",
     })
+    expect(Object.values(envelope)).not.toContain(undefined)
+    const cta = input.cta
     for (const doc of [flowCatalog, stateModel, adapters]) {
       expect(doc).toContain(`\`${cta}\``)
       expect(doc).toContain(`RT-${cta}-<epoch-ms>`)
@@ -91,13 +105,15 @@ test("CONTRACT-DATA-019 canonical persistence boundary never permits sensitive b
   }
 })
 
-test("CONTRACT-DATA-020 restored gates reject non-allowlisted data and strip unknown fields", () => {
+test("CONTRACT-DATA-020 restored gates reject non-allowlisted, unknown, and private fields as one envelope", () => {
   const now = new Date("2026-08-19T10:00:00.000Z")
   const envelope = createReturnTo({ cta: "SAVE_VENUE", gateQueue: ["account"], venueId: "public-venue", now })
   expect(isReturnToUsable({ ...envelope, cta: "OPEN_REDIRECT" } as never, new Date("2026-08-19T10:01:00.000Z"))).toBeFalsy()
   expect(isReturnToUsable({ ...envelope, tokenId: "RT-START_CHECKOUT-1787133600000" }, new Date("2026-08-19T10:01:00.000Z"))).toBeFalsy()
   expect(isReturnToUsable({ ...envelope, gateQueue: ["account", "admin"] } as never, new Date("2026-08-19T10:01:00.000Z"))).toBeFalsy()
-  expect(restoreReturnTo({ ...envelope, credential: "must-not-survive" }, new Date("2026-08-19T10:01:00.000Z"))).toEqual(envelope)
+  expect(restoreReturnTo({ ...envelope, harmlessUnknown: true }, new Date("2026-08-19T10:01:00.000Z"))).toBeNull()
+  expect(restoreReturnTo({ ...envelope, credential: "must-not-survive" }, new Date("2026-08-19T10:01:00.000Z"))).toBeNull()
+  expect(resolveReturnTo({ ...envelope, credential: "must-not-survive" }, new Date("2026-08-19T10:01:00.000Z"))).toMatchObject({ kind: "safe_return", reason: "private_field", surface: { kind: "map" }, discardToken: true })
   for (const malformed of [{}, { ...envelope, tokenId: 42 }, { ...envelope, cta: null }, { ...envelope, gateQueue: null }]) {
     expect(() => restoreReturnTo(malformed, new Date("2026-08-19T10:01:00.000Z"))).not.toThrow()
     expect(restoreReturnTo(malformed, new Date("2026-08-19T10:01:00.000Z"))).toBeNull()
@@ -126,9 +142,15 @@ test("CONTRACT-DATA-021 each return CTA accepts only its real gate sequence and 
 
 test("CONTRACT-DATA-022 malformed context, gate sequences, and token epochs never restore", () => {
   const now = new Date("2026-08-19T10:00:00.000Z")
-  const make = (cta: ReturnToCta, gateQueue: [GateKind, ...GateKind[]], context: { venueId?: string; tableId?: string } = {}) => (
-    createReturnTo({ cta, gateQueue, ...context, now })
-  )
+  const make = (cta: ReturnToCta, gateQueue: [GateKind, ...GateKind[]], context: { venueId?: string; tableId?: string } = {}) => ({
+    tokenId: `RT-${cta}-${now.getTime()}`,
+    cta,
+    gateQueue,
+    activeGate: gateQueue[0],
+    ...context,
+    createdAt: now.toISOString(),
+    expiresAt: "2026-08-19T10:15:00.000Z",
+  })
   const invalid = [
     make("SAVE_VENUE", ["account"]),
     make("SAVE_VENUE", ["account"], { venueId: "public-venue", tableId: "unrelated-table" }),
@@ -152,6 +174,26 @@ test("CONTRACT-DATA-022 malformed context, gate sequences, and token epochs neve
     expect(isReturnToUsable(envelope as never, new Date("2026-08-19T10:01:00.000Z"))).toBeFalsy()
     expect(restoreReturnTo(envelope, new Date("2026-08-19T10:01:00.000Z"))).toBeNull()
   }
+})
+
+test("CONTRACT-DATA-022A deterministic snapshot/hash and compare-and-set consumption are exact and one-shot", () => {
+  const created = new Date("2026-08-19T10:00:00.000Z")
+  const now = new Date("2026-08-19T10:01:00.000Z")
+  const envelope = createReturnTo({ cta: "SAVE_VENUE", gateQueue: ["account"], venueId: "public-venue", now: created })
+  const expectation = createReturnToConsumptionExpectation(envelope)!
+
+  expect(snapshotReturnTo(envelope)).toEqual(snapshotReturnTo({ ...envelope }))
+  expect(hashReturnTo(envelope)).toBe(expectation.snapshotHash)
+  expect(hashReturnTo({ ...envelope, venueId: "another-venue" })).not.toBe(expectation.snapshotHash)
+
+  const mismatch = consumeReturnToOnce({ ...envelope, venueId: "another-venue" }, expectation, now)
+  expect(mismatch).toMatchObject({ kind: "safe_return", reason: "mismatch", surface: { kind: "map" } })
+  const first = consumeReturnToOnce(envelope, expectation, now)
+  expect(first.kind).toBe("consumed")
+  if (first.kind !== "consumed") throw new Error("Expected a consumed return")
+  expect(first.envelope.consumedAt).toBe(now.toISOString())
+  expect(consumeReturnToOnce(first.envelope, expectation, now)).toMatchObject({ kind: "safe_return", reason: "consumed" })
+  expect(resolveReturnTo(envelope, new Date("2026-08-19T10:15:00.000Z"))).toMatchObject({ kind: "safe_return", reason: "expired", discardToken: true })
 })
 
 test("CONTRACT-DATA-023 canonical docs own the CTA gate/context matrix and Labs has no default fallthrough", () => {
@@ -180,7 +222,7 @@ test("CONTRACT-DATA-024 hydration validates return contexts against canonical en
   const provider = appFile("features/ondo/shared/state/ondo-provider.tsx")
 
   expect(provider).toContain('import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"')
-  expect(provider).toContain('import { TABLES } from "../../connect/table-model"')
+  expect(provider).toContain('import { TABLES } from "../../connect/table-fixtures"')
   expect(provider).toContain("function hasRegisteredReturnContext(envelope: ReturnToEnvelope)")
   expect(provider).toContain("const restoredGate = restoreReturnTo(session.gate)")
   expect(provider).toContain("const pendingGate = restoredGate")

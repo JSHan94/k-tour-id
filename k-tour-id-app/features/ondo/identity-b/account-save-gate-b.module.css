@@ -1,12 +1,12 @@
 .layer {
   position: fixed;
-  z-index: 146;
+  z-index: 160;
   inset: 0;
   display: grid;
   min-height: 100dvh;
   place-items: center;
   padding: 20px;
-  color: #171717;
+  color: var(--ondo-ink, #171717);
   overscroll-behavior: contain;
   -webkit-tap-highlight-color: transparent;
 }
@@ -25,12 +25,11 @@
   width: min(100%, 460px);
   max-height: min(780px, calc(100dvh - 40px));
   overflow-y: auto;
-  border: 1px solid rgb(255 255 255 / 58%);
+  border: 1px solid var(--ondo-line, rgb(255 255 255 / 58%));
   border-radius: 30px;
-  background:
-    radial-gradient(circle at 100% 0, rgb(89 35 58 / 7%), transparent 31%),
-    #fff;
-  box-shadow: 0 34px 96px rgb(0 0 0 / 30%), 0 1px 0 #fff inset;
+  background: var(--ondo-surface-raised, var(--ondo-surface, #fff));
+  color: var(--ondo-ink, #171717);
+  box-shadow: 0 34px 96px rgb(0 0 0 / 30%);
   outline: none;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -44,7 +43,7 @@
   left: 30px;
   height: 3px;
   border-radius: 0 0 999px 999px;
-  background: linear-gradient(90deg, transparent, #111 24%, #6c2745 72%, transparent);
+  background: var(--ondo-control, #111);
   content: "";
   pointer-events: none;
 }
@@ -55,7 +54,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 17px 22px 0;
-  color: #575757;
+  color: var(--ondo-muted, #575757);
   font-size: 12px;
 }
 
@@ -72,13 +71,25 @@
   display: grid;
   min-height: 34px;
   place-items: center;
-  border: 1px solid #dedede;
+  border: 1px solid var(--ondo-line, #dedede);
   border-radius: 999px;
   padding: 0 11px;
-  background: #f7f7f7;
-  color: #383838;
+  background: var(--ondo-surface-soft, #f7f7f7);
+  color: var(--ondo-ink, #383838);
   font-size: 12px;
   font-weight: 760;
+}
+
+.close {
+  display: grid;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--ondo-line, #dedede);
+  border-radius: 999px;
+  background: var(--ondo-surface, #fff);
+  color: var(--ondo-ink, #222);
 }
 
 .body {
@@ -96,19 +107,21 @@
 
 .heroIcon {
   box-sizing: content-box;
-  border: 1px solid #dedede;
+  border: 1px solid var(--ondo-line, #dedede);
   border-radius: 20px;
   padding: 11px;
-  background: #f5f5f5;
-  color: #171717;
+  background: var(--ondo-surface-soft, #f5f5f5);
+  color: var(--ondo-ink, #171717);
   box-shadow: 0 14px 30px rgb(0 0 0 / 9%);
 }
 
 .body[role="alert"] .heroIcon {
-  border-color: #ead5d2;
-  background: #fff3f1;
-  color: #963d35;
+  border-color: color-mix(in srgb, var(--destructive, #963d35) 28%, var(--ondo-line, transparent));
+  background: color-mix(in srgb, var(--destructive, #963d35) 9%, var(--ondo-surface, #fff));
+  color: var(--destructive, #963d35);
 }
+
+.spinner { animation: accountSpin .8s linear infinite; }
 
 .body h2 {
   max-width: 390px;
@@ -123,15 +136,15 @@
 
 .reason {
   margin: 0;
-  color: #5e5e5e;
+  color: var(--ondo-muted, #5e5e5e);
   font-size: 14px;
   line-height: 1.62;
 }
 
 .boundary {
-  border-top: 1px solid #e6e6e6;
+  border-top: 1px solid var(--ondo-line, #e6e6e6);
   padding-top: 7px;
-  color: #626262;
+  color: var(--ondo-muted, #626262);
   font-size: 12px;
   line-height: 1.55;
 }
@@ -144,7 +157,7 @@
   align-items: center;
   font-weight: 780;
   text-decoration: underline;
-  text-decoration-color: #c9c9c9;
+  text-decoration-color: var(--ondo-line-strong, #c9c9c9);
   text-underline-offset: 4px;
 }
 
@@ -155,10 +168,10 @@
   display: grid;
   gap: 8px;
   overflow: hidden;
-  border: 1px solid #dedede;
+  border: 1px solid var(--ondo-line, #dedede);
   border-radius: 18px;
   padding: 14px 15px 14px 18px;
-  background: #fafafa;
+  background: var(--ondo-surface-soft, #fafafa);
   box-shadow: 0 11px 28px rgb(0 0 0 / 5%);
 }
 
@@ -172,7 +185,7 @@
 
 .returnContext h3 {
   margin: 0;
-  color: #646464;
+  color: var(--ondo-muted, #646464);
   font-size: 12px;
   font-weight: 840;
   letter-spacing: .11em;
@@ -181,7 +194,7 @@
 
 .returnContext p { display: grid; gap: 4px; margin: 0; }
 .returnContext strong { font-size: 15px; font-weight: 810; }
-.returnContext span { color: #646464; font-size: 12px; line-height: 1.48; }
+.returnContext span { color: var(--ondo-muted, #646464); font-size: 12px; line-height: 1.48; }
 
 .actions { display: grid; min-width: 0; gap: 9px; }
 
@@ -202,20 +215,28 @@
 }
 
 .primary {
-  border: 1px solid #111;
-  background: #111;
-  color: #fff;
+  border: 1px solid var(--ondo-control, #111);
+  background: var(--ondo-control, #111);
+  color: var(--ondo-control-ink, #fff);
   box-shadow: 0 15px 32px rgb(0 0 0 / 18%);
 }
 
-.secondary { border: 1px solid #dedede; background: #fff; color: #343434; }
+.secondary { border: 1px solid var(--ondo-line, #dedede); background: var(--ondo-surface, #fff); color: var(--ondo-ink, #343434); }
 
 .layer button:focus-visible,
-.layer summary:focus-visible { outline: 3px solid rgb(91 38 65 / 30%); outline-offset: 3px; }
+.layer summary:focus-visible { outline: 3px solid var(--ondo-focus, #1d66d1); outline-offset: 3px; }
 
 @media (max-width: 520px) {
-  .layer { align-items: end; padding: 0; }
-  .dialog { width: 100%; max-height: calc(100dvh - 8px); border-radius: 28px 28px 0 0; }
+  .layer {
+    align-items: end;
+    padding: max(8px, env(safe-area-inset-top)) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  }
+  .dialog {
+    width: 100%;
+    max-height: calc(100dvh - max(8px, env(safe-area-inset-top)));
+    padding-bottom: env(safe-area-inset-bottom);
+    border-radius: 28px 28px 0 0;
+  }
 }
 
 @media (max-width: 360px) {
@@ -224,20 +245,99 @@
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .layer { align-items: stretch; padding: 0; }
-  .dialog { width: min(100%, 880px); max-height: 100dvh; margin: 0 auto; border-radius: 0; }
-  .header { min-height: 54px; padding: 9px 20px 0; }
-  .body { grid-template-columns: minmax(0, .9fr) minmax(300px, 1.1fr); align-items: start; gap: 10px 20px; padding: 8px 24px 16px; }
-  .body > .heroIcon, .body > h2, .body > .reason { grid-column: 1; }
-  .body > .boundary, .body > .returnContext, .body > .actions { grid-column: 2; }
+  .layer {
+    align-items: stretch;
+    padding: max(6px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  }
+  .dialog {
+    width: min(100%, 880px);
+    max-height: calc(100dvh - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom)));
+    margin: 0 auto;
+    border-radius: 22px;
+  }
+  .header { min-height: 50px; padding: 7px 20px 0; }
+  .body {
+    grid-template-columns: minmax(0, .9fr) minmax(300px, 1.1fr);
+    grid-template-rows: auto auto auto auto;
+    align-items: start;
+    gap: 8px 18px;
+    padding: 4px 20px 8px;
+  }
+  .body > .heroIcon { grid-area: 1 / 1; }
+  .body > h2 { grid-area: 2 / 1; }
+  .body > .reason { grid-area: 3 / 1; }
+  .body > .returnContext { grid-area: 1 / 2; padding: 10px 12px 10px 15px; }
+  .body > .boundary { grid-area: 2 / 2; }
+  .body > .actions { grid-area: 3 / 2; gap: 6px; }
+  .body[role="alert"] > .actions { grid-area: 2 / 2; }
   .heroIcon { width: 24px; height: 24px; padding: 8px; }
   .body h2 { font-size: 30px; }
-  .actions button { min-height: 46px; }
+  .actions button { min-height: 44px; padding-block: 8px; }
 }
 
 @keyframes veilIn { from { opacity: 0; } }
 @keyframes dialogIn { from { opacity: 0; transform: translateY(18px) scale(.99); } }
+@keyframes accountSpin { to { transform: rotate(360deg); } }
+
+.layer[data-account-presence="closing"] .backdrop {
+  animation: accountBackdropExit 260ms ease forwards;
+}
+
+.layer[data-account-presence="closing"] .dialog {
+  animation: accountDialogExit 260ms cubic-bezier(.4, 0, 1, 1) forwards;
+}
+
+@keyframes accountBackdropExit {
+  to { opacity: 0; backdrop-filter: blur(0); }
+}
+
+@keyframes accountDialogExit {
+  to { opacity: 0; transform: translateY(24px); }
+}
+
+@keyframes accountDialogExitRight {
+  to { opacity: 0; transform: translateX(28px); }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .layer[data-account-presence="closing"] .dialog { animation-name: accountDialogExitRight; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .backdrop, .dialog { animation: none; backdrop-filter: none; }
+  .backdrop, .dialog, .spinner,
+  .layer[data-account-presence="closing"] .backdrop,
+  .layer[data-account-presence="closing"] .dialog { animation: none; backdrop-filter: none; }
+}
+
+/* P0 JIT compression — the saved place is the anchor; account/provider
+   boundaries stay in the disclosure instead of competing with the action. */
+.body { gap: 12px; }
+.contextLabel {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.returnContext {
+  gap: 2px;
+  padding: 11px 13px 11px 16px;
+  background: var(--ondo-surface-soft, #f7f7f7);
+  box-shadow: none;
+}
+.returnContext strong { display: block; overflow-wrap: anywhere; word-break: normal; }
+.returnContext + .heroIcon { margin-top: 4px; }
+.boundary { margin-top: 0; }
+.actions { margin-top: 2px; }
+
+@media (max-width: 520px) {
+  .header { min-height: 54px; padding: 10px 17px 0; }
+  .body { gap: 11px; padding: 10px 17px calc(18px + env(safe-area-inset-bottom)); }
+  .body > .heroIcon { display: none; }
+  .body h2 { font-size: clamp(26px, 8.4vw, 32px); }
+  .reason { font-size: 13px; line-height: 1.48; }
+  .boundary summary { min-height: 44px; }
+  .actions button { min-height: 52px; }
+  .actions .secondary { min-height: 44px; border-color: transparent; background: transparent; }
 }

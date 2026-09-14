@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
+import { gatePlanForBAction } from "../../features/ondo/identity-b/action-gate-contract-b"
+import { ACTIVE_TABLE_ID } from "../../features/ondo/connect/table-policy-b"
 
 const APP_ROOT = process.cwd()
 
@@ -30,8 +32,10 @@ test("PREMIUM-002 a place exposes the natural travel decision loop", () => {
     "canonical-venue-save",
     "canonical-place-table",
     "canonical-local-signal-open",
-    "canonical-meal-benefit-open",
   ]) expect(placeSource, `missing consumer action ${action}`).toContain(`data-testid=\"${action}\"`)
+  expect(placeSource).toContain('offerTestId="canonical-meal-benefit-open"')
+  expect(source("features/ondo/place/place-service-actions-b.tsx")).toContain('data-testid={offerTestId ?? "place-offer-open"}')
+  expect(placeSource).toContain('data-testid="canonical-venue-primary-directions" data-visual-priority="secondary"')
   expect(placeSource).not.toContain("canonical-demo-meal-offer-open")
 })
 
@@ -51,12 +55,18 @@ test("PREMIUM-004 normal eligibility UI cannot expose a QA outcome picker", () =
   expect(after19Source).toContain('if (gate === "age" && qa?.after19)')
   expect(after19Source).toContain("after19-start")
   expect(after19Source).toContain("action-gate-cancel")
-  expect(after19Source).toContain("Confirm 19+ for this Table")
-  expect(after19Source).toContain("Only an eligibility result and expiry are kept in this tab")
+  expect(after19Source).toContain('ageTitle: "Confirm 19+"')
+  expect(after19Source).toContain("No date of birth is requested or stored. Only a temporary 19+ result returns to this Table; it is not a rule for the venue.")
   expect(after19Source).toContain('data-return-table={pending.cta === "JOIN_TABLE" ? pending.tableId : "none"}')
-  expect(actionGateContractSource).toContain('if (cta === "JOIN_TABLE") return ["account", "age"]')
+  expect(gatePlanForBAction("JOIN_TABLE", { tableId: ACTIVE_TABLE_ID })).toEqual(["account", "age"])
+  expect(gatePlanForBAction("JOIN_TABLE", { tableId: "unregistered" })).toEqual(["account", "person", "age"])
+  expect(actionGateContractSource).toContain("ondoBTablePolicyById(context?.tableId)")
+  expect(actionGateContractSource).toContain('...(table.requiresPerson ? ["person" as const] : [])')
+  expect(actionGateContractSource).toContain('...(table.alcohol ? ["age" as const] : [])')
   expect(actionGateContractSource).toContain("consumePendingBActionAtMutation")
-  expect(ageModelSource).toContain("recordGlobalAfter19AgeEligibilityB")
+  expect(ageModelSource).toContain("recordGlobalAfter19ReviewEligibilityB")
+  expect(after19Source).toContain('explicitlyRequested: reviewMode')
+  expect(after19Source).not.toContain("recordGlobalAfter19AgeEligibilityB")
   expect(`${after19Source}\n${ageModelSource}`).not.toMatch(/dateOfBirth|passportNumber|credentialPayload|providerResponse/i)
 })
 

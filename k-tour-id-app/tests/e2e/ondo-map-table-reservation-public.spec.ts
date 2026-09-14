@@ -1,0 +1,151 @@
+import AxeBuilder from "@axe-core/playwright"
+import { expect, test, type Page } from "@playwright/test"
+import { resolveCommercePlaceB } from "../../features/ondo/commerce-b/place-service-registry-b"
+import { RESERVATION_COPY_B } from "../../features/ondo/reservation-b/reservation-copy-b"
+import { expectBRuntimeClean, installBRuntimeGuard } from "../helpers/ondo-b-qa"
+
+const BUSAN_VENUE = "mois-03041681b54ea5399763"
+const BUSAN_TABLE = "table-busan-gijang-dinner"
+const SEOUL_VENUE = "mois-0021cd596bc5b2a922ad"
+const SEOUL_TABLE = "table-seoul-night-bites"
+
+test.beforeEach(({ page }) => installBRuntimeGuard(page))
+test.afterEach(async ({ page }, info) => { await expectBRuntimeClean(page, info) })
+test.setTimeout(120_000)
+
+async function enterBusanPlace(page: Page, locale: "ko" | "ja", width: number, appearance: "light" | "dark") {
+  await page.setViewportSize({ width, height: 844 })
+  await page.emulateMedia({ reducedMotion: "reduce", colorScheme: appearance })
+  // Only display/onboarding preferences are supplied. Account, identity,
+  // Table membership and every reservation transition use the public UI.
+  await page.addInitScript(({ locale, appearance }) => {
+    if (!location.protocol.startsWith("http")) return
+    const previous = JSON.parse(localStorage.getItem("ondo-b.device.v1") ?? "{}")
+    localStorage.setItem("ondo-b.device.v1", JSON.stringify({ ...previous, locale, appearancePreference: appearance, onboarding: "ONB-COMPLETE" }))
+  }, { locale, appearance })
+  await page.goto(`/?city=busan&view=list&venueId=${BUSAN_VENUE}&detail=1`, { waitUntil: "domcontentloaded" })
+  await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+}
+
+async function closeBooking(page: Page) {
+  const booking = page.getByTestId("reservation-sample")
+  await page.getByTestId("ondo-sheet").filter({ has: booking }).locator(":scope > header button").click()
+  await expect(booking).toHaveCount(0)
+}
+
+async function changeResponse(page: Page, testId: string, response: string) {
+  const select = page.getByTestId(testId)
+  const details = select.locator("xpath=ancestor::details")
+  if (await details.getAttribute("open") === null) await details.locator("summary").click()
+  await select.selectOption(response)
+}
+
+test("MW-TABLE Busan venue joins its exact Table and returns to the same place at 320px Korean dark", async ({ page }, info) => {
+  await enterBusanPlace(page, "ko", 320, "dark")
+  const place = page.getByTestId("canonical-place-overlay")
+  await place.getByTestId("canonical-place-table").click()
+  const table = page.getByTestId("table-detail")
+  await expect(table).toHaveAttribute("data-table-id", BUSAN_TABLE)
+  await expect(table).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await expect(table.getByTestId("table-place-context")).toContainText(resolveCommercePlaceB(BUSAN_VENUE)!.name.ko)
+  await table.getByTestId("table-join-draft").fill("창가에서 만나요")
+  await table.getByTestId("table-join").click()
+  const gate = page.getByTestId("ondo-b-action-gate")
+  await expect(gate).toHaveAttribute("data-active-gate", "account")
+  await expect(gate.getByTestId("action-gate-return-context")).toHaveAttribute("data-return-table", BUSAN_TABLE)
+  await expect(gate.getByTestId("action-gate-return-context")).toHaveAttribute("data-return-venue", BUSAN_VENUE)
+  await gate.getByTestId("action-gate-confirm").click()
+  await expect(gate).toHaveCount(0)
+  await expect(table.getByTestId("table-join-confirmation")).toContainText("창가에서 만나요")
+  await expect(page.getByTestId("after19-start")).toHaveCount(0)
+  await expect(page.getByTestId("wallet-connect-sheet")).toHaveCount(0)
+  await table.getByTestId("table-join-confirm").click()
+  await expect(table).toHaveAttribute("data-table-membership", "TMB-CONFIRMED")
+  await page.screenshot({ path: info.outputPath("busan-table-confirmed-320-ko-dark.png") })
+  await table.getByTestId("table-return-place").click()
+  await expect(place).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await place.getByTestId("canonical-place-table").click()
+  await expect(table).toHaveAttribute("data-table-id", BUSAN_TABLE)
+  await expect(table).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await expect(table).toHaveAttribute("data-table-membership", "TMB-CONFIRMED")
+  expect(await page.locator("html").evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true)
+  const contrast = await new AxeBuilder({ page }).include('[data-testid="table-detail"]').withRules(["color-contrast"]).analyze()
+  expect(contrast.violations).toEqual([])
+  await page.screenshot({ path: info.outputPath("busan-same-table-return-320-ko-dark.png") })
+})
+
+test("MW-RESERVATION Japanese unknown booking survives reload, query and independent venue history without wallet or ID", async ({ page }, info) => {
+  await enterBusanPlace(page, "ja", 430, "light")
+  const t = RESERVATION_COPY_B.ja
+  await page.getByTestId("place-reservation-open").click()
+  const booking = page.getByTestId("reservation-sample")
+  await expect(booking).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await expect(page.getByTestId("reservation-conditions")).toContainText(t.free)
+  await page.getByLabel(t.party, { exact: true }).selectOption("4")
+  await page.getByLabel(t.time, { exact: true }).selectOption("19:00")
+  await changeResponse(page, "reservation-outcome", "unknown")
+  await page.getByTestId("reservation-submit").click()
+  await expect(booking).toHaveAttribute("data-phase", "unknown")
+  const original = await booking.getAttribute("data-operation-id")
+  expect(original).toBeTruthy()
+  await expect(page.getByTestId("reservation-submit")).toHaveCount(0)
+  await expect(page.getByTestId("ondo-b-action-gate")).toHaveCount(0)
+  await expect(page.getByTestId("wallet-connect-sheet")).toHaveCount(0)
+  await page.screenshot({ path: info.outputPath("busan-booking-unknown-430-ja.png") })
+  await closeBooking(page)
+  await page.reload({ waitUntil: "domcontentloaded" })
+  await page.getByTestId("place-reservation-open").click()
+  await expect(booking).toHaveAttribute("data-phase", "unknown")
+  await expect(booking).toHaveAttribute("data-operation-id", original!)
+  await expect(booking).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await expect(booking.getByTestId("reservation-receipt")).toContainText(resolveCommercePlaceB(BUSAN_VENUE)!.name.ja)
+  await expect(booking.getByTestId("reservation-receipt")).toContainText("19:00")
+  await page.getByTestId("reservation-query").click()
+  await expect(booking).toHaveAttribute("data-phase", "confirmed")
+  await expect(booking).toHaveAttribute("data-operation-id", original!)
+  await page.getByTestId("reservation-return-place").click()
+  await expect(booking).toHaveCount(0)
+  await expect(page.getByTestId("canonical-place-overlay")).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await page.getByTestId("canonical-place-overlay").locator("header > button").first().click()
+  await expect(page.getByTestId("canonical-place-overlay")).toHaveCount(0)
+  await page.getByTestId("canonical-place-peek").locator(":scope > button").click()
+  await expect(page.getByTestId("canonical-place-peek")).toHaveCount(0)
+  await expect(page.getByTestId("nav-tables")).toBeVisible()
+  await page.getByTestId("nav-tables").click()
+  await page.getByTestId(`table-open-${SEOUL_TABLE}`).click()
+  await page.getByTestId("table-reservation-open").click()
+  await expect(booking).toHaveAttribute("data-venue-id", SEOUL_VENUE)
+  await expect(booking).toHaveAttribute("data-phase", "draft")
+  await expect(page.getByLabel(t.party, { exact: true })).toHaveValue("2")
+  await page.getByTestId("reservation-submit").click()
+  await expect(booking).toHaveAttribute("data-phase", "confirmed")
+  const second = await booking.getAttribute("data-operation-id")
+  expect(second).not.toBe(original)
+  await closeBooking(page)
+  await expect(page.getByTestId("tables-reservation-history")).toBeVisible()
+  await page.getByTestId(`reservation-history-${BUSAN_VENUE}`).click()
+  await expect(booking).toHaveAttribute("data-operation-id", original!)
+  await expect(booking).toHaveAttribute("data-venue-id", BUSAN_VENUE)
+  await expect(booking).toHaveAttribute("data-phase", "confirmed")
+  await changeResponse(page, "reservation-cancel-outcome", "unknown")
+  await page.getByTestId("reservation-cancel").click()
+  await page.getByTestId("reservation-confirm-cancel").click()
+  await expect(booking).toHaveAttribute("data-phase", "cancel_unknown")
+  await closeBooking(page)
+  await page.getByTestId(`reservation-history-${BUSAN_VENUE}`).click()
+  await expect(booking).toHaveAttribute("data-phase", "cancel_unknown")
+  await page.getByTestId("reservation-query").click()
+  await expect(booking).toHaveAttribute("data-phase", "cancelled")
+  await expect(booking).toHaveAttribute("data-operation-id", original!)
+  expect(await booking.evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true)
+  const contrast = await new AxeBuilder({ page }).include('[data-testid="reservation-sample"]').withRules(["color-contrast"]).analyze()
+  expect(contrast.violations).toEqual([])
+  await page.screenshot({ path: info.outputPath("busan-booking-cancelled-history-430-ja.png") })
+  await closeBooking(page)
+  await page.getByTestId(`reservation-history-${SEOUL_VENUE}`).click()
+  await expect(booking).toHaveAttribute("data-operation-id", second!)
+  await expect(booking).toHaveAttribute("data-venue-id", SEOUL_VENUE)
+  await expect(booking).toHaveAttribute("data-phase", "confirmed")
+  await expect(page.getByTestId("ondo-b-action-gate")).toHaveCount(0)
+  await expect(page.getByTestId("wallet-connect-sheet")).toHaveCount(0)
+})
