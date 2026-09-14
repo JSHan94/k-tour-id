@@ -191,7 +191,7 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
           throw error
         }
       }).withConf({ lang: locale, theme: document.documentElement.dataset.ondoTheme === "dark" ? "dark" : "light" })
-        .withOptions({ addViewportTag: false, adaptIframeHeight: true, enableScrollIntoView: false })
+        .withOptions({ addViewportTag: false, adaptIframeHeight: true, enableScrollIntoView: true })
         .onMessage((type: string) => {
           // Events trigger a signed-server status refresh, never an approval.
           if (["idCheck.onApplicantSubmitted", "idCheck.onApplicantStatusChanged", "idCheck.onApplicantResubmitted", "idCheck.onStepCompleted", "idCheck.onApplicantReviewComplete", "idCheck.onApplicantVerificationCompleted"].includes(type)) void refreshStatus()

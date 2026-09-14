@@ -9,6 +9,13 @@
 .root[data-identity-presence="closing"] .backdrop { animation: ktour-backdrop-out 260ms ease-in both; }
 .root[data-identity-presence="closing"] .dialog { animation: ktour-dialog-out 260ms cubic-bezier(.4, 0, 1, 1) both; }
 .header { position: sticky; z-index: 3; top: 0; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 9px; min-height: 68px; border-bottom: 1px solid #ededed; padding: 8px 14px; background: rgb(255 255 255 / 94%); backdrop-filter: blur(18px); }
+/* The embedded provider owns a separate scroll body. Its country/document
+   popovers must never scroll behind ONDO's otherwise-sticky modal header. */
+.dialog[data-phase="sumsub_sandbox"] { overflow: hidden; }
+.dialog[data-phase="sumsub_sandbox"] > .header { position: relative; top: auto; flex-shrink: 0; }
+/* The same retention and authority boundary are inside the SDK step's Privacy
+   disclosure, within its scroll body; do not reserve a second footer here. */
+.dialog[data-phase="sumsub_sandbox"] > .protocolDetails { display: none; }
 .header > p { display: flex; min-width: 0; align-items: center; justify-content: center; margin: 0; color: #282828; font-size: 12px; font-weight: 820; letter-spacing: .04em; line-height: 1.35; text-align: center; }
 .brandMark,
 .iconButton { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid #e2e2e2; border-radius: 50%; background: #fff; color: #181818; }

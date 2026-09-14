@@ -277,6 +277,22 @@ test("SUMSUB-018 the client SDK cannot issue a pass or persist credentials and o
   }
 })
 
+test("SUMSUB-024 provider scroll requests stay enabled in a body separate from the ONDO header", () => {
+  const source = readFileSync("features/ondo/identity-b/sumsub-passport-step-b.tsx", "utf8")
+  const stepCss = readFileSync("features/ondo/identity-b/sumsub-passport-step-b.module.css", "utf8")
+  const dialogCss = readFileSync("features/ondo/identity-b/ktour-id-setup-b.module.css", "utf8")
+  expect(source).toContain("adaptIframeHeight: true, enableScrollIntoView: true")
+  expect(dialogCss).toMatch(/\.dialog\[data-phase="sumsub_sandbox"\]\s*\{[^}]*overflow:\s*hidden/)
+  expect(dialogCss).toMatch(/\.dialog\[data-phase="sumsub_sandbox"\] > \.header\s*\{[^}]*position:\s*relative;[^}]*flex-shrink:\s*0/)
+  expect(stepCss).toMatch(/\.root\s*\{[^}]*flex:\s*1 1 auto;[^}]*min-height:\s*0;[^}]*overflow-y:\s*auto/)
+  // The provider still sets its adaptive iframe height; no viewport-sized frame
+  // or hidden iframe overflow may clip its own country/document dialogs.
+  const iframeRule = stepCss.match(/\.sdk iframe\s*\{([^}]*)\}/)?.[1] ?? ""
+  expect(iframeRule).not.toMatch(/(?:height|max-height|min-height|overflow)\s*:/)
+  expect(source).toContain('<details className={styles.privacy}>')
+  expect(source).toContain('<p>{disclosure.retention}</p><p>{disclosure.boundary}</p>')
+})
+
 test("SUMSUB-019 prechecked retains an unfinished SDK flow regardless of partial review answers", () => {
   for (const reviewAnswer of [undefined, "GREEN", "RED", "YELLOW"]) {
     const status = normalizeReview({ reviewStatus: "prechecked", reviewResult: { reviewAnswer, reviewRejectType: "FINAL" } })

@@ -104,12 +104,14 @@ async function main() {
     "--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader",
     "--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream",
   ] })
+  let page: Page | undefined
+  let mayCaptureFailure = false
   try {
     // New isolated context; no stored sessions, real camera, or recording.
     const context = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, locale: "en-US", colorScheme: "light" })
     await context.grantPermissions(["camera", "microphone"], { origin })
     await context.grantPermissions(["camera", "microphone"], { origin: "https://api.sumsub.com" })
-    const page = await context.newPage()
+    page = await context.newPage()
     page.setDefaultTimeout(30_000)
     let pageErrorCount = 0
     page.on("pageerror", () => { pageErrorCount += 1 })
@@ -146,21 +148,37 @@ async function main() {
       await expect(sumsubIdSwitch).toHaveAttribute("aria-checked", "false")
     }
     await start.click()
-    stage = "german-passport-selection"
-    // The SDK button's accessible name also contains its country-field label.
-    // This recorded Korea-preview journey must fail, not guess, if it changes.
-    await sdk.locator("button").filter({ hasText: "South Korea" }).click()
-    await sdk.getByPlaceholder("Search", { exact: true }).fill("Germany")
-    await sdk.getByText("Germany", { exact: true }).click()
+    stage = "country-picker-open"
+    await expect(page.getByTestId("sumsub-access-code")).toHaveCount(0)
+    mayCaptureFailure = true
+    // Use the verified field label, independent of the default country.
+    const issuingCountry = sdk.getByRole("button", { name: /Issuing country/ })
+    await issuingCountry.click()
+    stage = "country-search-germany"
+    const countrySearch = sdk.getByPlaceholder("Search", { exact: true })
+    await countrySearch.fill("Germany")
+    stage = "country-select-germany"
+    await sdk.getByRole("option", { name: "Germany", exact: true }).click()
+    stage = "country-selection-confirmed"
+    // Do not bypass pointer interception from parent headers/nested scrolling.
+    // A click alone does not prove that the SDK accepted the country choice.
+    await expect(countrySearch).toBeHidden()
+    await expect(issuingCountry).toContainText("Germany")
+    stage = "passport-radio-check"
     await sdk.getByRole("radio", { name: "Passport", exact: true }).check()
+    stage = "passport-selection-continue"
     await sdk.getByRole("button", { name: "Continue", exact: true }).click()
-    stage = "official-document-upload"
+    stage = "official-document-file-input"
     await sdk.locator('input[type="file"]').setInputFiles(fixture)
+    stage = "official-document-upload"
     await sdk.getByRole("button", { name: "Upload document", exact: true }).click()
+    stage = "official-document-upload-continue"
     await sdk.getByRole("button", { name: "Continue", exact: true }).click({ timeout: 60_000 })
-    stage = "synthetic-camera-readiness"
+    stage = "camera-introduction"
     await expect(sdk.getByText("Get your camera ready", { exact: true })).toBeVisible()
+    stage = "camera-introduction-continue"
     await sdk.getByRole("button", { name: "Continue", exact: true }).click()
+    stage = "synthetic-camera-readiness"
     const video = sdk.locator("video").first()
     await expect.poll(async () => video.evaluate(element => {
       const camera = element as HTMLVideoElement
@@ -211,6 +229,21 @@ async function main() {
     console.log(JSON.stringify(report))
     console.log("NOTE: this run's synthetic Sandbox applicant/document may be retained by Sumsub; returning is not provider-data deletion")
     await context.close()
+  } catch {
+    // Only the post-consent country/document/synthetic-camera/result screens
+    // can be captured. Never capture the private access-code entry, a later
+    // access-gate reset, raw error output, or Playwright locator snapshots.
+    if (mayCaptureFailure && page && !page.isClosed()) {
+      try {
+        const noAccessField = await page.getByTestId("sumsub-access-code").count() === 0
+        const noPasswordField = await page.locator('input[type="password"]').count() === 0
+        if (noAccessField && noPasswordField) {
+          await page.screenshot({ path: `${OUTPUT_DIRECTORY}/journey-failure-${stage}.png`, timeout: 10_000 })
+          console.error(`SAFE EVIDENCE: ${OUTPUT_DIRECTORY}/journey-failure-${stage}.png`)
+        }
+      } catch { /* Screenshot failure must not reveal browser error details. */ }
+    }
+    throw new Error("Operator journey failed")
   } finally {
     await browser.close()
   }

@@ -261,8 +261,14 @@ test("OPENDID-B-009 keeps integration status internal and moves technical truth 
     "本人確認や公的身分証ではなく",
   ]) expect(setup).toContain(truth)
 
-  expect(setup).toContain('data-environment="simulated"')
-  expect(setup).toContain('data-integration-status="not_configured"')
+  // Only the explicitly enabled, newly consented passport route may leave the
+  // local review boundary. Mobile ID, residence and sample recovery stay as-is.
+  expect(setup).toContain('const sumsubEnabled = process.env.NEXT_PUBLIC_ONDO_SUMSUB_SANDBOX === "1"')
+  expect(setup).toContain('const sandboxPassport = sumsubEnabled && !sampleRecovery && method === "passport_ekyc" && (phase === "consent" || phase === "sumsub_sandbox")')
+  expect(setup).toContain('if (!reviewMode && !(sumsubEnabled && !sampleRecovery && nextMethod === "passport_ekyc"))')
+  expect(setup).toContain('data-environment={sandboxPassport ? "sandbox" : "simulated"}')
+  expect(setup).toContain('data-integration-status={sandboxPassport ? "sandbox_check" : "not_configured"}')
+  expect(setup).toContain('{sandboxPassport ? sandboxDisclosure.boundary : sumsubEnabled && phase === "method_select" ? sandboxDisclosure.scope : copy.boundary}')
   expect(setupSurfaces).not.toMatch(/navigator\.(?:mediaDevices|credentials)|NDEFReader|showOpenFilePicker/)
   expect(passportOcr).not.toContain('type="file"')
   expect(passportOcr).not.toContain('capture="environment"')
@@ -387,7 +393,8 @@ test("OPENDID-B-012 keeps identity out of the first onboarding screen and starts
   expect(intentStep).not.toMatch(/K-Tour ID|openIdentitySetup|identity provider|OmniOne|eKYC/i)
   expect(onboarding).not.toContain('data-testid="k-tour-id-setup-open"')
   expect(methodStep).toContain("copy.title")
-  expect(methodStep).toContain("<small>{note}</small>")
+  expect(methodStep).toContain('<small>{sumsubEnabled && !sampleRecovery && id === "passport_ekyc" ? sandboxDisclosure.scope : note}</small>')
+  expect(methodStep).toContain('data-availability={sumsubEnabled && !sampleRecovery && id === "passport_ekyc" ? "sandbox" : reviewMode ? "review" : "unavailable"}')
   expect(methodStep).toContain(".map(({ id, icon: Icon, title, note, oldId, newId })")
   expect(methodStep).toContain("routes.filter(route => !sampleRecovery || route.id === state.identityCredential?.method)")
   expect(methodStep).toContain('data-identity-initial-focus={sampleRecovery || id === "mobile_id" ? true : undefined}')

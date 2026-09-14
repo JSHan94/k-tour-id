@@ -13,7 +13,7 @@ test("KTOUR-MEANING-001 method choice is the first focus owner with concise rout
   expect(method).toContain('routes.filter(route => !sampleRecovery || route.id === state.identityCredential?.method)')
   expect(setup).toContain('if (sampleRecovery && nextMethod !== state.identityCredential?.method) return')
   expect(method).not.toContain("copy.lead")
-  expect(method).toContain("<small>{note}</small>")
+  expect(method).toContain('<small>{sumsubEnabled && !sampleRecovery && id === "passport_ekyc" ? sandboxDisclosure.scope : note}</small>')
   for (const note of ["mobileNote", "residenceNote", "passportNote"]) expect(setup).toContain(`note: copy.${note}`)
   expect(method).not.toMatch(/mobileNote|residenceNote|passportNote|OmniOne|provider|optional/i)
   expect(method.match(/className=\{styles\.route\}/g)).toHaveLength(1)
@@ -50,7 +50,15 @@ test("KTOUR-MEANING-003 setup stays three steps and only a protected-action orig
   const visibleFacts = request.indexOf("<Disclosure rows=")
   const retentionDisclosure = request.indexOf("<Disclosure label={copy.consentDetails}")
 
-  expect(setup).toContain("[copy.chooseStep, copy.checkStep, copy.issueStep]")
+  // Sandbox checks return without issuing a pass; the existing review journey
+  // retains its third issuance step and protected-action presentation boundary.
+  expect(setup).toContain("[copy.chooseStep, copy.checkStep, sandboxPassport ? sandboxDisclosure.returnStep : copy.issueStep]")
+  const consentHandler = setup.slice(setup.indexOf("function acceptConsent()"), setup.indexOf("function interruptBoundary("))
+  expect(consentHandler).toMatch(/if \(sandboxPassport\)\s*\{\s*setSession\(null\)[\s\S]*?setPhase\("sumsub_sandbox"\)\s*return\s*\}/)
+  expect(consentHandler).toContain('if (!reviewMode) return fail("IDENTITY_METHOD_UNAVAILABLE", "method_select")')
+  expect(setup).toContain('if (!holderReceiptRef.current || !reviewMode) return')
+  expect(setup).toContain('if (execution.result !== "FIXTURE_SUCCESS") return fail("IDENTITY_METHOD_UNAVAILABLE", "method_select")')
+  expect(setup).toContain('<SumsubPassportStepB ref={sumsubStepRef} locale={state.locale} onReturn={finishFinalDismiss} />')
   expect(setup).not.toContain("[copy.chooseStep, copy.checkStep, copy.issueStep, copy.presentStep]")
   expect(setup).toContain('origin === "action_gate" ? <button')
   expect(setup).toContain('data-testid="k-tour-id-presentation-open"')
