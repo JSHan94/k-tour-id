@@ -112,7 +112,7 @@ test("HANDOFF-SYNC-005 all provider work retains separate responsibility and off
 })
 
 test("HANDOFF-SYNC-006 every current handoff points to the same deployed release record", () => {
-  const releaseName = "PLACE_AFTER19_FIX_2026-09-14.md"
+  const releaseName = "BRAND_SHARE_REFRESH_2026-09-14.md"
   const release = doc(releaseName)
   const source = release.match(/배포 source `([a-f0-9]{7})`/)?.[1]
   expect(source).toBeDefined()
@@ -131,6 +131,10 @@ test("HANDOFF-SYNC-006 every current handoff points to the same deployed release
   expect(readmeRelease?.match(/(?:deployment )?source(?:\/runtime)? `([a-f0-9]{7})`/i)?.[1]).toBe(source)
   expect(release).toContain("실제 provider 연결")
   expect(release).toContain("실제 iPhone Safari/Android")
+  expect(readme).toContain("last functional-flow QA baseline is historical `e2ad7c4`")
+  expect(guide).toContain("마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`")
+  expect(release).toContain("계약833/833")
+  expect(release).toContain("이번 소스에서 재실행한 결과가 아님")
 })
 
 test("HANDOFF-SYNC-007 map-wallet journeys have matching place, order and reservation backend contracts", () => {

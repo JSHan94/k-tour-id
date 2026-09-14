@@ -4,7 +4,7 @@
 
 **[단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)은 공통 CX/OpenDID·서버 계약의 상세 참고다.** Sui 담당·환경·가용 시간을 추가 확인해 일정을 확정한다. 네 기술과 AI 실행을 기존 1주 일정에 그대로 완료할 수 있다고 가정하지 않으며, 프로그램 등록·별도 제출 자격·추가 상금 적용 조건도 확인한다. 아래는 전체 제품 인계로, 금융·예약 등 전체 목록이 이번 주 필수라는 뜻은 아니다.
 
-기준: **2026-09-14 · ONDO B · 운영 배포 source/runtime `e2ad7c4` · 인계 branch `handoff/harvey-20260914`**. [운영 앱](https://ondo-tau.vercel.app), [고유 배포 주소](https://ondo-eq9z4oba8-jaewook-9643s-projects.vercel.app), [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)을 확인한다. production deployment `dpl_435M4FCDrrR8AWGgNhmCTD9J3g8J`는 Ready다. 인계는 최신 소스 스냅샷이며 과거 배포 commit ID는 이 브랜치의 checkout 대상이 아닌 이력 참고값이다.
+기준: **2026-09-14 · ONDO B · 운영 배포 source/runtime `cc3d7c3` · 인계 branch `handoff/harvey-20260914`**. [운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 확인한다. 이번 변경은 음식·카페·바 중심 공유 카드와 무채색 K-TOUR ID 아이콘뿐이며 최종 production Ready·검수 범위는 해당 기록을 따른다. 인계는 최신 소스 스냅샷이며 과거 배포 commit ID는 이 브랜치의 checkout 대상이 아닌 이력 참고값이다.
 
 이전 운영 source `d9eda4f`의 [지도 우선 진입 릴리스](./MAP_FIRST_ENTRY_2026-09-14.md)와 `82ea4c9`의 [지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)는 역사적 배포·검수 기록으로 별도 보존한다. 현재 앱의 기준으로 혼용하지 않는다.
 
@@ -29,7 +29,8 @@
 - 지도/추천의 선택 매장과 지도 잔액 진입, ID/Wallet, Tables, My Korea, Settings, Demo의 sheet·탭이 플로우 진입점이다. 매장에서는 혜택·결제·Table·예약으로 이어지고 길찾기/저장은 보조 행동이다. `/pass`, `/wallet`, `/present`, `/partner/verify`, `/partner/settlements`, `/evidence`를 새 API나 현재 공개 페이지로 가정하지 않는다.
 - 기본 데모에서 샘플 상황을 선택할 수 있다. `review=0`은 실제 미연결 경계를 확인하는 경로이며, provider 실패를 샘플 성공으로 자동 대체하지 않는다.
 - 준비된 K-Pass 자격 선택기는 **테스트 fixture 주입**이다. 별도의 K-Tour ID setup walkthrough는 provider 동의/복귀/holder 보관을 시연한다. walkthrough의 `review-draft`가 실제 Person/Age/Payment 자격 발급을 의미하지 않는다.
-- **최신 공개판:** source/runtime `e2ad7c4`, [운영 앱](https://ondo-tau.vercel.app), [고유 배포 주소](https://ondo-eq9z4oba8-jaewook-9643s-projects.vercel.app), production deployment `dpl_435M4FCDrrR8AWGgNhmCTD9J3g8J` Ready. 로컬 전체 계약833/833(11.3초)·typecheck/build/scan·HTTP probe·After 19 공개 경로5/5(2.7분) PASS. 새 운영 HTTP 및 After 19 공개 경로5/5(2.0분, workers1/retries0) PASS. 5개 project mismatch skip은 실행 수에 포함하지 않는다. 정확한 검사 범위는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)을 따른다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개 및 계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거이며 새 source에서 재실행한 것으로 합산하지 않는다. [9월 11일 검수](./FINAL_JOURNEY_QA_2026-09-11.md)와 당시 인계 결과도 별도이며 실제 SDK/provider 또는 모든 기기 완료를 뜻하지 않는다.
+- **최신 브랜딩 공개판:** source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. [아트워크·생성 프롬프트](../k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md)를 별도로 보존한다.
+- **기능 검수 이력:** 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개·계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md), [9월 11일 검수](./FINAL_JOURNEY_QA_2026-09-11.md)도 각각의 실행 범위만 따른다.
 
 ### 플로우 → 개발 작업
 

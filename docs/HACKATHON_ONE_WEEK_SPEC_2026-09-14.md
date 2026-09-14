@@ -48,8 +48,8 @@ M0만 연결하거나 M2 없이 끝내면 이번 팀 필수 구현 완료가 아
 | 항목 | 시작점 |
 |---|---|
 | UX 목업 | [ONDO](https://ondo-tau.vercel.app), 공개 진입 `/` |
-| 앱·문서 인계 기준 | 브랜치 `handoff/harvey-20260914`의 최신 앱·문서 스냅샷. runtime source `e2ad7c4`는 배포 이력 참고값이며 이 브랜치에서 checkout할 commit이 아님 |
-| 목업 runtime 기준 | `e2ad7c4`, [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md). 장소 상세 위 확인 화면과 같은 장소 복귀를 보완했다. production Ready·운영 HTTP 및 해당 공개 경로5/5 검수 완료. 실제 CX/OpenDID/Chain/Sui 연동은 활성화하지 않음 |
+| 앱·문서 인계 기준 | 브랜치 `handoff/harvey-20260914`의 최신 앱·문서 스냅샷. runtime source `cc3d7c3`는 배포 이력 참고값이며 이 브랜치에서 checkout할 commit이 아님 |
+| 목업 runtime 기준 | `cc3d7c3`, [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md). 공유 카드·무채색 아이콘만 변경했으며 최종 배포·검수 상태는 해당 기록을 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 별도 증거다. 실제 CX/OpenDID/Chain/Sui 연동 및 이 문서의 개발 범위는 변경하지 않음 |
 | 앱 디렉터리 | 인계 브랜치를 clone한 저장소의 `k-tour-id-app/` |
 | 새 구현 분리 | 위 소스에서 해커톤 연동 브랜치와 별도 HTTPS staging을 생성. 기존 공개 목업을 즉시 덮어쓰지 않음 |
 
@@ -340,4 +340,4 @@ D4 첫 전체 시연 예정 / 제출 마감 확인: ___
 - 공식 조건은 §1 링크와 최신 팀 안내를 따른다. 공급자 상세 규격은 실제 제공 문서와 고정 OpenDID release를 따른다.
 - 사업 원문: 저장소 루트 `TrackNo2_Hope&Woogieboogie_K-Tour ID_260531.pdf`, 신원→권한→업무 기록 설계. 개인 연락처가 있어 외부 공유용으로 그대로 복사하지 않는다.
 - [전체 개발 스펙](./DEPLOYMENT_SPEC.md), [전체 BE 작업표](./BACKEND_HANDOFF_CHECKLIST_2026-09-09.md), [전체 기술 매트릭스](./HACKATHON_INTEGRATION_MATRIX_2026-09-08.md)는 **후속 운영화/확장용**. 이번 주에 모든 항목을 구현하라는 뜻이 아니다.
-- [현재 매장 After 19 수정·검수 기록](./PLACE_AFTER19_FIX_2026-09-14.md), [이전 지도 우선 진입 기록](./MAP_FIRST_ENTRY_2026-09-14.md), [이전 지도·지갑 여정 기록](./MAP_WALLET_JOURNEYS_2026-09-12.md)은 UX 참고용이며 실제 공급자 연동 증거와 분리한다.
+- [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md), [이전 매장 After 19 수정·검수 기록](./PLACE_AFTER19_FIX_2026-09-14.md), [이전 지도 우선 진입 기록](./MAP_FIRST_ENTRY_2026-09-14.md), [이전 지도·지갑 여정 기록](./MAP_WALLET_JOURNEYS_2026-09-12.md)은 UX 참고용이며 실제 공급자 연동 증거와 분리한다.

@@ -1,10 +1,10 @@
 # 해커톤 연동·목업·백엔드 작업 매트릭스
 
-최신 배포: source/runtime `e2ad7c4`, [운영 앱](https://ondo-tau.vercel.app), [고유 배포 주소](https://ondo-eq9z4oba8-jaewook-9643s-projects.vercel.app), production deployment `dpl_435M4FCDrrR8AWGgNhmCTD9J3g8J` Ready. **현재 URL·배포 ID·검사 범위는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)** 을 따른다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개 및 계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거이며 새 source에서 재실행한 것으로 합산하지 않는다. 실제 provider/SDK 요구는 유지한다.
+최신 브랜딩 배포: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 실제 provider/SDK 요구와 해커톤 범위는 변경하지 않았다. 이전 기능 검수 결과를 새 브랜딩 배포의 전체 여정 PASS로 이월하지 않는다.
 
 상태: `2026-09-14 지도 우선 진입 운영 Ready · 로컬 신규5개/desktop1개·832계약·운영 HTTP PASS · 운영 신규5개/실제 desktop1개 PASS · 외부 연동은 별도`
 
-이전 `82ea4c9` 공개 mobile12/desktop·tablet2, `3d02b84` 로컬 mobile12/기존7, 당시 계약826 결과는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거다. 현재 `e2ad7c4`의 로컬 전체 계약833/833(11.3초)·typecheck/build/scan·HTTP probe·After 19 공개 경로5/5(2.7분) PASS. 새 운영 HTTP 및 After 19 공개 경로5/5(2.0분, workers1/retries0) PASS. 5개 project mismatch skip은 실행 수에 포함하지 않는다. 실행별 source·시간·로그는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)에서 구분한다.
+이번 `cc3d7c3`의 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9` 공개 mobile12/desktop·tablet2, `3d02b84` 로컬 mobile12/기존7, 당시 계약826 결과는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거다.
 
 - [x] 9월 11일 프리뷰 `52f376e`의 영향27개 **범위 한정 PASS**. 기준선174개와 별도 URL의 증거이며 현재 운영 URL 실행 수로 세지 않는다. 최초 실패·재실행 조건은 [전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 실제 공급자 활용·제출 인정과 별도다.
 
@@ -31,7 +31,7 @@
 
 ## 2. 현재 코드에서 확인한 경계
 
-- 기준선: 핵심 DID 공개 목업 `bec3257` 이후 v3.2 및 G09-S 변경. 현재 개발 시작점은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. `996119f`·`a45400f`·core app `5233816`와 이전 공개 source `3dc392b`는 각각의 후보 증거다. 이전 공개 증거는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md), 당시 문서 대조·선택 로컬 회귀는 [9월 11일 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 `52f376e`·중간 `f8960b4`·`abd0f83`과 기준선 `564823e`의 공개 결과는 [9월 11일 배포 기록](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 현재 `e2ad7c4`는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 범위만 따른다.
+- 기준선: 핵심 DID 공개 목업 `bec3257` 이후 v3.2 및 G09-S 변경. 현재 개발 시작점은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. `996119f`·`a45400f`·core app `5233816`와 이전 공개 source `3dc392b`는 각각의 후보 증거다. 이전 공개 증거는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md), 당시 문서 대조·선택 로컬 회귀는 [9월 11일 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 `52f376e`·중간 `f8960b4`·`abd0f83`과 기준선 `564823e`의 공개 결과는 [9월 11일 배포 기록](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 이전 기능 검수 기준 `e2ad7c4`는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 범위만 따른다.
 - 아래 `B/`는 이 기준선의 `k-tour-id-app/features/ondo/`다. 루트의 오래된 앱이나 배포에서 제외된 legacy route를 현재 증거로 세지 않는다.
 - `코드 존재`는 읽기 검토 결과다. 각 flow의 실제 브라우저 정상·경계·mobile 검수 통과는 별도 기록이 필요하다.
 - `구현중`은 이번 turn의 새 작업이다. 결과를 보지 않고 완료로 갱신하지 않는다.
@@ -216,12 +216,12 @@ Sui zkLogin은 ephemeral key/OAuth·salt·proof·maxEpoch 흐름이며, signer �
 
 | 구분 | 반드시 남길 파일/정보 | 현재 판정 |
 |---|---|---|
-| 목업 릴리스 | source commit, standalone build ID, 공유 URL, fixture version·진입방법 | **source/runtime `e2ad7c4` production Ready:** [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 주소·배포·검사/복구 범위를 따른다. 로컬 전체 계약833/833(11.3초)·typecheck/build/scan·HTTP probe·After 19 공개 경로5/5(2.7분) PASS. 새 운영 HTTP 및 After 19 공개 경로5/5(2.0분, workers1/retries0) PASS. 5개 project mismatch skip은 실행 수에 포함하지 않는다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개 및 계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거이며 새 source에서 재실행한 것으로 합산하지 않는다. |
+| 목업 릴리스 | source commit, standalone build ID, 공유 URL, fixture version·진입방법 | **브랜딩 전용 source/runtime `cc3d7c3`:** [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)의 주소·최종 배포·검사 범위를 따른다. 마지막 기능 흐름 검수 `e2ad7c4`의 계약833/833·After 19 로컬5/5·운영5/5는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 결과이며 새 source에서 재실행한 것으로 합산하지 않는다. |
 | 플로우 목록 | G01–G13 × 기존 REQ/FL × mock source × test ID × 상태 | 본 문서/Deployment Spec에 대응 계약이 있고 [전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)에 G별 브라우저 범위·상태가 있다 |
 | DID 효과 시연 | 신원 경로 3개, 체류/연령/혜택/한도별 allow·proof_required·deny·expired 영상 | 공개 기준선의 identity 52개에 세 신원 경로·8개 자격·서비스별 허용/거절·복구 PASS 증거가 있다. 최초 실패/재실행과 해당 URL은 [전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)를 따른다. 실제 provider 증거 및 제출용 영상 녹화는 별도 후속 작업 |
 | API handoff | OpenAPI/schema, 상태전이, callback mapping, error/recovery, DB migration | 본 문서는 요구 계약. 실제 machine-readable schema/backend 구현 필요 |
 | 외부 실증 | redacted CX/eKYC/OpenDID receipt, contract ABI/address·tx evidence, Sui effects | 현재 앱의 실제 연결 증거 없음. 과거 로컬 실험은 별도 |
 | 운영 | env manifest(값 제외), key custody/RBAC, idempotency/outbox/DLQ/reconcile, reset/rollback | backend 구현 및 runbook 필요 |
-| 검수 | 계약/브라우저 명령·실행 결과, viewport 캡처, 반례 review | **현재 `e2ad7c4`:** 로컬 전체 계약833/833(11.3초)·typecheck/build/scan·HTTP probe·After 19 공개 경로5/5(2.7분) PASS. 새 운영 HTTP 및 After 19 공개 경로5/5(2.0분, workers1/retries0) PASS. 5개 project mismatch skip은 실행 수에 포함하지 않는다. [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md) 참조. **이전 `82ea4c9`:** 공개 mobile12/desktop·tablet2·HTTP·계약826 PASS는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)에 보존. 이전 `52f376e` HTTP10/mobile6 및 9월 11일 기준선174/영향27은 [이전 운영 기록](./PRODUCTION_RELEASE_2026-09-12.md)·[전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)의 별도 증거. 실기기 미검증 |
+| 검수 | 계약/브라우저 명령·실행 결과, viewport 캡처, 반례 review | **브랜딩 전용 `cc3d7c3`:** 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 운영 검수는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. **마지막 기능 흐름 검수 `e2ad7c4`:** 계약833/833·After 19 로컬5/5·운영5/5 PASS는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md) 참조. **이전 `82ea4c9`:** 공개 mobile12/desktop·tablet2·HTTP·계약826 PASS는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)에 보존. 이전 `52f376e` HTTP10/mobile6 및 9월 11일 기준선174/영향27은 [이전 운영 기록](./PRODUCTION_RELEASE_2026-09-12.md)·[전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)의 별도 증거. 실제 iPhone Safari/Android·provider 검수나 전체 여정 재실행이 아님 |
 
 우선순위는 H04의 자격→서비스 연결과 H01/H05/H06을 이어 DID 서비스 가치를 입증하고, H08/H09/H11/H12의 금전·혜택·정산·증거를 같은 operation으로 연결하는 것이다. Sui는 그 업무와 충돌하지 않는 독립 signer/transaction 경계로 구현한다. 성과는 완료율 대신 이 표의 재현 가능한 증거로 판단한다.
