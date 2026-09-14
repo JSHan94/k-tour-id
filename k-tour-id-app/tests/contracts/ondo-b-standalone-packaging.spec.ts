@@ -68,7 +68,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
   test("B-STANDALONE-001B isolated source declares its remote-build runtime", () => {
     const sourcePreparer = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/prepare.mjs"), "utf8")
     expect(sourcePreparer).toContain('scripts: { build: "next build" }')
-    for (const dependency of ["next", "react", "react-dom", "maplibre-gl", "lucide-react", "typescript", "@types/node", "@types/react", "@types/react-dom"]) {
+    for (const dependency of ["next", "react", "react-dom", "maplibre-gl", "lucide-react", "@sumsub/websdk", "typescript", "@types/node", "@types/react", "@types/react-dom"]) {
       expect(sourcePreparer).toContain(dependency)
     }
     expect(sourcePreparer).toContain('exclude: ["node_modules", "dist", "vite.config.ts", "worker"]')
@@ -153,6 +153,8 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     const routeFiles = filesBelow(resolve(STAGE_ROOT, "app"))
       .filter((file) => /(?:page|route|layout)\.(?:ts|tsx)$/.test(file))
     expect(routeFiles).toEqual([
+      "api/kyc/sumsub/session/route.ts",
+      "api/kyc/sumsub/status/route.ts",
       "api/ondo/venues/[venueId]/route.ts",
       "layout.tsx",
       "ondo-b/page.tsx",
@@ -229,6 +231,9 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(stagedGlobals).toContain("--ondo-canvas: #ffffff")
     expect(stagedGlobals).toContain(':root[data-ondo-theme="dark"]')
     for (const file of [
+      "lib/kyc/sumsub-sandbox.ts",
+      "features/ondo/identity-b/sumsub-passport-step-b.tsx",
+      "features/ondo/identity-b/sumsub-passport-step-b.module.css",
       "features/ondo/contracts/execution-mode.ts",
       "features/ondo/after19/after19-global-b-model.ts",
       "features/ondo/after19/after19-global-b.tsx",

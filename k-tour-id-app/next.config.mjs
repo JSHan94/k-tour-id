@@ -1,4 +1,6 @@
-const productionSecurityHeaders = [
+import { withSumsubSandboxHeaders } from "./lib/kyc/sumsub-security.mjs"
+
+const productionSecurityHeaders = withSumsubSandboxHeaders([
   {
     key: "Content-Security-Policy",
     value: [
@@ -21,7 +23,7 @@ const productionSecurityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "geolocation=(self), camera=(), microphone=(), payment=(), usb=()" },
   { key: "X-Frame-Options", value: "DENY" },
-]
+])
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -38,6 +40,7 @@ const nextConfig = {
       { source: "/ondo-a", headers: productionSecurityHeaders },
       { source: "/ondo", headers: productionSecurityHeaders },
       { source: "/api/ondo/venues/:path*", headers: productionSecurityHeaders },
+      { source: "/api/kyc/sumsub/:path*", headers: productionSecurityHeaders },
     ]
   },
 }

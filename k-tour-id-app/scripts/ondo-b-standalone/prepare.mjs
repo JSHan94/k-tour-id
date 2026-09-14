@@ -219,13 +219,14 @@ export function useReviewSampleSession() {
 export function readQaRuntime<T extends object>(): T | undefined { return undefined }
 `
 
-const NEXT_CONFIG = `const securityHeaders = [
+const NEXT_CONFIG = `import { withSumsubSandboxHeaders } from "./lib/kyc/sumsub-security.mjs"
+const securityHeaders = withSumsubSandboxHeaders([
   { key: "Content-Security-Policy", value: "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data: https://tiles.openfreemap.org; img-src 'self' data: blob: https:; connect-src 'self' https://tiles.openfreemap.org https://openfreemap.org; worker-src 'self' blob:" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "geolocation=(self), camera=(), microphone=(), payment=(), usb=()" },
   { key: "X-Frame-Options", value: "DENY" },
-]
+])
 
 export default {
   images: { unoptimized: true },
@@ -235,6 +236,7 @@ export default {
       { source: "/", headers: securityHeaders },
       { source: "/ondo-b", headers: securityHeaders },
       { source: "/api/ondo/venues/:path*", headers: securityHeaders },
+      { source: "/api/kyc/sumsub/:path*", headers: securityHeaders },
     ]
   },
 }
@@ -300,6 +302,8 @@ function secure(response: Response) {
 function isAllowed(pathname: string) {
   return pathname === "/"
     || pathname === "/ondo-b"
+    || pathname === "/api/kyc/sumsub/session"
+    || pathname === "/api/kyc/sumsub/status"
     || /^\\/api\\/ondo\\/venues\\/[^/]+$/.test(pathname)
     || pathname === "/_vinext/image"
     || allowedPublicAssetPaths.has(pathname)
@@ -378,6 +382,7 @@ const PACKAGE = JSON.stringify({
   type: "module",
   scripts: { build: "next build" },
   dependencies: {
+    "@sumsub/websdk": "2.9.0",
     "lucide-react": "^0.454.0",
     "maplibre-gl": "^5.7.1",
     "qrcode-generator": "2.0.4",

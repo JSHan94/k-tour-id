@@ -55,6 +55,7 @@ test("PROD-B-DATA-001 initial B client graph uses only compact venue data and th
   expect(clientGraph).toContain("lib/ondo/venues/map-data.ts")
   expect(clientGraph).not.toContain("lib/ondo/venues/index.ts")
   expect(clientGraph).not.toContain("lib/ondo/venues/detail-server.ts")
+  expect(clientGraph).not.toContain("lib/kyc/sumsub-sandbox.ts")
 
   const clientSource = clientGraph.map((file) => readFileSync(resolve(APP_ROOT, file), "utf8")).join("\n")
   expect(clientSource).toContain("canonical-venues-map.json")

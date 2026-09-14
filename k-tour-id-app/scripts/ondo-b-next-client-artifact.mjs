@@ -40,7 +40,7 @@ async function assertIsolatedNextClosure() {
   if (SOURCE_ROOT === APP_ROOT) return null
   const manifest = JSON.parse(await readFile(resolve(NEXT_ROOT, "server/app-paths-manifest.json"), "utf8"))
   const routes = Object.keys(manifest).sort()
-  const expectedRoutes = ["/_global-error/page", "/_not-found/page", "/api/ondo/venues/[venueId]/route", "/ondo-b/page", "/page"]
+  const expectedRoutes = ["/_global-error/page", "/_not-found/page", "/api/kyc/sumsub/session/route", "/api/kyc/sumsub/status/route", "/api/ondo/venues/[venueId]/route", "/ondo-b/page", "/page"]
   if (JSON.stringify(routes) !== JSON.stringify(expectedRoutes)) fail("The isolated Next route census drifted", routes)
 
   const files = await filesBelow(NEXT_ROOT)

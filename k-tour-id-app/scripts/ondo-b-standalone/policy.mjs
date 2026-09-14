@@ -137,6 +137,12 @@ export const REQUIRED_B_NATIVE_LABS_FILES = Object.freeze([
 ])
 
 export const SOURCE_FILES = Object.freeze([
+  "lib/kyc/sumsub-sandbox.ts",
+  "lib/kyc/sumsub-security.mjs",
+  "app/api/kyc/sumsub/session/route.ts",
+  "app/api/kyc/sumsub/status/route.ts",
+  "features/ondo/identity-b/sumsub-passport-step-b.tsx",
+  "features/ondo/identity-b/sumsub-passport-step-b.module.css",
   "features/ondo/commerce-b/wallet-connection-preview-b.tsx",
   "features/ondo/identity-b/identity-demo-boundary-b.ts",
   "features/ondo/identity-b/identity-handoff-step-b.tsx",
@@ -266,6 +272,8 @@ export const PUBLIC_FILES = Object.freeze([
 ])
 
 export const EXPECTED_ROUTE_FILES = Object.freeze([
+  "api/kyc/sumsub/session/route.ts",
+  "api/kyc/sumsub/status/route.ts",
   "api/ondo/venues/[venueId]/route.ts",
   "layout.tsx",
   "ondo-b/page.tsx",
