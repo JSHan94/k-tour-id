@@ -1,8 +1,8 @@
 # Sumsub Sandbox 연동 인계
 
-브랜치: `feat/sumsub-sandbox-onboarding-20260914` · 배포 소스: `f5c5af3`.
+브랜치: `feat/sumsub-sandbox-onboarding-20260914` · 최종 확인 배포 소스: `c80d1da` · 상태: **Ready**.
 
-**[Sumsub Sandbox Preview 열기](https://ondo-h8khioo8p-jaewook-9643s-projects.vercel.app)** — 기존 Production 배포는 변경하지 않았다. 앱의 **ID · Wallet → 여행 준비 상태(Trip readiness) 펼치기 → K-Tour ID 열기(Open K-Tour ID) → Passport → 테스트 안내 동의**로 진입한다. 최초 시작에 필요한 테스트 접근 코드는 별도 전달하며 이 문서·URL·Git에는 넣지 않는다.
+**[최종 Sumsub Sandbox Preview 열기](https://ondo-ph4kwxgrc-jaewook-9643s-projects.vercel.app)** — 기존 Production 배포는 변경하지 않았다. 앱의 **ID · Wallet → 여행 준비 상태(Trip readiness) 펼치기 → K-Tour ID 열기(Open K-Tour ID) → Passport → 테스트 안내 동의**로 진입한다. 최초 시작에 필요한 테스트 접근 코드는 별도 전달하며 이 문서·URL·Git에는 넣지 않는다.
 
 ## 1. 이번 연결의 범위
 
@@ -56,23 +56,36 @@ Sandbox와 Production은 같은 API 호스트를 사용하므로 URL만으로 �
 
 ## 4. 검수 및 다음 개발 단계
 
-| 검수 | 통과 기준 |
-|---|---|
-| 설정 없음·잘못된 키/level·공급자 장애 | 안전한 오류, 샘플 승인으로 자동 전환하지 않음 |
-| 동의·SDK 진입·토큰 갱신 | 명시적 시작, 유효 세션/applicant 유지, 토큰을 영구 저장하지 않음 |
-| 쿠키 변조·만료·다른 applicant·외부 origin 요청 | 요청 거절, 다른 사람의 상태/토큰 조회 불가 |
-| 제출·pending·재제출·거절·완료 | 서버 조회 결과에 맞는 상태. 완료 이벤트만으로 승인 금지 |
-| 닫기·재진입·새로고침 | 유효 쿠키에서만 같은 applicant 재사용. 미완료 명시적 닫기는 쿠키 삭제, 완료·최종 거절 닫기는 유지 |
-| 기존 앱 권한 | Sandbox 완료 후 Person/Age/Payment KYC·K-Pass·잔액·혜택 불변 |
-| 배포·정보 노출 | 격리 Preview, 기존 운영 유지, 정확한 API allowlist, client bundle/log에 secret·PII 없음 |
+최종 배포 검수 결과:
 
-확인된 결과:
+- **계약 검사 85개 통과**, **원격 모바일 UI 회귀 검사 9개 통과**. 후자는 API mock으로 실행했으며 실제 provider 요청·브라우저 오류는 각각 0회다.
+- **실제 WebSDK 여정 확인**: 아래 문서 업로드·테스트 카메라 경로를 실행한 후, 같은 applicant에 명시적으로 Sandbox `GREEN`을 시뮬레이션해 ONDO 서버의 완료 화면·ID 화면 복귀까지 확인했다. 브라우저 오류 0회, 패스 미발급, Person/Age/Payment 자격 변화 없음.
+- **수정 확인**: `prechecked`를 진행 중으로 처리하고 중간 상태·일시적 상태 조회 실패가 열린 SDK를 종료하지 않게 했다. 진행을 취소하던 상단 뒤로가기 버튼을 제거하고 헤더·중첩 스크롤·SDK 스크롤 요청을 조정했다. 실제 국가 선택 팝업에서 Germany 선택 후 팝업이 닫히고 다음 단계로 진행됨을 확인했다.
 
-- **계약 검사 49개 통과**: Sumsub 전용 19개와 기존 standalone 패키징·클라이언트 데이터·QA 진입·로컬 기능 경계 검사. 실제 provider 호출 없이 가짜 입력/응답으로 검증했다.
-- **Preview UI 회귀 검사 8개 통과**: API를 mock한 원격 검사이며 실제 provider 요청은 0회. 브라우저 오류·재시도 없이 통과했다. 위 계약 검사 49개와 별도다.
-- **실제 Sandbox WebSDK 표시·닫기 확인**: 390×844 브라우저에서 `api.sumsub.com` iframe 표시, 가로 넘침·브라우저 오류 없음, 패스 미발급·닫기 후 복귀를 확인했다. 실제 모바일 기기·물리 카메라 검증은 아니다.
-- **실제 Sandbox API 확인**: 공급자에 설정한 `GREEN`, `RED + RETRY`, `RED + FINAL`을 각각 완료·재제출·최종 거절로 읽었다. 접근 코드 미충족 `401`, 잘못된 origin `403`, token 갱신 시 같은 applicant 유지, HttpOnly·no-store, `DELETE` 후 세션 접근 차단도 확인했다. [Sandbox 응답 시뮬레이션](https://docs.sumsub.com/reference/simulate-review-response-in-sandbox)
-- **미검증**: 실제 신분증 제출·liveness 통과·물리 카메라, 운영 KYC.
+실제 실행 경로는 다음 두 검증을 구분한다.
+
+```text
+A. 지도 → Passport 동의 → 공급자 초기 동의 → 선택 사항인 Sumsub ID 재사용 해제
+ → Germany / Passport → 공식 테스트 여권 이미지 업로드 성공
+ → Continue → 2단계 얼굴 촬영 → 테스트 카메라 영상 준비
+
+B. A의 같은 applicant에 명시적 Sandbox GREEN 시뮬레이션
+ → ONDO 서버 재조회 → 테스트 완료 화면 → ID 화면 복귀
+```
+
+업로드 파일은 [Sumsub 공식 독일 여권 테스트 이미지](https://sumsub.com/files/29346237-germany-passport.jpg) 그대로이며 개인 여권은 사용하지 않았다. 카메라는 Chromium의 **얼굴 없는 테스트 패턴 영상**이다. 카메라 입력은 확인했으나 실제 얼굴/liveness는 통과하지 않았고, 확인한 화면에 Sandbox 건너뛰기는 없었다. **A는 실제 얼굴 촬영·SDK 전체 제출 완료가 아니다. B는 공급자의 테스트 결과 설정을 검증한 것이며 이를 liveness 성공으로 집계하지 않는다.** [공식 Sandbox 결과 시뮬레이션](https://docs.sumsub.com/reference/simulate-review-response-in-sandbox)
+
+이전 `3870469` 빌드에서는 실제 열린 SDK에 상태 조회 응답 `503/502/504/429`를 **주입**한 뒤 실제 API로 복구해 같은 iframe이 유지됨을 확인했다. 이는 공급자 자체 장애를 재현한 시험은 아니다. 당시 검증한 서버 helper는 최종 빌드에서도 동일하다. 이전 API 검사에서 `GREEN`·`RED + RETRY`·`RED + FINAL` 매핑, 접근 코드 `401`·다른 origin `403`, 같은 applicant token 갱신, HttpOnly·no-store, `DELETE` 후 세션 접근 차단도 확인했다.
+
+재실행은 `k-tour-id-app/`에서 담당자의 로컬 Sandbox 설정을 사용한다. 문서·테스트 카메라 검사 명령은 아래와 같다. 정확한 허용 origin을 지정하며, secret이나 접근 코드를 명령에 직접 적지 않는다.
+
+```sh
+SUMSUB_ALLOWED_ORIGINS=https://ondo-ph4kwxgrc-jaewook-9643s-projects.vercel.app node --env-file=.env.local --import tsx scripts/kyc/browser-sumsub-journey.ts https://ondo-ph4kwxgrc-jaewook-9643s-projects.vercel.app
+```
+
+기본 실행은 A만 검사한다. B까지 검사하려면 같은 명령 끝에 **`--simulate-review-after-camera`를 명시적으로 추가**한다. 이 옵션은 이번 브라우저의 유효한 서버 쿠키에 연결된 Sandbox applicant만 변경한다. 실행 중 debug·trace·HAR·영상 기록을 켜지 않는다.
+
+남은 수동 검수는 동의한 테스터가 **본인 휴대폰 카메라**에서 얼굴 촬영·재시도·최종 제출을 직접 확인하는 것이다. 문서는 위 공식 테스트 이미지를 사용하고 개인 여권 업로드는 요구하지 않는다. 얼굴 검증을 위조·우회하지 않으며, 테스트 화면의 완료도 운영 KYC 승인이 아니다.
 
 전용 계약 검사 재실행: `k-tour-id-app/`에서 `pnpm exec playwright test tests/contracts/ondo-sumsub-boundary.spec.ts --config=playwright.contracts.config.ts --workers=1 --reporter=line`.
 
