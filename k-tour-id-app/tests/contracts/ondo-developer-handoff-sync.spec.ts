@@ -12,10 +12,14 @@ const groups = ["G01", "G02", "G03", "G04", "G05", "G06", "G07", "G08", "G08-R",
 
 // These guards check documentation traceability, not provider implementation
 // or browser coverage. Runtime evidence is deliberately recorded separately.
-test("HANDOFF-SYNC-008 concise handoff keeps the flow, all three integrations, resources and delivery scope", () => {
+test("HANDOFF-SYNC-008 concise handoff keeps the flow, all four integrations, resources and delivery scope", () => {
   const brief = doc("HARVEY_HACKATHON_HANDOFF_2026-09-14.md")
   const detailed = doc("HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
-  expect(brief).toContain("OmniOne CX + OpenDID + OmniOne Chain")
+  expect(brief).toContain("OmniOne CX + OpenDID + OmniOne Chain + Sui")
+  for (const requirement of ["Move", "zkLogin", "PTB", "Agentic AI", "DeepSurge", "provenance"]) {
+    expect(brief, requirement).toContain(requirement)
+  }
+  expect(brief).toContain("HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md")
   expect(brief).toContain("2026-09-21(월) 18:00 KST")
   expect(brief).toContain("https://github.com/woogieboogie-jl/k-tour-id")
   expect(brief).toContain("handoff/harvey-20260914")
@@ -32,6 +36,20 @@ test("HANDOFF-SYNC-008 concise handoff keeps the flow, all three integrations, r
   expect(detailed).toContain("이번 팀의 필수 구현 범위")
   expect(detailed).not.toContain("M0-only 제출로 축소할지 결정")
   expect(detailed).toContain("HARVEY_HACKATHON_HANDOFF_2026-09-14.md")
+})
+
+test("HANDOFF-SYNC-009 required Sui scope includes real execution, distinct service finality and bounty evidence", () => {
+  const sui = doc("HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md")
+  const detailed = doc("HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
+  for (const term of ["zkLogin + PTB", "Agentic AI", "Move package", "DeepSurge", "provenance", "fulfillment_blocked", "durable intent", "A13", "A20"]) {
+    expect(sui, term).toContain(term)
+  }
+  expect(sui).toContain("Sui 권한 행사 성공은 혜택 사용 완료가 아니다")
+  expect(sui).toContain("코드 완료와 접수/수상/격려금 지급은 별도 판정")
+  expect(detailed).not.toContain("이번 인계에서는 Sui를 구현 범위에서 제외한다")
+  expect(detailed).not.toContain("Sui: 이번 범위 제외")
+  expect(detailed).toContain("M2: 팀 필수 Sui 바운티 범위")
+  expect(detailed).toContain("A01–A20")
 })
 
 test("HANDOFF-SYNC-001 every current flow group has an assigned work package and detailed contract", () => {
@@ -56,7 +74,7 @@ test("HANDOFF-SYNC-002 every concrete B source touchpoint in the start guide exi
 })
 
 test("HANDOFF-SYNC-003 current handoff and README local document links resolve", () => {
-  for (const file of ["README.md", "docs/DEVELOPER_START_HERE.md", "docs/DEPLOYMENT_SPEC.md", "docs/BACKEND_HANDOFF_CHECKLIST_2026-09-09.md", "docs/HACKATHON_INTEGRATION_MATRIX_2026-09-08.md", "docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md", "docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md", "docs/MAP_FIRST_ENTRY_2026-09-14.md", "docs/PLACE_AFTER19_FIX_2026-09-14.md"]) {
+  for (const file of ["README.md", "docs/DEVELOPER_START_HERE.md", "docs/DEPLOYMENT_SPEC.md", "docs/BACKEND_HANDOFF_CHECKLIST_2026-09-09.md", "docs/HACKATHON_INTEGRATION_MATRIX_2026-09-08.md", "docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md", "docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md", "docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md", "docs/MAP_FIRST_ENTRY_2026-09-14.md", "docs/PLACE_AFTER19_FIX_2026-09-14.md"]) {
     const text = readFileSync(resolve(root, file), "utf8")
     const links = [...text.matchAll(/\]\(([^)]+)\)/g)].map(match => match[1])
     for (const link of links.filter(link => !/^(?:https?:|#)/.test(link))) {

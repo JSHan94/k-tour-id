@@ -6,7 +6,7 @@ ONDO 溫圖 is a map-first Korea food and travel product. It combines 400 offici
 
 ## Developer handoff — start here
 
-For the September 21 submission, start with [해커톤 연동 개발 요약](./docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md) for the flow, tasks and resources, then [1주 해커톤 통합 개발안](./docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md) for implementation contracts. CX, OpenDID and OmniOne Chain are all required by the team; Sui and real financial/reservation integrations are outside this sprint. The full-product handoff below remains the longer-term reference.
+For the September 21 submission, start with [해커톤 연동 개발 요약](./docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md), then [Sui 필수 통합 추가 명세](./docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) and the [1주 해커톤 통합 개발안](./docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). **CX, OpenDID, OmniOne Chain and Sui are all required by the team.** The same nonfinancial entitlement journey adds real Move, zkLogin/PTB and a user-authorized, bounded AI agent. The addendum takes precedence for scope and execution order; Sui staffing and readiness must be confirmed before treating the original one-week schedule as feasible. Financial/reservation integrations, bridge and passport/residence integrations remain mock. Program registration, submission eligibility and matching-prize terms require separate confirmation. The full-product handoff below remains the longer-term reference.
 
 Read [개발자 시작 문서](./docs/DEVELOPER_START_HERE.md) for the current mock → API/SDK/backend work map and implementation order. Start from branch `handoff/harvey-20260914`, which contains the app and docs together. This is a source snapshot; commit IDs in historical release notes describe prior deployments, not checkout targets in this branch.
 

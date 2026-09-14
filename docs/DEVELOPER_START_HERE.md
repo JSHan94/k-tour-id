@@ -1,8 +1,8 @@
 # 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
 
-**9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** 대표 플로우·구현 작업·참고 리소스를 안내한다. CX·OpenDID·OmniOne Chain 세 가지 모두 팀 필수이며, 실제 금융/예약·Sui는 이번 범위에서 제외한다. 아래 전체 제품 인계와 이번 주 일정·범위를 구분한다.
+**9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 같은 비금전 혜택 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 범위·실행 순서가 기존 단일안과 아래 전체 제품 목록보다 우선한다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
 
-**1주 해커톤 개발을 검토한다면 [단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)부터 읽는다.** 아래는 전체 제품 인계다. 단일안의 인원·환경·범위를 합의한 뒤 이번 주 작업만 배정하며, 아래 전체 목록을 일주일 내 필수로 해석하지 않는다.
+**[단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)은 공통 CX/OpenDID·서버 계약의 상세 참고다.** Sui 담당·환경·가용 시간을 추가 확인해 일정을 확정한다. 네 기술과 AI 실행을 기존 1주 일정에 그대로 완료할 수 있다고 가정하지 않으며, 프로그램 등록·별도 제출 자격·추가 상금 적용 조건도 확인한다. 아래는 전체 제품 인계로, 금융·예약 등 전체 목록이 이번 주 필수라는 뜻은 아니다.
 
 기준: **2026-09-14 · ONDO B · 운영 배포 source/runtime `e2ad7c4` · 인계 branch `handoff/harvey-20260914`**. [운영 앱](https://ondo-tau.vercel.app), [고유 배포 주소](https://ondo-eq9z4oba8-jaewook-9643s-projects.vercel.app), [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)을 확인한다. production deployment `dpl_435M4FCDrrR8AWGgNhmCTD9J3g8J`는 Ready다. 인계는 최신 소스 스냅샷이며 과거 배포 commit ID는 이 브랜치의 checkout 대상이 아닌 이력 참고값이다.
 
