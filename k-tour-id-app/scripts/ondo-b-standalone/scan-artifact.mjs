@@ -77,18 +77,20 @@ export async function scanStandaloneArtifact() {
   }
 
   const emittedImages = artifactFiles.filter((file) => /\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(file))
-  const expectedOg = PUBLIC_FILES[0]
-  const emittedOg = emittedImages.find((file) => file.endsWith("/og-map-first.png") || file === "og-map-first.png")
+  const expectedOg = "public/og-ktour-food-v1.png"
+  if (!PUBLIC_FILES.includes(expectedOg)) fail("The production social card is absent from the public allowlist")
+  const ogPath = expectedOg.replace(/^public\//, "")
+  const emittedOg = emittedImages.find((file) => file.endsWith(`/${ogPath}`) || file === ogPath)
   if (!emittedOg) fail("The production K-TOUR ID social card is missing")
   if (await digest(resolve(STAGE_DIST, emittedOg)) !== await digest(resolve(APP_ROOT, expectedOg))) {
     fail("The emitted K-TOUR ID social card differs from the validated source")
   }
-  for (const publicFile of PUBLIC_FILES.slice(1)) {
+  for (const publicFile of PUBLIC_FILES) {
     const publicPath = publicFile.replace(/^public\//, "")
     const emittedFile = emittedImages.find((file) => file === publicPath || file.endsWith(`/${publicPath}`))
-    if (!emittedFile) fail("A required ONDO editorial image is missing", [publicPath])
+    if (!emittedFile) fail("A required ONDO public image is missing", [publicPath])
     if (await digest(resolve(STAGE_DIST, emittedFile)) !== await digest(resolve(APP_ROOT, publicFile))) {
-      fail("An emitted ONDO editorial image differs from the validated source", [publicPath])
+      fail("An emitted ONDO public image differs from the validated source", [publicPath])
     }
   }
   const requiredPublicImage = (file) => PUBLIC_FILES.some((publicFile) => {

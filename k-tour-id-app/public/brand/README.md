@@ -5,10 +5,30 @@
 `ktour-id-mark.png` is the byte-for-byte transparent mark supplied in the
 workspace `sources/` folder (SHA-256
 `2f7467cb8efe5640489f8387e7b7f842b56b45a53619f61268b864fb9cd9b38d`).
-The `-32`, `-64`, `-180`, `-192`, and `-512` files are size-only PNG exports
-from that master. Use the 32 px and 192 px exports for browser icons and the
-180 px export for Apple touch metadata; do not derive icons from screenshots
-or the horizontal lockup.
+The `-32`, `-64`, `-180`, `-192`, and `-512` files are historical size-only
+PNG exports from that master. Preserve these supplied assets; new browser and
+Apple icons use the monochrome variant below.
+
+## K-TOUR ID monochrome app icon
+
+`ktour-id-mono-v1.svg` is a code-native simplification of the supplied K,
+location pin and route silhouette. The mark is white on a near-black rounded
+tile, with no photo, gradient, status badge or verification claim. It remains
+readable on light and dark browser chrome.
+
+Browser metadata uses the SVG and 16/32/192 px PNG variants; Apple touch uses
+the 180 px PNG. The 512 px PNG is retained for app-icon use. Render each size
+directly from the SVG with `node scripts/brand/export-ktour-id-mono.mjs`.
+The original colorful logo is deliberately not overwritten.
+
+## Food-first sharing card
+
+`../og-ktour-food-v1.png` is the active 1200×630 Open Graph and Twitter card.
+K-TOUR ID is the lead brand; food, café and bar imagery describes the service.
+The dishes are generated brand illustrations, not photographs of named venues
+or evidence of visits. See `docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md`
+for the final generation prompt and usage record. Versioned filenames separate
+the new artwork from cached old link previews.
 
 `溫圖` is the product's Hanja signature: `溫` for warmth and `圖` for map. It
 sits beside the full lockup; `ONDO` remains the international product name.

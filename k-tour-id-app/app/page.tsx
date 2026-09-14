@@ -3,8 +3,8 @@ import { headers } from "next/headers"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
 const title = "K-TOUR ID | ONDO 溫圖"
-const description = "A map-first Korea travel experience by ONDO 溫圖—discover Seoul, Busan, and Jeju with a privacy-minded K-TOUR ID travel pass."
-const socialImage = "/og-map-first.png"
+const description = "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close."
+const socialImage = "/og-ktour-food-v1.png"
 
 function configuredOrigin() {
   const configured = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN
@@ -46,10 +46,12 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     icons: {
       icon: [
-        { url: "/brand/ktour-id-mark-32.png", type: "image/png", sizes: "32x32" },
-        { url: "/brand/ktour-id-mark-192.png", type: "image/png", sizes: "192x192" },
+        { url: "/brand/ktour-id-mono-v1-16.png", type: "image/png", sizes: "16x16" },
+        { url: "/brand/ktour-id-mono-v1-32.png", type: "image/png", sizes: "32x32" },
+        { url: "/brand/ktour-id-mono-v1-192.png", type: "image/png", sizes: "192x192" },
+        { url: "/brand/ktour-id-mono-v1.svg", type: "image/svg+xml", sizes: "any" },
       ],
-      apple: [{ url: "/brand/ktour-id-mark-180.png", type: "image/png", sizes: "180x180" }],
+      apple: [{ url: "/brand/ktour-id-mono-v1-180.png", type: "image/png", sizes: "180x180" }],
     },
     alternates: { canonical: "/" },
     openGraph: {
@@ -60,9 +62,9 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/",
       images: [{
         url: imageUrl,
-        width: 1731,
-        height: 909,
-        alt: "K-TOUR ID by ONDO 溫圖 — a map-first Korea travel experience",
+        width: 1200,
+        height: 630,
+        alt: "K-TOUR ID — Food, Cafés and Bars in Korea, by ONDO",
       }],
     },
     twitter: {

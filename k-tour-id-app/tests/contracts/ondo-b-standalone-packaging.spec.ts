@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto"
 import { existsSync, readFileSync, readdirSync } from "node:fs"
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
+import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
@@ -12,6 +13,10 @@ const PERSONAL_VERCEL_PROJECT = "prj_w5rckTz9B1DO55fvVRXjQRy9L5RM"
 const PERSONAL_VERCEL_ORG = "team_6kJAloQ9WlswvMtbbCmGI7Er"
 const PERSONAL_VERCEL_NAME = "ondo"
 const STAGE_ROOT = resolve(APP_ROOT, ".ondo-b-standalone")
+const BRAND_DESCRIPTION = "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close."
+// Resolve the already-pinned Next dependency rather than an unrelated global Sharp installation.
+const appRequire = createRequire(resolve(APP_ROOT, "package.json"))
+const sharp = createRequire(appRequire.resolve("next/package.json"))("sharp")
 
 function filesBelow(root: string, prefix = ""): string[] {
   if (!existsSync(root)) return []
@@ -155,7 +160,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     ])
 
     const files = filesBelow(STAGE_ROOT)
-    expect(files).toContain("public/og-map-first.png")
+    expect(files).toContain("public/og-ktour-food-v1.png")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.tsx")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
@@ -168,6 +173,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "public/brand/ktour-id-mark-512.png",
       "public/brand/ktour-id-mark-64.png",
       "public/brand/ktour-id-mark.png",
+      "public/brand/ktour-id-mono-v1-16.png",
+      "public/brand/ktour-id-mono-v1-180.png",
+      "public/brand/ktour-id-mono-v1-192.png",
+      "public/brand/ktour-id-mono-v1-32.png",
+      "public/brand/ktour-id-mono-v1-512.png",
+      "public/brand/ktour-id-mono-v1.svg",
       "public/brand/ktour-id-wordmark.png",
       "public/brand/ondo-lockup.svg",
       "public/brand/ondo-mark-inverse.svg",
@@ -193,7 +204,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
       "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
       "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
-      "public/og-map-first.png",
+      "public/og-ktour-food-v1.png",
     ])
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
     expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
@@ -208,8 +219,9 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(stagedLegacy).toContain("permanentRedirect(query ?")
     expect(stagedLayout).toContain('applicationName: "K-TOUR ID"')
     expect(stagedLayout).toContain('title: "K-TOUR ID | ONDO 溫圖"')
-    expect(stagedLayout).toContain('url: "/brand/ktour-id-mark-32.png"')
-    expect(stagedLayout).toContain('url: "/og-map-first.png"')
+    expect(stagedLayout).toContain('url: "/brand/ktour-id-mono-v1.svg"')
+    expect(stagedLayout).toContain('url: "/brand/ktour-id-mono-v1-32.png"')
+    expect(stagedLayout).toContain('url: "/og-ktour-food-v1.png"')
     expect(stagedLayout).toContain("robots: { index: false, follow: false }")
     expect(stagedLayout).toContain("ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT")
     expect(stagedLayout).toContain('data-ondo-theme="light"')
@@ -452,6 +464,75 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       .update(readFileSync(resolve(APP_ROOT, "public/brand/ktour-id-mark.png")))
       .digest("hex")
     expect(suppliedMarkHash).toBe("2f7467cb8efe5640489f8387e7b7f842b56b45a53619f61268b864fb9cd9b38d")
+  })
+
+  test("B-STANDALONE-BRAND-001 ships the versioned 1200x630 food discovery social card", async () => {
+    const { PUBLIC_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    expect(PUBLIC_FILES).toContain("public/og-ktour-food-v1.png")
+    expect(PUBLIC_FILES).not.toContain("public/og-map-first.png")
+    const metadata = await sharp(resolve(APP_ROOT, "public/og-ktour-food-v1.png")).metadata()
+    expect(metadata).toMatchObject({ format: "png", width: 1200, height: 630 })
+    for (const path of ["app/page.tsx", "app/layout.tsx", "scripts/ondo-b-standalone/prepare.mjs"]) {
+      const source = readFileSync(resolve(APP_ROOT, path), "utf8")
+      expect(source, path).toContain("/og-ktour-food-v1.png")
+      expect(source, path).toContain(BRAND_DESCRIPTION)
+      expect(source, path).toContain("width: 1200")
+      expect(source, path).toContain("height: 630")
+      expect(source, path).not.toContain("/og-map-first.png")
+    }
+    const scanner = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/scan-artifact.mjs"), "utf8")
+    expect(scanner).toContain('const expectedOg = "public/og-ktour-food-v1.png"')
+    expect(scanner).toContain("for (const publicFile of PUBLIC_FILES)")
+    expect(scanner).not.toContain("PUBLIC_FILES[0]")
+    expect(scanner).not.toContain("PUBLIC_FILES.slice(1)")
+  })
+
+  test("B-STANDALONE-BRAND-002 ships monochrome browser icons at their declared sizes", async () => {
+    const { PUBLIC_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
+    const svgPath = "public/brand/ktour-id-mono-v1.svg"
+    expect(PUBLIC_FILES).toContain(svgPath)
+    const svg = readFileSync(resolve(APP_ROOT, svgPath), "utf8")
+    expect(svg).toContain('viewBox="0 0 64 64"')
+    expect(svg).not.toMatch(/<(?:image|script|linearGradient|radialGradient|filter)\b/i)
+    const paints = [...svg.matchAll(/(?:fill|stroke)="(#[a-f\d]{3}(?:[a-f\d]{3})?)"/gi)].map((match) => match[1].slice(1))
+    expect(paints.length).toBeGreaterThan(0)
+    for (const paint of paints) {
+      const rgb = paint.length === 3 ? [...paint].map((channel) => channel.repeat(2)).join("") : paint
+      expect(rgb.slice(0, 2), `SVG paint #${paint} is monochrome`).toBe(rgb.slice(2, 4))
+      expect(rgb.slice(2, 4), `SVG paint #${paint} is monochrome`).toBe(rgb.slice(4, 6))
+    }
+    for (const size of [16, 32, 180, 192, 512]) {
+      const path = `public/brand/ktour-id-mono-v1-${size}.png`
+      expect(PUBLIC_FILES).toContain(path)
+      const metadata = await sharp(resolve(APP_ROOT, path)).metadata()
+      expect(metadata, path).toMatchObject({ format: "png", width: size, height: size })
+      const { data, info }: { data: Buffer; info: { channels: number } } = await sharp(resolve(APP_ROOT, path))
+        .toColourspace("srgb").ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+      expect(info.channels).toBe(4)
+      let coloredPixels = 0
+      let darkPixels = 0
+      let lightOrTransparentPixels = 0
+      for (let index = 0; index < data.length; index += 4) {
+        if (data[index + 3] === 0) {
+          lightOrTransparentPixels += 1
+          continue
+        }
+        if (data[index] !== data[index + 1] || data[index + 1] !== data[index + 2]) coloredPixels += 1
+        if (data[index] < 128) darkPixels += 1
+        if (data[index] > 200) lightOrTransparentPixels += 1
+      }
+      expect(coloredPixels, `${path} visible pixels must be grayscale`).toBe(0)
+      expect(darkPixels, `${path} must contain a visible mark`).toBeGreaterThan(0)
+      expect(lightOrTransparentPixels, `${path} must preserve contrast`).toBeGreaterThan(0)
+    }
+    for (const path of ["app/layout.tsx", "scripts/ondo-b-standalone/prepare.mjs"]) {
+      const source = readFileSync(resolve(APP_ROOT, path), "utf8")
+      expect(source, path).toContain("/brand/ktour-id-mono-v1.svg")
+      expect(source, path).toContain("/brand/ktour-id-mono-v1-32.png")
+      expect(source, path).toContain("/brand/ktour-id-mono-v1-180.png")
+      expect(source, path).not.toContain("/brand/ktour-id-mark-32.png")
+      expect(source, path).not.toContain("/brand/ktour-id-mark-180.png")
+    }
   })
 
   test("B-STANDALONE-015 generated worker owns the canonical legacy redirect and its exact query allowlist", async () => {

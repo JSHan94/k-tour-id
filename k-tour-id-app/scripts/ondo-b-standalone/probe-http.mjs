@@ -69,10 +69,15 @@ export async function probeStandaloneHttp(baseUrl) {
   assert(/ONDO/.test(html), "/: product identity missing")
   assert(/<title>K-TOUR ID \| ONDO 溫圖<\/title>/.test(html), "/: K-TOUR ID | ONDO title missing")
   assert(/property="og:title" content="K-TOUR ID \| ONDO 溫圖"/.test(html), "/: social title missing")
-  assert(/property="og:image" content="[^"]*\/og-map-first\.png"/.test(html), "/: production social card missing")
-  assert(/name="twitter:image" content="[^"]*\/og-map-first\.png"/.test(html), "/: Twitter social card missing")
-  assert(/rel="icon"[^>]*href="[^"]*\/brand\/ktour-id-mark-32\.png"/.test(html), "/: K-TOUR ID favicon missing")
-  assert(/rel="apple-touch-icon"[^>]*href="[^"]*\/brand\/ktour-id-mark-180\.png"/.test(html), "/: K-TOUR ID Apple icon missing")
+  assert(/property="og:image" content="[^"]*\/og-ktour-food-v1\.png"/.test(html), "/: production food discovery social card missing")
+  assert(/name="twitter:image" content="[^"]*\/og-ktour-food-v1\.png"/.test(html), "/: Twitter food discovery social card missing")
+  assert(/property="og:image:width" content="1200"/.test(html) && /property="og:image:height" content="630"/.test(html), "/: social card dimensions must be 1200x630")
+  const description = "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close."
+  assert(html.includes(`name="description" content="${description}"`), "/: food discovery description missing")
+  assert(/rel="icon"[^>]*href="[^"]*\/brand\/ktour-id-mono-v1\.svg"/.test(html), "/: monochrome K-TOUR ID SVG favicon missing")
+  assert(/rel="icon"[^>]*href="[^"]*\/brand\/ktour-id-mono-v1-32\.png"/.test(html), "/: monochrome K-TOUR ID PNG favicon missing")
+  assert(/rel="apple-touch-icon"[^>]*href="[^"]*\/brand\/ktour-id-mono-v1-180\.png"/.test(html), "/: monochrome K-TOUR ID Apple icon missing")
+  assert(!/rel="(?:icon|apple-touch-icon)"[^>]*href="[^"]*\/brand\/ktour-id-mark/.test(html), "/: archived supplied marks must not own active favicon metadata")
   assert(!/rel="icon"[^>]*href="[^"]*\/icon\.svg/.test(html), "/: legacy ONDO app icon still owns the canonical favicon")
   assert(/name="robots" content="noindex, nofollow"/.test(html), "/: noindex boundary missing")
   assert(/LOCALDATA|공식 일반음식점/.test(html), "/: production directory content missing")
@@ -136,6 +141,14 @@ export async function probeStandaloneHttp(baseUrl) {
     const path = `/${publicFile.replace(/^public\//, "")}`
     const asset = await request(baseUrl, path, 200)
     assert(asset.headers.get("content-type")?.startsWith("image/"), `${path}: expected an image content type`)
+    const iconSize = /^\/brand\/ktour-id-mono-v1-(16|32|180|192|512)\.png$/.exec(path)?.[1]
+    if (path === "/og-ktour-food-v1.png" || iconSize) {
+      const bytes = Buffer.from(await asset.arrayBuffer())
+      assert(bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${path}: expected PNG bytes`)
+      const width = iconSize ? Number(iconSize) : 1200
+      const height = iconSize ? Number(iconSize) : 630
+      assert(bytes.readUInt32BE(16) === width && bytes.readUInt32BE(20) === height, `${path}: decoded PNG dimensions differ from metadata`)
+    }
   }
   const assets = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
     .map((match) => match[1])

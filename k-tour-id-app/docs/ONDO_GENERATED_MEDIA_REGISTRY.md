@@ -6,6 +6,8 @@ proof that a depicted event occurred.
 
 | Asset | Intended surface | Generation record | Public boundary |
 |---|---|---|---|
+| `public/og-ktour-food-v1.png` | K-TOUR ID food-first Open Graph / Twitter sharing card, 1200×630 | Built-in OpenAI ImageGen, 2026-09-14; prompt in `branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md` | Synthetic brand illustration of food, café and bar categories; not named-venue photography, menu facts or popularity evidence. |
+| `public/brand/ktour-id-mono-v1.svg` and `ktour-id-mono-v1-{16,32,180,192,512}.png` | Browser favicon / Apple touch icon | Code-native monochrome derivative of the supplied K + location-pin mark, 2026-09-14 | Brand only; no provider, verification or payment claim. Original supplied logo remains unchanged. |
 | `public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg` | Guest onboarding editorial band | OpenAI ImageGen, 2026-08-27 | Fictional travelers. Never use in identity, eKYC, credential, official evidence or verified-traveler UI. |
 | `public/editorial/people/ondo-tables-dinner-v2-landscape.jpg` | Tables root invitation ambience only | OpenAI ImageGen, 2026-08-27 | Fictional diners. Never use in Table detail, chat, avatar, matching, attendance, check-in, venue evidence or safety proof. |
 | `public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg` | Empty My Korea inspiration only | OpenAI ImageGen, 2026-08-27 | Fictional traveler. Hide when user history exists; never present as a saved place, visit, route, memory or user photo. |
@@ -27,7 +29,9 @@ proof that a depicted event occurred.
 
 ## Usage constraints
 
-- Use localized product text outside the bitmap; do not bake copy into the media.
+- Use localized product text outside editorial bitmaps; do not bake interface
+  copy into them. The social sharing card is the exception: its fixed English
+  brand lockup and category line are intentionally part of the artwork.
 - Provide localized alt text that describes the scene without claiming a real
   person, account, visit, booking, identity or provider relationship.
 - Keep generated people out of official LOCALDATA evidence, exact editorial
