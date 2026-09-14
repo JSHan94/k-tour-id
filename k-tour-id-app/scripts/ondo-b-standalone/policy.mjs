@@ -143,6 +143,7 @@ export const SOURCE_FILES = Object.freeze([
   "app/api/kyc/sumsub/status/route.ts",
   "features/ondo/identity-b/sumsub-passport-step-b.tsx",
   "features/ondo/identity-b/sumsub-passport-step-b.module.css",
+  "features/ondo/identity-b/sumsub-passport-status-b.ts",
   "features/ondo/commerce-b/wallet-connection-preview-b.tsx",
   "features/ondo/identity-b/identity-demo-boundary-b.ts",
   "features/ondo/identity-b/identity-handoff-step-b.tsx",

@@ -108,7 +108,10 @@ export function normalizeReview(value: Record<string, unknown>): SandboxStatus {
     return "unavailable"
   }
   if (["pending", "queued", "onHold", "awaitingService"].includes(String(value.reviewStatus))) return "pending"
-  if (["init", "awaitingUser"].includes(String(value.reviewStatus))) return "in_progress"
+  // Sumsub's prechecked stage is an unfinished initial document check, not an
+  // unavailable service or an approval. The SDK may still request corrections.
+  // https://docs.sumsub.com/reference/get-applicant-review-status
+  if (["init", "prechecked", "awaitingUser"].includes(String(value.reviewStatus))) return "in_progress"
   return "unavailable"
 }
 

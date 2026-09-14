@@ -35,11 +35,13 @@ try {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)
   if (overflow) throw new Error("Mobile document overflow")
   await page.screenshot({ path: "artifacts/sumsub/mobile-sdk.png" })
+  expect(failures).toEqual([])
   // Report origins/feature names only, never the iframe URL containing a token.
   console.log(JSON.stringify({ result: "PASS", mapFirst: true, accessGate: true, sdkIframeOrigin: "https://api.sumsub.com", iframeAllow: await frame.getAttribute("allow"), viewport: "390x844", passIssued: false, pageErrorNames: failures }))
   await page.getByTestId("sumsub-return").click()
   await expect(page.getByTestId("sumsub-passport-step")).toHaveCount(0)
   await expect(page.getByTestId("ondo-b-traveler-id")).toBeVisible()
+  expect(failures).toEqual([])
   console.log("PASS: SDK dismissed and original ID screen restored")
   await context.close()
 } catch (error) {

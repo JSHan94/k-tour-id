@@ -839,7 +839,7 @@ export function KTourIdSetupB() {
   const liveDialog = <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-label={copy.dialog} tabIndex={-1}
       data-testid="k-tour-id-setup" data-phase={phase} data-method={method} data-origin={origin} data-environment={sandboxPassport ? "sandbox" : "simulated"} data-integration-status={sandboxPassport ? "sandbox_check" : "not_configured"} data-execution-mode={reviewMode ? "review" : "normal"} data-public-sample={reviewMode && sampleConsumedRef.current ? "true" : undefined} data-recovery-in-progress={sampleRecovery ? "true" : "false"} onKeyDown={handleKeyDown}>
       <header className={styles.header}>
-        {phase === "method_select" ? <span className={styles.brandMark}><KTourIdMark size={28} /></span> : <button type="button" className={styles.iconButton} aria-label={copy.back} onClick={goBack}><ChevronLeft size={21} aria-hidden="true" /></button>}
+        {phase === "method_select" || phase === "sumsub_sandbox" ? <span className={styles.brandMark}><KTourIdMark size={28} /></span> : <button type="button" className={styles.iconButton} aria-label={copy.back} onClick={goBack}><ChevronLeft size={21} aria-hidden="true" /></button>}
         <p data-testid="k-tour-id-environment"><span>{copy.env}</span></p>
         <button type="button" className={styles.iconButton} data-testid="k-tour-id-cancel" aria-label={copy.close} onClick={requestFinalDismiss}><X size={20} aria-hidden="true" /></button>
       </header>

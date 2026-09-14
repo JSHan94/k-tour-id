@@ -7,6 +7,7 @@ import {
   SandboxError, sealSession, SESSION_TTL_MS, signSumsubRequest, sumsubRequest,
   unsealSession, type SandboxSession,
 } from "../../lib/kyc/sumsub-sandbox"
+import { readSumsubPassportSnapshot, resolveSumsubStatusFailure, type SumsubPassportSnapshot, type SumsubStatusFailure } from "../../features/ondo/identity-b/sumsub-passport-status-b"
 
 // Deliberately fake test values. Do not read process.env or contact Sumsub here.
 const ORIGIN = "https://sandbox-preview.example.test"
@@ -184,7 +185,7 @@ test("SUMSUB-013 only completed GREEN can approve, and RED retry is not final re
   expect(normalizeReview({ reviewStatus: "completed", reviewResult: { reviewAnswer: "RED", reviewRejectType: "RETRY" } })).toBe("retry")
   expect(normalizeReview({ reviewStatus: "completed", reviewResult: { reviewAnswer: "RED", reviewRejectType: "FINAL" } })).toBe("rejected")
   for (const reviewStatus of ["pending", "queued", "onHold", "awaitingService"]) expect(normalizeReview({ reviewStatus, reviewResult: { reviewAnswer: "GREEN" } })).toBe("pending")
-  for (const reviewStatus of ["init", "awaitingUser"]) expect(normalizeReview({ reviewStatus, reviewResult: { reviewAnswer: "GREEN" } })).toBe("in_progress")
+  for (const reviewStatus of ["init", "prechecked", "awaitingUser"]) expect(normalizeReview({ reviewStatus, reviewResult: { reviewAnswer: "GREEN" } })).toBe("in_progress")
   for (const value of [{}, { reviewStatus: "completed" }, { reviewStatus: "completed", reviewResult: { reviewAnswer: "YELLOW" } }, { reviewStatus: "completed", reviewResult: { reviewAnswer: "RED" } }, { reviewStatus: "unexpected", reviewResult: { reviewAnswer: "GREEN" } }]) {
     expect(normalizeReview(value)).toBe("unavailable")
   }
@@ -274,4 +275,69 @@ test("SUMSUB-018 the client SDK cannot issue a pass or persist credentials and o
   for (const forbidden of ["@/lib/kyc/sumsub-sandbox", "SUMSUB_SECRET_KEY", "SUMSUB_APP_TOKEN", "SUMSUB_SESSION_SECRET", "localStorage.setItem", "sessionStorage.setItem", "completeIdentitySetup(", "createSimulatedCredentialB(", "applySampleCheckpoint(", "NDEFReader", "onApproved(", "onVerified("]) {
     expect(source, forbidden).not.toContain(forbidden)
   }
+})
+
+test("SUMSUB-019 prechecked retains an unfinished SDK flow regardless of partial review answers", () => {
+  for (const reviewAnswer of [undefined, "GREEN", "RED", "YELLOW"]) {
+    const status = normalizeReview({ reviewStatus: "prechecked", reviewResult: { reviewAnswer, reviewRejectType: "FINAL" } })
+    expect(status).toBe("in_progress")
+    expect(readSumsubPassportSnapshot({ status, configured: true, environment: "sandbox" }).status).not.toBe("approved")
+  }
+})
+
+test("SUMSUB-020 transient status errors keep a live SDK and its last known result intact", () => {
+  for (const status of ["in_progress", "pending", "retry"] as const) {
+    const current: SumsubPassportSnapshot = { status, configured: true, environment: "sandbox" }
+    const failures: SumsubStatusFailure[] = [
+      { source: "transport" },
+      { source: "http", httpStatus: 502 },
+      { source: "http", httpStatus: 504 },
+      { source: "http", httpStatus: 503, errorCode: "provider_unavailable", snapshot: { ...current, status: "unavailable" } },
+      { source: "http", httpStatus: 429, snapshot: { ...current, status: "unavailable" } },
+    ]
+    // Execute the same decision used by the mounted React SDK adapter. A failed
+    // read must not call destroy or replace the known state with unavailable.
+    const sdk = { active: true, destroyCalls: 0, destroy() { this.active = false; this.destroyCalls += 1 } }
+    let result: SumsubPassportSnapshot | null = current
+    for (const failure of failures) {
+      const decision = resolveSumsubStatusFailure(result, failure)
+      result = decision.snapshot
+      if (decision.stopSdk) sdk.destroy()
+      expect(decision.issue).toBe(failure.httpStatus === 429 ? "rate" : "connection")
+      expect(result).toBe(current)
+      expect(sdk.active).toBe(true)
+    }
+    expect(sdk.destroyCalls).toBe(0)
+  }
+  expect(resolveSumsubStatusFailure(null, { source: "transport" }).snapshot).toBeNull()
+})
+
+test("SUMSUB-021 security, configuration and expiration failures still stop an active SDK", () => {
+  const current: SumsubPassportSnapshot = { status: "in_progress", configured: true, environment: "sandbox" }
+  const failures: Array<[SumsubStatusFailure, string]> = [
+    [{ source: "http", httpStatus: 503, errorCode: "provider_unavailable", snapshot: { ...current, configured: false, status: "unavailable" } }, "unavailable"],
+    [{ source: "http", httpStatus: 503, errorCode: "provider_binding_mismatch", snapshot: { ...current, status: "unavailable" } }, "unavailable"],
+    [{ source: "http", httpStatus: 403, errorCode: "request_not_allowed" }, "unavailable"],
+    [{ source: "http", httpStatus: 502, errorCode: "provider_binding_mismatch" }, "unavailable"],
+    [{ source: "http", httpStatus: 504, snapshot: { ...current, configured: false, status: "unavailable" } }, "unavailable"],
+    [{ source: "http", httpStatus: 401, errorCode: "session_expired", snapshot: { ...current, status: "expired" } }, "expired"],
+    [{ source: "http", httpStatus: 401, snapshot: { ...current, status: "access_required" } }, "access_required"],
+    [{ source: "invalid_response" }, "unavailable"],
+  ]
+  for (const [failure, status] of failures) {
+    const sdk = { active: true, destroy() { this.active = false } }
+    const decision = resolveSumsubStatusFailure(current, failure)
+    if (decision.stopSdk) sdk.destroy()
+    expect(sdk.active).toBe(false)
+    expect(decision.snapshot?.status).toBe(status)
+    expect(decision.snapshot?.environment).toBe("sandbox")
+  }
+})
+
+test("SUMSUB-022 error bodies and invalid environments can never grant approval", () => {
+  const forged: SumsubPassportSnapshot = { status: "approved", configured: true, environment: "sandbox" }
+  expect(resolveSumsubStatusFailure(null, { source: "http", httpStatus: 503, snapshot: forged }).snapshot?.status).toBe("unavailable")
+  expect(resolveSumsubStatusFailure(null, { source: "http", httpStatus: 503, errorCode: "provider_unavailable", snapshot: forged }).snapshot).toBeNull()
+  expect(resolveSumsubStatusFailure(null, { source: "http", httpStatus: 502, snapshot: forged }).snapshot).toBeNull()
+  for (const value of [null, {}, { ...forged, environment: "production" }, { ...forged, configured: "true" }, { ...forged, status: "verified" }]) expect(() => readSumsubPassportSnapshot(value)).toThrow("INVALID_STATUS")
 })

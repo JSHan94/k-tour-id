@@ -3,6 +3,7 @@
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react"
 import { ArrowRight, Check, Clock3, ShieldCheck, TriangleAlert } from "lucide-react"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
+import { readSumsubPassportSnapshot as snapshotFrom, resolveSumsubStatusFailure, type SumsubPassportSnapshot as Snapshot, type SumsubPassportStatus as Status } from "./sumsub-passport-status-b"
 import styles from "./sumsub-passport-step-b.module.css"
 
 export const SUMSUB_PASSPORT_DISCLOSURE = {
@@ -23,23 +24,14 @@ const SESSION_COPY = {
   ja: { cancel: "テストを閉じて戻る", cancelRetry: "セッション終了を再試行", cancelError: "カメラは閉じましたが、ブラウザのセッション終了を確認できませんでした。再試行してください。本人確認サービスの審査やデータを取り消す機能ではありません。", pendingBody: "再提出は不要です。この画面で結果を確認してください。画面を閉じるとブラウザのセッションのみ終了し、事業者の審査は取り消されません。", autoPaused: "自動更新を一時停止しました。「状況を確認」で結果を更新できます。" },
 } as const
 
-type Status = "not_started" | "access_required" | "in_progress" | "pending" | "approved" | "retry" | "rejected" | "expired" | "unavailable"
-type Snapshot = { status: Status; environment: "sandbox"; configured: boolean }
 type Issue = "connection" | "sdk" | "access" | "cancel" | "rate" | null
 type SdkInstance = { destroy(): void }
-const STATUSES: readonly string[] = ["not_started", "access_required", "in_progress", "pending", "approved", "retry", "rejected", "expired", "unavailable"]
 const TERMINAL: readonly Status[] = ["approved", "rejected", "expired", "unavailable", "access_required"]
 
-function snapshotFrom(value: unknown): Snapshot {
-  if (!value || typeof value !== "object") throw new Error("INVALID_STATUS")
-  const candidate = value as Record<string, unknown>
-  if (candidate.environment !== "sandbox" || typeof candidate.configured !== "boolean" || !STATUSES.includes(String(candidate.status))) throw new Error("INVALID_STATUS")
-  return { status: candidate.configured ? candidate.status as Status : "unavailable", configured: candidate.configured, environment: "sandbox" }
-}
-
 class RequestError extends Error {
-  constructor(readonly status: number, readonly snapshot?: Snapshot) { super("SANDBOX_REQUEST_FAILED") }
+  constructor(readonly status: number, readonly snapshot?: Snapshot, readonly code?: string) { super("SANDBOX_REQUEST_FAILED") }
 }
+class TransportError extends Error { constructor() { super("SANDBOX_CONNECTION_FAILED") } }
 
 export type SumsubPassportStepHandle = { requestExit(): Promise<boolean> }
 
@@ -59,6 +51,7 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
   const epoch = useRef(0)
   const snapshotRef = useRef<Snapshot | null>(null)
   const sdk = useRef<SdkInstance | null>(null)
+  const sdkBlocked = useRef(false)
   const controllers = useRef(new Set<AbortController>())
   const postControllers = useRef(new Set<AbortController>())
   const tokenRequest = useRef<Promise<Response> | null>(null)
@@ -83,11 +76,19 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
     try {
       const headers = new Headers(init?.headers)
       headers.set("X-KTour-KYC", "1")
-      const response = await fetch(path, { ...init, headers, credentials: "same-origin", cache: "no-store", signal: controller.signal })
+      let response: Response
+      try { response = await fetch(path, { ...init, headers, credentials: "same-origin", cache: "no-store", signal: controller.signal }) }
+      catch { throw new TransportError() }
       if (!response.ok) {
         let remote: Snapshot | undefined
-        try { remote = snapshotFrom(await response.json()) } catch { /* Never display untrusted error bodies. */ }
-        throw new RequestError(response.status, remote)
+        let code: string | undefined
+        try {
+          const body: unknown = await response.json()
+          if (body && typeof body === "object" && "error" in body && typeof body.error === "string"
+            && ["provider_unavailable", "provider_binding_mismatch", "invalid_provider_response", "request_not_allowed", "session_expired"].includes(body.error)) code = body.error
+          remote = snapshotFrom(body)
+        } catch { /* Never display untrusted error bodies. */ }
+        throw new RequestError(response.status, remote, code)
       }
       return response
     } finally {
@@ -110,15 +111,18 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
       if (!mounted.current || epoch.current !== expected || exiting.current) return
       snapshotRef.current = next
       setSnapshot(next)
+      sdkBlocked.current = TERMINAL.includes(next.status)
       setIssue(current => current === "connection" || current === "rate" ? null : current)
       if (TERMINAL.includes(next.status)) destroySdk()
     } catch (error) {
       if (mounted.current && epoch.current === expected && !exiting.current) {
-        if (error instanceof RequestError && error.snapshot) {
-          snapshotRef.current = error.snapshot; setSnapshot(error.snapshot)
-          if (TERMINAL.includes(error.snapshot.status)) destroySdk()
-        }
-        setIssue(error instanceof RequestError && error.status === 429 ? "rate" : "connection")
+        const failure = error instanceof TransportError ? { source: "transport" as const }
+          : error instanceof RequestError ? { source: "http" as const, httpStatus: error.status, errorCode: error.code, snapshot: error.snapshot }
+          : { source: "invalid_response" as const }
+        const decision = resolveSumsubStatusFailure(snapshotRef.current, failure)
+        snapshotRef.current = decision.snapshot; setSnapshot(decision.snapshot)
+        if (decision.stopSdk) { sdkBlocked.current = true; destroySdk() }
+        setIssue(decision.issue)
       }
     } finally {
       if (epoch.current === expected) {
@@ -168,16 +172,17 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
   async function start() {
     if (actionBusy.current || exiting.current || !snapshot?.configured || TERMINAL.includes(snapshot.status) && !["access_required", "expired"].includes(snapshot.status)) return
     actionBusy.current = true
+    sdkBlocked.current = false
     const expected = epoch.current
     setBusy("starting"); setIssue(null)
     destroySdk()
     try {
       const token = await requestToken(accessCode.trim() || undefined)
       // Never write this short-lived SDK token or the access code to storage.
-      if (!mounted.current || epoch.current !== expected || exiting.current) return
+      if (!mounted.current || epoch.current !== expected || exiting.current || sdkBlocked.current) return
       setAccessCode("")
       const { default: builder } = await import("@sumsub/websdk")
-      if (!mounted.current || epoch.current !== expected || exiting.current) return
+      if (!mounted.current || epoch.current !== expected || exiting.current || sdkBlocked.current) return
       const instance = builder.init(token, async () => {
         try { return await requestToken() } catch (error) {
           if (mounted.current && epoch.current === expected && !exiting.current) {
@@ -195,13 +200,13 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
           if (!mounted.current || epoch.current !== expected || exiting.current || snapshotRef.current?.status === "approved" || snapshotRef.current?.status === "rejected") return
           destroySdk(); setIssue("sdk")
         }).build()
-      if (snapshotRef.current?.status === "approved" || snapshotRef.current?.status === "rejected") { instance.destroy(); return }
+      if (sdkBlocked.current || snapshotRef.current?.status === "approved" || snapshotRef.current?.status === "rejected") { instance.destroy(); return }
       sdk.current = instance
       setSnapshot({ status: "in_progress", configured: true, environment: "sandbox" })
       snapshotRef.current = { status: "in_progress", configured: true, environment: "sandbox" }
       setSdkActive(true)
       await new Promise<void>(resolve => window.requestAnimationFrame(() => resolve()))
-      if (!mounted.current || epoch.current !== expected || exiting.current || snapshotRef.current?.status === "approved" || snapshotRef.current?.status === "rejected") { instance.destroy(); return }
+      if (!mounted.current || epoch.current !== expected || exiting.current || sdkBlocked.current || snapshotRef.current?.status === "approved" || snapshotRef.current?.status === "rejected") { instance.destroy(); return }
       instance.launch(`#${containerId}`)
     } catch (error) {
       if (!mounted.current || epoch.current !== expected || exiting.current) return
@@ -257,7 +262,7 @@ export const SumsubPassportStepB = forwardRef<SumsubPassportStepHandle, { locale
     <div id={containerId} className={styles.sdk} hidden={!sdkActive} data-testid="sumsub-sdk-container" />
     <p className={styles.live} role="status" aria-live="polite">{busy === "checking" ? copy.checking : busy === "starting" ? copy.starting : busy === "cancelling" ? copy.cancelling : ""}</p>
     {autoPaused && !approved && status !== "rejected" ? <p className={styles.lead}>{copy.autoPaused}</p> : null}
-    {issue === "access" || issue === "cancel" || issue === "rate" || issue === "connection" && sdkActive ? <p className={styles.alert} role="alert">{issue === "access" ? copy.codeError : issue === "cancel" ? copy.cancelError : issue === "rate" ? copy.rateLimit : copy.errorBody}</p> : null}
+    {issue === "access" || issue === "cancel" || issue === "rate" || issue === "connection" && (sdkActive || status === "pending" || status === "retry") ? <p className={styles.alert} role="alert">{issue === "access" ? copy.codeError : issue === "cancel" ? copy.cancelError : issue === "rate" ? copy.rateLimit : copy.errorBody}</p> : null}
     {canStart ? <form className={styles.form} onSubmit={event => { event.preventDefault(); void start() }}>
       {status === "access_required" ? <label>{copy.accessLabel}<input autoComplete="off" type="password" value={accessCode} maxLength={256} onChange={event => setAccessCode(event.target.value)} disabled={Boolean(busy)} data-testid="sumsub-access-code" /></label> : null}
       <button className={styles.primary} type="submit" disabled={Boolean(busy) || status === "access_required" && !accessCode.trim()} data-testid="sumsub-start">{status === "in_progress" || status === "retry" ? copy.resume : copy.start}<ArrowRight size={18} aria-hidden="true" /></button>

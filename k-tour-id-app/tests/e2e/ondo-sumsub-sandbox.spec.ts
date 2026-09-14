@@ -130,6 +130,8 @@ async function openPassport(page: Page, calls: ApiCalls, appearance: "light" | "
   await expect(step).not.toHaveAttribute("data-status", "loading")
   await expect(step).toHaveAttribute("data-environment", "sandbox")
   await expect(step).toHaveAttribute("data-pass-issued", "false")
+  await expect(setup.getByRole("button", { name: "Previous step", exact: true })).toHaveCount(0)
+  await expect(setup.getByTestId("k-tour-id-cancel")).toBeVisible()
   await expect(page.getByTestId("sumsub-sdk-container")).toBeHidden()
   return { setup, step, before }
 }
@@ -253,5 +255,31 @@ test("SUMSUB-UI pending: a failed close stays honest and retry ends only the bro
   await page.getByTestId("sumsub-return").click()
   await expectReturnedWithoutAuthority(page, before)
   expect(calls.closes).toBe(2)
+  expect(calls.sessions).toEqual([])
+})
+
+test("SUMSUB-UI a temporary status outage preserves pending review and recovers on the next query", async ({ page }) => {
+  let reply = snapshot("pending")
+  const calls = await mockApi(page, { status: () => reply })
+  const { step, before } = await openPassport(page, calls)
+  const outages: Reply[] = [
+    { status: 503, body: { status: "unavailable", error: "provider_unavailable", configured: true, environment: "sandbox" } },
+    { status: 502 },
+    { status: 504 },
+  ]
+  for (const outage of outages) {
+    reply = outage
+    await page.getByTestId("sumsub-check-status").click()
+    await expect(step).toHaveAttribute("data-status", "pending")
+    await expect(step.getByRole("heading")).toHaveText("Your test is being reviewed")
+    await expect(step.getByRole("alert")).toContainText("Check your connection")
+    await noIssuedPass(page)
+  }
+  reply = snapshot("approved")
+  await page.getByTestId("sumsub-check-status").click()
+  await expect(step).toHaveAttribute("data-status", "approved")
+  await expect(step.getByRole("alert")).toHaveCount(0)
+  await page.getByTestId("sumsub-return").click()
+  await expectReturnedWithoutAuthority(page, before)
   expect(calls.sessions).toEqual([])
 })
