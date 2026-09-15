@@ -4,7 +4,7 @@ import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
 const title = "K-Tour ID"
 const description = "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close."
-const socialImage = "/og-ktour-food-v2.png"
+const socialImage = "/og-ktour-korea-v3.png"
 const productionOrigin = "https://ktour-id.vercel.app"
 
 function configuredOrigin() {
@@ -68,7 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
         url: imageUrl,
         width: 1200,
         height: 630,
-        alt: "K-Tour ID — Food, Cafés and Bars in Korea",
+        alt: "K-Tour ID — Korean hanok alley, barbecue and a café with yakgwa",
       }],
     },
     twitter: {

@@ -239,6 +239,7 @@ test("B-ACTION-GATE-002 the full plan is rechecked and a return envelope can be 
   })
   expect(consumePendingBActionAtMutation(storage as unknown as Storage, envelope, new Set(["account"]), NOW)).toBeNull()
   const atomic = consumePendingBActionAtMutation(storage as unknown as Storage, envelope, new Set(["account", "payment_kyc"]), NOW)
+  if (!atomic || atomic.cta !== "START_CHECKOUT") throw new Error("Expected the exact consumed checkout action")
   expect(atomic?.consumedAt).toBe(NOW.toISOString())
   expect(restoreBActionGateSession(storage as unknown as Storage, NOW)).toMatchObject({ pending: null, lastConsumed: { tokenId: envelope.tokenId } })
   expect(consumePendingBActionAtMutation(storage as unknown as Storage, envelope, new Set(["account", "payment_kyc"]), NOW)).toBeNull()

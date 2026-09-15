@@ -1,5 +1,8 @@
 # K-Tour ID public-brand unification — 2026-09-15
 
+Historical v2 artwork record. The current Korean travel sharing card is documented in
+[KTOUR_KOREA_SHARE_2026-09-15.md](./KTOUR_KOREA_SHARE_2026-09-15.md); the monochrome app logo is unchanged.
+
 This asset record describes the shared artwork and brand-only changes first
 validated in the separate Sandbox Preview. For this pure-mock release's
 current GitHub source and actual deployment verification, use
@@ -25,7 +28,7 @@ organization (`ohayo.global`) is account-owned and was not relabelled.
 
 ## Social image
 
-- Active asset: `public/og-ktour-food-v2.png`.
+- Asset at this historical release: `public/og-ktour-food-v2.png`.
 - Original: `public/og-ktour-food-v1.png`, retained as historical source.
 - Edited with the built-in imagegen tool, using the original as edit target.
 - The output is resized to its declared 1200×630 dimensions with

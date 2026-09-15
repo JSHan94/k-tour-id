@@ -1,5 +1,7 @@
 # K-Tour ID · 해커톤 연동 개발 요약
 
+9/15 신규 골목 가이드 목업·한국 여행 공유 이미지의 검수/배포는 [새 릴리스 기록](./KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)을 확인합니다. 현재는 검수·배포 진행 중이며, 실제 네 기술 연동 완료를 뜻하지 않습니다.
+
 ## 1. 목표와 범위
 
 기존 지도 기반 웹앱에 **OmniOne CX + OpenDID + OmniOne Chain + Sui**를 연결합니다. 장소 1곳에서 신원 확인, 패스 발급·제시, AI의 체험 혜택 제안, 사용자 승인에 따른 실행, 사용 결과 기록까지 실제로 동작하는 여정이 목표입니다. 현재 공개 앱은 목업이며, 아래 연동은 개발 대상입니다.
@@ -47,6 +49,7 @@
 - **앱·소스:** [K-Tour ID](https://ktour-id.vercel.app) · [Harvey 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [main](https://github.com/woogieboogie-jl/k-tour-id/tree/main). `handoff/harvey-20260914`의 `k-tour-id-app/`에서 시작합니다. 앱 코드 기준 `505e475`의 운영 배포와 브랜치 동기화를 확인했으며 후속 결과 문서·테스트 수정과 구분합니다. [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)과 [README 실행 안내](../README.md#run-the-handoff)를 참고합니다.
 - **별도 실험:** Sumsub Sandbox는 별도 feature 브랜치·Preview이며 이 릴리스에 포함하지 않습니다. 네 기술의 필수 개발을 대체하지 않습니다. 경로와 검증 한계는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에 정리합니다.
 - **구현 상세:** [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) → [기존 1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). 이번 네 기술의 범위·실행 순서는 추가 명세가 우선합니다. API는 신규 구현 제안이며 공급자 공식 규격이 아닙니다.
+- **새 체험 UI 연결:** [비금전 체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) — 9/15 승인 후 구현·검수 중인 장소 기반 예시와 실제 adapter의 대응입니다. 기존 금융 목업과 독립이며 실제 인증·AI·두 체인 호출을 하지 않습니다. 기능별 완료/배포 상태는 해당 기록을 따릅니다.
 - **OpenDID:** [공식 아키텍처](https://github.com/OmniOneID/did-doc-architecture) · [공식 릴리스](https://github.com/OmniOneID/did-release) — 서버·지갑 구성과 설치 자료.
 - **해커톤·CX·Chain:** [공식 해커톤 안내](https://opendid.org/hackathon/2026/) — 가이드북·기술 설명회·제출 자료. 가이드북의 과제 안내 p5·8, 모바일 신분증/CX p19–26, Chain p33–40을 참고합니다.
 - **Sui:** [지원 프로그램 안내](https://mystenlabs.notion.site/2026-AI-1-1-Sui-2c76d9dcb4e980c4ba47c9c81dd1564a) · [TypeScript SDK](https://sdk.mystenlabs.com/sui) · [zkLogin](https://docs.sui.io/sui-stack/zklogin-integration/zklogin) · [PTB](https://docs.sui.io/develop/transactions/ptbs/prog-txn-blocks). 상세 요건과 제출 증거는 추가 명세에 정리합니다.

@@ -484,6 +484,10 @@ type OperationError = {
 
 ## 8. Sui의 역할과 연동 경계
 
+**9/21 해커톤 최소 연동은 비금전 체험 여정이다.** [Sui 필수 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)가 아래 전체 제품의 자산/bridge/badge 예시보다 우선한다. 9/15 추가 목업과 실제 연결점은 [체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다. 로바 상세의 골목 가이드 체험은 Person 확인·목적에 맞는 VP·제안·범위 승인·제한된 실행·서비스 사용·독립 감사 기록을 연결하며, 기존 금융 혜택이나 방문 badge를 이 완료 증거로 쓰지 않는다.
+
+이 체험의 자격 정책은 현재 유효한 Person 확인만이다. VP로 요청하지 않은 국적·체류·성인·결제 정보를 추정하지 않는다. 고정된 브라우저 샘플 사용자/캠페인 기록은 실제 사용자 중복 방지나 암호학적 영수증이 아니다. 하비는 서버 세션·현재 자격·durable intent와 실제 AI/zkLogin/PTB/Move, 최종 DB 사용, OmniOne outbox를 연결한다. 실제 매장의 제공 의무가 있는 상품권·할인·예약을 새로 만들지 않는다.
+
 Sui는 이번 사용자가 지정한 목업·인계 범위다. DID 신원확인의 대체재가 아니다. 제품 후보는 **사용자 서명 수단(zkLogin/기존 wallet) → 명시 동의한 자산 동작 또는 선택적 기념 badge → receipt**다. 실제 대상 asset/Move package/수탁·상환 구조는 `ADR-SUI-01`의 결정 항목이다.
 
 - zkLogin은 OAuth JWT·ephemeral key·salt·maxEpoch·proving service를 사용하는 Sui 서명 방식이다. 계정 로그인 또는 signer 준비가 Person/Age/Payment KYC 증명을 만들지 않는다. salt 백업·복구와 epoch 만료 후 재로그인을 정의한다. [Sui 공식 zkLogin](https://docs.sui.io/sui-stack/zklogin-integration).

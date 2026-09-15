@@ -122,5 +122,5 @@ test("KTOUR-BRAND-004 archived logos remain tracked locally but cannot enter the
     expect(ignored.has(`k-tour-id-app/${path}`), path).toBe(true)
   }
   expect(PUBLIC_FILES).toContain("public/brand/ktour-id-mono-v1.svg")
-  expect(PUBLIC_FILES).toContain("public/og-ktour-food-v2.png")
+  expect(PUBLIC_FILES).toContain("public/og-ktour-korea-v3.png")
 })

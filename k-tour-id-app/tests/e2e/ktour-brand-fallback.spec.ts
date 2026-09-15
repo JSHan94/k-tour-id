@@ -109,7 +109,7 @@ test("KTOUR-BRAND deployment serves current assets but not archived logos or the
     const response = await request.get(path, { maxRedirects: 0 })
     expect(response.status(), path).toBe(404)
   }
-  for (const path of ["/brand/ktour-id-mono-v1.svg", "/brand/ktour-id-mono-v1-32.png", "/og-ktour-food-v2.png"]) {
+  for (const path of ["/brand/ktour-id-mono-v1.svg", "/brand/ktour-id-mono-v1-32.png", "/og-ktour-korea-v3.png"]) {
     const response = await request.get(path, { maxRedirects: 0 })
     expect(response.status(), path).toBe(200)
     expect(response.headers()["content-type"], path).toMatch(/^image\//)

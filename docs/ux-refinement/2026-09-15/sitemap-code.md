@@ -4,6 +4,8 @@
 
 **상태: 코드↔브라우저 차이 분류 완료, 전체 UI 검수 완료 아님.** 첫 동결 당시 브라우저 실행은 0회였고 다른 mapper의 산출물을 읽지 않았다. 이후 별도 온보딩 증거와 독립 commerce 반례를 대조했다. 현재 판정은 마지막 ‘CODE-01–12 최종 분류’를 따른다. [기계 판독 registry](./sitemap-code.json)가 상세 정본이며 이 파일은 탐색용 요약이다.
 
+**후속 UX-08 보충(9/15 사용자 승인):** 아래 78노드/264행과 JSON census는 기존 묶음의 동결값이다. 새 체험을 포함한 전체 재계수는 하지 않았다. 새 코드 계약과 UI 연결·실행 검수 상태는 마지막 보충 절 및 [체험 목업 인계](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다.
+
 ## 범위와 수량
 
 - 공개 사용자 URL은 `/` 하나. `/ondo-b`는 redirect, venue API는 읽기 API이지 화면이 아니다. 옛 A 경로는 배포 정책에서 제외된다.
@@ -187,7 +189,7 @@
 | CODE-05 | 중복 입구 source 제거. 독립 두 주문에서 Zest 환불 unknown 복원/조회/1회 credit, Bar Cham 미변경 PASS | 전액·급속 중복 submit·비EN 전체를 통과로 추정하지 않음 |
 | CODE-06 | **3가지 origin의 선택 구매→실제 영수증→동일 매장 복귀 표적 PASS**: canonical Roba(4830), editorial 제주 해녀의부엌(0b1f), research Zest/Bar Cham 및 다중 주문·환불 격리(4830 비작성자 R009–025) | 빌드·대상·조건별 증거이며 모든 상태/locale/device/reload 통과가 아님. canonical/research 결과를 후속 0b1f 재실행으로 표기하지 않음 |
 | CODE-07 | same-session 닫기/재열기는 PASS, **reload/저장 실패는 미검수** | 두 상태를 혼동하지 않고 수명 변경은 별도 승인 |
-| CODE-08 | real CX/OpenDID/AI-Sui/OmniOne 통합과 local Labs를 구분 완료 | 신규 연결 비금전 UX08 **보류 유지**, 실제 연동은 개발자 범위 |
+| CODE-08 | real CX/OpenDID/AI-Sui/OmniOne 통합과 local Labs를 구분 완료 | 당시 보류한 UX08은 9/15 후속 사용자 승인으로 별도 목업 구현·검수 중(아래 보충). 실제 연동은 개발자 범위 |
 | CODE-09 | Busan/저장 café 보존은 실제 PASS, 임시 nation preview≠맥락 손실 | exact camera/query/list-scroll 미측정; UX04 재설계 보류 |
 | CODE-10 | 최초/추가 검수 모두 visible local sample UI 사용, 금융·계정 state injection 없음 | review=0/실제 provider/미방문 분기는 별도 미검수 |
 | CODE-11 | 초기 Onion-only 게이트 이후 **어니언 안국·학림다방 2개 실제 사진 승인/반영**. 학림 콘텐츠 1곳 추가로 research 25곳; 최신 media manifest·시각 검수·릴리스가 근거 | absent/failed·권리/출처/크롭 구분 유지. 기존 서비스 등록 27곳 불변, 학림 사진/추천 추가≠결제·예약·혜택 capability |
@@ -208,3 +210,18 @@
 독립 editorial 최종 표적: **`page-0b1f4b74cde440be.js`**, 새 EN 390×844 세션에서 공개 `jeju-haenyeo-kitchen-bukchon` URL→peek 서비스→명시적 지갑 설정/구매 동의/Account·Payment→3만2천원 구매→영수증→My Korea의 같은 매장/생성 order/실제 receipt→동일 editorial 복귀→잔액 2만8천원·같은 order 유지 PASS. `artifacts/qa/ux-audit/editorial-receipt-final-0b1f/results.json`과 3개 캡처에 기록했다. pageerror/외부 mutation/state injection 0. 연구 다중 주문 R009–025는 **4830**에서 두 매장별 receipt/settled refund 참조 격리, unknown/failed 환불 참조 제외와 복귀 후 잔액 보존을 확인했다. 각 결과를 동일 빌드의 전체 여정 완료로 합치지 않는다.
 
 **반환 수준 정정:** 두 독립 캡처에서 canonical/editorial은 원래 진입한 **peek**로 돌아왔다. JSON E-187/E-188의 주 target은 실제 확인한 `CANONICAL_PEEK`/`EDITORIAL_PEEK`이며, expanded detail-origin 복귀는 `conditional_alternative_target`으로만 남긴다. 같은 매장 복귀 PASS를 expanded detail 복귀 PASS로 바꾸지 않는다. 이는 노드나 edge를 새로 늘린 것이 아니다.
+
+## UX-08 후속 보충 — 새 비금전 체험
+
+사용자 승인 후 `feat/ktour-experience-share-20260915`에서 추가 중이다. 기존 JSON의 78노드/264행과 source census를 소급해 변경하지 않았다. 아래 `UX08-*`은 이 묶음의 보충 식별자이며 새 전체 화면 수·기존 FL/G/MW의 재번호가 아니다.
+
+| 보충 ID | 진입 → 상태/행동 → 다음·복귀 | 정적 계약 / 현재 확인 범위 |
+|---|---|---|
+| UX08-ENTRY | canonical Roba 전체 상세 → 독립 동네 가이드 행 → 체험 sheet | 장소 `mois-0021cd596bc5b2a922ad` 1곳, `requestExperienceB`/`ktour:experience:open`. place-service-actions→ExperienceEntryB, 공통 ExperienceMountB 소스 연결. peek 2CTA와 기존 금융/예약은 유지. 실제 도달 대기 |
+| UX08-PERSON | 체험 시작 → 필요한 기존 account/person → 동일 행동의 현재 Person 결과 재사용 → 명시 패스 생성/보관 동의 → holder 준비/ack → 목적별 person VP | `verified_person_consent`는 같은 live token/intent/receipt만 재사용하며 2번째 수단/provider 확인을 생략. 발급/holder/VP 동의는 유지. 공개 `personVerified`와 현재 status/risk/expiry만, 국적/체류/성인/Payment 제외. 직렬화 과거 이력은 권한 아님 |
+| UX08-PROPOSAL | 유효 runtime permit → 준비된 제안 → 사용자가 대상/수신자/1회/금액0/최대5분 승인 | `ExperienceScopeB`, 고정 캠페인 `ktour-neighborhood-guide-v1`, proposal/consent digest. 실제 모델/지갑/서명 호출 아님 |
+| UX08-EXECUTION | approve → granted → success/unknown/failure 또는 stop/revoke/expired | `authorization` 축, 같은 intent·최대1회, unknown에서 새 건 자동 생성 금지 |
+| UX08-RESULT | consumed → 현재 자격 재확인 → pending/fulfilled/blocked → 독립 audit pending/confirmed/failed → 가이드 내용·같은 장소 | 사용/감사 상태 분리. 매장 쿠폰·방문·잔액/Payment 권한 생성 없음 |
+| UX08-RESUME | 닫기/새로고침 → 같은 체험 이력 읽기 → 필요한 새 목적별 확인 → 같은 작업 이어가기 | IndexedDB transaction/revision은 같은 origin의 mock 이력만 보존. permit은 WeakMap이며 복원 불가. 저장 실패는 unavailable, 실제 서버/cold-return 검증 아님 |
+
+구체 모델/저장/sheet·gate 파일과 Harvey adapter 매핑은 [체험 목업 인계](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md#현재-저장된-코드-계약)에 있다. **현재 model/store/sheet·gate·앱 mount/장소 연결 정적 확인; 실제 여정/시각 검수 대기**다. 브라우저 결과를 얻으면 같은 artifact/조건을 별도로 기록하고 기존 관찰 수에 합산하지 않는다.

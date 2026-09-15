@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test"
 import ts from "typescript"
 
 const PRIMARY = "https://ktour-id.vercel.app"
-const IMAGE = "/og-ktour-food-v2.png"
+const IMAGE = "/og-ktour-korea-v3.png"
 const appRoot = process.cwd()
 const pageSource = readFileSync(resolve(appRoot, "app/page.tsx"), "utf8")
 const preparer = readFileSync(resolve(appRoot, "scripts/ondo-b-standalone/prepare.mjs"), "utf8")

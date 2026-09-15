@@ -10,10 +10,14 @@ const CLIENT_MANIFEST = resolve(NEXT_ROOT, "server/app/page_client-reference-man
 const SERVER_ROUTE = resolve(NEXT_ROOT, "server/app/api/ondo/venues/[venueId]/route.js")
 const SERVER_TRACE = `${SERVER_ROUTE}.nft.json`
 const PULSE_SOURCE = resolve(SOURCE_ROOT, "features/ondo/pulse-b/pulse-model-b.ts")
+const EXPERIENCE_SOURCE = resolve(SOURCE_ROOT, "features/ondo/experience-b/experience-model-b.ts")
 // The single flagship venue is intentionally shared by temperature, Tables,
 // Place, commerce and My Korea. Keep that interlink explicit while the total
 // occurrence budget and the non-curated-id check still catch dataset leakage.
 const MAX_CURATED_PULSE_MULTIPLICITY = 7
+// The one registered experience adds one explicit reference to its place.
+// No other curated venue or compact dataset row gains this allowance.
+const MAX_EXPERIENCE_PLACE_MULTIPLICITY = 8
 const FORBIDDEN_QA_RUNTIME_TEXT = [
   "__ONDO_B_QA__",
   "ondo.qa.controls.v1",
@@ -60,9 +64,10 @@ async function assertIsolatedNextClosure() {
 
 export async function scanOndoBNextClientArtifact() {
   const isolated = await assertIsolatedNextClosure()
-  const [manifestSource, pulseSource] = await Promise.all([
+  const [manifestSource, pulseSource, experienceSource] = await Promise.all([
     readFile(CLIENT_MANIFEST, "utf8"),
     readFile(PULSE_SOURCE, "utf8"),
+    readFile(EXPERIENCE_SOURCE, "utf8"),
   ])
   const context = { globalThis: {} }
   runInNewContext(manifestSource, context)
@@ -91,6 +96,9 @@ export async function scanOndoBNextClientArtifact() {
   const venueIdCounts = new Map()
   for (const venueId of venueIds) venueIdCounts.set(venueId, (venueIdCounts.get(venueId) ?? 0) + 1)
   const pulseVenueIds = new Set([...pulseSource.matchAll(/mois-[0-9a-f]+/g)].map((match) => match[0]))
+  const experienceVenueId = experienceSource.match(/export const EXPERIENCE_PLACE_ID_B = "(mois-[0-9a-f]+)"/)?.[1]
+  if (!experienceVenueId || !pulseVenueIds.has(experienceVenueId)) fail("The one experience place must remain an explicit curated venue")
+  const excessiveVenueIds = [...venueIdCounts].filter(([venueId, count]) => count > (venueId === experienceVenueId ? MAX_EXPERIENCE_PLACE_MULTIPLICITY : MAX_CURATED_PULSE_MULTIPLICITY)).map(([venueId]) => venueId)
   const unexpectedElevatedVenueIds = [...venueIdCounts]
     .filter(([venueId, count]) => count > 2 && !pulseVenueIds.has(venueId))
     .map(([venueId]) => venueId)
@@ -104,6 +112,8 @@ export async function scanOndoBNextClientArtifact() {
     maxVenueIdMultiplicity: Math.max(0, ...venueIdCounts.values()),
     curatedPulseVenueIds: pulseVenueIds.size,
     unexpectedElevatedVenueIds,
+    experienceVenueId,
+    excessiveVenueIds,
   }
   if (clientSource.includes("sourceRecordDigest") || clientSource.includes('"sourceIds"')) {
     fail("Full canonical venue details leaked into the canonical / client chunks", client)
@@ -116,7 +126,7 @@ export async function scanOndoBNextClientArtifact() {
     || client.venueIdOccurrences > 800 + pulseVenueIds.size * 3
     || client.uniqueVenueIds !== 400
     || client.minimumVenueIdMultiplicity !== 2
-    || client.maxVenueIdMultiplicity > MAX_CURATED_PULSE_MULTIPLICITY
+    || excessiveVenueIds.length
     || unexpectedElevatedVenueIds.length
   ) {
     fail("The canonical / client venue multiplicity differs from the compact 400-record dataset", client)

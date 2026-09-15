@@ -128,6 +128,34 @@ export function isSimulatedCredentialActiveB(credential: OndoBSimulatedCredentia
   return isKPassDemoCredentialCurrent(credential, now)
 }
 
+/** A prepared Person result cannot issue age, stay, payment or benefit claims.
+ * Keep the standard issuer fixture unchanged for separately consented routes. */
+export function createPersonOnlySimulatedCredentialB(now = Date.now()): OndoBSimulatedCredential {
+  const base = createSimulatedCredentialB("mobile_id", now)
+  return {
+    ...base,
+    credentialId: `kpass-demo:mobile_id:${now}:person-only`,
+    claims: Object.freeze({
+      ...base.claims,
+      ageOver19: null,
+      stayPeriod: null,
+      trustLevel: "limited",
+      serviceAccess: Object.freeze(["person"] as const),
+      paymentLimitKrw: 0,
+      paymentSpentKrw: 0,
+      visitorBenefit: Object.freeze({ ...base.claims.visitorBenefit, entitled: false, expiresAt: now }),
+    }),
+  }
+}
+
+export function isPersonOnlySimulatedCredentialB(credential: OndoBSimulatedCredential | null) {
+  return Boolean(credential && credential.claims.personVerified
+    && credential.claims.serviceAccess.length === 1 && credential.claims.serviceAccess[0] === "person"
+    && credential.claims.ageOver19 === null && credential.claims.stayPeriod === null
+    && credential.claims.paymentLimitKrw === 0 && credential.claims.paymentSpentKrw === 0
+    && !credential.claims.visitorBenefit.entitled)
+}
+
 /** An explicit, successfully checked sample proof revision for the same
  * holder. Renewing proof does not create a new economic issuance, adult age,
  * trip entitlement or unused allowance. The provider owns the review gate. */

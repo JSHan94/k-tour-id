@@ -69,8 +69,8 @@ export async function probeStandaloneHttp(baseUrl) {
   assert(/K-Tour ID/.test(html), "/: product identity missing")
   assert(/<title>K-Tour ID<\/title>/.test(html), "/: K-Tour ID title missing")
   assert(/property="og:title" content="K-Tour ID"/.test(html), "/: social title missing")
-  assert(/property="og:image" content="[^"]*\/og-ktour-food-v2\.png"/.test(html), "/: production food discovery social card missing")
-  assert(/name="twitter:image" content="[^"]*\/og-ktour-food-v2\.png"/.test(html), "/: Twitter food discovery social card missing")
+  assert(/property="og:image" content="[^"]*\/og-ktour-korea-v3\.png"/.test(html), "/: production food discovery social card missing")
+  assert(/name="twitter:image" content="[^"]*\/og-ktour-korea-v3\.png"/.test(html), "/: Twitter food discovery social card missing")
   assert(/property="og:image:width" content="1200"/.test(html) && /property="og:image:height" content="630"/.test(html), "/: social card dimensions must be 1200x630")
   const description = "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close."
   assert(html.includes(`name="description" content="${description}"`), "/: food discovery description missing")
@@ -142,7 +142,7 @@ export async function probeStandaloneHttp(baseUrl) {
     const asset = await request(baseUrl, path, 200)
     assert(asset.headers.get("content-type")?.startsWith("image/"), `${path}: expected an image content type`)
     const iconSize = /^\/brand\/ktour-id-mono-v1-(16|32|180|192|512)\.png$/.exec(path)?.[1]
-    if (path === "/og-ktour-food-v2.png" || iconSize) {
+    if (path === "/og-ktour-korea-v3.png" || iconSize) {
       const bytes = Buffer.from(await asset.arrayBuffer())
       assert(bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), `${path}: expected PNG bytes`)
       const width = iconSize ? Number(iconSize) : 1200

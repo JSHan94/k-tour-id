@@ -131,6 +131,11 @@ test("B-PULSE-HOT-006 the Next client scan allows only curated Pulse ids above c
   expect(scanner).toContain("unexpectedElevatedVenueIds")
   expect(scanner).toContain("minimumVenueIdMultiplicity")
   expect(scanner).toContain("MAX_CURATED_PULSE_MULTIPLICITY = 7")
+  expect(scanner).toContain("MAX_EXPERIENCE_PLACE_MULTIPLICITY = 8")
+  expect(scanner).toContain("!experienceVenueId || !pulseVenueIds.has(experienceVenueId)")
+  expect(scanner).toContain("venueId === experienceVenueId ? MAX_EXPERIENCE_PLACE_MULTIPLICITY : MAX_CURATED_PULSE_MULTIPLICITY")
+  expect(scanner).toContain("|| excessiveVenueIds.length")
+  expect(scanner).toContain("client.venueIdOccurrences > 800 + pulseVenueIds.size * 3")
   expect(scanner).not.toContain("client.venueIdOccurrences !== 800")
 })
 

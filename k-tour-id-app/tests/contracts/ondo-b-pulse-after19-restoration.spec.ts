@@ -141,7 +141,7 @@ test("B-PULSE-004 the slice keeps concise truth plus EN/KO/JA, modal, keyboard, 
   expect(productSource).toContain("useModalIsolation")
   expect(productSource).toContain("onKeyDown")
   expect(productSource).toContain("focusFirstAvailableDestination")
-  expect(gate).toContain('data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"}')
+  expect(gate).toContain('data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : isExperience ? "experience" : "checkout"}')
   expect(gate).toContain('data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined}')
   expect(css).toContain("@media")
   expect(css).toContain("min-height: 44px")

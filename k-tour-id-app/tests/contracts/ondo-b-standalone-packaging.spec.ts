@@ -160,7 +160,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     ])
 
     const files = filesBelow(STAGE_ROOT)
-    expect(files).toContain("public/og-ktour-food-v2.png")
+    expect(files).toContain("public/og-ktour-korea-v3.png")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.tsx")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
@@ -192,7 +192,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
       "public/media/venues/onion-anguk-christopher-phua-20250301.jpg",
       "public/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
-      "public/og-ktour-food-v2.png",
+      "public/og-ktour-korea-v3.png",
     ])
     expect(files).toContain("features/ondo/identity-b/local-check-walkthrough-b.tsx")
     expect(files).toContain("features/ondo/identity-b/traveler-id-entry-b.tsx")
@@ -211,7 +211,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(stagedLayout).toContain('generator: "K-Tour ID"')
     expect(stagedLayout).toContain('url: "/brand/ktour-id-mono-v1.svg"')
     expect(stagedLayout).toContain('url: "/brand/ktour-id-mono-v1-32.png"')
-    expect(stagedLayout).toContain('url: "/og-ktour-food-v2.png"')
+    expect(stagedLayout).toContain('url: "/og-ktour-korea-v3.png"')
     expect(stagedLayout).toContain("robots: { index: false, follow: false }")
     expect(stagedLayout).toContain("ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT")
     expect(stagedLayout).toContain('data-ondo-theme="light"')
@@ -453,14 +453,15 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
 
   test("B-STANDALONE-BRAND-001 ships the versioned 1200x630 food discovery social card", async () => {
     const { PUBLIC_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
-    expect(PUBLIC_FILES).toContain("public/og-ktour-food-v2.png")
+    expect(PUBLIC_FILES).toContain("public/og-ktour-korea-v3.png")
+    expect(PUBLIC_FILES).not.toContain("public/og-ktour-food-v2.png")
     expect(PUBLIC_FILES).not.toContain("public/og-ktour-food-v1.png")
     expect(PUBLIC_FILES).not.toContain("public/og-map-first.png")
-    const metadata = await sharp(resolve(APP_ROOT, "public/og-ktour-food-v2.png")).metadata()
+    const metadata = await sharp(resolve(APP_ROOT, "public/og-ktour-korea-v3.png")).metadata()
     expect(metadata).toMatchObject({ format: "png", width: 1200, height: 630 })
     for (const path of ["app/page.tsx", "app/layout.tsx", "scripts/ondo-b-standalone/prepare.mjs"]) {
       const source = readFileSync(resolve(APP_ROOT, path), "utf8")
-      expect(source, path).toContain("/og-ktour-food-v2.png")
+      expect(source, path).toContain("/og-ktour-korea-v3.png")
       expect(source, path).not.toContain("/og-ktour-food-v1.png")
       expect(source, path).not.toContain("K-TOUR ID | ONDO")
       expect(source, path).toContain(BRAND_DESCRIPTION)
@@ -469,7 +470,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       expect(source, path).not.toContain("/og-map-first.png")
     }
     const scanner = readFileSync(resolve(APP_ROOT, "scripts/ondo-b-standalone/scan-artifact.mjs"), "utf8")
-    expect(scanner).toContain('const expectedOg = "public/og-ktour-food-v2.png"')
+    expect(scanner).toContain('const expectedOg = "public/og-ktour-korea-v3.png"')
     expect(scanner).toContain("for (const publicFile of PUBLIC_FILES)")
     expect(scanner).not.toContain("PUBLIC_FILES[0]")
     expect(scanner).not.toContain("PUBLIC_FILES.slice(1)")

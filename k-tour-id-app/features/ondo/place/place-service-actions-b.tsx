@@ -8,6 +8,7 @@ import { requestReservationSampleB } from "../reservation-b/reservation-model-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
 import { useReviewSampleSession } from "../shared/ui/use-qa-controls"
 import styles from "./place-service-actions-b.module.css"
+import { ExperienceEntryB } from "../experience-b/experience-b"
 
 const COPY = {
   ko: { offer: "혜택 확인", benefit: "최대", discount: "할인", reserve: "예약하기", reserveHint: "날짜와 인원 선택" },
@@ -48,7 +49,7 @@ export function PlaceServiceActionsB({ placeId, locale, onOffer, offerTestId }: 
   const place = resolveCommercePlaceB(placeId)
   if (!sampleMode || !place || (!place.commerce && !place.reservation)) return null
   const copy = COPY[locale]
-  return <section className={styles.actions} data-testid="place-service-actions" data-service-place-id={place.id} data-place-return-section="offer" data-capability-mode="sample">
+  return <><section className={styles.actions} data-testid="place-service-actions" data-service-place-id={place.id} data-place-return-section="offer" data-capability-mode="sample">
     {place.commerce ? <button type="button" className={styles.primary} data-testid={offerTestId ?? "place-offer-open"} data-place-service="offer" data-offer-id={place.commerce.offerId} onClick={() => {
       capturePlaceServiceMapReturnB(place.id)
       if (onOffer) onOffer()
@@ -62,5 +63,5 @@ export function PlaceServiceActionsB({ placeId, locale, onOffer, offerTestId }: 
     }}>
       <CalendarClock size={20} aria-hidden="true" /><span><strong>{copy.reserve}</strong><small>{copy.reserveHint}</small></span><ChevronRight size={18} aria-hidden="true" />
     </button> : null}
-  </section>
+  </section><ExperienceEntryB placeId={placeId} locale={locale} /></>
 }

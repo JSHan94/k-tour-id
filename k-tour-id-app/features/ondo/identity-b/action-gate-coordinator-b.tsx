@@ -7,6 +7,8 @@ import { venueLabelById } from "@/lib/ondo/venues/display"
 import { editorialPlaceById } from "../pulse-b/japan-first-pulse-model-b"
 import { resolveCommercePlaceB } from "../commerce-b/place-service-registry-b"
 import { createKPassPresentationBinding, evaluateKPassService } from "../contracts/kpass-capabilities"
+import { EXPERIENCE_COPY_B } from "../experience-b/experience-copy-b"
+import { requestExperienceB } from "../experience-b/experience-model-b"
 import { kpassDecisionLabel, kpassDecisionRecovery } from "./kpass-decision-copy"
 import { createReviewFixtureAuthority, providerUnavailable, reviewFixture, type ProviderUnavailableExecution, type ReviewFixtureExecution, type ReviewFixtureOutcome } from "../contracts/execution-mode"
 import {
@@ -27,6 +29,7 @@ import {
   createPresentationRequestB,
   isPresentationRequestActiveB,
   isSimulatedCredentialActiveB,
+  isPersonOnlySimulatedCredentialB,
   resolvePresentationRequestB,
   type OndoBPresentationRequest,
 } from "./ktour-id-setup-model-b"
@@ -39,6 +42,7 @@ import {
   DEFAULT_B_ACTION_GATE_SESSION,
   abandonPendingBAction,
   authorizeBActionPresentationDecision,
+  bActionPresentationPurpose,
   createBActionReviewAxis,
   hasBActionPresentationApproval,
   hashBActionReturnTo,
@@ -476,6 +480,7 @@ function runAfterFrames(callback: () => void, count: number) {
 }
 
 function returnLabel(returnTo: BActionReturnTo, copy: (typeof COPY)[keyof typeof COPY]) {
+  if (returnTo.cta === "REDEEM_DEMO_ENTITLEMENT") return EXPERIENCE_COPY_B[copy === COPY.ko ? "ko" : copy === COPY.ja ? "ja" : "en"].title
   if (returnTo.cta === "JOIN_TABLE") return copy.table
   if (returnTo.cta === "SUBMIT_LOCAL_SIGNAL") return copy.signal
   if (returnTo.cta === "MINT_BADGE") return copy.badge
@@ -531,6 +536,7 @@ export function BActionGateCoordinator() {
 
   const restoreContext = useCallback((returnTo: BActionReturnTo) => {
     const privateContext = privateContextForBAction(returnTo)
+    if (returnTo.cta === "REDEEM_DEMO_ENTITLEMENT") return privateContext?.cta === "REDEEM_DEMO_ENTITLEMENT" && requestExperienceB(returnTo.venueId)
     if (returnTo.cta === "JOIN_TABLE") {
       if (!privateContext || privateContext.cta !== "JOIN_TABLE") return false
       actions.setTab("tables")
@@ -626,7 +632,7 @@ export function BActionGateCoordinator() {
   const presentationNeeded = Boolean(pending && !canonicalGate && requiresBActionPresentation(pending) && !hasBActionPresentationApproval(session, pending, state.identityCredential))
   const activeGate: BActionCoordinatorStep | null = canonicalGate ?? (paymentBlocked ? "payment_kyc" : presentationNeeded ? "credential" : null)
   const serviceDecision = state.identityCredential && activeGate && ["person", "age", "credential"].includes(activeGate)
-    ? evaluateKPassService(state.identityCredential, { service: activeGate === "credential" ? "visitor_benefit" : activeGate as "person" | "age" }) : null
+    ? evaluateKPassService(state.identityCredential, { service: activeGate === "credential" && pending ? bActionPresentationPurpose(pending) : activeGate as "person" | "age" }) : null
   const blockedDecision = activeGate === "payment_kyc" ? paymentBlocked : serviceDecision?.status !== "allowed" ? serviceDecision : null
   const expiredReturn = pending ? !isBActionReturnPending(pending, clock) : false
   // `clock` advances on a coarse expiry interval and can predate a credential
@@ -659,7 +665,7 @@ export function BActionGateCoordinator() {
     }
     if (!presentationRequest) {
       if (!state.identityCredential || pending.cta === "MINT_BADGE" || blockedDecision) return
-      const request = createPresentationRequestB(Date.now(), `action:${pending.tokenId}:${Date.now()}`, createKPassPresentationBinding(state.identityCredential.credentialId, "visitor_benefit", { audience: pending.venueId, domain: window.location.origin }))
+      const request = createPresentationRequestB(Date.now(), `action:${pending.tokenId}:${Date.now()}`, createKPassPresentationBinding(state.identityCredential.credentialId, bActionPresentationPurpose(pending), { audience: pending.venueId, domain: window.location.origin }))
       if (!registerBActionPresentationRequest(pending, request)) {
         fail("credential", "failure")
         return
@@ -1092,7 +1098,7 @@ export function BActionGateCoordinator() {
         return
       }
       if (!state.identityCredential || pending.cta === "MINT_BADGE") return
-      const binding = createKPassPresentationBinding(state.identityCredential.credentialId, "visitor_benefit", { audience: pending.venueId, domain: window.location.origin })
+      const binding = createKPassPresentationBinding(state.identityCredential.credentialId, bActionPresentationPurpose(pending), { audience: pending.venueId, domain: window.location.origin })
       const request = presentationRequest ?? createPresentationRequestB(Date.now(), `action:${pending.tokenId}:${Date.now()}`, binding)
       const resolution = resolvePresentationRequestB(request, "approve", Date.now(), binding)
       setPresentationRequest(resolution.request)
@@ -1264,9 +1270,11 @@ export function BActionGateCoordinator() {
   const resolvedView: GateRenderView = expiredReturn ? "expired" : view
   const gate = activeGate ?? pending.gatePlan.at(-1) ?? "account"
   const isCheckout = pending.cta === "START_CHECKOUT"
+  const isExperience = pending.cta === "REDEEM_DEMO_ENTITLEMENT"
+  const experienceCopy = EXPERIENCE_COPY_B[state.locale]
   const isCredential = gate === "credential"
   const credentialNeedsSetup = isCredential && !credentialActive
-  const accountContextTitle = pending.cta === "JOIN_TABLE" ? copy.accountTableTitle : pending.cta === "SUBMIT_LOCAL_SIGNAL" ? copy.accountSignalTitle : copy.accountCheckoutTitle
+  const accountContextTitle = isExperience ? experienceCopy.gateTitle : pending.cta === "JOIN_TABLE" ? copy.accountTableTitle : pending.cta === "SUBMIT_LOCAL_SIGNAL" ? copy.accountSignalTitle : copy.accountCheckoutTitle
   const residenceUnavailable = gate === "person" && personRoute === "mobile_residence_card" && resolvedView === "unavailable"
   const residenceUnsupported = gate === "person" && personRoute === "mobile_residence_card" && resolvedView === "unsupported"
   const residenceIssue = residenceUnavailable || residenceUnsupported
@@ -1283,7 +1291,7 @@ export function BActionGateCoordinator() {
       : resolvedView === "expired" ? copy.expiredTitle
         : gate === "account" ? accountContextTitle
           : gate === "person" ? copy.personTitle
-            : isCredential ? credentialNeedsSetup ? copy.credentialMissingTitle : pending.cta === "JOIN_TABLE" ? copy.credentialTableTitle : copy.credentialCheckoutTitle
+            : isCredential ? credentialNeedsSetup ? copy.credentialMissingTitle : isExperience ? experienceCopy.presentationTitle : pending.cta === "JOIN_TABLE" ? copy.credentialTableTitle : copy.credentialCheckoutTitle
               : gate === "age" ? copy.ageTitle
                 : isCheckout ? copy.checkoutPaymentTitle : copy.paymentTitle
   const body = resolvedView === "processing" ? gate === "account" ? copy.accountProcessingBody : gate === "age" ? copy.ageProcessingBody : gate === "payment_kyc" ? copy.paymentProcessingBody : copy.personProcessingBody
@@ -1295,7 +1303,7 @@ export function BActionGateCoordinator() {
       : resolvedView === "expired" ? copy.expiredBody
         : gate === "account" ? copy.accountJitBody
           : gate === "person" ? copy.personBody
-            : isCredential ? credentialNeedsSetup ? copy.credentialMissingBody : copy.credentialBody
+            : isCredential ? credentialNeedsSetup ? copy.credentialMissingBody : isExperience ? experienceCopy.presentationBody : copy.credentialBody
               : gate === "age" ? copy.ageBody
                 : isCheckout ? copy.checkoutPaymentBody : copy.paymentBody
   const action = gate === "account" ? copy.accountAction
@@ -1326,13 +1334,15 @@ export function BActionGateCoordinator() {
   ] as const
 
   const ReturnIcon = pending.cta === "MINT_BADGE" ? BadgeCheck : MapPin
+  const additionalPassChecks = reviewMode && blockedDecision?.reason === "service_not_entitled"
+    && isPersonOnlySimulatedCredentialB(state.identityCredential)
 
   if (blockedDecision && !expiredReturn && view !== "processing" && view !== "success") return <div ref={layerRef} className={styles.layer} data-testid="ondo-b-action-gate" data-ondo-layer="critical" data-modal-layer-priority={ONDO_MODAL_PRIORITY.critical} data-active-gate={gate} data-gate-view="policy" data-return-cta={pending.cta}>
     <div className={styles.backdrop} aria-hidden="true" />
     <section ref={dialogRef} className={styles.dialog} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="b-action-gate-title" onKeyDown={handleKeyDown} data-testid="kpass-policy-decision" data-reason={blockedDecision.reason}>
       <header><span><ShieldCheck size={18} aria-hidden="true" />K-Tour ID</span><button type="button" aria-label={cancelLabel} onClick={() => cancel()}><X size={18} aria-hidden="true" /></button></header>
       <div className={styles.body}><div className={styles.content}><div className={styles.hero}><ShieldCheck size={31} aria-hidden="true" /></div><h2 id="b-action-gate-title">{kpassDecisionLabel(blockedDecision, state.locale)}</h2><p className={styles.lead}>{kpassDecisionRecovery(blockedDecision, state.locale)}</p></div>
-        <div className={styles.actions}>{blockedDecision.reason === "age_proof_required" ? <button type="button" className={styles.primary} data-action-gate-initial-focus data-testid="kpass-request-age-proof" onClick={confirm}>{state.locale === "ko" ? "나이 증명 확인" : state.locale === "ja" ? "年齢の証明を確認" : "Confirm age proof"}<ShieldCheck size={17} aria-hidden="true" /></button> : null}<button type="button" className={blockedDecision.reason === "age_proof_required" ? styles.secondary : styles.primary} data-action-gate-initial-focus={blockedDecision.reason !== "age_proof_required" ? true : undefined} data-testid="kpass-policy-return" onClick={() => cancel(gate === "credential" ? "denied" : "cancel")}>{gate === "credential" ? state.locale === "ko" ? "혜택 없이 계속" : state.locale === "ja" ? "特典なしで続ける" : "Continue without benefit" : cancelLabel}<ChevronRight size={17} aria-hidden="true" /></button></div>
+        <div className={styles.actions}>{additionalPassChecks ? <button type="button" className={styles.primary} data-action-gate-initial-focus data-testid="kpass-additional-checks-open" onClick={() => actions.openIdentitySetup("action_gate")}>{experienceCopy.additionalChecks}<ChevronRight size={17} aria-hidden="true" /></button> : null}{blockedDecision.reason === "age_proof_required" ? <button type="button" className={styles.primary} data-action-gate-initial-focus data-testid="kpass-request-age-proof" onClick={confirm}>{state.locale === "ko" ? "나이 증명 확인" : state.locale === "ja" ? "年齢の証明を確認" : "Confirm age proof"}<ShieldCheck size={17} aria-hidden="true" /></button> : null}<button type="button" className={additionalPassChecks || blockedDecision.reason === "age_proof_required" ? styles.secondary : styles.primary} data-action-gate-initial-focus={!additionalPassChecks && blockedDecision.reason !== "age_proof_required" ? true : undefined} data-testid="kpass-policy-return" onClick={() => cancel(gate === "credential" ? "denied" : "cancel")}>{isExperience ? experienceCopy.back : gate === "credential" ? state.locale === "ko" ? "혜택 없이 계속" : state.locale === "ja" ? "特典なしで続ける" : "Continue without benefit" : cancelLabel}<ChevronRight size={17} aria-hidden="true" /></button></div>
       </div>
     </section>
   </div>
@@ -1340,7 +1350,7 @@ export function BActionGateCoordinator() {
   return (
     <div ref={layerRef} className={styles.layer} data-testid="ondo-b-action-gate" data-ondo-layer="critical" data-modal-layer-priority={ONDO_MODAL_PRIORITY.critical} data-active-gate={gate} data-person-route={gate === "person" ? personRoute ?? "unselected" : undefined} data-gate-view={resolvedView} data-return-cta={pending.cta} data-execution-mode={gate === "person" || gate === "age" || gate === "payment_kyc" ? reviewMode ? "review" : "normal" : undefined}>
       <div className={styles.backdrop} aria-hidden="true" />
-      <section ref={dialogRef} className={styles.dialog} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : gate === "payment_kyc" ? "payment-check-walkthrough" : undefined} data-check-kind={gate} data-check-phase={gate === "person" ? resolvedView === "intro" ? personRoute ? "consent" : "route" : resolvedView === "success" ? "result" : resolvedView : gate === "age" || gate === "payment_kyc" ? resolvedView === "intro" ? "decision" : resolvedView === "success" ? "result" : resolvedView : undefined} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : "checkout"} data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined} onKeyDown={handleKeyDown}>
+      <section ref={dialogRef} className={styles.dialog} role="dialog" tabIndex={-1} aria-modal="true" aria-labelledby="b-action-gate-title" data-testid={gate === "person" ? "ondo-b-local-check-walkthrough" : gate === "age" ? "after19-walkthrough" : gate === "payment_kyc" ? "payment-check-walkthrough" : undefined} data-check-kind={gate} data-check-phase={gate === "person" ? resolvedView === "intro" ? personRoute ? "consent" : "route" : resolvedView === "success" ? "result" : resolvedView : gate === "age" || gate === "payment_kyc" ? resolvedView === "intro" ? "decision" : resolvedView === "success" ? "result" : resolvedView : undefined} data-check-origin={pending.cta === "SUBMIT_LOCAL_SIGNAL" ? "local_signal" : pending.cta === "JOIN_TABLE" ? "table" : isExperience ? "experience" : "checkout"} data-visual-direction={gate === "age" && pending.cta === "JOIN_TABLE" ? "timeleft-checkpoint" : undefined} onKeyDown={handleKeyDown}>
         <header><span><ShieldCheck size={18} aria-hidden="true" />{headerLabel}</span><button type="button" aria-label={cancelLabel} onClick={() => cancel()}><X size={18} aria-hidden="true" /></button></header>
         <div className={styles.body}>
           <div className={`${styles.content} ${statusTransition ? styles.transitionContent : ""}`} data-testid={resolvedView === "processing" ? gate === "account" ? "account-gate-processing" : "local-check-processing" : resolvedView === "success" ? "local-check-result" : undefined} data-result={resolvedView === "success" ? "success" : undefined} aria-live={statusTransition ? "polite" : undefined} aria-busy={resolvedView === "processing" ? true : undefined}>
@@ -1374,14 +1384,14 @@ export function BActionGateCoordinator() {
             </section> : null}
             {isCredential && !credentialNeedsSetup && resolvedView === "intro" ? <section className={styles.personRoute} data-testid="action-gate-presentation" data-request-active={presentationRequest ? isPresentationRequestActiveB(presentationRequest) : false}>
               <span className={styles.personRouteIcon}><ShieldCheck size={21} aria-hidden="true" /></span>
-              <span><small>{pending.cta === "JOIN_TABLE" ? returnLabel(pending, copy) : copy.checkout}</small><strong data-testid="action-gate-presentation-requester">{returnVenueLabel ?? returnLabel(pending, copy)}</strong></span>
+              <span><small>{pending.cta === "JOIN_TABLE" || isExperience ? returnLabel(pending, copy) : copy.checkout}</small><strong data-testid="action-gate-presentation-requester">{returnVenueLabel ?? returnLabel(pending, copy)}</strong></span>
             </section> : null}
             {!reviewTransition && resolvedView === "intro" && gate === "person" && personRoute ? <section id="action-person-decision-truth" className={styles.decisionTruth} data-testid="person-decision-truth">
-              <p data-testid="consent-minimum"><ShieldCheck size={16} aria-hidden="true" /><span><small>{copy.consentMinimum}</small><strong>{copy.consentMinimumValue}</strong></span></p>
+              <p data-testid="consent-minimum"><ShieldCheck size={16} aria-hidden="true" /><span><small>{copy.consentMinimum}</small><strong>{isExperience ? experienceCopy.proof : copy.consentMinimumValue}</strong></span></p>
               <p data-testid="consent-retention"><span aria-hidden="true">↳</span><span><small>{copy.consentRetention}</small><strong>{copy.consentRetentionValue}</strong></span></p>
             </section> : null}
             {!reviewTransition && resolvedView === "intro" && isCredential && !credentialNeedsSetup ? <section id="action-credential-decision-truth" className={styles.decisionTruth} data-testid="credential-decision-truth">
-              <p data-testid="credential-visible-predicate"><ShieldCheck size={16} aria-hidden="true" /><span><small>{copy.consentMinimum}</small><strong>{copy.credentialPredicate}</strong></span></p>
+              <p data-testid="credential-visible-predicate"><ShieldCheck size={16} aria-hidden="true" /><span><small>{copy.consentMinimum}</small><strong>{isExperience ? experienceCopy.proof : copy.credentialPredicate}</strong></span></p>
               <p data-testid="credential-visible-retention"><span aria-hidden="true">↳</span><span><small>{copy.consentRetention}</small><strong>{copy.credentialRetention}</strong></span></p>
             </section> : null}
             {!statusTransition && gate === "account" ? <details className={`${styles.disclosure} ${styles.accountDisclosure}`} data-testid="account-privacy-disclosure">
@@ -1394,7 +1404,7 @@ export function BActionGateCoordinator() {
                 <p className={styles.truth}><ShieldCheck size={16} aria-hidden="true" />{copy.truth}</p>
                 {resolvedView === "intro" ? <section className={styles.consent} data-testid="local-check-consent">
                   <p data-testid="consent-requester"><small>{copy.consentRequester}</small><strong>{copy.consentRequesterValue}</strong></p>
-                  <p data-testid="consent-purpose"><small>{copy.consentPurpose}</small><strong>{copy.consentPurposeValue}</strong></p>
+                  <p data-testid="consent-purpose"><small>{copy.consentPurpose}</small><strong>{isExperience ? experienceCopy.presentationBody : copy.consentPurposeValue}</strong></p>
                 </section> : null}
               </div>
             </details> : !reviewTransition && isCredential ? <details className={styles.disclosure} data-testid="credential-presentation-details">

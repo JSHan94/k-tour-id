@@ -66,6 +66,7 @@ import {
   completeKPassDemoAgeProofB,
   recoverSimulatedCredentialB,
   createSimulatedCredentialB,
+  createPersonOnlySimulatedCredentialB,
   type KPassAgeProofValueB,
   type OndoBIdentityMethod,
   type OndoBIdentitySetupOrigin,
@@ -78,6 +79,8 @@ import {
   forgetBActionGateRuntimeAuthorityAfterReset,
   restoreBActionGateSession,
   persistBActionGateSession,
+  isBExperiencePersonHandoffCurrent,
+  type BExperiencePersonHandoff,
 } from "../../identity-b/action-gate-contract-b"
 import {
   DEFAULT_GLOBAL_AFTER19_PREFERENCE,
@@ -256,7 +259,7 @@ export type OndoBActions = {
   acknowledgeLocalInteractionBoundary(): boolean
   openIdentitySetup(origin: OndoBIdentitySetupOrigin): void
   closeIdentitySetup(): void
-  completeIdentitySetup(method: OndoBIdentityMethod, options?: { sampleRecovery?: true }): void
+  completeIdentitySetup(method: OndoBIdentityMethod, options?: { sampleRecovery?: true; issuanceScope?: "person"; experiencePersonHandoff?: BExperiencePersonHandoff }): boolean
   completeAgeProof(execution: ReviewFixtureExecution<KPassAgeProofValueB>): boolean
   setIdentityDemoScenario(scenario: KPassScenario | "guest"): boolean
   acknowledgeCommerceLocalBoundary(): boolean
@@ -1378,12 +1381,21 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
     openIdentitySetup: (identitySetupOrigin) => commitEphemeral((current) => ({ ...current, identitySetupOrigin })),
     closeIdentitySetup: () => commitEphemeral((current) => ({ ...current, identitySetupOrigin: null })),
     completeIdentitySetup: (method, options) => {
-      if (options?.sampleRecovery && !qaReviewFixtureOptions().allowReviewFixture) return
+      if (options?.sampleRecovery && !qaReviewFixtureOptions().allowReviewFixture) return false
+      if (options?.issuanceScope === "person") {
+        // Recheck the exact live receipt at the actual state mutation boundary.
+        // A serialized receipt, prior pass or standalone flag cannot issue it.
+        if (options.sampleRecovery || method !== "mobile_id" || !options.experiencePersonHandoff
+          || stateRef.current.identityCredential || stateRef.current.identitySetupOrigin !== "action_gate") return false
+        try {
+          if (!isBExperiencePersonHandoffCurrent(window.sessionStorage, options.experiencePersonHandoff, new Date(), qaReviewFixtureOptions())) return false
+        } catch { return false }
+      }
       const recovered = options?.sampleRecovery ? recoverSimulatedCredentialB(stateRef.current.identityCredential) : null
-      if (options?.sampleRecovery && (!recovered || recovered.method !== method)) return
+      if (options?.sampleRecovery && (!recovered || recovered.method !== method)) return false
       commitEphemeral((current) => ({
       ...current,
-      identityCredential: recovered ?? createSimulatedCredentialB(method, Date.now(), current.identityDemoScenario),
+      identityCredential: options?.issuanceScope === "person" ? createPersonOnlySimulatedCredentialB() : recovered ?? createSimulatedCredentialB(method, Date.now(), current.identityDemoScenario),
       // A protected action must observe credential issuance and setup closure
       // as one mounted-session transition. Publishing them separately lets the
       // coordinator render the still-missing credential between updates and
@@ -1392,6 +1404,7 @@ export function OndoBProvider({ children }: { children: ReactNode }) {
         ? null
         : current.identitySetupOrigin,
       }))
+      return true
     },
     completeAgeProof: (execution) => {
       const options = qaReviewFixtureOptions()

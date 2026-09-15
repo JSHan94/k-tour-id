@@ -3100,8 +3100,8 @@ export function MapEntryB() {
     if (place.originKind === "canonical") actions.setSurface({ kind: "venue", venueId: place.id })
     else if (editorial) actions.setSurface({ kind: "editorial_place", editorialPlaceId: editorial.id })
     else actions.setSurface({ kind: "map" })
-    const focus = "focus" in detail && (detail.focus === "reservation" || detail.focus === "table") ? detail.focus : "offer"
-    setResearchReturnFocus(place.originKind === "research" ? { placeId: place.id, focus } : null)
+    const focus = "focus" in detail && (detail.focus === "reservation" || detail.focus === "table" || detail.focus === "experience") ? detail.focus : "offer"
+    setResearchReturnFocus(place.originKind === "research" ? { placeId: place.id, focus: focus === "experience" ? "offer" : focus } : null)
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       if (snapshot && listPanelRef.current) listPanelRef.current.scrollTop = snapshot.listScroll
       const scroll = place.originKind === "research"
@@ -3116,7 +3116,17 @@ export function MapEntryB() {
         })
         scroll.scrollTop = snapshot.detailScroll
       }
-      document.querySelector<HTMLElement>(`[data-place-service='${focus}']`)?.focus({ preventScroll: true })
+      const target = document.querySelector<HTMLElement>(`[data-place-service='${focus}']`)
+      if (focus === "experience" && target && scroll) {
+        // A resized viewport can put the restored row below the visible sheet.
+        // Keep the original position unless this specific return focus is hidden.
+        const row = target.getBoundingClientRect()
+        const owner = scroll.getBoundingClientRect()
+        if (row.top < Math.max(0, owner.top) || row.bottom > Math.min(window.innerHeight, owner.bottom)) {
+          target.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" })
+        }
+      }
+      target?.focus({ preventScroll: true })
     }))
   }
 

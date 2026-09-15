@@ -4,6 +4,8 @@
 
 Public target: https://ktour-id.vercel.app. Investigation worktree: `ux/flow-refinement-20260915` at `b9cdc42`; deployed app functional baseline supplied by coordinator: `4cb1964`. No other mapper's inventory was read before this freeze.
 
+**UX-08 follow-up, 2026-09-15:** the user subsequently approved a separate Roba digital-guide mock. It is not included in this frozen 40+12-observation inventory. Its separately executed 320px JA/dark keyboard review and viewport-change return caveat are recorded in the [mock handoff](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md); final source-specific regression/deployment results follow the [new release record](../../KTOUR_EXPERIENCE_RELEASE_2026-09-15.md). Neither changes the original observation count. Earlier scope-decision gaps below are historical, not a claim that approval is still missing.
+
 ## Method and result
 
 - Actual public UI, fresh isolated Chromium context, 390 × 844, EN, light. No application state seeding or source-derived fixtures.

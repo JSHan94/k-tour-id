@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     title: "K-Tour ID",
     description: "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
     type: "website",
-    images: [{ url: "/og-ktour-food-v2.png", width: 1200, height: 630, alt: "K-Tour ID — Food, Cafés and Bars in Korea" }],
+    images: [{ url: "/og-ktour-korea-v3.png", width: 1200, height: 630, alt: "K-Tour ID — Korean hanok alley, barbecue and a café with yakgwa" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "K-Tour ID",
     description: "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
-    images: ["/og-ktour-food-v2.png"],
+    images: ["/og-ktour-korea-v3.png"],
   },
 }
 

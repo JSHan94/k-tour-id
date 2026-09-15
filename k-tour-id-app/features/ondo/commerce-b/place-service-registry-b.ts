@@ -96,7 +96,7 @@ export function commercePlaceByOfferIdB(offerId: unknown): CommercePlaceB | null
 
 export const PLACE_SERVICE_RETURN_EVENT_B = "ondo:b:place-service-return"
 export const SHOW_BALANCE_PLACES_EVENT_B = "ondo:b:show-balance-places"
-export type PlaceServiceReturnB = { placeId: string; focus?: "offer" | "reservation" | "table" }
+export type PlaceServiceReturnB = { placeId: string; focus?: "offer" | "reservation" | "table" | "experience" }
 export type ShowBalancePlacesB = { cityId?: CommercePlaceCityB }
 
 export function requestPlaceServiceReturnB(placeId: string, focus?: PlaceServiceReturnB["focus"]) {
