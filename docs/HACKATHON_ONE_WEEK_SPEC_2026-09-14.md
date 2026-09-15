@@ -1,4 +1,4 @@
-# ONDO 해커톤 1주 개발 명세
+# K-Tour ID 해커톤 1주 개발 명세
 
 작성일: 2026-09-14 · 개발 인계안 v3 · 대상: 구현 개발자, 기술 담당자, 시연 담당자
 
@@ -47,16 +47,18 @@ M0만 연결하거나 M2 없이 끝내면 이번 팀 필수 구현 완료가 아
 
 | 항목 | 시작점 |
 |---|---|
-| UX 목업 | [ONDO](https://ondo-tau.vercel.app), 공개 진입 `/` |
-| 앱·문서 인계 기준 | 브랜치 `handoff/harvey-20260914`의 최신 앱·문서 스냅샷. runtime source `cc3d7c3`는 배포 이력 참고값이며 이 브랜치에서 checkout할 commit이 아님 |
-| 목업 runtime 기준 | `cc3d7c3`, [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md). 공유 카드·무채색 아이콘만 변경했으며 최종 배포·검수 상태는 해당 기록을 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 별도 증거다. 실제 CX/OpenDID/Chain/Sui 연동 및 이 문서의 개발 범위는 변경하지 않음 |
+| UX 목업 | [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app), 공개 진입 `/` |
+| 앱·문서 인계 기준 | 현재 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. `handoff/harvey-20260914`는 원 인계 스냅샷이며 runtime `cc3d7c3`는 이전 운영 배포 참고값 |
+| 기존 운영 목업 기준 | `cc3d7c3`, [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md). 공유 카드·무채색 아이콘만 변경했으며 최종 배포·검수 상태는 해당 기록을 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 별도 증거다. 실제 CX/OpenDID/Chain/Sui 연동 및 이 문서의 개발 범위는 변경하지 않음 |
 | 앱 디렉터리 | 인계 브랜치를 clone한 저장소의 `k-tour-id-app/` |
 | 새 구현 분리 | 위 소스에서 해커톤 연동 브랜치와 별도 HTTPS staging을 생성. 기존 공개 목업을 즉시 덮어쓰지 않음 |
+
+별도 [Passport Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 실제 WebSDK/API 테스트로, 이 문서의 필수 범위를 늘리거나 CX/OpenDID/Chain/Sui를 대체하지 않는다. 실제 얼굴/liveness·전체 촬영/제출 완료는 미검수다.
 
 코드 저장소 접근 권한과 인계 브랜치 존재를 먼저 확인한다. Node.js 22.13 이상과 pnpm 10.8.0을 사용한다.
 
 ```bash
-git clone --branch handoff/harvey-20260914 --single-branch https://github.com/woogieboogie-jl/k-tour-id.git k-tour-id-handoff
+git clone --branch feat/sumsub-sandbox-onboarding-20260914 --single-branch https://github.com/woogieboogie-jl/k-tour-id.git k-tour-id-handoff
 cd k-tour-id-handoff/k-tour-id-app
 pnpm install --frozen-lockfile
 pnpm typecheck
@@ -135,7 +137,7 @@ pnpm exec next start .ondo-b-standalone -p 3438
 - 선택한 release의 issuer/TA/verifier/holder를 동일 환경·버전으로 고정한다. 공식 release 설치 문서를 사용하되 새 native wallet 제품 개발은 하지 않는다. [공식 release 자료](https://github.com/OmniOneID/did-release)
 - **`did-demo-app` 웹페이지는 실제 holder의 대체물이 아니다.** 공식 README도 실제 데이터 및 QR 자격 거래가 없는 시뮬레이션임을 설명한다. 준비된 실제 앱/SDK로 발급·보관·제시 receipt를 얻어야 한다. [공식 Demo App 설명](https://github.com/OmniOneID/did-demo-app)
 - 앱 정규화 schema 제안: `KPassHackathonCredential/v1`. `holderBinding, issuerRef, schemaVersion, personVerified, serviceAccess=["redeem_demo_entitlement"], validFrom, validUntil, policyVersion, statusRef`만 사용한다. 실제 VC 문서 구조·proof 필드와의 mapping은 고정 release 규격으로 구현한다.
-- `personVerified`는 CX 검증에서, `serviceAccess`는 ONDO 체험 정책에서 부여한다. 정부의 상업 혜택 보증이나 실제 관광 주민증 발급으로 표현하지 않는다. 불필요한 이름·생년월일·국적·체류기간·결제한도를 VC에 추가하지 않는다.
+- `personVerified`는 CX 검증에서, `serviceAccess`는 K-Tour ID 체험 정책에서 부여한다. 정부의 상업 혜택 보증이나 실제 관광 주민증 발급으로 표현하지 않는다. 불필요한 이름·생년월일·국적·체류기간·결제한도를 VC에 추가하지 않는다.
 - 발급 성공과 holder 저장 완료를 분리한다. 저장 확인 실패는 같은 발급 operation을 조회·재전달하며 새 VC를 무조건 발급하지 않는다. CX subject와 holder 소유 증명을 발급 세션에 바인딩한다.
 - VP는 holder 동의·proof·issuer 신뢰·현재 status·유효기간·요청 nonce/audience/domain/purpose를 검증한다. 최소 claim을 가진 VC/VP를 사용한다. 별도 ZKP를 구현하지 않았다면 최소공개와 영지식증명을 동일시하지 않는다.
 - VP challenge nonce는 검증 성공과 판정 생성 시 원자적으로 소비한다. 동일 제출의 멱등 재시도는 기존 판정을 반환하고 다른 제출/요청으로의 재사용은 거절한다. 취소·거절·만료된 요청은 다시 제출할 수 없다. 서비스 사용 권한은 별도의 단기 `decisionRef`로 발급하고 다음 단계에서 한 번만 소비한다.
@@ -315,7 +317,7 @@ Sui↔OmniOne bridge, USDC/USDT→ooKRW 전환, 실제 원화 상환은 여전�
 - [ ] 실제 CX·VC/holder·VP·AI 제안/동의·Sui 실행·redemption·OmniOne receipt의 비식별 evidence 묶음.
 - [ ] HK-09: DeepSurge 실제 접수·공개 Move/앱 코드·재현 README·1페이지 Sui–AI case study.
 - [ ] 정상+거절/중복/복구 영상, MVP 시연 영상과 결선 제안서. 실제 연결/목업/제외 기능 표.
-- [ ] 실제 기관 서비스가 아닌 ONDO 체험 혜택이라는 설명, 남은 연동과 종료 후 테스트 데이터 삭제 담당.
+- [ ] 실제 기관 서비스가 아닌 K-Tour ID 체험 혜택이라는 설명, 남은 연동과 종료 후 테스트 데이터 삭제 담당.
 
 **녹화 권장 구성(공식 영상 길이 제한 아님):** 지도·혜택 → 실제 CX/holder·VC/VP → AI 제안·사용자 승인·Sui 실제 실행 → 서버 사용·같은 장소 복귀 → 중복·거절/복구 → 두 체인 증거·실제/목업 구분. 공급자 왕복 시간에 맞게 편집하되 실제 개인정보·QR secret·token은 가린다. 실패 장면을 샘플 성공 영상으로 덮지 않는다.
 

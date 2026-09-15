@@ -1,10 +1,12 @@
-# 해커톤 연동·목업·백엔드 작업 매트릭스
+# K-Tour ID 해커톤 연동·목업·백엔드 작업 매트릭스
 
-최신 브랜딩 배포: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 실제 provider/SDK 요구와 해커톤 범위는 변경하지 않았다. 이전 기능 검수 결과를 새 브랜딩 배포의 전체 여정 PASS로 이월하지 않는다.
+**현재 앱·소스:** [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app) · 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. [개발자 시작 문서](./DEVELOPER_START_HERE.md)의 현재 경로를 따른다. 아래 `cc3d7c3`·`handoff/harvey-20260914` 및 이전 검수 수치는 원 운영·인계 기준선이며 현재 Preview의 검수 결과가 아니다. 별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 운영 신원 확인·실제 얼굴/liveness 완료 증거가 아니며 CX·OpenDID·OmniOne Chain·Sui 필수 구현을 대신하지 않는다.
 
-상태: `2026-09-14 지도 우선 진입 운영 Ready · 로컬 신규5개/desktop1개·832계약·운영 HTTP PASS · 운영 신규5개/실제 desktop1개 PASS · 외부 연동은 별도`
+기존 운영 브랜딩 기준선: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 실제 provider/SDK 요구와 해커톤 범위는 변경하지 않았다. 이전 기능 검수 결과를 새 브랜딩 배포의 전체 여정 PASS로 이월하지 않는다.
 
-이번 `cc3d7c3`의 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9` 공개 mobile12/desktop·tablet2, `3d02b84` 로컬 mobile12/기존7, 당시 계약826 결과는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거다.
+원 기준선 상태: `2026-09-14 지도 우선 진입 운영 Ready · 로컬 신규5개/desktop1개·832계약·운영 HTTP PASS · 운영 신규5개/실제 desktop1개 PASS · 외부 연동은 별도`
+
+기존 `cc3d7c3`의 당시 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9` 공개 mobile12/desktop·tablet2, `3d02b84` 로컬 mobile12/기존7, 당시 계약826 결과는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)의 역사적 증거다.
 
 - [x] 9월 11일 프리뷰 `52f376e`의 영향27개 **범위 한정 PASS**. 기준선174개와 별도 URL의 증거이며 현재 운영 URL 실행 수로 세지 않는다. 최초 실패·재실행 조건은 [전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 실제 공급자 활용·제출 인정과 별도다.
 
@@ -31,7 +33,7 @@
 
 ## 2. 현재 코드에서 확인한 경계
 
-- 기준선: 핵심 DID 공개 목업 `bec3257` 이후 v3.2 및 G09-S 변경. 현재 개발 시작점은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. `996119f`·`a45400f`·core app `5233816`와 이전 공개 source `3dc392b`는 각각의 후보 증거다. 이전 공개 증거는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md), 당시 문서 대조·선택 로컬 회귀는 [9월 11일 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 `52f376e`·중간 `f8960b4`·`abd0f83`과 기준선 `564823e`의 공개 결과는 [9월 11일 배포 기록](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 이전 기능 검수 기준 `e2ad7c4`는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 범위만 따른다.
+- 기준선: 핵심 DID 공개 목업 `bec3257` 이후 v3.2 및 G09-S 변경. 원 인계 기준선은 `handoff/harvey-20260914`의 `k-tour-id-app/`이며 현재 시작 브랜치는 위 안내를 따른다. `996119f`·`a45400f`·core app `5233816`와 이전 공개 source `3dc392b`는 각각의 후보 증거다. 이전 공개 증거는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md), 당시 문서 대조·선택 로컬 회귀는 [9월 11일 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 `52f376e`·중간 `f8960b4`·`abd0f83`과 기준선 `564823e`의 공개 결과는 [9월 11일 배포 기록](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 이전 기능 검수 기준 `e2ad7c4`는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 범위만 따른다.
 - 아래 `B/`는 이 기준선의 `k-tour-id-app/features/ondo/`다. 루트의 오래된 앱이나 배포에서 제외된 legacy route를 현재 증거로 세지 않는다.
 - `코드 존재`는 읽기 검토 결과다. 각 flow의 실제 브라우저 정상·경계·mobile 검수 통과는 별도 기록이 필요하다.
 - `구현중`은 이번 turn의 새 작업이다. 결과를 보지 않고 완료로 갱신하지 않는다.

@@ -1,14 +1,18 @@
-# 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
+# K-Tour ID 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
 
 **9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 같은 비금전 혜택 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 범위·실행 순서가 기존 단일안과 아래 전체 제품 목록보다 우선한다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
 
 **[단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)은 공통 CX/OpenDID·서버 계약의 상세 참고다.** Sui 담당·환경·가용 시간을 추가 확인해 일정을 확정한다. 네 기술과 AI 실행을 기존 1주 일정에 그대로 완료할 수 있다고 가정하지 않으며, 프로그램 등록·별도 제출 자격·추가 상금 적용 조건도 확인한다. 아래는 전체 제품 인계로, 금융·예약 등 전체 목록이 이번 주 필수라는 뜻은 아니다.
 
-기준: **2026-09-14 · ONDO B · 운영 배포 source/runtime `cc3d7c3` · 인계 branch `handoff/harvey-20260914`**. [운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 확인한다. 이번 변경은 음식·카페·바 중심 공유 카드와 무채색 K-TOUR ID 아이콘뿐이며 최종 production Ready·검수 범위는 해당 기록을 따른다. 인계는 최신 소스 스냅샷이며 과거 배포 commit ID는 이 브랜치의 checkout 대상이 아닌 이력 참고값이다.
+현재 앱: **[K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app)**(브랜딩 배포 소스 `4464697`). 앱·문서 시작 브랜치는 **`feat/sumsub-sandbox-onboarding-20260914`**다. 공개 이름은 K-Tour ID이며 `ondo` 모듈·API·환경 키와 역사적 기록명은 호환성을 위해 유지한다.
+
+별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 실제 WebSDK/API 테스트다. 운영 신원 확인이나 패스 발급이 아니며, 실제 얼굴/liveness·전체 촬영/제출은 미검수다. CX·OpenDID·OmniOne Chain·Sui의 필수 개발을 대신하거나 이번 해커톤 범위를 확대하지 않는다.
+
+기존 운영·인계 기준은 **2026-09-14 · source/runtime `cc3d7c3` · branch `handoff/harvey-20260914`**다. [기존 운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)는 당시 배포·검수 기록이며 현재 Preview와 구분한다. 과거 배포 commit ID는 이력 참고값이다. 이 Preview로 기존 Production이나 원 인계 브랜치를 덮어쓰지 않았다.
 
 이전 운영 source `d9eda4f`의 [지도 우선 진입 릴리스](./MAP_FIRST_ENTRY_2026-09-14.md)와 `82ea4c9`의 [지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)는 역사적 배포·검수 기록으로 별도 보존한다. 현재 앱의 기준으로 혼용하지 않는다.
 
-목표는 새 화면을 처음부터 만드는 것이 아니라 **지금 클릭되는 목업의 성공·거절·대기·복구를 실제 응답에 연결하는 것**이다. 실제 SDK/provider/서버 연결은 개발자 작업이다. 그 연결이 아직 없다는 이유만으로 목업을 미완료로 보지 않으며, 반대로 샘플 성공을 실제 연동 증거로 쓰지 않는다.
+목표는 새 화면을 처음부터 만드는 것이 아니라 **지금 클릭되는 목업의 성공·거절·대기·복구를 실제 응답에 연결하는 것**이다. 위 별도 Sandbox를 제외한 해커톤 SDK/provider/서버 연결은 개발자 작업이다. 그 연결이 아직 없다는 이유만으로 목업을 미완료로 보지 않으며, 반대로 샘플 성공을 실제 연동 증거로 쓰지 않는다.
 
 ## 1. 처음에는 이것만 읽기
 
@@ -21,20 +25,20 @@
 
 **위 세 문서가 현행 인계 정본이다.** `DEVELOPMENT_SPEC.md`, 예전 traceability·Sui 브리프·실행팩은 배경/역사적 요구 자료다. 옛 독립 route나 과거 Sui 프로그램 조건을 현재 앱의 완료/필수 조건으로 그대로 이식하지 않는다. 범위 충돌은 DEPLOYMENT_SPEC §1.1을 따른다.
 
-실제 앱은 인계 브랜치를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. 이 브랜치의 앱과 문서를 함께 사용하며 오래된 `main`과 혼용하지 않는다.
+실제 앱은 위 현재 브랜치를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. 해당 브랜치의 앱과 문서를 함께 사용하며 원 인계 스냅샷이나 `main`과 혼용하지 않는다.
 
 ## 2. 실행 화면과 구현 상태
 
-- 공개 진입은 **`/` 한 곳**이다. `/ondo-b`는 redirect, 현재 장소 데이터 HTTP API는 `/api/ondo/venues/[venueId]`다.
+- 공개 진입은 **`/` 한 곳**이다. `/ondo-b`는 redirect, 현재 장소 데이터 HTTP API는 `/api/ondo/venues/[venueId]`다. 별도 Sandbox에는 `POST`/`DELETE /api/kyc/sumsub/session`, `GET /api/kyc/sumsub/status`가 구현되어 있다.
 - 지도/추천의 선택 매장과 지도 잔액 진입, ID/Wallet, Tables, My Korea, Settings, Demo의 sheet·탭이 플로우 진입점이다. 매장에서는 혜택·결제·Table·예약으로 이어지고 길찾기/저장은 보조 행동이다. `/pass`, `/wallet`, `/present`, `/partner/verify`, `/partner/settlements`, `/evidence`를 새 API나 현재 공개 페이지로 가정하지 않는다.
 - 기본 데모에서 샘플 상황을 선택할 수 있다. `review=0`은 실제 미연결 경계를 확인하는 경로이며, provider 실패를 샘플 성공으로 자동 대체하지 않는다.
 - 준비된 K-Pass 자격 선택기는 **테스트 fixture 주입**이다. 별도의 K-Tour ID setup walkthrough는 provider 동의/복귀/holder 보관을 시연한다. walkthrough의 `review-draft`가 실제 Person/Age/Payment 자격 발급을 의미하지 않는다.
-- **최신 브랜딩 공개판:** source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. [아트워크·생성 프롬프트](../k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md)를 별도로 보존한다.
+- **기존 운영 브랜딩 기준선:** source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. [아트워크·생성 프롬프트](../k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md)를 별도로 보존한다.
 - **기능 검수 이력:** 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개·계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md), [9월 11일 검수](./FINAL_JOURNEY_QA_2026-09-11.md)도 각각의 실행 범위만 따른다.
 
 ### 플로우 → 개발 작업
 
-아래의 “목업 결과”는 source/model과 공개 진입 경로의 대응표다. 개별 브라우저 검증 범위는 위 기록을 따른다. **API는 모두 앱/BFF 구현 제안이며, 이미 배포된 endpoint나 공급자 공식 API명이 아니다.** 상세 source/fixture/test는 DEPLOYMENT_SPEC Appendix A에 있다.
+아래의 “목업 결과”는 source/model과 공개 진입 경로의 대응표다. 개별 브라우저 검증 범위는 각 배포 기록을 따른다. **아래 개발 작업의 API는 앱/BFF 구현 제안이며, 이미 배포된 endpoint나 공급자 공식 API명이 아니다.** 위 장소/Sandbox API와 구분한다. 상세 source/fixture/test는 DEPLOYMENT_SPEC Appendix A에 있다.
 
 | 플로우 | 목업에서 확인할 동작 | 개발자가 연결할 것 | 작업 ID |
 |---|---|---|---|

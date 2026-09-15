@@ -166,26 +166,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.tsx")
     expect(files).toContain("features/ondo/onboarding/official-directory-onboarding.module.css")
     expect(files.filter((file) => file.startsWith("public/"))).toEqual([
-      "public/brand/ktour-id-lockup-transparent.png",
-      "public/brand/ktour-id-lockup.png",
-      "public/brand/ktour-id-logo-source.png",
-      "public/brand/ktour-id-mark-180.png",
-      "public/brand/ktour-id-mark-192.png",
-      "public/brand/ktour-id-mark-32.png",
-      "public/brand/ktour-id-mark-512.png",
-      "public/brand/ktour-id-mark-64.png",
-      "public/brand/ktour-id-mark.png",
       "public/brand/ktour-id-mono-v1-16.png",
       "public/brand/ktour-id-mono-v1-180.png",
       "public/brand/ktour-id-mono-v1-192.png",
       "public/brand/ktour-id-mono-v1-32.png",
       "public/brand/ktour-id-mono-v1-512.png",
       "public/brand/ktour-id-mono-v1.svg",
-      "public/brand/ktour-id-wordmark.png",
-      "public/brand/ondo-lockup.svg",
-      "public/brand/ondo-mark-inverse.svg",
-      "public/brand/ondo-mark-micro-24.svg",
-      "public/brand/ondo-mark.svg",
       "public/editorial/food/coffee-croissant-illustration-v1.jpg",
       "public/editorial/food/ondo-category-casual-v1.jpg",
       "public/editorial/food/ondo-category-chinese-v1.jpg",
@@ -447,7 +433,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
   })
 
-  test("B-STANDALONE-011 ships optional OpenDID setup and every referenced editorial brand asset", async () => {
+  test("B-STANDALONE-011 ships current monochrome branding and preserves archived sources only in Git", async () => {
     const { PUBLIC_FILES, SOURCE_FILES } = await import("../../scripts/ondo-b-standalone/policy.mjs")
     for (const path of [
       "features/ondo/identity-b/ktour-id-setup-b.tsx",
@@ -456,17 +442,12 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "features/ondo/shared/ui/ktour-id-mark.tsx",
     ]) expect(SOURCE_FILES, `${path} must ship with /ondo-b`).toContain(path)
     for (const path of [
-      "public/brand/ondo-lockup.svg",
-      "public/brand/ondo-mark.svg",
-      "public/brand/ondo-mark-inverse.svg",
-      "public/brand/ondo-mark-micro-24.svg",
-      "public/brand/ktour-id-mark-32.png",
-      "public/brand/ktour-id-mark-180.png",
-      "public/brand/ktour-id-mark-192.png",
       "public/editorial/people/ondo-my-korea-inspiration-v2-landscape.jpg",
       "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
       "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
     ]) expect(PUBLIC_FILES, `${path} is referenced by the shipped UI`).toContain(path)
+    expect(PUBLIC_FILES.filter(path => /\/brand\/(?:ondo-|ktour-id-(?:mark|lockup|logo|wordmark))/.test(path))).toEqual([])
+    expect(PUBLIC_FILES).toContain("public/brand/ktour-id-mono-v1.svg")
     const suppliedMarkHash = createHash("sha256")
       .update(readFileSync(resolve(APP_ROOT, "public/brand/ktour-id-mark.png")))
       .digest("hex")

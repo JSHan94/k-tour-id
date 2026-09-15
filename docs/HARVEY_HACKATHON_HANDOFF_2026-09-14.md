@@ -1,8 +1,8 @@
-# ONDO · 해커톤 연동 개발 요약
+# K-Tour ID · 해커톤 연동 개발 요약
 
 ## 1. 목표와 범위
 
-기존 지도 기반 웹앱에 **OmniOne CX + OpenDID + OmniOne Chain + Sui**를 연결합니다. 장소 1곳에서 신원 확인, 패스 발급·제시, AI의 체험 혜택 제안, 사용자 승인에 따른 실행, 사용 결과 기록까지 실제로 동작하는 여정이 목표입니다. 현재 공개 앱은 목업이며, 아래 연동은 개발 대상입니다.
+기존 지도 기반 웹앱에 **OmniOne CX + OpenDID + OmniOne Chain + Sui**를 연결합니다. 장소 1곳에서 신원 확인, 패스 발급·제시, AI의 체험 혜택 제안, 사용자 승인에 따른 실행, 사용 결과 기록까지 실제로 동작하는 여정이 목표입니다. 아래 해커톤 여정은 현재 목업이며, 네 기술 연동은 개발 대상입니다.
 
 이번 구현은 **신원 확인 경로 1개 · 패스 1종 · 비금전 체험 혜택 1개 · Sui 실행 권한 1종 · OmniOne 감사 이벤트 1종**으로 한정합니다. 실제 원화/스테이블코인 충전·결제·환불, bridge, 상점 예약 API, 여권·외국인등록증 실연동은 목업으로 유지합니다.
 
@@ -44,7 +44,8 @@
 
 ## 5. 참고 리소스
 
-- **앱·소스:** [현재 목업](https://ondo-tau.vercel.app) · [GitHub 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914). `main`이 아닌 `handoff/harvey-20260914`에서 시작하며, 앱은 `k-tour-id-app/`에 있습니다. 설치·실행 명령은 [README](../README.md#run-the-handoff)를 참고합니다.
+- **앱·소스:** [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app) · [현재 GitHub 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914). `feat/sumsub-sandbox-onboarding-20260914`의 `k-tour-id-app/`에서 시작합니다. 설치·실행은 [README](../README.md#run-the-handoff)를 참고합니다. `handoff/harvey-20260914`는 원 인계 기준선이며 기존 Production과 현재 Preview는 별개입니다.
+- **별도 Passport 테스트:** [Sumsub Sandbox 인계](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md). 실제 WebSDK/API 테스트이며 운영 신원 확인이나 실제 얼굴/liveness 완료 증거가 아닙니다. 위 네 기술의 필수 개발을 대신하지 않습니다.
 - **구현 상세:** [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) → [기존 1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). 이번 네 기술의 범위·실행 순서는 추가 명세가 우선합니다. API는 신규 구현 제안이며 공급자 공식 규격이 아닙니다.
 - **OpenDID:** [공식 아키텍처](https://github.com/OmniOneID/did-doc-architecture) · [공식 릴리스](https://github.com/OmniOneID/did-release) — 서버·지갑 구성과 설치 자료.
 - **해커톤·CX·Chain:** [공식 해커톤 안내](https://opendid.org/hackathon/2026/) — 가이드북·기술 설명회·제출 자료. 가이드북의 과제 안내 p5·8, 모바일 신분증/CX p19–26, Chain p33–40을 참고합니다.
