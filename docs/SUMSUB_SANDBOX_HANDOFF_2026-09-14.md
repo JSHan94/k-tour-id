@@ -1,5 +1,7 @@
 # Sumsub Sandbox 연동 인계
 
+2026-09-15 브랜드 업데이트: 현재 확인 링크는 **[K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app)** (`4464697`, Ready)다. 서비스명·흑백 로고·공유 이미지를 통일했으며 Sumsub 서버/SDK 검증 동작과 아래 신뢰 경계는 그대로다. 아래 `c80d1da`와 이전 URL은 실제 문서·카메라 여정 검수 당시의 증거를 가리킨다. Production 배포는 변경하지 않았다.
+
 브랜치: `feat/sumsub-sandbox-onboarding-20260914` · 최종 확인 배포 소스: `c80d1da` · 상태: **Ready**.
 
 **[최종 Sumsub Sandbox Preview 열기](https://ondo-ph4kwxgrc-jaewook-9643s-projects.vercel.app)** — 기존 Production 배포는 변경하지 않았다. 앱의 **ID · Wallet → 여행 준비 상태(Trip readiness) 펼치기 → K-Tour ID 열기(Open K-Tour ID) → Passport → 테스트 안내 동의**로 진입한다. 최초 시작에 필요한 테스트 접근 코드는 별도 전달하며 이 문서·URL·Git에는 넣지 않는다.

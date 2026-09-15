@@ -1,5 +1,9 @@
 # K-Tour ID public-brand unification — 2026-09-15
 
+App source: `4464697` on `feat/sumsub-sandbox-onboarding-20260914`.
+Verified Ready **Preview**: https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app
+The existing Production and Harvey handoff branch were not changed.
+
 ## Public presentation
 
 - The app name is **K-Tour ID**, not ONDO or ONDO 溫圖.
@@ -47,3 +51,9 @@ boundary scan; HTTP artifact probe (41 public assets and 26 blocked paths);
 cases against the built app (mobile/desktop, light/dark, 320/390/1440 CSS px).
 The browser cases assert zero application errors. Header screenshots are
 branding evidence, not a new end-to-end KYC or live-map performance claim.
+
+After the deployment reached Ready, 4 mobile branding browser cases passed
+against the actual Preview (12.6 seconds, no retries, zero application errors),
+and the remote HTTP probe passed the same 41 assets / 26 blocked-path checks.
+Settled local screenshots also confirmed the hero, city labels and options;
+earlier empty-map captures were taken before map projection settled.
