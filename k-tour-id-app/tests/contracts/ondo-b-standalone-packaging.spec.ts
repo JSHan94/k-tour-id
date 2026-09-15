@@ -191,6 +191,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
       "public/editorial/people/ondo-onboarding-travelers-v2-landscape.jpg",
       "public/editorial/people/ondo-tables-dinner-v2-landscape.jpg",
       "public/media/venues/onion-anguk-christopher-phua-20250301.jpg",
+      "public/media/venues/research-jeju-sinseoloreum/momguk-gong-seokbae-20190723-v1.jpg",
       "public/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
       "public/og-ktour-korea-v3.png",
     ])

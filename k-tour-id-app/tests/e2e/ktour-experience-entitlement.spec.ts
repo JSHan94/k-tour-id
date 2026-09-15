@@ -44,6 +44,7 @@ async function openFromPublicMap(page: Page) {
 
 async function checkToProposal(page: Page) {
   const visited = new Set<string>()
+  let holderAcknowledgements = 0
   const flow = page.getByTestId("experience-flow")
   const start = page.getByTestId("experience-check")
   if (await start.isVisible()) await start.click()
@@ -80,6 +81,16 @@ async function checkToProposal(page: Page) {
       }
     }
     visited.add(action)
+    if (action === "k-tour-id-continue") {
+      const holder = page.getByTestId("k-tour-id-holder-delivery")
+      if (await holder.isVisible()) {
+        await expect(holder).toHaveAttribute("data-holder-preparation", "automatic")
+        await expect(holder).toHaveAttribute("data-holder-state", "receipt")
+        await expect(holder).toContainText("Nothing is saved until you acknowledge below")
+        holderAcknowledgements += 1
+        visited.add(`holder-ack:${holderAcknowledgements}`)
+      }
+    }
     await page.getByTestId(action).filter({ visible: true }).first().click()
   }
   throw new Error("Experience did not reach its bounded approval screen")
@@ -127,6 +138,8 @@ test("UX08 public guest map → Roba → account/Person/VP → one approval → 
   expect(visited.has("experience-pass-approve")).toBe(true)
   expect(visited.has("k-tour-id-method-mobile-id")).toBe(false)
   expect(visited.has("identity-handoff-approve")).toBe(false)
+  expect(visited.has("holder-ack:1")).toBe(true)
+  expect(visited.has("holder-ack:2")).toBe(false)
   const flow = page.getByTestId("experience-flow")
   const intent = await flow.getAttribute("data-intent-id")
   await page.screenshot({ path: testInfo.outputPath("01-contextual-consent.png"), fullPage: true })

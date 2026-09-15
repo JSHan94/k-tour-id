@@ -97,8 +97,14 @@ test("AV-02 expanded editorial place information survives the service round trip
   const peek = source.locator("xpath=ancestor::*[@data-place-service-scroll][1]")
   const service = peek.getByTestId("peek-place-service")
   await service.focus()
-  const before = await peek.evaluate(node => node.scrollTop)
+  // click() may scroll a partly visible button before activating it. Capture
+  // the actual user's departure position, before the app's handoff handler,
+  // rather than an earlier focus position. Never read the private snapshot.
+  const activationScroll = service.evaluate(node => new Promise<number>(resolve => {
+    node.addEventListener("click", () => resolve(node.closest<HTMLElement>("[data-place-service-scroll]")!.scrollTop), { once: true, capture: true })
+  }))
   await service.click()
+  const before = await activationScroll
   await page.getByTestId("commerce-origin-return").click()
   await expect(source).toHaveAttribute("open", "")
   await expect.poll(() => peek.evaluate(node => node.scrollTop)).toBeCloseTo(before, 0)

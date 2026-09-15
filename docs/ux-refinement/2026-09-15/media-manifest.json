@@ -1,8 +1,8 @@
 {
   "schemaVersion": "ux-media-manifest-1.0",
-  "phase": "A_IMPLEMENTED_CONTENT_LOCAL_QA",
-  "checkedAt": "2026-09-15",
-  "approvedForApp": 2,
+  "phase": "B_CONTENT_IMPLEMENTED_PENDING_INDEPENDENT_QA",
+  "checkedAt": "2026-09-16",
+  "approvedForApp": 3,
   "rules": {
     "realPhotographsOnly": true,
     "noGeneratedVenuePhotos": true,
@@ -18,9 +18,9 @@
     "newCandidatePhotoLeads": 3,
     "blockedExamples": 3,
     "existingVenuePhotosVisuallyInspected": 2,
-    "originalAssetsAcquired": 0,
+    "originalAssetsAcquired": 1,
     "newCandidateVenuesWithPhotoLeads": 2,
-    "deliveryAssetsAcquired": 2
+    "deliveryAssetsAcquired": 3
   },
   "assets": [
     {
@@ -331,14 +331,14 @@
       ]
     },
     {
-      "checkedAt": "2026-09-15",
-      "downloadedToRepository": false,
-      "deploymentPath": null,
-      "sha256": null,
+      "checkedAt": "2026-09-16",
+      "downloadedToRepository": true,
+      "deploymentPath": "/media/venues/research-jeju-sinseoloreum/momguk-gong-seokbae-20190723-v1.jpg",
+      "sha256": "1550a36f18e307d644c5856573de445e0ae62530137cb1d4f2e945c983885666",
       "hotlinkAllowedByThisPlan": false,
-      "integrationAllowed": false,
+      "integrationAllowed": true,
       "id": "photo-sinseoloreum-momguk",
-      "venueId": "candidate-jeju-sinseoloreum",
+      "venueId": "research-jeju-sinseoloreum",
       "priority": "P1_NEW_CANDIDATE",
       "sourceUrl": "https://commons.wikimedia.org/wiki/File:신설오름_몸국.jpg",
       "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/12/%EC%8B%A0%EC%84%A4%EC%98%A4%EB%A6%84_%EB%AA%B8%EA%B5%AD.jpg",
@@ -354,7 +354,7 @@
       },
       "creditRequiredByLicense": true,
       "creditRequiredByProject": true,
-      "creditDraft": "신설오름 몸국 — 공석배 / Wikimedia Commons, CC BY 4.0; cropped/resized",
+      "creditDraft": "신설오름 몸국 — 공석배 / Wikimedia Commons, CC BY 4.0. Photographed2019-07-23. Original JPEG; display crop only.",
       "photoTakenAt": "2019-07-23",
       "sourceDimensions": {
         "width": 961,
@@ -367,21 +367,27 @@
         "limits": "2019 photo, not current plating/stock proof. Never use for Woojin Haejangguk or as generic photo falsely attributed to another restaurant."
       },
       "visualReview": {
-        "status": "INSPECTED_HISTORICAL_FOOD_CONTENT_ONLY",
+        "status": "EXACT_LOCAL_ORIGINAL_INSPECTED_HISTORICAL_FOOD_CONTENT_ONLY",
         "findings": "Bowl of momguk on a table with vegetables behind it; no visible people. The named restaurant's 2019 photo, not current plating or availability evidence.",
-        "crop": "Square historical detail composition reviewed; 4:3 crop not approved.",
+        "crop": "Square original inspected. Root approved content-only implementation; actual4:3 card and1:1 detail crop/credit/failure review remains pending.",
         "altDraft": {
           "en": "Momguk photographed at Sinseoloreum in 2019",
           "ko": "2019년 신설오름에서 촬영된 몸국",
           "ja": "2019年にシンソルオルムで撮影されたモムクッ"
         }
       },
-      "proposedLocalPath": "/media/venues/research-jeju-sinseoloreum/momguk-gong-seokbae-20190723-v1.webp",
+      "proposedLocalPath": "/media/venues/research-jeju-sinseoloreum/momguk-gong-seokbae-20190723-v1.jpg",
+      "deliveredUrl": "https://upload.wikimedia.org/wikipedia/commons/1/12/%EC%8B%A0%EC%84%A4%EC%98%A4%EB%A6%84_%EB%AA%B8%EA%B5%AD.jpg",
+      "deliveredBytes": 229740,
+      "deliveredDimensions": { "width": 961, "height": 961 },
+      "localBitmapEdits": false,
+      "allowedSlotsAfterGate": ["recommendation_card", "research_detail_identity"],
+      "notAllowedSlots": ["other_venue_photo", "current_offer_menu", "checkout_item_photo", "venue_exterior"],
+      "contentGate": "ROOT_APPROVED_CONTENT_ONLY_IMPLEMENTATION_AFTER_TWO_OFFICIAL_GEO_SOURCES; independent runtimeQA pending",
+      "runtimeReview": { "status": "PENDING_NEW_ARTIFACT_INDEPENDENT_REVIEW", "notClaimed": ["current menu", "real partnership", "real device", "production verification"] },
       "blockers": [
-        "Second-source coordinates not verified; no new map pin approved",
-        "Local delivery asset/hash and actual UI crop/credit QA pending",
-        "Photo date/context must remain explicit; no current offer inference",
-        "Parent new-content integration approval"
+        "Independent actual4:3/1:1 UI crop, credit, localload/fallback and no-capability review",
+        "Final build/publicasset and release verification"
       ]
     },
     {

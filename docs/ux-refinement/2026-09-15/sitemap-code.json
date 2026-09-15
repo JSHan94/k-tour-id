@@ -8,6 +8,22 @@
     "public_url": "https://ktour-id.vercel.app",
     "application_root": "k-tour-id-app"
   },
+  "current_structure_revision": {
+    "date": "2026-09-16",
+    "baseline_sha": "173e71c",
+    "branch": "feat/ktour-ux-polish-20260916",
+    "status": "SOURCE_MAPPED_WITH_SCOPED_EXPERIENCE_BROWSER_EVIDENCE",
+    "initial_graph": { "nodes": 78, "cross_surface_edges": 189, "grouped_rows": 75, "unique_steps": 168 },
+    "delta": "One EXPERIENCE_FLOW node, eight cross-surface edges, one grouped internal row; seven existing node contracts updated through UX08/D03. No new public route.",
+    "added_source_files": [
+      "features/ondo/experience-b/experience-model-b.ts",
+      "features/ondo/experience-b/experience-store-b.ts",
+      "features/ondo/experience-b/experience-copy-b.ts",
+      "features/ondo/experience-b/experience-b.tsx",
+      "features/ondo/experience-b/experience-b.module.css"
+    ],
+    "evidence_note": "Prior experience release evidence is documented separately. Current page-cb3c6ace225a6949.js on local 3116 passed experience E2E 8/8 in 110.15s, mobile-chromium, workers1/retries0, no skips/flakies/page errors. This is not all-state or real-provider signoff; historical AST source_census and initial seven-probe count are unchanged."
+  },
   "evidence_boundary": {
     "method": "Independent white-box traversal of the standalone source manifest, root imports, UI branches, state models, reducers, event entry points, return contracts and historical registries.",
     "browser_mapping_read": true,
@@ -94,9 +110,9 @@
     },
     "source_manifest": {
       "file": "scripts/ondo-b-standalone/policy.mjs",
-      "line": 146,
-      "entry_count": 173,
-      "unique_count": 172,
+      "line": 144,
+      "entry_count": 178,
+      "unique_count": 177,
       "duplicate_note": "map/place-return-ui-snapshot-b.ts occurs twice."
     }
   },
@@ -1257,7 +1273,8 @@
       "actions": [
         "open offer",
         "open Table",
-        "open reservation"
+        "open reservation",
+        "open Roba-only full-detail digital-guide experience"
       ],
       "mutation": "Captures exact place-service return snapshot before child journey; no side effect from listing alone",
       "returns": "Completion/cancel event returns originating venue/camera/query/list/focus or safe same-city fallback",
@@ -1273,6 +1290,10 @@
         {
           "file": "features/ondo/map/place-service-map-return-b.ts",
           "line": 1
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
         }
       ],
       "runtime_entry": "conditional_sample_registry",
@@ -1573,7 +1594,7 @@
         "unsupported",
         "expired"
       ],
-      "entry": "JOIN_TABLE / SUBMIT_LOCAL_SIGNAL / START_CHECKOUT / MINT_BADGE intent",
+      "entry": "JOIN_TABLE / SUBMIT_LOCAL_SIGNAL / START_CHECKOUT / MINT_BADGE intent / REDEEM_DEMO_ENTITLEMENT exact venue/campaign/intent",
       "actions": [
         "complete required next axis",
         "cancel",
@@ -1581,7 +1602,7 @@
         "choose alternate",
         "resume exact action"
       ],
-      "mutation": "Only required independent axes; private pending payload in memory, subject/action/context-bound one-use token",
+      "mutation": "Only required independent axes; private pending payload in memory, subject/action/context-bound one-use token; experience requires only Account + current Person + explicitly approved contextual person VP, not Age/Stay/Payment",
       "returns": "Already satisfied steps skip; cancel retains appropriate source draft; stale/context-mismatch never resumes unrelated action",
       "source": [
         {
@@ -1595,6 +1616,14 @@
         {
           "file": "features/ondo/identity-b/action-gate-contract-b.ts",
           "line": 382
+        },
+        {
+          "file": "features/ondo/identity-b/action-gate-contract-b.ts",
+          "line": 183
+        },
+        {
+          "file": "features/ondo/identity-b/action-gate-contract-b.ts",
+          "line": 269
         }
       ],
       "runtime_entry": "static_connected; browser_unverified",
@@ -1617,7 +1646,8 @@
           "JOIN_TABLE",
           "SUBMIT_LOCAL_SIGNAL",
           "START_CHECKOUT",
-          "MINT_BADGE"
+          "MINT_BADGE",
+          "REDEEM_DEMO_ENTITLEMENT"
         ],
         "axis_status": [
           "unverified",
@@ -1710,6 +1740,7 @@
       "steps": [
         "method_select",
         "consent",
+        "verified_person_consent",
         "cx_handoff_preview",
         "document_preview",
         "face_liveness_preview",
@@ -1734,7 +1765,8 @@
         "expired",
         "cancelled",
         "manual_review",
-        "credential_ready"
+        "credential_ready",
+        "verified_person_consent"
       ],
       "entry": "Explicit ID setup or ACTION_GATE credential step; onboarding origin enum does not itself prove active onboarding entry",
       "actions": [
@@ -1743,9 +1775,11 @@
         "continue",
         "sample outcome selection",
         "back",
-        "close"
+        "close",
+        "approve Person-only pass from same-action live receipt",
+        "explicit additional full-purpose checks for limited pass"
       ],
-      "mutation": "Review credential only in sample boundary; no provider or OpenDID SDK invoked",
+      "mutation": "Review credential only in sample boundary; no provider or OpenDID SDK invoked; Person-only live handoff reuse never infers age/stay/payment/benefit; expired handoff or false completion mutation cannot save",
       "returns": "Caller-bound exit/recovery; app form consent is not provider consent; unavailable branch keeps alternate method/return",
       "source": [
         {
@@ -1759,6 +1793,14 @@
         {
           "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
           "line": 833
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 404
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 873
         }
       ],
       "runtime_entry": "sample walkthrough or explicit unavailable when review opted out",
@@ -2124,28 +2166,30 @@
         "not_prepared",
         "receipt_prepared",
         "acknowledged",
-        "HOLDER_DELIVERY_FAILED"
+        "HOLDER_DELIVERY_FAILED",
+        "auto_preparing_experience_only"
       ],
-      "entry": "Provider processing accepted",
+      "entry": "Provider processing accepted; or explicitly consented current same-action Person receipt reuse",
       "actions": [
-        "prepare holder preview",
-        "acknowledge delivered",
+        "manual preparation on standard paths",
+        "automatic one-shot preparation for experience Person reuse only",
+        "explicit acknowledge and save",
         "cancel"
       ],
-      "mutation": "Only explicit successful acknowledgment permits local simulated credential completion",
+      "mutation": "Only explicit successful acknowledgment permits local simulated credential completion; D03 skips preparation click only, never acknowledgement. Both prepare/finish revalidate current handoff/session.",
       "returns": "Close does not fabricate receipt or delivered credential",
       "source": [
         {
           "file": "features/ondo/identity-b/identity-holder-step-b.tsx",
-          "line": 18
+          "line": 11
         },
         {
           "file": "features/ondo/identity-b/identity-holder-step-b.tsx",
-          "line": 33
+          "line": 25
         },
         {
           "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
-          "line": 849
+          "line": 899
         }
       ],
       "runtime_entry": "static_connected; browser_unverified",
@@ -2185,7 +2229,8 @@
         "return to ID/origin",
         "present for pending action",
         "renew",
-        "restore on device"
+        "restore on device",
+        "explicit additional full-purpose checks for Person-only pass"
       ],
       "mutation": "Review-only credential normalized claims; TTL 2h; does not bypass separate service policy",
       "returns": "Outside action origin no unconditional presentation action; invalid credential routes recovery",
@@ -2201,6 +2246,10 @@
         {
           "file": "features/ondo/identity-b/ktour-id-setup-model-b.ts",
           "line": 4
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 728
         }
       ],
       "runtime_entry": "static_connected; browser_unverified",
@@ -2208,7 +2257,14 @@
         "expired"
       ],
       "browser_evidence": [],
-      "status": "CODE_MAPPED_NOT_EXECUTED"
+      "status": "CODE_MAPPED_NOT_EXECUTED",
+      "dimensions": {
+        "issuance_scope": [
+          "full_review",
+          "person_only_review"
+        ],
+        "scope_boundary": "Distinct credential identity; Person-only has no age/stay/payment/benefit claims or automatic promotion."
+      }
     },
     {
       "id": "ID_RECOVERY",
@@ -2244,7 +2300,7 @@
         "cancel",
         "return"
       ],
-      "mutation": "Preserve claim provenance and invalidity; no fresh real assurance from local recovery",
+      "mutation": "Preserve claim provenance and invalidity; no fresh real assurance from local recovery; limited Person claims stay limited on recovery. Separately consented full-purpose checks are new issuance, not renewal promotion.",
       "returns": "Cancel returns credential; recovery cannot silently reinstate revoked authority",
       "source": [
         {
@@ -4824,8 +4880,8 @@
         "safe fallback",
         "retry storage"
       ],
-      "mutation": "Persisted preference/saved/plans/contributions/funding records differ from freshly created commerceSession; do not replay credits",
-      "returns": "Restoration must never resurrect spent quote, invalid VP, already consumed return token or duplicate credit",
+      "mutation": "Persisted preference/saved/plans/contributions/funding records differ from freshly created commerceSession; do not replay credits; experience IndexedDB fixed browser actor/campaign + revision CAS stores local history, not real-person uniqueness/live permit",
+      "returns": "Restoration must never resurrect spent quote, invalid VP, already consumed return token or duplicate credit; unknown/consumed experience resumes same intent, never silent regrant",
       "source": [
         {
           "file": "features/ondo/shared/state/ondo-b-provider.tsx",
@@ -4838,6 +4894,10 @@
         {
           "file": "features/ondo/map/b-discovery-history.ts",
           "line": 18
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
         }
       ],
       "runtime_entry": "shared_mechanism_not_independent_page",
@@ -4925,6 +4985,133 @@
       "protected_states": [],
       "browser_evidence": [],
       "status": "EXCLUDED_BOUNDARY"
+    },
+    {
+      "id": "EXPERIENCE_FLOW",
+      "label": "Roba digital neighborhood-guide nonfinancial local mock",
+      "kind": "sheet",
+      "refs": {
+        "flow_ids": [],
+        "group_ids": [
+          "UX08"
+        ],
+        "mw_ids": []
+      },
+      "steps": [
+        "loading",
+        "offer",
+        "proposal",
+        "running",
+        "unknown",
+        "failed",
+        "pending",
+        "complete",
+        "blocked",
+        "cancelled",
+        "cancelPending",
+        "expired"
+      ],
+      "states": [
+        "authorization:none|granted|unknown|consumed|revoked|expired|failed",
+        "fulfillment:not_started|pending|fulfilled|blocked",
+        "audit:not_started|pending|confirmed|failed",
+        "storage_error",
+        "busy"
+      ],
+      "entry": "Sample mode + exact Roba full detail (mois-0021cd596bc5b2a922ad); or same-tab reopening of campaign ktour-neighborhood-guide-v1",
+      "actions": [
+        "propose",
+        "approve",
+        "execution",
+        "reconcile_execution",
+        "fulfill",
+        "audit",
+        "request_cancel",
+        "resolve_cancel",
+        "expire",
+        "close/return"
+      ],
+      "mutation": "IndexedDB fixed browser sample actor/campaign revision CAS; one simulated execution/use. Current Person + nonserialized exact-intent permit. Consent freezes recipient/scope/5-minute expiry. Consumption, fulfillment and audit are independent. No financial/visit/provider writes or merchant voucher.",
+      "returns": "Same Roba detail snapshot/focus. Close does not imply cancellation. Unknown reconciles same intent; lost permit requires recheck, known ineligibility blocks fulfillment, audit retry never reexecutes.",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "runtime_entry": "public_sample_only; review_opt_out_hidden",
+      "protected_states": [
+        "unknown",
+        "consumed_service_blocked",
+        "audit_pending",
+        "audit_failed",
+        "cancel_requested_not_confirmed",
+        "expired",
+        "storage_error",
+        "stale_revision",
+        "lost_live_permit"
+      ],
+      "browser_evidence": [
+        "2026-09-16 local page-cb3c6ace225a6949.js; tests/e2e/ktour-experience-entitlement.spec.ts; 8/8 PASS, 110.15s, mobile-chromium, workers1/retries0; /tmp/ktour-ux16-experience-release.json (local evidence, not GitHub link).",
+        "Scoped cases: fresh Person reuse/automatic holder preparation + explicit ack once/VP, reload single-use, audit pending and failed retry without execution, consumed+service-blocked, unknown+confirmed stop+new consent, unavailable IndexedDB, same-origin two-tab one-use, Person-only pass followed by explicit full-purpose manual delivery."
+      ],
+      "status": "CODE_MAPPED_SCOPED_BROWSER_PASS_NOT_ALL_STATES",
+      "dimensions": {
+        "authorization": [
+          "none",
+          "granted",
+          "unknown",
+          "consumed",
+          "revoked",
+          "expired",
+          "failed"
+        ],
+        "fulfillment": [
+          "not_started",
+          "pending",
+          "fulfilled",
+          "blocked"
+        ],
+        "audit": [
+          "not_started",
+          "pending",
+          "confirmed",
+          "failed"
+        ],
+        "scenario": [
+          "success",
+          "executionUnknown",
+          "executionFailure",
+          "serviceBlocked",
+          "auditDelay",
+          "auditFailure",
+          "cancelRace"
+        ]
+      },
+      "unknowns": [
+        "Not all Cartesian axis combinations are valid; restore/reducer enforce coherence.",
+        "D04 public guide versus optional pass-save value choice is awaiting user decision."
+      ]
     }
   ],
   "edges": [
@@ -7095,7 +7282,7 @@
       "to": "ID_CREDENTIAL",
       "action": "explicit acknowledged delivery",
       "kind": "entry_or_forward",
-      "precondition": "See source node entry/mode and action text; conditional branch, not guaranteed success.",
+      "precondition": "Explicit holder acknowledgement + current session/handoff + receipt + successful boolean save; automatic preparation alone never issues. False save restores dismissal guards.",
       "source": [
         {
           "file": "features/ondo/identity-b/identity-holder-step-b.tsx",
@@ -7191,7 +7378,7 @@
       "to": "ID_PRESENTATION",
       "action": "action-gate origin only",
       "kind": "entry_or_forward",
-      "precondition": "See source node entry/mode and action text; conditional branch, not guaranteed success.",
+      "precondition": "Exact action purpose; person for experience, existing age/visitor-benefit policies remain separate. Limited pass cannot imply expanded claims.",
       "source": [
         {
           "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
@@ -7216,7 +7403,7 @@
       "to": "ACTION_GATE",
       "action": "valid approved purpose-bound receipt",
       "kind": "entry_or_forward",
-      "precondition": "See source node entry/mode and action text; conditional branch, not guaranteed success.",
+      "precondition": "Explicit valid purpose-bound VP; exact token/intent/context, no stale/cancelled receipt.",
       "source": [
         {
           "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
@@ -7366,7 +7553,7 @@
       "to": "ID_SETUP",
       "action": "required credential/identity path",
       "kind": "entry_or_forward",
-      "precondition": "See source node entry/mode and action text; conditional branch, not guaranteed success.",
+      "precondition": "Missing required pass, same-action live Person receipt shortcut, or explicit full-purpose additional checks; serialized history alone cannot create live handoff.",
       "source": [
         {
           "file": "features/ondo/identity-b/action-gate-coordinator-b.tsx",
@@ -10313,7 +10500,8 @@
       "action": [
         "open offer",
         "open Table",
-        "open reservation"
+        "open reservation",
+        "open Roba-only full-detail digital-guide experience"
       ],
       "steps": [
         "capability_lookup",
@@ -10339,6 +10527,10 @@
         {
           "file": "features/ondo/map/place-service-map-return-b.ts",
           "line": 1
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
         }
       ],
       "browser_evidence": [],
@@ -10547,8 +10739,8 @@
         "unsupported",
         "expired"
       ],
-      "precondition": "JOIN_TABLE / SUBMIT_LOCAL_SIGNAL / START_CHECKOUT / MINT_BADGE intent",
-      "mutation": "Only required independent axes; private pending payload in memory, subject/action/context-bound one-use token",
+      "precondition": "JOIN_TABLE / SUBMIT_LOCAL_SIGNAL / START_CHECKOUT / MINT_BADGE intent / REDEEM_DEMO_ENTITLEMENT exact venue/campaign/intent",
+      "mutation": "Only required independent axes; private pending payload in memory, subject/action/context-bound one-use token; experience requires only Account + current Person + explicitly approved contextual person VP, not Age/Stay/Payment",
       "returns": "Already satisfied steps skip; cancel retains appropriate source draft; stale/context-mismatch never resumes unrelated action",
       "source": [
         {
@@ -10562,6 +10754,14 @@
         {
           "file": "features/ondo/identity-b/action-gate-contract-b.ts",
           "line": 382
+        },
+        {
+          "file": "features/ondo/identity-b/action-gate-contract-b.ts",
+          "line": 183
+        },
+        {
+          "file": "features/ondo/identity-b/action-gate-contract-b.ts",
+          "line": 269
         }
       ],
       "browser_evidence": [],
@@ -10621,11 +10821,14 @@
         "continue",
         "sample outcome selection",
         "back",
-        "close"
+        "close",
+        "approve Person-only pass from same-action live receipt",
+        "explicit additional full-purpose checks for limited pass"
       ],
       "steps": [
         "method_select",
         "consent",
+        "verified_person_consent",
         "cx_handoff_preview",
         "document_preview",
         "face_liveness_preview",
@@ -10650,10 +10853,11 @@
         "expired",
         "cancelled",
         "manual_review",
-        "credential_ready"
+        "credential_ready",
+        "verified_person_consent"
       ],
       "precondition": "Explicit ID setup or ACTION_GATE credential step; onboarding origin enum does not itself prove active onboarding entry",
-      "mutation": "Review credential only in sample boundary; no provider or OpenDID SDK invoked",
+      "mutation": "Review credential only in sample boundary; no provider or OpenDID SDK invoked; Person-only live handoff reuse never infers age/stay/payment/benefit; expired handoff or false completion mutation cannot save",
       "returns": "Caller-bound exit/recovery; app form consent is not provider consent; unavailable branch keeps alternate method/return",
       "source": [
         {
@@ -10667,6 +10871,14 @@
         {
           "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
           "line": 833
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 404
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 873
         }
       ],
       "browser_evidence": [],
@@ -10905,8 +11117,9 @@
       "to": "ID_HOLDER_DELIVERY",
       "kind": "intra_surface_step_or_state",
       "action": [
-        "prepare holder preview",
-        "acknowledge delivered",
+        "manual preparation on standard paths",
+        "automatic one-shot preparation for experience Person reuse only",
+        "explicit acknowledge and save",
         "cancel"
       ],
       "steps": [
@@ -10917,23 +11130,24 @@
         "not_prepared",
         "receipt_prepared",
         "acknowledged",
-        "HOLDER_DELIVERY_FAILED"
+        "HOLDER_DELIVERY_FAILED",
+        "auto_preparing_experience_only"
       ],
-      "precondition": "Provider processing accepted",
-      "mutation": "Only explicit successful acknowledgment permits local simulated credential completion",
+      "precondition": "Provider processing accepted; or explicitly consented current same-action Person receipt reuse",
+      "mutation": "Only explicit successful acknowledgment permits local simulated credential completion; D03 skips preparation click only, never acknowledgement. Both prepare/finish revalidate current handoff/session.",
       "returns": "Close does not fabricate receipt or delivered credential",
       "source": [
         {
           "file": "features/ondo/identity-b/identity-holder-step-b.tsx",
-          "line": 18
+          "line": 11
         },
         {
           "file": "features/ondo/identity-b/identity-holder-step-b.tsx",
-          "line": 33
+          "line": 25
         },
         {
           "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
-          "line": 849
+          "line": 899
         }
       ],
       "browser_evidence": [],
@@ -10948,7 +11162,8 @@
         "return to ID/origin",
         "present for pending action",
         "renew",
-        "restore on device"
+        "restore on device",
+        "explicit additional full-purpose checks for Person-only pass"
       ],
       "steps": [
         "credential_ready"
@@ -10975,6 +11190,10 @@
         {
           "file": "features/ondo/identity-b/ktour-id-setup-model-b.ts",
           "line": 4
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 728
         }
       ],
       "browser_evidence": [],
@@ -11005,7 +11224,7 @@
         "failed"
       ],
       "precondition": "Credential lifecycle actions",
-      "mutation": "Preserve claim provenance and invalidity; no fresh real assurance from local recovery",
+      "mutation": "Preserve claim provenance and invalidity; no fresh real assurance from local recovery; limited Person claims stay limited on recovery. Separately consented full-purpose checks are new issuance, not renewal promotion.",
       "returns": "Cancel returns credential; recovery cannot silently reinstate revoked authority",
       "source": [
         {
@@ -12824,8 +13043,8 @@
         "uncertain"
       ],
       "precondition": "Reload, fresh tab/session or local persistence mutation",
-      "mutation": "Persisted preference/saved/plans/contributions/funding records differ from freshly created commerceSession; do not replay credits",
-      "returns": "Restoration must never resurrect spent quote, invalid VP, already consumed return token or duplicate credit",
+      "mutation": "Persisted preference/saved/plans/contributions/funding records differ from freshly created commerceSession; do not replay credits; experience IndexedDB fixed browser actor/campaign + revision CAS stores local history, not real-person uniqueness/live permit",
+      "returns": "Restoration must never resurrect spent quote, invalid VP, already consumed return token or duplicate credit; unknown/consumed experience resumes same intent, never silent regrant",
       "source": [
         {
           "file": "features/ondo/shared/state/ondo-b-provider.tsx",
@@ -12838,6 +13057,340 @@
         {
           "file": "features/ondo/map/b-discovery-history.ts",
           "line": 18
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "browser_evidence": [],
+      "status": "GROUPED_STATE_TRANSITIONS_REQUIRE_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-190",
+      "from": "PLACE_SERVICE_ENTRY",
+      "to": "EXPERIENCE_FLOW",
+      "action": "Open exact registered Roba from full detail",
+      "kind": "entry_or_forward",
+      "precondition": "Sample mode only; no third peek CTA",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-191",
+      "from": "EXPERIENCE_FLOW",
+      "to": "ACTION_GATE",
+      "action": "Begin or recheck Person-only experience",
+      "kind": "entry_or_forward",
+      "precondition": "Exact venue/campaign/intent; need current scoped permit",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-192",
+      "from": "ACTION_GATE",
+      "to": "EXPERIENCE_FLOW",
+      "action": "READY exact return or CANCEL pending check",
+      "kind": "entry_or_forward",
+      "precondition": "READY matches token/hash/intent and explicit person VP; CANCEL clears check and grants nothing",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-193",
+      "from": "ID_SETUP",
+      "to": "ID_HOLDER_DELIVERY",
+      "action": "Approve same-action Person-only pass creation",
+      "kind": "entry_or_forward",
+      "precondition": "Live receipt current; automatic preparation only, acknowledgement stays explicit",
+      "source": [
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 682
+        },
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 899
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-194",
+      "from": "EXPERIENCE_FLOW",
+      "to": "CANONICAL_DETAIL",
+      "action": "Close/return to exact Roba",
+      "kind": "return_or_recovery",
+      "precondition": "Restore snapshot/focus; no implied cancellation or repeated execution",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-195",
+      "from": "RELOAD_BOUNDARY",
+      "to": "EXPERIENCE_FLOW",
+      "action": "Reopen same local experience",
+      "kind": "return_or_recovery",
+      "precondition": "Validated IDB + same-tab marker; live permit not restored",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-196",
+      "from": "EXPERIENCE_FLOW",
+      "to": "RELOAD_BOUNDARY",
+      "action": "Persist/channel refresh/storage recovery",
+      "kind": "return_or_recovery",
+      "precondition": "Atomic revision; unavailable storage never grants success",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-197",
+      "from": "ID_CREDENTIAL",
+      "to": "ID_SETUP",
+      "action": "Explicit additional full-purpose checks",
+      "kind": "entry_or_forward",
+      "precondition": "Limited pass only; user consents new issuance, no automatic promotion",
+      "source": [
+        {
+          "file": "features/ondo/identity-b/ktour-id-setup-b.tsx",
+          "line": 404
+        }
+      ],
+      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "browser_evidence": [],
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "S-EXPERIENCE_FLOW",
+      "from": "EXPERIENCE_FLOW",
+      "to": "EXPERIENCE_FLOW",
+      "kind": "intra_surface_step_or_state",
+      "action": [
+        "propose",
+        "approve",
+        "execution",
+        "reconcile_execution",
+        "fulfill",
+        "audit",
+        "request_cancel",
+        "resolve_cancel",
+        "expire",
+        "close/return"
+      ],
+      "steps": [
+        "loading",
+        "offer",
+        "proposal",
+        "running",
+        "unknown",
+        "failed",
+        "pending",
+        "complete",
+        "blocked",
+        "cancelled",
+        "cancelPending",
+        "expired"
+      ],
+      "states": [
+        "authorization:none|granted|unknown|consumed|revoked|expired|failed",
+        "fulfillment:not_started|pending|fulfilled|blocked",
+        "audit:not_started|pending|confirmed|failed",
+        "storage_error",
+        "busy"
+      ],
+      "precondition": "Sample mode + exact Roba full detail (mois-0021cd596bc5b2a922ad); or same-tab reopening of campaign ktour-neighborhood-guide-v1",
+      "mutation": "IndexedDB fixed browser sample actor/campaign revision CAS; one simulated execution/use. Current Person + nonserialized exact-intent permit. Consent freezes recipient/scope/5-minute expiry. Consumption, fulfillment and audit are independent. No financial/visit/provider writes or merchant voucher.",
+      "returns": "Same Roba detail snapshot/focus. Close does not imply cancellation. Unknown reconciles same intent; lost permit requires recheck, known ineligibility blocks fulfillment, audit retry never reexecutes.",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 30
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 94
+        },
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 181
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 15
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 82
+        },
+        {
+          "file": "features/ondo/experience-b/experience-store-b.ts",
+          "line": 45
         }
       ],
       "browser_evidence": [],
@@ -26963,18 +27516,18 @@
     ]
   },
   "counts": {
-    "semantic_nodes": 78,
-    "explicit_cross_surface_edges": 189,
-    "grouped_internal_transition_rows": 75,
-    "code_files": 124,
+    "semantic_nodes": 79,
+    "explicit_cross_surface_edges": 197,
+    "grouped_internal_transition_rows": 76,
+    "code_files": 128,
     "type_vocabulary_groups": 285,
     "ui_anchors": 772,
-    "unique_steps": 168,
-    "count_note": "Structural node/edge/step and source file membership counts recalculated after reconciliation; not PASS counts. Type vocabulary/UI anchors remain initial b9cdc42 AST snapshot, not regenerated current-screen metrics.",
+    "unique_steps": 176,
+    "count_note": "Membership updated 2026-09-16 through UX08/D03. Nodes, edges and steps are not screen/PASS counts. AST vocabulary/anchors and detailed source_census remain initial b9cdc42 snapshot.",
     "flow_families": 18,
     "browser_verified_nodes": 0,
-    "source_manifest_entries": 173,
-    "unique_source_files": 172,
+    "source_manifest_entries": 178,
+    "unique_source_files": 177,
     "source_census_snapshot": "INITIAL_B9CDC42_AST_RETAINED"
   }
 }

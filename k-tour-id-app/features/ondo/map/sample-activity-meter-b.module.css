@@ -13,7 +13,7 @@
 }
 .heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .heading > span { font-size: 12px; line-height: 1.3; font-weight: 740; }
-.heading > small { display: flex; gap: 5px; font-size: 10px; font-weight: 550; color: var(--ondo-muted, #62666c); white-space: nowrap; }
+.heading > small { display: flex; gap: 5px; font-size: 11px; font-weight: 550; color: var(--ondo-muted, #62666c); white-space: nowrap; }
 .heading time { font-variant-numeric: tabular-nums; }
 .signal { display: flex; align-items: center; justify-content: space-between; min-width: 0; gap: 10px; }
 .reading { display: flex; align-items: center; gap: 5px; min-width: 0; }
@@ -25,14 +25,17 @@
 .contributions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 3px 0 5px; }
 .contributions > span { display: flex; align-items: center; justify-content: flex-start; gap: 4px; min-width: 0; }
 .contributions svg { color: var(--ondo-muted); flex: 0 0 auto; }
-.contributions b { font-size: 12px; font-variant-numeric: tabular-nums; }
-.contributions small { font-size: 10px; color: var(--ondo-muted); }
+.contributions b { font-size: 12px; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: center; border-radius: 4px; }
+.contributions small { font-size: 11px; color: var(--ondo-muted); }
+/* Only the changed count remounts; no new timer, score, or moving hit target. */
+.meter[data-sample-running="true"] .count { animation: countChange 650ms ease-out both; }
+@keyframes countChange { from { background-color: color-mix(in srgb, var(--sample-color) 20%, transparent); } to { background-color: transparent; } }
 .contribute { display: flex; justify-content: center; align-items: center; gap: 5px; min-height: 44px; width: 100%; border: 0; border-top: 1px solid var(--ondo-line); padding: 8px 0 0; color: var(--ondo-ink); background: transparent; font-size: 12px; font-weight: 650; cursor: pointer; }
 .contribute:focus-visible { outline: 2px solid var(--ondo-focus-ring, #2563eb); outline-offset: 2px; border-radius: 6px; }
-@media (max-width: 350px) { .contributions > span { flex-wrap: wrap; gap: 3px; } .contributions small { font-size: 9px; } .sparkline { flex-basis: 72px; width: 72px; } }
+@media (max-width: 350px) { .contributions > span { flex-wrap: wrap; gap: 3px; } .sparkline { flex-basis: 72px; width: 72px; } }
 .scale { position: relative; display: block; height: 5px; border-radius: 8px; background: linear-gradient(90deg, #4b9fa6, #e6b74d 24%, #f18b43 48%, #ed5960 70%, #b32c79); }
 .scale > i { position: absolute; top: 50%; left: var(--sample-position); width: 10px; height: 10px; border: 2px solid var(--ondo-surface-raised, #fff); border-radius: 50%; background: var(--sample-color); box-shadow: 0 0 0 1px color-mix(in srgb, var(--sample-color) 40%, transparent); transform: translate(-50%, -50%); transition: left 900ms linear, background-color 900ms linear; }
 .meter[data-after19="true"] .scale { background: linear-gradient(90deg, #7cbec1, #f5c766 24%, #ff9a56 48%, #ff7383 70%, #e84d9c); }
-.meter[data-sample-running="false"], .meter[data-sample-running="false"] * { transition: none; }
-@media (prefers-reduced-motion: reduce) { .meter, .meter * { transition: none; } }
+.meter[data-sample-running="false"], .meter[data-sample-running="false"] * { transition: none; animation: none; }
+@media (prefers-reduced-motion: reduce) { .meter, .meter * { transition: none; animation: none !important; } }
 @media (forced-colors: active) { .meter { border-color: CanvasText; background: Canvas; } .scale { border: 1px solid CanvasText; } .scale > i { background: Highlight; border-color: Canvas; } .sparkline polyline { stroke: CanvasText; } .sparkline circle { fill: CanvasText; } }

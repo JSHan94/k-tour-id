@@ -1,16 +1,16 @@
 # 코드 기반 여정 지도 · 독립 동결 및 교차 분류 완료
 
-기준: `b9cdc42` · 브랜치 `ux/flow-refinement-20260915` · 작성일 2026-09-15.
+최초 독립 기준: `b9cdc42` · 브랜치 `ux/flow-refinement-20260915` · 작성일 2026-09-15. 구조 갱신: 2026-09-16, `173e71c` 기준 `feat/ktour-ux-polish-20260916` 작업 소스의 UX08·D03까지.
 
 **상태: 코드↔브라우저 차이 분류 완료, 전체 UI 검수 완료 아님.** 첫 동결 당시 브라우저 실행은 0회였고 다른 mapper의 산출물을 읽지 않았다. 이후 별도 온보딩 증거와 독립 commerce 반례를 대조했다. 현재 판정은 마지막 ‘CODE-01–12 최종 분류’를 따른다. [기계 판독 registry](./sitemap-code.json)가 상세 정본이며 이 파일은 탐색용 요약이다.
 
-**후속 UX-08 보충(9/15 사용자 승인):** 아래 78노드/264행과 JSON census는 기존 묶음의 동결값이다. 새 체험을 포함한 전체 재계수는 하지 않았다. 새 코드 계약과 UI 연결·실행 검수 상태는 마지막 보충 절 및 [체험 목업 인계](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다.
+**후속 UX08 구조 통합(9/16):** 기존 78노드/264행은 초기 이력이다. JSON에 `EXPERIENCE_FLOW` 1개 의미 노드와 실제 연결 8개·묶음 전이 1행을 추가하고 기존 7개 노드 계약을 갱신했다. 현 구조는 79노드/273행이며 전체 상태 조합 PASS가 아니다. UX08의 이전 릴리스 검수와 이번 D03 검수를 섞지 않는다.
 
 ## 범위와 수량
 
 - 공개 사용자 URL은 `/` 하나. `/ondo-b`는 redirect, venue API는 읽기 API이지 화면이 아니다. 옛 A 경로는 배포 정책에서 제외된다.
-- 최신 구조 재계수: **78개 의미 단위 노드**, **189개 명시적 노드 간 edge**, **75개 묶음 내부 전이 행**(총 264행). 고유 step 이름은 168개이며 화면 수나 브라우저 통과 수가 아니다. 초기 186개 edge에서 선택 구매의 같은 장소 복귀 3개만 추가했으며 새 페이지/노드는 추가하지 않았다.
-- 현재 배포 source manifest를 다시 읽어 **173행/172개 고유 파일/124개 코드 파일**, 코드 파일 추가·누락 0개를 확인했다. JSON의 어휘 285묶음/UI anchor 772개와 상세 `source_census`는 **초기 b9cdc42 AST snapshot**으로 유지한다. 변경 후 anchor 전체를 다시 추출한 수치가 아니며, 타입 문자열을 화면 수로 사용하면 안 된다.
+- 최신 구조 재계수: **79개 의미 단위 노드**, **197개 명시적 노드 간 edge**, **76개 묶음 내부 전이 행**(총 273행). 고유 step 이름은 176개이며 화면 수나 브라우저 통과 수가 아니다. 이전 78/189/75/168에서 UX08 연결을 통합했으며 공개 URL은 추가되지 않았다.
+- 현재 작업 source manifest를 다시 읽어 **178행/177개 고유 파일/128개 코드 파일**을 확인했다. 이전 173/172/124 대비 experience 모듈 5파일(코드4·CSS1)이 추가됐다. JSON의 어휘 285묶음/UI anchor 772개와 상세 `source_census`는 **초기 b9cdc42 AST snapshot**으로 유지한다. 변경 후 anchor 전체를 다시 추출한 수치가 아니며, 타입 문자열을 화면 수로 사용하면 안 된다.
 - 기존 FL-001–018 전부, G01–13 및 G08-R/G09-S, MW-01–05를 연결했다. 과거 QA 18 flow/126 checkpoint/50 visual case는 대조 자료일 뿐 이번 검수 결과나 현 기능 전체 분모가 아니다.
 
 ## 읽는 법 / 미완료 범위
@@ -72,6 +72,7 @@
 | `PROFILE` | Optional public profile / reputation; summary → edit → discard_confirmation | FL-015, G04 | pending, failed |
 | `AFTER19` | Global After 19 / exact-place age prompt; intro → pending → result → active_map → notice | FL-002, FL-013, FL-014, G07 | pending, failure, unavailable, expired, checkExpired |
 | `LOCAL_SIGNAL` | Place contribution draft / optional local photo; draft → gate → ready → saving → receipt | FL-005, FL-006, FL-012, G08 | UPL-FAILED, photoTypeError, photoSizeError, photoPrepareError |
+| `EXPERIENCE_FLOW` | Roba 전체 상세 → 현재 Person·목적별 VP → 제안/명시 승인 → 제한 실행 → 독립 제공·감사 → 같은 상세 | UX08 독립 목업 | unknown, consumed+blocked, audit pending/failed, cancel 미확정, 만료, 저장 실패, stale revision, live permit 상실 |
 
 ### Tables/내 기록/거래/예약
 
@@ -213,15 +214,17 @@
 
 ## UX-08 후속 보충 — 새 비금전 체험
 
-사용자 승인 후 `feat/ktour-experience-share-20260915`에서 추가 중이다. 기존 JSON의 78노드/264행과 source census를 소급해 변경하지 않았다. 아래 `UX08-*`은 이 묶음의 보충 식별자이며 새 전체 화면 수·기존 FL/G/MW의 재번호가 아니다.
+사용자 승인 후 `feat/ktour-experience-share-20260915`에서 구현·한정 검수했고, 9/16 JSON의 단일 `EXPERIENCE_FLOW`로 통합했다. 아래 `UX08-*` 6개는 설명용 구간이지 6개 새 페이지가 아니다. 최초 78노드/264행과 AST census는 이력으로 남기며, 새 연결은 `E-190`–`E-197`, 내부 단계는 `S-EXPERIENCE_FLOW`다.
 
 | 보충 ID | 진입 → 상태/행동 → 다음·복귀 | 정적 계약 / 현재 확인 범위 |
 |---|---|---|
-| UX08-ENTRY | canonical Roba 전체 상세 → 독립 동네 가이드 행 → 체험 sheet | 장소 `mois-0021cd596bc5b2a922ad` 1곳, `requestExperienceB`/`ktour:experience:open`. place-service-actions→ExperienceEntryB, 공통 ExperienceMountB 소스 연결. peek 2CTA와 기존 금융/예약은 유지. 실제 도달 대기 |
-| UX08-PERSON | 체험 시작 → 필요한 기존 account/person → 동일 행동의 현재 Person 결과 재사용 → 명시 패스 생성/보관 동의 → holder 준비/ack → 목적별 person VP | `verified_person_consent`는 같은 live token/intent/receipt만 재사용하며 2번째 수단/provider 확인을 생략. 발급/holder/VP 동의는 유지. 공개 `personVerified`와 현재 status/risk/expiry만, 국적/체류/성인/Payment 제외. 직렬화 과거 이력은 권한 아님 |
+| UX08-ENTRY | canonical Roba 전체 상세 → 독립 동네 가이드 행 → 체험 sheet | 장소 `mois-0021cd596bc5b2a922ad` 1곳, `requestExperienceB`/`ktour:experience:open`. place-service-actions→ExperienceEntryB, 공통 ExperienceMountB 소스 연결. peek 2CTA와 기존 금융/예약 유지. 이전 artifact의 도달 검수는 별도 릴리스 기록 참조 |
+| UX08-PERSON | 체험 시작 → 필요한 기존 account/person → 동일 행동의 현재 Person 결과 재사용 → 명시 패스 생성/보관 동의 → holder 준비/ack → 목적별 person VP | `verified_person_consent`는 같은 live token/intent/receipt만 재사용하며 2번째 수단/provider 확인을 생략. D03은 이 경로에서만 holder 준비 클릭1회를 자동화하고 ack·발급·VP 동의는 유지한다. 공개 `personVerified`와 현재 status/risk/expiry만, 국적/체류/성인/Payment 제외. 직렬화 과거 이력은 권한 아님 |
 | UX08-PROPOSAL | 유효 runtime permit → 준비된 제안 → 사용자가 대상/수신자/1회/금액0/최대5분 승인 | `ExperienceScopeB`, 고정 캠페인 `ktour-neighborhood-guide-v1`, proposal/consent digest. 실제 모델/지갑/서명 호출 아님 |
 | UX08-EXECUTION | approve → granted → success/unknown/failure 또는 stop/revoke/expired | `authorization` 축, 같은 intent·최대1회, unknown에서 새 건 자동 생성 금지 |
 | UX08-RESULT | consumed → 현재 자격 재확인 → pending/fulfilled/blocked → 독립 audit pending/confirmed/failed → 가이드 내용·같은 장소 | 사용/감사 상태 분리. 매장 쿠폰·방문·잔액/Payment 권한 생성 없음 |
 | UX08-RESUME | 닫기/새로고침 → 같은 체험 이력 읽기 → 필요한 새 목적별 확인 → 같은 작업 이어가기 | IndexedDB transaction/revision은 같은 origin의 mock 이력만 보존. permit은 WeakMap이며 복원 불가. 저장 실패는 unavailable, 실제 서버/cold-return 검증 아님 |
 
-구체 모델/저장/sheet·gate 파일과 Harvey adapter 매핑은 [체험 목업 인계](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md#현재-저장된-코드-계약)에 있다. **현재 model/store/sheet·gate·앱 mount/장소 연결 정적 확인; 실제 여정/시각 검수 대기**다. 브라우저 결과를 얻으면 같은 artifact/조건을 별도로 기록하고 기존 관찰 수에 합산하지 않는다.
+구체 모델/저장/sheet·gate 파일과 Harvey adapter 매핑은 [체험 목업 인계](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md#현재-저장된-코드-계약)에 있다. 이전 UX08의 실제 검수·운영 배포는 [별도 릴리스](../../KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)를 따른다. 12개 UI 단계와 승인7/제공4/감사4 상태 축은 가능한 모든 조합이나 실제 완주 수가 아니다. 신규 `verified_person_consent`, Person-only 발급/복구, 명시 추가 확인, 같은 intent 재개를 기존 노드에도 반영했다.
+
+**9/16 최종 local artifact 한정 검수:** `page-cb3c6ace225a6949.js` / 3116에서 experience E2E **8/8 PASS, 110.15초**, mobile-chromium·workers1·retries0·skip/flaky/pageerror0. 새 체험의 자동 holder 준비/명시 ack1회·VP, 새로고침 같은 사용 이력, audit pending/failure 단독 재시도, consumed+service-blocked, unknown→중단 확인→같은 intent의 새 동의, IndexedDB 차단, 두 탭 단일 실행, 제한 패스→별도 full-purpose 동의/수동 delivery를 검사했다. 근거는 로컬 `/tmp/ktour-ux16-experience-release.json`과 `artifacts/qa/ux16-experience-release` 캡처4개다. 기존 7회 probe나 이전 배포 PASS에 합산하지 않는다. 모든 만료·취소 타이밍, 언어/물리 기기, 실제 provider 연동까지 실행했다는 뜻은 아니다.

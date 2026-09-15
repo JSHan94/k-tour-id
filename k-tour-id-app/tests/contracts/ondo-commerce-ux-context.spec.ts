@@ -47,7 +47,8 @@ test("UX01 unresolved submitted top-up survives close and restore as the same op
 test("UX01 fiat and stablecoin return to the retained venue without authorizing its purchase", () => {
   expect(commerce).toContain('returnVenueName: presented.transactionVenueName')
   expect(funding).toContain('data-testid="funding-return-context"')
-  expect(funding).toContain('Payment is confirmed separately.')
+  expect(funding).toContain('Adding funds is separate from paying the place.')
+  expect(funding).not.toContain('Payment is confirmed separately.')
   expect(funding).toContain('returnLabel={fundingReturnLabel}')
   expect(funding).toContain('creditComplete ? fundingReturnLabel')
   expect(source("stablecoin-funding-b.tsx")).toContain('creditComplete ? returnLabel')
@@ -83,7 +84,7 @@ test("UX09 seed stays 60000 KRW while sample setup and purchase-only history nam
 })
 
 test("UX05 review copy is venue-neutral while stablecoin transfer details remain explicit", () => {
-  expect(commerce).toContain('title: "Review your offer"')
+  expect(commerce).toContain('title: "Review payment"')
   expect(commerce).toContain('<Store size={30} aria-hidden="true" />')
   expect(commerce).not.toContain('K-Tour ID MEAL BENEFIT')
   expect(commerce).not.toContain('Your visit, ready')

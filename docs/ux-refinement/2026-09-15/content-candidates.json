@@ -1,9 +1,10 @@
 {
   "schemaVersion": "ux-content-candidates-1.0",
-  "phase": "A_CONTENT_GATE_FOLLOWUP",
-  "checkedAt": "2026-09-15",
+  "phase": "B_CONTENT_IMPLEMENTED_PENDING_INDEPENDENT_QA",
+  "checkedAt": "2026-09-16",
   "appBaseline": "b9cdc42",
-  "runtimeChanged": false,
+  "runtimeChanged": true,
+  "countMeaning": "existingResearch and existingPhotoAudit preserve the original b9cdc42 audit. Integration counts describe current approvals; current research catalog has26 records after Hakrim and Sinseoloreum, without changing400 canonical/80 curated pulse/27 sample service capabilities.",
   "count": {
     "existingResearch": 24,
     "newCandidates": 12,
@@ -12,8 +13,8 @@
       "busan": 4,
       "jeju": 4
     },
-    "approvedForIntegration": 0,
-    "readyForParentNewContentReview": 1
+    "approvedForIntegration": 2,
+    "readyForParentNewContentReview": 0
   },
   "authorityBoundary": "Factual public sources and licensed historical photographs do not prove live heat, current opening, real partnership, benefit eligibility, payment acceptance, reservation availability or personal visit.",
   "existingPhotoAudit": [
@@ -1039,13 +1040,14 @@
       "city": "jeju",
       "name": {
         "ko": "신설오름",
-        "en": "Sinseoloreum"
+        "en": "Sinseoloreum",
+        "ja": "シンソルオルム"
       },
       "kind": "food",
       "address": "제주특별자치도 제주시 고마로17길 2",
       "summaryDraft": "Jeju soup restaurant",
       "menuEvidence": "Momguk",
-      "checkedAt": "2026-09-15",
+      "checkedAt": "2026-09-16",
       "sourcePublishedAt": null,
       "source": {
         "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020185&menuId=DOM_000001719000000000",
@@ -1064,7 +1066,16 @@
         "crs": "EPSG:4326",
         "sourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020185&menuId=DOM_000001719000000000",
         "extraction": "Public page latitude/longitude fields",
-        "status": "PRIMARY_COORDINATES_ONLY_SECOND_SOURCE_PENDING"
+        "status": "TWO_OFFICIAL_SOURCE_POINTS_WITHIN_TEN_METERS",
+        "corroboratingSource": {
+          "url": "https://korean.visitkorea.or.kr/call?cmd=TOUR_CONTENT_BODY_DETAIL&cotId=f8eee625-9581-4af7-99c8-bd69e9dcde02&locationx=&locationy=&stampId=",
+          "checkedAt": "2026-09-16",
+          "method": "Public unauthenticated GET; no submission or account",
+          "latitude": 33.5053848808039,
+          "longitude": 126.541578109031,
+          "address": "제주특별자치도 제주시 고마로17길 2",
+          "limits": "Two tourism points agree approximately; not an independently surveyed entrance or current opening proof"
+        }
       },
       "dedup": {
         "against": [
@@ -1081,15 +1092,13 @@
         "candidateMediaIds": [
           "photo-sinseoloreum-momguk"
         ],
-        "rightsStatus": "LICENSE_AND_HISTORICAL_FOOD_CONTENT_VERIFIED_GEO_BLOCKED",
+        "rightsStatus": "CC_BY_4_0_SOURCE_AND_UNCHANGED_LOCAL_PHOTO_VERIFIED",
         "noTourismGalleryHotlink": true
       },
-      "status": "BLOCKED_NEW_PIN_SECOND_COORDINATE_SOURCE",
-      "integrationAllowed": false,
+      "status": "IMPLEMENTED_CONTENT_ONLY_PENDING_INDEPENDENT_BROWSER_QA",
+      "integrationAllowed": true,
       "blockers": [
-        "A second public coordinate source has not been verified; no new pin approval",
-        "Local photo/hash, date-aware credit and crop QA",
-        "Parent new-content scope approval"
+        "Independent actual UI crop/credit/failure/no-capability QA and release verification remain pending"
       ],
       "liveClaimsAllowed": false,
       "merchantCapabilities": {
@@ -1102,7 +1111,7 @@
         {
           "url": "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=f8eee625-9581-4af7-99c8-bd69e9dcde02",
           "authority": "Korea Tourism Organization",
-          "scope": "Restaurant and momguk facts corroborated; no second coordinate pair extracted"
+          "scope": "Restaurant/address corroborated; public content GET now supplies the second matching coordinate pair on2026-09-16"
         },
         {
           "url": "https://0spei.tistory.com/8",
@@ -1305,6 +1314,6 @@
       }
     }
   ],
-  "runtimeChangedByThisResearchAgent": false,
-  "runtimeChangedMeaning": "This staging artifact did not modify runtime. Root's parallel Onion/UI integration is tracked separately; existingPhotoAudit describes baseline b9cdc42."
+  "runtimeChangedByThisResearchAgent": true,
+  "runtimeChangedMeaning": "Initial2026-09-15 research changed no runtime. On2026-09-16 explicit approval authorized this agent to add only Sinseoloreum content/photo and category badge sizing. existingPhotoAudit remains baseline b9cdc42; no service or live activity capability was added."
 }

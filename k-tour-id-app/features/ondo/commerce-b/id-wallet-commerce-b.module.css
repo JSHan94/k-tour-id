@@ -2003,6 +2003,21 @@
    260ms sheet interval. Domain/history state has already moved on; these
    selectors animate presentation only and keep the retained modal operable by
    neither pointer nor keyboard while it still owns scroll isolation. */
+.fundingReturnContext {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--ondo-line, rgba(128, 128, 128, .2));
+  border-radius: 16px;
+  background: var(--ondo-surface-soft, rgba(128, 128, 128, .06));
+  overflow-wrap: anywhere;
+}
+.fundingReturnContext > strong { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.fundingReturnContext > strong > svg { flex: none; }
+.fundingReturnContext > p { margin: 0; font-size: 14px; line-height: 1.45; }
+.fundingReturnContext > small { color: var(--ondo-muted, #626262); font-size: 12px; line-height: 1.45; }
+
 .offerOverlay[data-commerce-presence="closing"] {
   pointer-events: auto;
   animation: commerceOfferExit 260ms cubic-bezier(.4, 0, 1, 1) forwards;

@@ -102,6 +102,7 @@ type FundingSheetSubject = {
   context: string
   purpose: "topup" | "payment"
   returnVenueName?: string
+  returnShortageKrw?: number
   locale: Locale
   source: OndoBCommerceFundingSource
   walletReady: boolean
@@ -290,7 +291,7 @@ const COPY = {
     balanceSource: "Prepared for this trip",
     balanceSourceEmpty: "No funds added",
     balanceReview: "Review sample · no external wallet",
-    balanceEmpty: "Set up when you want to use an offer",
+    balanceEmpty: "Set up when you want to pay at a place",
     balanceEmptyReady: "Choose a funding method",
     balanceEmptyStatus: "Empty",
     testAsset: "How your wallet works",
@@ -313,14 +314,14 @@ const COPY = {
     noActivityBody: "Your place purchases and their refunds appear here. Top-ups are separate.",
     paidActivity: "Balance used",
     refundedActivity: "Balance restored",
-    activityVenue: "Offer at",
+    activityVenue: "Payment at",
     activityReceipt: "Balance record",
     originalPayment: "Original balance record",
     refundReference: "Restore reference",
     refundedAmount: "Balance restored",
     activityPlace: "Open exact place",
     privacy: "Payment privacy",
-    privacyBody: "Only wallet readiness and your benefit choice are used for an offer. Your name, age, identity and address are not shared.",
+    privacyBody: "Only wallet readiness and your benefit choice are used for this payment. Your name, age, identity and address are not shared.",
     testTruth: "Amounts are shown to you in KRW and estimated USD. The device ledger uses OOKRW internally. USDC or USDT may appear here only when selected as a funding source. No bank, card, wallet or payment provider is connected yet, so no money or digital asset moves.",
     linkDialog: "Travel Wallet",
     linkTitle: "Start with an empty travel wallet",
@@ -344,7 +345,7 @@ const COPY = {
     balanceSource: "이번 여행에 준비된 잔액",
     balanceSourceEmpty: "추가된 금액 없음",
     balanceReview: "심사용 잔액 · 외부 지갑 미연결",
-    balanceEmpty: "오퍼를 사용할 때 설정하세요",
+    balanceEmpty: "매장에서 결제할 때 설정하세요",
     balanceEmptyReady: "충전 방식을 선택하세요",
     balanceEmptyStatus: "잔액 없음",
     testAsset: "지갑 이용 안내",
@@ -367,14 +368,14 @@ const COPY = {
     noActivityBody: "장소별 구매와 해당 환불을 확인하세요. 충전 내역은 별도예요.",
     paidActivity: "잔액 사용",
     refundedActivity: "잔액 복원",
-    activityVenue: "오퍼 장소",
+    activityVenue: "결제 장소",
     activityReceipt: "잔액 기록",
     originalPayment: "원 잔액 기록",
     refundReference: "복원 참조",
     refundedAmount: "복원된 잔액",
     activityPlace: "이 장소 열기",
     privacy: "결제 개인정보",
-    privacyBody: "오퍼에는 지갑 준비 상태와 혜택 선택만 사용합니다. 이름·나이·신원·주소는 공유하지 않아요.",
+    privacyBody: "이 결제에는 지갑 준비 상태와 혜택 선택만 사용합니다. 이름·나이·신원·주소는 공유하지 않아요.",
     testTruth: "금액은 KRW와 예상 USD로 표시합니다. 기기 내 원장은 OOKRW를 내부 단위로 사용하며, USDC나 USDT는 사용자가 자금 출처로 선택한 경우에만 이 상세에서 보여줍니다. 아직 은행·카드·지갑·결제 제공자가 연결되지 않아 실제 금액이나 디지털 자산은 이동하지 않습니다.",
     linkDialog: "여행 지갑",
     linkTitle: "빈 여행 지갑으로 시작",
@@ -398,7 +399,7 @@ const COPY = {
     balanceSource: "この旅行用に準備した残高",
     balanceSourceEmpty: "入金額なし",
     balanceReview: "レビュー用残高・外部ウォレット未接続",
-    balanceEmpty: "オファーを使うときに設定",
+    balanceEmpty: "お店で支払うときに設定",
     balanceEmptyReady: "入金方法を選んでください",
     balanceEmptyStatus: "残高なし",
     testAsset: "ウォレットの仕組み",
@@ -421,14 +422,14 @@ const COPY = {
     noActivityBody: "お店での購入とその返金を表示します。チャージは別です。",
     paidActivity: "残高を使用",
     refundedActivity: "残高を復元",
-    activityVenue: "オファーのお店",
+    activityVenue: "支払先のお店",
     activityReceipt: "残高記録",
     originalPayment: "元の残高記録",
     refundReference: "復元参照",
     refundedAmount: "戻した残高",
     activityPlace: "このお店を開く",
     privacy: "決済時のプライバシー",
-    privacyBody: "オファーには、ウォレットの準備状況と特典の選択だけを使用します。名前、年齢、本人情報、住所は共有しません。",
+    privacyBody: "この支払いには、ウォレットの準備状況と特典の選択だけを使用します。名前、年齢、本人情報、住所は共有しません。",
     testTruth: "金額はKRWとUSDの概算で表示します。端末内台帳ではOOKRWを内部単位として使用し、USDCやUSDTは資金元として選択した場合にだけこの詳細に表示します。銀行、カード、ウォレット、決済事業者はまだ接続されていないため、実際のお金やデジタル資産は移動しません。",
     linkDialog: "旅のウォレット",
     linkTitle: "空の旅ウォレットから始める",
@@ -448,12 +449,12 @@ const COPY = {
 
 const OFFER_COPY = {
   en: {
-    eyebrow: "YOUR PLACE OFFER",
-    title: "Review your offer",
-    from: "Offer at",
-    venueBoundaryPrefix: "K-Tour ID on-device offer at",
+    eyebrow: "PLACE PAYMENT",
+    title: "Review payment",
+    from: "Payment at",
+    venueBoundaryPrefix: "K-Tour ID on-device payment preview at",
     venueBoundarySuffix: "· not offered or accepted by the venue · no wallet/provider contacted · no money moves",
-    price: "Offer",
+    price: "Payment amount",
     testQuote: "Price in USD",
     estimateBasis: "Estimate · ₩1,350 = US$1 · Aug 19, 2026",
     benefit: "K-Tour ID benefit",
@@ -465,7 +466,7 @@ const OFFER_COPY = {
     voucher: "Your benefit",
     voucherBody: (minimum: string, expiry: string) => `${minimum} minimum met · valid through ${expiry}`,
     fixedQuote: "Display estimate · ₩1,350 = US$1 · provider rate and fees unavailable",
-    recommendation: "Available for this offer",
+    recommendation: "Available for this payment",
     applied: "Applied",
     apply: "Apply benefit",
     remove: "Not now",
@@ -476,7 +477,7 @@ const OFFER_COPY = {
     policyBody: "Nothing changed. Return to the place and choose another option.",
     consentTitle: "Pay privately",
     consentBody: "Only wallet readiness and this benefit choice are used. Your name, identity, age, address and original documents stay private.",
-    consent: "I agree to use my travel balance for this offer",
+    consent: "I agree to use my travel balance for this payment",
     consentRequired: "Review this one choice to continue.",
     pay: (amount: string) => `Use ${amount} travel balance`,
     connectToPay: "Set up travel wallet to continue",
@@ -491,7 +492,7 @@ const OFFER_COPY = {
     insufficient: "Not enough travel balance",
     insufficientBody: "No debit was made. The temporary condition is cleared before you retry, or you can choose another way at the venue.",
     paymentStorageError: "Could not save this on-device payment record. Nothing was completed — try again.",
-    gateStorageError: "Could not open the Payment check. The offer and device balance are unchanged — try again.",
+    gateStorageError: "Could not open the Payment check. The payment details and device balance are unchanged — try again.",
     refundStorageError: "Could not save this balance-restoration record. The original balance record is unchanged — try again.",
     retry: "Try again",
     receipt: "Balance-use record",
@@ -528,12 +529,12 @@ const OFFER_COPY = {
     reviewProvenance: "Review result · sample data · no real payment",
   },
   ko: {
-    eyebrow: "장소별 오퍼",
-    title: "오퍼를 확인해 주세요",
-    from: "오퍼 장소",
-    venueBoundaryPrefix: "K-Tour ID 기기 내 오퍼 장소",
+    eyebrow: "매장 결제",
+    title: "결제 금액 확인",
+    from: "결제 장소",
+    venueBoundaryPrefix: "K-Tour ID 기기 내 결제 체험 장소",
     venueBoundarySuffix: "· 매장에서 제공하거나 접수하지 않음 · 지갑·공급자 연결 없음 · 돈 이동 없음",
-    price: "오퍼",
+    price: "이용 금액",
     testQuote: "USD 예상 금액",
     estimateBasis: "예상값 · ₩1,350 = US$1 · 2026. 8. 19.",
     benefit: "K-Tour ID 혜택",
@@ -545,7 +546,7 @@ const OFFER_COPY = {
     voucher: "나의 혜택",
     voucherBody: (minimum: string, expiry: string) => `${minimum} 최소 금액 충족 · ${expiry}까지`,
     fixedQuote: "표시용 예상값 · ₩1,350 = US$1 · 실제 환율과 수수료는 제공자 연결 후 확인",
-    recommendation: "이 오퍼에 사용할 수 있는 혜택",
+    recommendation: "이 결제에 사용할 수 있는 혜택",
     applied: "적용됨",
     apply: "혜택 적용",
     remove: "나중에",
@@ -556,7 +557,7 @@ const OFFER_COPY = {
     policyBody: "변경된 내용은 없습니다. 장소로 돌아가 다른 방법을 선택해 주세요.",
     consentTitle: "개인정보를 지키는 결제",
     consentBody: "지갑 준비 상태와 이 혜택 선택만 사용합니다. 이름·신원·나이·주소·원본 문서는 비공개로 유지돼요.",
-    consent: "이 오퍼에 여행 잔액을 사용하는 데 동의합니다",
+    consent: "이 결제에 여행 잔액을 사용하는 데 동의합니다",
     consentRequired: "이 항목을 확인하면 계속할 수 있어요.",
     pay: (amount: string) => `여행 잔액 ${amount} 사용`,
     connectToPay: "여행 지갑을 설정하고 계속",
@@ -571,7 +572,7 @@ const OFFER_COPY = {
     insufficient: "여행 잔액이 부족해요",
     insufficientBody: "차감된 잔액은 없습니다. 재시도 전에 임시 조건이 해제되며, 매장에서 다른 방법을 선택할 수도 있어요.",
     paymentStorageError: "이 기기에 결제 기록을 저장하지 못했어요. 완료된 내용은 없습니다. 다시 시도하세요.",
-    gateStorageError: "결제 확인을 열지 못했어요. 오퍼와 기기 내 잔액은 그대로입니다. 다시 시도하세요.",
+    gateStorageError: "결제 확인을 열지 못했어요. 결제 내용과 기기 내 잔액은 그대로입니다. 다시 시도하세요.",
     refundStorageError: "이 기기에 잔액 복원 기록을 저장하지 못했어요. 원 잔액 기록은 그대로입니다. 다시 시도하세요.",
     retry: "다시 시도",
     receipt: "잔액 사용 기록",
@@ -608,12 +609,12 @@ const OFFER_COPY = {
     reviewProvenance: "심사용 결과 · 예시 데이터 · 실제 결제 없음",
   },
   ja: {
-    eyebrow: "お店のオファー",
-    title: "オファーを確認",
-    from: "オファー対象店",
-    venueBoundaryPrefix: "K-Tour ID端末内オファー対象店",
+    eyebrow: "お店への支払い",
+    title: "支払いを確認",
+    from: "支払先のお店",
+    venueBoundaryPrefix: "K-Tour ID端末内の支払い体験・対象店",
     venueBoundarySuffix: "· お店での提供・受付なし · ウォレット・事業者への接続なし · お金の移動なし",
-    price: "オファー",
+    price: "利用金額",
     testQuote: "USDでの概算",
     estimateBasis: "概算・₩1,350 = US$1・2026/8/19",
     benefit: "K-Tour ID特典",
@@ -625,7 +626,7 @@ const OFFER_COPY = {
     voucher: "あなたの特典",
     voucherBody: (minimum: string, expiry: string) => `最低金額${minimum}を達成 · ${expiry}まで有効`,
     fixedQuote: "表示用の概算・₩1,350 = US$1・実際のレートと手数料は事業者接続後に確認",
-    recommendation: "このオファーで使える特典",
+    recommendation: "この支払いで使える特典",
     applied: "適用済み",
     apply: "特典を適用",
     remove: "今回は使わない",
@@ -636,7 +637,7 @@ const OFFER_COPY = {
     policyBody: "変更はありません。お店の画面に戻り、別の方法を選んでください。",
     consentTitle: "必要な情報だけで支払いを確認",
     consentBody: "使うのはウォレットの準備状況とこの特典の選択だけです。名前、本人情報、年齢、住所、元の書類は非公開のままです。",
-    consent: "このオファーに旅の残高を使うことに同意します",
+    consent: "この支払いに旅の残高を使うことに同意します",
     consentRequired: "この項目を確認すると続けられます。",
     pay: (amount: string) => `旅の残高から${amount}を使う`,
     connectToPay: "旅のウォレットを設定して続ける",
@@ -651,7 +652,7 @@ const OFFER_COPY = {
     insufficient: "旅の残高が不足しています",
     insufficientBody: "残高は引かれていません。再試行の前に一時条件を解除します。お店で別の方法を選ぶこともできます。",
     paymentStorageError: "この端末に支払い記録を保存できませんでした。完了した処理はありません。もう一度お試しください。",
-    gateStorageError: "支払い確認を開けませんでした。オファーと端末内残高は変わっていません。もう一度お試しください。",
+    gateStorageError: "支払い確認を開けませんでした。支払い内容と端末内残高は変わっていません。もう一度お試しください。",
     refundStorageError: "この端末に残高復元の記録を保存できませんでした。元の残高記録は変わっていません。もう一度お試しください。",
     retry: "もう一度試す",
     receipt: "残高利用の記録",
@@ -880,12 +881,13 @@ function fundingSourceLabel(locale: Locale, source: OndoBCommerceFundingSource) 
   return copy.balance
 }
 
-function FundingSourceSheet({ locale, source, subject, purpose, returnVenueName, walletReady, presenceState, onSelect, onClose }: {
+function FundingSourceSheet({ locale, source, subject, purpose, returnVenueName, returnShortageKrw, walletReady, presenceState, onSelect, onClose }: {
   locale: Locale
   source: OndoBCommerceFundingSource
   subject: string
   purpose: FundingSheetSubject["purpose"]
   returnVenueName?: string
+  returnShortageKrw?: number
   walletReady: boolean
   presenceState: Exclude<SheetPresencePhase, "closed">
   onSelect(source: OndoBCommerceFundingSource): boolean
@@ -1083,7 +1085,7 @@ function FundingSourceSheet({ locale, source, subject, purpose, returnVenueName,
   const money = (minor: number, currency: "KRW" | "USD") => new Intl.NumberFormat(locale === "ko" ? "ko-KR" : locale === "ja" ? "ja-JP" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "KRW" ? 0 : 2 }).format(currency === "USD" ? minor / 100 : minor)
   const phase = operation?.phase
   const fundingReturnLabel = returnVenueName
-    ? words(`Return to ${returnVenueName}`, `${returnVenueName} 오퍼로 돌아가기`, `${returnVenueName}に戻る`)
+    ? words(`Return to ${returnVenueName}`, `${returnVenueName} 결제로 돌아가기`, `${returnVenueName}の支払いに戻る`)
     : words("Back to balance", "잔액으로 돌아가기", "残高に戻る")
   const phaseTitle = operation?.stablecoin && phase === "quoted" ? words("Stablecoins, ready for your trip", "코인을 여행 잔액으로", "コインを旅の残高に")
     : operation?.stablecoin && phase === "authorize" ? words("Review your transfer", "전송 내용을 확인해 주세요", "送信内容を確認")
@@ -1112,7 +1114,13 @@ function FundingSourceSheet({ locale, source, subject, purpose, returnVenueName,
         <header><span>{operation ? words("Add money", "충전", "チャージ") : purpose === "topup" ? copy.addFunds : copy.sheet}</span><button type="button" data-funding-focus aria-label={COPY[locale].close} aria-disabled={closing ? "true" : undefined} onClick={closeFunding}><X size={20} aria-hidden="true" /></button></header>
         <div className={styles.fundingSheetBody} data-sample-step={phase ?? "methods"}>
           <h2 id="funding-source-title">{operation ? phaseTitle : purpose === "topup" ? copy.topupTitle : copy.title}</h2>
-          {returnVenueName ? <p className={fundingStyles.note} data-testid="funding-return-context">{words(`Return to your offer at ${returnVenueName} after adding funds. Payment is confirmed separately.`, `충전 후 ${returnVenueName}의 같은 오퍼로 돌아와요. 결제는 따로 확인하세요.`, `チャージ後は${returnVenueName}の同じオファーに戻ります。決済は別に確認してください。`)}</p> : null}
+          {returnVenueName ? <section className={styles.fundingReturnContext} data-testid="funding-return-context" data-shortage-krw={returnShortageKrw ?? 0}>
+            <strong><MapPin size={15} aria-hidden="true" />{returnVenueName}</strong>
+            <p>{!creditComplete && returnShortageKrw !== undefined && returnShortageKrw > 0
+              ? words(`Shortfall before top-up: ${formatKrw(returnShortageKrw, locale)}`, `충전 전 부족 금액 ${formatKrw(returnShortageKrw, locale)}`, `チャージ前の不足額 ${formatKrw(returnShortageKrw, locale)}`)
+              : words("Return to this payment after adding funds", "충전 후 같은 결제로 돌아와요", "チャージ後は同じ支払いに戻ります")}</p>
+            <small>{words("Adding funds is separate from paying the place.", "충전은 매장 결제와 별개예요.", "チャージとお店への支払いは別です。")}</small>
+          </section> : null}
           {phase === "settled" && creditComplete && subject.startsWith("wallet:") ? <button type="button" className={styles.primary} data-testid="funding-balance-places" onClick={useBalanceAtPlaces}><MapPin size={18} aria-hidden="true" />{words("Find places for this balance", "이 잔액으로 이용할 곳 보기", "この残高で使える場所を見る")}</button> : null}
           {operation && quote && operation.stablecoin ? <div data-testid="funding-rail-journey" data-phase={phase} data-provider-route={quote.rail} data-credit-committed={creditComplete}>
             <StablecoinFundingB key={quote.quoteId} operation={operation} locale={locale} closing={closing} creditComplete={creditComplete} balance={formatKrwFromSettlementUnits(stableCommerceBalanceB(state.commerceSession), locale)} returnLabel={fundingReturnLabel} onAction={transition} onAmount={amount => editQuote(amount)} onCreditRetry={() => creditSettled(operation)} onUseBalance={useSampleBalance} onMethods={showMethods} onClose={closeFunding} />
@@ -1720,8 +1728,8 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
             <button type="button" onClick={(event) => openFundingForQuote(event.currentTarget)}>{fundingCopy.change}</button>
           </section>
 
-          {reviewMode && shortageKrw > 0 ? <section className={styles.shortage} data-testid="commerce-balance-shortage" role="status"><strong>{words("Add a little more for this visit", "이곳에서 이용하려면 조금 더 필요해요", "この場所で使うには少し追加が必要です")}</strong><p>{words("Available", "사용 가능", "利用可能")} {formatKrwFromSettlementUnits(balance, locale)} · {words("Short by", "부족 금액", "不足額")} {formatKrw(shortageKrw, locale)}</p><button type="button" data-testid="commerce-shortage-fund" onClick={event => openFundingForQuote(event.currentTarget, "topup")}>{words("Top up and return here", "충전하고 이 결제로 돌아오기", "チャージしてこの決済に戻る")}</button></section> : null}
-          {commerce.lockedQuote && !commerce.confirmationPending ? <p className={styles.quoteReturn} data-testid="commerce-held-quote">{words("This place and amount are kept while you top up. Confirm payment separately.", "충전하는 동안 장소와 금액은 그대로예요. 결제는 따로 확인하세요.", "チャージ中も場所と金額を保持します。決済は別に確認してください。")} <button type="button" onClick={() => { actions.dispatchCommerce({ type: "CANCEL_CONFIRMATION" }); setConsent(false) }}>{words("Review changes", "금액·혜택 다시 보기", "金額・特典を見直す")}</button></p> : null}
+          {reviewMode && shortageKrw > 0 ? <section className={styles.shortage} data-testid="commerce-balance-shortage" role="status"><strong>{words("Add a little more for this payment", "이 결제에 조금 더 필요해요", "この支払いには少し追加が必要です")}</strong><p>{words("Available", "사용 가능", "利用可能")} {formatKrwFromSettlementUnits(balance, locale)} · {words("Short by", "부족 금액", "不足額")} {formatKrw(shortageKrw, locale)}</p><button type="button" data-testid="commerce-shortage-fund" onClick={event => openFundingForQuote(event.currentTarget, "topup")}>{words("Top up and return here", "충전하고 이 결제로 돌아오기", "チャージしてこの決済に戻る")}</button></section> : null}
+          {commerce.lockedQuote && !commerce.confirmationPending ? <p className={styles.quoteReturn} data-testid="commerce-held-quote">{words("This place and amount are kept while you top up. Adding funds is separate from paying the place.", "충전하는 동안 장소와 금액은 그대로예요. 충전은 매장 결제와 별개예요.", "チャージ中も場所と金額を保持します。チャージとお店への支払いは別です。")} <button type="button" onClick={() => { actions.dispatchCommerce({ type: "CANCEL_CONFIRMATION" }); setConsent(false) }}>{words("Review changes", "금액·혜택 다시 보기", "金額・特典を見直す")}</button></p> : null}
 
           <section className={styles.offerBenefit} data-testid="commerce-voucher" data-voucher-state={commerce.voucher} data-benefit-recommendation={commerce.benefitRecommendation}>
             <div className={styles.benefitIcon}><TicketCheck size={22} aria-hidden="true" /></div>
@@ -1768,7 +1776,7 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
               <CircleDollarSign size={19} aria-hidden="true" />
               {!reviewMode
                 ? walletStatus === "ready" ? fundingCopy.chooseFunding : copy.connectToPay
-                : shortageKrw > 0 ? words("Top up for this visit", "충전 후 이용하기", "チャージして利用する") : fundingSource !== "travel_balance" ? fundingCopy.chooseAvailable : walletStatus === "ready" ? copy.pay(formatKrwFromSettlementUnits(debit, locale)) : copy.connectToPay}
+                : shortageKrw > 0 ? words("Top up for this payment", "이 결제에 필요한 잔액 충전", "この支払いのためにチャージ") : fundingSource !== "travel_balance" ? fundingCopy.chooseAvailable : walletStatus === "ready" ? copy.pay(formatKrwFromSettlementUnits(debit, locale)) : copy.connectToPay}
             </button>
             <button type="button" className={styles.quietButton} data-testid="payment-cancel" onClick={closeOffer}><ArrowLeft size={17} aria-hidden="true" /><span>{copy.back}</span></button>
           </div>
@@ -1848,7 +1856,7 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
           <CommerceRefundsB locale={locale} scope="checkout" reviewMode={reviewMode && !closing} />
           {renderedStorageError === "refund" ? <p className={styles.storageError} data-testid="commerce-storage-error" role="alert">{copy.refundStorageError}</p> : null}
           <button type="button" className={styles.primary} data-testid="payment-receipt-return" onClick={closeOffer}>{crossVenueReceipt ? copy.returnToPlace(originVenueName) : copy.return}<ChevronRight size={18} aria-hidden="true" /></button>
-          <button type="button" className={styles.quietButton} data-testid="payment-new-order" onClick={() => actions.openMealBenefitFromPlace(venueId, { newOrder: true })}>{words("Start another visit here", "이곳에서 새로 이용하기", "ここで新しく利用する")}</button>
+          <button type="button" className={styles.quietButton} data-testid="payment-new-order" onClick={() => actions.openMealBenefitFromPlace(venueId, { newOrder: true })}>{words("Start another payment here", "이 매장에서 새 결제 시작", "このお店で新しい支払い")}</button>
         </div>
       ) : null}
     </section>
@@ -1921,6 +1929,7 @@ export function CommerceOfferMountB() {
   const presentedPhase = desiredSubject?.key === retainedSubject?.key && offerPresence.phase === "open" ? "open" : "closing"
 
   const exactOpenerRef = useRef<HTMLElement | null>(null)
+  const researchOpenerRef = useRef<{ placeId: string; action: "offer" } | null>(null)
   const restoreAfterExitRef = useRef(false)
   const desiredWasOpenRef = useRef(false)
   const desiredKeyRef = useRef<string | null>(null)
@@ -1946,7 +1955,14 @@ export function CommerceOfferMountB() {
     desiredKeyRef.current = desiredSubject.key
     restoreAfterExitRef.current = false
     restorationSerialRef.current += 1
-    exactOpenerRef.current = activeAtOpen?.closest<HTMLElement>("button") ?? null
+    const opener = activeAtOpen?.closest<HTMLElement>("button") ?? null
+    exactOpenerRef.current = opener
+    researchOpenerRef.current = opener?.dataset.placeService === "offer"
+      && opener.dataset.servicePlaceId === desiredSubject.originVenueId
+      && resolveCommercePlaceB(desiredSubject.originVenueId)?.originKind === "research"
+      && opener.closest("[role='dialog']")?.querySelector<HTMLElement>("[data-testid='researched-food-detail']")?.dataset.researchId === desiredSubject.originVenueId
+      ? { placeId: desiredSubject.originVenueId, action: "offer" }
+      : null
   }, [activeAtOpen, desiredSubject])
 
   useEffect(() => {
@@ -1955,6 +1971,8 @@ export function CommerceOfferMountB() {
     const restorationSerial = restorationSerialRef.current
     const exactOpener = exactOpenerRef.current
     exactOpenerRef.current = null
+    const researchOpener = researchOpenerRef.current
+    researchOpenerRef.current = null
     let cancelFallback: (() => void) | undefined
     const frame = window.requestAnimationFrame(() => {
       if (restorationSerial !== restorationSerialRef.current || desiredWasOpenRef.current) return
@@ -1968,6 +1986,20 @@ export function CommerceOfferMountB() {
       if (exactOpener?.isConnected && isRenderedFocusable(exactOpener)) {
         exactOpener.focus({ preventScroll: true })
         return
+      }
+      // Research detail is remounted behind the exiting payment sheet. Its
+      // initial focus runs while it is still inert, so restore this exact
+      // place/action only after exit, without changing global sheet timing.
+      if (!exactOpener?.isConnected && researchOpener) {
+        const replacement = Array.from(document.querySelectorAll<HTMLButtonElement>("button[data-service-place-id][data-place-service]"))
+          .find(button => button.dataset.servicePlaceId === researchOpener.placeId
+            && button.dataset.placeService === researchOpener.action
+            && button.closest("[role='dialog']")?.querySelector<HTMLElement>("[data-testid='researched-food-detail']")?.dataset.researchId === researchOpener.placeId
+            && isRenderedFocusable(button))
+        if (replacement) {
+          replacement.focus({ preventScroll: true })
+          return
+        }
       }
       cancelFallback = focusFirstAvailableDestination(COMMERCE_FALLBACK_DESTINATIONS)
     })
@@ -2031,6 +2063,7 @@ export function CommerceOfferMountB() {
     context: `offer:${presented.originVenueId}`,
     purpose: fundingPurpose,
     returnVenueName: presented.transactionVenueName,
+    returnShortageKrw: Math.max(0, Math.round((stableCommerceQuoteDebitB(presented.commerce) - stableCommerceBalanceB(presented.commerce)) * 1_000)),
     locale: presented.locale,
     source: presented.fundingSource,
     walletReady: presented.walletStatus === "ready",
@@ -2165,6 +2198,7 @@ export function CommerceOfferMountB() {
       subject={fundingPresence.value.context}
       purpose={fundingPresence.value.purpose}
       returnVenueName={fundingPresence.value.returnVenueName}
+      returnShortageKrw={fundingPresence.value.returnShortageKrw}
       walletReady={fundingPresence.value.walletReady}
       presenceState={fundingPresentedPhase}
       onSelect={actions.setCommerceFundingSource}

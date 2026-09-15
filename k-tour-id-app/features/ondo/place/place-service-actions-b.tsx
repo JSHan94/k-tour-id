@@ -11,16 +11,17 @@ import styles from "./place-service-actions-b.module.css"
 import { ExperienceEntryB } from "../experience-b/experience-b"
 
 const COPY = {
-  ko: { offer: "혜택 확인", benefit: "최대", discount: "할인", reserve: "예약하기", reserveHint: "날짜와 인원 선택" },
-  en: { offer: "See your benefit", benefit: "Up to", discount: "off", reserve: "Book a table", reserveHint: "Choose a day and party size" },
-  ja: { offer: "特典を見る", benefit: "最大", discount: "割引", reserve: "席を予約", reserveHint: "日付と人数を選択" },
+  ko: { offer: "결제 금액 확인", benefit: "최대", discount: "할인", reserve: "예약하기", reserveHint: "날짜와 인원 선택" },
+  en: { offer: "Review payment", benefit: "Up to", discount: "off", reserve: "Book a table", reserveHint: "Choose a day and party size" },
+  ja: { offer: "支払いを確認", benefit: "最大", discount: "割引", reserve: "席を予約", reserveHint: "日付と人数を選択" },
 } as const
 
 /** A peek offers one supported next action, never a new row of product tools.
  * Directions remain reachable in the full place details. */
-export function PlacePeekActionsB({ placeId, locale, className, details, directions, directionsFirst = false, onOffer }: {
+export function PlacePeekActionsB({ placeId, locale, className, details, directions, directionsFirst = false, onOffer, actionTestId = "peek-place-service" }: {
   placeId: string; locale: "en" | "ko" | "ja"; className: string
   details: (hasService: boolean) => ReactNode; directions: ReactNode; directionsFirst?: boolean; onOffer?: () => void
+  actionTestId?: string
 }) {
   const { actions } = useOndoB()
   const sampleMode = useReviewSampleSession()
@@ -28,7 +29,7 @@ export function PlacePeekActionsB({ placeId, locale, className, details, directi
   const place = sampleMode && registered && (registered.commerce || registered.reservation) ? registered : null
   const copy = COPY[locale]
   return <div className={className} data-peek-has-service={Boolean(place)}>
-    {place ? <><button type="button" data-testid="peek-place-service" data-place-service={place.commerce ? "offer" : "reservation"} data-place-return-section="offer" data-capability-mode="sample" data-service-place-id={place.id} data-visual-priority="primary" onClick={() => {
+    {place ? <><button type="button" data-testid={actionTestId} data-place-service={place.commerce ? "offer" : "reservation"} data-place-return-section="offer" data-capability-mode="sample" data-service-place-id={place.id} data-visual-priority="primary" onClick={() => {
       capturePlaceServiceMapReturnB(place.id)
       if (place.commerce) { if (onOffer) onOffer(); else actions.openMealBenefitFromPlace(place.id) }
       else requestReservationSampleB({ venueId: place.id })
@@ -38,19 +39,21 @@ export function PlacePeekActionsB({ placeId, locale, className, details, directi
 
 /** Capabilities are an explicit walkthrough registry, never inferred from a
  * guide entry or directory record. Production hides these sample actions. */
-export function PlaceServiceActionsB({ placeId, locale, onOffer, offerTestId }: {
+export function PlaceServiceActionsB({ placeId, locale, onOffer, offerTestId, offerInFooter = false }: {
   placeId: string
   locale: "en" | "ko" | "ja"
   onOffer?: () => void
   offerTestId?: string
+  /** One action owner: a research detail can place the offer in its footer. */
+  offerInFooter?: boolean
 }) {
   const { actions } = useOndoB()
   const sampleMode = useReviewSampleSession()
   const place = resolveCommercePlaceB(placeId)
   if (!sampleMode || !place || (!place.commerce && !place.reservation)) return null
   const copy = COPY[locale]
-  return <><section className={styles.actions} data-testid="place-service-actions" data-service-place-id={place.id} data-place-return-section="offer" data-capability-mode="sample">
-    {place.commerce ? <button type="button" className={styles.primary} data-testid={offerTestId ?? "place-offer-open"} data-place-service="offer" data-offer-id={place.commerce.offerId} onClick={() => {
+  return <>{(!offerInFooter && place.commerce) || place.reservation ? <section className={styles.actions} data-testid="place-service-actions" data-service-place-id={place.id} data-place-return-section="offer" data-capability-mode="sample">
+    {place.commerce && !offerInFooter ? <button type="button" className={styles.primary} data-testid={offerTestId ?? "place-offer-open"} data-place-service="offer" data-offer-id={place.commerce.offerId} onClick={() => {
       capturePlaceServiceMapReturnB(place.id)
       if (onOffer) onOffer()
       else actions.openMealBenefitFromPlace(place.id)
@@ -63,5 +66,5 @@ export function PlaceServiceActionsB({ placeId, locale, onOffer, offerTestId }: 
     }}>
       <CalendarClock size={20} aria-hidden="true" /><span><strong>{copy.reserve}</strong><small>{copy.reserveHint}</small></span><ChevronRight size={18} aria-hidden="true" />
     </button> : null}
-  </section><ExperienceEntryB placeId={placeId} locale={locale} /></>
+  </section> : null}<ExperienceEntryB placeId={placeId} locale={locale} /></>
 }
