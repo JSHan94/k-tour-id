@@ -11,7 +11,6 @@
 | Harvey 시작 브랜치 | [handoff/harvey-20260914](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · 기존 이름 유지 |
 | 짧은 개발 인계서 | [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md) |
 | 실행·개발 작업표 | [README](../README.md#run-the-handoff) · [개발자 시작 문서](./DEVELOPER_START_HERE.md) |
-| 전달 메시지 | [Harvey에게 보낼 메시지](./HARVEY_MESSAGE_2026-09-15.md) |
 | 배포 source | 앱 코드·배포 검수 기준 `4cb1964a0ed6d071601c69cfae5b276fa8cd9e83` · Git source / ref `main` |
 | 배포 ID·고유 URL | `dpl_7t3mdwdw744frAaiqG6muF3F2ywZ` · [검수 기준 Production](https://ondo-9nq835j26-jaewook-9643s-projects.vercel.app), Ready |
 | main / Harvey 원격 HEAD | 동기화 검수 기준 `4cb1964a0ed6d071601c69cfae5b276fa8cd9e83`로 양쪽 일치 확인. 후속 문서 전용 커밋도 두 브랜치에 동일 반영 |
@@ -61,4 +60,4 @@
 - [x] 대표 주소의 canonical·공유 이미지·모바일/데스크톱 지정 화면 검수.
 - [x] 순수 목업 산출물의 Sumsub SDK·서버 경로 제외 및 API `404` 확인; 실제 자격·결제·예약 연동 미완료 경계 유지.
 - [x] 최종 문서 계약·링크 검사와 확인한 테스트 범위 기록; 미검수 항목은 미검수로 유지.
-- [x] 완료 사실에 맞춰 README·짧은 인계서·전달 메시지의 대기 표시 갱신.
+- [x] 완료 사실에 맞춰 README·짧은 인계서의 대기 표시 갱신.

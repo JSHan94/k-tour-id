@@ -74,7 +74,7 @@ test("HANDOFF-SYNC-002 every concrete B source touchpoint in the start guide exi
 })
 
 test("HANDOFF-SYNC-003 current handoff and README local document links resolve", () => {
-  for (const file of ["README.md", "docs/DEVELOPER_START_HERE.md", "docs/DEPLOYMENT_SPEC.md", "docs/BACKEND_HANDOFF_CHECKLIST_2026-09-09.md", "docs/HACKATHON_INTEGRATION_MATRIX_2026-09-08.md", "docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md", "docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md", "docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md", "docs/KTOUR_PRODUCTION_HANDOFF_2026-09-15.md", "docs/HARVEY_MESSAGE_2026-09-15.md", "docs/GITHUB_BRAND_CLEANUP_2026-09-15.md", "docs/MAP_FIRST_ENTRY_2026-09-14.md", "docs/PLACE_AFTER19_FIX_2026-09-14.md"]) {
+  for (const file of ["README.md", "docs/DEVELOPER_START_HERE.md", "docs/DEPLOYMENT_SPEC.md", "docs/BACKEND_HANDOFF_CHECKLIST_2026-09-09.md", "docs/HACKATHON_INTEGRATION_MATRIX_2026-09-08.md", "docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md", "docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md", "docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md", "docs/KTOUR_PRODUCTION_HANDOFF_2026-09-15.md", "docs/GITHUB_BRAND_CLEANUP_2026-09-15.md", "docs/MAP_FIRST_ENTRY_2026-09-14.md", "docs/PLACE_AFTER19_FIX_2026-09-14.md"]) {
     const text = readFileSync(resolve(root, file), "utf8")
     const links = [...text.matchAll(/\]\(([^)]+)\)/g)].map(match => match[1])
     for (const link of links.filter(link => !/^(?:https?:|#)/.test(link))) {
@@ -116,7 +116,6 @@ test("HANDOFF-SYNC-006 current app/main/Harvey paths agree and historical releas
   const current = doc(currentName)
   const brief = doc("HARVEY_HACKATHON_HANDOFF_2026-09-14.md")
   const detailed = doc("HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
-  const message = doc("HARVEY_MESSAGE_2026-09-15.md")
   const readme = readFileSync(resolve(root, "README.md"), "utf8")
 
   for (const text of [readme, guide, spec, work, matrix, brief, detailed]) {
@@ -130,7 +129,7 @@ test("HANDOFF-SYNC-006 current app/main/Harvey paths agree and historical releas
   for (const text of [readme, detailed]) {
     expect(text).toContain("git clone --branch handoff/harvey-20260914 --single-branch")
   }
-  for (const text of [current, message]) {
+  for (const text of [current, brief]) {
     expect(text).toContain("https://ktour-id.vercel.app")
     expect(text).toContain("https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914")
     expect(text).toContain("OmniOne Chain")
@@ -139,7 +138,6 @@ test("HANDOFF-SYNC-006 current app/main/Harvey paths agree and historical releas
     expect(text).toContain("Sumsub")
     expect(text).toContain("별도")
   }
-  expect(message).toContain("https://github.com/woogieboogie-jl/k-tour-id/blob/handoff/harvey-20260914/docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md")
   expect(current).toContain("https://github.com/woogieboogie-jl/k-tour-id/tree/main")
   expect(current).toContain("동일한 앱·문서 소스로 동기화")
   expect(current).toMatch(/상태: \*\*(?:pending|Ready)/)
