@@ -1,16 +1,18 @@
 # K-Tour ID · GitHub와 배포 경로 정리
 
+**이 문서는 `0ddc9e1` 브랜드 배포 당시의 역사적 기록이다.** 최신 대표 주소와 main/Harvey 동기화 상태는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)을 따른다. 아래 실제 source·배포 ID·검수 결과는 그 당시 증거로 보존한다.
+
 기록일: 2026-09-15. **K-Tour ID 브랜드 Production 배포 Ready.** 배포 시 릴리스 브랜치의 원격 소스와 실제 배포 source는 `0ddc9e1bd2df4a496a9d1d588ad6012eedbac680`이다. 이후 문서만 수정한 커밋과 이 runtime source를 구분한다. 과거 PASS를 이번 배포 결과로 이월하지 않는다.
 
-## 어디에서 시작하나요?
+## 당시 배포·인계 경로
 
 | 구분 | 경로와 상태 |
 |---|---|
-| 최신 순수 목업 소스 | [`release/ktour-brand-20260915`](https://github.com/woogieboogie-jl/k-tour-id/tree/release/ktour-brand-20260915) · 앱은 `k-tour-id-app/`, 실행은 [README](../README.md#run-the-handoff) |
+| 당시 순수 목업 소스 | [`release/ktour-brand-20260915`](https://github.com/woogieboogie-jl/k-tour-id/tree/release/ktour-brand-20260915) · 앱은 `k-tour-id-app/`, 실행은 [README](../README.md#run-the-handoff) |
 | 운영 앱 | [ondo-tau.vercel.app](https://ondo-tau.vercel.app) · K-Tour ID 브랜드 배포 Ready, source `0ddc9e1` |
 | 고유 운영 배포 | [ondo-gafo82sil](https://ondo-gafo82sil-jaewook-9643s-projects.vercel.app) · `dpl_HVfUAJY7CiFdKDoJCoynvp9rBYwV` |
 | 기존 공유 별칭 | [ondo-k-tour-id.vercel.app](https://ondo-k-tour-id.vercel.app) · 이전 배포에 고정된 별칭을 위 같은 Ready 배포로 수정 후 확인 |
-| 원 Harvey 인계 기준선 | [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914), `9d4aec9` · 역사적 스냅샷이며 최신 브랜드 릴리스와 구분 |
+| 원 Harvey 인계 기준선 | [인계 snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9) · 역사적 스냅샷이며 최신 브랜드 릴리스와 구분 |
 | 별도 Passport 실험 | [`feat/sumsub-sandbox-onboarding-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914) · [Sumsub Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app), source `4a6904a`, Ready · `dpl_EbZv6Fp4PLPVQRAEDdv2ToZxcqee` |
 
 ## 이번 릴리스에 포함되는 것
@@ -22,9 +24,9 @@
 
 Sumsub는 별도 Sandbox에서 실제 WebSDK/API를 테스트한 실험이다. 운영 KYC나 실제 얼굴/liveness·전체 촬영/제출 완료를 증명하지 않으며 기존 DID 자격·혜택·잔액을 만들지 않는다. 자세한 범위와 수동 검수 잔여 사항은 [그 브랜치의 인계 문서](https://github.com/woogieboogie-jl/k-tour-id/blob/feat/sumsub-sandbox-onboarding-20260914/docs/SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)를 따른다.
 
-## GitHub에서 아직 별도인 것
+## 당시 GitHub 변경 범위
 
-이 릴리스가 GitHub 기본 브랜치 `main`, 저장소 About 또는 기존 `k-tour` 자동 배포 구성을 변경했다고 해석하지 않는다. 원 인계 브랜치는 `9d4aec9` 그대로이며 기본 브랜치·About·자동 배포 구성도 유지했다. 최신 앱 공유에는 위 명시적 릴리스 브랜치를 사용한다. 기본 브랜치·About·자동 배포 연결을 최신 앱으로 전환할지는 사용자 결정 후 별도 작업으로 처리한다.
+이 브랜드 릴리스 당시에는 GitHub 기본 브랜치 `main`, 저장소 About 또는 기존 `k-tour` 자동 배포 구성을 변경하지 않았다. 당시 인계 기준선은 `9d4aec9`였다. 이후 대표 URL·main·Harvey 브랜치의 변경은 위 현재 배포·인계 기록과 구분한다.
 
 ## 이번 릴리스 검수
 

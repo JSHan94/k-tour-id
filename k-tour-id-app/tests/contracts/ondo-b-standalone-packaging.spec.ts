@@ -62,7 +62,7 @@ test.describe("ONDO B standalone Sites packaging contract", () => {
     expect(buildRunner).toContain('child.once("close"')
     expect(buildRunner).not.toContain('child.once("exit"')
     expect(sourcePreparer).toContain("metadataBase: new URL(metadataOrigin)")
-    expect(sourcePreparer).toContain("https://ondo-k-tour-id.vercel.app")
+    expect(sourcePreparer).toContain("https://ktour-id.vercel.app")
   })
 
   test("B-STANDALONE-001B isolated source declares its remote-build runtime", () => {

@@ -4,7 +4,7 @@ K-Tour ID is a map-first Korea food and travel product. It combines 400 official
 
 This release is a clickable **mock**. Identity, funding, payment, reservation and chain outcomes are simulated; a sample credential, ticket or receipt is not external confirmation. CX, OpenDID, OmniOne Chain and Sui remain required developer integrations.
 
-**Current clean mock source:** branch [`release/ktour-brand-20260915`](https://github.com/woogieboogie-jl/k-tour-id/tree/release/ktour-brand-20260915). **[Production app](https://ondo-tau.vercel.app): K-Tour ID rebrand Ready**, deployment source `0ddc9e1`. The [release record](./docs/GITHUB_BRAND_CLEANUP_2026-09-15.md) separates deployment status, local checks and remote verification; this is still a mock, not completed provider integration.
+**[K-Tour ID app](https://ktour-id.vercel.app)** · **[main](https://github.com/woogieboogie-jl/k-tour-id/tree/main)** · **[Harvey handoff](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)**. Deployment and same-source branch synchronization are **pending verification**; see the [current production handoff record](./docs/KTOUR_PRODUCTION_HANDOFF_2026-09-15.md). This is a pure mock release, not completed provider integration.
 
 The [separate Sumsub Sandbox Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app) lives on `feat/sumsub-sandbox-onboarding-20260914` and is **not included in this release**. Its real WebSDK/API tests are not production KYC or verified real face/liveness. See its [separate handoff](https://github.com/woogieboogie-jl/k-tour-id/blob/feat/sumsub-sandbox-onboarding-20260914/docs/SUMSUB_SANDBOX_HANDOFF_2026-09-14.md).
 
@@ -14,14 +14,14 @@ K-Tour ID is the public product name. Historical ONDO names, `ondo` module/API i
 
 For the September 21 submission, start with [해커톤 연동 개발 요약](./docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md), then [Sui 필수 통합 추가 명세](./docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) and the [1주 해커톤 통합 개발안](./docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). **CX, OpenDID, OmniOne Chain and Sui are all required by the team.** The same nonfinancial entitlement journey adds real Move, zkLogin/PTB and a user-authorized, bounded AI agent. The addendum takes precedence for scope and execution order; Sui staffing and readiness must be confirmed before treating the original one-week schedule as feasible. Financial/reservation integrations, bridge and passport/residence integrations remain mock. Program registration, submission eligibility and matching-prize terms require separate confirmation. The full-product handoff below remains the longer-term reference.
 
-Read [개발자 시작 문서](./docs/DEVELOPER_START_HERE.md) for the current mock → API/SDK/backend work map and implementation order. Start from `release/ktour-brand-20260915` for the current branded mock and docs together. [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914), source `9d4aec9`, is the original handoff baseline. Historical release commits describe their own deployments, not mandatory checkout targets or current-release verification.
+Read [개발자 시작 문서](./docs/DEVELOPER_START_HERE.md) for the mock → API/SDK/backend work map. Harvey starts from `handoff/harvey-20260914`; `main` is the canonical source. The current release record tracks their synchronization, so use the app and docs from the same confirmed handoff. The [original handoff snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9) is historical, not the moving branch head. A [ready-to-send Harvey message](./docs/HARVEY_MESSAGE_2026-09-15.md) links the app, branch and short brief.
 
 ### Run the handoff
 
 Requires Node.js 22.13+ and pnpm 10.8.0. No provider credentials are needed to run the mock.
 
 ```bash
-git clone --branch release/ktour-brand-20260915 --single-branch https://github.com/woogieboogie-jl/k-tour-id.git k-tour-id-handoff
+git clone --branch handoff/harvey-20260914 --single-branch https://github.com/woogieboogie-jl/k-tour-id.git k-tour-id-handoff
 cd k-tour-id-handoff/k-tour-id-app
 pnpm install --frozen-lockfile
 pnpm typecheck

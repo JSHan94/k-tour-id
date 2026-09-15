@@ -5,6 +5,7 @@ import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 const title = "K-Tour ID"
 const description = "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close."
 const socialImage = "/og-ktour-food-v2.png"
+const productionOrigin = "https://ktour-id.vercel.app"
 
 function configuredOrigin() {
   const configured = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN
@@ -27,6 +28,9 @@ function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
       return "https://ondo-directory.invalid"
     }
   }
+  // Production aliases share one public identity; preview and local QA remain
+  // on their own origins instead of advertising the production deployment.
+  if (process.env.VERCEL_ENV === "production") return productionOrigin
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.phenixnet-jl\.chatgpt\.site$/.test(host)) return `https://${host}`
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.vercel\.app$/.test(host)) return `https://${host}`
   const configured = configuredOrigin()

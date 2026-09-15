@@ -15,7 +15,9 @@ import type { Metadata, Viewport } from "next"
 import "./globals.css"
 import { ONDO_B_APPEARANCE_BOOTSTRAP_SCRIPT } from "@/features/ondo/shared/state/ondo-b-appearance"
 
-const metadataOrigin = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN ?? "https://ondo-k-tour-id.vercel.app"
+const metadataOrigin = process.env.VERCEL_ENV === "production"
+  ? "https://ktour-id.vercel.app"
+  : process.env.NEXT_PUBLIC_ONDO_B_ORIGIN ?? "https://ktour-id.vercel.app"
 
 export const metadata: Metadata = {
   metadataBase: new URL(metadataOrigin),

@@ -1,6 +1,6 @@
 # K-Tour ID Deployment Spec
 
-**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 K-Tour ID 브랜드 배포가 **Ready**다(배포 source `0ddc9e1`). [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 배포와 두 브랜치의 동일 소스 동기화 상태는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에서 확인한다. 현재는 확인 대기다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
 
 상태: `v3.3 · 목업 ↔ 개발 인계 정합화 · 2026-09-11 · 실제 연결은 개발자 구현 범위`
 
@@ -50,7 +50,7 @@
 ### 1.2 감사 기준선
 
 - 소스 기준: `7776a7228d7df96f5981038bf77a3da6e5bd37c1` 기반 B 앱 및 복구된 후속 변경.
-- 원 인계 시작점: branch `handoff/harvey-20260914` (`9d4aec9`)의 `k-tour-id-app/`. 현재는 위 릴리스 브랜치를 사용하며 과거 배포 commit ID는 이력 참고값이다.
+- 원 인계 기록: [snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)의 `k-tour-id-app/`. 현재는 위 main/Harvey 인계 경로를 사용하며 과거 배포 commit ID는 이력 참고값이다.
 - 기존 운영 목업·배포 source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md), [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md) 및 [이전 전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)와 함께 source·URL별로 구분한다.
 - 이전 핵심 목업·인계 커밋 `bec3257`·`bc8f0d0`, v3.2/G09-S `6fb5b96`·`996119f`, 모바일 `a45400f`, docs `d99ca9c`, core app `5233816`와 공개판 `3dc392b`는 각각의 역사적 기록이다.
 - 저장소 루트의 오래된 `k-tour-id-app`을 최신 구현으로 집계하지 않는다.
@@ -591,7 +591,8 @@ Sui는 이번 사용자가 지정한 목업·인계 범위다. DID 신원확인�
 <!-- ktour-handoff:v1 -->
 
 - [x] `trace:G01`–`trace:G13`: Appendix A의 FL/REQ·공개 component·fixture/test·FE gap·BE/H·ADR·proof status가 모두 갱신됨
-- [x] `release:current`: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 기존 기능 검수와 실제 provider 완료는 별도다
+- [x] `release:current`: [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에 대표 URL·main·Harvey 브랜치·배포 상태를 분리 기록한다. 문서 연결 완료이며 배포·연동 완료 체크가 아니다.
+- [x] `release:historical:cc3d7c3`: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 기존 기능 검수와 실제 provider 완료는 별도다
 - [x] `release:historical-separated`: `3dc392b`의 24개 공개 검사 및 `996119f`/v3.2 evidence는 historical로 표시하고 현재 PASS와 합산하지 않음
 - [x] `fe:provider-sdk-handoff`: CX/Passport/OpenDID/payment/Sui/restaurant adapter·SDK handoff와 실제 API 경계가 기록됨 (연동 구현 완료 아님)
 - [x] `mock:truth-boundary`: mock receipt·sample signer·local meal plan이 실제 provider receipt·signer·restaurant booking으로 표시되지 않음

@@ -1,12 +1,12 @@
 # K-Tour ID 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
 
-**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 K-Tour ID 브랜드 배포가 **Ready**다(배포 source `0ddc9e1`). [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 배포와 두 브랜치의 동일 소스 동기화 상태는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에서 확인한다. 현재는 확인 대기다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
 
 **9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 같은 비금전 혜택 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 범위·실행 순서가 기존 단일안과 아래 전체 제품 목록보다 우선한다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
 
 **[단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)은 공통 CX/OpenDID·서버 계약의 상세 참고다.** Sui 담당·환경·가용 시간을 추가 확인해 일정을 확정한다. 네 기술과 AI 실행을 기존 1주 일정에 그대로 완료할 수 있다고 가정하지 않으며, 프로그램 등록·별도 제출 자격·추가 상금 적용 조건도 확인한다. 아래는 전체 제품 인계로, 금융·예약 등 전체 목록이 이번 주 필수라는 뜻은 아니다.
 
-기준: **기존 2026-09-14 운영 source/runtime `cc3d7c3` · 원 인계 branch `handoff/harvey-20260914` (`9d4aec9`)**. [운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 확인한다. 당시 변경은 공유 카드·아이콘뿐이며 해당 기록의 Ready·검수 수치를 이번 릴리스로 이월하지 않는다. 과거 배포 commit ID는 이력 참고값이며 현재 시작점은 위 릴리스 브랜치다.
+기준: **기존 2026-09-14 운영 source/runtime `cc3d7c3` · [원 인계 snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)**. [운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 확인한다. 당시 변경은 공유 카드·아이콘뿐이며 해당 기록의 Ready·검수 수치를 이번 릴리스로 이월하지 않는다. 과거 배포 commit ID는 이력 참고값이며 현재 시작점은 위 Harvey 브랜치다.
 
 이전 운영 source `d9eda4f`의 [지도 우선 진입 릴리스](./MAP_FIRST_ENTRY_2026-09-14.md)와 `82ea4c9`의 [지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)는 역사적 배포·검수 기록으로 별도 보존한다. 현재 앱의 기준으로 혼용하지 않는다.
 
@@ -23,7 +23,7 @@
 
 **위 세 문서가 현행 인계 정본이다.** `DEVELOPMENT_SPEC.md`, 예전 traceability·Sui 브리프·실행팩은 배경/역사적 요구 자료다. 옛 독립 route나 과거 Sui 프로그램 조건을 현재 앱의 완료/필수 조건으로 그대로 이식하지 않는다. 범위 충돌은 DEPLOYMENT_SPEC §1.1을 따른다.
 
-실제 앱은 `release/ktour-brand-20260915`를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. 이 브랜치의 앱과 문서를 함께 사용하며 오래된 `main`과 혼용하지 않는다.
+실제 앱은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. `main`과 인계 브랜치는 같은 소스로 맞추는 대상이며, 실제 일치 여부는 위 현재 배포·인계 기록을 확인한다. 예전 로컬 checkout과 새 문서를 혼용하지 않는다.
 
 ## 2. 실행 화면과 구현 상태
 

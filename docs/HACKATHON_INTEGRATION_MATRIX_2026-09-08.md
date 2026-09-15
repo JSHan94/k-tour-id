@@ -1,6 +1,6 @@
 # K-Tour ID 해커톤 연동·목업·백엔드 작업 매트릭스
 
-**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 K-Tour ID 브랜드 배포가 **Ready**다(배포 source `0ddc9e1`). [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 배포와 두 브랜치의 동일 소스 동기화 상태는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에서 확인한다. 현재는 확인 대기다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
 
 기존 운영 브랜딩 기준선: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 실제 provider/SDK 요구와 해커톤 범위는 변경하지 않았다. 이전 기능 검수 결과를 새 브랜딩 배포의 전체 여정 PASS로 이월하지 않는다.
 
@@ -33,7 +33,7 @@
 
 ## 2. 현재 코드에서 확인한 경계
 
-- 기준선: 핵심 DID 공개 목업 `bec3257` 이후 v3.2 및 G09-S 변경. 원 인계 기준선은 `handoff/harvey-20260914`의 `k-tour-id-app/`이며 현재 시작점은 위 릴리스 브랜치다. `996119f`·`a45400f`·core app `5233816`와 이전 공개 source `3dc392b`는 각각의 후보 증거다. 이전 공개 증거는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md), 당시 문서 대조·선택 로컬 회귀는 [9월 11일 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 `52f376e`·중간 `f8960b4`·`abd0f83`과 기준선 `564823e`의 공개 결과는 [9월 11일 배포 기록](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 이전 기능 검수 기준 `e2ad7c4`는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 범위만 따른다.
+- 기준선: 핵심 DID 공개 목업 `bec3257` 이후 v3.2 및 G09-S 변경. 원 인계 기준선은 [snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)의 `k-tour-id-app/`이며 현재 시작점은 위 main/Harvey 경로다. `996119f`·`a45400f`·core app `5233816`와 이전 공개 source `3dc392b`는 각각의 후보 증거다. 이전 공개 증거는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md), 당시 문서 대조·선택 로컬 회귀는 [9월 11일 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 `52f376e`·중간 `f8960b4`·`abd0f83`과 기준선 `564823e`의 공개 결과는 [9월 11일 배포 기록](./FINAL_JOURNEY_QA_2026-09-11.md)에 보존한다. 이전 기능 검수 기준 `e2ad7c4`는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)의 범위만 따른다.
 - 아래 `B/`는 이 기준선의 `k-tour-id-app/features/ondo/`다. 루트의 오래된 앱이나 배포에서 제외된 legacy route를 현재 증거로 세지 않는다.
 - `코드 존재`는 읽기 검토 결과다. 각 flow의 실제 브라우저 정상·경계·mobile 검수 통과는 별도 기록이 필요하다.
 - `구현중`은 이번 turn의 새 작업이다. 결과를 보지 않고 완료로 갱신하지 않는다.
