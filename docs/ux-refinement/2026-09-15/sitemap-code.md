@@ -190,7 +190,7 @@
 | CODE-08 | real CX/OpenDID/AI-Sui/OmniOne 통합과 local Labs를 구분 완료 | 신규 연결 비금전 UX08 **보류 유지**, 실제 연동은 개발자 범위 |
 | CODE-09 | Busan/저장 café 보존은 실제 PASS, 임시 nation preview≠맥락 손실 | exact camera/query/list-scroll 미측정; UX04 재설계 보류 |
 | CODE-10 | 최초/추가 검수 모두 visible local sample UI 사용, 금융·계정 state injection 없음 | review=0/실제 provider/미방문 분기는 별도 미검수 |
-| CODE-11 | 승인된 Onion 실매장 사진만 적용, manifest로 권리/출처 구분 | absent/failed 구분 유지, 사진·추천 추가≠서비스 권한 |
+| CODE-11 | 초기 Onion-only 게이트 이후 **어니언 안국·학림다방 2개 실제 사진 승인/반영**. 학림 콘텐츠 1곳 추가로 research 25곳; 최신 media manifest·시각 검수·릴리스가 근거 | absent/failed·권리/출처/크롭 구분 유지. 기존 서비스 등록 27곳 불변, 학림 사진/추천 추가≠결제·예약·혜택 capability |
 | CODE-12 | legacy enum/guarded-empty는 source census 어휘로만 유지 | 도달·화면·구조 노드로 과장하지 않음 |
 
 **원 코드 지도의 의미 정정:** `VISIT_STAMP`는 결제로 9→10을 자동 만드는 단계가 아니다. B037은 결제 후 0개와 별도 Check this visit을 보여준다. `visit-stamp-receipt-b.tsx:84–105`에서 명시적 로컬 확인 후 canonical venue 조건과 unique evidence 검사를 거쳐서만 기록된다. 실패/duplicate/unavailable을 보존한다. 역사 FL-004의 stamp milestone 문구를 현재 자동 동작처럼 읽지 않는다. JSON 노드와 내부 grouped transition에도 이 교정을 반영했다.

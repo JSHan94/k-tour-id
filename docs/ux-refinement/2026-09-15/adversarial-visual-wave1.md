@@ -1,6 +1,6 @@
 # Wave 1 — independent mobile visual review
 
-상태: **세 번째 artifact 확인 — 사진/CTA/하단 배경/canonical 스크롤 해결; editorial의 펼친 출처 상태 복귀 1건 추가 수정 대기**. 대상은 root가 고정한 `http://127.0.0.1:3315`이며, 최신 확인 HTML의 앱 chunk는 `page-4830b1d8d0c4bd61.js`다. 아래 결과를 이후 코드/배포에 자동 상속하지 않는다. 앱 파일은 이 검토자가 수정하지 않았다. 각 artifact의 결과를 다음 절에서 구분한다.
+상태: **한정한 시각 이슈 해결 — 사진 비율/CTA/하단 배경/canonical 스크롤 및 editorial의 펼친 출처·정확한 스크롤 복귀 확인 완료**. 대상은 root가 고정한 `http://127.0.0.1:3315`이며, 최종 후속 확인 HTML의 앱 chunk는 `page-0b1f4b74cde440be.js`다. 최종 artifact에서 다시 확인한 범위는 §8의 editorial 복귀·다른 장소 비상속·footer이며, 사진 및 나머지 시각 결과의 artifact는 각 절에 구분한다. 아래 결과를 이후 코드/배포에 자동 상속하지 않는다. 앱 파일은 이 검토자가 수정하지 않았다.
 
 [시각 역할 합의 범위](ux-review-visual.md#6-조정-라운드-a--시각-역할의-명시적-표결)와 [콘텐츠 게이트](content-research.md#7-후속-독립-콘텐츠-게이트)를 기준으로 한다. 거래 회계/원 주문/환불 검수는 별도 역할이며 이 문서의 PASS로 대체하지 않는다.
 
@@ -65,7 +65,7 @@ Playwright Chromium의 모바일 에뮬레이션을 사용했다. JA/dark는 320
 
 브라우저 pageerror **0건**, 의도한 어니언 파일 abort **2건**(카드/상세), 그 밖의 requestfailed **0건**, 보호용 차단에 걸린 write request **0건**. 실제 Safari/iPhone/Android나 다른 motion/도시 전체 조합까지 검증했다고 주장하지 않는다. 모든 검토 브라우저를 종료했다.
 
-증거: [observations.json](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/observations.json), [runtime-summary.json](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/runtime-summary.json). 이 ignored QA 폴더를 원본 evidence로 사용하며 공개 배포 자산이 아니다.
+증거: observations.json (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/observations.json`), runtime-summary.json (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/runtime-summary.json`). 이 ignored QA 폴더를 원본 evidence로 사용하며 공개 배포 자산이 아니다.
 
 ## 5. 수정 재검수 항목과 역할 승인
 
@@ -82,7 +82,7 @@ Playwright Chromium의 모바일 에뮬레이션을 사용했다. JA/dark는 320
 - 일반 내부 scrollTop78 뒤: y494.875, 높이50, 두 버튼 모두 hit-test true.
 - 같은 현상이 unsupported sample peek에서도 관찰됐다. review=0과 390×844 light에서는 첫 화면에 보였다.
 
-[밀린 상태](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/12-ja320-dark-supported-settled-top.png) → [정상 스크롤로 접근한 상태](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/13-ja320-dark-supported-settled-cta.png). 단순 CTA 존재/visible matcher만으로 첫 화면 가시성을 검증하면 놓칠 수 있다.
+밀린 상태 (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/12-ja320-dark-supported-settled-top.png`) → 정상 스크롤로 접근한 상태 (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1/13-ja320-dark-supported-settled-cta.png`). 단순 CTA 존재/visible matcher만으로 첫 화면 가시성을 검증하면 놓칠 수 있다.
 
 root의 **기존 스크롤 소유자 안 sticky action row** 제안을 시각 역할에서 조건부 승인했다. canonical/editorial 모두 정확히 2CTA를 유지하고 `bottom:0`, 닫기보다 낮은 레이어, 불투명 theme 표면을 사용한다. 새 portal/스크롤 소유자나 sample 정보 삭제는 승인하지 않는다. 넓은 화면에서 정상 흐름이 변하지 않으면 별도 모바일 분기 없이 공유할 수 있다.
 
@@ -103,7 +103,7 @@ root가 별도로 제시한 MyKorea 정리를 **조건부 승인**했다. 제목
 
 ## 6. 두 번째 artifact 재검수 — `page-9b5879f4ec0dd6ea.js`
 
-root의 새 standalone artifact를 같은 로컬 주소에서 검토했다. HTML GET으로 위 page chunk를 확인했다. 증거 폴더는 첫 검수와 분리한 [최종 observations.json](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-final/observations.json), [최종 runtime-summary.json](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-final/runtime-summary.json)이다. 이 시점의 18개 단계 캡처를 모두 시각 확인했으며, 18개 독립 E2E PASS라고 세지 않는다.
+root의 새 standalone artifact를 같은 로컬 주소에서 검토했다. HTML GET으로 위 page chunk를 확인했다. 증거 폴더는 첫 검수와 분리한 최종 observations.json (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-final/observations.json`), 최종 runtime-summary.json (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-final/runtime-summary.json`)이다. 이 시점의 18개 단계 캡처를 모두 시각 확인했으며, 18개 독립 E2E PASS라고 세지 않는다.
 
 ### 해결을 확인한 범위
 
@@ -131,14 +131,14 @@ root의 새 standalone artifact를 같은 로컬 주소에서 검토했다. HTML
 
 ## 7. 세 번째 artifact 제한 재검수 — `page-4830b1d8d0c4bd61.js`
 
-이번에는 두 남은 caveat와 desktop smoke만 실행했다. HTML의 page chunk를 다시 확인했다. [closeout observations](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-closeout/observations.json), [closeout summary](../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-closeout/runtime-summary.json)에 첫/복귀 scroll과 geometry를 기록했다. pageerror/requestfailed/write request는 모두 0건이며 브라우저를 종료했다.
+이번에는 두 남은 caveat와 desktop smoke만 실행했다. HTML의 page chunk를 다시 확인했다. closeout observations (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-closeout/observations.json`), closeout summary (`../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-closeout/runtime-summary.json`)에 첫/복귀 scroll과 geometry를 기록했다. pageerror/requestfailed/write request는 모두 0건이며 브라우저를 종료했다.
 
 - **하단 배경 해결:** 320×480 첫 화면에서 row는 y397–471, peek bottom472다. 하단 안쪽 hit-test가 row에 속해 기존 padding의 sample 선이 더 이상 비치지 않는다. 두 CTA는 여전히131×52, y405–457로 모두 눌린다. 강제 색상도 불투명 상태를 유지했다.
 - **canonical 내부 스크롤 해결:** 본문 마지막 버튼에서 서비스에 진입하기 직전 scrollTop150, 같은 장소 복귀 후150으로 일치한다. focus는 서비스 버튼으로 돌아왔고 본문 말단은 계속 접근 가능하다.
 - **desktop 유지:** 1440×1000 light 비터치 환경에서 peek는460×408.59, 두 CTA209×52가 첫 화면에 보인다. 추가로 늘어난 부분은 실제 footer padding이며 큰 빈 action 띠는 관찰되지 않았다.
-- **editorial 펼침 상태 반례:** 제주 peek의 출처 details를 펼친 뒤 scrollTop33에서 서비스로 이동했다. 복귀 때 details가 닫혀 content height386→356으로 줄고 scroll은 최대12로 clamp된다. 같은 장소와 CTA는 유지되지만 **펼친 설명과 정확한 읽던 위치는 아직 보존되지 않는다**. 원인이 scroll capture 실패라고 단정하지 않고 native details의 remount 상태 소실과 구분한다.
+- **editorial 펼침 상태 반례(이 artifact 당시, §8에서 해결):** 제주 peek의 출처 details를 펼친 뒤 scrollTop33에서 서비스로 이동했다. 복귀 때 details가 닫혀 content height386→356으로 줄고 scroll은 최대12로 clamp된다. 같은 장소와 CTA는 유지되지만 **펼친 설명과 정확한 읽던 위치는 아직 보존되지 않는다**. 원인이 scroll capture 실패라고 단정하지 않고 native details의 remount 상태 소실과 구분한다.
 
-root가 제안한 기존 동일-장소 snapshot의 `expandedDisclosures`(선택적 testid 배열) 추가를 시각 역할에서 조건부 승인했다. 기존 기록된 scroll container 안의 named details만 수집하고, 같은 place/container에서 대응하는 disclosure 상태를 복원한 뒤 scrollTop을 적용한다. 알 수 없는 ID는 무시하며 HTML/내용·새 권한·영속 저장소를 추가하지 않는다. 다음 검수는 출처 open 유지·33→33 복귀와 다른 장소에 상태가 번지지 않는지로 한정한다. 이 수정의 PASS는 아직 기록하지 않는다.
+root가 제안한 기존 동일-장소 snapshot의 `expandedDisclosures`(선택적 testid 배열) 추가를 시각 역할에서 조건부 승인했다. 기존 기록된 scroll container 안의 named details만 수집하고, 같은 place/container에서 대응하는 disclosure 상태를 복원한 뒤 scrollTop을 적용한다. 알 수 없는 ID는 무시하며 HTML/내용·새 권한·영속 저장소를 추가하지 않는다. 이때 후속 검수를 출처 open 유지·33→33 복귀와 다른 장소에 상태가 번지지 않는지로 한정했다. 최종 artifact의 실제 결과는 §8에 별도로 기록한다.
 
 ### 공유 가능한 작은 화면 증거
 
@@ -152,3 +152,18 @@ root가 제안한 기존 동일-장소 snapshot의 `expandedDisclosures`(선택�
 | EN1440 light desktop footer | [desktop](evidence/04-en1440-final-footer.png) |
 
 [media-manifest.json](media-manifest.json)의 실제 승인/로컬 전달 수는 **2건**(어니언·학림)으로 바로잡았다. 두 로컬 파일의 SHA-256 일치도 확인했다. generic runtime pending 대신 §6의 JA/EN 로컬 crop/load/credit 검증 범위를 기록했다. KO 실제 UI, 실제 기기/원격 production, 학림 파일만의 abort를 별도로 수행했다고 쓰지 않았으며, 공통 오류 컴포넌트는 어니언 실제 abort로 확인했음을 구분했다.
+
+
+## 8. 최종 editorial 복귀 후속 검수 — 해결
+
+최종 확인 chunk는 `page-0b1f4b74cde440be.js`다. Chromium 한 개, JA dark 320×480, DPR1, touch/mobile, reduced-motion 설정으로 확인했다. 기존 장치 언어·테마·설정 완료 preference만 준비했으며, 자격증명/성공 거래를 주입하거나 provider 요청을 수행하지 않았다.
+
+- **같은 장소 출처/위치 보존 PASS:** 제주 해녀의 부엌 북촌점의 출처를 펼치고 기존 peek 안에서 실제 wheel로 scrollTop33에 위치시킨 뒤, 화면에 보이는 서비스 버튼을 touchscreen으로 눌렀다. 원 장소 서비스 화면을 거쳐 돌아오면 출처 `open=true`, scrollTop **33→33**이다. 별도 실제 tap에서는 **42→42**도 유지했다.
+- **다른 장소 비상속 PASS:** 같은 문서에서 peek 닫기→목록→성산일출봉 순서로 이동했다. 다른 장소는 출처 `open=false`, scrollTop0이며 `performance.timeOrigin`이 같았다. reload로 상태를 지운 검사가 아니다.
+- **footer 빠른 확인 PASS:** 최종 320×480 화면에서 두 CTA와 불투명 하단 배경이 유지된다. 최종 복귀 캡처를 직접 확인했다.
+- **검사 도구 구분:** 첫 자동 `locator.click()`은 클릭 전 자동 스크롤을33→42로 이동시켰다. 앱은 실제 진입 시점의42를 정확히 복원했다. 이를 앱 회귀로 기록하지 않고, 보이는 버튼의 실제 touch tap으로33→33을 재확인했다.
+- **안전/종료:** pageerror0. 이번 확인은 실제 기기/원격 production/결제·신원 provider 검수가 아니다. 브라우저와 context는 모두 종료했다.
+
+최종 공개 증거: [JA320×480 editorial 출처 펼침·33px 복귀](evidence/05-ja320x480-editorial-final-return.png). §7의 4개와 이 1개는 단계별 캡처이며, 5개의 독립 테스트 통과 수로 합산하지 않는다. 캡처는 CSS scale이고 실제 계정/문서/결제 PII를 포함하지 않는다.
+
+로컬 상세 증거(ignored, GitHub 링크 아님): `../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-editorial-final/runtime-summary.json`, `../../../k-tour-id-app/artifacts/qa/ux-audit/adversarial-visual-wave1-editorial-final/other-place-no-inheritance.png`. 공개 검수 문서는 위 `evidence/` 파일만 이미지 링크로 사용한다.

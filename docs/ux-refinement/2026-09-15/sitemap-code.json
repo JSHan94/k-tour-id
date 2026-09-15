@@ -12976,7 +12976,7 @@
         "k-tour-id-app/features/ondo/map/researched-food-b.ts:1",
         "k-tour-id-app/features/ondo/commerce-b/place-service-registry-b.ts:21"
       ],
-      "decision": "Approved exact licensed Onion photo only in this wave; media-manifest.json governs. Absent/failed differ; media never grants services.",
+      "decision": "The initial Onion-only gate is historical. Final approved content has two exact real photographs (Onion Anguk and Hakrim Dabang); Hakrim adds one content-only recommendation, for 25 research places. Existing 27 service-capability entries are unchanged. Latest media-manifest.json, visual review and RELEASE.md govern rights/crop/runtime boundaries. Absent/failed differ; media never grants payment, reservation or benefit authority.",
       "owner": "content reviewer",
       "status": "RECONCILED_APPROVED_MEDIA_ONLY_CAPABILITIES_UNCHANGED"
     },

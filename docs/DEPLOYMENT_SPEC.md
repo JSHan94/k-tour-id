@@ -1,6 +1,6 @@
 # K-Tour ID Deployment Spec
 
-**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 배포와 두 브랜치의 동일 소스 동기화 상태는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에서 확인한다. Production Ready이며 앱 코드·배포 및 브랜치 동기화 검수 기준은 `4cb1964`다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 앱 코드 기준 `505e475`의 Production과 두 브랜치 동기화는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md), 9/15 UI 계약·검수와 보류 사항은 [UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)를 따른다. 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
 
 상태: `v3.3 · 목업 ↔ 개발 인계 정합화 · 2026-09-11 · 실제 연결은 개발자 구현 범위`
 
@@ -186,7 +186,7 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 
 분위기 기여의 제안 API는 `POST /places/{id}/signals` 및 `GET /places/{id}/signals/{operationId}`다 (BE-11, media를 실제 채택하면 BE-10). 검증된 최소 proof receipt·태그·원 action digest → accepted/pending/duplicate/rejected와 비식별 evidenceRef. 신원 확인은 물리적 방문 증명이 아니므로 방문 판정은 별도 정책으로 검증한다. 새 public upload/게시를 연결할 때 현재 메모/사진을 몰래 포함하지 말고 대상·공개 범위·보존에 대한 별도 동의를 설계한다. 현 샘플의 `account:local`·venue 기반 evidence key는 서버 subject/방문 검증을 대신하지 않는다.
 
-**9월 15일 UX 후보 계약:** 등록된 샘플 매장의 지도 미리보기는 혜택/상세 두 액션으로 연결하고, 미지원 매장은 기존 상세/길찾기를 유지한다. 길찾기는 전체 상세에서도 제공한다. 사진·디렉터리 등재·신규 리서치만으로 예약/결제 capability를 부여하지 않는다. 사진은 실제 매장 사진과 예시를 구분하고 로컬 자산·번역 alt·출처/라이선스·오류 대체 표시를 함께 전달한다. 실행 판정은 [UX 검수 기록](./ux-refinement/2026-09-15/README.md)을 따른다.
+**9월 15일 목업 UX 계약:** 등록된 샘플 매장의 지도 미리보기는 혜택/상세 두 액션으로 연결하고, 미지원 매장은 기존 상세/길찾기를 유지한다. 길찾기는 전체 상세에서도 제공한다. 같은 장소의 서비스 복귀는 펼친 설명·스크롤을 함께 복원하며 다른 장소에 전파하지 않는다. 사진·디렉터리 등재·신규 리서치만으로 예약/결제 capability를 부여하지 않는다. 사진은 실제 매장 사진과 예시를 구분하고 로컬 자산·번역 alt·출처/라이선스·오류 대체 표시를 함께 전달한다. 실행 판정은 [UX 검수 기록](./ux-refinement/2026-09-15/README.md)을 따른다.
 
 ### G04 계정·저장·My Korea·공개 프로필 — FL-010/011/015
 
@@ -259,7 +259,7 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 
 #### G09-S · 명시적 스테이블코인 충전 계약
 
-**9월 15일 UX 후보 계약:** funding 진입에 `purpose`(충전/결제수단 선택)와 원 매장 문맥을 전달한다. 충전에서는 기존 잔액을 입금 수단으로 제시하지 않는다. Wallet에서 완료하면 잔액으로, 주문에서 완료하면 같은 매장의 주문 검토로 돌아간다. 이미 반영된 완료 영수증은 새 수단 선택을 가리지 않지만 미확정 작업은 동일 operation으로 복구한다. 완료 화면을 닫거나 새 수단을 선택해도 credit를 재적용하지 않는다. 충전 완료는 구매 동의·매입이 아니다. 이 필드는 화면 복귀용이며 서버 지급 권한이 아니다.
+**9월 15일 목업 UX 계약:** funding 진입에 `purpose`(충전/결제수단 선택)와 원 매장 문맥을 전달한다. 충전에서는 기존 잔액을 입금 수단으로 제시하지 않는다. Wallet에서 완료하면 잔액으로, 주문에서 완료하면 같은 매장의 주문 검토로 돌아간다. 이미 반영된 완료 영수증은 새 수단 선택을 가리지 않지만 미확정 작업은 동일 operation으로 복구한다. 완료 화면을 닫거나 새 수단을 선택해도 credit를 재적용하지 않는다. 충전 완료는 구매 동의·매입이 아니다. 이 필드는 화면 복귀용이며 서버 지급 권한이 아니다.
 
 이번 변경은 generic USD 전환에 이름만 붙이는 작업이 아니다. `USDC/USDT 선택 → sample Sui signer(zkLogin 또는 기존 wallet) → 고정 견적 → 명시적 승인 → source 제출/확인 → routing → destination 확인 → 샘플 잔액/영수증`을 동일 Wallet 맥락에서 연결한다. 심사용 fixture는 실제 OAuth·지갑 서명창·token 전송을 호출하지 않는다.
 
@@ -287,7 +287,7 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 
 샘플의 매입 성공은 최종 자격 검사·원장·혜택·기기 저장이 모두 성공한 뒤 한 번에 publish한다. 실제 processor에서는 이미 확정된 capture를 나중의 자격 변화만으로 “차감 없음”으로 되돌려 표시하면 안 된다. 서버 사전 정책 검사와 확정 거래 대사·필요한 보상/환불 상태를 별도로 구현한다.
 
-**9월 15일 UX 후보 계약:** checkout/Wallet 모두 `CommerceRefundsB`의 하나의 환불 패널로 부분 금액·잔여 전액·실패 재시도·unknown 조회를 제공한다. 중복된 legacy 전액환불 버튼을 별도 연결하지 않는다. 구매 내역은 ‘구매/환불’이며 모든 입출금 원장을 뜻하지 않는다. 결제 자격 확인의 완료 문구는 기존 동의한 같은 결제를 이어간다고 명시하며, quote/대상/금액이 달라지면 재검토·재동의한다. Account/Person/Age/Payment KYC와 방문 기록은 여전히 별개다.
+**9월 15일 목업 UX 계약:** checkout/Wallet 모두 `CommerceRefundsB`의 하나의 환불 패널로 부분 금액·잔여 전액·실패 재시도·unknown 조회를 제공한다. 중복된 legacy 전액환불 버튼을 별도 연결하지 않는다. 구매 내역은 ‘구매/환불’이며 모든 입출금 원장을 뜻하지 않는다. My Korea에는 선택한 주문의 장소·원결제·확정 환불 ID를 연결하고 미확정/실패·타 주문 환불을 포함하지 않는다. 결제 자격 확인의 완료 문구는 기존 동의한 같은 결제를 이어간다고 명시하며, quote/대상/금액이 달라지면 재검토·재동의한다. Account/Person/Age/Payment KYC와 방문 기록은 여전히 별개다.
 
 `CommerceOrderContextB`는 orderId/venueId/offerId/grossKrw/benefitKrw/operationId/receiptId와 자격 귀속을 묶는다. legacy 첫 샘플 주문의 고정 ID는 호환용이며 이후 주문은 고유 ID를 사용한다. 기존 orderId의 다른 매장·offer·금액 바인딩과 다른 주문의 operationId/receiptId 재사용을 거절한다. payment pending/unknown 중 내역 전환으로 hold를 버리지 않는다. 과거 주문 선택/재결제/부분환불은 다른 주문을 덮어쓰거나 공통 funding credit를 복제하지 않으며, 환불 사용액·혜택은 원 발급에 귀속한다.
 

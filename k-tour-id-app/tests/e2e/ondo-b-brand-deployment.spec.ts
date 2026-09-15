@@ -111,17 +111,22 @@ test.describe("K-Tour ID unified deployment brand", () => {
     })
   }
 
-  test("an allowed deployment host owns its canonical and social image URLs", async ({ request }) => {
+  test("an allowed deployment host owns its canonical and social image URLs", async ({ request, baseURL }) => {
+    const target = new URL(baseURL!)
+    const local = ["localhost", "127.0.0.1"].includes(target.hostname)
+    // Only the local server receives our simulated proxy header unchanged.
+    // At Vercel the edge owns it; inspect the actual deployment origin there.
+    const expectedOrigin = local ? "https://k-tour-id.vercel.app" : target.origin
     const response = await request.get("/", {
-      headers: { "x-forwarded-host": "k-tour-id.vercel.app" },
+      ...(local ? { headers: { "x-forwarded-host": "k-tour-id.vercel.app" } } : {}),
     })
     expect(response.ok()).toBeTruthy()
     const html = await response.text()
-    expect(html).toContain('property="og:image" content="https://k-tour-id.vercel.app/og-ktour-food-v2.png"')
-    expect(html).toContain('name="twitter:image" content="https://k-tour-id.vercel.app/og-ktour-food-v2.png"')
+    expect(html).toContain(`property="og:image" content="${expectedOrigin}/og-ktour-food-v2.png"`)
+    expect(html).toContain(`name="twitter:image" content="${expectedOrigin}/og-ktour-food-v2.png"`)
     const canonical = html.match(/rel="canonical" href="([^"]+)"/)?.[1]
     expect(canonical).toBeTruthy()
-    expect(new URL(canonical!).origin).toBe("https://k-tour-id.vercel.app")
+    expect(new URL(canonical!).origin).toBe(expectedOrigin)
     expect(new URL(canonical!).pathname).toBe("/")
   })
 })

@@ -23,7 +23,7 @@
 
 **위 세 문서가 현행 인계 정본이다.** `DEVELOPMENT_SPEC.md`, 예전 traceability·Sui 브리프·실행팩은 배경/역사적 요구 자료다. 옛 독립 route나 과거 Sui 프로그램 조건을 현재 앱의 완료/필수 조건으로 그대로 이식하지 않는다. 범위 충돌은 DEPLOYMENT_SPEC §1.1을 따른다.
 
-실제 앱은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. `main`과 인계 브랜치는 검수 기준 `4cb1964`에서 같은 소스로 확인했다. 이후 문서 전용 커밋도 두 브랜치에 동일 반영하며 앱 코드 검수 기준과 구분한다. 예전 로컬 checkout과 새 문서를 혼용하지 않는다.
+실제 앱은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. `main`과 인계 브랜치는 앱 검수 기준 `505e475`에서 같은 소스로 확인했다. 이후 결과 문서·테스트만 바꾼 커밋도 두 브랜치에 동일 반영하며 앱 코드 검수 기준과 구분한다. 예전 로컬 checkout과 새 문서를 혼용하지 않는다.
 
 ## 2. 실행 화면과 구현 상태
 

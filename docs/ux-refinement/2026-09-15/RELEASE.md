@@ -1,6 +1,8 @@
 # K-Tour ID · 여정 UX 정리
 
-2026-09-15 · 브랜치 `ux/flow-refinement-20260915` · 배포 판정 대기. 기준선 `b9cdc42`.
+2026-09-15 · **운영 배포·한정 여정 검수 완료, UX-08 결정 대기**. 앱 소스 `505e475` · 기준선 `b9cdc42` · 작업 브랜치 `ux/flow-refinement-20260915`.
+
+[운영 앱](https://ktour-id.vercel.app) · [개발자 시작 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [배포 ID·소스 기록](../../KTOUR_PRODUCTION_HANDOFF_2026-09-15.md).
 
 ## 사용자에게 달라진 흐름
 
@@ -22,9 +24,16 @@
 
 로컬 앱 artifact `page-0b1f4b74cde440be.js`: 전체 계약 **862/862**(10.9초), production build/typecheck/client scan, HTTP 공개 자산29개·차단경로41개·build asset19개 통과. 핵심 여정 **14/14**(98.0초, workers1, 재시도0) 통과: 충전 문맥, 부분/전액 환불, My Korea 실제 주문 참조·정확한 장소 복귀, 사진 로드/실패, 320×480/568 CTA·포커스·스크롤, 펼친 제주 정보 복귀. 모바일390/데스크톱1440 프로젝트와 테스트별 강제 작은 viewport를 구분한다.
 
-기존 온보딩·After 19·스테이블코인/ID/거래 회귀와 같은 Git SHA Preview/Production은 확인 중이다. 중간 빌드 결과를 새 빌드의 PASS로 이월하지 않는다.
+| 실행 환경 | 확인한 결과 |
+|---|---|
+| 같은 로컬 앱의 기존 여정 | 모바일 프로젝트 **33 PASS / 1 의도된 desktop 전용 skip**(275.7초, workers2, 재시도0). 선택형 온보딩 EN/KO/JA·320–430/가로 화면·저장 실패/재시도, 매장/지도 After 19 복귀, USDC/USDT 서명·충전·ID·결제·환불·실패·중복 처리, 예약 취소 미확정 복구, Labs 경계. 별도 desktop After 19 **1/1 PASS**(22.6초). |
+| Git Preview `505e475` | 핵심 모바일 여정 **7/7 PASS**. 브랜드 최초 **4 PASS / 1 하네스 불일치**: Vercel edge가 proxy header를 소유하는데 로컬 header 주입 결과를 기대했다. 앱 수정 없이 local/remote 검사를 분리하고 브랜드 **5/5 PASS**(11.7초). HTTP 자산29/차단41/build19 통과. |
+| 운영 대표 주소 `505e475` | 모바일·데스크톱 핵심 여정14 + 브랜드10 = **24/24 PASS**(87.0초, workers2, 재시도0). HTTP 자산29/차단41/build19, redirect308·지도 query7 통과. 실제 배포에서 사진 로드/오류, 주문·충전 복귀, 부분/전액 환불·내역, 작은 화면 CTA/펼침/스크롤, metadata/흑백 브랜딩을 확인했다. |
+| 최종 문서 | 인계 정합성 계약9/9, 후속 전체 계약862/862(11.3초), 문서20개의 Git 추적 상대 링크209개·JSON·git diff 검사 통과. source/node 수와 실제 실행 수를 구분했다. |
 
-중간 검수에서 작은 화면의 CTA 가림, 사진 비율, My Korea의 고정 영수증/매장명, 기존 구매가 있는 동안의 빈 내역 안내를 발견해 수정했다. 병렬 브라우저 과부하 상황의 timeout은 실패 실행으로 남겼으며 단독 재검사와 구분한다. [시각 검수](./adversarial-visual-wave1.md), [거래 검수](./adversarial-root-wave2.md).
+위 결과를 서로 합산해 전체 상태 조합 완료라고 표시하지 않는다. 각 viewport는 Chromium 에뮬레이션이며 실제 휴대전화 검수가 아니다. 앱 코드는 `505e475`에서 고정했고 후속 결과 문서와 배포 환경 구분 테스트만 main/Harvey에 동일 반영한다.
+
+중간 검수에서 작은 화면의 CTA 가림, 사진 비율, My Korea의 고정 영수증/매장명, 기존 구매가 있는 동안의 빈 내역 안내를 발견해 수정했다. 다수 브라우저 동시 실행 중 timeout이 발생한 실행은 실패/중단 기록으로 남겼다. 정확한 원인을 부하로 단정하지 않았고, 단독 재현에서는 발생하지 않았으며 최종 최대2worker 검사에서 통과했다. [시각 검수](./adversarial-visual-wave1.md), [거래 검수](./adversarial-root-wave2.md).
 
 ## 남은 범위
 

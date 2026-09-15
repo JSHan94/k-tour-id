@@ -44,7 +44,7 @@
 
 ## 5. 참고 리소스
 
-- **앱·소스:** [K-Tour ID](https://ktour-id.vercel.app) · [Harvey 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [main](https://github.com/woogieboogie-jl/k-tour-id/tree/main). `handoff/harvey-20260914`의 `k-tour-id-app/`에서 시작합니다. 운영 배포와 브랜치 동기화를 확인했습니다. 앱 코드·배포 검수 기준은 `4cb1964`이며 상세 결과는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)을 참고합니다. 설치·실행은 [README](../README.md#run-the-handoff)를 참고합니다.
+- **앱·소스:** [K-Tour ID](https://ktour-id.vercel.app) · [Harvey 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [main](https://github.com/woogieboogie-jl/k-tour-id/tree/main). `handoff/harvey-20260914`의 `k-tour-id-app/`에서 시작합니다. 앱 코드 기준 `505e475`의 운영 배포와 브랜치 동기화를 확인했으며 후속 결과 문서·테스트 수정과 구분합니다. [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)과 [README 실행 안내](../README.md#run-the-handoff)를 참고합니다.
 - **별도 실험:** Sumsub Sandbox는 별도 feature 브랜치·Preview이며 이 릴리스에 포함하지 않습니다. 네 기술의 필수 개발을 대체하지 않습니다. 경로와 검증 한계는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에 정리합니다.
 - **구현 상세:** [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) → [기존 1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). 이번 네 기술의 범위·실행 순서는 추가 명세가 우선합니다. API는 신규 구현 제안이며 공급자 공식 규격이 아닙니다.
 - **OpenDID:** [공식 아키텍처](https://github.com/OmniOneID/did-doc-architecture) · [공식 릴리스](https://github.com/OmniOneID/did-release) — 서버·지갑 구성과 설치 자료.
