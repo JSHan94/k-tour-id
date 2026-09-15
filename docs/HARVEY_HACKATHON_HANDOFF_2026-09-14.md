@@ -50,4 +50,4 @@
 - **OpenDID:** [공식 아키텍처](https://github.com/OmniOneID/did-doc-architecture) · [공식 릴리스](https://github.com/OmniOneID/did-release) — 서버·지갑 구성과 설치 자료.
 - **해커톤·CX·Chain:** [공식 해커톤 안내](https://opendid.org/hackathon/2026/) — 가이드북·기술 설명회·제출 자료. 가이드북의 과제 안내 p5·8, 모바일 신분증/CX p19–26, Chain p33–40을 참고합니다.
 - **Sui:** [지원 프로그램 안내](https://mystenlabs.notion.site/2026-AI-1-1-Sui-2c76d9dcb4e980c4ba47c9c81dd1564a) · [TypeScript SDK](https://sdk.mystenlabs.com/sui) · [zkLogin](https://docs.sui.io/sui-stack/zklogin-integration/zklogin) · [PTB](https://docs.sui.io/develop/transactions/ptbs/prog-txn-blocks). 상세 요건과 제출 증거는 추가 명세에 정리합니다.
-- **전체 제품 참고:** [Deployment Spec](./DEPLOYMENT_SPEC.md) — 이번 최소 연동 이후의 전체 기능·백엔드 요구사항.
+- **전체 제품 참고:** [Deployment Spec](./DEPLOYMENT_SPEC.md) — 이번 최소 연동 이후의 전체 기능·백엔드 요구사항. [9/15 UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)에는 매장/충전 복귀·환불 내역·사진 변경과 검수/배포 상태를 정리했습니다. 금융 목업은 위 비금전 Sui 실행 흐름을 대신하지 않습니다.

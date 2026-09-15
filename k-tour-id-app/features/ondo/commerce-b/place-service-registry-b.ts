@@ -23,7 +23,35 @@ export type CommercePlaceB = Readonly<{
  * independently verified capabilities; a directory listing never grants them.
  * Keep source ids intact: editorial/research is not a canonical license record.
  */
-const researchPlaces: CommercePlaceB[] = RESEARCHED_FOOD_B.map(place => {
+// Preserve the original 24 walkthroughs explicitly. Adding editorial content
+// or media must never implicitly create payment, benefit or reservation rights.
+const RESEARCH_WALKTHROUGH_IDS_B: ReadonlySet<string> = new Set([
+  "research-seoul-zest",
+  "research-seoul-bar-cham",
+  "research-seoul-gosari-express",
+  "research-seoul-3rd-samgyetang",
+  "research-seoul-onion-anguk",
+  "research-seoul-london-bagel-dosan",
+  "research-seoul-okdongsik",
+  "research-seoul-geumdwaeji-sikdang",
+  "research-busan-moemiljip",
+  "research-busan-songheonjip",
+  "research-busan-momos-yeongdo",
+  "research-busan-waveon-coffee",
+  "research-busan-sour-yeongdo",
+  "research-busan-living-room-bar",
+  "research-busan-hapcheon-gukbapjip",
+  "research-busan-haeundae-amso-galbijip",
+  "research-jeju-woojin-haejangguk",
+  "research-jeju-gozip-dolwurock-jungmun",
+  "research-jeju-azulejo",
+  "research-jeju-moasi",
+  "research-jeju-delmoondo-hamdeok",
+  "research-jeju-magpie-tapdong",
+  "research-jeju-oneunjeong-gimbap",
+  "research-jeju-yaksuteo-olle-market",
+])
+const researchPlaces: CommercePlaceB[] = RESEARCHED_FOOD_B.filter(place => RESEARCH_WALKTHROUGH_IDS_B.has(place.id)).map(place => {
   const grossKrw = place.kind === "cafe" ? 12_000 : place.kind === "bar" ? 28_000 : 22_000
   return Object.freeze({
     id: place.id, originKind: "research" as const, cityId: place.city,

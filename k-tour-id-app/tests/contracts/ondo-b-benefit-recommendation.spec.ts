@@ -43,7 +43,7 @@ test("B-BENEFIT-003 consumer offer exposes recommendation decisions without outc
   for (const testId of ["commerce-benefit-eligibility", "benefit-accept", "benefit-decline"]) {
     expect(commerce).toContain(`data-testid=\"${testId}\"`)
   }
-  expect(commerce).toContain("Recommended for this meal")
+  expect(commerce).toContain("Available for this offer")
   expect(commerce).toContain("no AI or provider call")
   expect(commerce).toContain("stableCommerceBenefitPolicyB(")
   expect(commerce).toContain("data-benefit-policy")

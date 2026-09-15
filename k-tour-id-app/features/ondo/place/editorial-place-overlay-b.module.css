@@ -71,7 +71,11 @@
 .recordSummary[open] > summary svg { transform: rotate(90deg); }
 .recordSummary p { margin: 0; padding: 2px 0 10px; color: #666; font-size: 12px; line-height: 1.45; }
 .peekActions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-.peekActions a, .peekActions button { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; border-radius: 15px; font: inherit; font-size: 13px; font-weight: 760; text-decoration: none; }
+.peekActions[data-peek-has-service="true"] button:last-child { border-color: var(--ondo-line, #dedede); background: var(--ondo-surface-raised, #fff); color: var(--ondo-ink, #171717); box-shadow: none; }
+.peek { scroll-padding-block: 52px 88px; }
+.peekActions { position: sticky; bottom: -14px; z-index: 2; padding: 8px 0 14px; background: var(--ondo-surface-raised, #fff); }
+@media (forced-colors: active) { .peekActions { background: Canvas; } }
+.peekActions a, .peekActions button { display: flex; min-height: 52px; align-items: center; justify-content: center; gap: 7px; border-radius: 15px; font: inherit; font-size: 13px; font-weight: 760; text-decoration: none; }
 .peekActions a { border: 1px solid #dad7d1; background: #fff; color: #22211f; }
 .peekActions button { border: 1px solid #20201e; background: #20201e; color: #fff; box-shadow: 0 10px 22px rgb(34 33 31 / 14%); }
 @keyframes editorialPeekEnter { from { opacity: .78; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }

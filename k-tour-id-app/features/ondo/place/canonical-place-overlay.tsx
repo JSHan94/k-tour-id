@@ -42,7 +42,7 @@ import { FoodPhotoB } from "../map/food-photo-b"
 import { canonicalVenueMoodImage } from "../map/canonical-venue-capsule-b"
 import { ONDO_B_TABLES, ondoBTableTimeline } from "../connect/table-model"
 import { capturePlaceServiceMapReturnB } from "../map/place-service-map-return-b"
-import { PlaceServiceActionsB } from "./place-service-actions-b"
+import { PlacePeekActionsB, PlaceServiceActionsB } from "./place-service-actions-b"
 import {
   canonicalFactFreshness,
   canonicalFactState,
@@ -1037,7 +1037,7 @@ export function CanonicalPlaceOverlay({ locale: mountedLocale, presenceState, ve
   }
 
   if (!visualSnapshot.expanded) return (
-    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} aria-busy={closing ? "true" : undefined} tabIndex={-1} data-testid="canonical-place-peek" data-modal-layer-priority={ONDO_MODAL_PRIORITY.peek} data-place-presence={presenceState} data-venue-id={venue.id} onKeyDown={handlePeekKeyDown} onClickCapture={consumeClosingInput} onPointerDownCapture={consumeClosingInput} onKeyDownCapture={consumeClosingInput}>
+    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} aria-busy={closing ? "true" : undefined} tabIndex={-1} data-testid="canonical-place-peek" data-place-service-scroll="true" data-modal-layer-priority={ONDO_MODAL_PRIORITY.peek} data-place-presence={presenceState} data-venue-id={venue.id} onKeyDown={handlePeekKeyDown} onClickCapture={consumeClosingInput} onPointerDownCapture={consumeClosingInput} onKeyDownCapture={consumeClosingInput}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <section className={styles.peekIdentityStage} data-testid="canonical-place-identity-stage" data-pulse-level={pulse.level}>
@@ -1067,10 +1067,9 @@ export function CanonicalPlaceOverlay({ locale: mountedLocale, presenceState, ve
         data-source-presentation="nonvisual-metadata"
         data-source-contract={OFFICIAL_DIRECTORY_SOURCE_CONTRACT}
       >{copy.active}. {copy.sourceBoundary}</span>
-      <div className={styles.peekActions}>
-        <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
-        <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>
-      </div>
+      <PlacePeekActionsB placeId={venue.id} locale={locale} className={styles.peekActions} onOffer={openMealBenefitFromPlace}
+        details={hasService => <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority={hasService ? "secondary" : "primary"}>{copy.details}<ChevronRight size={17} /></button>}
+        directions={<a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>} />
     </div>
   )
 

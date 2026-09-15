@@ -80,17 +80,19 @@ const SEPTEMBER_11_ADDITIONS = [
 test("TRAVELER-FOOD-009 six additions preserve official coordinate evidence and historical research dates", () => {
   const picks = CITIES.flatMap(readPicks)
   const additions = new Set<string>(SEPTEMBER_11_ADDITIONS.map(([id]) => id))
-  expect(picks).toHaveLength(24)
+  expect(picks).toHaveLength(25)
   for (const [id, latitude, longitude] of SEPTEMBER_11_ADDITIONS) {
     const pick = picks.find(place => place.id === id)
     expect(pick, id).toMatchObject({ latitude, longitude, checkedAt: "2026-09-11", canonicalVenueId: null, photo: null })
     expect(["english.visitkorea.or.kr", "www.visitbusan.net", "www.visitjeju.net"]).toContain(new URL(pick!.coordinateSourceUrl).hostname)
     expect(pick!.sources.some(source => source.url === pick!.coordinateSourceUrl && source.evidence === "tourism"), id).toBe(true)
   }
-  expect(picks.filter(pick => !additions.has(pick.id))).toHaveLength(18)
-  for (const pick of picks.filter(pick => !additions.has(pick.id))) {
+  const originalPicks = picks.filter(pick => !additions.has(pick.id) && pick.id !== "research-seoul-hakrim-dabang")
+  expect(originalPicks).toHaveLength(18)
+  for (const pick of originalPicks) {
     expect(pick.checkedAt, "Adding places never refreshes an older source date").toBe("2026-09-09")
   }
+  expect(picks.find(pick => pick.id === "research-seoul-hakrim-dabang")).toMatchObject({ checkedAt: "2026-09-15", latitude: 37.5819287995496, longitude: 127.001679855807, canonicalVenueId: null })
 })
 
 test("TRAVELER-FOOD-001 contribution examples are deterministic and explicitly not observations", () => {
@@ -146,7 +148,7 @@ test("TRAVELER-FOOD-004 invalid or out-of-range minutes normalize counts and con
 for (const city of CITIES) {
   test(`TRAVELER-FOOD-005 ${city} food discovery has usable localized, located, sourced records`, () => {
     const picks = readPicks(city)
-    expect(picks).toHaveLength(8)
+    expect(picks).toHaveLength(city === "seoul" ? 9 : 8)
     expect(new Set(picks.map((pick) => pick.kind)).size).toBeGreaterThanOrEqual(2)
     const bounds = CITY_BOUNDS[city]
     for (const pick of picks) {
@@ -171,7 +173,7 @@ for (const city of CITIES) {
       isoDate(pick.checkedAt, `${pick.id}:checkedAt`)
       // Historical picks retain their actual research date; adding records is
       // not evidence that every older venue was freshly rechecked.
-      expect(["2026-09-09", "2026-09-11"], pick.id).toContain(pick.checkedAt)
+      expect(pick.id === "research-seoul-hakrim-dabang" ? ["2026-09-15"] : ["2026-09-09", "2026-09-11"], pick.id).toContain(pick.checkedAt)
       expect(Array.isArray(pick.sources), pick.id).toBe(true)
       expect(pick.sources.length, pick.id).toBeGreaterThan(0)
       for (const source of pick.sources) {

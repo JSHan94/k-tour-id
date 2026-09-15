@@ -23,7 +23,7 @@ import {
   RotateCcw,
   ShieldCheck,
   Sparkles,
-  Soup,
+  Store,
   TicketCheck,
   WalletCards,
   X,
@@ -100,6 +100,8 @@ type QaBenefit = "ineligible" | "below_minimum" | "expired"
 type QaRuntime = { wallet?: "failure"; payment?: QaPayment; benefit?: QaBenefit; holdProcessing?: boolean }
 type FundingSheetSubject = {
   context: string
+  purpose: "topup" | "payment"
+  returnVenueName?: string
   locale: Locale
   source: OndoBCommerceFundingSource
   walletReady: boolean
@@ -148,11 +150,12 @@ const FUNDING_COPY = {
   en: {
     sheet: "Payment method",
     title: "How would you like to pay?",
+    topupTitle: "How would you like to add funds?",
     selected: "Payment method",
     change: "Change",
     chooseAvailable: "Choose another method",
     chooseFunding: "Choose funding method",
-    addFunds: "Add funds first",
+    addFunds: "Add funds",
     done: "Use this method",
     ready: "Ready",
     setup: "Set up",
@@ -179,11 +182,12 @@ const FUNDING_COPY = {
   ko: {
     sheet: "결제수단",
     title: "어떻게 결제할까요?",
+    topupTitle: "어떤 방법으로 충전할까요?",
     selected: "결제수단",
     change: "변경",
     chooseAvailable: "다른 수단 선택",
     chooseFunding: "충전 방식 선택",
-    addFunds: "먼저 금액 추가",
+    addFunds: "충전하기",
     done: "이 수단 사용",
     ready: "준비됨",
     setup: "설정 필요",
@@ -210,11 +214,12 @@ const FUNDING_COPY = {
   ja: {
     sheet: "支払い方法",
     title: "どの方法で支払いますか？",
+    topupTitle: "どの方法でチャージしますか？",
     selected: "支払い方法",
     change: "変更",
     chooseAvailable: "別の方法を選ぶ",
     chooseFunding: "入金方法を選ぶ",
-    addFunds: "先に入金してください",
+    addFunds: "チャージする",
     done: "この方法を使う",
     ready: "利用可能",
     setup: "設定が必要",
@@ -280,7 +285,7 @@ const COPY = {
   en: {
     eyebrow: "TRAVEL WALLET",
     title: "Wallet",
-    body: "Keep your travel balance, meal benefits and receipts together.",
+    body: "Keep your travel balance, place benefits and receipts together.",
     balance: "Travel balance",
     balanceSource: "Prepared for this trip",
     balanceSourceEmpty: "No funds added",
@@ -298,17 +303,17 @@ const COPY = {
     reconnectCompact: "Try again",
     disconnect: "Reset travel wallet",
     disconnectCompact: "Reset",
-    benefits: "Meal benefit",
+    benefits: "Place benefit",
     benefitTitle: (amount: string) => `${amount} off`,
     benefitBody: "Use it at eligible K-Tour ID places.",
     benefitState: "Available",
     explore: "Open benefit place",
-    activity: "Recent activity",
-    noActivity: "No balance records yet",
-    noActivityBody: "Meal-offer balance changes appear here.",
+    activity: "Purchases & refunds",
+    noActivity: "No purchases yet",
+    noActivityBody: "Your place purchases and their refunds appear here. Top-ups are separate.",
     paidActivity: "Balance used",
     refundedActivity: "Balance restored",
-    activityVenue: "Meal benefit at",
+    activityVenue: "Offer at",
     activityReceipt: "Balance record",
     originalPayment: "Original balance record",
     refundReference: "Restore reference",
@@ -320,6 +325,8 @@ const COPY = {
     linkDialog: "Travel Wallet",
     linkTitle: "Start with an empty travel wallet",
     linkBody: "Choose how you’ll add KRW or USD when a provider is connected.",
+    sampleLinkTitle: "Try your travel wallet",
+    sampleLinkBody: "Start with a sample travel balance. No real funds are added.",
     linking: "Creating your wallet…",
     linkingBody: "No funding or payment is being made.",
     linkFailed: "Local setup didn’t complete",
@@ -332,7 +339,7 @@ const COPY = {
   ko: {
     eyebrow: "여행 지갑",
     title: "지갑",
-    body: "여행 잔액과 식사 혜택, 영수증을 한곳에서 확인하세요.",
+    body: "여행 잔액과 장소별 혜택, 영수증을 한곳에서 확인하세요.",
     balance: "여행 잔액",
     balanceSource: "이번 여행에 준비된 잔액",
     balanceSourceEmpty: "추가된 금액 없음",
@@ -350,17 +357,17 @@ const COPY = {
     reconnectCompact: "다시 시도",
     disconnect: "여행 지갑 초기화",
     disconnectCompact: "초기화",
-    benefits: "식사 혜택",
+    benefits: "장소별 혜택",
     benefitTitle: (amount: string) => `${amount} 할인`,
     benefitBody: "대상 K-Tour ID 장소에서 사용할 수 있어요.",
     benefitState: "사용 가능",
     explore: "혜택 장소 열기",
-    activity: "최근 활동",
-    noActivity: "아직 잔액 기록이 없어요",
-    noActivityBody: "K-Tour ID 식사 오퍼의 잔액 변화가 여기에 표시됩니다.",
+    activity: "구매·환불 내역",
+    noActivity: "아직 구매 내역이 없어요",
+    noActivityBody: "장소별 구매와 해당 환불을 확인하세요. 충전 내역은 별도예요.",
     paidActivity: "잔액 사용",
     refundedActivity: "잔액 복원",
-    activityVenue: "식사 혜택 장소",
+    activityVenue: "오퍼 장소",
     activityReceipt: "잔액 기록",
     originalPayment: "원 잔액 기록",
     refundReference: "복원 참조",
@@ -372,6 +379,8 @@ const COPY = {
     linkDialog: "여행 지갑",
     linkTitle: "빈 여행 지갑으로 시작",
     linkBody: "제공자 연결 후 KRW 또는 USD를 추가할 방식을 선택하세요.",
+    sampleLinkTitle: "여행 지갑을 체험해 보세요",
+    sampleLinkBody: "샘플 여행 잔액으로 시작해요. 실제 금액이 충전되지는 않아요.",
     linking: "지갑을 만드는 중…",
     linkingBody: "충전이나 결제는 진행되지 않아요.",
     linkFailed: "로컬 설정을 완료하지 못했어요",
@@ -384,7 +393,7 @@ const COPY = {
   ja: {
     eyebrow: "トラベルウォレット",
     title: "ウォレット",
-    body: "旅の残高、食事特典、レシートをまとめて確認できます。",
+    body: "旅の残高、お店の特典、レシートをまとめて確認できます。",
     balance: "旅の残高",
     balanceSource: "この旅行用に準備した残高",
     balanceSourceEmpty: "入金額なし",
@@ -402,17 +411,17 @@ const COPY = {
     reconnectCompact: "再試行",
     disconnect: "旅のウォレットをリセット",
     disconnectCompact: "リセット",
-    benefits: "食事特典",
+    benefits: "お店の特典",
     benefitTitle: (amount: string) => `${amount}割引`,
     benefitBody: "対象のK-Tour IDスポットで利用できます。",
     benefitState: "利用可能",
     explore: "特典のお店を開く",
-    activity: "最近の利用履歴",
-    noActivity: "残高記録はまだありません",
-    noActivityBody: "K-Tour IDの食事オファーによる残高の変化がここに表示されます。",
+    activity: "購入・返金履歴",
+    noActivity: "購入履歴はまだありません",
+    noActivityBody: "お店での購入とその返金を表示します。チャージは別です。",
     paidActivity: "残高を使用",
     refundedActivity: "残高を復元",
-    activityVenue: "食事特典の利用先",
+    activityVenue: "オファーのお店",
     activityReceipt: "残高記録",
     originalPayment: "元の残高記録",
     refundReference: "復元参照",
@@ -424,6 +433,8 @@ const COPY = {
     linkDialog: "旅のウォレット",
     linkTitle: "空の旅ウォレットから始める",
     linkBody: "事業者への接続後にKRWまたはUSDを追加する方法を選べます。",
+    sampleLinkTitle: "旅のウォレットを体験",
+    sampleLinkBody: "サンプルの旅の残高から始めます。実際の資金は追加されません。",
     linking: "ウォレットを作成しています…",
     linkingBody: "入金や支払いは行われません。",
     linkFailed: "ローカル設定を完了できませんでした",
@@ -437,12 +448,12 @@ const COPY = {
 
 const OFFER_COPY = {
   en: {
-    eyebrow: "K-Tour ID MEAL BENEFIT",
-    title: "Your meal benefit",
-    from: "Meal offer at",
+    eyebrow: "YOUR PLACE OFFER",
+    title: "Review your offer",
+    from: "Offer at",
     venueBoundaryPrefix: "K-Tour ID on-device offer at",
     venueBoundarySuffix: "· not offered or accepted by the venue · no wallet/provider contacted · no money moves",
-    price: "Meal",
+    price: "Offer",
     testQuote: "Price in USD",
     estimateBasis: "Estimate · ₩1,350 = US$1 · Aug 19, 2026",
     benefit: "K-Tour ID benefit",
@@ -451,16 +462,16 @@ const OFFER_COPY = {
     balanceAfter: "After this use",
     balanceRestored: "Restored balance",
     asset: "KRW",
-    voucher: "Your meal benefit",
+    voucher: "Your benefit",
     voucherBody: (minimum: string, expiry: string) => `${minimum} minimum met · valid through ${expiry}`,
     fixedQuote: "Display estimate · ₩1,350 = US$1 · provider rate and fees unavailable",
-    recommendation: "Recommended for this meal",
+    recommendation: "Available for this offer",
     applied: "Applied",
     apply: "Apply benefit",
     remove: "Not now",
     available: "Available",
     policyIneligible: "Benefit unavailable for this place",
-    policyBelowMinimum: "Meal minimum not met",
+    policyBelowMinimum: "Minimum spend not met",
     policyExpired: "This benefit has expired",
     policyBody: "Nothing changed. Return to the place and choose another option.",
     consentTitle: "Pay privately",
@@ -497,7 +508,7 @@ const OFFER_COPY = {
     support: "Restore this record",
     supportBody: "Restore the travel balance and one-use benefit saved on this device.",
     refunded: "Balance restored",
-    refundedBody: "Your travel balance and meal benefit are available again.",
+    refundedBody: "Your travel balance and benefit are available again.",
     refundedWithoutBenefit: "Your travel balance is available again and the unused benefit remains available.",
     return: "Return to place",
     returnToPlace: (venue: string) => `Return to ${venue}`,
@@ -517,12 +528,12 @@ const OFFER_COPY = {
     reviewProvenance: "Review result · sample data · no real payment",
   },
   ko: {
-    eyebrow: "K-Tour ID 식사 혜택",
-    title: "나의 식사 혜택",
-    from: "식사 오퍼 장소",
+    eyebrow: "장소별 오퍼",
+    title: "오퍼를 확인해 주세요",
+    from: "오퍼 장소",
     venueBoundaryPrefix: "K-Tour ID 기기 내 오퍼 장소",
     venueBoundarySuffix: "· 매장에서 제공하거나 접수하지 않음 · 지갑·공급자 연결 없음 · 돈 이동 없음",
-    price: "식사",
+    price: "오퍼",
     testQuote: "USD 예상 금액",
     estimateBasis: "예상값 · ₩1,350 = US$1 · 2026. 8. 19.",
     benefit: "K-Tour ID 혜택",
@@ -531,16 +542,16 @@ const OFFER_COPY = {
     balanceAfter: "사용 후 잔액",
     balanceRestored: "복원된 잔액",
     asset: "KRW",
-    voucher: "나의 식사 혜택",
+    voucher: "나의 혜택",
     voucherBody: (minimum: string, expiry: string) => `${minimum} 최소 금액 충족 · ${expiry}까지`,
     fixedQuote: "표시용 예상값 · ₩1,350 = US$1 · 실제 환율과 수수료는 제공자 연결 후 확인",
-    recommendation: "이번 식사 추천 혜택",
+    recommendation: "이 오퍼에 사용할 수 있는 혜택",
     applied: "적용됨",
     apply: "혜택 적용",
     remove: "나중에",
     available: "사용 가능",
     policyIneligible: "이 장소에서는 혜택을 사용할 수 없어요",
-    policyBelowMinimum: "식사 최소 금액을 충족하지 못했어요",
+    policyBelowMinimum: "최소 이용 금액을 충족하지 못했어요",
     policyExpired: "이 혜택은 만료됐어요",
     policyBody: "변경된 내용은 없습니다. 장소로 돌아가 다른 방법을 선택해 주세요.",
     consentTitle: "개인정보를 지키는 결제",
@@ -564,7 +575,7 @@ const OFFER_COPY = {
     refundStorageError: "이 기기에 잔액 복원 기록을 저장하지 못했어요. 원 잔액 기록은 그대로입니다. 다시 시도하세요.",
     retry: "다시 시도",
     receipt: "잔액 사용 기록",
-    receiptBody: "이 잔액 기록에 식사 혜택이 적용됐어요.",
+    receiptBody: "이 잔액 기록에 혜택이 적용됐어요.",
     receiptWithoutBenefit: "잔액 사용 기록을 활동에 저장했어요.",
     paid: "금액",
     remaining: "남은 잔액",
@@ -577,7 +588,7 @@ const OFFER_COPY = {
     support: "이 기록 복원",
     supportBody: "이 기기에 저장된 여행 잔액과 1회 혜택을 다시 사용할 수 있게 복원합니다.",
     refunded: "잔액 복원 완료",
-    refundedBody: "여행 잔액과 식사 혜택을 다시 사용할 수 있어요.",
+    refundedBody: "여행 잔액과 혜택을 다시 사용할 수 있어요.",
     refundedWithoutBenefit: "여행 잔액을 복원했고 사용하지 않은 혜택은 그대로 남아 있어요.",
     return: "장소로 돌아가기",
     returnToPlace: (venue: string) => `장소로 돌아가기 · ${venue}`,
@@ -597,12 +608,12 @@ const OFFER_COPY = {
     reviewProvenance: "심사용 결과 · 예시 데이터 · 실제 결제 없음",
   },
   ja: {
-    eyebrow: "K-Tour IDの食事特典",
-    title: "食事特典",
-    from: "食事オファー対象店",
+    eyebrow: "お店のオファー",
+    title: "オファーを確認",
+    from: "オファー対象店",
     venueBoundaryPrefix: "K-Tour ID端末内オファー対象店",
     venueBoundarySuffix: "· お店での提供・受付なし · ウォレット・事業者への接続なし · お金の移動なし",
-    price: "食事代",
+    price: "オファー",
     testQuote: "USDでの概算",
     estimateBasis: "概算・₩1,350 = US$1・2026/8/19",
     benefit: "K-Tour ID特典",
@@ -611,16 +622,16 @@ const OFFER_COPY = {
     balanceAfter: "利用後の残高",
     balanceRestored: "復元後の残高",
     asset: "KRW",
-    voucher: "食事特典",
+    voucher: "あなたの特典",
     voucherBody: (minimum: string, expiry: string) => `最低金額${minimum}を達成 · ${expiry}まで有効`,
     fixedQuote: "表示用の概算・₩1,350 = US$1・実際のレートと手数料は事業者接続後に確認",
-    recommendation: "この食事におすすめ",
+    recommendation: "このオファーで使える特典",
     applied: "適用済み",
     apply: "特典を適用",
     remove: "今回は使わない",
     available: "利用可能",
     policyIneligible: "このお店では特典を利用できません",
-    policyBelowMinimum: "食事の最低金額に達していません",
+    policyBelowMinimum: "最低利用額に達していません",
     policyExpired: "この特典の有効期限が切れています",
     policyBody: "変更はありません。お店の画面に戻り、別の方法を選んでください。",
     consentTitle: "必要な情報だけで支払いを確認",
@@ -644,7 +655,7 @@ const OFFER_COPY = {
     refundStorageError: "この端末に残高復元の記録を保存できませんでした。元の残高記録は変わっていません。もう一度お試しください。",
     retry: "もう一度試す",
     receipt: "残高利用の記録",
-    receiptBody: "この残高記録に食事特典を適用しました。",
+    receiptBody: "この残高記録に特典を適用しました。",
     receiptWithoutBenefit: "残高利用の記録をアクティビティに保存しました。",
     paid: "金額",
     remaining: "残りの残高",
@@ -657,7 +668,7 @@ const OFFER_COPY = {
     support: "この記録を復元",
     supportBody: "この端末に保存した旅の残高と1回限りの特典を、もう一度使える状態に戻します。",
     refunded: "残高を復元しました",
-    refundedBody: "旅の残高と食事特典をもう一度利用できます。",
+    refundedBody: "旅の残高と特典をもう一度利用できます。",
     refundedWithoutBenefit: "旅の残高を復元し、未使用の特典はそのまま残っています。",
     return: "同じお店の画面に戻る",
     returnToPlace: (venue: string) => `${venue}に戻る`,
@@ -843,7 +854,7 @@ function WalletConnectSheet({ locale, boundarySeen, presenceState, subject, revi
         {visual.phase === "info" ? (
           <div className={`${styles.sheetBody} ${styles.walletSetupBody}`} data-testid="wallet-setup-scroll">
             <div className={styles.sheetIcon}><WalletCards size={28} aria-hidden="true" /></div>
-            <h2>{copy.linkTitle}</h2><p>{copy.linkBody}</p>
+            <h2>{reviewMode ? copy.sampleLinkTitle : copy.linkTitle}</h2><p>{reviewMode ? copy.sampleLinkBody : copy.linkBody}</p>
             <div className={styles.walletSetupFlow} role="img" aria-label={copy.linkBody}>
               <span><WalletCards aria-hidden="true" /></span><ChevronRight aria-hidden="true" /><span><Gift aria-hidden="true" /></span><ChevronRight aria-hidden="true" /><span><ReceiptText aria-hidden="true" /></span>
             </div>
@@ -869,10 +880,12 @@ function fundingSourceLabel(locale: Locale, source: OndoBCommerceFundingSource) 
   return copy.balance
 }
 
-function FundingSourceSheet({ locale, source, subject, walletReady, presenceState, onSelect, onClose }: {
+function FundingSourceSheet({ locale, source, subject, purpose, returnVenueName, walletReady, presenceState, onSelect, onClose }: {
   locale: Locale
   source: OndoBCommerceFundingSource
   subject: string
+  purpose: FundingSheetSubject["purpose"]
+  returnVenueName?: string
   walletReady: boolean
   presenceState: Exclude<SheetPresencePhase, "closed">
   onSelect(source: OndoBCommerceFundingSource): boolean
@@ -899,7 +912,7 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
   useDocumentScrollLock(true)
   useModalVisualViewport(layerRef)
   useLayoutEffect(() => {
-    setDraftSource(source)
+    setDraftSource(purpose === "topup" && source === "travel_balance" ? "krw_bank" : source)
     let restored: FundingRailOperationB | null = null
     let credited = false
     try {
@@ -911,6 +924,11 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
         if (!credited) {
           window.sessionStorage.removeItem(FUNDING_RAIL_SESSION_KEY_B)
           restored = null
+        } else {
+          // A credited receipt remains in the mounted ledger, but a fresh
+          // Add funds / Change request starts at methods, not that old receipt.
+          restored = null
+          credited = false
         }
       }
     } catch { restored = null }
@@ -919,7 +937,7 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
     setConsent(false)
     setCreditComplete(credited)
     setSaveError(false)
-  }, [source, subject, reviewMode])
+  }, [source, subject, purpose, reviewMode])
   useLayoutEffect(() => {
     // A cancelled exit keeps this component mounted. Mark it settled before
     // reopening so the base entrance animation cannot restart from frame one.
@@ -1001,7 +1019,7 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
     { id: "krw_bank" as const, Icon: Banknote, title: copy.bank, body: copy.bankBody, status: reviewMode ? "Sample" : copy.provider },
     { id: "card_wallet" as const, Icon: CreditCard, title: copy.card, body: copy.cardBody, status: reviewMode ? "Sample" : copy.provider },
     { id: "digital_dollar" as const, Icon: Coins, title: copy.digital, body: copy.digitalBody, status: reviewMode ? "Sample" : copy.provider },
-  ]
+  ].filter(method => purpose !== "topup" || method.id !== "travel_balance")
   function commitFundingChoice() {
     if (closing) return
     setSaveError(false)
@@ -1064,6 +1082,9 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
   const railLabel = quote?.rail === "card_wallet" ? quote.cardMethod === "apple_pay" ? "Apple Pay" : words("Card", "카드", "カード") : quote ? fundingSourceLabel(locale, quote.rail) : ""
   const money = (minor: number, currency: "KRW" | "USD") => new Intl.NumberFormat(locale === "ko" ? "ko-KR" : locale === "ja" ? "ja-JP" : "en-US", { style: "currency", currency, maximumFractionDigits: currency === "KRW" ? 0 : 2 }).format(currency === "USD" ? minor / 100 : minor)
   const phase = operation?.phase
+  const fundingReturnLabel = returnVenueName
+    ? words(`Return to ${returnVenueName}`, `${returnVenueName} 오퍼로 돌아가기`, `${returnVenueName}に戻る`)
+    : words("Back to balance", "잔액으로 돌아가기", "残高に戻る")
   const phaseTitle = operation?.stablecoin && phase === "quoted" ? words("Stablecoins, ready for your trip", "코인을 여행 잔액으로", "コインを旅の残高に")
     : operation?.stablecoin && phase === "authorize" ? words("Review your transfer", "전송 내용을 확인해 주세요", "送信内容を確認")
     : operation?.stablecoin && phase === "pending" ? words("Follow your transfer", "전송 과정을 확인해요", "送信の流れを確認")
@@ -1086,14 +1107,15 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
       onPointerDownCapture={(event) => { if (closing) { event.preventDefault(); event.stopPropagation(); event.nativeEvent.stopImmediatePropagation() } }}
       onKeyDownCapture={(event) => { if (closing) { event.preventDefault(); event.stopPropagation(); event.nativeEvent.stopImmediatePropagation() } }}
     >
-      <div ref={rootRef} className={`${styles.sheet} ${styles.fundingSheet}`} role="dialog" aria-modal="true" aria-labelledby="funding-source-title" aria-busy={closing ? "true" : undefined} data-testid="funding-source-sheet" data-funding-subject={subject} data-funding-source={source} data-funding-locale={locale} data-modal-layer-priority={ONDO_MODAL_PRIORITY.finalCritical} onAnimationEnd={(event) => { if (event.currentTarget === event.target && presenceState === "open") setHasEntered(true) }} onKeyDown={(event) => trapFocus(event, rootRef.current, closeFunding)}>
+      <div ref={rootRef} className={`${styles.sheet} ${styles.fundingSheet}`} role="dialog" aria-modal="true" aria-labelledby="funding-source-title" aria-busy={closing ? "true" : undefined} data-testid="funding-source-sheet" data-funding-subject={subject} data-funding-purpose={purpose} data-funding-source={source} data-funding-locale={locale} data-modal-layer-priority={ONDO_MODAL_PRIORITY.finalCritical} onAnimationEnd={(event) => { if (event.currentTarget === event.target && presenceState === "open") setHasEntered(true) }} onKeyDown={(event) => trapFocus(event, rootRef.current, closeFunding)}>
         <div className={styles.grabber} aria-hidden="true" />
-        <header><span>{operation ? words("Add money", "충전", "チャージ") : copy.sheet}</span><button type="button" data-funding-focus aria-label={COPY[locale].close} aria-disabled={closing ? "true" : undefined} onClick={closeFunding}><X size={20} aria-hidden="true" /></button></header>
+        <header><span>{operation ? words("Add money", "충전", "チャージ") : purpose === "topup" ? copy.addFunds : copy.sheet}</span><button type="button" data-funding-focus aria-label={COPY[locale].close} aria-disabled={closing ? "true" : undefined} onClick={closeFunding}><X size={20} aria-hidden="true" /></button></header>
         <div className={styles.fundingSheetBody} data-sample-step={phase ?? "methods"}>
-          <h2 id="funding-source-title">{operation ? phaseTitle : copy.title}</h2>
+          <h2 id="funding-source-title">{operation ? phaseTitle : purpose === "topup" ? copy.topupTitle : copy.title}</h2>
+          {returnVenueName ? <p className={fundingStyles.note} data-testid="funding-return-context">{words(`Return to your offer at ${returnVenueName} after adding funds. Payment is confirmed separately.`, `충전 후 ${returnVenueName}의 같은 오퍼로 돌아와요. 결제는 따로 확인하세요.`, `チャージ後は${returnVenueName}の同じオファーに戻ります。決済は別に確認してください。`)}</p> : null}
           {phase === "settled" && creditComplete && subject.startsWith("wallet:") ? <button type="button" className={styles.primary} data-testid="funding-balance-places" onClick={useBalanceAtPlaces}><MapPin size={18} aria-hidden="true" />{words("Find places for this balance", "이 잔액으로 이용할 곳 보기", "この残高で使える場所を見る")}</button> : null}
           {operation && quote && operation.stablecoin ? <div data-testid="funding-rail-journey" data-phase={phase} data-provider-route={quote.rail} data-credit-committed={creditComplete}>
-            <StablecoinFundingB key={quote.quoteId} operation={operation} locale={locale} closing={closing} creditComplete={creditComplete} balance={formatKrwFromSettlementUnits(stableCommerceBalanceB(state.commerceSession), locale)} onAction={transition} onAmount={amount => editQuote(amount)} onCreditRetry={() => creditSettled(operation)} onUseBalance={useSampleBalance} onMethods={showMethods} onClose={closeFunding} />
+            <StablecoinFundingB key={quote.quoteId} operation={operation} locale={locale} closing={closing} creditComplete={creditComplete} balance={formatKrwFromSettlementUnits(stableCommerceBalanceB(state.commerceSession), locale)} returnLabel={fundingReturnLabel} onAction={transition} onAmount={amount => editQuote(amount)} onCreditRetry={() => creditSettled(operation)} onUseBalance={useSampleBalance} onMethods={showMethods} onClose={closeFunding} />
             {saveError ? <p className={styles.error} role="alert">{copy.saveError}</p> : null}
           </div> : operation && quote ? <div className={fundingStyles.flow} data-testid="funding-rail-journey" data-phase={phase} data-provider-route={quote.rail} data-card-method={quote.cardMethod ?? "none"} data-credit-committed={creditComplete}>
             <p className={fundingStyles.eyebrow}><SampleIcon size={17} aria-hidden="true" />{railLabel} · {words("Sample", "샘플", "サンプル")}</p>
@@ -1104,11 +1126,11 @@ function FundingSourceSheet({ locale, source, subject, walletReady, presenceStat
               <dl className={fundingStyles.quote}><div><dt>{words("You pay", "출금 금액", "支払額")}</dt><dd>{money(quote.sourceAmountMinor, quote.sourceCurrency)}</dd></div><div><dt>{words("Fee included", "포함된 수수료", "含まれる手数料")}</dt><dd>{money(quote.feeMinor, quote.sourceCurrency)}</dd></div><div><dt>{words("Added to balance", "잔액에 충전", "残高への追加")}</dt><dd>{money(quote.creditKrw, "KRW")}</dd></div>{quote.rateKrwPerUsd ? <div><dt>{words("Sample rate", "샘플 환율", "サンプルレート")}</dt><dd>$1 = ₩1,500</dd></div> : null}</dl>
               {phase === "authorize" ? <><p className={fundingStyles.note}>{quote.rail === "krw_bank" ? words("Approve a sample bank transfer. No bank account is requested.", "샘플 은행 이체를 승인해요. 실제 계좌를 입력하지 않습니다.", "サンプル銀行振込を承認します。実際の口座情報は不要です。") : quote.rail === "card_wallet" ? quote.cardMethod === "apple_pay" ? words("Preview Apple Pay authorization. No system payment sheet or charge is opened.", "Apple Pay 승인을 체험해요. 실제 결제창이나 청구는 없습니다.", "Apple Pay承認の体験です。実際の決済画面や請求はありません。") : words("Preview a card authentication step. No card number is collected.", "카드 인증 단계를 체험해요. 카드번호는 수집하지 않습니다.", "カード認証を体験します。カード番号は収集しません。") : words("Approve a sample USD conversion. No token transfer or bridge is submitted.", "샘플 USD 전환을 승인해요. 토큰 전송이나 브리지는 실행하지 않습니다.", "サンプルUSD変換を承認します。トークン送信やブリッジは実行しません。")}</p><label className={fundingStyles.consent}><input type="checkbox" data-testid="funding-consent" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>{words("Add this amount to my sample travel wallet. Create the sample wallet if needed. No real funds move.", "샘플 여행 지갑에 이 금액을 충전합니다. 필요하면 샘플 지갑을 만들며, 실제 돈은 이동하지 않습니다.", "この金額をサンプル旅行ウォレットに追加します。必要ならサンプルを作成します。実際の資金は動きません。")}</span></label><details className={fundingStyles.technical}><summary>{words("Sample outcome", "샘플 결과 선택", "サンプル結果")}</summary><div className={fundingStyles.options}>{(["settled", "failed", "unknown"] as const).map(outcome => <button key={outcome} type="button" data-testid={`funding-outcome-${outcome}`} aria-pressed={sampleOutcome === outcome} onClick={() => setSampleOutcome(outcome)}>{outcome === "settled" ? words("Complete", "완료", "完了") : outcome === "failed" ? words("Failure", "실패", "失敗") : words("Pending", "확인 중", "確認中")}</button>)}</div></details></> : <p className={fundingStyles.note}>{words("Illustrative fees and rates only. No real payment details are needed.", "환율과 수수료는 샘플이에요. 실제 결제 정보는 필요하지 않습니다.", "レートと手数料はサンプルです。実際の決済情報は不要です。")}</p>}
               <div className={fundingStyles.actions}><button type="button" className={fundingStyles.primary} data-testid={phase === "quoted" ? "funding-quote-continue" : "funding-authorize"} disabled={closing || (phase === "authorize" && !consent)} onClick={() => phase === "quoted" ? transition({ type: "REVIEW", now: Date.now() }) : transition({ type: "AUTHORIZE", quoteId: quote.quoteId, consent, outcome: sampleOutcome, now: Date.now() })}>{phase === "quoted" ? words("Continue", "계속", "続ける") : words("Approve sample top-up", "샘플 충전 승인", "サンプルチャージを承認")}</button><button type="button" className={fundingStyles.secondary} data-testid="funding-cancel" onClick={() => transition({ type: "CANCEL", now: Date.now() })}>{COPY[locale].cancel}</button></div>
-            </> : phase === "pending" || phase === "unknown" ? <><div className={fundingStyles.status} role="status"><span className={fundingStyles.mark}>{phase === "pending" ? <LoaderCircle className={styles.spinner} size={30} aria-hidden="true" /> : <Clock3 size={30} aria-hidden="true" />}</span><strong className={fundingStyles.amount}>{money(quote.creditKrw, "KRW")}</strong><p className={fundingStyles.note}>{words("Your balance has not changed. Check this same top-up before starting another.", "아직 잔액은 그대로예요. 새 충전 전에 이 요청을 먼저 확인합니다.", "残高はまだ変わっていません。次のチャージの前にこの申請を確認します。")}</p></div>{phase === "unknown" || saveError ? <button type="button" className={fundingStyles.primary} data-testid="funding-check-status" onClick={() => checkStatus("settled")}>{words("Check status", "상태 확인", "状況を確認")}</button> : null}<button type="button" className={fundingStyles.secondary} onClick={closeFunding}>{words("Check later", "나중에 확인", "後で確認")}</button></> : phase === "settled" ? <><div className={fundingStyles.status}><span className={fundingStyles.mark}><BadgeCheck size={30} aria-hidden="true" /></span><strong className={fundingStyles.amount}>+{money(quote.creditKrw, "KRW")}</strong></div><dl className={fundingStyles.quote}><div><dt>{words("Sample top-up", "샘플 충전", "サンプルチャージ")}</dt><dd>{money(quote.creditKrw, "KRW")}</dd></div><div><dt>{words("Sample balance", "샘플 잔액", "サンプル残高")}</dt><dd data-testid="funding-receipt-balance">{formatKrwFromSettlementUnits(stableCommerceBalanceB(state.commerceSession), locale)}</dd></div></dl><p className={fundingStyles.note}>{words("No real funds moved. Your payment check and pass allowance stay separate.", "실제 돈은 이동하지 않았어요. 결제 확인과 자격 한도는 그대로 유지됩니다.", "実際の資金は動いていません。決済確認とパス上限は別のままです。")}</p><div className={fundingStyles.actions}><button type="button" className={fundingStyles.primary} data-testid={creditComplete ? "funding-sample-use" : "funding-credit-retry"} onClick={creditComplete ? useSampleBalance : () => creditSettled(operation)}>{creditComplete ? words("Back to balance", "잔액으로 돌아가기", "残高に戻る") : words("Apply sample result", "샘플 결과 반영", "サンプル結果を反映")}</button><button type="button" className={fundingStyles.secondary} data-testid="funding-add-another" onClick={showMethods}>{words("Start another top-up", "다른 충전 시작", "別のチャージを開始")}</button></div><details className={fundingStyles.technical}><summary>{words("Receipt", "영수증", "控え")}</summary><span className={fundingStyles.operation}>{operation.operationId}</span></details></> : <><div className={fundingStyles.status}><span className={fundingStyles.mark}><RotateCcw size={30} aria-hidden="true" /></span><p className={fundingStyles.note}>{words("Your balance is unchanged. Retry with a new quote.", "잔액은 그대로예요. 새 견적으로 다시 시도할 수 있습니다.", "残高は変わっていません。新しい見積もりで再試行できます。")}</p></div><div className={fundingStyles.actions}><button type="button" className={fundingStyles.primary} data-testid="funding-retry" onClick={() => { setConsent(false); setSampleOutcome("settled"); transition({ type: "RETRY", now: Date.now() }) }}>{words("Try again", "다시 시도", "もう一度試す")}</button><button type="button" className={fundingStyles.secondary} onClick={showMethods}>{words("Choose another method", "다른 방법 선택", "別の方法を選ぶ")}</button></div></>}
+            </> : phase === "pending" || phase === "unknown" ? <><div className={fundingStyles.status} role="status"><span className={fundingStyles.mark}>{phase === "pending" ? <LoaderCircle className={styles.spinner} size={30} aria-hidden="true" /> : <Clock3 size={30} aria-hidden="true" />}</span><strong className={fundingStyles.amount}>{money(quote.creditKrw, "KRW")}</strong><p className={fundingStyles.note}>{words("Your balance has not changed. Check this same top-up before starting another.", "아직 잔액은 그대로예요. 새 충전 전에 이 요청을 먼저 확인합니다.", "残高はまだ変わっていません。次のチャージの前にこの申請を確認します。")}</p></div>{phase === "unknown" || saveError ? <button type="button" className={fundingStyles.primary} data-testid="funding-check-status" onClick={() => checkStatus("settled")}>{words("Check status", "상태 확인", "状況を確認")}</button> : null}<button type="button" className={fundingStyles.secondary} onClick={closeFunding}>{words("Check later", "나중에 확인", "後で確認")}</button></> : phase === "settled" ? <><div className={fundingStyles.status}><span className={fundingStyles.mark}><BadgeCheck size={30} aria-hidden="true" /></span><strong className={fundingStyles.amount}>+{money(quote.creditKrw, "KRW")}</strong></div><dl className={fundingStyles.quote}><div><dt>{words("Sample top-up", "샘플 충전", "サンプルチャージ")}</dt><dd>{money(quote.creditKrw, "KRW")}</dd></div><div><dt>{words("Sample balance", "샘플 잔액", "サンプル残高")}</dt><dd data-testid="funding-receipt-balance">{formatKrwFromSettlementUnits(stableCommerceBalanceB(state.commerceSession), locale)}</dd></div></dl><p className={fundingStyles.note}>{words("No real funds moved. Your payment check and pass allowance stay separate.", "실제 돈은 이동하지 않았어요. 결제 확인과 자격 한도는 그대로 유지됩니다.", "実際の資金は動いていません。決済確認とパス上限は別のままです。")}</p><div className={fundingStyles.actions}><button type="button" className={fundingStyles.primary} data-testid={creditComplete ? "funding-sample-use" : "funding-credit-retry"} onClick={creditComplete ? useSampleBalance : () => creditSettled(operation)}>{creditComplete ? fundingReturnLabel : words("Apply sample result", "샘플 결과 반영", "サンプル結果を反映")}</button><button type="button" className={fundingStyles.secondary} data-testid="funding-add-another" onClick={showMethods}>{words("Start another top-up", "다른 충전 시작", "別のチャージを開始")}</button></div><details className={fundingStyles.technical}><summary>{words("Receipt", "영수증", "控え")}</summary><span className={fundingStyles.operation}>{operation.operationId}</span></details></> : <><div className={fundingStyles.status}><span className={fundingStyles.mark}><RotateCcw size={30} aria-hidden="true" /></span><p className={fundingStyles.note}>{words("Your balance is unchanged. Retry with a new quote.", "잔액은 그대로예요. 새 견적으로 다시 시도할 수 있습니다.", "残高は変わっていません。新しい見積もりで再試行できます。")}</p></div><div className={fundingStyles.actions}><button type="button" className={fundingStyles.primary} data-testid="funding-retry" onClick={() => { setConsent(false); setSampleOutcome("settled"); transition({ type: "RETRY", now: Date.now() }) }}>{words("Try again", "다시 시도", "もう一度試す")}</button><button type="button" className={fundingStyles.secondary} onClick={showMethods}>{words("Choose another method", "다른 방법 선택", "別の方法を選ぶ")}</button></div></>}
             {saveError ? <p className={styles.error} role="alert">{copy.saveError}</p> : null}
           </div> : <>
           <fieldset className={styles.fundingOptions}>
-            <legend className={styles.srOnly}>{copy.sheet}</legend>
+            <legend className={styles.srOnly}>{purpose === "topup" ? copy.addFunds : copy.sheet}</legend>
             {methods.map(({ id, Icon, title, body, status }) => (
               <label key={id} data-selected={draftSource === id} data-committed={source === id} data-connected={id === "travel_balance" && walletReady} data-requires-provider={id === "travel_balance" ? "false" : "true"}>
                 <input type="radio" name="funding-source" value={id} checked={draftSource === id} aria-disabled={closing ? "true" : undefined} onChange={() => { if (!closing) { setDraftSource(id); setSaveError(false) } }} />
@@ -1144,7 +1166,7 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
   fundingSource: OndoBCommerceFundingSource
   reviewMode: boolean
   onConnect(trigger: HTMLButtonElement): void
-  onOpenFunding(trigger: HTMLButtonElement): void
+  onOpenFunding(trigger: HTMLButtonElement, purpose: FundingSheetSubject["purpose"]): void
   onClose(): boolean
 }) {
   const { state, actions } = useOndoB()
@@ -1540,7 +1562,7 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
     }
   }
 
-  function openFundingForQuote(trigger: HTMLButtonElement) {
+  function openFundingForQuote(trigger: HTMLButtonElement, purpose: FundingSheetSubject["purpose"] = "payment") {
     if (closingRef.current || exitRequestedRef.current) return
     if (reviewMode && liveCommerce.status === "idle" && !liveCommerce.confirmationPending) {
       const quote = liveCommerce.lockedQuote ?? createStableCommerceBLockedQuote(liveCommerce)
@@ -1548,14 +1570,14 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
       // Adding funds is separate from approving this merchant amount.
       setConsent(false)
     }
-    onOpenFunding(trigger)
+    onOpenFunding(trigger, purpose)
   }
 
   function pay(event?: SyntheticEvent<HTMLButtonElement>) {
     if (closingRef.current || exitRequestedRef.current) return
     if (!reviewMode) return
     if (shortageKrw > 0 && event) {
-      openFundingForQuote(event.currentTarget)
+      openFundingForQuote(event.currentTarget, "topup")
       return
     }
     if (liveCommerce.lockedQuote && !isStableCommerceBLockedQuote(liveCommerce.lockedQuote, new Date())) {
@@ -1591,16 +1613,6 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
     pendingRef.current = false
     setStorageError(null)
     setView("review")
-  }
-
-  function refund() {
-    if (closingRef.current || exitRequestedRef.current) return
-    setStorageError(null)
-    if (!actions.dispatchCommerce({ type: "REFUND" })) {
-      setStorageError("refund")
-      return
-    }
-    setView("refunded")
   }
 
   function consumeClosingInput(event: SyntheticEvent) {
@@ -1691,9 +1703,9 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
       {renderedView === "review" ? (
         <div className={styles.offerBody}>
           <section className={styles.offerHero}>
-            <div className={styles.offerMark}><Soup size={30} aria-hidden="true" /></div>
+            <div className={styles.offerMark}><Store size={30} aria-hidden="true" /></div>
             <p>{copy.eyebrow}</p>
-            <h2 id="canonical-commerce-title">{order.venueId === STABLE_B_OFFER_VENUE_ID ? copy.title : words("Your visit, ready", "이곳에서 이용하기", "この場所で楽しむ")}</h2>
+            <h2 id="canonical-commerce-title">{copy.title}</h2>
             <span data-testid="commerce-place-context" data-place-context="venue" data-venue-id={venueId}><MapPin size={15} aria-hidden="true" />{copy.from} {venueName}</span>
           </section>
 
@@ -1708,7 +1720,7 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
             <button type="button" onClick={(event) => openFundingForQuote(event.currentTarget)}>{fundingCopy.change}</button>
           </section>
 
-          {reviewMode && shortageKrw > 0 ? <section className={styles.shortage} data-testid="commerce-balance-shortage" role="status"><strong>{words("Add a little more for this visit", "이곳에서 이용하려면 조금 더 필요해요", "この場所で使うには少し追加が必要です")}</strong><p>{words("Available", "사용 가능", "利用可能")} {formatKrwFromSettlementUnits(balance, locale)} · {words("Short by", "부족 금액", "不足額")} {formatKrw(shortageKrw, locale)}</p><button type="button" data-testid="commerce-shortage-fund" onClick={event => openFundingForQuote(event.currentTarget)}>{words("Top up and return here", "충전하고 이 결제로 돌아오기", "チャージしてこの決済に戻る")}</button></section> : null}
+          {reviewMode && shortageKrw > 0 ? <section className={styles.shortage} data-testid="commerce-balance-shortage" role="status"><strong>{words("Add a little more for this visit", "이곳에서 이용하려면 조금 더 필요해요", "この場所で使うには少し追加が必要です")}</strong><p>{words("Available", "사용 가능", "利用可能")} {formatKrwFromSettlementUnits(balance, locale)} · {words("Short by", "부족 금액", "不足額")} {formatKrw(shortageKrw, locale)}</p><button type="button" data-testid="commerce-shortage-fund" onClick={event => openFundingForQuote(event.currentTarget, "topup")}>{words("Top up and return here", "충전하고 이 결제로 돌아오기", "チャージしてこの決済に戻る")}</button></section> : null}
           {commerce.lockedQuote && !commerce.confirmationPending ? <p className={styles.quoteReturn} data-testid="commerce-held-quote">{words("This place and amount are kept while you top up. Confirm payment separately.", "충전하는 동안 장소와 금액은 그대로예요. 결제는 따로 확인하세요.", "チャージ中も場所と金額を保持します。決済は別に確認してください。")} <button type="button" onClick={() => { actions.dispatchCommerce({ type: "CANCEL_CONFIRMATION" }); setConsent(false) }}>{words("Review changes", "금액·혜택 다시 보기", "金額・特典を見直す")}</button></p> : null}
 
           <section className={styles.offerBenefit} data-testid="commerce-voucher" data-voucher-state={commerce.voucher} data-benefit-recommendation={commerce.benefitRecommendation}>
@@ -1795,7 +1807,7 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
             ? <p className={styles.storageError} data-testid="commerce-storage-error" role="alert">{copy.paymentStorageError}</p>
             : <p>{renderedView === "failure" ? copy.failedBody : copy.insufficientBody}</p>}
           <button type="button" className={styles.primary} data-testid="payment-retry" onClick={retry}>{copy.retry}</button>
-          {renderedView === "insufficient" ? <button type="button" className={styles.secondary} data-testid="payment-shortage-funding" onClick={event => { setView("review"); openFundingForQuote(event.currentTarget) }}>{words("Top up and return", "충전하고 돌아오기", "チャージして戻る")}</button> : null}
+          {renderedView === "insufficient" ? <button type="button" className={styles.secondary} data-testid="payment-shortage-funding" onClick={event => { setView("review"); openFundingForQuote(event.currentTarget, "topup") }}>{words("Top up and return", "충전하고 돌아오기", "チャージして戻る")}</button> : null}
           <button type="button" className={styles.quietButton} onClick={closeOffer}>{copy.back}</button>
         </div>
       ) : null}
@@ -1835,9 +1847,6 @@ function CanonicalCommerceOfferB({ commerce, locale, presenceState, venueId, ven
           {renderedView === "receipt" ? <VisitStampReceiptB locale={locale} venueId={venueId} /> : null}
           <CommerceRefundsB locale={locale} scope="checkout" reviewMode={reviewMode && !closing} />
           {renderedStorageError === "refund" ? <p className={styles.storageError} data-testid="commerce-storage-error" role="alert">{copy.refundStorageError}</p> : null}
-          {renderedView === "receipt" ? (
-            <details className={styles.refundDetails} data-testid="commerce-refund-details"><summary>{copy.support}</summary><p>{copy.supportBody}</p><button type="button" data-testid="payment-refund" disabled={liveCommerce.refundOperations?.some(item => item.phase === "pending" || item.phase === "unknown")} onClick={refund}><RotateCcw size={17} aria-hidden="true" />{copy.refund}</button></details>
-          ) : null}
           <button type="button" className={styles.primary} data-testid="payment-receipt-return" onClick={closeOffer}>{crossVenueReceipt ? copy.returnToPlace(originVenueName) : copy.return}<ChevronRight size={18} aria-hidden="true" /></button>
           <button type="button" className={styles.quietButton} data-testid="payment-new-order" onClick={() => actions.openMealBenefitFromPlace(venueId, { newOrder: true })}>{words("Start another visit here", "이곳에서 새로 이용하기", "ここで新しく利用する")}</button>
         </div>
@@ -1970,6 +1979,7 @@ export function CommerceOfferMountB() {
 
   const [linkSubject, setLinkSubject] = useState<WalletSheetSubject | null>(null)
   const [fundingOpen, setFundingOpen] = useState(false)
+  const [fundingPurpose, setFundingPurpose] = useState<FundingSheetSubject["purpose"]>("payment")
   const linkSerialRef = useRef(0)
   const linkReturnFocusRef = useRef<WalletFocusReturn | null>(null)
   const linkReturnRequiresOfferRef = useRef(false)
@@ -2019,10 +2029,12 @@ export function CommerceOfferMountB() {
   const linkPresentedPhase = desiredLinkSubject && linkPresence.phase === "open" ? "open" : "closing"
   const fundingSubject = useMemo<FundingSheetSubject | null>(() => presented ? {
     context: `offer:${presented.originVenueId}`,
+    purpose: fundingPurpose,
+    returnVenueName: presented.transactionVenueName,
     locale: presented.locale,
     source: presented.fundingSource,
     walletReady: presented.walletStatus === "ready",
-  } : null, [presented])
+  } : null, [presented, fundingPurpose])
   const desiredFundingSubject = fundingOpen && desiredSubject && fundingSubject ? fundingSubject : null
   const fundingPresence = useSheetPresence(desiredFundingSubject)
   const fundingPresentedPhase = desiredFundingSubject && fundingPresence.phase === "open" ? "open" : "closing"
@@ -2102,12 +2114,13 @@ export function CommerceOfferMountB() {
     setLinkSubject(null)
   }
 
-  function openFunding(trigger: HTMLButtonElement) {
+  function openFunding(trigger: HTMLButtonElement, purpose: FundingSheetSubject["purpose"]) {
     fundingReturnFocusRef.current = {
       exact: trigger,
       fallbackSelectors: ["[data-testid='commerce-funding-source'] button", "[data-testid='payment-confirm']"],
     }
     fundingCloseRequestedRef.current = false
+    setFundingPurpose(purpose)
     setFundingOpen(true)
   }
 
@@ -2150,6 +2163,8 @@ export function CommerceOfferMountB() {
       locale={fundingPresence.value.locale}
       source={fundingPresence.value.source}
       subject={fundingPresence.value.context}
+      purpose={fundingPresence.value.purpose}
+      returnVenueName={fundingPresence.value.returnVenueName}
       walletReady={fundingPresence.value.walletReady}
       presenceState={fundingPresentedPhase}
       onSelect={actions.setCommerceFundingSource}
@@ -2290,6 +2305,7 @@ export function WalletFundingMountB() {
     locale={presence.value.locale}
     source={presence.value.source}
     subject={presence.value.context}
+    purpose={presence.value.purpose}
     walletReady={presence.value.walletReady}
     presenceState={presentedPhase}
     onSelect={actions.setCommerceFundingSource}
@@ -2300,7 +2316,6 @@ export function WalletFundingMountB() {
 export function IdWalletCommerceB() {
   const { state, actions } = useOndoB()
   const reviewMode = useQaControls()
-  const [activityStorageError, setActivityStorageError] = useState(false)
   const linkButtonRef = useRef<HTMLButtonElement>(null)
   const locale = state.locale
   const copy = COPY[locale]
@@ -2317,11 +2332,6 @@ export function IdWalletCommerceB() {
   const fundingCopy = FUNDING_COPY[locale]
   const activeFundingSource: OndoBCommerceFundingSource = state.commerceFundingSource
   const walletPresentationState = walletStatus === "ready" && !reviewMode ? "empty" : walletStatus
-
-  function refundFromActivity() {
-    setActivityStorageError(false)
-    if (!actions.dispatchCommerce({ type: "REFUND" })) setActivityStorageError(true)
-  }
 
   function openReceiptPlace() {
     if (!receiptVenue) return
@@ -2354,7 +2364,7 @@ export function IdWalletCommerceB() {
           {walletStatus === "ready" ? (
             reviewMode
               ? <button type="button" className={styles.balanceAction} aria-label={copy.disconnect} onClick={() => actions.setCommerceWalletStatus("disconnected")}><span className={styles.balanceActionFull}>{copy.disconnect}</span><span className={styles.balanceActionCompact} aria-hidden="true">{copy.disconnectCompact}</span></button>
-              : <button type="button" className={styles.balanceAction} data-testid="wallet-funding-primary" data-wallet-primary="funding" aria-label={fundingCopy.chooseFunding} onClick={(event) => openWalletFundingSheet(event.currentTarget, { locale, source: activeFundingSource, walletReady: true })}><CircleDollarSign size={17} aria-hidden="true" /><span className={styles.balanceActionFull}>{fundingCopy.chooseFunding}</span><span className={styles.balanceActionCompact} aria-hidden="true">{fundingCopy.addFunds}</span></button>
+              : <button type="button" className={styles.balanceAction} data-testid="wallet-funding-primary" data-wallet-primary="funding" aria-label={fundingCopy.chooseFunding} onClick={(event) => openWalletFundingSheet(event.currentTarget, { locale, source: activeFundingSource, purpose: "topup", walletReady: true })}><CircleDollarSign size={17} aria-hidden="true" /><span className={styles.balanceActionFull}>{fundingCopy.chooseFunding}</span><span className={styles.balanceActionCompact} aria-hidden="true">{fundingCopy.addFunds}</span></button>
           ) : (
             <button ref={linkButtonRef} type="button" className={styles.balanceAction} data-testid="wallet-link-open" aria-label={walletStatus === "failed" ? copy.reconnect : copy.connect} onClick={(event) => openCommerceWalletSheet(event.currentTarget)}><WalletCards size={17} aria-hidden="true" /><span className={styles.balanceActionFull}>{walletStatus === "failed" ? copy.reconnect : copy.connect}</span><span className={styles.balanceActionCompact} aria-hidden="true">{walletStatus === "failed" ? copy.reconnectCompact : copy.connectCompact}</span></button>
           )}
@@ -2363,7 +2373,7 @@ export function IdWalletCommerceB() {
 
       <div className={styles.walletMapActions}>
         <button type="button" className={styles.primary} data-testid="wallet-balance-places" onClick={openBenefitPlace}><MapPin size={18} aria-hidden="true" />{words("Find places to use it", "잔액으로 이용할 곳 보기", "残高を使える場所を見る")}<ChevronRight size={18} aria-hidden="true" /></button>
-        {walletStatus === "ready" ? <button type="button" className={styles.secondary} data-testid="wallet-add-funds" onClick={event => openWalletFundingSheet(event.currentTarget, { locale, source: activeFundingSource, walletReady: true })}>{fundingCopy.addFunds}</button> : null}
+        {walletStatus === "ready" ? <button type="button" className={styles.secondary} data-testid="wallet-add-funds" onClick={event => openWalletFundingSheet(event.currentTarget, { locale, source: activeFundingSource, purpose: "topup", walletReady: true })}>{fundingCopy.addFunds}</button> : null}
         <details className={styles.privacy} data-testid="wallet-balance-info"><summary><Info size={16} aria-hidden="true" />{words("About this balance", "잔액 안내", "残高について")}</summary><p>{FUNDING_COPY[locale].technicalBody}</p></details>
       </div>
 
@@ -2380,7 +2390,7 @@ export function IdWalletCommerceB() {
           <p>{activeFundingSource === "travel_balance"
             ? walletStatus === "ready" ? reviewMode ? fundingCopy.ready : fundingCopy.addFunds : fundingCopy.setup
             : fundingCopy.provider}</p>
-          <button type="button" data-testid="wallet-funding-change" onClick={(event) => openWalletFundingSheet(event.currentTarget, { locale, source: activeFundingSource, walletReady: walletStatus === "ready" })}>{fundingCopy.change}<ChevronRight size={16} aria-hidden="true" /></button>
+          <button type="button" data-testid="wallet-funding-change" onClick={(event) => openWalletFundingSheet(event.currentTarget, { locale, source: activeFundingSource, purpose: "payment", walletReady: walletStatus === "ready" })}>{fundingCopy.change}<ChevronRight size={16} aria-hidden="true" /></button>
         </section>
 
         <section className={styles.activityCard} data-testid="wallet-activity">
@@ -2395,12 +2405,10 @@ export function IdWalletCommerceB() {
               <summary><ReceiptText size={22} aria-hidden="true" /><span><strong>{commerce.status === "refunded" ? `${copy.refundedActivity} ${formatKrwFromSettlementUnits(commerce.chargedDebit, locale)}` : `${copy.paidActivity} ${formatKrwFromSettlementUnits(commerce.chargedDebit, locale)}`}</strong><small>{receiptVenueName ? `${copy.activityVenue} ${receiptVenueName}` : copy.activityReceipt}</small></span><ChevronRight size={17} aria-hidden="true" /></summary>
               <div><span>{commerce.status === "refunded" ? copy.originalPayment : copy.activityReceipt}</span><code>{commerce.receiptId}</code></div>
               {commerce.status === "refunded" ? <div><span>{copy.refundReference}</span><code>{commerce.refundOperations?.filter(item => item.phase === "settled").at(-1)?.receiptId ?? STABLE_B_REFUND_RECEIPT_ID}</code></div> : null}
-              {commerce.status === "paid" ? <button type="button" data-testid="wallet-activity-refund" disabled={commerce.refundOperations?.some(item => item.phase === "pending" || item.phase === "unknown")} onClick={refundFromActivity}><RotateCcw size={16} aria-hidden="true" />{OFFER_COPY[locale].refund}</button> : null}
               <CommerceRefundsB key={order.orderId} locale={locale} scope="wallet" reviewMode={reviewMode} />
               {receiptVenue ? <button type="button" data-testid="wallet-activity-place" onClick={openReceiptPlace}><MapPin size={16} aria-hidden="true" />{copy.activityPlace}<ChevronRight size={16} aria-hidden="true" /></button> : null}
-              {activityStorageError ? <p className={styles.storageError} data-testid="commerce-storage-error" role="alert">{OFFER_COPY[locale].refundStorageError}</p> : null}
             </details>
-          ) : reviewMode && commerce.confirmationPending && commerce.paymentOperation ? <section className={operationStyles.paymentOptions} data-testid="wallet-pending-payment"><div className={operationStyles.body}><Clock3 size={20} aria-hidden="true" /><strong>{locale === "ko" ? "확인 중인 결제" : locale === "ja" ? "確認中の決済" : "Payment to check"}</strong><span>{formatKrw(commerce.paymentOperation.amountKrw, locale)}</span><button type="button" data-testid="wallet-payment-resume" onClick={() => actions.openMealBenefitFromPlace(order.venueId, { orderId: order.orderId })}>{locale === "ko" ? "같은 결제 확인" : locale === "ja" ? "同じ決済を確認" : "Check this payment"}</button></div></section> : <div className={styles.emptyActivity}><ReceiptText size={25} aria-hidden="true" /><div><h3>{copy.noActivity}</h3><p>{copy.noActivityBody}</p></div></div>}
+          ) : reviewMode && commerce.confirmationPending && commerce.paymentOperation ? <section className={operationStyles.paymentOptions} data-testid="wallet-pending-payment"><div className={operationStyles.body}><Clock3 size={20} aria-hidden="true" /><strong>{locale === "ko" ? "확인 중인 결제" : locale === "ja" ? "確認中の決済" : "Payment to check"}</strong><span>{formatKrw(commerce.paymentOperation.amountKrw, locale)}</span><button type="button" data-testid="wallet-payment-resume" onClick={() => actions.openMealBenefitFromPlace(order.venueId, { orderId: order.orderId })}>{locale === "ko" ? "같은 결제 확인" : locale === "ja" ? "同じ決済を確認" : "Check this payment"}</button></div></section> : orders.length === 0 ? <div className={styles.emptyActivity} data-testid="wallet-purchases-empty"><ReceiptText size={25} aria-hidden="true" /><div><h3>{copy.noActivity}</h3><p>{copy.noActivityBody}</p></div></div> : null}
         </section>
       </div>
 

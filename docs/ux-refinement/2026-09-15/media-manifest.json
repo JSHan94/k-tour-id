@@ -1,0 +1,471 @@
+{
+  "schemaVersion": "ux-media-manifest-1.0",
+  "phase": "A_IMPLEMENTED_CONTENT_LOCAL_QA",
+  "checkedAt": "2026-09-15",
+  "approvedForApp": 2,
+  "rules": {
+    "realPhotographsOnly": true,
+    "noGeneratedVenuePhotos": true,
+    "noRuntimeRemoteHotlinks": true,
+    "unknownRightsBlocked": true,
+    "noMerchantAuthorityFromPhoto": true,
+    "sourceDateIsNotLiveCheckedAt": true,
+    "attributionRequiredByProject": true,
+    "onlyExplicitDownloadedPathsExist": true
+  },
+  "coverage": {
+    "existingVenuePhotoLeads": 2,
+    "newCandidatePhotoLeads": 3,
+    "blockedExamples": 3,
+    "existingVenuePhotosVisuallyInspected": 2,
+    "originalAssetsAcquired": 0,
+    "newCandidateVenuesWithPhotoLeads": 2,
+    "deliveryAssetsAcquired": 2
+  },
+  "assets": [
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": true,
+      "deploymentPath": "/media/venues/onion-anguk-christopher-phua-20250301.jpg",
+      "sha256": "99c36696d3900d0224adcb6c548c2ac1b19744d2526db1ae9447a36af16daa23",
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": true,
+      "deliveryDimensions": {
+        "width": 1200,
+        "height": 800
+      },
+      "contentGate": "ROOT_AND_NONAUTHOR_APPROVED; scoped local production-browser crop/load/error/credit verification PASS",
+      "deliveredUrl": "https://images.unsplash.com/photo-1740799246453-bf871357820d?auto=format&fit=max&fm=jpg&q=85&w=1200",
+      "id": "photo-onion-anguk-vvwf",
+      "venueId": "research-seoul-onion-anguk",
+      "priority": "P0_EXISTING_VENUE",
+      "sourceUrl": "https://unsplash.com/photos/desserts-and-a-coffee-are-served-on-a-tray-VVwfHGp8in8",
+      "downloadUrl": "https://images.unsplash.com/photo-1740799246453-bf871357820d?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+      "originalFileUrl": null,
+      "author": "Christopher Phua (findviewer92)",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "rightsStatus": "EXPLICIT_REUSE_LICENSE_VERIFIED",
+      "creditRequiredByLicense": false,
+      "creditRequiredByProject": true,
+      "creditDraft": "Photo: Christopher Phua / Unsplash",
+      "photoPublishedAt": "2025-03-01",
+      "photoTakenAt": null,
+      "subject": "pastries_and_coffee",
+      "identity": {
+        "status": "PHOTOGRAPHER_LOCATION_ASSERTION_CORROBORATED_WITH_BRANCH_ADDRESS",
+        "sourceLabel": "Cafe Onion Anguk, South Korea",
+        "operatorSourceUrl": "https://www.onionkr.com/category/contact/26/",
+        "operatorAddress": "5 Gyedong-gil, Jongno-gu, Seoul",
+        "limits": "No architectural branch identifier is visible; location depends on photographer metadata, not image recognition. Not proof of current menu/stock."
+      },
+      "visualReview": {
+        "status": "DELIVERY_FILE_INDEPENDENTLY_INSPECTED",
+        "previewDimensions": {
+          "width": 500,
+          "height": 333
+        },
+        "findings": "Independently inspected exact 1200x800 delivered JPEG: two pastries and latte on a tray; no visible people. Historical food-at-venue imagery, not exterior or current menu proof.",
+        "crop": "Centered CSS object-fit: cover verified in actual research-list 4:3 and detail 1:1. At JA320 the detail is90x90; load and actual image-abort keep the same frame. All three food items remain visible.",
+        "altDraft": {
+          "en": "Pastries and coffee photographed at Onion Anguk",
+          "ko": "어니언 안국에서 촬영된 빵과 커피",
+          "ja": "オニオン安国で撮影されたパンとコーヒー"
+        },
+        "reviewedDeliverySha256": "99c36696d3900d0224adcb6c548c2ac1b19744d2526db1ae9447a36af16daa23"
+      },
+      "proposedLocalPath": "/media/venues/onion-anguk-christopher-phua-20250301.jpg",
+      "allowedSlotsAfterGate": [
+        "recommendation_card",
+        "map_peek",
+        "detail_gallery"
+      ],
+      "notAllowedSlots": [
+        "current_offer_menu",
+        "checkout_item_photo",
+        "venue_exterior"
+      ],
+      "blockers": [],
+      "runtimeReview": {
+        "status": "PASS_IN_SCOPED_LOCAL_BROWSER_REVIEW",
+        "verifiedArtifactAppChunk": "page-9b5879f4ec0dd6ea.js",
+        "evidence": "adversarial-visual-wave1.md#6",
+        "slots": [
+          "research_list_4:3",
+          "research_detail_1:1"
+        ],
+        "verifiedLocales": [
+          "ja",
+          "en"
+        ],
+        "verifiedViewports": [
+          "320x480 dark",
+          "320x568 dark (earlier artifact)",
+          "390x844 light"
+        ],
+        "checks": [
+          "local1200x800 loaded",
+          "localized alt",
+          "actual source abort fallback",
+          "stable error frame",
+          "author/source/license",
+          "past-photo boundary"
+        ],
+        "notClaimed": [
+          "KO runtime independently replayed",
+          "remote production browser verification",
+          "real device verification",
+          "current menu availability"
+        ]
+      }
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": false,
+      "deploymentPath": null,
+      "sha256": null,
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": false,
+      "id": "photo-momos-yeongdo-013508",
+      "venueId": "research-busan-momos-yeongdo",
+      "priority": "P0_EXISTING_VENUE",
+      "sourceUrl": "https://visitbusan.net/archive/dataSearch/view.nm?dataSid=METADATA013508",
+      "downloadUrl": "https://visitbusan.net/archive/upload/2025/09/10/20250910144124987280_m.png",
+      "downloadUrlRole": "Public item preview, NOT original full-resolution JPG",
+      "originalFileUrl": null,
+      "originalAcquisition": "Use archive item download UI and its declared use-purpose/user-category form. No form or statistics POST submitted in this pass; do not bypass that workflow.",
+      "author": "하이픈그룹",
+      "publisher": "부산관광공사 글로벌마케팅팀",
+      "license": "KOGL Type 1 (attribution)",
+      "licenseUrl": "https://visitbusan.net/archive/index.nm?menuCd=9",
+      "rightsStatus": "EXPLICIT_ITEM_REUSE_LICENSE_VERIFIED",
+      "creditRequiredByLicense": true,
+      "creditRequiredByProject": true,
+      "creditDraft": "사진: 하이픈그룹 / 부산관광공사 글로벌마케팅팀 · 부산관광아카이브 · 공공누리 제1유형 (2024-08-01, 크롭·리사이즈)",
+      "photoPublishedAt": null,
+      "photoTakenAt": "2024-08-01",
+      "photoDateMeaning": "Archive production date; shutter date not independently confirmed",
+      "subject": "interior_harbor_view",
+      "identity": {
+        "status": "EXACT_BRANCH_ADDRESS_MATCH",
+        "sourceLabel": "모모스로스터리&커피바",
+        "sourceAddress": "부산 영도구 봉래나루로 160",
+        "limits": "Generic archive caption says venue view; actual inspected image is an interior window/harbor view, not a building exterior."
+      },
+      "visualReview": {
+        "status": "PREVIEW_INSPECTED",
+        "previewDimensions": {
+          "width": 499,
+          "height": 750
+        },
+        "findings": "Cafe seating and large window looking across working harbor. No clearly identifiable faces visible.",
+        "crop": "Portrait composition; favor detail gallery. Do not force into landscape hero until an original/alternate landscape item is reviewed.",
+        "altDraft": {
+          "en": "Seating and harbor view through the windows at Momos Yeongdo",
+          "ko": "모모스 영도의 좌석과 창 너머 항구 풍경",
+          "ja": "モモス影島の座席と窓越しの港の景色"
+        }
+      },
+      "proposedLocalPath": "/media/venues/research-busan-momos-yeongdo/interior-busan-archive-013508-v1.webp",
+      "allowedSlotsAfterGate": [
+        "detail_gallery",
+        "portrait_place_card"
+      ],
+      "notAllowedSlots": [
+        "menu_photo",
+        "exterior_photo",
+        "landscape_hero_without_crop_review"
+      ],
+      "blockers": [
+        "Acquire original through permitted archive download workflow; preview alone is only 499 pixels wide",
+        "Verify original and responsive crops, record checksum, preserve visible attribution/source/license link",
+        "Parent content integration approval"
+      ]
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": true,
+      "deploymentPath": "/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
+      "sha256": "8fdf8b238be3746975ed8eacb95a0a9318bceb0f5f024686a8a850fee97b6e76",
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": true,
+      "id": "photo-hakrim-01",
+      "venueId": "candidate-seoul-hakrim-dabang",
+      "priority": "P1_NEW_CANDIDATE",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hakrim_Dabang_01.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/4/46/Hakrim_Dabang_01.jpg",
+      "author": "Seefooddiet",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "rightsStatus": "EXPLICIT_FILE_LICENSE_VERIFIED",
+      "creditRequiredByLicense": true,
+      "creditRequiredByProject": true,
+      "creditDraft": "Hakrim Dabang 01.jpg — Seefooddiet / Wikimedia Commons, CC BY-SA 4.0. Wikimedia 960px thumbnail; top-aligned display crop. Photographed 2025-01-10.",
+      "photoTakenAt": "2025-01-10",
+      "sourceDimensions": {
+        "width": 3024,
+        "height": 4032
+      },
+      "encodedPixelDimensions": {
+        "width": 4032,
+        "height": 3024
+      },
+      "exifOrientation": 6,
+      "subject": "venue_sign_and_entrance",
+      "identity": {
+        "status": "VISIBLE_KOREAN_VENUE_SIGN_AND_AUTHOR_LOCATION_MATCH",
+        "sourceLabel": "Hakrim Dabang, Seoul",
+        "limits": "January 2025 entrance/sign, not current opening or partnership. Door decals do not establish current payment acceptance."
+      },
+      "visualReview": {
+        "status": "ORIENTED_ORIGINAL_AND_TWO_TOP_ALIGNED_CROPS_INSPECTED",
+        "findings": "Clear 학림다방 sign and entrance; no identifiable faces. Dim partial figure inside is not the subject.",
+        "crop": "Honor EXIF orientation 6. Upright 4:3 and 1:1 review crops preserve the sign when top-aligned: object-fit: cover; object-position: 50% 0%. Centered 4:3 removes the sign and is not approved.",
+        "altDraft": {
+          "en": "Hakrim Dabang's sign and entrance photographed in 2025",
+          "ko": "2025년에 촬영된 학림다방 간판과 입구",
+          "ja": "2025年に撮影された学林茶房の看板と入口"
+        }
+      },
+      "contentGate": "PARENT_APPROVED_CONTENT_ONLY_IMPLEMENTATION; local production-browser load/top-crop/credit/no-capability verification PASS",
+      "proposedLocalPath": "/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
+      "allowedSlotsAfterGate": [
+        "recommendation_card",
+        "detail_gallery"
+      ],
+      "notAllowedSlots": [
+        "current_offer_menu",
+        "checkout_item_photo",
+        "centered_landscape_crop"
+      ],
+      "blockers": [],
+      "deliveredUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Hakrim_Dabang_01.jpg/960px-Hakrim_Dabang_01.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+      "deliveredBytes": 385996,
+      "deliveredDimensions": {
+        "width": 960,
+        "height": 1280
+      },
+      "deliveredExifOrientation": null,
+      "localBitmapEdits": false,
+      "deliveryReview": {
+        "status": "LOCAL_960PX_BROWSER_CROP_AND_CREDIT_VERIFIED",
+        "findings": "Actual local image loads upright at960x1280. Top-aligned4:3 card and1:1 detail preserve the readable sign. Seefooddiet/CC BY-SA4.0/date/thumbnail-crop credit visible. No raw original is shipped."
+      },
+      "runtimeReview": {
+        "status": "PASS_IN_SCOPED_LOCAL_BROWSER_REVIEW",
+        "verifiedArtifactAppChunk": "page-9b5879f4ec0dd6ea.js",
+        "evidence": "adversarial-visual-wave1.md#6",
+        "slots": [
+          "research_list_4:3_top_aligned",
+          "research_detail_1:1_top_aligned"
+        ],
+        "verifiedLocales": [
+          "ja",
+          "en"
+        ],
+        "verifiedViewports": [
+          "320x480 dark",
+          "390x844 light",
+          "1440x1000 light"
+        ],
+        "checks": [
+          "local960x1280 loaded",
+          "object-position50%0%",
+          "localized alt",
+          "author/title/source/license",
+          "thumbnail and display-crop modification notice",
+          "past-photo boundary",
+          "detail service action count0",
+          "detail sample activity meter count0"
+        ],
+        "notClaimed": [
+          "KO runtime independently replayed",
+          "asset-specific Hakrim abort replay (shared fallback tested with Onion)",
+          "remote production browser verification",
+          "real device verification",
+          "current opening or payment acceptance"
+        ]
+      }
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": false,
+      "deploymentPath": null,
+      "sha256": null,
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": false,
+      "id": "photo-hakrim-02",
+      "venueId": "candidate-seoul-hakrim-dabang",
+      "priority": "P1_NEW_CANDIDATE",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hakrim_Dabang_02.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Hakrim_Dabang_02.jpg",
+      "author": "Seefooddiet",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "rightsStatus": "EXPLICIT_FILE_LICENSE_VERIFIED",
+      "creditRequiredByLicense": true,
+      "creditRequiredByProject": true,
+      "creditDraft": "Hakrim Dabang 02.jpg — Seefooddiet / Wikimedia Commons, CC BY-SA 4.0; cropped/resized",
+      "photoTakenAt": "2025-01-10",
+      "sourceDimensions": {
+        "width": 4032,
+        "height": 3024
+      },
+      "subject": "interior_with_identifiable_visitors",
+      "identity": {
+        "status": "AUTHOR_FILE_DESCRIPTION_NAMES_VENUE",
+        "sourceLabel": "Hakrim Dabang, Seoul",
+        "limits": "Prominent identifiable diners make this unsuitable for this batch's main venue photo. Copyright license alone does not resolve person-related rights."
+      },
+      "visualReview": {
+        "status": "INSPECTED_BLOCKED_PROMINENT_IDENTIFIABLE_VISITORS",
+        "findings": "Multiple identifiable diners occupy central and foreground positions. Prefer the separately reviewed entrance/sign photo 01.",
+        "crop": "Not approved for this batch",
+        "altDraft": null
+      },
+      "proposedLocalPath": "/media/venues/research-seoul-hakrim-dabang/scene-seefooddiet-20250110-v1.webp",
+      "blockers": [
+        "Prominent identifiable visitors: blocked for this batch; no person-rights clearance claimed",
+        "Keep adapted image under CC BY-SA 4.0; provide author, title, source, license and modification notice",
+        "Candidate geo/alias/operating freshness review and integration approval"
+      ]
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": false,
+      "deploymentPath": null,
+      "sha256": null,
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": false,
+      "id": "photo-sinseoloreum-momguk",
+      "venueId": "candidate-jeju-sinseoloreum",
+      "priority": "P1_NEW_CANDIDATE",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:신설오름_몸국.jpg",
+      "downloadUrl": "https://upload.wikimedia.org/wikipedia/commons/1/12/%EC%8B%A0%EC%84%A4%EC%98%A4%EB%A6%84_%EB%AA%B8%EA%B5%AD.jpg",
+      "originalPublicationUrl": "https://0spei.tistory.com/8",
+      "author": "공석배",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "rightsStatus": "EXPLICIT_FILE_LICENSE_WITH_REVIEW_VERIFIED",
+      "licenseReview": {
+        "reviewedAt": "2021-12-07",
+        "reviewer": "Kwangya",
+        "source": "Wikimedia Commons file page"
+      },
+      "creditRequiredByLicense": true,
+      "creditRequiredByProject": true,
+      "creditDraft": "신설오름 몸국 — 공석배 / Wikimedia Commons, CC BY 4.0; cropped/resized",
+      "photoTakenAt": "2019-07-23",
+      "sourceDimensions": {
+        "width": 961,
+        "height": 961
+      },
+      "subject": "momguk",
+      "identity": {
+        "status": "FILE_DESCRIPTION_NAMES_RESTAURANT_AND_DISH",
+        "sourceLabel": "Sinseol Oreum restaurant's momguk",
+        "limits": "2019 photo, not current plating/stock proof. Never use for Woojin Haejangguk or as generic photo falsely attributed to another restaurant."
+      },
+      "visualReview": {
+        "status": "INSPECTED_HISTORICAL_FOOD_CONTENT_ONLY",
+        "findings": "Bowl of momguk on a table with vegetables behind it; no visible people. The named restaurant's 2019 photo, not current plating or availability evidence.",
+        "crop": "Square historical detail composition reviewed; 4:3 crop not approved.",
+        "altDraft": {
+          "en": "Momguk photographed at Sinseoloreum in 2019",
+          "ko": "2019년 신설오름에서 촬영된 몸국",
+          "ja": "2019年にシンソルオルムで撮影されたモムクッ"
+        }
+      },
+      "proposedLocalPath": "/media/venues/research-jeju-sinseoloreum/momguk-gong-seokbae-20190723-v1.webp",
+      "blockers": [
+        "Second-source coordinates not verified; no new map pin approved",
+        "Local delivery asset/hash and actual UI crop/credit QA pending",
+        "Photo date/context must remain explicit; no current offer inference",
+        "Parent new-content integration approval"
+      ]
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": false,
+      "deploymentPath": null,
+      "sha256": null,
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": false,
+      "id": "blocked-london-bagel-jamsil-for-dosan",
+      "venueId": "research-seoul-london-bagel-dosan",
+      "priority": "REJECTED_SUBSTITUTION",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:런던베이글뮤지엄_잠실점_브릭레인_샌드위치.jpg",
+      "downloadUrl": null,
+      "author": "찐요미",
+      "license": "CC BY 2.0 KR",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/kr/",
+      "rightsStatus": "FILE_LICENSE_FOUND_BUT_IDENTITY_FAILS",
+      "identity": {
+        "status": "WRONG_BRANCH",
+        "actualBranch": "Jamsil",
+        "requiredBranch": "Dosan"
+      },
+      "visualReview": {
+        "status": "NOT_NEEDED_FOR_REJECTION"
+      },
+      "blockers": [
+        "Photograph explicitly names Jamsil branch; no substitution for Dosan even if dish/brand look similar"
+      ]
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": false,
+      "deploymentPath": null,
+      "sha256": null,
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": false,
+      "id": "blocked-momos-013551-address-conflict",
+      "venueId": "research-busan-momos-yeongdo",
+      "priority": "REJECTED_SUBSTITUTION",
+      "sourceUrl": "https://visitbusan.net/archive/dataSearch/view.nm?dataSid=METADATA013551",
+      "downloadUrl": null,
+      "author": "하이픈그룹",
+      "license": "KOGL Type 1",
+      "licenseUrl": "https://visitbusan.net/archive/index.nm?menuCd=9",
+      "rightsStatus": "LICENSE_FOUND_BUT_IDENTITY_CONFLICT",
+      "identity": {
+        "status": "WRONG_OR_INCONSISTENT_BRANCH_METADATA",
+        "sourceAddress": "부산 부산진구 전포대로199번길 34",
+        "requiredAddress": "부산 영도구 봉래나루로 160"
+      },
+      "format": "MP4",
+      "visualReview": {
+        "status": "NOT_DONE"
+      },
+      "blockers": [
+        "Same title is not branch proof; metadata address conflicts and file is video. Use exact-address JPG item instead."
+      ]
+    },
+    {
+      "checkedAt": "2026-09-15",
+      "downloadedToRepository": false,
+      "deploymentPath": null,
+      "sha256": null,
+      "hotlinkAllowedByThisPlan": false,
+      "integrationAllowed": false,
+      "id": "blocked-tosokchon-2016-permission-conflict",
+      "venueId": "candidate-seoul-tosokchon-samgyetang",
+      "priority": "RIGHTS_REVIEW_REQUIRED",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Malbok_Tosokchon_Samgyetang_01_(28730531750).jpg",
+      "downloadUrl": null,
+      "author": "Jeon Han / Korea.net",
+      "license": "CC BY-SA 2.0 label with restrictive prose in source description",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+      "rightsStatus": "BLOCKED_CONFLICTING_PERMISSION_TEXT",
+      "identity": {
+        "status": "DESCRIPTION_NAMES_SEOUL_TOSOKCHON"
+      },
+      "visualReview": {
+        "status": "NOT_DONE"
+      },
+      "blockers": [
+        "File page also contains news/personal-use restriction wording. Resolve actual permission applicability before product use; do not infer Commons hosting alone clears this."
+      ]
+    }
+  ]
+}

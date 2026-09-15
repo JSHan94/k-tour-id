@@ -223,6 +223,8 @@ export const SOURCE_FILES = Object.freeze([
 
 export const PUBLIC_FILES = Object.freeze([
   "public/editorial/food/perilla-noodles-illustration-v1.jpg",
+  "public/media/venues/onion-anguk-christopher-phua-20250301.jpg",
+  "public/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
   "public/editorial/food/tteokgalbi-illustration-v1.jpg",
   "public/editorial/food/coffee-croissant-illustration-v1.jpg",
   "public/og-ktour-food-v2.png",

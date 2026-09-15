@@ -80,6 +80,7 @@ type ServiceMapSnapshotB = {
   placeId: string; city: CityId; view: ViewMode; query: string; category: BDiscoveryCategory
   editorialCategory: EditorialCategory; listScroll: number; camera?: BDiscoveryCamera
   balancePlacesOnly: boolean; history: BDiscoveryHistoryEntry | null; detailScroll: number
+  expandedDisclosures: string[]
 }
 const BALANCE_MAP_COPY = {
   ko: { places: "사용할 곳", clear: "사용할 곳 필터 해제", filter: "사용할 곳 보기" },
@@ -3066,6 +3067,7 @@ export function MapEntryB() {
       listScroll, camera,
       history: history ? { ...history, listScroll, ...(camera ? { camera } : {}) } : null,
       detailScroll: detail?.scrollTop ?? 0,
+      expandedDisclosures: Array.from(detail?.querySelectorAll<HTMLDetailsElement>("details[open][data-testid]") ?? []).map(node => node.dataset.testid!).filter(Boolean),
     })
     return true
   }
@@ -3105,7 +3107,15 @@ export function MapEntryB() {
       const scroll = place.originKind === "research"
         ? document.querySelector<HTMLElement>("[data-testid='researched-food-detail']")?.closest<HTMLElement>("[data-sheet-scroll-owner]")
         : document.querySelector<HTMLElement>("[data-place-service-scroll]")
-      if (scroll && snapshot) scroll.scrollTop = snapshot.detailScroll
+      if (scroll && snapshot) {
+        // Restore only named disclosures in this place's scroll owner before
+        // restoring its position; collapsed content would clamp scrollTop.
+        const expanded = new Set(snapshot.expandedDisclosures ?? [])
+        scroll.querySelectorAll<HTMLDetailsElement>("details[data-testid]").forEach(node => {
+          node.open = expanded.has(node.dataset.testid ?? "")
+        })
+        scroll.scrollTop = snapshot.detailScroll
+      }
       document.querySelector<HTMLElement>(`[data-place-service='${focus}']`)?.focus({ preventScroll: true })
     }))
   }

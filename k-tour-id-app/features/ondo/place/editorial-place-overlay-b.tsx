@@ -14,7 +14,7 @@ import { useDocumentScrollLock, useModalIsolation } from "../shared/ui/use-modal
 import type { SheetPresencePhase } from "../shared/ui/use-sheet-presence"
 import { ONDO_B_JEJU_TABLE } from "../connect/table-model"
 import { capturePlaceServiceMapReturnB } from "../map/place-service-map-return-b"
-import { PlaceServiceActionsB } from "./place-service-actions-b"
+import { PlacePeekActionsB, PlaceServiceActionsB } from "./place-service-actions-b"
 import styles from "./editorial-place-overlay-b.module.css"
 
 const FOCUSABLE = "a[href],button:not([disabled]),summary,[tabindex]:not([tabindex='-1'])"
@@ -276,7 +276,7 @@ export function EditorialPlaceOverlayB({ editorialPlaceId, locale: mountedLocale
   }
 
   if (!expandedView) return (
-    <div id="editorial-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={activePlace.name[locale]} aria-busy={closing ? "true" : undefined} tabIndex={-1} data-testid="ondo-b-editorial-place-peek" data-modal-layer-priority={ONDO_MODAL_PRIORITY.peek} data-editorial-place-id={activePlace.id} data-editorial-presence={presenceState} onClickCapture={consumeClosingInput} onPointerDownCapture={consumeClosingInput} onKeyDownCapture={consumeClosingInput} onKeyDown={trapFocus}>
+    <div id="editorial-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={activePlace.name[locale]} aria-busy={closing ? "true" : undefined} tabIndex={-1} data-testid="ondo-b-editorial-place-peek" data-place-service-scroll="true" data-modal-layer-priority={ONDO_MODAL_PRIORITY.peek} data-editorial-place-id={activePlace.id} data-editorial-presence={presenceState} onClickCapture={consumeClosingInput} onPointerDownCapture={consumeClosingInput} onKeyDownCapture={consumeClosingInput} onKeyDown={trapFocus}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} aria-hidden="true" /></button>
       <section className={styles.peekIdentity}>
@@ -294,10 +294,9 @@ export function EditorialPlaceOverlayB({ editorialPlaceId, locale: mountedLocale
         <summary><span><strong>{copy.source}</strong><small>VISITKOREA</small></span><ChevronRight size={16} aria-hidden="true" /></summary>
         <p>{copy.checked}</p>
       </details>
-      <div className={styles.peekActions}>
-        <a href={directions} target="_blank" rel="noreferrer" data-testid="ondo-b-editorial-place-directions"><Navigation size={17} aria-hidden="true" />{copy.directions}</a>
-        <button ref={openRef} type="button" onClick={openDetails} data-testid="ondo-b-editorial-place-details">{copy.details}<ChevronRight size={17} aria-hidden="true" /></button>
-      </div>
+      <PlacePeekActionsB placeId={activePlace.id} locale={locale} className={styles.peekActions} directionsFirst
+        details={hasService => <button ref={openRef} type="button" onClick={openDetails} data-testid="ondo-b-editorial-place-details" data-visual-priority={hasService ? "secondary" : "primary"}>{copy.details}<ChevronRight size={17} aria-hidden="true" /></button>}
+        directions={<a href={directions} target="_blank" rel="noreferrer" data-testid="ondo-b-editorial-place-directions"><Navigation size={17} aria-hidden="true" />{copy.directions}</a>} />
     </div>
   )
 

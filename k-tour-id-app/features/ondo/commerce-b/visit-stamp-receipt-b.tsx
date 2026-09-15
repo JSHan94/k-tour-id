@@ -12,7 +12,7 @@ import styles from "./visit-stamp-receipt-b.module.css"
 const COPY = {
   en: {
     title: "Remember this visit",
-    body: "Your meal balance and visit history stay separate. Check this visit when you’re here.",
+    body: "Your travel balance and visit history stay separate. Check this visit when you’re here.",
     confirm: "Check this visit",
     checking: "Checking visit",
     recorded: "Visit saved",

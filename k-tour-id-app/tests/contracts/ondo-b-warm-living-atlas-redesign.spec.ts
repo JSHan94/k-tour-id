@@ -66,9 +66,16 @@ test("ATLAS-005 visual redesign preserves consumer truth and every money boundar
     "wallet-activity",
     "payment-confirm",
     "payment-receipt",
-    "payment-refund",
+    'scope="checkout"',
+    'scope="wallet"',
+    "CommerceRefundsB",
     "OOKRW",
   ]) expect(combined, `missing ${contract}`).toContain(contract)
+
+  const refunds = source("features/ondo/commerce-b/commerce-refunds-b.tsx")
+  for (const action of ["amount", "all", "submit", "check", "retry"]) {
+    expect(refunds).toContain('data-testid={`${scope}-refund-' + action + '`}')
+  }
 
   for (const forbidden of ["real credential", "real stablecoin", "on-chain payment"]) {
     expect(combined.toLowerCase()).not.toContain(forbidden)

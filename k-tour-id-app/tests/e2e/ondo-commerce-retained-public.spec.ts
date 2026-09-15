@@ -8,7 +8,8 @@ async function start(page: Page) {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.emulateMedia({ reducedMotion: "reduce" })
   await page.goto("/", { waitUntil: "domcontentloaded" })
-  await page.getByTestId("onboarding-guest-skip").click()
+  // Public first entry is map-first; optional setup is no longer a gate.
+  await expect(page.getByTestId("ondo-b-korea-atlas")).toBeVisible()
 }
 
 test("public Jeju cancellation unknown retains one booking through reload and permits a fresh booking only after resolution", async ({ page }, info) => {

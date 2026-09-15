@@ -13,6 +13,7 @@ type Props = {
   closing: boolean
   creditComplete: boolean
   balance: string
+  returnLabel: string
   onAction: (action: FundingRailActionB) => unknown
   onAmount: (amount: number) => void
   onCreditRetry: () => void
@@ -23,7 +24,7 @@ type Props = {
 
 /** This visible route is a connected-product rehearsal, not a wallet SDK.
  * Source confirmation and destination confirmation remain separate actions. */
-export function StablecoinFundingB({ operation, locale, closing, creditComplete, balance, onAction, onAmount, onCreditRetry, onUseBalance, onMethods, onClose }: Props) {
+export function StablecoinFundingB({ operation, locale, closing, creditComplete, balance, returnLabel, onAction, onAmount, onCreditRetry, onUseBalance, onMethods, onClose }: Props) {
   const [consent, setConsent] = useState(false)
   const [method, setMethod] = useState<StablecoinSignerMethodB>(operation.stablecoin?.signerMethod ?? "zklogin")
   const [signerResult, setSignerResult] = useState<"ready" | "failed" | "wrong_network">("ready")
@@ -110,7 +111,7 @@ export function StablecoinFundingB({ operation, locale, closing, creditComplete,
           <div><dt>{w("Sample travel balance", "샘플 여행 잔액", "サンプルの旅の残高")}</dt><dd data-testid="funding-receipt-balance">{balance}</dd></div>
         </dl>
         <p className={styles.notice}>{w("No real funds moved. DID, payment verification and pass allowance are unchanged.", "실제 자금은 이동하지 않았어요. DID·결제 자격·패스 한도는 바뀌지 않습니다.", "実際の資金移動はありません。DID・決済確認・パス上限は変わりません。")}</p>
-        <div className={styles.actions}><button type="button" className={styles.primary} disabled={closing} data-testid={creditComplete ? "funding-sample-use" : "funding-credit-retry"} onClick={creditComplete ? onUseBalance : onCreditRetry}>{creditComplete ? w("Back to balance", "잔액으로 돌아가기", "残高に戻る") : w("Apply sample receipt", "샘플 결과 반영", "サンプル結果を反映")}</button><button type="button" className={styles.secondary} data-testid="funding-add-another" disabled={closing} onClick={onMethods}>{w("Start another top-up", "다른 충전 시작", "別のチャージを開始")}</button></div>
+        <div className={styles.actions}><button type="button" className={styles.primary} disabled={closing} data-testid={creditComplete ? "funding-sample-use" : "funding-credit-retry"} onClick={creditComplete ? onUseBalance : onCreditRetry}>{creditComplete ? returnLabel : w("Apply sample receipt", "샘플 결과 반영", "サンプル結果を反映")}</button><button type="button" className={styles.secondary} data-testid="funding-add-another" disabled={closing} onClick={onMethods}>{w("Start another top-up", "다른 충전 시작", "別のチャージを開始")}</button></div>
       </>}
     </> : rejected ? <>
       <p className={styles.notice}>{w("No sample tokens were transferred and your travel balance is unchanged. A retry creates a new quote and asks for approval again.", "샘플 코인을 전송하지 않았고 여행 잔액도 그대로예요. 재시도하면 새 견적을 확인하고 다시 승인합니다.", "サンプルコインは送信されず、旅の残高も変わりません。再試行では新しい見積もりを確認して再承認します。")}</p>

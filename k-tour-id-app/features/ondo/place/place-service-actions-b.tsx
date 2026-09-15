@@ -1,6 +1,7 @@
 "use client"
 
 import { CalendarClock, ChevronRight, WalletCards } from "lucide-react"
+import type { ReactNode } from "react"
 import { resolveCommercePlaceB } from "../commerce-b/place-service-registry-b"
 import { capturePlaceServiceMapReturnB } from "../map/place-service-map-return-b"
 import { requestReservationSampleB } from "../reservation-b/reservation-model-b"
@@ -13,6 +14,26 @@ const COPY = {
   en: { offer: "See your benefit", benefit: "Up to", discount: "off", reserve: "Book a table", reserveHint: "Choose a day and party size" },
   ja: { offer: "特典を見る", benefit: "最大", discount: "割引", reserve: "席を予約", reserveHint: "日付と人数を選択" },
 } as const
+
+/** A peek offers one supported next action, never a new row of product tools.
+ * Directions remain reachable in the full place details. */
+export function PlacePeekActionsB({ placeId, locale, className, details, directions, directionsFirst = false, onOffer }: {
+  placeId: string; locale: "en" | "ko" | "ja"; className: string
+  details: (hasService: boolean) => ReactNode; directions: ReactNode; directionsFirst?: boolean; onOffer?: () => void
+}) {
+  const { actions } = useOndoB()
+  const sampleMode = useReviewSampleSession()
+  const registered = resolveCommercePlaceB(placeId)
+  const place = sampleMode && registered && (registered.commerce || registered.reservation) ? registered : null
+  const copy = COPY[locale]
+  return <div className={className} data-peek-has-service={Boolean(place)}>
+    {place ? <><button type="button" data-testid="peek-place-service" data-place-service={place.commerce ? "offer" : "reservation"} data-place-return-section="offer" data-capability-mode="sample" data-service-place-id={place.id} data-visual-priority="primary" onClick={() => {
+      capturePlaceServiceMapReturnB(place.id)
+      if (place.commerce) { if (onOffer) onOffer(); else actions.openMealBenefitFromPlace(place.id) }
+      else requestReservationSampleB({ venueId: place.id })
+    }}>{place.commerce ? <WalletCards size={17} aria-hidden="true" /> : <CalendarClock size={17} aria-hidden="true" />}{place.commerce ? copy.offer : copy.reserve}</button>{details(true)}</> : directionsFirst ? <>{directions}{details(false)}</> : <>{details(false)}{directions}</>}
+  </div>
+}
 
 /** Capabilities are an explicit walkthrough registry, never inferred from a
  * guide entry or directory record. Production hides these sample actions. */

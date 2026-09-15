@@ -4,7 +4,7 @@ import { ChevronRight, MapPin, Navigation, Utensils } from "lucide-react"
 import { SheetB } from "../shared/ui/sheet-b"
 import { FoodPhotoB } from "./food-photo-b"
 import { SampleActivityMeterB } from "./sample-activity-meter-b"
-import { researchFoodDirectionsB, researchFoodIllustrationB, type ResearchedFoodB } from "./researched-food-b"
+import { researchFoodDirectionsB, researchFoodMediaB, type ResearchedFoodB } from "./researched-food-b"
 import { PlaceServiceActionsB } from "../place/place-service-actions-b"
 import styles from "./researched-food-panel-b.module.css"
 
@@ -21,7 +21,7 @@ export function ResearchedFoodListB({ places, locale, onSelect }: { places: read
   return <section className={styles.section} data-testid="researched-food-list" aria-label={copy.title}>
     <header><div><h2>{copy.title}</h2><p>{copy.subtitle}</p></div><Utensils size={20} aria-hidden="true" /></header>
     <div className={styles.cards}>{places.map(place => <button type="button" className={styles.card} key={place.id} aria-label={`${place.name[locale]} · ${place.signature[locale]}`} data-research-id={place.id} onClick={() => onSelect(place)}>
-      <FoodPhotoB {...researchFoodIllustrationB(place)} locale={locale} />
+      <FoodPhotoB {...researchFoodMediaB(place)} locale={locale} />
       <span className={styles.cardCopy}><small>{place.district[locale]} · {copy[place.kind]}</small><strong>{place.name[locale]}</strong><span>{place.signature[locale]}</span></span>
     </button>)}</div>
   </section>
@@ -34,10 +34,11 @@ export function ResearchedFoodPanelB({ place, locale, onClose, onMap, returnFocu
     <button type="button" onClick={onMap}><MapPin size={18} />{copy.map}</button>
   </div>}>
     <article className={styles.detail} data-testid="researched-food-detail" data-research-id={place.id} data-origin="EDITORIAL_RESEARCH">
-      <div className={styles.identity}><FoodPhotoB {...researchFoodIllustrationB(place)} locale={locale} /><div><small>{copy.guide} · {copy[place.kind]}</small><h2>{place.name[locale]}</h2><p>{place.signature[locale]}</p><span>{place.district[locale]}</span></div></div>
+      <div className={styles.identity}><FoodPhotoB {...researchFoodMediaB(place)} locale={locale} compact /><div><small>{copy.guide} · {copy[place.kind]}</small><h2>{place.name[locale]}</h2><p>{place.signature[locale]}</p><span>{place.district[locale]}</span></div></div>
       <PlaceServiceActionsB placeId={place.id} locale={locale} />
       <SampleActivityMeterB venueId={place.id} city={place.city} locale={locale} fallback={null} />
       <div className={styles.reason}><h3>{copy.why}</h3><p>{place.reason[locale]}</p></div>
+      {place.photo?.localSrc && <details className={styles.disclosure} data-testid="research-photo-credit"><summary>{locale === "ko" ? "사진 정보" : locale === "ja" ? "写真について" : "About the photo"}<ChevronRight size={16} /></summary><p>{place.photo.credit}</p>{place.photo.publishedAt && <p>{locale === "ko" ? "사진 게시일" : locale === "ja" ? "写真公開日" : "Photo published"}: {place.photo.publishedAt}</p>}<p>{locale === "ko" ? "당시 매장에서 촬영한 사진이며 현재 메뉴·가격·재고를 보장하지 않아요." : locale === "ja" ? "当時お店で撮影された写真です。現在のメニュー・価格・在庫を保証するものではありません。" : "Photographed at this place, not a guarantee of today's menu, prices or availability."}</p><ul><li><a href={place.photo.sourceUrl} target="_blank" rel="noopener noreferrer">{locale === "ko" ? "원본 사진" : locale === "ja" ? "元の写真" : "Original photo"}</a></li><li><a href={place.photo.licenseUrl} target="_blank" rel="noopener noreferrer">{place.photo.license}</a></li></ul></details>}
       <details className={styles.disclosure}><summary>{copy.source}<ChevronRight size={16} /></summary><p>{copy.truth}</p><p>{copy.checked}: {place.checkedAt}</p><p>{place.address}</p><ul>{place.sources.map(source => <li key={source.url}><a href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a></li>)}</ul></details>
     </article>
   </SheetB>

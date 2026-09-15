@@ -191,12 +191,13 @@ for (const scenario of [EN, JA]) {
     await expect(sheet).toHaveCount(0)
     await expect(page.getByTestId("wallet-display-equivalent")).toHaveText("₩90,000")
     expect(await axes(page)).toEqual(initialAxes)
-    // Reopening the same confirmed receipt is a normal public action, not a
-    // second deposit or a fresh funding operation.
+    // A fresh method selection must not reopen an already credited receipt.
+    // The confirmed operation remains available as read-only ledger evidence.
     await page.getByTestId("wallet-funding-change").click()
-    await expect(journey).toHaveAttribute("data-credit-committed", "true")
+    await expect(sheet.getByTestId("funding-method-save")).toBeVisible()
+    await expect(journey).toHaveCount(0)
     expect((await fundingSnapshot(page))?.operationId).toBe(operation!.operationId)
-    await sheet.getByTestId("funding-sample-use").click()
+    await sheet.locator(":scope > header button").click()
     await expect(page.getByTestId("wallet-display-equivalent")).toHaveText("₩90,000")
 
     await issuePassThroughPublicHandoff(page)
@@ -263,8 +264,12 @@ for (const scenario of [EN, JA]) {
     const activity = page.getByTestId("wallet-activity-receipt")
     await expand(activity)
     const paymentReference = await activity.locator("code").first().textContent()
-    await activity.getByTestId("wallet-activity-refund").click()
-    await expect(activity.getByTestId("wallet-activity-refund")).toHaveCount(0)
+    const refund = activity.getByTestId("wallet-refund-panel")
+    await expand(refund)
+    await refund.getByTestId("wallet-refund-all").click()
+    await refund.getByTestId("wallet-refund-submit").click()
+    await expect(refund.getByTestId("wallet-refund-remaining")).toHaveText("₩0")
+    await expect(refund.getByTestId("wallet-refund-submit")).toHaveCount(0)
     await expect(page.getByTestId("wallet-display-equivalent")).toHaveText("₩90,000")
     await expect(activity.locator("code").first()).toHaveText(paymentReference!)
     expect(await axes(page)).toEqual(paidAxes)

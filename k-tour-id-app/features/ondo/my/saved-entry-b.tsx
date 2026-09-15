@@ -27,7 +27,8 @@ import { MyKoreaMemoryThumbnailB, MyKoreaMemoryVenueCardB } from "./memory-venue
 import { MY_KOREA_TABLE_CATALOG, resolveSavedRemovalFocusIndex } from "./my-korea-model"
 import { KoreaMemoryMapB } from "./korea-memory-map-b"
 import { PrivateNote } from "./private-note"
-import { STABLE_B_KRW_PRICE, STABLE_B_OOKRW_PRICE, STABLE_B_RECEIPT_ID, STABLE_B_REFUND_RECEIPT_ID } from "../commerce-b/stable-commerce-model-b"
+import { STABLE_B_KRW_PRICE, STABLE_B_OOKRW_PRICE, stableCommerceOrderB } from "../commerce-b/stable-commerce-model-b"
+import { resolveCommercePlaceB, requestPlaceServiceReturnB } from "../commerce-b/place-service-registry-b"
 import { ProfileReputationEntryB } from "../identity-b/profile-reputation-b"
 
 const ONDO_OPEN_TABLE_EVENT = "ondo:b:open-table"
@@ -70,13 +71,13 @@ const COPY = {
     contributionsEmptyBody: "This stays empty until you add a Local Signal.",
     contributed: "Local Signal added",
     recentSaveFailed: "The place opened, but Recently viewed could not be updated.",
-    receiptsTitle: "Wallet activity",
-    receiptsBody: "Your private travel-balance activity.",
+    receiptsTitle: "Selected purchase",
+    receiptsBody: "This purchase and its refunds. Open your wallet for all purchases.",
     receiptBoundary: "No charge made · private record",
     paid: "Payment saved",
     refunded: "Payment undone",
     originalPayment: "Original balance record",
-    refundReference: "Restore reference",
+    refundReference: "Refund reference",
     receiptDetails: "Receipt details",
     openWallet: "Open wallet",
     openReceiptPlace: "Open exact place",
@@ -119,13 +120,13 @@ const COPY = {
     contributionsEmptyBody: "로컬 시그널을 남기기 전까지 비어 있습니다.",
     contributed: "로컬 시그널 남김",
     recentSaveFailed: "장소는 열었지만 최근 본 목록은 업데이트하지 못했어요.",
-    receiptsTitle: "지갑 활동",
-    receiptsBody: "결제·환불 기록 · 실제 금액 이동 없음.",
+    receiptsTitle: "선택한 구매",
+    receiptsBody: "이 구매와 환불 기록이에요. 전체 구매는 지갑에서 확인하세요.",
     receiptBoundary: "실제 결제 없음 · 비공개 기록",
     paid: "결제 저장",
     refunded: "결제 되돌림",
     originalPayment: "원 잔액 기록",
-    refundReference: "복원 참조",
+    refundReference: "환불 참조",
     receiptDetails: "영수증 상세",
     openWallet: "지갑 열기",
     openReceiptPlace: "이 장소 열기",
@@ -168,13 +169,13 @@ const COPY = {
     contributionsEmptyBody: "ローカルシグナルを投稿するまで、ここは空のままです。",
     contributed: "ローカルシグナルを追加",
     recentSaveFailed: "場所は開きましたが、「最近見た場所」を更新できませんでした。",
-    receiptsTitle: "ウォレット履歴",
-    receiptsBody: "支払い・返金の記録・実際のお金は動いていません。",
+    receiptsTitle: "選択した購入",
+    receiptsBody: "この購入と返金の記録です。すべての購入はウォレットで確認できます。",
     receiptBoundary: "実際の決済なし・非公開の記録",
     paid: "支払いを保存",
     refunded: "支払いを取り消し",
     originalPayment: "元の残高記録",
-    refundReference: "復元参照",
+    refundReference: "返金参照",
     receiptDetails: "レシートの詳細",
     openWallet: "ウォレットを開く",
     openReceiptPlace: "このお店を開く",
@@ -288,7 +289,11 @@ export function SavedEntryB() {
     const venue = canonicalMapVenueById(venueId)
     return venue ? [venue] : []
   })
-  const receiptVenue = state.commerceReceiptVenueId ? canonicalMapVenueById(state.commerceReceiptVenueId) : undefined
+  const receiptOrder = stableCommerceOrderB(state.commerceSession)
+  const receiptPlace = resolveCommercePlaceB(receiptOrder.venueId)
+  const receiptVenue = canonicalMapVenueById(receiptOrder.venueId)
+  const paymentReceiptId = state.commerceSession.receiptId ?? receiptOrder.receiptId
+  const settledRefunds = (state.commerceSession.refundOperations ?? []).filter(operation => operation.phase === "settled" && operation.receiptId)
   const mappedOfficialVenues = [
     ...saved,
     ...recent,
@@ -569,16 +574,16 @@ export function SavedEntryB() {
           <section className={styles.activitySection} data-testid="my-korea-receipts" aria-labelledby="my-korea-receipts-heading">
             <div className={styles.activityHeading}><ReceiptText size={19} aria-hidden="true" /><span><h2 id="my-korea-receipts-heading">{copy.receiptsTitle}</h2><p>{copy.receiptsBody}</p></span></div>
             <div className={styles.referenceList}>
-              <article className={styles.planReference}>
+              <article className={styles.planReference} data-testid="my-korea-selected-purchase" data-order-id={receiptOrder.orderId} data-venue-id={receiptOrder.venueId}>
                 <span className={styles.localBadge}>{state.commerceSession.status === "refunded" ? `${copy.refunded} ${formatReceiptKrw(state.commerceSession.chargedDebit, locale)}` : `${copy.paid} ${formatReceiptKrw(state.commerceSession.chargedDebit, locale)}`}</span>
-                <h3>{receiptVenue ? personalVenueName(receiptVenue.name.ko, locale).officialName : copy.receiptsTitle}</h3>
+                <h3>{receiptVenue ? personalVenueName(receiptVenue.name.ko, locale).officialName : receiptPlace?.name[locale] ?? copy.receiptsTitle}</h3>
                 <span className={savedStyles.receiptBoundary} data-testid="my-korea-receipt-boundary"><LockKeyhole size={14} aria-hidden="true" />{copy.receiptBoundary}</span>
                 <details className={styles.receiptDetails} data-testid="my-korea-receipt-details">
                   <summary>{copy.receiptDetails}<ChevronRight size={15} aria-hidden="true" /></summary>
-                  <p>{state.commerceSession.status === "refunded" ? `${copy.originalPayment}: ${STABLE_B_RECEIPT_ID}` : STABLE_B_RECEIPT_ID}</p>
-                  {state.commerceSession.status === "refunded" ? <p>{copy.refundReference}: {STABLE_B_REFUND_RECEIPT_ID}</p> : null}
+                  <p data-testid="my-korea-payment-reference">{copy.originalPayment}: {paymentReceiptId}</p>
+                  {settledRefunds.map(operation => <p key={operation.operationId} data-testid="my-korea-refund-reference">{copy.refundReference}: {operation.receiptId}</p>)}
                 </details>
-                {receiptVenue ? <button type="button" data-testid="my-korea-receipt-place" onClick={() => openVenue(receiptVenue.id, receiptVenue.cityId)}>{copy.openReceiptPlace}<ChevronRight size={16} aria-hidden="true" /></button> : null}
+                {receiptPlace ? <button type="button" data-testid="my-korea-receipt-place" onClick={() => requestPlaceServiceReturnB(receiptPlace.id)}>{copy.openReceiptPlace}<ChevronRight size={16} aria-hidden="true" /></button> : receiptVenue ? <button type="button" data-testid="my-korea-receipt-place" onClick={() => openVenue(receiptVenue.id, receiptVenue.cityId)}>{copy.openReceiptPlace}<ChevronRight size={16} aria-hidden="true" /></button> : null}
                 <button type="button" onClick={() => actions.setTab("id")}>{copy.openWallet}<ChevronRight size={16} aria-hidden="true" /></button>
               </article>
             </div>
