@@ -130,7 +130,7 @@ test("JA-B-004 original editorial art is visually primary and external provenanc
     expect(bytes.subarray(0, 2).toString("hex")).toBe("ffd8")
   }
   expect(model.match(/rightsMode: "ondo-original",/g)?.length).toBe(5)
-  expect(model.match(/ja: "ONDO編集イラスト"/g)?.length).toBe(5)
+  expect(model.match(/ja: "K-Tour ID 編集イラスト"/g)?.length).toBe(5)
   expect(discovery).toContain("item.editorialMedia.credit[locale]")
   expect(discovery).not.toMatch(/<figcaption>\{item\.sourceReferences\[0\]\.label\}/)
   expect(discovery).toContain("<SourceLinks")

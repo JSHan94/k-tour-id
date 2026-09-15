@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { dirname, extname, relative, resolve } from "node:path"
 import { expect, test } from "@playwright/test"
+import ts from "typescript"
 import { B_PRODUCTION_FLOWS, B_PRODUCTION_VISUAL_CASES } from "../helpers/ondo-b-production-registry"
 
 const APP_ROOT = process.cwd()
@@ -90,6 +91,31 @@ const STABLECOIN_DISCLOSURE_PATTERNS = new Set([
 ].map(String))
 function isExplicitStablecoinDisclosure(file: string, literal: string, pattern: RegExp) {
   return STABLECOIN_DISCLOSURES[file]?.has(literal) === true && STABLECOIN_DISCLOSURE_PATTERNS.has(String(pattern))
+}
+
+function withoutInternalSumsubTransportMetadata(file: string, source: string) {
+  if (file !== "features/ondo/identity-b/sumsub-passport-step-b.tsx") return source
+  const ast = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const spans: Array<{ start: number; end: number }> = []
+  function visit(node: ts.Node) {
+    if (ts.isStringLiteral(node)) {
+      const parent = node.parent
+      // Only the exact API argument of the existing transport wrapper is
+      // internal. A URL used in a title, JSX, or another component still scans.
+      if (ts.isCallExpression(parent) && parent.arguments[0] === node) {
+        const endpoint = /^\/api\/kyc\/sumsub\/(?:session|status)$/.test(node.text)
+          && ts.isIdentifier(parent.expression) && parent.expression.text === "request"
+        const csrfHeader = node.text === "X-KTour-KYC" && ts.isPropertyAccessExpression(parent.expression)
+          && ts.isIdentifier(parent.expression.expression) && parent.expression.expression.text === "headers"
+          && parent.expression.name.text === "set" && parent.arguments[1]
+          && ts.isStringLiteral(parent.arguments[1]) && parent.arguments[1].text === "1"
+        if (endpoint || csrfHeader) spans.push({ start: node.getStart(ast), end: node.getEnd() })
+      }
+    }
+    ts.forEachChild(node, visit)
+  }
+  visit(ast)
+  return spans.sort((a, b) => b.start - a.start).reduce((text, span) => `${text.slice(0, span.start)}"transport-endpoint"${text.slice(span.end)}`, source)
 }
 
 test("PROD-B-001 canonical / keeps the official guest discovery foundation reachable", () => {
@@ -195,7 +221,8 @@ test("PROD-B-003 QA and Labs session seams stay allow-listed, session-only, and 
 test("PROD-B-004 sample disclosures are explicit without false provider-success copy", () => {
   const source = graphSource(productionImportGraph()).filter(({ file }) => /\.tsx$/.test(file))
   const rawHits = source.flatMap(({ file, source: text }) => {
-    const literals = [...text.matchAll(/(["'`])([^"'`\n]{1,500})\1/g)].map((match) => match[2])
+    const copySource = withoutInternalSumsubTransportMetadata(file, text)
+    const literals = [...copySource.matchAll(/(["'`])([^"'`\n]{1,500})\1/g)].map((match) => match[2])
     return literals.flatMap((literal) => FALSE_OR_TEST_COPY
       .filter((pattern) => pattern.test(literal))
       .filter((pattern) => {
@@ -274,13 +301,28 @@ test("PROD-B-004 sample disclosures are explicit without false provider-success 
   expect(stablecoin).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|EventSource/)
 })
 
-test("PROD-B-004S stablecoin disclosure exceptions cannot allow false settlement or other surfaces", () => {
+test("PROD-B-004S disclosure and transport exceptions cannot allow false claims or other surfaces", () => {
   const path = "features/ondo/commerce-b/stablecoin-funding-b.tsx"
   expect(isExplicitStablecoinDisclosure(path, "Interoperability hypothesis", /\bhypoth(?:esis|eses)\b/i)).toBe(true)
   expect(isExplicitStablecoinDisclosure("features/ondo/map/map-entry-b.tsx", "Interoperability hypothesis", /\bhypoth(?:esis|eses)\b/i)).toBe(false)
   expect(isExplicitStablecoinDisclosure(path, "Bridge confirmed", /\b(?:wallet|bridge)\s+(?:success|complete|confirmed)\b/i)).toBe(false)
   expect(isExplicitStablecoinDisclosure(path, "OOKRW is redeemable won", /\bOOKRW\b/i)).toBe(false)
   expect(isExplicitStablecoinDisclosure(path, "Simulated wallet success", /\bsimulat(?:e|ed|es|ing|ion|ions)\b/i)).toBe(false)
+  const sandboxPath = "features/ondo/identity-b/sumsub-passport-step-b.tsx"
+  const internal = 'request("/api/kyc/sumsub/status"); request("/api/kyc/sumsub/session", { method: "POST" }); headers.set("X-KTour-KYC", "1")'
+  expect(withoutInternalSumsubTransportMetadata(sandboxPath, internal)).not.toMatch(/\bKYC\b/i)
+  expect(withoutInternalSumsubTransportMetadata("features/ondo/map/map-entry-b.tsx", internal)).toBe(internal)
+  for (const consumerCopy of [
+    'const title = "/api/kyc/sumsub/session"',
+    'const view = <p>{"/api/kyc/sumsub/status"}</p>',
+    'const label = "X-KTour-KYC"',
+    'request("Payment KYC verified")',
+    'request("/api/kyc/other/session")',
+    'headers.set("Payment KYC verified", "1")',
+  ]) {
+    expect(withoutInternalSumsubTransportMetadata(sandboxPath, consumerCopy)).toBe(consumerCopy)
+    expect(FALSE_OR_TEST_COPY.some(pattern => pattern.test(consumerCopy))).toBe(true)
+  }
 })
 
 test("PROD-B-005 six production flows remain the guest foundation, not the whole PRD gate", () => {

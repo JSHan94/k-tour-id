@@ -1,5 +1,7 @@
 # K-Tour ID public-brand unification — 2026-09-15
 
+Historical artwork and verification record for `4464697`. For the current Preview and its separate validation scope, see the [September 15 maintenance record](../../../docs/KTOUR_BRAND_CLEANUP_2026-09-15.md). The source, URL and results below remain evidence of this earlier release.
+
 App source: `4464697` on `feat/sumsub-sandbox-onboarding-20260914`.
 Verified Ready **Preview**: https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app
 The existing Production and Harvey handoff branch were not changed.

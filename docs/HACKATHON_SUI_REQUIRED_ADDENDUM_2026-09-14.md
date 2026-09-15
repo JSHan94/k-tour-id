@@ -2,6 +2,8 @@
 
 작성일: 2026-09-14 · 상태: **개발 대상, 실제 구현·검수 완료 아님**
 
+현재 앱 참고는 [K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app)(source `4a6904a`, `feat/sumsub-sandbox-onboarding-20260914`)와 [유지보수 검수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md)을 따른다. 이 브랜딩·패키징 검수는 아래 Sui 개발·제출 요건의 완료 증거가 아니다.
+
 ## 1. 범위와 공식 근거
 
 이번 팀의 필수 기술은 **OmniOne CX + OpenDID + OmniOne Chain + Sui**다. 이 문서는 [1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)의 Sui 상세 계약이며, 기존 Sui 제외 문구와 DB 선사용 방식보다 아래의 통합 순서가 우선한다. 실제 금융·브리지·매장 예약·외국인 인증까지 확대하는 것은 아니다.

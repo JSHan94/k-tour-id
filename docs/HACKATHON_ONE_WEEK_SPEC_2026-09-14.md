@@ -47,7 +47,7 @@ M0만 연결하거나 M2 없이 끝내면 이번 팀 필수 구현 완료가 아
 
 | 항목 | 시작점 |
 |---|---|
-| UX 목업 | [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app), 공개 진입 `/` |
+| UX 목업 | [K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app), 공개 진입 `/`, source `4a6904a`의 [유지보수 검수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md) |
 | 앱·문서 인계 기준 | 현재 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. `handoff/harvey-20260914`는 원 인계 스냅샷이며 runtime `cc3d7c3`는 이전 운영 배포 참고값 |
 | 기존 운영 목업 기준 | `cc3d7c3`, [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md). 공유 카드·무채색 아이콘만 변경했으며 최종 배포·검수 상태는 해당 기록을 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 별도 증거다. 실제 CX/OpenDID/Chain/Sui 연동 및 이 문서의 개발 범위는 변경하지 않음 |
 | 앱 디렉터리 | 인계 브랜치를 clone한 저장소의 `k-tour-id-app/` |

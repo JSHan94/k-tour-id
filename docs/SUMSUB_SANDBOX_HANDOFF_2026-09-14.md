@@ -1,6 +1,6 @@
 # K-Tour ID · Sumsub Sandbox 연동 인계
 
-2026-09-15 브랜드 업데이트: 현재 확인 링크는 **[K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app)** (`4464697`, Ready)다. 서비스명·흑백 로고·공유 이미지를 통일했으며 Sumsub 서버/SDK 검증 동작과 아래 신뢰 경계는 그대로다. 아래 `c80d1da`와 이전 URL은 실제 문서·카메라 여정 검수 당시의 증거를 가리킨다. Production 배포는 변경하지 않았다.
+2026-09-15 유지보수 업데이트: 현재 확인 링크는 **[K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app)** (`4a6904a`, Ready)다. 남은 화면 브랜드 표기와 공개 자산 패키징·인계 문서를 정리했으며 Sumsub 서버/SDK 검증 동작과 아래 신뢰 경계는 그대로다. 이번 HTTP·브랜딩 검수는 [유지보수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md)을 따른다. 아래 `c80d1da`와 이전 URL은 실제 문서·카메라 여정 검수 당시의 증거를 가리킨다. 이 Sandbox Preview 배포는 Production 배포와 별개다.
 
 현재 소스 브랜치: `feat/sumsub-sandbox-onboarding-20260914`. 아래 검수 수치와 실제 SDK 여정의 기준은 이전 `c80d1da` 배포이며 현재 브랜딩 Preview의 재실행 결과로 합산하지 않는다.
 
@@ -82,7 +82,7 @@ B. A의 같은 applicant에 명시적 Sandbox GREEN 시뮬레이션
 재실행은 `k-tour-id-app/`에서 담당자의 로컬 Sandbox 설정을 사용한다. 문서·테스트 카메라 검사 명령은 아래와 같다. 정확한 허용 origin을 지정하며, secret이나 접근 코드를 명령에 직접 적지 않는다.
 
 ```sh
-SUMSUB_ALLOWED_ORIGINS=https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app node --env-file=.env.local --import tsx scripts/kyc/browser-sumsub-journey.ts https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app
+SUMSUB_ALLOWED_ORIGINS=https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app node --env-file=.env.local --import tsx scripts/kyc/browser-sumsub-journey.ts https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app
 ```
 
 기본 실행은 A만 검사한다. B까지 검사하려면 같은 명령 끝에 **`--simulate-review-after-camera`를 명시적으로 추가**한다. 이 옵션은 이번 브라우저의 유효한 서버 쿠키에 연결된 Sandbox applicant만 변경한다. 실행 중 debug·trace·HAR·영상 기록을 켜지 않는다.

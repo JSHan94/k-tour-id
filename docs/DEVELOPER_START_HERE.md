@@ -4,7 +4,7 @@
 
 **[단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)은 공통 CX/OpenDID·서버 계약의 상세 참고다.** Sui 담당·환경·가용 시간을 추가 확인해 일정을 확정한다. 네 기술과 AI 실행을 기존 1주 일정에 그대로 완료할 수 있다고 가정하지 않으며, 프로그램 등록·별도 제출 자격·추가 상금 적용 조건도 확인한다. 아래는 전체 제품 인계로, 금융·예약 등 전체 목록이 이번 주 필수라는 뜻은 아니다.
 
-현재 앱: **[K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app)**(브랜딩 배포 소스 `4464697`). 앱·문서 시작 브랜치는 **`feat/sumsub-sandbox-onboarding-20260914`**다. 공개 이름은 K-Tour ID이며 `ondo` 모듈·API·환경 키와 역사적 기록명은 호환성을 위해 유지한다.
+현재 앱: **[K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app)**(배포 소스 `4a6904a`). 앱·문서 시작 브랜치는 **`feat/sumsub-sandbox-onboarding-20260914`**다. 현재 배포와 검수 범위는 [브랜드 정리 유지보수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md)을 따른다. 공개 이름은 K-Tour ID이며 `ondo` 모듈·API·환경 키와 역사적 기록명은 호환성을 위해 유지한다.
 
 별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 실제 WebSDK/API 테스트다. 운영 신원 확인이나 패스 발급이 아니며, 실제 얼굴/liveness·전체 촬영/제출은 미검수다. CX·OpenDID·OmniOne Chain·Sui의 필수 개발을 대신하거나 이번 해커톤 범위를 확대하지 않는다.
 

@@ -128,7 +128,8 @@ test("HANDOFF-SYNC-006 current Sandbox Preview stays distinct from the historica
   expect(source).toBeDefined()
   const readme = readFileSync(resolve(root, "README.md"), "utf8")
   const detailed = doc("HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
-  const previewRecord = readFileSync(resolve(process.cwd(), "docs/branding/KTOUR_BRAND_UNIFICATION_2026-09-15.md"), "utf8")
+  const previewRecordName = "KTOUR_BRAND_CLEANUP_2026-09-15.md"
+  const previewRecord = doc(previewRecordName)
   const previewSource = previewRecord.match(/App source: `([a-f0-9]{7})`/)?.[1]
   const previewUrl = previewRecord.match(/Verified Ready \*\*Preview\*\*: (https:\/\/[^\s]+)/)?.[1]
   expect(previewSource).toBeDefined()
@@ -136,6 +137,7 @@ test("HANDOFF-SYNC-006 current Sandbox Preview stays distinct from the historica
   expect(previewSource).not.toBe(source)
   for (const text of [readme, guide, spec, work, matrix, detailed, doc("HARVEY_HACKATHON_HANDOFF_2026-09-14.md")]) {
     expect(text).toContain(previewUrl!)
+    expect(text).toContain(previewRecordName)
     expect(text).toContain("feat/sumsub-sandbox-onboarding-20260914")
     expect(text).toContain("SUMSUB_SANDBOX_HANDOFF_2026-09-14.md")
   }

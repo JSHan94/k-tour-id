@@ -42,7 +42,17 @@ test("W1-ID-002 Person methods disclose only at choice and preserve independent 
   for (const method of ["mobile_id", "mobile_residence_card", "passport_ekyc"]) {
     expect(`${coordinator}\n${directCheck}\n${setup}`).toContain(`"${method}"`)
   }
-  expect(setup).toContain('const steps = [copy.chooseStep, copy.checkStep, copy.issueStep]')
+  expect(setup).toContain('const steps = [copy.chooseStep, copy.checkStep, sandboxPassport ? sandboxDisclosure.returnStep : copy.issueStep]')
+  expect(setup).toContain('const sumsubEnabled = process.env.NEXT_PUBLIC_ONDO_SUMSUB_SANDBOX === "1"')
+  expect(setup).toContain('const sandboxPassport = sumsubEnabled && !sampleRecovery && method === "passport_ekyc" && (phase === "consent" || phase === "sumsub_sandbox")')
+  const consent = setup.slice(setup.indexOf("function acceptConsent()"), setup.indexOf("function interruptBoundary("))
+  expect(consent).toMatch(/if \(sandboxPassport\)\s*\{\s*setSession\(null\)[\s\S]*?setPhase\("sumsub_sandbox"\)\s*return\s*\}/)
+  expect(consent).toContain('if (!reviewMode) return fail("IDENTITY_METHOD_UNAVAILABLE", "method_select")')
+  expect(setup).toContain('<SumsubPassportStepB ref={sumsubStepRef} locale={state.locale} onReturn={finishFinalDismiss} />')
+  expect(setup).toContain('if (!holderReceiptRef.current || !reviewMode) return')
+  const sandbox = source("features/ondo/identity-b/sumsub-passport-step-b.tsx")
+  expect(sandbox).toContain('data-pass-issued="false"')
+  expect(sandbox).not.toMatch(/completeIdentitySetup\(|createSimulatedCredentialB\(|recordGlobalAfter19AgeEligibilityB\(|setCommerceWalletStatus\(/)
   expect(setup).toContain('if (origin === "action_gate")')
   expect(coordinator).toContain('data-testid="action-gate-presentation"')
   expect(coordinator).toContain('data-testid="action-gate-presentation-requester"')

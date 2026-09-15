@@ -1,6 +1,6 @@
 # K-Tour ID Deployment Spec
 
-**현재 앱·소스:** [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app) · 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. [개발자 시작 문서](./DEVELOPER_START_HERE.md)의 현재 경로를 따른다. 아래 `cc3d7c3`·`handoff/harvey-20260914` 및 이전 검수 수치는 원 운영·인계 기준선이며 현재 Preview의 검수 결과가 아니다. 별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 운영 신원 확인·실제 얼굴/liveness 완료 증거가 아니며 CX·OpenDID·OmniOne Chain·Sui 필수 구현을 대신하지 않는다.
+**현재 앱·소스:** [K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app) · source `4a6904a` · 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. [개발자 시작 문서](./DEVELOPER_START_HERE.md)의 현재 경로와 [유지보수 검수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md)을 따른다. 아래 `cc3d7c3`·`handoff/harvey-20260914` 및 이전 검수 수치는 원 운영·인계 기준선이며 현재 Preview의 검수 결과가 아니다. 별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 운영 신원 확인·실제 얼굴/liveness 완료 증거가 아니며 CX·OpenDID·OmniOne Chain·Sui 필수 구현을 대신하지 않는다.
 
 상태: `v3.3 · 목업 ↔ 개발 인계 정합화 · 2026-09-11 · 실제 연결은 개발자 구현 범위`
 

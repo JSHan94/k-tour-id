@@ -44,7 +44,7 @@
 
 ## 5. 참고 리소스
 
-- **앱·소스:** [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app) · [현재 GitHub 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914). `feat/sumsub-sandbox-onboarding-20260914`의 `k-tour-id-app/`에서 시작합니다. 설치·실행은 [README](../README.md#run-the-handoff)를 참고합니다. `handoff/harvey-20260914`는 원 인계 기준선이며 기존 Production과 현재 Preview는 별개입니다.
+- **앱·소스:** [K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app) · [현재 GitHub 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914). 현재 배포 source `4a6904a`와 검수는 [유지보수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md)을 참고합니다. `feat/sumsub-sandbox-onboarding-20260914`의 `k-tour-id-app/`에서 시작합니다. 설치·실행은 [README](../README.md#run-the-handoff)를 참고합니다. `handoff/harvey-20260914`는 원 인계 기준선이며 기존 Production과 현재 Preview는 별개입니다.
 - **별도 Passport 테스트:** [Sumsub Sandbox 인계](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md). 실제 WebSDK/API 테스트이며 운영 신원 확인이나 실제 얼굴/liveness 완료 증거가 아닙니다. 위 네 기술의 필수 개발을 대신하지 않습니다.
 - **구현 상세:** [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) → [기존 1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). 이번 네 기술의 범위·실행 순서는 추가 명세가 우선합니다. API는 신규 구현 제안이며 공급자 공식 규격이 아닙니다.
 - **OpenDID:** [공식 아키텍처](https://github.com/OmniOneID/did-doc-architecture) · [공식 릴리스](https://github.com/OmniOneID/did-release) — 서버·지갑 구성과 설치 자료.

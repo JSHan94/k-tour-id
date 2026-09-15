@@ -1,6 +1,6 @@
 # K-Tour ID 해커톤 연동·목업·백엔드 작업 매트릭스
 
-**현재 앱·소스:** [K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app) · 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. [개발자 시작 문서](./DEVELOPER_START_HERE.md)의 현재 경로를 따른다. 아래 `cc3d7c3`·`handoff/harvey-20260914` 및 이전 검수 수치는 원 운영·인계 기준선이며 현재 Preview의 검수 결과가 아니다. 별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 운영 신원 확인·실제 얼굴/liveness 완료 증거가 아니며 CX·OpenDID·OmniOne Chain·Sui 필수 구현을 대신하지 않는다.
+**현재 앱·소스:** [K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app) · source `4a6904a` · 브랜치 `feat/sumsub-sandbox-onboarding-20260914`. [개발자 시작 문서](./DEVELOPER_START_HERE.md)의 현재 경로와 [유지보수 검수 기록](./KTOUR_BRAND_CLEANUP_2026-09-15.md)을 따른다. 아래 `cc3d7c3`·`handoff/harvey-20260914` 및 이전 검수 수치는 원 운영·인계 기준선이며 현재 Preview의 검수 결과가 아니다. 별도 [Sumsub Sandbox](./SUMSUB_SANDBOX_HANDOFF_2026-09-14.md)는 운영 신원 확인·실제 얼굴/liveness 완료 증거가 아니며 CX·OpenDID·OmniOne Chain·Sui 필수 구현을 대신하지 않는다.
 
 기존 운영 브랜딩 기준선: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 실제 provider/SDK 요구와 해커톤 범위는 변경하지 않았다. 이전 기능 검수 결과를 새 브랜딩 배포의 전체 여정 PASS로 이월하지 않는다.
 

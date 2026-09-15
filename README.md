@@ -2,7 +2,7 @@
 
 K-Tour ID is a map-first Korea food and travel product. It combines 400 official Seoul and Busan food-service records with a clearly separated Jeju editorial collection, then connects discovery to saved places, Tables and an optional privacy-preserving travel credential flow.
 
-**[Open the current K-Tour ID Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app)** — branded Preview source `4464697`, on branch [`feat/sumsub-sandbox-onboarding-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914). This separate Preview does not replace the original production deployment or the original Harvey handoff branch.
+**[Open the current K-Tour ID Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app)** — branded Preview source `4a6904a`, on branch [`feat/sumsub-sandbox-onboarding-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914). The [September 15 cleanup record](./docs/KTOUR_BRAND_CLEANUP_2026-09-15.md) records this Preview's verification separately from the original production deployment and Harvey handoff branch.
 
 The product journeys remain a clickable mock, with one isolated real **Sumsub Sandbox WebSDK/API** integration for Passport testing. Sandbox approval is not production identity verification, a pass, or a payment entitlement; real face/liveness and a complete real capture/submission journey remain unverified. See the [Sandbox handoff and verification boundaries](./docs/SUMSUB_SANDBOX_HANDOFF_2026-09-14.md). CX, OpenDID, OmniOne Chain and Sui integrations remain developer work. Funding, payment, reservation and chain outcomes are simulated.
 
