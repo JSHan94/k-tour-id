@@ -1,6 +1,6 @@
 # Harvey에게 보낼 메시지
 
-발송 전 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)의 Ready 및 main/Harvey 동기화를 확인한다. 현재는 확인 대기이며, 아래 본문만 복사해 전달한다.
+[현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에 운영 검수와 main/Harvey 동기화 기준을 정리했다. 아래 본문만 복사해 전달한다.
 
 ---
 

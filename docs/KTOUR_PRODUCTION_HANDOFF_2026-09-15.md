@@ -1,6 +1,6 @@
 # K-Tour ID · 현재 운영 배포와 개발자 인계
 
-기록일: 2026-09-15. 상태: **pending — 새 대표 주소 배포·검수 및 main/Harvey 동기화 확인 대기**.
+기록일: 2026-09-15. 상태: **Ready — 대표 주소 운영 배포·검수 및 main/Harvey 동기화 확인 완료**. 아래 `4cb1964`는 이번 앱 코드·배포 및 동기화 검수 기준이며, 이후 문서 전용 커밋과 구분한다.
 
 ## 현재 공유 경로
 
@@ -12,18 +12,19 @@
 | 짧은 개발 인계서 | [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md) |
 | 실행·개발 작업표 | [README](../README.md#run-the-handoff) · [개발자 시작 문서](./DEVELOPER_START_HERE.md) |
 | 전달 메시지 | [Harvey에게 보낼 메시지](./HARVEY_MESSAGE_2026-09-15.md) |
-| 배포 source | pending — 실제 배포 소스 확인 후 기록 |
-| 배포 ID·고유 URL | pending — Ready와 응답 확인 후 기록 |
-| main / Harvey 원격 HEAD | pending — 두 브랜치의 동일 SHA 확인 후 기록 |
+| 배포 source | 앱 코드·배포 검수 기준 `4cb1964a0ed6d071601c69cfae5b276fa8cd9e83` · Git source / ref `main` |
+| 배포 ID·고유 URL | `dpl_7t3mdwdw744frAaiqG6muF3F2ywZ` · [검수 기준 Production](https://ondo-9nq835j26-jaewook-9643s-projects.vercel.app), Ready |
+| main / Harvey 원격 HEAD | 동기화 검수 기준 `4cb1964a0ed6d071601c69cfae5b276fa8cd9e83`로 양쪽 일치 확인. 후속 문서 전용 커밋도 두 브랜치에 동일 반영 |
 
-앱은 `k-tour-id-app/`에 있다. `main`과 Harvey 브랜치를 **동일한 앱·문서 소스로 동기화**하는 인계이며, 기존 Harvey 브랜치 이름은 바꾸지 않는다. 이 문서의 pending 상태는 아직 원격 반영·배포 확인이 끝나지 않았다는 뜻이다. 문서 작성만으로 동기화·운영 검수 완료를 주장하지 않는다. 배포 runtime source와 이후 문서 전용 커밋은 별도로 기록한다.
+앱은 `k-tour-id-app/`에 있다. `main`과 Harvey 브랜치를 **동일한 앱·문서 소스로 동기화**했으며 기존 Harvey 브랜치 이름을 유지했다. 위 SHA에서 원격 양쪽 일치를 확인했고 로컬 Harvey도 fast-forward했다. 이후 결과 기록용 문서 전용 커밋은 두 브랜치에 동일 반영하며, 앱 코드를 바꾸거나 과거 실행 증거의 source를 새 문서 커밋으로 바꾸지 않는다. 이 문서 안에 매번 자기 자신의 최종 HEAD를 적어 반복 수정하지 않고 **검수 기준과 후속 문서 반영을 구분**한다.
 
 ## 확인된 배포 구성
 
-- 대표 별칭 `ktour-id.vercel.app`을 확보해 기존 Ready 배포에 연결했다. 새 canonical origin을 적용한 최종 빌드·배포 검수는 위 pending 상태와 별도로 확인 중이다.
+- 대표 주소 `ktour-id.vercel.app`은 프로젝트 도메인으로 등록해 Production을 자동으로 따른다. 위 Git 기반 Ready 배포와 대표 주소의 실제 응답을 확인했다. 기존 `ondo-tau.vercel.app`·`ondo-k-tour-id.vercel.app`도 같은 Production에 자동 연결됨을 확인했다.
 - 운영 Vercel 프로젝트 `ondo`의 Git 연결을 `woogieboogie-jl/k-tour-id`, Production 브랜치를 `main`으로 맞췄다.
 - 구 `k-tour-id` Vercel 프로젝트는 Git 연결만 해제해 중복 자동 배포를 막았다. 프로젝트·기존 배포·키는 삭제하지 않았다.
 - Production의 `NEXT_PUBLIC_SITE_URL`과 `NEXT_PUBLIC_ONDO_B_ORIGIN`은 대표 URL로 설정했다. 기존 환경 키 이름은 유지하며 Preview 환경·KYC secret은 변경하지 않았다.
+- GitHub About·homepage는 K-Tour ID 이름과 대표 URL로 정리했다. 저장소·기존 인계 브랜치 이름은 유지했다.
 
 ## 개발자가 연결할 범위
 
@@ -43,11 +44,21 @@
 
 원 인계는 [snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)로 고정해 보존한다. `cc3d7c3`의 [9/14 공유 이미지 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md), `0ddc9e1`의 [브랜드 배포 기록](./GITHUB_BRAND_CLEANUP_2026-09-15.md)은 당시 source·URL·검수 증거다. 해당 기록의 PASS를 새 대표 주소나 새 배포에서 재실행한 결과로 합산하지 않는다.
 
+## 이번 검수 결과
+
+- **로컬 앱 코드 기준:** 전체 계약 **847/847** 통과(14.8초), production build·artifact scan 통과.
+- **운영 대표 주소 브라우저:** 모바일·데스크톱 브랜드 **8/8** 통과(21.4초, workers 1, retries 0), 모바일 EN/KO/JA fallback **4/4** 통과(39.3초). 후자에서 점검한 24개 화면은 4개 테스트의 범위이며 별도 테스트 수로 추가하지 않는다. KYC 요청·브라우저 오류 각각 0회.
+- **운영 대표 주소 HTTP:** 공개 27개·차단 41개·build asset 19개, root `200`·legacy redirect `308`·discovery 7개 검사 통과. Sumsub session/status 두 API는 `404`. canonical·OG URL 및 Twitter 공유 이미지의 origin/path가 대표 주소 기준임을 확인했다.
+- **배포 전 Git Preview:** 같은 앱 source `4cb1964`의 [검수 Preview](https://ondo-7p0s0az4l-jaewook-9643s-projects.vercel.app), `dpl_BnMza5U6P2azwtJeS5JzHZ27kSxA`에서 HTTP 공개 27개·차단 41개와 모바일 8/8(43.8초) 통과. 이 결과는 운영 검사 수에 합산하지 않는다.
+- **최종 문서:** 인계 정합성 계약 9/9 통과(454ms), 문서 11개의 로컬 링크 224개 확인, `git diff --check` 통과. 문서 정합성 검사이며 추가 앱 여정 검사로 합산하지 않는다.
+
+이 검수는 목업·브랜딩·지정 화면과 배포 경계 확인이다. CX/OpenDID/OmniOne Chain/Sui 실제 연동, 실자금 이동·예약 확정, 실제 iPhone Safari/Android 기기 검수나 Sumsub 실제 얼굴/liveness·전체 제출 완료를 뜻하지 않는다.
+
 ## 공개·인계 확인
 
-- [ ] 실제 배포 source·Ready·고유 URL·대표 주소 응답 확인.
-- [ ] main과 Harvey 원격 HEAD가 동일한 앱·문서 SHA인지 확인.
-- [ ] 새 대표 주소의 canonical·공유 이미지·모바일/데스크톱 주요 화면 검수.
-- [ ] 순수 목업에 Sumsub SDK·서버 경로가 없고 실제 자격·결제·예약을 생성하지 않음을 확인.
-- [ ] 문서 계약·링크 검사와 확인한 테스트 범위 기록; 미검수 항목은 미검수로 유지.
-- [ ] 완료 사실에 맞춰 README·짧은 인계서·전달 메시지의 대기 표시 갱신.
+- [x] 실제 배포 source·Ready·고유 URL·대표 주소 응답 확인.
+- [x] 검수 기준 `4cb1964`에서 main과 Harvey 원격 HEAD 및 로컬 Harvey fast-forward 확인.
+- [x] 대표 주소의 canonical·공유 이미지·모바일/데스크톱 지정 화면 검수.
+- [x] 순수 목업 산출물의 Sumsub SDK·서버 경로 제외 및 API `404` 확인; 실제 자격·결제·예약 연동 미완료 경계 유지.
+- [x] 최종 문서 계약·링크 검사와 확인한 테스트 범위 기록; 미검수 항목은 미검수로 유지.
+- [x] 완료 사실에 맞춰 README·짧은 인계서·전달 메시지의 대기 표시 갱신.

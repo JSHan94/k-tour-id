@@ -48,7 +48,7 @@ M0만 연결하거나 M2 없이 끝내면 이번 팀 필수 구현 완료가 아
 | 항목 | 시작점 |
 |---|---|
 | UX 목업 | [K-Tour ID](https://ktour-id.vercel.app), 공개 진입 `/`. 새 대표 주소 배포·검수는 [현재 인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md) 참고 |
-| 앱·문서 인계 기준 | 기준 `main`, Harvey 시작 `handoff/harvey-20260914`; 동일 소스 동기화는 현재 확인 대기. [원 인계 snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)와 runtime source `cc3d7c3`는 과거 기록 |
+| 앱·문서 인계 기준 | 기준 `main`, Harvey 시작 `handoff/harvey-20260914`; 앱 코드·동기화 검수 기준 `4cb1964`에서 일치 확인. 이후 문서 전용 커밋은 양 브랜치 동일 반영. [원 인계 snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)와 runtime source `cc3d7c3`는 과거 기록 |
 | 기존 운영 목업 기준 | `cc3d7c3`, [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md). 공유 카드·무채색 아이콘만 변경했으며 최종 배포·검수 상태는 해당 기록을 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 별도 증거다. 실제 CX/OpenDID/Chain/Sui 연동 및 이 문서의 개발 범위는 변경하지 않음 |
 | 앱 디렉터리 | 인계 브랜치를 clone한 저장소의 `k-tour-id-app/` |
 | 새 구현 분리 | 위 소스에서 해커톤 연동 브랜치와 별도 HTTPS staging을 생성. 기존 공개 목업을 즉시 덮어쓰지 않음 |
