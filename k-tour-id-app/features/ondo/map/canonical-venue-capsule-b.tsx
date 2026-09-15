@@ -18,9 +18,9 @@ const CATEGORY_COPY: Record<VenuePrimaryCategory, Record<OndoBLocale, string>> =
 }
 
 const TEMPERATURE_NAME: Record<OndoBLocale, string> = {
-  en: "ONDO temperature",
-  ko: "온도",
-  ja: "ONDO温度",
+  en: "Place temperature",
+  ko: "장소 온도",
+  ja: "スポットのにぎわい",
 }
 
 const PERSONAL_MATCH: Record<OndoBLocale, string> = {

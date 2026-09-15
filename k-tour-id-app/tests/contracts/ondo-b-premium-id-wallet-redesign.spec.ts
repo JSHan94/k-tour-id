@@ -115,7 +115,7 @@ test("B-PREMIUM-POLISH-001 first-frame consumer copy stays product-shaped while 
   expect(commerce).toContain('voucherBody: (minimum: string, expiry: string) => `${minimum} 최소 금액 충족 · ${expiry}까지`')
   expect(commerce).toContain("copy.voucherBody(formatKrw(order.grossKrw, locale), productTimeline.benefitExpiry[locale])")
   expect(commerce).toContain("Meal-offer balance changes appear here.")
-  expect(commerce).toContain("ONDO 식사 오퍼의 잔액 변화가 여기에 표시됩니다.")
+  expect(commerce).toContain("식사 오퍼의 잔액 변화가 여기에 표시됩니다.")
   expect(commerce).toContain('balanceEquivalent: "Estimated in USD"')
   expect(commerce).toContain('technical: "Balance details"')
   expect(commerce).toContain('digital: "Stablecoins"')

@@ -1,4 +1,14 @@
-# ONDO 溫圖 brand marks
+# K-Tour ID brand marks
+
+The public service name is **K-Tour ID**. The map header, ID setup, wallet,
+requester descriptions and sharing metadata use this name; ONDO and 溫圖
+are retired public brand labels. Internal `ondo-*` filenames, event names,
+storage keys and historical receipt IDs remain unchanged for compatibility.
+
+The header uses `KTourIdMark` with a typographic K-Tour ID wordmark. The
+K / location-pin / route silhouette follows the monochrome favicon master.
+Use dark ink on light surfaces and white ink on dark surfaces; no gradient,
+photography, status color or verification badge belongs inside the app logo.
 
 ## K-TOUR ID supplied mark
 
@@ -23,15 +33,18 @@ The original colorful logo is deliberately not overwritten.
 
 ## Food-first sharing card
 
-`../og-ktour-food-v1.png` is the active 1200×630 Open Graph and Twitter card.
+`../og-ktour-food-v2.png` is the active 1200×630 Open Graph and Twitter card.
 K-TOUR ID is the lead brand; food, café and bar imagery describes the service.
 The dishes are generated brand illustrations, not photographs of named venues
 or evidence of visits. See `docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md`
-for the final generation prompt and usage record. Versioned filenames separate
+for the original prompt, and `docs/branding/KTOUR_BRAND_UNIFICATION_2026-09-15.md`
+for the imagegen edit removing the old endorsement. Versioned filenames separate
 the new artwork from cached old link previews.
 
-`溫圖` is the product's Hanja signature: `溫` for warmth and `圖` for map. It
-sits beside the full lockup; `ONDO` remains the international product name.
+## Archived ONDO assets (not the current public brand)
+
+The remaining guidance below documents the historical files retained in Git.
+Do not introduce these assets into new K-Tour ID screens.
 
 The ONDO mark is a three-facet open atlas with a waypoint cutout: a calm travel brand object, not a badge or status symbol. Its folded silhouette must remain recognisable without the wordmark and must never collapse into a letterform.
 

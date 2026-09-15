@@ -54,7 +54,7 @@ test("Tables stays polished and closable at 360, 390, and 430 CSS pixels", async
     await page.goto("/", { waitUntil: "domcontentloaded" })
     await page.getByTestId("nav-tables").click()
     const entry = page.getByTestId("tables-entry")
-    await expect(entry.getByRole("heading", { name: "ONDO Tables" })).toBeVisible()
+    await expect(entry.getByRole("heading", { name: "K-Tour ID Tables" })).toBeVisible()
     await expectNoHorizontalOverflow(entry)
     const activeCard = page.getByTestId(`table-card-${TABLE_ID}`)
     await activeCard.scrollIntoViewIfNeeded()

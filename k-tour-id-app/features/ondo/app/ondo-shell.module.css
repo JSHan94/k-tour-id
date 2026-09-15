@@ -50,7 +50,7 @@
    it as soon as local state is restored. */
 .stage[data-hydrated="false"] {
   background-color: var(--ondo-canvas);
-  background-image: url("/brand/ktour-id-mark-192.png");
+  background-image: url("/brand/ktour-id-mono-v1-192.png");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 46px 46px;

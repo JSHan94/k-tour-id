@@ -232,7 +232,7 @@ export const PUBLIC_FILES = Object.freeze([
   "public/editorial/food/perilla-noodles-illustration-v1.jpg",
   "public/editorial/food/tteokgalbi-illustration-v1.jpg",
   "public/editorial/food/coffee-croissant-illustration-v1.jpg",
-  "public/og-ktour-food-v1.png",
+  "public/og-ktour-food-v2.png",
   "public/brand/ktour-id-mono-v1.svg",
   "public/brand/ktour-id-mono-v1-16.png",
   "public/brand/ktour-id-mono-v1-32.png",

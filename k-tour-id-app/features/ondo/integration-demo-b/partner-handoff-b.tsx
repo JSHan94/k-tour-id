@@ -17,7 +17,7 @@ export function PartnerDeviceSetupB({ locale, onReady }: { locale: OndoBLocale; 
     <Landmark size={28} aria-hidden="true" />
     <small>{w("Partner workspace · demo", "파트너 작업 공간 · 데모", "パートナー画面・デモ")}</small>
     <h2>{step === "sign_in" ? w("Welcome to the counter", "매장 카운터에서 시작해요", "店舗カウンターから始めましょう") : w("Prepare this counter", "이 기기를 확인에 사용해요", "この端末を確認に使用")}</h2>
-    <p>{w("Use the prepared ONDO sample café account. No real sign-in or device registration takes place.", "준비된 ONDO 샘플 카페 계정을 사용해요. 실제 로그인이나 기기 등록은 하지 않아요.", "用意されたONDOサンプルカフェのアカウントを使います。実際のログインや端末登録は行いません。")}</p>
+    <p>{w("Use the prepared K-Tour ID sample café account. No real sign-in or device registration takes place.", "준비된 K-Tour ID 샘플 카페 계정을 사용해요. 실제 로그인이나 기기 등록은 하지 않아요.", "用意されたK-Tour ID サンプルカフェのアカウントを使います。実際のログインや端末登録は行いません。")}</p>
     {step === "sign_in" ? <button className={styles.primary} data-testid="partner-sample-sign-in" onClick={() => setStep("device")}>{w("Enter sample workspace", "샘플 작업 공간 열기", "サンプル画面を開く")}</button> : <>
       <label className={styles.deviceConsent}><input type="checkbox" data-testid="partner-device-consent" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>{w("Use this browser as the sample café counter. Only the requested eligibility result will be shown.", "이 브라우저를 샘플 카페 카운터로 사용합니다. 요청한 자격 결과만 표시돼요.", "このブラウザーをサンプルカフェの端末として使います。要求した資格結果のみを表示します。")}</span></label>
       <button className={styles.primary} disabled={!consent} data-testid="partner-device-ready" onClick={onReady}>{w("Prepare sample counter", "샘플 카운터 준비", "サンプル端末を準備")}</button>

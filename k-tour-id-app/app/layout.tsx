@@ -10,11 +10,11 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_SITE_URL ?? "https://ondo-directory.invalid",
   ),
   alternates: { canonical: "/" },
-  applicationName: "K-TOUR ID",
-  title: "K-TOUR ID | ONDO 溫圖",
+  applicationName: "K-Tour ID",
+  title: "K-Tour ID",
   description:
-    "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
-  generator: "K-TOUR ID by ONDO 溫圖",
+    "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
+  generator: "K-Tour ID",
   icons: {
     icon: [
       { url: "/brand/ktour-id-mono-v1-16.png", type: "image/png", sizes: "16x16" },
@@ -25,17 +25,17 @@ export const metadata: Metadata = {
     apple: [{ url: "/brand/ktour-id-mono-v1-180.png", type: "image/png", sizes: "180x180" }],
   },
   openGraph: {
-    siteName: "K-TOUR ID",
-    title: "K-TOUR ID | ONDO 溫圖",
-    description: "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
+    siteName: "K-Tour ID",
+    title: "K-Tour ID",
+    description: "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
     type: "website",
-    images: [{ url: "/og-ktour-food-v1.png", width: 1200, height: 630, alt: "K-TOUR ID — Food, Cafés and Bars in Korea, by ONDO" }],
+    images: [{ url: "/og-ktour-food-v2.png", width: 1200, height: 630, alt: "K-Tour ID — Food, Cafés and Bars in Korea" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "K-TOUR ID | ONDO 溫圖",
-    description: "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
-    images: ["/og-ktour-food-v1.png"],
+    title: "K-Tour ID",
+    description: "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close.",
+    images: ["/og-ktour-food-v2.png"],
   },
 }
 
