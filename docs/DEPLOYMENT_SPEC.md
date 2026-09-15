@@ -1,10 +1,12 @@
-# K-Tour ID / ONDO Deployment Spec
+# K-Tour ID Deployment Spec
+
+**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 이번 브랜드 배포는 아직 검수 대기이며 Ready로 판정하지 않는다. [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
 
 상태: `v3.3 · 목업 ↔ 개발 인계 정합화 · 2026-09-11 · 실제 연결은 개발자 구현 범위`
 
 **개발자는 [시작 문서](./DEVELOPER_START_HERE.md)부터 읽는다.** 이 문서는 상세 계약 정본, [Backend 인계 작업표](./BACKEND_HANDOFF_CHECKLIST_2026-09-09.md)는 배정 단위, [해커톤 매트릭스](./HACKATHON_INTEGRATION_MATRIX_2026-09-08.md)는 기술별 충족 증거다.
 
-**현재 공개 주소는 [운영 앱](https://ondo-tau.vercel.app)** 이다. source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다.
+**기존 운영 기준선은 [운영 앱](https://ondo-tau.vercel.app)** 이다. source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다.
 
 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개·계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md), [9월 11일 전체 검수](./FINAL_JOURNEY_QA_2026-09-11.md)도 각각의 역사적 범위만 따른다. 실제 provider 연결·실기기 완료가 아니다.
 
@@ -48,8 +50,8 @@
 ### 1.2 감사 기준선
 
 - 소스 기준: `7776a7228d7df96f5981038bf77a3da6e5bd37c1` 기반 B 앱 및 복구된 후속 변경.
-- 개발 시작점: branch `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`. 과거 배포 commit ID는 이력 참고값이며 현재 인계 브랜치는 최신 소스 스냅샷이다.
-- 현재 목업·배포 source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md), [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md) 및 [이전 전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)와 함께 source·URL별로 구분한다.
+- 원 인계 시작점: branch `handoff/harvey-20260914` (`9d4aec9`)의 `k-tour-id-app/`. 현재는 위 릴리스 브랜치를 사용하며 과거 배포 commit ID는 이력 참고값이다.
+- 기존 운영 목업·배포 source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 마지막 기능 흐름 검수 `e2ad7c4`는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md), [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md) 및 [이전 전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md)와 함께 source·URL별로 구분한다.
 - 이전 핵심 목업·인계 커밋 `bec3257`·`bc8f0d0`, v3.2/G09-S `6fb5b96`·`996119f`, 모바일 `a45400f`, docs `d99ca9c`, core app `5233816`와 공개판 `3dc392b`는 각각의 역사적 기록이다.
 - 저장소 루트의 오래된 `k-tour-id-app`을 최신 구현으로 집계하지 않는다.
 - 아래 `B/`는 **이 기준선의** `k-tour-id-app/features/ondo/`를 뜻한다. 인계 시 이 branch의 코드·문서를 같은 commit으로 묶어야 한다.

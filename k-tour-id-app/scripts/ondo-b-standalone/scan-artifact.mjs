@@ -77,7 +77,7 @@ export async function scanStandaloneArtifact() {
   }
 
   const emittedImages = artifactFiles.filter((file) => /\.(?:avif|gif|jpe?g|png|svg|webp)$/i.test(file))
-  const expectedOg = "public/og-ktour-food-v1.png"
+  const expectedOg = "public/og-ktour-food-v2.png"
   if (!PUBLIC_FILES.includes(expectedOg)) fail("The production social card is absent from the public allowlist")
   const ogPath = expectedOg.replace(/^public\//, "")
   const emittedOg = emittedImages.find((file) => file.endsWith(`/${ogPath}`) || file === ogPath)

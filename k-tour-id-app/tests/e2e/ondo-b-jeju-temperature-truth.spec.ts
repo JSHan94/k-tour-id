@@ -79,14 +79,14 @@ test("Jeju stays editorial-unscored across map, list, detail and accessible name
   await expect(peekTemperature).toHaveAttribute("data-pulse-level", "limited")
   await expect(peekTemperature).toHaveAttribute("data-coverage-intensity", "clustered")
   await expect(peekTemperature).toHaveAttribute("data-temperature-model", "editorial-unscored")
-  await expect(peekTemperature).toHaveAccessibleName("ONDO temperature · Editorial place coverage: Grouped · No popularity score")
+  await expect(peekTemperature).toHaveAccessibleName("Place temperature · Editorial place coverage: Grouped · No popularity score")
 
   await page.getByTestId("ondo-b-editorial-place-details").click()
   const detailTemperature = page.getByTestId("ondo-b-editorial-place-overlay").locator("[data-pulse-level]")
   await expect(detailTemperature).toHaveAttribute("data-pulse-level", "limited")
   await expect(detailTemperature).toHaveAttribute("data-coverage-intensity", "clustered")
   await expect(detailTemperature).toHaveAttribute("data-editorial-temperature-mode", "editorial-coverage")
-  await expect(detailTemperature).toHaveAccessibleName("ONDO temperature · Editorial place coverage: Grouped · No popularity score")
+  await expect(detailTemperature).toHaveAccessibleName("Place temperature · Editorial place coverage: Grouped · No popularity score")
 })
 
 test("Jeju coverage key and rows stay contained from 320 to 430px in EN, KO and JA", async ({ page }) => {

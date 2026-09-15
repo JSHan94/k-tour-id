@@ -18,7 +18,7 @@ import { PartnerDeviceSetupB, PartnerRequestHandoffB } from "./partner-handoff-b
 const COPY = {
   en: {
     title: "Partner tools", sample: "Sample responses · no external actions", verify: "Check", settlements: "Settlement", events: "Events",
-    partner: "ONDO sample café", ask: "Request only what you need", person: "Identity", age: "19+", visitor_benefit: "Visitor benefit",
+    partner: "K-Tour ID sample café", ask: "Request only what you need", person: "Identity", age: "19+", visitor_benefit: "Visitor benefit",
     create: "Create request", open: "Review request", holder: "Your choice", shares: "Only this result is shared", allow: "Share result", deny: "Not now", again: "New request", receipt: "Sample receipt",
     allowed: "Eligible at this check", needs_proof: "More information needed", denied: "Not eligible", expired: "Expired", notShared: "Not shared", requestBlocked: "Request not accepted", stale: "Check again", staleNote: "This past result is no longer current. Create a new request.", checked: "Checked", historical: "Result at the time of this sample check.",
     alternate: "Try another case", normal: "Normal request", wrong_audience: "Wrong partner", replay: "Already used request", revoked: "Revoked at verifier", requestExpired: "Expired request", caseNote: "Changes this check only, not your pass.",
@@ -28,7 +28,7 @@ const COPY = {
   },
   ko: {
     title: "파트너 도구", sample: "샘플 응답 · 외부 실행 없음", verify: "자격 확인", settlements: "정산", events: "기록",
-    partner: "ONDO 샘플 카페", ask: "필요한 자격만 요청해요", person: "신원", age: "19+", visitor_benefit: "방문자 혜택",
+    partner: "K-Tour ID 샘플 카페", ask: "필요한 자격만 요청해요", person: "신원", age: "19+", visitor_benefit: "방문자 혜택",
     create: "확인 요청 만들기", open: "요청 확인", holder: "공유할까요?", shares: "이 결과만 공유돼요", allow: "결과 공유", deny: "지금은 안 할게요", again: "새 요청", receipt: "샘플 영수증",
     allowed: "확인 당시 조건 충족", needs_proof: "추가 확인 필요", denied: "이용 조건 미충족", expired: "만료됨", notShared: "공유하지 않았어요", requestBlocked: "요청을 사용할 수 없어요", stale: "다시 확인해 주세요", staleNote: "이전 결과는 현재 유효하지 않아요. 새 요청으로 확인해 주세요.", checked: "확인 시각", historical: "샘플 확인 당시의 결과예요.",
     alternate: "다른 상황 체험", normal: "정상 요청", wrong_audience: "다른 파트너의 요청", replay: "이미 사용한 요청", revoked: "철회된 자격", requestExpired: "만료된 요청", caseNote: "이번 확인만 바뀌며 내 패스는 그대로예요.",
@@ -38,7 +38,7 @@ const COPY = {
   },
   ja: {
     title: "パートナーツール", sample: "サンプル応答・外部実行なし", verify: "資格確認", settlements: "精算", events: "記録",
-    partner: "ONDOサンプルカフェ", ask: "必要な資格だけを確認", person: "本人", age: "19+", visitor_benefit: "旅行者特典",
+    partner: "K-Tour ID サンプルカフェ", ask: "必要な資格だけを確認", person: "本人", age: "19+", visitor_benefit: "旅行者特典",
     create: "確認リクエスト", open: "内容を確認", holder: "共有しますか？", shares: "この結果だけを共有します", allow: "結果を共有", deny: "今はしない", again: "新しいリクエスト", receipt: "サンプル控え",
     allowed: "確認時の条件を満たしました", needs_proof: "追加確認が必要", denied: "条件を満たしません", expired: "期限切れ", notShared: "共有していません", requestBlocked: "リクエストを使用できません", stale: "再確認してください", staleNote: "過去の結果は現在無効です。新しいリクエストで確認してください。", checked: "確認日時", historical: "サンプル確認時点の結果です。",
     alternate: "別のケースを試す", normal: "通常のリクエスト", wrong_audience: "別のパートナー", replay: "使用済みリクエスト", revoked: "資格が取り消された", requestExpired: "期限切れリクエスト", caseNote: "今回の確認だけが変わります。パスは変わりません。",

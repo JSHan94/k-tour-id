@@ -1,7 +1,7 @@
 export const RESERVATION_COPY_B = {
   en: {
     title: "Book a table", sample: "Sample booking", boundary: "Prepared availability · nothing is sent to a restaurant.",
-    venue: "ONDO sample restaurant", seoul: "Seoul", busan: "Busan", jeju: "Jeju", city: "City", date: "Day", time: "Time · KST", party: "People",
+    venue: "K-Tour ID sample restaurant", seoul: "Seoul", busan: "Busan", jeju: "Jeju", city: "City", date: "Day", time: "Time · KST", party: "People",
     request: "Request sample booking", requesting: "Requesting…", confirmed: "Your table is ready", confirmedNote: "Sample confirmation only. No real seats are reserved.",
     full: "Try another time", fullNote: "This sample time has no seats. Your choices are kept.", failed: "Request not completed", failedNote: "No sample booking was created. You can retry safely.",
     unknown: "Still checking your booking", unknownNote: "Keep this request. Check its status before trying again.",
@@ -17,7 +17,7 @@ export const RESERVATION_COPY_B = {
   },
   ko: {
     title: "매장 예약", sample: "예약 샘플", boundary: "준비된 좌석 예시 · 매장으로 전송되지 않아요.",
-    venue: "ONDO 샘플 레스토랑", seoul: "서울", busan: "부산", jeju: "제주", city: "도시", date: "날짜", time: "시간 · 한국 기준", party: "인원",
+    venue: "K-Tour ID 샘플 레스토랑", seoul: "서울", busan: "부산", jeju: "제주", city: "도시", date: "날짜", time: "시간 · 한국 기준", party: "인원",
     request: "샘플 예약 요청", requesting: "요청 중…", confirmed: "테이블이 준비됐어요", confirmedNote: "샘플 확인서예요. 실제 좌석을 예약한 것은 아니에요.",
     full: "다른 시간을 골라볼까요?", fullNote: "이 샘플 시간은 만석이에요. 선택한 내용은 유지했어요.", failed: "요청을 완료하지 못했어요", failedNote: "생성된 샘플 예약은 없어요. 다시 요청해 보세요.",
     unknown: "예약을 확인하고 있어요", unknownNote: "새 요청 대신 현재 예약의 상태를 확인해 주세요.",
@@ -33,7 +33,7 @@ export const RESERVATION_COPY_B = {
   },
   ja: {
     title: "席を予約", sample: "予約サンプル", boundary: "用意された空席例・店舗には送信されません。",
-    venue: "ONDOサンプルレストラン", seoul: "ソウル", busan: "釜山", jeju: "済州", city: "都市", date: "日付", time: "時間・韓国時間", party: "人数",
+    venue: "K-Tour ID サンプルレストラン", seoul: "ソウル", busan: "釜山", jeju: "済州", city: "都市", date: "日付", time: "時間・韓国時間", party: "人数",
     request: "サンプル予約を依頼", requesting: "依頼中…", confirmed: "席の準備ができました", confirmedNote: "サンプルの確認書です。実際の席は予約されていません。",
     full: "別の時間を選びましょう", fullNote: "このサンプル時間は満席です。選択内容は保持されています。", failed: "依頼を完了できませんでした", failedNote: "サンプル予約は作成されていません。再試行できます。",
     unknown: "予約を確認しています", unknownNote: "新しく依頼せず、この予約の状況を確認してください。",

@@ -615,7 +615,7 @@ function LocalSignal({ venueId }: { venueId: string }) {
     : status === "submitted"
       ? locale === "ko" ? "현장 팁을 이 기기의 데모에 저장했어요. 실제 서비스에는 전송되지 않았어요." : "Your local tip was saved to this device demo. Nothing was sent to a live service."
       : status === "duplicate"
-        ? locale === "ko" ? "이미 반영된 데모 방문이에요. 방문·기여 이력과 공개 ONDO 점수는 다시 바뀌지 않았어요." : "This demo visit was already recorded. Visit and contribution histories and the public ONDO score did not change again."
+        ? locale === "ko" ? "이미 반영된 데모 방문이에요. 방문·기여 이력과 공개 장소 점수는 다시 바뀌지 않았어요." : "This demo visit was already recorded. Visit and contribution histories and the public place score did not change again."
         : null
 
   useEffect(() => {
@@ -638,7 +638,7 @@ function LocalSignal({ venueId }: { venueId: string }) {
         <p className={styles.eyebrow}>{locale === "ko" ? "다음 여행자에게 도움 주기" : "Help the next traveler"}</p>
         <h2>{locale === "ko" ? "지금 알게 된 현장 팁을 남겨주세요" : "Share what you found here"}</h2>
         <p className={styles.lead}>{venue}</p>
-        <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "이 기기의 데모에만 저장되고 실제 서비스로 전송되지 않아요. 제출하면 방문과 기여 이력만 바뀝니다. 신원, 19세 이상 확인, 결제 확인, 모임 이력과 스탬프는 그대로이고 공개 ONDO 점수는 즉시 바뀌지 않아요." : "This demo session records a simulated contribution only; nothing is sent to a live service. Submitting updates only visit and contribution histories. Identity, 19+, payment verification, meetup history, and stamps stay unchanged, and the public ONDO score does not change immediately."}</span></InlineNotice>
+        <InlineNotice tone="neutral"><ShieldCheck size={18} /><span>{locale === "ko" ? "이 기기의 데모에만 저장되고 실제 서비스로 전송되지 않아요. 제출하면 방문과 기여 이력만 바뀝니다. 신원, 19세 이상 확인, 결제 확인, 모임 이력과 스탬프는 그대로이고 공개 장소 점수는 즉시 바뀌지 않아요." : "This demo session records a simulated contribution only; nothing is sent to a live service. Submitting updates only visit and contribution histories. Identity, 19+, payment verification, meetup history, and stamps stay unchanged, and the public place score does not change immediately."}</span></InlineNotice>
         {!terminal ? <>
           <label className={styles.fieldLabel} htmlFor={`signal-note-${venueId}`}>{locale === "ko" ? "도움이 될 정보 · 메모 또는 사진 필수" : "Helpful note · Add a note or photo"}</label>
           <p className={styles.requirement} id={`signal-requirement-${venueId}`}>{locale === "ko" ? "메모나 현장 사진 중 하나를 추가해야 제출할 수 있어요." : "Add either a note or an on-site photo before submitting."}</p>

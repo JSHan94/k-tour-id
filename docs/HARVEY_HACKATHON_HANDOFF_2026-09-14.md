@@ -1,4 +1,4 @@
-# ONDO · 해커톤 연동 개발 요약
+# K-Tour ID · 해커톤 연동 개발 요약
 
 ## 1. 목표와 범위
 
@@ -44,7 +44,8 @@
 
 ## 5. 참고 리소스
 
-- **앱·소스:** [현재 목업](https://ondo-tau.vercel.app) · [GitHub 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914). `main`이 아닌 `handoff/harvey-20260914`에서 시작하며, 앱은 `k-tour-id-app/`에 있습니다. 설치·실행 명령은 [README](../README.md#run-the-handoff)를 참고합니다.
+- **앱·소스:** [운영 목업](https://ondo-tau.vercel.app) · [K-Tour ID 릴리스 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/release/ktour-brand-20260915). `release/ktour-brand-20260915`의 `k-tour-id-app/`에서 시작합니다. 이번 브랜드 배포는 검수 대기이며 [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 완료 여부를 확인합니다. `handoff/harvey-20260914`는 원 인계 기준선입니다. 설치·실행은 [README](../README.md#run-the-handoff)를 참고합니다.
+- **별도 실험:** Sumsub Sandbox는 별도 feature 브랜치·Preview이며 이 릴리스에 포함하지 않습니다. 네 기술의 필수 개발을 대체하지 않습니다. 경로와 검증 한계는 [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에 정리합니다.
 - **구현 상세:** [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) → [기존 1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). 이번 네 기술의 범위·실행 순서는 추가 명세가 우선합니다. API는 신규 구현 제안이며 공급자 공식 규격이 아닙니다.
 - **OpenDID:** [공식 아키텍처](https://github.com/OmniOneID/did-doc-architecture) · [공식 릴리스](https://github.com/OmniOneID/did-release) — 서버·지갑 구성과 설치 자료.
 - **해커톤·CX·Chain:** [공식 해커톤 안내](https://opendid.org/hackathon/2026/) — 가이드북·기술 설명회·제출 자료. 가이드북의 과제 안내 p5·8, 모바일 신분증/CX p19–26, Chain p33–40을 참고합니다.

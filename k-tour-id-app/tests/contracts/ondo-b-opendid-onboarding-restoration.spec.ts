@@ -84,7 +84,7 @@ test("OPENDID-B-001 restores the three truthful identity routes without provider
 test("OPENDID-B-002 every route has one on-device boundary and never performs identity network or sensitive storage", () => {
   expect(setupSurfaces).not.toContain("SIMULATED")
   expect(setup).toContain("No identity provider or OpenDID service is connected")
-  expect(setup).toContain("ONDO K-Tour ID")
+  expect(setup).toContain('requesterValue: "K-Tour ID"')
   expect(setup).toContain("No Mobile ID payload, name, birth date, signed callback or provider result is stored")
   expect(setup).toContain("No residence-card payload, name, birth date, signed callback or provider result is stored")
   expect(setup).toContain("bundled redacted sample")
@@ -302,8 +302,11 @@ test("OPENDID-B-015 archived source assets remain while identity uses the monoch
   expect(setup).toContain("<KTourIdMark")
   expect(setup).not.toContain('/brand/ktour-id-mark')
   expect(mark).toContain('data-ktour-mark="monochrome"')
-  expect(mark).toContain('stroke="currentColor"')
-  expect(mark).not.toMatch(/<image|linearGradient|#[0-9a-f]{3,8}/i)
+  expect(mark).toContain('fill="currentColor"')
+  expect(mark).not.toMatch(/<image|linearGradient|radialGradient/i)
+  // The supplied silhouette uses a black/white luminance mask; only the
+  // visible silhouette must inherit the surrounding foreground color.
+  expect(mark.replace(/<mask\b[\s\S]*?<\/mask>/g, "")).not.toMatch(/#[0-9a-f]{3,8}/i)
   expect(setup).toContain('className={styles.brandMark}')
 })
 
