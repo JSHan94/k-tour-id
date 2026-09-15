@@ -1,6 +1,6 @@
 # K-Tour ID Deployment Spec
 
-**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 이번 브랜드 배포는 아직 검수 대기이며 Ready로 판정하지 않는다. [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
+**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 K-Tour ID 브랜드 배포가 **Ready**다(배포 source `0ddc9e1`). [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
 
 상태: `v3.3 · 목업 ↔ 개발 인계 정합화 · 2026-09-11 · 실제 연결은 개발자 구현 범위`
 

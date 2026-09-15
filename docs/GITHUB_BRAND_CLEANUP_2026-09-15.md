@@ -1,15 +1,17 @@
 # K-Tour ID · GitHub와 배포 경로 정리
 
-기록일: 2026-09-15. **현재 브랜드 릴리스는 배포·검수 대기다.** 코드 수정, GitHub 게시, 실제 배포 Ready와 브라우저 검수는 각각 확인한 뒤 기록한다. 과거 PASS를 이번 배포 결과로 이월하지 않는다.
+기록일: 2026-09-15. **K-Tour ID 브랜드 Production 배포 Ready.** 배포 시 릴리스 브랜치의 원격 소스와 실제 배포 source는 `0ddc9e1bd2df4a496a9d1d588ad6012eedbac680`이다. 이후 문서만 수정한 커밋과 이 runtime source를 구분한다. 과거 PASS를 이번 배포 결과로 이월하지 않는다.
 
 ## 어디에서 시작하나요?
 
 | 구분 | 경로와 상태 |
 |---|---|
 | 최신 순수 목업 소스 | [`release/ktour-brand-20260915`](https://github.com/woogieboogie-jl/k-tour-id/tree/release/ktour-brand-20260915) · 앱은 `k-tour-id-app/`, 실행은 [README](../README.md#run-the-handoff) |
-| 운영 앱 | [ondo-tau.vercel.app](https://ondo-tau.vercel.app) · 이번 K-Tour ID 브랜드 배포는 아직 완료 판정 전 |
+| 운영 앱 | [ondo-tau.vercel.app](https://ondo-tau.vercel.app) · K-Tour ID 브랜드 배포 Ready, source `0ddc9e1` |
+| 고유 운영 배포 | [ondo-gafo82sil](https://ondo-gafo82sil-jaewook-9643s-projects.vercel.app) · `dpl_HVfUAJY7CiFdKDoJCoynvp9rBYwV` |
+| 기존 공유 별칭 | [ondo-k-tour-id.vercel.app](https://ondo-k-tour-id.vercel.app) · 이전 배포에 고정된 별칭을 위 같은 Ready 배포로 수정 후 확인 |
 | 원 Harvey 인계 기준선 | [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914), `9d4aec9` · 역사적 스냅샷이며 최신 브랜드 릴리스와 구분 |
-| 별도 Passport 실험 | [`feat/sumsub-sandbox-onboarding-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914) · [Sumsub Preview](https://ondo-mi9i0eh8v-jaewook-9643s-projects.vercel.app), 브랜딩 배포 소스 `4464697` |
+| 별도 Passport 실험 | [`feat/sumsub-sandbox-onboarding-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/feat/sumsub-sandbox-onboarding-20260914) · [Sumsub Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app), source `4a6904a`, Ready · `dpl_EbZv6Fp4PLPVQRAEDdv2ToZxcqee` |
 
 ## 이번 릴리스에 포함되는 것
 
@@ -22,12 +24,16 @@ Sumsub는 별도 Sandbox에서 실제 WebSDK/API를 테스트한 실험이다. �
 
 ## GitHub에서 아직 별도인 것
 
-이 릴리스가 GitHub 기본 브랜치 `main`, 저장소 About 또는 기존 `k-tour` 자동 배포 구성을 변경했다고 해석하지 않는다. 현재 이들은 기존 상태를 유지하며, 최신 앱 공유에는 위 명시적 릴리스 브랜치를 사용한다. 기본 브랜치·About·자동 배포 연결을 최신 앱으로 전환할지는 사용자 결정 후 별도 작업으로 처리한다. 원 인계 브랜치나 운영 배포를 무단 덮어쓰지 않는다.
+이 릴리스가 GitHub 기본 브랜치 `main`, 저장소 About 또는 기존 `k-tour` 자동 배포 구성을 변경했다고 해석하지 않는다. 원 인계 브랜치는 `9d4aec9` 그대로이며 기본 브랜치·About·자동 배포 구성도 유지했다. 최신 앱 공유에는 위 명시적 릴리스 브랜치를 사용한다. 기본 브랜치·About·자동 배포 연결을 최신 앱으로 전환할지는 사용자 결정 후 별도 작업으로 처리한다.
 
-## 공개 전 확인
+## 이번 릴리스 검수
 
-- [ ] 릴리스 브랜치의 원격 commit과 실제 배포 source를 기록한다.
-- [ ] 운영 배포 Ready, 고유 URL 및 운영 별칭 응답을 확인한다.
-- [ ] 모바일·데스크톱 앱 이름·흑백 로고·공유 이미지와 주요 화면을 확인한다.
-- [ ] Sumsub 서버 경로·SDK·설정이 순수 목업 산출물에 없음을 확인한다.
-- [ ] 검수한 테스트·환경·제한만 기록하고 README와 인계 문서의 대기 상태를 갱신한다.
+- **로컬:** typecheck·production build·artifact scan 통과. 전체 계약 **842/842**(16.0초), 모바일·데스크톱 브랜드 E2E **10/10**(21.2초), EN/KO/JA fallback·24개 화면·자산 검사 E2E **4/4**(22.9초) 통과. 후자의 24개 화면은 4개 테스트가 점검한 화면 수이며 추가 테스트 수가 아니다.
+- **로컬 HTTP:** 공개 자산/경로 27개·차단 경로 41개 검사 통과. 순수 목업의 Sumsub session/status 경로는 `404`이며 SDK·서버 코드를 포함하지 않는다.
+- **운영 모바일:** 브랜드 4개 + EN/KO/JA fallback·24개 화면 검사 4개, 합계 **8/8** 통과(48.9초, workers 1, retries 0). 브라우저 오류·KYC 요청 각각 0회. 24개 화면은 4개 fallback 테스트의 점검 범위이며 테스트 수에 추가하지 않는다.
+- **운영 HTTP:** 고유 `ondo-gafo82sil` URL, 공유용 `ondo-tau.vercel.app`, 기존 공유 별칭 `ondo-k-tour-id.vercel.app` 세 주소에서 각각 공개 27개·차단 41개, root `200`, legacy redirect `308`, discovery 7개 검사 통과. Sumsub session/status는 모두 `404`다.
+- **기존 별칭 수정 이력:** `ondo-k-tour-id.vercel.app` 최초 probe는 이전 배포에 직접 고정된 별칭 때문에 새 제목을 찾지 못해 실패했다. 같은 승인된 프로젝트의 위 Ready 배포로 별칭을 옮긴 뒤 전체 HTTP probe가 통과했다. 최초 실패를 최초부터 성공한 것처럼 집계하지 않는다. 별칭 추가 확인은 HTTP 검사이며 원격 모바일 8개를 이 주소에서 추가 재실행했다는 뜻은 아니다.
+- **별도 Sumsub Preview:** 모바일 브랜드 4개(12.8초), fallback 4개(32.5초), HTTP 공개 27개·차단 41개 통과. 이 결과는 브랜드/표시 회귀이며 실제 얼굴/liveness 또는 전체 SDK 제출 완료 검수가 아니다. 순수 목업의 테스트 수에 합산하지 않는다.
+- **최종 문서:** 개발자 인계 계약 9/9 통과, 문서 9개의 로컬 링크 211개 확인, `git diff --check` 통과. 이는 문서 정합성 검사이며 추가 제품 여정 검수가 아니다.
+
+이 검수는 브랜딩·지정 화면·목업 경계 확인이다. CX/OpenDID/OmniOne Chain/Sui의 실제 연동, 실자금 이동, 예약 확정 또는 실제 iPhone Safari/Android 기기 검수 완료로 확대하지 않는다. 별도 수동 KYC 검수의 미완료 범위는 위 Sumsub 인계 문서에 유지한다.

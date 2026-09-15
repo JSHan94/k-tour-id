@@ -1,6 +1,6 @@
 # K-Tour ID 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
 
-**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 이번 브랜드 배포는 아직 검수 대기이며 Ready로 판정하지 않는다. [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
+**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 K-Tour ID 브랜드 배포가 **Ready**다(배포 source `0ddc9e1`). [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
 
 **9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 같은 비금전 혜택 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 범위·실행 순서가 기존 단일안과 아래 전체 제품 목록보다 우선한다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
 

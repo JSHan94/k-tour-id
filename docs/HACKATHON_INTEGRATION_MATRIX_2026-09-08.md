@@ -1,6 +1,6 @@
 # K-Tour ID 해커톤 연동·목업·백엔드 작업 매트릭스
 
-**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 이번 브랜드 배포는 아직 검수 대기이며 Ready로 판정하지 않는다. [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
+**현재 앱·소스:** 공개 이름은 K-Tour ID, 최신 순수 목업 브랜치는 `release/ktour-brand-20260915`다. [운영 주소](https://ondo-tau.vercel.app)의 K-Tour ID 브랜드 배포가 **Ready**다(배포 source `0ddc9e1`). [GitHub·배포 상태](./GITHUB_BRAND_CLEANUP_2026-09-15.md)에서 확정 결과를 확인한다. 아래 `cc3d7c3`·`handoff/harvey-20260914`와 검수 수치는 원 운영·인계 기준선이다. 별도 Sumsub 실험은 이 릴리스에 포함하지 않으며 해커톤의 CX·OpenDID·OmniOne Chain·Sui 요구는 유지한다.
 
 기존 운영 브랜딩 기준선: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 실제 provider/SDK 요구와 해커톤 범위는 변경하지 않았다. 이전 기능 검수 결과를 새 브랜딩 배포의 전체 여정 PASS로 이월하지 않는다.
 
