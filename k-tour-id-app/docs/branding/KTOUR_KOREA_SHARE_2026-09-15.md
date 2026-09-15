@@ -24,4 +24,3 @@ Composition: large legible black K-TOUR ID on left, warm Korea alley and food im
 ## Validation
 
 Visual inspection at the exported 1200 × 630 dimensions: brand and Korean text legible; no clipped title; Korean alley and food recognizable; no ONDO/technology labels. Runtime metadata/asset checks are recorded in the release verification, not implied by this visual review.
-

@@ -1,6 +1,21 @@
 # K-Tour ID · 현재 운영 배포와 개발자 인계
 
-기록일: 2026-09-15. 상태: **pending — 한국 여행 공유 이미지·골목 가이드 체험의 신규 검수·배포 진행**. 새 소스·실행 결과·Ready 및 원격 브랜치 동기화는 [신규 릴리스 기록](./KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)을 따른다. 이 안내만으로 운영 앱이나 Harvey 브랜치에 새 코드가 반영됐다고 주장하지 않는다. 아래 `505e475`와 `4cb1964`의 검증된 이전 배포 증거는 별도로 보존한다.
+기록일: 2026-09-15. 상태: **Ready — 한국 여행 공유 이미지·골목 가이드 체험 운영 배포**. 앱 검수 source는 `5712aed`이며 실제 실행 수·검수 범위는 [신규 릴리스 기록](./KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)을 따른다. 아래 `505e475`와 `4cb1964`의 이전 증거는 별도로 보존한다.
+
+## 최신 앱·개발 시작점 — 5712aed
+
+| 항목 | 확인한 값 |
+|---|---|
+| 대표 앱 | [ktour-id.vercel.app](https://ktour-id.vercel.app) |
+| 배포 source | `5712aede4cba3549dc15b1565f1f05257e1c1bd0` · main |
+| main / Harvey 원격 HEAD | 앱 검수 기준 `5712aede4cba3549dc15b1565f1f05257e1c1bd0`에서 양쪽 일치 확인. atomic fast-forward, force push 없음 |
+| 배포 ID·고유 URL | `dpl_87smepbXSj8DRwm8nveLJ9SuQRbS` · [검수 기준 Production](https://ondo-ixgksyq9e-jaewook-9643s-projects.vercel.app) · Ready, 대표 주소 alias 확인. Git 로그 main/5712aed |
+| 선행 Git Preview | `dpl_8anxp7yz8pgNXMnGmdJk3nMwDMGb` · [검수 Preview](https://ondo-8egc96uut-jaewook-9643s-projects.vercel.app), 같은 앱 소스 |
+| 개발자 시작 | [Harvey 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [짧은 인계](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md) · [체험의 실제 연결점](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) |
+
+이번에는 한국 골목·음식 공유 이미지와 **로바 상세 → Person 확인·패스·목적별 제시 → 범위 승인 → 디지털 가이드 → 같은 장소**를 추가했다. 실제 CX/OpenDID/AI/Sui/OmniOne Chain은 미연동이며, 단축 발급은 Person 외의 연령·체류·결제·혜택 권한을 만들지 않는다. Sumsub 실험은 여전히 별도다.
+
+이후 결과 문서·대표 캡처·테스트 하네스만 바꾼 후속 커밋은 main/Harvey에 함께 반영한다. 검수 source를 새 문서 커밋으로 바꾸거나 같은 검사를 반복 합산하지 않는다. 최종 HEAD는 GitHub에서 확인하며, 현재 기록은 위 고정 source의 실제 배포와 검수를 보존한다.
 
 ## 직전 UX 배포·개발 시작점 — 505e475
 
@@ -16,7 +31,7 @@
 | 개발자 시작 | [Harvey 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [짧은 인계서](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md) |
 | 변경·검수·보류 | [UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md) · [전체 여정 지도와 합의](./ux-refinement/2026-09-15/README.md) |
 
-이 묶음에서 순수 목업의 매장 액션, 충전/주문 복귀, 공통 환불, 주문별 내역, 사진 콘텐츠를 정리했다. 이후 UX-08은 사용자 승인으로 별도 비금전 골목 가이드 목업을 구현·검수하고 있다. [새 체험 연결 계약](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)과 신규 릴리스의 결과를 따르며, 이 과거 금융 목업의 PASS를 새 체험의 완료 증거로 쓰지 않는다. 실제 CX/OpenDID/OmniOne Chain/Sui 실연동은 개발 대상이고 Sumsub Sandbox는 아래 별도 경로를 유지한다.
+이 묶음에서 순수 목업의 매장 액션, 충전/주문 복귀, 공통 환불, 주문별 내역, 사진 콘텐츠를 정리했다. 이후 UX-08은 별도 `5712aed`에서 구현·검수·운영 배포했다. [새 체험 연결 계약](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)과 신규 릴리스의 결과를 따르며, 이 과거 금융 목업의 PASS를 새 체험의 완료 증거로 쓰지 않는다. 실제 CX/OpenDID/OmniOne Chain/Sui 실연동은 개발 대상이고 Sumsub Sandbox는 아래 별도 경로를 유지한다.
 
 당시 검수 기준 SHA와 결과 기록·테스트 하네스만 바꾼 후속 커밋을 구분한다. 그 후속 기록은 앱 배포 입력이 `505e475`와 같은 범위에만 적용하며, 새로운 체험/OG 코드는 같은 입력이라고 간주하지 않는다. 배포별 실제 실행 수와 실패 재검사 이력은 해당 릴리스에 기록한다.
 

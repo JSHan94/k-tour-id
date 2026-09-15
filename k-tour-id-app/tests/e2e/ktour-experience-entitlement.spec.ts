@@ -319,19 +319,21 @@ test("UX08 Person-only pass keeps other services locked; later age service requi
   await expect(page.getByTestId("identity-additional-checks-consent")).toContainText("payment checks remain separate")
   await page.screenshot({ path: testInfo.outputPath("04-separately-consented-pass-checks.png"), fullPage: true })
   await page.getByTestId("k-tour-id-consent-approve").click()
-  for (let step = 0; step < 8; step += 1) {
-    let controlId = ""
-    await expect.poll(async () => {
-      if (!(await setup.isVisible())) return "delivered"
-      for (const id of ["identity-handoff-approve", "k-tour-id-continue"]) {
-        const control = setup.getByTestId(id).filter({ visible: true }).first()
-        if (await control.isVisible() && await control.isEnabled()) { controlId = id; return id }
-      }
-      return "waiting"
-    }, { timeout: 15_000 }).not.toBe("waiting")
-    if (!(await setup.isVisible())) break
-    await setup.getByTestId(controlId).filter({ visible: true }).first().click()
-  }
+  const handoff = setup.getByTestId("k-tour-id-route-step")
+  await expect(handoff).toHaveAttribute("data-handoff-state", "ready")
+  await handoff.getByTestId("k-tour-id-continue").click()
+  await expect(handoff).toHaveAttribute("data-handoff-state", "waiting")
+  await handoff.getByTestId("identity-handoff-approve").click()
+  await expect(handoff).toHaveAttribute("data-handoff-state", "approved")
+  await handoff.getByTestId("k-tour-id-continue").click()
+  const holder = setup.getByTestId("k-tour-id-holder-delivery")
+  await expect(holder).toHaveAttribute("data-holder-state", "ready")
+  await holder.getByTestId("k-tour-id-continue").click()
+  await expect(holder).toHaveAttribute("data-holder-state", "receipt")
+  await expect(holder.getByTestId("identity-holder-receipt")).toContainText("Nothing is saved until you acknowledge")
+  await holder.getByTestId("k-tour-id-continue").click()
+  // Issuance closes this retained sheet. Do not treat its outgoing frame as
+  // another delivery step or attempt a second acknowledgment while it exits.
   await expect(setup).toBeHidden()
   await expect(page.getByTestId("kpass-policy-decision")).toHaveCount(0)
   // A newly issued age predicate does not itself consent to joining a table.

@@ -72,7 +72,7 @@ Person 전용 샘플 패스는 `:person-only` 식별자와 `identity-person-only
 ## 4. 검수 범위와 인계
 
 - 비작성자 소스·문구 검토: 한 primary와 같은 장소 복귀, 준비된 응답의 펼침 설명, 실제 가이드 내용, 중단과 기록만 재시도하는 구조를 확인했다. EN/KO/JA의 실제 동일인 중복 제한으로 오해될 문구를 제거하고 `personVerified`를 신원 확인 여부로 맞췄다. 설명/재조회 44px, 기록 텍스트 12px를 소스에서 확인했다. 이는 실제 화면의 시각 PASS가 아니다.
-- 독립 로컬 시각 실행(`page-0a579e8a35166cb4.js`): 320px JA/dark의 fresh Person·명시적 Person 전용 패스 생성/보관·holder·VP, Tab/Space/Enter 승인, 실제 가이드 3개와 52px footer의 가시성/히트 영역을 확인했다. 가로 overflow·page error·provider 요청은 없었다. 화면 높이를 568→480으로 바꾼 뒤 복귀하면 같은 장소/DOM focus는 유지하지만 진입 행이 화면 아래에 남는 조건이 있어 한정 보정·재검수 대상으로 남겼다. 근거는 로컬 `k-tour-id-app/artifacts/qa/experience-visual-review/`이며 물리 기기 검수가 아니다. 최종 판정은 새 릴리스 기록을 따른다.
+- 독립 로컬 시각 실행 **`5712aed` / `page-7c7e5c4f3603217e.js` 한정 PASS**: 320px JA/dark의 fresh Person·명시적 Person 전용 패스 생성/보관·holder·VP, Tab/Space/Enter 승인, 실제 가이드 3개와 52px footer의 가시성/히트 영역을 확인했다. 가로 overflow·page error·provider 요청은 없었다. 이전 artifact에서 발견한 568→480 높이 변경 후 진입 행이 fold 밖에 남는 반례는 experience 전용 최소 스크롤 보정 후 가시성·hit·focus 모두 통과했다. [독립 검수 범위·대표 캡처](./ux-refinement/2026-09-15/evidence/experience-visual-review-5712aed.md)를 참고한다. 물리 기기 검수가 아니며 다른 회귀·원격 배포의 최종 판정은 새 릴리스 기록을 따른다.
 - 수락 검사 대상: 실제 장소 CTA 진입, 한 primary 행동, 취소/거절/만료/unknown·중복, 원 장소 복귀, 다른 장소/잔액/credential/방문 불변, 320px·JA·dark 및 키보드. 실행한 조합만 별도 근거로 판정한다.
 - 계약·typecheck·build·브라우저·배포의 **최신 실제 결과와 소스/환경은 새 릴리스 기록**에만 유지한다. 기존 862 계약이나 `505e475` 운영 PASS를 새 기능에 상속하지 않는다. Chromium 검수를 물리 iPhone/Android·실제 provider 검수로 바꾸어 말하지 않는다.
 - Harvey의 네 기술 실연동, A01–A20과 Sui 제출/등록·case study 요구는 [짧은 인계서](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md) 및 기존 상세 명세 그대로다. 이 목업은 연결 지점을 제공할 뿐 해커톤 연동 완료나 추가 상금 자격의 증거가 아니다.
