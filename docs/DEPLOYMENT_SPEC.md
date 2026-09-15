@@ -1,6 +1,6 @@
 # K-Tour ID Deployment Spec
 
-**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 앱 코드 기준 `505e475`의 Production과 두 브랜치 동기화는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md), 9/15 UI 계약·검수와 보류 사항은 [UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)를 따른다. 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 현재 Production과 브랜치 동기화는 [배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md), 최신 UI 계약·검수와 보류 사항은 [9/16 UX 후속 기록](./ux-refinement/2026-09-15/round-20260916.md)을 따른다. [9/15 UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)는 당시 source의 이력이며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
 
 상태: `v3.3 · 목업 ↔ 개발 인계 정합화 · 2026-09-11 · 실제 연결은 개발자 구현 범위`
 
@@ -188,6 +188,8 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 
 **9월 15일 목업 UX 계약:** 등록된 샘플 매장의 지도 미리보기는 혜택/상세 두 액션으로 연결하고, 미지원 매장은 기존 상세/길찾기를 유지한다. 길찾기는 전체 상세에서도 제공한다. 같은 장소의 서비스 복귀는 펼친 설명·스크롤을 함께 복원하며 다른 장소에 전파하지 않는다. 사진·디렉터리 등재·신규 리서치만으로 예약/결제 capability를 부여하지 않는다. 사진은 실제 매장 사진과 예시를 구분하고 로컬 자산·번역 alt·출처/라이선스·오류 대체 표시를 함께 전달한다. 실행 판정은 [UX 검수 기록](./ux-refinement/2026-09-15/README.md)을 따른다.
 
+**9월 16일 후속:** research 전체 상세도 등록된 장소만 고정 footer에 결제 확인/지도 두 행동을 둔다. 본문의 같은 결제 버튼만 제거하고 예약·보조 길찾기는 유지한다. 미지원 research 장소는 지도/길찾기만 제공한다. 결제 sheet가 완전히 닫힌 뒤 동일 장소·행동 버튼의 focus를 복원하며, 이미 새 화면이 focus를 가진 경우 빼앗지 않는다. 온도 수치 강조는 기존 준비된 frame의 표시일 뿐 실시간 방문 집계·서비스 권한이 아니다.
+
 ### G04 계정·저장·My Korea·공개 프로필 — FL-010/011/015
 
 | 항목 | 계약 |
@@ -207,6 +209,8 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 | API·요청 → 결과 | §3.3 Identity/Credential. 국내 CX / 지원 Residence / Passport adapter → 최소 evidence → 발급·holder 상태 |
 | 기술·실개발 | CX provider discovery + QR/WEB2APP; Passport NFC/eKYC/liveness는 별도 provider; OpenDID issuer/schema/holder/status; unsupported residence 대체 |
 | 오류·복구·QA | 취소·미지원·미설치·QR/session 만료·얼굴 불일치·수동검토·issuer 실패·holder 저장 실패. 중복 callback 발급 1회. 체인 지연으로 발급 성공을 되돌리지 않음 |
+
+비금전 체험의 Person 전용 패스는 [체험 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)의 목적별 계약을 따른다. 같은 진행 중 Person 확인을 재사용하는 경로에서만 명시적 생성/보관 동의 후 holder **준비 요청**을1회 자동화한다. 서버/holder 결과 준비와 **사용자 수령 승인**, 목적별 VP 동의는 별도 단계다. 일반 신원 설정·추가 자격의 수동 절차를 이 경로로 대체하거나 Person을 Age/Payment로 승격하지 않는다.
 
 ### G06 VP 동의·파트너 검증 — 기존 holder + verifier 보완
 
@@ -251,7 +255,7 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 | 항목 | 계약 |
 |---|---|
 | 실제 surface | `B/commerce-b/id-wallet-commerce-b.tsx`의 wallet/funding sheets, `B/commerce-b/funding-rail-model-b.ts`, `B/identity-b/action-gate-coordinator-b.tsx`. 명시적 충전 UI는 같은 sheet 안의 `B/commerce-b/stablecoin-funding-b.tsx`와 `.module.css`; credit 경계는 `B/commerce-b/stable-commerce-model-b.ts` |
-| 9월 12일 작업본 MW-02/03 | 지도 잔액/ID Wallet → 충전 → 사용할 곳 보기 → 등록 장소, 또는 checkout 부족액 → 충전 → 같은 주문/quote 검토. 잔액은 매장 공통이며 내역 선택으로 초기화하지 않음. `PREPARE_QUOTE`는 funding 전에 quote만 보존하고 결제 제출/승인을 시작하지 않음. 복귀 시 별도 결제 동의가 필요하고 quote 만료/변경은 재검토·재동의. 해당 후보 증거는 [MW-01–05](./MAP_WALLET_JOURNEYS_2026-09-12.md)에서 별도 추적 |
+| 9월 12일 작업본 MW-02/03 | 지도 잔액/ID Wallet → 충전 → 사용할 곳 보기 → 등록 장소, 또는 checkout 부족액 → 충전 → 같은 주문/quote 검토. 잔액은 매장 공통이며 내역 선택으로 초기화하지 않음. `PREPARE_QUOTE`는 funding 전에 quote만 보존하고 결제 제출/승인을 시작하지 않음. 아직 승인하지 않은 구매는 별도 결제 동의가 필요하며, 기존 승인이 유효한 동일 quote의 재개와 구분한다. quote 만료/변경은 재검토·재동의. 해당 후보 증거는 [MW-01–05](./MAP_WALLET_JOURNEYS_2026-09-12.md)에서 별도 추적 |
 | 현재·확장 상태 | 은행/카드/Apple Pay 견적→승인→pending→settled·영수증/실패/재시도/unknown 조회와 G09-S 샘플 상태를 보존했다. 이전 기능 검수 기준 `e2ad7c4`의 실행 범위는 [매장 After 19 겹침 수정 릴리스](./PLACE_AFTER19_FIX_2026-09-14.md)을 따른다. 이전 `52f376e`와 f79 기준선은 [9월 11일 전체 여정 검수](./FINAL_JOURNEY_QA_2026-09-11.md), `3dc392b`는 [Prototype Completion release](./PROTOTYPE_COMPLETION_2026-09-10.md)의 역사적 범위만 따른다. `a45400f`·`996119f`·`5233816`의 funding 수치/URL도 역사적 후보 증거이며 최신 public PASS나 실제 funding receipt로 집계하지 않는다. 모든 경우 실제 은행/카드/Apple Pay/Sui/bridge API 호출은 없다 |
 | API·요청 → 결과 | `GET /wallets/current` → 공통 balance/held/available·revision; `GET /funding/methods`; `POST /funding/quotes`; `POST /funding/intents`; `GET /funding/intents/{id}` → 지원·요구 proof·asset/network·rate/fee/expiry·provider handoff·금전 상태. Sui signer는 G12의 세션/prepare/submit 계약을 사용하고, funding operation이 source/destination 상태와 각 receipt를 묶는다. 결제 복귀용 order/quote reference는 funding의 지급 권한이 아님 |
 | 기술·실개발 | 은행/외국발행 카드/Apple Pay processor/onramp adapter, 자산·network·representation allowlist, provider별 funding KYC·거주/국가/통화/한도 정책, custody/recovery·gas, FX/fee 견적, source/destination receipt·finality 검증, 검증된 도착 결과와 durable 이중분개 credit의 원자성 |
@@ -260,6 +264,8 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 #### G09-S · 명시적 스테이블코인 충전 계약
 
 **9월 15일 목업 UX 계약:** funding 진입에 `purpose`(충전/결제수단 선택)와 원 매장 문맥을 전달한다. 충전에서는 기존 잔액을 입금 수단으로 제시하지 않는다. Wallet에서 완료하면 잔액으로, 주문에서 완료하면 같은 매장의 주문 검토로 돌아간다. 이미 반영된 완료 영수증은 새 수단 선택을 가리지 않지만 미확정 작업은 동일 operation으로 복구한다. 완료 화면을 닫거나 새 수단을 선택해도 credit를 재적용하지 않는다. 충전 완료는 구매 동의·매입이 아니다. 이 필드는 화면 복귀용이며 서버 지급 권한이 아니다.
+
+**9월 16일 후속:** 주문 충전 화면에 원 매장과 충전 전 부족 KRW를 표시하고, credit 반영 완료 후 그 과거 부족액은 숨긴다. 이 표시 값은 견적/잔액에서 계산한 UI 맥락이며 서버 지급 권한·충전 금액 자동 선택·새 구매 동의가 아니다. `소셜 계정으로 연결` 같은 사용자 용어를 쓰되 signer/asset/network/수수료/승인 범위와 상세 Sui zkLogin·가설 경로 설명을 보존한다.
 
 이번 변경은 generic USD 전환에 이름만 붙이는 작업이 아니다. `USDC/USDT 선택 → sample Sui signer(zkLogin 또는 기존 wallet) → 고정 견적 → 명시적 승인 → source 제출/확인 → routing → destination 확인 → 샘플 잔액/영수증`을 동일 Wallet 맥락에서 연결한다. 심사용 fixture는 실제 OAuth·지갑 서명창·token 전송을 호출하지 않는다.
 

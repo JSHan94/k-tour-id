@@ -81,3 +81,15 @@ C는 이후 A가 작성한 holder 자동 준비 source를 독립 검토했다. `
 로컬 ignored 증거(공개 GitHub 링크 아님): `k-tour-id-app/artifacts/qa/ux-round-20260916-visual/final-89e7-r2/`의 `01-ja320-zest-footer.png`, `02-ja320-zest-directions.png`, `03-ja320-sinseoloreum-photo.png`, `04-en390-sinseoloreum-credit.png`, `05-en390-canonical-reduced-pulse.png`, `summary.json`; `final-89e7-small/`의 `06-ja320-list-crop.png`, `07-ja320-reduced-pulse.png`, `summary.json`.
 
 검수 과정의 제한도 보존한다. 첫 서버 접속 실패는 packaging stage 재생성/재빌드 순서 문제로 브라우저 시작 전에 중단되었다. 이후 첫 기하 검사의 실패는 시트 진입 애니메이션 종료 전 측정이었다. 실제 `getAnimations()` 종료를 기다린 같은 앱 산출물 재실행이 통과했으며 앱 패치로 해결한 결함으로 집계하지 않는다. Zest research 상세에 실제 painted pulse frame이 없던 경우는 `NOT_RENDERED_NO_PAINTED_FRAME`으로 남겼고, 데이터 주입 없이 기존 canonical Roba 공개 진입에서 pulse를 검수했다. C 앱 소스는 이 검수 동안 변경하지 않았다.
+
+## 7. 최종 인계 경계와 Preview 사진 확인 · `8fcbeb1`
+
+`173e71c`→`8fcbeb1` diff와 [통합 라운드](./round-20260916.md), [Harvey 요약](../../HARVEY_HACKATHON_HANDOFF_2026-09-14.md), [체험 목업 계약](../../EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)을 다시 독립 대조했다. **기능 삭제나 실제 네 기술 연동 완료로 오표기하는 차단 사항은 발견하지 않았다.** guide의 공개 열람/선택 저장 정책은 여전히 사용자 선택 HOLD다. experience domain·공통 provider·금융 모델·서비스 registry·API·package 의존성에 이 커밋의 변경은 없다. Person 전용 경로의 준비1회만 자동화하고 명시 holder ack/VP·일반 수동 발급을 보존한다. 실제 CX/OpenDID/Sui/AI/OmniOne 호출과 서비스 사용 확정은 개발 대상으로 유지한다. 이전 시각 artifact의 PASS를 최종 focus 변경에 이월하지 않는 문서 구분도 확인했다.
+
+조정자가 Git source `8fcbeb1`의 Ready를 확인한 Preview `https://ondo-cmk176e1e-jaewook-9643s-projects.vercel.app`에서 C는 **사진 정상·실패의 두 시나리오만 PASS**했다. 브라우저가 받은 chunk는 `page-efb3bd6fb35a971f.js`이며 로컬 chunk와 혼용하지 않는다. JA/dark320×480, reduced-motion, Chromium1browser/1page, preference만 설정했다.
+
+- 정상: 신설오름 실제 local 사진961×961·2019 촬영 alt, 저자 공석배/Commons/CC BY4.0/2019-07-23·현재 메뉴 보장 아님·원본/라이선스 링크를 펼쳐 확인했다. 지도 primary+길찾기 각52px·top416/bottom468·중앙 hit·가로 overflow0. offer/reservation/pulse0.
+- 실패1case: 해당 사진 URL만 실제 네트워크 단계에서 차단했다. 목록·상세에서 총2회 요청이 차단됐으며 실패 케이스를2개로 부풀리지 않는다. `data-photo-state="error"`와 일본어 ‘写真を読み込めませんでした’가 보이고 사진 img/실제사진 caption은 사라진다. 상호·설명·지도/길찾기는 유지된다. 응답 mock/자격 주입/앱 source 변경 없음.
+- 정상·크레딧·실패 캡처3장을 직접 열어 확인했다. pageerror0, 금지된 provider/쓰기 요청0. 종료 후 context/browser 모두 닫힘. 이 결과는 원격 전체 여정·focus·holder·실기기·실연동 검수가 아니다.
+
+로컬 ignored 증거: `k-tour-id-app/artifacts/qa/ux-round-20260916-visual/preview-8fcbeb1/`의 `01-ja320-photo-loaded.png`, `02-ja320-photo-credit.png`, `03-ja320-photo-fallback.png`, `summary.json`. 현재 운영 배포의 최종 판정은 조정자의 릴리스 기록을 따른다.

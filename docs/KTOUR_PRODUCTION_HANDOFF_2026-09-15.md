@@ -1,8 +1,16 @@
 # K-Tour ID · 현재 운영 배포와 개발자 인계
 
-기록일: 2026-09-15. 상태: **Ready — 한국 여행 공유 이미지·골목 가이드 체험 운영 배포**. 앱 검수 source는 `5712aed`이며 실제 실행 수·검수 범위는 [신규 릴리스 기록](./KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)을 따른다. 아래 `505e475`와 `4cb1964`의 이전 증거는 별도로 보존한다.
+갱신일: 2026-09-16. 상태: **Ready — 매장/충전/체험 UX 후속 운영 배포**. 앱 검수 source는 `8fcbeb1`이며 실제 실행 수·검수 범위와 남긴 결정은 [최신 라운드](./ux-refinement/2026-09-15/round-20260916.md)를 따른다. 아래 과거 배포의 증거는 별도로 보존한다.
 
-## 최신 앱·개발 시작점 — 5712aed
+## 최신 앱·개발 시작점 — 8fcbeb1
+
+- 대표 앱: [ktour-id.vercel.app](https://ktour-id.vercel.app). `dpl_8EPi7GPt4yP5pzdVYBZTQkLpGFPK`, [고유 Production](https://ondo-ese4000rf-jaewook-9643s-projects.vercel.app), Ready·대표 주소 alias 확인.
+- 앱 source: `8fcbeb1c0dfaa0c4df99ffb197f9490aea260539`. main/Harvey 원격을 같은 source로 atomic fast-forward했다. 강제 push나 다른 개발자의 변경 덮어쓰기는 없었다.
+- 선행 [Git Preview](https://ondo-cmk176e1e-jaewook-9643s-projects.vercel.app): `dpl_HijeFmjAMEDC29CRtX3GmTdsPuTb`, 같은 Git source. 환경별 실행 근거는 최신 라운드에 분리한다.
+- 매장 결제 CTA/복귀 focus, 주문 충전의 장소·부족액, Person 체험의 holder 준비1회 단축, 온도 label/변경 강조, 제주 신설오름 실제 음식 사진을 반영했다. guide 공개 정책은 사용자 선택 전 기존대로 유지했다.
+- [짧은 인계](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md), [체험 계약](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md), [전체 명세](./DEPLOYMENT_SPEC.md)는 같은 브랜치에서 읽는다. 이후 문서 전용 커밋은 이 앱 source와 구분하며 최종 HEAD는 GitHub에서 확인한다. 실제 네 기술/AI/금융/예약 연동·실기기 검수는 완료되지 않았다.
+
+## 이전 체험 배포·개발 시작점 — 5712aed
 
 | 항목 | 확인한 값 |
 |---|---|

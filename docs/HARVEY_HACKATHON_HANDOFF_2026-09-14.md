@@ -1,6 +1,6 @@
 # K-Tour ID · 해커톤 연동 개발 요약
 
-9/15 골목 가이드 목업·한국 여행 공유 이미지를 운영 배포하고 main/Harvey에 반영했습니다. [새 릴리스 기록](./KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)에서 검수 범위를 확인할 수 있습니다. 실제 네 기술 연동은 아래 개발 대상입니다.
+9/16 매장 액션·충전 맥락·체험 패스 준비 UX 개선을 운영 배포하고 main/Harvey에 반영했습니다. [최신 검수 기록](./ux-refinement/2026-09-15/round-20260916.md)에서 범위를 확인할 수 있습니다. 실제 네 기술 연동은 아래 개발 대상이며 추가된 필수 연동은 없습니다.
 
 ## 1. 목표와 범위
 
@@ -46,7 +46,7 @@
 
 ## 5. 참고 리소스
 
-- **앱·소스:** [K-Tour ID](https://ktour-id.vercel.app) · [Harvey 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [main](https://github.com/woogieboogie-jl/k-tour-id/tree/main). `handoff/harvey-20260914`의 `k-tour-id-app/`에서 시작합니다. 검수된 앱 코드 기준은 `5712aed`이며, 문서·테스트 후속 커밋 `173e71c`까지 운영 배포와 브랜치 동기화를 확인했습니다. 이후 UX 작업은 별도 브랜치에서 검수하며 미배포 작업과 구분합니다. [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)과 [README 실행 안내](../README.md#run-the-handoff)를 참고합니다.
+- **앱·소스:** [K-Tour ID](https://ktour-id.vercel.app) · [Harvey 인계 브랜치](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914) · [main](https://github.com/woogieboogie-jl/k-tour-id/tree/main). `handoff/harvey-20260914`의 `k-tour-id-app/`에서 시작합니다. 검수된 앱 코드 기준은 `8fcbeb1`이며 이후 문서 전용 커밋과 구분합니다. [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)과 [README 실행 안내](../README.md#run-the-handoff)를 참고합니다.
 - **별도 실험:** Sumsub Sandbox는 별도 feature 브랜치·Preview이며 이 릴리스에 포함하지 않습니다. 네 기술의 필수 개발을 대체하지 않습니다. 경로와 검증 한계는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에 정리합니다.
 - **구현 상세:** [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) → [기존 1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). 이번 네 기술의 범위·실행 순서는 추가 명세가 우선합니다. API는 신규 구현 제안이며 공급자 공식 규격이 아닙니다.
 - **새 체험 UI 연결:** [비금전 체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) — 구현·지정 여정 검수·운영 배포를 마친 장소 기반 목업과 실제 adapter의 대응입니다. 기존 금융 목업과 독립이며 실제 인증·AI·두 체인 호출을 하지 않습니다. 기능별 검수 범위와 한계는 해당 기록을 따릅니다.
