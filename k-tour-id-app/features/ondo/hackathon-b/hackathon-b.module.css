@@ -1,4 +1,5 @@
-.root { position:fixed; inset:0; z-index:80; display:flex; align-items:flex-end; justify-content:center; background:rgb(0 0 0 / 46%); }
+/* Canvas-local layer like the app's own sheets; z-index mirrors ONDO_MODAL_PRIORITY.critical. */
+.root { position:absolute; inset:0; z-index:160; display:flex; align-items:flex-end; justify-content:center; background:rgb(0 0 0 / 46%); }
 .sheet { width:min(100%, 560px); max-height:calc(100dvh - 16px); display:flex; flex-direction:column; background:var(--ondo-surface); color:var(--ondo-ink); border-radius:22px 22px 0 0; box-shadow:var(--ondo-shadow); overflow:hidden; }
 @media (min-width:720px) { .root { align-items:center; } .sheet { border-radius:22px; max-height:calc(100dvh - 48px); } }
 .head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:start; padding:18px 18px 12px; border-bottom:1px solid var(--ondo-line); }
@@ -47,3 +48,6 @@
 .cta strong { font-size:14px; line-height:1.4; font-weight:760; }
 .cta small { font-size:12px; line-height:1.4; color:var(--ondo-muted); word-break:keep-all; }
 .cta:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }
+/* Demo-only floating entry above the dock and its review chip (nav ≈92px + chip 42px). */
+.entry { position:fixed; right:16px; bottom:calc(150px + env(safe-area-inset-bottom)); z-index:65; display:inline-flex; align-items:center; gap:8px; padding:11px 16px; border-radius:999px; border:1px solid var(--ondo-control); background:var(--ondo-control); color:var(--ondo-control-ink); font:inherit; font-size:13px; font-weight:760; box-shadow:var(--ondo-shadow); cursor:pointer; }
+.entry:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }

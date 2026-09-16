@@ -19,9 +19,11 @@
     "probe:sites:ondo-b": "node scripts/ondo-b-standalone/probe-http.mjs",
     "guard:deploy:ondo-b": "node scripts/ondo-b-standalone/assert-deploy-target.mjs",
     "dev": "next dev",
+    "setup": "npx --yes pnpm@10.8.0 install --frozen-lockfile",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm typecheck && pnpm build",
+    "check": "npm run typecheck && npm run build",
+    "prestart": "node scripts/ensure-build.mjs",
     "start": "next start",
     "test:contracts": "playwright test --config=playwright.contracts.config.ts",
     "test:contracts:fidelity": "playwright test tests/contracts/ondo-prd-fidelity.spec.ts --config=playwright.contracts.config.ts",
@@ -120,5 +122,18 @@
     "vinext": "0.0.50",
     "vite": "8.0.13",
     "wrangler": "4.92.0"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": [
+        "current",
+        "darwin",
+        "linux"
+      ],
+      "cpu": [
+        "current",
+        "arm64"
+      ]
+    }
   }
 }

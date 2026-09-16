@@ -5,10 +5,13 @@
 // Consumer copy uses actions ("신원 확인", "혜택 확인", "확인하고 사용하기");
 // technology names live in the evidence section.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { X } from "lucide-react"
+import { Ticket, X } from "lucide-react"
 import type { OperationResult } from "@/lib/hackathon/types"
 import { requestPlaceServiceReturnB } from "../commerce-b/place-service-registry-b"
-import { HACKATHON_OPEN_EVENT_B, readPendingHackathon, writePendingHackathon, type HackathonOpenDetail } from "./hackathon-campaign"
+import { useOndoB } from "../shared/state/ondo-b-provider"
+import { ONDO_MODAL_PRIORITY } from "../shared/ui/modal-layer-priority"
+import { useDocumentScrollLock, useModalIsolation } from "../shared/ui/use-modal-isolation"
+import { HACKATHON_DEMO_ENTRY, HACKATHON_OPEN_EVENT_B, openHackathonVenueB, readPendingHackathon, writePendingHackathon, type HackathonOpenDetail } from "./hackathon-campaign"
 import { ApiError, api, beginZkLogin, canonicalJson, clearJourneySecrets, createDemoSigner, ensureHolderKey, finishZkLogin, holderSign, readSigner, sha256Hex, signPersonalMessage, signTransactionBytes, fromBase64, type EntitlementInfo, type PublicConfig, type StoredSigner } from "./hackathon-client"
 import styles from "./hackathon-b.module.css"
 
@@ -51,11 +54,25 @@ export function HackathonEntitlementLayerB() {
     const hk = url.searchParams.get("hk")
     const pending = readPendingHackathon()
     if (pending && (!hk || hk === pending.resumeOperationId)) setOpen(pending)
+    // `/hackathon` deep link → jump to the designated venue so the CTA is one tap away
+    else if (hk === "start" && HACKATHON_DEMO_ENTRY) openHackathonVenueB(300)
     if (hk) { url.searchParams.delete("hk"); window.history.replaceState(null, "", url.toString()) }
     return () => window.removeEventListener(HACKATHON_OPEN_EVENT_B, onOpen)
   }, [])
-  if (!open) return null
+  if (!open) return HACKATHON_DEMO_ENTRY ? <DemoEntryButton /> : null
   return <Journey key={open.resumeOperationId ?? open.venueId} detail={open} onClose={() => setOpen(null)} />
+}
+
+/** Floating map shortcut (demo builds only): opens the designated venue's place sheet. */
+function DemoEntryButton() {
+  const { state } = useOndoB()
+  if (state.tab !== "ondo" || state.surface.kind !== "map") return null
+  const label = state.locale === "en" ? "Start perk journey" : state.locale === "ja" ? "体験特典を始める" : "체험 혜택 여정 시작"
+  return (
+    <button type="button" className={styles.entry} data-testid="hackathon-demo-entry" onClick={() => openHackathonVenueB()}>
+      <Ticket size={16} aria-hidden="true" /><span>{label}</span>
+    </button>
+  )
 }
 
 function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: () => void }) {
@@ -72,6 +89,11 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
   const [signer, setSigner] = useState<StoredSigner | null>(null)
   const vcRef = useRef<unknown>(null)
   const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad/i.test(navigator.userAgent)
+  // Sit above the place sheet in the app's modal stack: the sheet (and dock)
+  // become inert while the journey is open and are restored on close.
+  const rootRef = useRef<HTMLDivElement>(null)
+  useModalIsolation(true, rootRef)
+  useDocumentScrollLock(true)
 
   const run = useCallback(async (label: string, fn: () => Promise<void>) => {
     setBusy(label); setError(null)
@@ -165,7 +187,7 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
   const title = useMemo(() => info?.campaign?.title?.[locale] ?? c.title, [info, locale, c.title])
 
   return (
-    <div className={styles.root} role="dialog" aria-modal="true" aria-label={c.title} data-testid="hackathon-layer">
+    <div ref={rootRef} className={styles.root} role="dialog" aria-modal="true" aria-label={c.title} data-testid="hackathon-layer" data-modal-layer-priority={ONDO_MODAL_PRIORITY.critical}>
       <div className={styles.sheet}>
         <header className={styles.head}>
           <div><h2>{title}</h2><p>{c.sub} · <span className={styles.badge} data-tone={tone(modes.cx)}>ID {modes.cx === "cx" ? c.live : c.sample}</span> <span className={styles.badge} data-tone={tone(modes.opendid)}>PASS {modes.opendid === "opendid" ? c.live : c.sample}</span> <span className={styles.badge} data-tone={modes.sui === "testnet" ? "chain" : "sample"}>SUI {modes.sui === "testnet" ? c.chain : "—"}</span> <span className={styles.badge} data-tone={modes.omnione === "stage" ? "chain" : "sample"}>OMNIONE {modes.omnione === "stage" ? "STAGE" : "—"}</span></p></div>

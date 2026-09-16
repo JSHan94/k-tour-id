@@ -61,17 +61,21 @@ chain/omnione/                       DemoEntitlementRegistry.sol / ABI / 배포 
 
 ## 4. 실행
 
+npm만 있으면 된다(pnpm 설치 불필요). 의존성은 pnpm 레이아웃으로 이미 설치돼 있고, macOS arm64·Linux arm64 네이티브 바이너리를 함께 담고 있다(`package.json` → `pnpm.supportedArchitectures`).
+
 ```bash
 cd k-tour-id-app
-pnpm install --frozen-lockfile        # 의존성 (빌드 스크립트는 pnpm 기본 정책대로 차단)
-cp hackathon.env.example .env.local   # 값 채우기 (팀 내부 공유 파일 참고; .env.local은 gitignored)
-pnpm typecheck
-pnpm dev                              # http://localhost:3000
+npm run dev                           # http://localhost:3000 (개발)
+npm start                             # 프로덕션: 빌드가 없으면 prestart가 next build 1회 실행 후 next start
+npm run setup                         # 재설치가 필요할 때만 (npx pnpm@10.8.0 install --frozen-lockfile; `npm install`은 쓰지 말 것 — 레이아웃이 깨진다)
+npm run typecheck
 node scripts/hackathon-smoke.mjs      # 정상 E2E (Sui·OmniOne 실 트랜잭션 발생)
 node scripts/hackathon-smoke.mjs http://localhost:3000 --negative   # 위조 claim → deny
 ```
 
-UI: 지도에서 해당 장소 상세 → **체험 혜택 보기** → 단계별 진행. 외부 앱/새로고침 후에는 `sessionStorage`의 pending operation으로 자동 재개하고, 완료 시 `requestPlaceServiceReturnB`로 같은 장소로 돌아간다.
+`.env.local`은 채워져 있다(gitignored). 새 체크아웃이면 `cp hackathon.env.example .env.local` 후 값 채우기.
+
+UI 진입(둘 다 `NEXT_PUBLIC_HK_DEMO_ENTRY=1`일 때): **http://localhost:3000/hackathon** 딥링크 → 지정 장소(로바) 상세가 열리고 **체험 혜택 보기** CTA에 포커스. 또는 지도 화면 우하단 **체험 혜택 여정 시작** 버튼. 이후 단계별 버튼: 동의 → 모바일 신분증 확인(샘플 승인/취소/실패) → 패스 자동 발급 → 패스 제시/제시하지 않기 → 혜택 제안 받기 → 서명자 선택(Google zkLogin / 샘플) → 위임 서명 → 실행 → 확인하고 사용하기 → 기록 확정·증거 보기 → 같은 장소로 돌아가기. 외부 앱/새로고침 후에는 `sessionStorage`의 pending operation으로 자동 재개한다. 여정 오버레이는 앱 모달 스택(`ONDO_MODAL_PRIORITY.critical`)에 올라가므로 열려 있는 동안 장소 시트·독은 inert가 되고 닫으면 복원된다. 시각 회귀 테스트를 돌릴 때는 `NEXT_PUBLIC_HK_DEMO_ENTRY=0`.
 
 필수 env(.env.local): `HK_SUI_PACKAGE_ID`, `HK_SUI_CAMPAIGN_ID`, `HK_SUI_CAMPAIGN_INITIAL_VERSION`, `HK_SUI_ISSUER_SECRET_KEY`, `HK_SUI_AGENT_SECRET_KEY`, `HK_OMNIONE_RPC_URL`, `HK_OMNIONE_PRIVATE_KEY`, `HK_OMNIONE_REGISTRY_ADDRESS`. 선택: `GEMINI_API_KEY`(제안을 실제 모델로), `NEXT_PUBLIC_GOOGLE_CLIENT_ID` + `HK_ZKLOGIN_SALT_SEED`(zkLogin), `HK_MODE_CX=cx` + CX 접속값, `HK_MODE_OPENDID=opendid` + 서버 URL.
 
