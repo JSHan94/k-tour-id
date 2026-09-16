@@ -23,7 +23,7 @@ import {
 import { commitExperienceB, openExperienceB, readExperienceB } from "./experience-store-b"
 import styles from "./experience-b.module.css"
 
-const OPEN_KEY = "ktour.experience-open.v1"
+const OPEN_KEY = "ktour.experience-save-open.v2"
 type Scenario = "success" | "executionUnknown" | "executionFailure" | "serviceBlocked" | "auditDelay" | "auditFailure" | "cancelRace"
 
 /** Only the explicitly registered place owns this noncommercial preview. */
@@ -38,10 +38,67 @@ export function ExperienceEntryB({ placeId, locale }: { placeId: string; locale:
 }
 
 export function ExperienceMountB() {
-  return useReviewSampleSession() ? <ExperienceFlowB /> : null
+  return useReviewSampleSession() ? <PublicExperienceB /> : null
 }
 
-function ExperienceFlowB() {
+function GuideContentB({ locale }: { locale: "en" | "ko" | "ja" }) {
+  const t = EXPERIENCE_COPY_B[locale]
+  return <section className={styles.guide} data-testid="experience-guide-content"><h2>{t.guideHeading}</h2>{([[t.guide1, t.guide1Body], [t.guide2, t.guide2Body], [t.guide3, t.guide3Body]] as const).map(([heading, text], index) => <div key={heading}><span>{String(index + 1).padStart(2, "0")}</span><article><h3>{heading}</h3><p>{text}</p></article></div>)}</section>
+}
+
+/** Reading owns only an in-memory view. Do not initialize the save store,
+ * action gate, permit, or execution observer until Add to my pass is chosen. */
+function PublicExperienceB() {
+  const { state } = useOndoB()
+  const t = EXPERIENCE_COPY_B[state.locale]
+  const [open, setOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [resume, setResume] = useState(false)
+  const [scenario, setScenario] = useState<Scenario>("success")
+  const origin = useRef<"place" | "pass">("place")
+  useEffect(() => {
+    const requested = (event: Event) => {
+      const detail = (event as CustomEvent).detail
+      if (detail?.placeId !== EXPERIENCE_PLACE_ID_B) return
+      origin.current = detail.source === "pass" ? "pass" : "place"
+      setOpen(true)
+    }
+    window.addEventListener(EXPERIENCE_OPEN_EVENT_B, requested)
+    try {
+      const savedOrigin = sessionStorage.getItem(OPEN_KEY)
+      if (savedOrigin === "place" || savedOrigin === "pass") {
+        origin.current = savedOrigin; setResume(true); setOpen(true); setSaving(true)
+      }
+    } catch { /* Public reading requires no storage. */ }
+    return () => window.removeEventListener(EXPERIENCE_OPEN_EVENT_B, requested)
+  }, [])
+  function close() {
+    setOpen(false); setSaving(false)
+    if (origin.current === "place") requestPlaceServiceReturnB(EXPERIENCE_PLACE_ID_B, "experience")
+    else window.setTimeout(() => {
+      const row = document.querySelector<HTMLButtonElement>("[data-testid='experience-saved-guide']")
+      if (document.activeElement === document.body && row && !row.closest("[inert], [aria-hidden='true']")) row.focus({ preventScroll: true })
+    }, 180)
+  }
+  function readAgain() {
+    try { sessionStorage.removeItem(OPEN_KEY) } catch { /* The public guide remains readable. */ }
+    setResume(false); setSaving(false)
+  }
+  if (!open) return null
+  if (saving) return <ExperienceFlowB initialScenario={scenario} resume={resume} origin={origin.current} onClose={close} onRead={readAgain} />
+  return <SheetB label={t.publicTitle} locale={state.locale} onClose={close} variant="full-task" size="full" header={<strong>{t.publicTitle}</strong>}
+    shouldRestoreFocus={() => origin.current === "pass"} initialFocusSelector="[data-testid='experience-public-heading']"
+    footer={<div className={styles.footer}><small className={styles.footerHint}>{t.readingFree}</small><button type="button" className={styles.primary} data-testid="experience-add-to-pass" onClick={() => { setResume(false); setSaving(true) }}>{origin.current === "pass" ? t.viewSaveStatus : t.addToPass}<ChevronRight size={18} aria-hidden="true" /></button></div>}>
+    <article className={styles.body} data-testid="experience-public-guide">
+      <div className={styles.eyebrow}><span><MapPin size={14} aria-hidden="true" />{t.place}</span></div>
+      <h1 tabIndex={-1} data-testid="experience-public-heading">{t.publicTitle}</h1><p className={styles.lead}>{t.publicBody}</p>
+      <GuideContentB locale={state.locale} />
+      <details className={styles.details} data-testid="experience-public-details"><summary>{t.details}<ChevronRight size={16} aria-hidden="true" /></summary><p>{t.boundary}</p><p>{t.detailsBody}</p><label>{t.scenario}<select data-testid="experience-public-scenario" value={scenario} onChange={event => setScenario(event.target.value as Scenario)}>{(["success", "executionUnknown", "executionFailure", "serviceBlocked", "auditDelay", "auditFailure", "cancelRace"] as const).map(value => <option key={value} value={value}>{t[value]}</option>)}</select></label></details>
+    </article>
+  </SheetB>
+}
+
+function ExperienceFlowB({ initialScenario, resume, origin, onClose, onRead }: { initialScenario: Scenario; resume: boolean; origin: "place" | "pass"; onClose(): void; onRead(): void }) {
   const { state } = useOndoB()
   const t = EXPERIENCE_COPY_B[state.locale]
   const [open, setOpen] = useState(false)
@@ -50,7 +107,7 @@ function ExperienceFlowB() {
   const [busy, setBusy] = useState(false)
   const [gatePending, setGatePending] = useState(false)
   const [consent, setConsent] = useState(false)
-  const [scenario, setScenario] = useState<Scenario>("success")
+  const [scenario, setScenario] = useState<Scenario>(initialScenario)
   const [permitVersion, setPermitVersion] = useState(0)
   const [clock, setClock] = useState(Date.now)
   const recordRef = useRef(record); recordRef.current = record
@@ -64,6 +121,7 @@ function ExperienceFlowB() {
   const headingRef = useRef<HTMLHeadingElement>(null)
   const returningRef = useRef(false)
   const autoAttemptRef = useRef<string | null>(null)
+  const startCheckRef = useRef(!resume)
 
   function context(): ExperienceContextB {
     return { sampleMode: qaReviewFixtureOptions().allowReviewFixture === true, now: Date.now(), credential: stateRef.current.identityCredential, permit: permitRef.current }
@@ -102,7 +160,7 @@ function ExperienceFlowB() {
       if (pending?.cta === "REDEEM_DEMO_ENTITLEMENT" && pending.intentId === next.intentId) { expectedGateRef.current = pending; setGatePending(true) }
       if (recordRef.current?.intentId === next.intentId && recordRef.current.revision > next.revision) return
       recordRef.current = next; setRecord(next); setError(false)
-      try { sessionStorage.setItem(OPEN_KEY, EXPERIENCE_PLACE_ID_B) } catch { /* Reopening from the place still reads the same durable history. */ }
+      try { sessionStorage.setItem(OPEN_KEY, origin) } catch { /* Reopening from the place still reads the same durable history. */ }
     } catch { if (mountedRef.current) setError(true) }
   }
   function leave() {
@@ -112,7 +170,7 @@ function ExperienceFlowB() {
     // Closing pauses this local simulator. A granted operation resumes through
     // explicit same-intent status checking, never an assumed cancellation.
     if (recordRef.current?.authorization === "granted") void commit({ type: "execution", outcome: "unknown" })
-    requestPlaceServiceReturnB(EXPERIENCE_PLACE_ID_B, "experience")
+    onClose()
   }
   function beginCheck() {
     const current = recordRef.current
@@ -149,14 +207,13 @@ function ExperienceFlowB() {
   const showRef = useRef(show); showRef.current = show
   useEffect(() => {
     mountedRef.current = true
-    const requested = (event: Event) => { if ((event as CustomEvent).detail?.placeId === EXPERIENCE_PLACE_ID_B) void showRef.current() }
     const ready = (event: Event) => { void checkedRef.current(event) }
     const cancelled = (event: Event) => {
       const detail = actionReturnFromBEvent(event instanceof CustomEvent ? event.detail : null)
       if (detail?.cta !== "REDEEM_DEMO_ENTITLEMENT" || detail.tokenId !== expectedGateRef.current?.tokenId) return
       expectedGateRef.current = null; permitRef.current = null; setGatePending(false); setConsent(false); setPermitVersion(value => value + 1)
+      onRead()
     }
-    window.addEventListener(EXPERIENCE_OPEN_EVENT_B, requested)
     window.addEventListener(B_ACTION_GATE_READY_EVENT, ready)
     window.addEventListener(B_ACTION_GATE_CANCEL_EVENT, cancelled)
     const channel = typeof BroadcastChannel !== "undefined" ? new BroadcastChannel(EXPERIENCE_CHANNEL_B) : null
@@ -164,10 +221,9 @@ function ExperienceFlowB() {
     if (channel) channel.onmessage = () => { if (openRef.current) void refresh() }
     const focus = () => { if (openRef.current) void refresh() }
     window.addEventListener("focus", focus)
-    try { if (sessionStorage.getItem(OPEN_KEY) === EXPERIENCE_PLACE_ID_B) void showRef.current() } catch { /* Optional view restoration only. */ }
+    void showRef.current()
     return () => {
       mountedRef.current = false; channel?.close(); channelRef.current = null
-      window.removeEventListener(EXPERIENCE_OPEN_EVENT_B, requested)
       window.removeEventListener(B_ACTION_GATE_READY_EVENT, ready)
       window.removeEventListener(B_ACTION_GATE_CANCEL_EVENT, cancelled)
       window.removeEventListener("focus", focus)
@@ -185,6 +241,14 @@ function ExperienceFlowB() {
     : record.authorization === "unknown" ? "unknown" : record.authorization === "failed" ? "failed"
     : record.authorization === "consumed" ? "pending" : record.authorization === "granted" ? "running"
     : record.scope && livePermit ? "proposal" : "offer"
+
+  useEffect(() => {
+    if (!record || !startCheckRef.current || gatePending || error) return
+    startCheckRef.current = false
+    if (stage === "offer" && record.authorization === "none") beginCheck()
+  // Only the explicit Add to my pass click may begin this check automatically.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [record, gatePending, error, stage])
 
   useEffect(() => {
     if (!open || gatePending || busy || !record) return
@@ -223,13 +287,13 @@ function ExperienceFlowB() {
       : stage === "proposal" ? <button type="button" className={styles.primary} data-testid="experience-approve" disabled={!consent || busy || !record?.scope || !livePermit || record.scope.expiresAt <= clock} onClick={() => { if (record?.scope) void commit({ type: "approve", proposalDigest: record.scope.proposalDigest }) }}>{t.approve}<ChevronRight size={18} aria-hidden="true" /></button>
         : needsCheck ? <button type="button" className={styles.primary} data-testid="experience-recheck" disabled={busy} onClick={beginCheck}>{t.recheck}<ShieldCheck size={18} aria-hidden="true" /></button>
           : stage === "unknown" || stage === "cancelPending" ? <button type="button" className={styles.primary} data-testid="experience-check-result" disabled={busy} onClick={() => { if (record) void commit(stage === "cancelPending" ? { type: "resolve_cancel", outcome: scenario === "cancelRace" ? "consumed" : "revoked" } : { type: "reconcile_execution", outcome: "success", executionRef: `${record.intentId}:execution` }) }}>{t.checkResult}</button> : null}
-    <button type="button" className={styles.secondary} data-testid="experience-return" onClick={leave}>{["complete", "blocked", "cancelled", "expired"].includes(stage) ? t.back : t.later}<MapPin size={17} aria-hidden="true" /></button>
+    <button type="button" className={styles.secondary} data-testid="experience-return" onClick={leave}>{origin === "pass" ? t.savedGuides : t.back}<MapPin size={17} aria-hidden="true" /></button>
   </div>
   return <SheetB label={t.title} locale={state.locale} onClose={leave} variant="full-task" size="full" header={<strong>{t.title}</strong>} footer={footer}
     suspended={gatePending || state.identitySetupOrigin !== null} shouldRestoreFocus={() => !returningRef.current} initialFocusSelector="[data-testid='experience-heading']">
     <article className={styles.body} data-testid="experience-flow" data-stage={stage} data-intent-id={record?.intentId} data-place-id={EXPERIENCE_PLACE_ID_B} data-campaign-id={EXPERIENCE_CAMPAIGN_ID_B} data-authorization={record?.authorization} data-fulfillment={record?.fulfillment} data-audit={record?.audit} data-used-count={record?.usedCount} data-execution-count={record?.executionCount}>
       <div className={styles.eyebrow}><span><MapPin size={14} aria-hidden="true" />{t.place}</span><small>{t.sample}</small></div>
-      <div className={styles.hero}>{["running", "pending", "loading"].includes(stage) ? <LoaderCircle className={styles.spinner} size={30} aria-hidden="true" /> : stage === "complete" ? <Check size={32} aria-hidden="true" /> : <BookOpen size={30} aria-hidden="true" />}</div>
+      <div className={styles.hero}>{!error && ["running", "pending", "loading"].includes(stage) ? <LoaderCircle className={styles.spinner} size={30} aria-hidden="true" /> : stage === "complete" ? <Check size={32} aria-hidden="true" /> : <BookOpen size={30} aria-hidden="true" />}</div>
       <h1 ref={headingRef} tabIndex={-1} data-testid="experience-heading">{title}</h1>
       <p className={styles.lead} aria-live="polite">{body}</p>
       {error ? <div role="alert" className={styles.notice} data-testid="experience-storage-error"><p>{t.error}</p><button type="button" onClick={() => record ? void refresh() : void show()}>{t.refresh}</button></div> : null}
@@ -238,8 +302,8 @@ function ExperienceFlowB() {
         <section className={styles.scope} data-testid="experience-scope"><small>{t.helper}</small><h2>{t.scope}</h2><dl><div><dt>{t.recipient}</dt><dd>{t.noMoney}</dd></div><div><dt>{t.expiry}</dt><dd><Clock3 size={15} aria-hidden="true" /><time dateTime={new Date(record.scope.expiresAt).toISOString()}>{new Date(record.scope.expiresAt).toLocaleTimeString(state.locale, { hour: "2-digit", minute: "2-digit" })}</time></dd></div></dl></section>
         <p className={styles.notice}>{t.boundary}</p><label className={styles.consent}><input type="checkbox" data-testid="experience-consent" checked={consent} onChange={event => setConsent(event.target.checked)} /><span>{t.consent}</span></label>
       </> : null}
+      <GuideContentB locale={state.locale} />
       {stage === "complete" ? <>
-        <section className={styles.guide} data-testid="experience-guide-content"><h2>{t.guideHeading}</h2>{([[t.guide1, t.guide1Body], [t.guide2, t.guide2Body], [t.guide3, t.guide3Body]] as const).map(([heading, text], index) => <div key={heading}><span>{String(index + 1).padStart(2, "0")}</span><article><h3>{heading}</h3><p>{text}</p></article></div>)}</section>
         <div className={styles.notice} data-testid="experience-audit-status"><p>{record?.audit === "confirmed" ? t.auditConfirmed : record?.audit === "failed" ? t.auditFailed : t.auditPending}</p>{record?.audit !== "confirmed" ? <button type="button" data-testid="experience-audit-retry" disabled={busy} onClick={() => void commit({ type: "audit", outcome: "success" })}>{t.auditRetry}</button> : null}</div>
       </> : null}
       {["running", "unknown", "pending"].includes(stage) && !record?.cancelRequested ? <button type="button" className={styles.textButton} data-testid="experience-stop" disabled={busy} onClick={() => void commit({ type: "request_cancel" })}>{t.stop}</button> : null}

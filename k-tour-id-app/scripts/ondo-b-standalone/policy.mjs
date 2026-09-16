@@ -83,6 +83,7 @@ export const B_NATIVE_INTERACTIVE_FILES = Object.freeze([
   "features/ondo/experience-b/experience-store-b.ts",
   "features/ondo/experience-b/experience-copy-b.ts",
   "features/ondo/experience-b/experience-b.tsx",
+  "features/ondo/experience-b/saved-experience-b.tsx",
   "features/ondo/experience-b/experience-b.module.css",
   "data/ondo/research/seoul-food-pulse.json",
   "data/ondo/research/busan-food-pulse.json",

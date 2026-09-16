@@ -10,19 +10,40 @@
   },
   "current_structure_revision": {
     "date": "2026-09-16",
-    "baseline_sha": "173e71c",
-    "branch": "feat/ktour-ux-polish-20260916",
-    "status": "SOURCE_MAPPED_WITH_SCOPED_EXPERIENCE_BROWSER_EVIDENCE",
-    "initial_graph": { "nodes": 78, "cross_surface_edges": 189, "grouped_rows": 75, "unique_steps": 168 },
-    "delta": "One EXPERIENCE_FLOW node, eight cross-surface edges, one grouped internal row; seven existing node contracts updated through UX08/D03. No new public route.",
+    "baseline_sha": "b7bdba0",
+    "branch": "feat/ktour-public-guide-20260916",
+    "status": "V2_SOURCE_MAPPED_RUNTIME_PENDING",
+    "delta": "D04 separates free public reading from optional v2 pass saving: one node, five cross-surface edges, one internal group added; no new public URL.",
     "added_source_files": [
       "features/ondo/experience-b/experience-model-b.ts",
       "features/ondo/experience-b/experience-store-b.ts",
       "features/ondo/experience-b/experience-copy-b.ts",
       "features/ondo/experience-b/experience-b.tsx",
-      "features/ondo/experience-b/experience-b.module.css"
+      "features/ondo/experience-b/experience-b.module.css",
+      "features/ondo/experience-b/saved-experience-b.tsx"
     ],
-    "evidence_note": "Prior experience release evidence is documented separately. Current page-cb3c6ace225a6949.js on local 3116 passed experience E2E 8/8 in 110.15s, mobile-chromium, workers1/retries0, no skips/flakies/page errors. This is not all-state or real-provider signoff; historical AST source_census and initial seven-probe count are unchanged."
+    "evidence_note": "D04 runtime pending. Earlier v1 scoped browser evidence remains historical.",
+    "previous_revision": {
+      "date": "2026-09-16",
+      "baseline_sha": "173e71c",
+      "branch": "feat/ktour-ux-polish-20260916",
+      "status": "SOURCE_MAPPED_WITH_SCOPED_EXPERIENCE_BROWSER_EVIDENCE",
+      "initial_graph": {
+        "nodes": 78,
+        "cross_surface_edges": 189,
+        "grouped_rows": 75,
+        "unique_steps": 168
+      },
+      "delta": "One EXPERIENCE_FLOW node, eight cross-surface edges, one grouped internal row; seven existing node contracts updated through UX08/D03. No new public route.",
+      "added_source_files": [
+        "features/ondo/experience-b/experience-model-b.ts",
+        "features/ondo/experience-b/experience-store-b.ts",
+        "features/ondo/experience-b/experience-copy-b.ts",
+        "features/ondo/experience-b/experience-b.tsx",
+        "features/ondo/experience-b/experience-b.module.css"
+      ],
+      "evidence_note": "Prior experience release evidence is documented separately. Current page-cb3c6ace225a6949.js on local 3116 passed experience E2E 8/8 in 110.15s, mobile-chromium, workers1/retries0, no skips/flakies/page errors. This is not all-state or real-provider signoff; historical AST source_census and initial seven-probe count are unchanged."
+    }
   },
   "evidence_boundary": {
     "method": "Independent white-box traversal of the standalone source manifest, root imports, UI branches, state models, reducers, event entry points, return contracts and historical registries.",
@@ -113,7 +134,8 @@
       "line": 144,
       "entry_count": 178,
       "unique_count": 177,
-      "duplicate_note": "map/place-return-ui-snapshot-b.ts occurs twice."
+      "duplicate_note": "map/place-return-ui-snapshot-b.ts occurs twice.",
+      "snapshot": "PRE_D04_173e71c_MANIFEST; saved-experience-b.tsx added afterward"
     }
   },
   "historical_registry": {
@@ -1274,7 +1296,7 @@
         "open offer",
         "open Table",
         "open reservation",
-        "open Roba-only full-detail digital-guide experience"
+        "open Roba-only free public neighborhood guide"
       ],
       "mutation": "Captures exact place-service return snapshot before child journey; no side effect from listing alone",
       "returns": "Completion/cancel event returns originating venue/camera/query/list/focus or safe same-city fallback",
@@ -1475,9 +1497,10 @@
         "check Age",
         "profile",
         "wallet actions",
-        "settings"
+        "settings",
+        "read fulfilled local guide collection"
       ],
-      "mutation": "No readiness inferred just by opening tab",
+      "mutation": "No readiness inferred by opening tab. SavedExperienceB reads existing v2 history without creating missing DB; shows fulfilled entry only, not a signed VC or real holder-bound ownership.",
       "returns": "Child closes to same ID page unless action-bound original venue return",
       "source": [
         {
@@ -1491,6 +1514,10 @@
         {
           "file": "features/ondo/identity-b/traveler-id-entry-b.tsx",
           "line": 481
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
         }
       ],
       "runtime_entry": "static_connected; browser_unverified",
@@ -4987,8 +5014,56 @@
       "status": "EXCLUDED_BOUNDARY"
     },
     {
+      "id": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "label": "Free neighborhood guide; optional pass save",
+      "kind": "sheet",
+      "refs": {
+        "flow_ids": [],
+        "group_ids": [
+          "UX08"
+        ],
+        "mw_ids": []
+      },
+      "steps": [
+        "public_read"
+      ],
+      "states": [
+        "open",
+        "closed"
+      ],
+      "entry": "Exact Roba full detail experience-open, or fulfilled collection experience-saved-guide. No identity required.",
+      "actions": [
+        "read three guide tips",
+        "close to originating place or pass",
+        "add to my pass"
+      ],
+      "mutation": "Reading creates no IDB database/record, gate, intent, consent, execution or use; legacy v1 record and marker unchanged. In-memory reader only. Prior explicit v2 save marker may separately resume unfinished saving.",
+      "returns": "Place-origin closes to exact Roba snapshot; pass-origin closes to the pass collection.",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "runtime_entry": "public_sample_reader_without_identity; review_opt_out_hidden",
+      "protected_states": [
+        "storage_unavailable_readable",
+        "legacy_v1_unchanged"
+      ],
+      "browser_evidence": [],
+      "status": "V2_SOURCE_MAPPED_RUNTIME_PENDING"
+    },
+    {
       "id": "EXPERIENCE_FLOW",
-      "label": "Roba digital neighborhood-guide nonfinancial local mock",
+      "label": "Optional neighborhood-guide save to local pass collection",
       "kind": "sheet",
       "refs": {
         "flow_ids": [],
@@ -5018,7 +5093,7 @@
         "storage_error",
         "busy"
       ],
-      "entry": "Sample mode + exact Roba full detail (mois-0021cd596bc5b2a922ad); or same-tab reopening of campaign ktour-neighborhood-guide-v1",
+      "entry": "Only after experience-add-to-pass, or prior explicit v2 save marker; campaign ktour-neighborhood-guide-save-v2",
       "actions": [
         "propose",
         "approve",
@@ -5031,35 +5106,23 @@
         "expire",
         "close/return"
       ],
-      "mutation": "IndexedDB fixed browser sample actor/campaign revision CAS; one simulated execution/use. Current Person + nonserialized exact-intent permit. Consent freezes recipient/scope/5-minute expiry. Consumption, fulfillment and audit are independent. No financial/visit/provider writes or merchant voucher.",
-      "returns": "Same Roba detail snapshot/focus. Close does not imply cancellation. Unknown reconciles same intent; lost permit requires recheck, known ineligibility blocks fulfillment, audit retry never reexecutes.",
+      "mutation": "IndexedDB local-demo-traveler:ktour-neighborhood-guide-save-v2 revision CAS, record.version2; action save-neighborhood-guide-to-pass, recipient demo-traveler-pass. One simulated execution/collection save; current Person + nonserialized exact-intent permit. Public reading never consumes. No signed VC, financial/visit/provider/merchant authority.",
+      "returns": "Close to originating place or pass; gate cancellation returns to free reader. Unknown reconciles same intent, final eligibility may block save, audit retry never reexecutes/adds another row. All result screens retain readable guide content.",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 30
-        },
-        {
-          "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 94
-        },
-        {
-          "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 181
+          "line": 51
         },
         {
           "file": "features/ondo/experience-b/experience-model-b.ts",
-          "line": 15
+          "line": 6
         },
         {
-          "file": "features/ondo/experience-b/experience-model-b.ts",
-          "line": 82
-        },
-        {
-          "file": "features/ondo/experience-b/experience-store-b.ts",
-          "line": 45
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
         }
       ],
-      "runtime_entry": "public_sample_only; review_opt_out_hidden",
+      "runtime_entry": "explicit_optional_save_in_public_sample; review_opt_out_hidden",
       "protected_states": [
         "unknown",
         "consumed_service_blocked",
@@ -5071,11 +5134,8 @@
         "stale_revision",
         "lost_live_permit"
       ],
-      "browser_evidence": [
-        "2026-09-16 local page-cb3c6ace225a6949.js; tests/e2e/ktour-experience-entitlement.spec.ts; 8/8 PASS, 110.15s, mobile-chromium, workers1/retries0; /tmp/ktour-ux16-experience-release.json (local evidence, not GitHub link).",
-        "Scoped cases: fresh Person reuse/automatic holder preparation + explicit ack once/VP, reload single-use, audit pending and failed retry without execution, consumed+service-blocked, unknown+confirmed stop+new consent, unavailable IndexedDB, same-origin two-tab one-use, Person-only pass followed by explicit full-purpose manual delivery."
-      ],
-      "status": "CODE_MAPPED_SCOPED_BROWSER_PASS_NOT_ALL_STATES",
+      "browser_evidence": [],
+      "status": "V2_SOURCE_MAPPED_RUNTIME_PENDING",
       "dimensions": {
         "authorization": [
           "none",
@@ -5110,7 +5170,11 @@
       },
       "unknowns": [
         "Not all Cartesian axis combinations are valid; restore/reducer enforce coherence.",
-        "D04 public guide versus optional pass-save value choice is awaiting user decision."
+        "D04 user approved free reading + optional pass save. New v2 runtime pending; historical v1 PASS is not inherited."
+      ],
+      "historical_browser_evidence": [
+        "2026-09-16 local page-cb3c6ace225a6949.js; tests/e2e/ktour-experience-entitlement.spec.ts; 8/8 PASS, 110.15s, mobile-chromium, workers1/retries0; /tmp/ktour-ux16-experience-release.json (local evidence, not GitHub link).",
+        "Scoped cases: fresh Person reuse/automatic holder preparation + explicit ack once/VP, reload single-use, audit pending and failed retry without execution, consumed+service-blocked, unknown+confirmed stop+new consent, unavailable IndexedDB, same-origin two-tab one-use, Person-only pass followed by explicit full-purpose manual delivery."
       ]
     }
   ],
@@ -13069,37 +13133,25 @@
     {
       "id": "E-190",
       "from": "PLACE_SERVICE_ENTRY",
-      "to": "EXPERIENCE_FLOW",
-      "action": "Open exact registered Roba from full detail",
+      "to": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "action": "Read exact Roba public guide from full detail",
       "kind": "entry_or_forward",
-      "precondition": "Sample mode only; no third peek CTA",
+      "precondition": "Sample mode; no third peek CTA; no identity/pass requirement",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 30
-        },
-        {
-          "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 94
-        },
-        {
-          "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 181
+          "line": 51
         },
         {
           "file": "features/ondo/experience-b/experience-model-b.ts",
-          "line": 15
+          "line": 6
         },
         {
-          "file": "features/ondo/experience-b/experience-model-b.ts",
-          "line": 82
-        },
-        {
-          "file": "features/ondo/experience-b/experience-store-b.ts",
-          "line": 45
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
         }
       ],
-      "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
+      "mutation": "UI only; no IDB/gate/intent/record creation",
       "browser_evidence": [],
       "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
     },
@@ -13107,9 +13159,9 @@
       "id": "E-191",
       "from": "EXPERIENCE_FLOW",
       "to": "ACTION_GATE",
-      "action": "Begin or recheck Person-only experience",
+      "action": "Begin or recheck Person-only pass save",
       "kind": "entry_or_forward",
-      "precondition": "Exact venue/campaign/intent; need current scoped permit",
+      "precondition": "Explicit Add to my pass; exact v2 venue/campaign/intent and current save-purpose permit",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
@@ -13144,9 +13196,9 @@
       "id": "E-192",
       "from": "ACTION_GATE",
       "to": "EXPERIENCE_FLOW",
-      "action": "READY exact return or CANCEL pending check",
+      "action": "READY exact save-purpose return",
       "kind": "entry_or_forward",
-      "precondition": "READY matches token/hash/intent and explicit person VP; CANCEL clears check and grants nothing",
+      "precondition": "READY matches v2 token/hash/intent and person VP; cancellation is E-202 and grants nothing",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
@@ -13202,9 +13254,9 @@
       "id": "E-194",
       "from": "EXPERIENCE_FLOW",
       "to": "CANONICAL_DETAIL",
-      "action": "Close/return to exact Roba",
+      "action": "Close save flow to exact Roba or originating pass",
       "kind": "return_or_recovery",
-      "precondition": "Restore snapshot/focus; no implied cancellation or repeated execution",
+      "precondition": "Place-origin snapshot/focus; pass-origin ID tab; no implied cancellation/reexecution",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
@@ -13233,15 +13285,16 @@
       ],
       "mutation": "See explicit source/target safeguards; static edge is not a successful commit or runtime PASS.",
       "browser_evidence": [],
-      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+      "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION",
+      "conditional_alternative_target": "ID_WALLET_TAB"
     },
     {
       "id": "E-195",
       "from": "RELOAD_BOUNDARY",
       "to": "EXPERIENCE_FLOW",
-      "action": "Reopen same local experience",
+      "action": "Resume same explicitly started v2 save",
       "kind": "return_or_recovery",
-      "precondition": "Validated IDB + same-tab marker; live permit not restored",
+      "precondition": "ktour.experience-save-open.v2 value place|pass + validated same campaign IDB; live permit not restored, old v1 marker ignored",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
@@ -13276,9 +13329,9 @@
       "id": "E-196",
       "from": "EXPERIENCE_FLOW",
       "to": "RELOAD_BOUNDARY",
-      "action": "Persist/channel refresh/storage recovery",
+      "action": "Persist v2 save revision or recover storage",
       "kind": "return_or_recovery",
-      "precondition": "Atomic revision; unavailable storage never grants success",
+      "precondition": "Explicit save only; unavailable storage never grants saved state; v1 not deleted/converted",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
@@ -13327,6 +13380,168 @@
       "status": "STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
     },
     {
+      "id": "E-198",
+      "from": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "to": "EXPERIENCE_FLOW",
+      "action": "Choose Add to my pass",
+      "kind": "entry_or_forward",
+      "precondition": "Explicit optional save",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "mutation": "Create/load v2 intent then required gate; not save success",
+      "browser_evidence": [],
+      "status": "V2_STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-199",
+      "from": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "to": "CANONICAL_DETAIL",
+      "action": "Close free guide from place",
+      "kind": "entry_or_forward",
+      "precondition": "Origin=place",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "mutation": "View return only",
+      "browser_evidence": [],
+      "status": "V2_STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-200",
+      "from": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "to": "ID_WALLET_TAB",
+      "action": "Close free guide from pass",
+      "kind": "entry_or_forward",
+      "precondition": "Origin=pass",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "mutation": "View return only",
+      "browser_evidence": [],
+      "status": "V2_STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-201",
+      "from": "ID_WALLET_TAB",
+      "to": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "action": "Read saved guide",
+      "kind": "entry_or_forward",
+      "precondition": "Validated v2 fulfillment=fulfilled row exists",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "mutation": "Read-only local collection; no signed VC or execution",
+      "browser_evidence": [],
+      "status": "V2_STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "E-202",
+      "from": "ACTION_GATE",
+      "to": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "action": "Cancel save identity/presentation check",
+      "kind": "entry_or_forward",
+      "precondition": "Pending v2 gate cancelled",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "mutation": "Clear current save UI marker; public reading remains available; no approval",
+      "browser_evidence": [],
+      "status": "V2_STATIC_EDGE_REQUIRES_RUNTIME_RECONCILIATION"
+    },
+    {
+      "id": "S-PUBLIC_NEIGHBORHOOD_GUIDE",
+      "from": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "to": "PUBLIC_NEIGHBORHOOD_GUIDE",
+      "kind": "intra_surface_step_or_state",
+      "action": [
+        "read three tips",
+        "expand sample explanation",
+        "close/reopen without save"
+      ],
+      "steps": [
+        "public_read"
+      ],
+      "states": [
+        "open",
+        "closed"
+      ],
+      "precondition": "Public guide entry, no identity",
+      "mutation": "No IDB/gate/intent/saved-use mutation",
+      "returns": "Same view or originating place/pass",
+      "source": [
+        {
+          "file": "features/ondo/experience-b/experience-b.tsx",
+          "line": 51
+        },
+        {
+          "file": "features/ondo/experience-b/experience-model-b.ts",
+          "line": 6
+        },
+        {
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
+        }
+      ],
+      "browser_evidence": [],
+      "status": "V2_GROUPED_STATE_TRANSITIONS_REQUIRE_RUNTIME_RECONCILIATION"
+    },
+    {
       "id": "S-EXPERIENCE_FLOW",
       "from": "EXPERIENCE_FLOW",
       "to": "EXPERIENCE_FLOW",
@@ -13364,33 +13579,21 @@
         "storage_error",
         "busy"
       ],
-      "precondition": "Sample mode + exact Roba full detail (mois-0021cd596bc5b2a922ad); or same-tab reopening of campaign ktour-neighborhood-guide-v1",
-      "mutation": "IndexedDB fixed browser sample actor/campaign revision CAS; one simulated execution/use. Current Person + nonserialized exact-intent permit. Consent freezes recipient/scope/5-minute expiry. Consumption, fulfillment and audit are independent. No financial/visit/provider writes or merchant voucher.",
-      "returns": "Same Roba detail snapshot/focus. Close does not imply cancellation. Unknown reconciles same intent; lost permit requires recheck, known ineligibility blocks fulfillment, audit retry never reexecutes.",
+      "precondition": "Only after experience-add-to-pass, or prior explicit v2 save marker; campaign ktour-neighborhood-guide-save-v2",
+      "mutation": "IndexedDB local-demo-traveler:ktour-neighborhood-guide-save-v2 revision CAS, record.version2; action save-neighborhood-guide-to-pass, recipient demo-traveler-pass. One simulated execution/collection save; current Person + nonserialized exact-intent permit. Public reading never consumes. No signed VC, financial/visit/provider/merchant authority.",
+      "returns": "Close to originating place or pass; gate cancellation returns to free reader. Unknown reconciles same intent, final eligibility may block save, audit retry never reexecutes/adds another row. All result screens retain readable guide content.",
       "source": [
         {
           "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 30
-        },
-        {
-          "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 94
-        },
-        {
-          "file": "features/ondo/experience-b/experience-b.tsx",
-          "line": 181
+          "line": 51
         },
         {
           "file": "features/ondo/experience-b/experience-model-b.ts",
-          "line": 15
+          "line": 6
         },
         {
-          "file": "features/ondo/experience-b/experience-model-b.ts",
-          "line": 82
-        },
-        {
-          "file": "features/ondo/experience-b/experience-store-b.ts",
-          "line": 45
+          "file": "features/ondo/experience-b/saved-experience-b.tsx",
+          "line": 12
         }
       ],
       "browser_evidence": [],
@@ -27516,18 +27719,19 @@
     ]
   },
   "counts": {
-    "semantic_nodes": 79,
-    "explicit_cross_surface_edges": 197,
-    "grouped_internal_transition_rows": 76,
+    "semantic_nodes": 80,
+    "explicit_cross_surface_edges": 202,
+    "grouped_internal_transition_rows": 77,
     "code_files": 128,
     "type_vocabulary_groups": 285,
     "ui_anchors": 772,
-    "unique_steps": 176,
-    "count_note": "Membership updated 2026-09-16 through UX08/D03. Nodes, edges and steps are not screen/PASS counts. AST vocabulary/anchors and detailed source_census remain initial b9cdc42 snapshot.",
+    "unique_steps": 177,
+    "count_note": "Membership updated through D04 public reader/optional save-v2, not screen/PASS counts. Initial AST/source_census retained; v2 runtime pending.",
     "flow_families": 18,
     "browser_verified_nodes": 0,
     "source_manifest_entries": 178,
     "unique_source_files": 177,
-    "source_census_snapshot": "INITIAL_B9CDC42_AST_RETAINED"
+    "source_census_snapshot": "INITIAL_B9CDC42_AST_RETAINED",
+    "source_manifest_snapshot": "PRE_D04_173e71c_MANIFEST_RETAINED"
   }
 }

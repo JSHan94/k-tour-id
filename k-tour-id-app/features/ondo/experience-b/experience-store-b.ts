@@ -2,20 +2,30 @@ import { createExperienceB, EXPERIENCE_KEY_B, reduceExperienceB, restoreExperien
 
 const DB_NAME = "ktour-experience-mock-v1"
 const STORE = "experiences"
+// Keep the existing database/store. The v2 save campaign has its own key;
+// old v1 opening records are neither read as saves nor deleted or rewritten.
 /** A single readwrite IndexedDB transaction serializes same-origin tabs.
  * No localStorage check-then-write fallback: denied storage is unavailable. */
-function database(): Promise<IDBDatabase> {
+function database(createIfMissing = true): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") { reject(new Error("storage_unavailable")); return }
     const request = indexedDB.open(DB_NAME, 1)
-    request.onupgradeneeded = () => request.result.createObjectStore(STORE, { keyPath: "key" })
-    request.onerror = () => reject(new Error("storage_unavailable"))
+    let missing = false
+    request.onupgradeneeded = () => {
+      if (!createIfMissing) { missing = true; request.transaction?.abort(); return }
+      request.result.createObjectStore(STORE, { keyPath: "key" })
+    }
+    request.onerror = () => reject(new Error(missing ? "history_not_created" : "storage_unavailable"))
     request.onblocked = () => reject(new Error("storage_blocked"))
     request.onsuccess = () => resolve(request.result)
   })
 }
-export async function readExperienceB(): Promise<ExperienceRecordB | null> {
-  const db = await database()
+export async function readExperienceB(existingOnly = false): Promise<ExperienceRecordB | null> {
+  const db = await database(!existingOnly).catch(error => {
+    if (existingOnly && error instanceof Error && error.message === "history_not_created") return null
+    throw error
+  })
+  if (!db) return null
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, "readonly")
     const get = tx.objectStore(STORE).get(EXPERIENCE_KEY_B)

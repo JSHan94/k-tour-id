@@ -16,7 +16,7 @@ For the September 21 submission, start with [해커톤 연동 개발 요약](./d
 
 Read [개발자 시작 문서](./docs/DEVELOPER_START_HERE.md) for the mock → API/SDK/backend work map. Harvey starts from `handoff/harvey-20260914`; `main` is the canonical source. The current release record tracks their synchronization, so use the app and docs from the same confirmed handoff. The [original handoff snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9) is historical, not the moving branch head.
 
-The approved [nonfinancial experience mock](./docs/EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) maps Roba → current Person check/scoped presentation → explicit one-action approval → digital guide → same place to Harvey's real integrations. It adds no real CX/OpenDID/AI/Sui/OmniOne calls, merchant voucher or financial/visit entitlement. The latest round automates only preparation in this scoped pass route; holder acknowledgement and purpose-specific presentation consent remain explicit. Making guide reading public is a held product decision, not part of this release.
+The approved [nonfinancial guide flow](./docs/EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) now separates **Roba → freely read the guide** from **optional Add to my pass → Person/pass/presentation → explicit saving approval → local pass collection**. Holder acknowledgement and purpose-specific presentation consent remain explicit. Old opening approvals are not reused for the new save campaign. It adds no real CX/OpenDID/AI/Sui/OmniOne calls, merchant voucher or financial/visit entitlement. The [public-guide release record](./docs/KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md) distinguishes this source change from its verification and deployment status.
 
 ### Run the handoff
 

@@ -210,7 +210,7 @@ G01~G13은 최종 산출물의 검수 묶음이다. 기존 FL/REQ를 대체하�
 | 기술·실개발 | CX provider discovery + QR/WEB2APP; Passport NFC/eKYC/liveness는 별도 provider; OpenDID issuer/schema/holder/status; unsupported residence 대체 |
 | 오류·복구·QA | 취소·미지원·미설치·QR/session 만료·얼굴 불일치·수동검토·issuer 실패·holder 저장 실패. 중복 callback 발급 1회. 체인 지연으로 발급 성공을 되돌리지 않음 |
 
-비금전 체험의 Person 전용 패스는 [체험 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)의 목적별 계약을 따른다. 같은 진행 중 Person 확인을 재사용하는 경로에서만 명시적 생성/보관 동의 후 holder **준비 요청**을1회 자동화한다. 서버/holder 결과 준비와 **사용자 수령 승인**, 목적별 VP 동의는 별도 단계다. 일반 신원 설정·추가 자격의 수동 절차를 이 경로로 대체하거나 Person을 Age/Payment로 승격하지 않는다.
+비금전 가이드의 **내 패스에 담기**에 필요한 Person 전용 패스는 [체험 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)의 목적별 계약을 따른다. 공개 가이드 읽기에는 인증·패스·gate가 필요 없다. 저장을 선택한 같은 진행 중 Person 확인 재사용 경로에서만 명시적 생성/보관 동의 후 holder **준비 요청**을 1회 자동화한다. 서버/holder 결과 준비와 **사용자 수령 승인**, 저장 목적의 VP 동의는 별도 단계다. 일반 신원 설정·추가 자격의 수동 절차를 이 경로로 대체하거나 Person을 Age/Payment로 승격하지 않는다.
 
 ### G06 VP 동의·파트너 검증 — 기존 holder + verifier 보완
 
@@ -490,9 +490,11 @@ type OperationError = {
 
 ## 8. Sui의 역할과 연동 경계
 
-**9/21 해커톤 최소 연동은 비금전 체험 여정이다.** [Sui 필수 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)가 아래 전체 제품의 자산/bridge/badge 예시보다 우선한다. 9/15 추가 목업과 실제 연결점은 [체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다. 로바 상세의 골목 가이드 체험은 Person 확인·목적에 맞는 VP·제안·범위 승인·제한된 실행·서비스 사용·독립 감사 기록을 연결하며, 기존 금융 혜택이나 방문 badge를 이 완료 증거로 쓰지 않는다.
+**9/21 해커톤 최소 연동은 공개 골목 가이드의 선택적 패스 저장 여정이다.** [Sui 필수 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 네 기술·실행/서비스/감사 분리 요건이 아래 전체 제품의 자산/bridge/badge 예시보다 우선한다. 9/16 승인된 v2 연결점은 [체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다. 로바 전체 상세의 가이드 내용은 인증 없이 무료로 읽으며 IDB·gate·intent·사용 기록을 만들지 않는다. **내 패스에 담기** 선택에만 Person/CX → OpenDID 발급·holder·VP → 준비된 AI 제안·명시 승인 → Sui 실행 → 최종 자격 재확인·패스 컬렉션 저장 → OmniOne 감사를 연결한다. 기존 금융 혜택이나 방문 badge는 이 완료 증거가 아니다.
 
-이 체험의 자격 정책은 현재 유효한 Person 확인만이다. VP로 요청하지 않은 국적·체류·성인·결제 정보를 추정하지 않는다. 고정된 브라우저 샘플 사용자/캠페인 기록은 실제 사용자 중복 방지나 암호학적 영수증이 아니다. 하비는 서버 세션·현재 자격·durable intent와 실제 AI/zkLogin/PTB/Move, 최종 DB 사용, OmniOne outbox를 연결한다. 실제 매장의 제공 의무가 있는 상품권·할인·예약을 새로 만들지 않는다.
+저장 자격 정책은 현재 유효한 Person 확인만이다. VP로 요청하지 않은 국적·체류·성인·결제 정보를 추정하지 않는다. scope action은 `save-neighborhood-guide-to-pass`, campaign은 `ktour-neighborhood-guide-save-v2`, recipient는 `demo-traveler-pass`다. 결과는 로컬 목업 패스 컬렉션 항목이며 서명 VC claim이 아니다. 이전 v1 읽기 승인·기록은 삭제·변환·저장 동의 재사용을 하지 않는다. 1회 제한은 저장에만 적용하며 무료 열람은 반복 가능하다.
+
+고정된 브라우저 샘플 사용자/캠페인 기록은 실제 사용자 중복 방지나 암호학적 영수증이 아니다. 하비는 서버 세션·현재 자격·durable intent와 실제 AI/zkLogin/PTB/Move, 최종 DB 컬렉션 저장, OmniOne outbox를 연결한다. Sui 권한 소비는 저장 완료가 아니며 감사 pending/실패는 저장 재실행 사유가 아니다. 실제 매장의 제공 의무가 있는 상품권·할인·예약은 만들지 않는다.
 
 Sui는 이번 사용자가 지정한 목업·인계 범위다. DID 신원확인의 대체재가 아니다. 제품 후보는 **사용자 서명 수단(zkLogin/기존 wallet) → 명시 동의한 자산 동작 또는 선택적 기념 badge → receipt**다. 실제 대상 asset/Move package/수탁·상환 구조는 `ADR-SUI-01`의 결정 항목이다.
 

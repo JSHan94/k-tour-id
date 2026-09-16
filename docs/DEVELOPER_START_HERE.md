@@ -60,7 +60,7 @@
 
 ## 3. DID 해커톤에서 우선 연결할 것
 
-9/15 추가한 비금전 골목 가이드의 화면·상태·연결 함수는 [체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)에서 바로 찾는다. 이 체험은 현재 Person 확인만 요청하며, 국적/체류/성인/결제 자격이나 매장 할인권을 만들지 않는다. 실제 연동과 검수 범위는 아래 네 기술의 증거로 판단한다.
+골목 가이드의 화면·상태·연결 함수는 [체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)에서 바로 찾는다. 무료 읽기에는 인증이 없고 **내 패스에 담기**를 선택했을 때만 Person 확인·패스·목적별 제시·저장 승인을 요청한다. 국적/체류/성인/결제 자격이나 매장 할인권을 만들지 않는다. v2 컬렉션 저장은 서명 VC가 아니며 이전 v1 열람 승인을 재사용하지 않는다. 실제 연동과 검수 범위는 아래 네 기술의 증거로 판단한다.
 
 공식 과제 구분은 [매트릭스 §1의 원문 근거](./HACKATHON_INTEGRATION_MATRIX_2026-09-08.md)를 따른다. 아래는 **프로젝트에서 개발할 범위**이며 목업만으로 공식 기술활용 인정이 완료됐다는 뜻이 아니다.
 
@@ -74,10 +74,11 @@
 네 기술을 포함하는 첫 수직 슬라이스:
 
 ```text
-Mobile ID 승인 → CX 결과 검증 → 최소 evidence / TrustProfile
+공개 가이드 읽기 → [선택] 내 패스에 담기
+ → Mobile ID 승인 → CX 결과 검증 → 최소 evidence / TrustProfile
  → OpenDID 발급 + holder ack → 같은 서비스의 VP / 서버 정책
- → 허용된 체험 제안 → 사용자 범위 승인 → zkLogin/PTB → Agent/Move 1회 실행
- → 서버 현재 자격 재확인 → DB 체험 사용 → 발생한 업무만 OmniOne outbox / receipt
+ → 허용된 가이드 저장 제안 → 사용자 범위 승인 → zkLogin/PTB → Agent/Move 1회 실행
+ → 서버 현재 자격 재확인 → DB 패스 컬렉션 저장 → 발생한 업무만 OmniOne outbox / receipt
 ```
 
 만료·철회·취소·중복·unknown·사용 후 감사 기록 지연은 같은 여정에서 검수한다. Passport/Residence·실제 commerce는 이번 최소 범위 밖이다. Sui signer 연결은 DID 신원확인이나 결제 KYC의 대체재가 아니다.

@@ -31,6 +31,12 @@ test("HANDOFF-SYNC-008 concise handoff keeps the flow, all four integrations, re
   expect(brief).toContain("외부 앱 복귀")
   expect(brief).toContain("취소·잘못된 증명·만료·철회")
   expect(brief).toContain("현재 공개 앱은 목업")
+  for (const scope of ["골목 가이드 무료 읽기", "내 패스에 담기", "save-neighborhood-guide-to-pass", "ktour-neighborhood-guide-save-v2", "demo-traveler-pass"]) {
+    expect(brief, scope).toContain(scope)
+  }
+  expect(brief).toContain("공개 읽기는 IDB·gate·intent를 만들지 않습니다")
+  expect(brief).toContain("이전 v1 읽기 승인·기록은 삭제/변환하거나 새 저장 동의로 재사용하지 않습니다")
+  expect(brief).toContain("별도 서명 VC·방문 배지·결제·예약·매장 제공 의무가 아닙니다")
   expect(brief).toContain("https://github.com/OmniOneID/did-release")
   expect(brief.length).toBeLessThan(6000)
   expect(detailed).toContain("이번 팀의 필수 구현 범위")

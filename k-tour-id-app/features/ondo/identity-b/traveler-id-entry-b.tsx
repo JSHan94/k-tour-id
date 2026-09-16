@@ -17,6 +17,7 @@ import { useOndoB } from "../shared/state/ondo-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { LocalCheckWalkthroughB, type LocalCheckKind, type LocalCheckOutcome } from "./local-check-walkthrough-b"
 import { IdWalletCommerceB } from "../commerce-b/id-wallet-commerce-b"
+import { SavedExperienceB } from "../experience-b/saved-experience-b"
 import {
   GLOBAL_AFTER19_SESSION_EVENT,
   GLOBAL_AFTER19_SESSION_KEY,
@@ -449,6 +450,8 @@ export function TravelerIdEntryB() {
           <KPassServiceCardB paymentReady={paymentStatus === "success"} compact />
           <IdWalletCommerceB />
         </div>
+
+        <SavedExperienceB locale={locale} />
 
         <details className={styles.readiness} data-testid="travel-pass-status" aria-labelledby="travel-readiness-title">
           <summary className={styles.sectionHeading} data-testid="travel-pass-readiness-toggle">

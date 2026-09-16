@@ -5,10 +5,12 @@ import {
   EXPERIENCE_ACTOR_B,
   EXPERIENCE_CAMPAIGN_ID_B,
   EXPERIENCE_KEY_B,
+  EXPERIENCE_OPEN_EVENT_B,
   EXPERIENCE_PLACE_ID_B,
   EXPERIENCE_SCOPE_MS_B,
   hasExperiencePermitB,
   reduceExperienceB,
+  requestExperienceB,
   restoreExperienceB,
   type ExperienceCommandB,
   type ExperienceContextB,
@@ -35,6 +37,7 @@ import {
   requiresBActionPresentation,
 } from "../../features/ondo/identity-b/action-gate-contract-b"
 import { createReviewFixtureAuthority, reviewFixture } from "../../features/ondo/contracts/execution-mode"
+import { hashReturnToSnapshot } from "../../features/ondo/contracts/return-to-integrity"
 
 const NOW = Date.parse("2026-09-15T08:00:00.000Z")
 const INTENT = "EXP-independent-review-0001"
@@ -80,12 +83,12 @@ function livePersonHandoff(offset: number, receiptOffset = 1, fixtureId: "FX-PER
 
 test("EXP-001 the single local sample campaign is nonfinancial and not keyed by a replaceable credential", () => {
   const initial = createExperienceB(INTENT, NOW)
-  expect(initial).toMatchObject({ mockOnly: true, actor: EXPERIENCE_ACTOR_B, key: EXPERIENCE_KEY_B,
+  expect(initial).toMatchObject({ version: 2, mockOnly: true, actor: EXPERIENCE_ACTOR_B, key: EXPERIENCE_KEY_B,
     placeId: EXPERIENCE_PLACE_ID_B, campaignId: EXPERIENCE_CAMPAIGN_ID_B, scope: null,
     authorization: "none", fulfillment: "not_started", audit: "not_started", executionCount: 0, usedCount: 0 })
   expect(EXPERIENCE_KEY_B).toBe(`${EXPERIENCE_ACTOR_B}:${EXPERIENCE_CAMPAIGN_ID_B}`)
   expect(createExperienceB("EXP-second-wallet-0002", NOW).key).toBe(initial.key)
-  expect(proposed().scope).toMatchObject({ maxUses: 1, moneyKrw: 0, action: "open-neighborhood-guide" })
+  expect(proposed().scope).toMatchObject({ maxUses: 1, moneyKrw: 0, action: "save-neighborhood-guide-to-pass", recipient: "demo-traveler-pass" })
 })
 
 test("EXP-002 preparing a proposal is not user approval and a different proposal cannot be approved", () => {
@@ -504,4 +507,98 @@ test("EXP-031 limited-credential recovery cannot promote claims; separately cons
   expect(standard.claims).toMatchObject({ serviceAccess: ["person", "age", "visitor_benefit", "payment"],
     ageOver19: true, paymentLimitKrw: 100_000, visitorBenefit: { entitled: true } })
   expect(evaluateKPassService(standard, { service: "payment", now: NOW, paymentKyc: true, amountKrw: 1 }).status).toBe("allowed")
+})
+
+/** Reconstruct the old opening contract, including its original digest. This
+ * is a negative compatibility fixture, never a v2 save/migration helper. */
+function legacyOpeningRecord(record: ExperienceRecordB) {
+  const campaignId = "ktour-neighborhood-guide-v1"
+  const scope = record.scope ? { ...copy(record.scope), campaignId,
+    action: "open-neighborhood-guide", recipient: "demo-traveler-wallet" } : null
+  if (scope) {
+    scope.proposalDigest = hashReturnToSnapshot({ intentId: record.intentId, placeId: EXPERIENCE_PLACE_ID_B, campaignId,
+      action: scope.action, recipient: scope.recipient, agent: scope.agent, maxUses: 1, moneyKrw: 0,
+      expiresAt: scope.expiresAt, policy: scope.policy, model: "prepared-proposal.v1" })!
+    scope.consentDigest = scope.approvedAt === null ? null : hashReturnToSnapshot({ intentId: record.intentId,
+      proposalDigest: scope.proposalDigest, approvedAt: scope.approvedAt, approved: true })!
+  }
+  return { ...copy(record), version: 1, campaignId, key: `${EXPERIENCE_ACTOR_B}:${campaignId}`, scope }
+}
+
+test("EXP-032 v2 pass saving has a new campaign/key and never interprets old opening history as a save", () => {
+  expect(EXPERIENCE_CAMPAIGN_ID_B).toBe("ktour-neighborhood-guide-save-v2")
+  const fresh = createExperienceB(INTENT, NOW)
+  expect(fresh.version).toBe(2)
+  const ctx = context()
+  for (const current of [fresh, proposed(ctx), granted(ctx),
+    run(granted(ctx), { type: "execution", outcome: "unknown" }, ctx), consumed(ctx), fulfilled(ctx)]) {
+    const legacy = legacyOpeningRecord(current)
+    const before = copy(legacy)
+    expect(legacy.key).not.toBe(EXPERIENCE_KEY_B)
+    expect(restoreExperienceB(legacy)).toBeNull()
+    for (const command of [{ type: "propose" }, { type: "execution", outcome: "success" },
+      { type: "fulfill", outcome: "success" }, { type: "audit", outcome: "success" }] as ExperienceCommandB[]) {
+      expect(run(legacy as never, command, ctx)).toBe(legacy)
+    }
+    expect(legacy).toEqual(before)
+    expect(restoreExperienceB(copy(current))).toEqual(current)
+  }
+})
+
+test("EXP-033 changing an old record version/key cannot promote opening consent into pass-save consent", () => {
+  const current = granted()
+  const legacy = legacyOpeningRecord(current)
+  expect(current.scope).toMatchObject({ action: "save-neighborhood-guide-to-pass", recipient: "demo-traveler-pass" })
+  expect(current.scope!.proposalDigest).not.toBe(legacy.scope!.proposalDigest)
+  expect(current.scope!.consentDigest).not.toBe(legacy.scope!.consentDigest)
+  const renamed = { ...legacy, version: 2, campaignId: EXPERIENCE_CAMPAIGN_ID_B, key: EXPERIENCE_KEY_B }
+  expect(restoreExperienceB(renamed)).toBeNull()
+  expect(restoreExperienceB({ ...current, scope: { ...current.scope!, proposalDigest: legacy.scope!.proposalDigest,
+    consentDigest: legacy.scope!.consentDigest } })).toBeNull()
+  expect(restoreExperienceB({ ...current, scope: { ...current.scope!, action: "open-neighborhood-guide" } })).toBeNull()
+  expect(restoreExperienceB({ ...current, scope: { ...current.scope!, recipient: "demo-traveler-wallet" } })).toBeNull()
+  const proposal = proposed()
+  expect(run(proposal, { type: "approve", proposalDigest: legacy.scope!.proposalDigest }, context())).toBe(proposal)
+})
+
+test("EXP-034 the legacy campaign gate cannot bind a new save request", () => {
+  const action = createBExperienceActionReturn({ venueId: EXPERIENCE_PLACE_ID_B, campaignId: EXPERIENCE_CAMPAIGN_ID_B,
+    intentId: INTENT, now: new Date(NOW + 34) })
+  const legacyAction = { ...action, campaignId: "ktour-neighborhood-guide-v1" }
+  expect(isBActionReturnStructurallyValid(legacyAction)).toBe(false)
+  expect(hashBActionReturnTo(legacyAction as never)).toBeNull()
+  expect(privateContextForBAction(legacyAction as never)).toBeNull()
+  expect(() => createBExperienceActionReturn({ venueId: EXPERIENCE_PLACE_ID_B,
+    campaignId: "ktour-neighborhood-guide-v1", intentId: INTENT })).toThrow()
+})
+
+test("EXP-035 public read is not a saving reducer command and cannot mark a guide used", () => {
+  const ctx = context()
+  for (const record of [createExperienceB(INTENT, NOW), granted(ctx), fulfilled(ctx)]) {
+    const before = copy(record)
+    for (const type of ["view", "read", "open", "public_guide"]) {
+      expect(run(record, { type } as never, ctx)).toBe(record)
+    }
+    expect(record).toEqual(before)
+  }
+})
+
+test("EXP-036 the open event preserves exact place/pass origin without carrying approval or creating an intent", () => {
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "window")
+  const dispatched: CustomEvent[] = []
+  Object.defineProperty(globalThis, "window", { configurable: true,
+    value: { dispatchEvent: (event: CustomEvent) => { dispatched.push(event); return true } } })
+  try {
+    expect(requestExperienceB(EXPERIENCE_PLACE_ID_B)).toBe(true)
+    expect(requestExperienceB(EXPERIENCE_PLACE_ID_B, "pass")).toBe(true)
+    expect(requestExperienceB("other-place", "pass")).toBe(false)
+    expect(requestExperienceB(EXPERIENCE_PLACE_ID_B, "other" as never)).toBe(false)
+    expect(dispatched.map(event => ({ type: event.type, detail: event.detail }))).toEqual([
+      { type: EXPERIENCE_OPEN_EVENT_B, detail: { placeId: EXPERIENCE_PLACE_ID_B, source: "place" } },
+      { type: EXPERIENCE_OPEN_EVENT_B, detail: { placeId: EXPERIENCE_PLACE_ID_B, source: "pass" } },
+    ])
+  } finally {
+    if (descriptor) Object.defineProperty(globalThis, "window", descriptor)
+    else Reflect.deleteProperty(globalThis, "window")
+  }
 })

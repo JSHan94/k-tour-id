@@ -38,8 +38,9 @@ async function openFromPublicMap(page: Page) {
   if (await peek.isVisible()) await peek.click()
   await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
   await page.getByTestId("experience-open").click()
-  await expect(page.getByTestId("experience-flow")).toHaveAttribute("data-stage", "offer")
-  await expect(page.getByTestId("experience-boundary")).toContainText("not a restaurant voucher or booking")
+  await expect(page.getByTestId("experience-public-guide")).toBeVisible()
+  await expect(page.getByTestId("experience-guide-content").getByRole("heading", { level: 3 })).toHaveCount(3)
+  await expect(page.getByTestId("experience-flow")).toHaveCount(0)
 }
 
 async function checkToProposal(page: Page) {
@@ -47,8 +48,10 @@ async function checkToProposal(page: Page) {
   let holderAcknowledgements = 0
   const flow = page.getByTestId("experience-flow")
   const start = page.getByTestId("experience-check")
-  if (await start.isVisible()) await start.click()
+  if (await page.getByTestId("experience-add-to-pass").isVisible()) await page.getByTestId("experience-add-to-pass").click()
+  else if (await start.isVisible()) await start.click()
   else await page.getByTestId("experience-recheck").click()
+  await expect(flow).toBeAttached()
   for (let step = 0; step < 18; step += 1) {
     if (await flow.getAttribute("data-stage") === "proposal") return visited
     const candidates = [
@@ -105,9 +108,10 @@ async function approve(page: Page) {
 }
 
 async function selectScenario(page: Page, scenario: string) {
-  const details = page.getByTestId("experience-details")
+  const reading = await page.getByTestId("experience-public-guide").isVisible()
+  const details = page.getByTestId(reading ? "experience-public-details" : "experience-details")
   await details.locator(":scope > summary").click()
-  await page.getByTestId("experience-scenario").selectOption(scenario)
+  await page.getByTestId(reading ? "experience-public-scenario" : "experience-scenario").selectOption(scenario)
   await details.locator(":scope > summary").click()
 }
 
@@ -127,7 +131,7 @@ async function assertNoPaidOrVisitEffects(page: Page) {
   await expect(page.getByTestId("payment-receipt")).toHaveCount(0)
 }
 
-test("UX08 public guest map → Roba → account/Person/VP → one approval → guide → same place; reload stays single-use", async ({ page }, testInfo) => {
+test("UX08 public guest map → free guide → Add to pass → Person/VP → one save → same place; reload stays single-use", async ({ page }, testInfo) => {
   await openFromPublicMap(page)
   await assertNoPaidOrVisitEffects(page)
   const visited = await checkToProposal(page)
@@ -164,6 +168,8 @@ test("UX08 public guest map → Roba → account/Person/VP → one approval → 
   await expect(page.getByTestId("ondo-b-city-header")).toContainText("Seoul")
   await expect(page.getByTestId("ondo-b-search")).toHaveValue("Roba")
   await page.getByTestId("experience-open").click()
+  await expect(page.getByTestId("experience-public-guide")).toBeVisible()
+  await page.getByTestId("experience-add-to-pass").click()
   await expect(flow).toHaveAttribute("data-intent-id", intent!)
   await expect(flow).toHaveAttribute("data-used-count", "1")
   await page.screenshot({ path: testInfo.outputPath("03-reopened-same-guide.png"), fullPage: true })
@@ -190,7 +196,7 @@ for (const scenario of ["auditDelay", "auditFailure"] as const) {
   })
 }
 
-test("UX08 final eligibility decline keeps consumed permission but zero guide use and no restart", async ({ page }) => {
+test("UX08 final eligibility decline keeps consumed permission but zero saves; guide remains readable", async ({ page }) => {
   await openFromPublicMap(page)
   await selectScenario(page, "serviceBlocked")
   await checkToProposal(page)
@@ -200,7 +206,7 @@ test("UX08 final eligibility decline keeps consumed permission but zero guide us
   await expect(flow).toHaveAttribute("data-authorization", "consumed")
   await expect(flow).toHaveAttribute("data-execution-count", "1")
   await expect(flow).toHaveAttribute("data-used-count", "0")
-  await expect(page.getByTestId("experience-guide-content")).toHaveCount(0)
+  await expect(page.getByTestId("experience-guide-content")).toBeVisible()
   await expect(page.getByTestId("experience-check")).toHaveCount(0)
   await expect(page.getByTestId("experience-approve")).toHaveCount(0)
   await assertNoPaidOrVisitEffects(page)
@@ -239,8 +245,11 @@ test("UX08 unavailable IndexedDB fails closed with an operable same-place return
   })
   await page.goto(`/?city=seoul&venueId=${PLACE}&detail=1`, { waitUntil: "domcontentloaded" })
   await page.getByTestId("experience-open").click()
+  await expect(page.getByTestId("experience-guide-content")).toBeVisible()
+  await expect(page.getByTestId("experience-storage-error")).toHaveCount(0)
+  await page.getByTestId("experience-add-to-pass").click()
   await expect(page.getByTestId("experience-storage-error")).toBeVisible()
-  await expect(page.getByTestId("experience-guide-content")).toHaveCount(0)
+  await expect(page.getByTestId("experience-guide-content")).toBeVisible()
   await expect(page.getByTestId("experience-approve")).toHaveCount(0)
   await page.getByTestId("experience-return").click()
   await expect(page.getByTestId("canonical-place-overlay")).toBeVisible()
@@ -310,6 +319,12 @@ test("UX08 Person-only pass keeps other services locked; later age service requi
   await page.getByTestId("experience-return").click()
   await page.getByTestId("canonical-place-overlay").locator('[data-place-return-focus="detail_close"]').click()
   await page.getByTestId("nav-id").click()
+  await expect(page.getByTestId("experience-saved-guide")).toBeVisible()
+  await page.getByTestId("experience-saved-guide").click()
+  await expect(page.getByTestId("experience-public-guide")).toBeVisible()
+  await expect(page.getByTestId("experience-flow")).toHaveCount(0)
+  await page.getByRole("dialog").filter({ has: page.getByTestId("experience-public-guide") }).getByRole("button", { name: "Close", exact: true }).click()
+  await expect(page.getByTestId("experience-saved-guide")).toBeFocused()
   await page.getByTestId("kpass-service-toggle").click()
   await expect(page.getByTestId("kpass-service-person")).toHaveAttribute("data-status", "allowed")
   for (const service of ["age", "visitor_benefit", "payment"]) {

@@ -1,9 +1,10 @@
 import { evaluateKPassService, type KPassDemoCredential } from "../contracts/kpass-capabilities"
 import { hashReturnToSnapshot } from "../contracts/return-to-integrity"
 
-/** Local demonstration only. These constants are NOT a merchant entitlement. */
+/** Local pass-collection demonstration only, NOT a merchant entitlement or
+ * signed credential claim. Public guide reading has no record or permission. */
 export const EXPERIENCE_PLACE_ID_B = "mois-0021cd596bc5b2a922ad"
-export const EXPERIENCE_CAMPAIGN_ID_B = "ktour-neighborhood-guide-v1"
+export const EXPERIENCE_CAMPAIGN_ID_B = "ktour-neighborhood-guide-save-v2"
 export const EXPERIENCE_ACTOR_B = "local-demo-traveler"
 export const EXPERIENCE_KEY_B = `${EXPERIENCE_ACTOR_B}:${EXPERIENCE_CAMPAIGN_ID_B}`
 export const EXPERIENCE_OPEN_EVENT_B = "ktour:experience:open"
@@ -16,13 +17,13 @@ export type ExperienceAuthorizationB = "none" | "granted" | "unknown" | "consume
 export type ExperienceFulfillmentB = "not_started" | "pending" | "fulfilled" | "blocked"
 export type ExperienceAuditB = "not_started" | "pending" | "confirmed" | "failed"
 export type ExperienceScopeB = Readonly<{
-  action: "open-neighborhood-guide"; recipient: "demo-traveler-wallet"; agent: "local-demo-helper"
+  action: "save-neighborhood-guide-to-pass"; recipient: "demo-traveler-pass"; agent: "local-demo-helper"
   placeId: typeof EXPERIENCE_PLACE_ID_B; campaignId: typeof EXPERIENCE_CAMPAIGN_ID_B
   intentId: string; maxUses: 1; moneyKrw: 0; expiresAt: number; policy: typeof EXPERIENCE_POLICY_B
   proposalDigest: string; consentDigest: string | null; approvedAt: number | null
 }>
 export type ExperienceRecordB = Readonly<{
-  version: 1; mockOnly: true; key: typeof EXPERIENCE_KEY_B; actor: typeof EXPERIENCE_ACTOR_B
+  version: 2; mockOnly: true; key: typeof EXPERIENCE_KEY_B; actor: typeof EXPERIENCE_ACTOR_B
   placeId: typeof EXPERIENCE_PLACE_ID_B; campaignId: typeof EXPERIENCE_CAMPAIGN_ID_B
   intentId: string; revision: number; createdAt: number; updatedAt: number
   scope: ExperienceScopeB | null; authorization: ExperienceAuthorizationB; fulfillment: ExperienceFulfillmentB
@@ -51,19 +52,19 @@ export function hasExperiencePermitB(record: ExperienceRecordB, context: Experie
 }
 export function createExperienceB(intentId: string, now = Date.now()): ExperienceRecordB {
   if (!/^EXP-[a-z0-9-]{8,80}$/i.test(intentId) || !Number.isSafeInteger(now) || now < 0) throw new Error("Invalid experience intent")
-  return { version: 1, mockOnly: true, key: EXPERIENCE_KEY_B, actor: EXPERIENCE_ACTOR_B, placeId: EXPERIENCE_PLACE_ID_B,
+  return { version: 2, mockOnly: true, key: EXPERIENCE_KEY_B, actor: EXPERIENCE_ACTOR_B, placeId: EXPERIENCE_PLACE_ID_B,
     campaignId: EXPERIENCE_CAMPAIGN_ID_B, intentId, revision: 0, createdAt: now, updatedAt: now, scope: null,
     authorization: "none", fulfillment: "not_started", audit: "not_started", cancelRequested: false,
     executionCount: 0, usedCount: 0, executionRef: null, fulfillmentRef: null, auditRef: null, blockReason: null }
 }
 function proposalDigest(intentId: string, expiresAt: number) {
   return hashReturnToSnapshot({ intentId, placeId: EXPERIENCE_PLACE_ID_B, campaignId: EXPERIENCE_CAMPAIGN_ID_B,
-    action: "open-neighborhood-guide", recipient: "demo-traveler-wallet", agent: "local-demo-helper", maxUses: 1, moneyKrw: 0,
+    action: "save-neighborhood-guide-to-pass", recipient: "demo-traveler-pass", agent: "local-demo-helper", maxUses: 1, moneyKrw: 0,
     expiresAt, policy: EXPERIENCE_POLICY_B, model: "prepared-proposal.v1" })!
 }
 function scopeFor(record: ExperienceRecordB, expiresAt: number): ExperienceScopeB {
   const digest = proposalDigest(record.intentId, expiresAt)
-  return { action: "open-neighborhood-guide", recipient: "demo-traveler-wallet", agent: "local-demo-helper",
+  return { action: "save-neighborhood-guide-to-pass", recipient: "demo-traveler-pass", agent: "local-demo-helper",
     placeId: EXPERIENCE_PLACE_ID_B, campaignId: EXPERIENCE_CAMPAIGN_ID_B, intentId: record.intentId,
     maxUses: 1, moneyKrw: 0, expiresAt, policy: EXPERIENCE_POLICY_B, proposalDigest: digest,
     consentDigest: null, approvedAt: null }
@@ -133,11 +134,12 @@ export function reduceExperienceB(record: ExperienceRecordB, command: Experience
   return record
 }
 
-/** This restores bounded MOCK HISTORY, not an authenticated identity or receipt. */
+/** Restore only v2 local pass-save history, not authenticated identity or a
+ * signed receipt. A v1 guide-opening approval is never a v2 save approval. */
 export function restoreExperienceB(value: unknown): ExperienceRecordB | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const r = value as ExperienceRecordB
-  if (r.version !== 1 || r.mockOnly !== true || r.key !== EXPERIENCE_KEY_B || r.actor !== EXPERIENCE_ACTOR_B || r.placeId !== EXPERIENCE_PLACE_ID_B || r.campaignId !== EXPERIENCE_CAMPAIGN_ID_B
+  if (r.version !== 2 || r.mockOnly !== true || r.key !== EXPERIENCE_KEY_B || r.actor !== EXPERIENCE_ACTOR_B || r.placeId !== EXPERIENCE_PLACE_ID_B || r.campaignId !== EXPERIENCE_CAMPAIGN_ID_B
     || typeof r.intentId !== "string" || !/^EXP-[a-z0-9-]{8,80}$/i.test(r.intentId)
     || !Number.isSafeInteger(r.revision) || r.revision < 0 || !Number.isSafeInteger(r.createdAt) || !Number.isSafeInteger(r.updatedAt) || r.createdAt < 0 || r.updatedAt < r.createdAt
     || !["none", "granted", "unknown", "consumed", "revoked", "expired", "failed"].includes(r.authorization)
@@ -164,8 +166,8 @@ export function restoreExperienceB(value: unknown): ExperienceRecordB | null {
   return r
 }
 
-export function requestExperienceB(placeId: string) {
-  if (typeof window === "undefined" || placeId !== EXPERIENCE_PLACE_ID_B) return false
-  window.dispatchEvent(new CustomEvent(EXPERIENCE_OPEN_EVENT_B, { detail: { placeId } }))
+export function requestExperienceB(placeId: string, source: "place" | "pass" = "place") {
+  if (typeof window === "undefined" || placeId !== EXPERIENCE_PLACE_ID_B || (source !== "place" && source !== "pass")) return false
+  window.dispatchEvent(new CustomEvent(EXPERIENCE_OPEN_EVENT_B, { detail: { placeId, source } }))
   return true
 }
