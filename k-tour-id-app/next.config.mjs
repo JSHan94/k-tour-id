@@ -13,7 +13,9 @@ const productionSecurityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' data: https://fonts.gstatic.com https://tiles.openfreemap.org",
       "img-src 'self' data: blob: https:",
-      "connect-src 'self' https://tiles.openfreemap.org https://openfreemap.org",
+      // cx.raonsecure.co.kr is called from the browser: the CX verifier refuses cloud
+      // egress, so the QR handoff is fetched by the visitor's own network.
+      "connect-src 'self' https://tiles.openfreemap.org https://openfreemap.org https://cx.raonsecure.co.kr:18543",
       "worker-src 'self' blob:",
     ].join("; "),
   },

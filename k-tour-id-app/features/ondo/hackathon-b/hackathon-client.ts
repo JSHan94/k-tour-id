@@ -19,6 +19,38 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 }
 const post = <T,>(path: string, body?: unknown) => call<T>(path, { method: "POST", body: JSON.stringify(body ?? {}) })
 
+// ── OmniOne CX, fetched by the browser ────────────────────────────────
+// The CX verifier answers unauthenticated and sends `Access-Control-Allow-Origin: *`,
+// but it refuses connections from cloud networks, so a deployed server cannot reach it.
+// The visitor's own network can, so the QR handoff is requested here. This proves the
+// CX integration end to end up to the handoff; the result still cannot be verified by
+// this server, so the journey continues on the clearly labelled sample path.
+export const CX_BROWSER_QR = process.env.NEXT_PUBLIC_HK_CX_BROWSER_QR === "1"
+const CX_BASE = process.env.NEXT_PUBLIC_HK_CX_BASE_URL || "https://cx.raonsecure.co.kr:18543"
+const CX_PROVIDER = process.env.NEXT_PUBLIC_HK_CX_PROVIDER || "comdl"
+const CX_ZKP = process.env.NEXT_PUBLIC_HK_CX_ZKP_TYPE || "AdultVerify"
+
+export type CxBrowserQr = { qrBase64: string; cxId: string; txId: string; provider: string }
+
+export async function fetchCxBrowserQr(): Promise<CxBrowserQr> {
+  const call = async (path: string, body: unknown) => {
+    const res = await fetch(`${CX_BASE}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) })
+    if (!res.ok) throw new Error(`CX ${path} ${res.status}`)
+    return (await res.json()) as Record<string, unknown>
+  }
+  const trans = await call("/oacx/api/v1.0/trans", {})
+  const token = String(trans.token ?? ""), txId = String(trans.txId ?? "")
+  if (!token || !txId) throw new Error("CX did not return a token")
+  const qr = await call("/oacx/api/v1.0/authen/qr/request", {
+    token, txId, provider: `${CX_PROVIDER}_v1.5`,
+    contentInfo: { signType: "ENT_MID" }, extraParams: { zkpType: CX_ZKP },
+  })
+  const code = Number(qr.resultCode ?? 200)
+  if (code !== 200) throw new Error(`CX qr/request ${code}: ${String(qr.oacxCode ?? "")}`)
+  const data = (qr.data && typeof qr.data === "object" ? qr.data : {}) as Record<string, unknown>
+  return { qrBase64: String(data.qrBase64 ?? ""), cxId: String(qr.cxId ?? ""), txId, provider: String(qr.provider ?? CX_PROVIDER) }
+}
+
 export const api = {
   /** Establish the HttpOnly session cookie before parallel calls so they cannot race to mint different ids. */
   session: () => post<{ ok: true; sessionId: string }>("/sessions"),
