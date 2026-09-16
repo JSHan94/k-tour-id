@@ -31,6 +31,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Hackathon demo deploys build the full app with `next build`. If a type-only regression
+  // blocks a Vercel build, HK_BUILD_IGNORE_TS=1 lets the demo ship while it is fixed;
+  // `pnpm typecheck` remains the source of truth locally.
+  typescript: { ignoreBuildErrors: process.env.HK_BUILD_IGNORE_TS === "1" },
   async headers() {
     return [
       { source: "/", headers: productionSecurityHeaders },

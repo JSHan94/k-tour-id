@@ -43,6 +43,7 @@ import { canonicalVenueMoodImage } from "../map/canonical-venue-capsule-b"
 import { ONDO_B_TABLES, ondoBTableTimeline } from "../connect/table-model"
 import { capturePlaceServiceMapReturnB } from "../map/place-service-map-return-b"
 import { PlacePeekActionsB, PlaceServiceActionsB } from "./place-service-actions-b"
+import { HackathonEntitlementCtaB } from "../hackathon-b/hackathon-cta-b"
 import {
   canonicalFactFreshness,
   canonicalFactState,
@@ -1140,6 +1141,7 @@ export function CanonicalPlaceOverlay({ locale: mountedLocale, presenceState, ve
             </div>
           </details>
 
+          <HackathonEntitlementCtaB venueId={currentVenueId} locale={locale} />
           <PlaceServiceActionsB placeId={currentVenueId} locale={locale} onOffer={openMealBenefitFromPlace} offerTestId="canonical-meal-benefit-open" />
           {placeTable ? (
             <section className={styles.tableActions} aria-label={locale === "ko" ? "이 장소의 테이블" : locale === "ja" ? "この場所のテーブル" : "Table at this place"} data-place-return-section="table">
