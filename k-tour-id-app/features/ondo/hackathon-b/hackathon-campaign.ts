@@ -13,7 +13,11 @@ export const HACKATHON_DEMO_ENTRY = HACKATHON_ENABLED && process.env.NEXT_PUBLIC
 export const HACKATHON_OPEN_EVENT_B = "ondo:b:hackathon-open"
 export const HACKATHON_PENDING_KEY = "ondo-b.hackathon.pending.v1"
 
-export type HackathonOpenDetail = { venueId: string; locale: "en" | "ko" | "ja"; resumeOperationId?: string }
+/** Autopilot: `execute` stops after the on-chain agent execution (step 7) so the
+ * final "confirm and use" stays a human tap; `redeem` runs through the service
+ * redemption (step 8) and the OmniOne record (step 9). Undefined = manual. */
+export type HackathonAuto = "execute" | "redeem"
+export type HackathonOpenDetail = { venueId: string; locale: "en" | "ko" | "ja"; resumeOperationId?: string; auto?: HackathonAuto }
 
 export function isHackathonVenue(venueId: unknown) {
   return HACKATHON_ENABLED && typeof venueId === "string" && venueId === HACKATHON_CAMPAIGN_VENUE_ID
@@ -29,7 +33,7 @@ export function requestHackathonOpenB(detail: HackathonOpenDetail) {
  * Uses the map's own return path, so the venue opens exactly like a post-service
  * return (city switch included). A short delay lets the map register its listener
  * when this is called right after first paint (`/hackathon` deep link). */
-export function openHackathonVenueB(delayMs = 0) {
+export function openHackathonVenueB(delayMs = 0, auto?: HackathonAuto, locale: HackathonOpenDetail["locale"] = "ko") {
   if (typeof window === "undefined") return
   window.setTimeout(() => {
     if (!requestPlaceServiceReturnB(HACKATHON_CAMPAIGN_VENUE_ID, "offer")) return
@@ -38,7 +42,12 @@ export function openHackathonVenueB(delayMs = 0) {
     let tries = 0
     const reveal = () => {
       const cta = document.querySelector<HTMLElement>("[data-testid='hackathon-entitlement-open']")
-      if (cta) { cta.scrollIntoView({ block: "center" }); cta.focus({ preventScroll: true }); return }
+      if (cta) {
+        cta.scrollIntoView({ block: "center" }); cta.focus({ preventScroll: true })
+        // Autopilot: don't wait for the tap on the CTA; open the journey with the flag set.
+        if (auto) requestHackathonOpenB({ venueId: HACKATHON_CAMPAIGN_VENUE_ID, locale, auto })
+        return
+      }
       document.querySelector<HTMLButtonElement>("[data-testid='canonical-place-details']")?.click()
       if (++tries < 40) window.setTimeout(reveal, 150)
     }

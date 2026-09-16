@@ -60,7 +60,34 @@ async function executeSigned(bytes: Uint8Array, signatures: string[]) {
   const txn = res.Transaction ?? res.FailedTransaction
   if (!txn) throw new HkError("sui_execute", "no transaction result", 502, true)
   if (!txn.status.success) throw new HkError("sui_execute_failed", `Sui execution failed: ${JSON.stringify(txn.status.error).slice(0, 300)}`, 502)
+  // executeTransaction returns on validator certification; the fullnode we read from
+  // may lag by a checkpoint. Wait until it has indexed this tx so the follow-up
+  // getObject / gas-coin lookups never see stale state ("Object … not found").
+  await waitForIndexed(txn.digest)
   return txn
+}
+
+async function waitForIndexed(digest: string, timeoutMs = 15_000) {
+  const client = suiClient() as unknown as { waitForTransaction?: (o: { digest: string; timeout?: number }) => Promise<unknown> }
+  const deadline = Date.now() + timeoutMs
+  if (typeof client.waitForTransaction === "function") {
+    try { await client.waitForTransaction({ digest, timeout: timeoutMs }); return } catch { /* fall through to polling */ }
+  }
+  while (Date.now() < deadline) {
+    try { const r = await suiClient().getTransaction({ digest }); if (r.Transaction ?? r.FailedTransaction) return } catch { /* not yet */ }
+    await new Promise((r) => setTimeout(r, 400))
+  }
+}
+
+/** getObject with a short retry: a freshly created object can trail the tx by a moment. */
+async function getObjectRetry(objectId: string, include?: { json?: boolean }, timeoutMs = 10_000) {
+  const deadline = Date.now() + timeoutMs
+  let lastErr: unknown = null
+  while (Date.now() < deadline) {
+    try { return (await suiClient().getObject(include ? { objectId, include } : { objectId })).object } catch (e) { lastErr = e }
+    await new Promise((r) => setTimeout(r, 400))
+  }
+  throw lastErr instanceof Error ? lastErr : new HkError("sui_read", `object ${objectId} not readable`, 502, true)
 }
 
 type Executed = Awaited<ReturnType<typeof executeSigned>>
@@ -70,8 +97,7 @@ function createdRefs(txn: Executed): ObjRef[] {
   return effects.changedObjects.filter((c) => c.idOperation === "Created").map((c) => ({ objectId: c.objectId, version: c.outputVersion ?? "0", digest: c.outputDigest ?? "" }))
 }
 async function objectType(objectId: string) {
-  const { object } = await suiClient().getObject({ objectId })
-  return object
+  return getObjectRetry(objectId)
 }
 
 // ── issuer: mint entitlement to user (sponsored by sponsor) ───────────
@@ -156,7 +182,7 @@ export async function agentConsume(opts: { grant: { objectId: string; initialSha
 }
 
 export async function readGrant(objectId: string) {
-  const { object } = await suiClient().getObject({ objectId, include: { json: true } })
+  const object = await getObjectRetry(objectId, { json: true })
   const j = (object.json ?? {}) as Record<string, unknown>
   return { type: object.type, version: object.version, uses: Number(j.uses ?? -1), revoked: Boolean(j.revoked), agent: String(j.agent ?? ""), owner: String(j.owner ?? ""), recipient: String(j.recipient ?? ""), expiresAtMs: Number(j.expires_at_ms ?? 0), json: j }
 }

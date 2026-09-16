@@ -12,6 +12,8 @@ import { canonicalMapVenueById } from "@/lib/ondo/venues/map-data"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
+// Sui build+execute+verify chains several RPC round trips; give the function headroom on Vercel.
+export const maxDuration = 60
 
 type Ctx = { params: Promise<{ path: string[] }> }
 
@@ -42,13 +44,14 @@ export async function GET(req: Request, ctx: Ctx) {
       const s = await ensureSession()
       const cfg = hkPublicConfig()
       if (path[1] !== cfg.campaign.venueId) return json({ supported: false, campaign: null, operation: null })
-      const live = readStore((db) => Object.values(db.operations).filter((o) => o.sessionId === s.sessionId && o.campaignId === cfg.campaign.campaignId).sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null)
-      const redeemed = readStore((db) => (s.subjectRef ? db.redemptions[`${s.subjectRef}::${cfg.campaign.campaignId}`] ?? null : null))
+      // Only an in-progress operation is resumable; finished ones stay reachable via /operations/{id} and the evidence screen.
+      const live = await readStore((db) => Object.values(db.operations).filter((o) => o.sessionId === s.sessionId && o.campaignId === cfg.campaign.campaignId && o.status === "pending").sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0] ?? null)
+      const redeemed = await readStore((db) => (s.subjectRef ? db.redemptions[`${s.subjectRef}::${cfg.campaign.campaignId}`] ?? null : null))
       return json({ supported: true, campaign: cfg.campaign, modes: cfg.modes, consentVersion: HK_CONSENT_VERSION, operation: live ? svc.toResult(live) : null, redeemed: redeemed ? { redemptionRef: redeemed.redemptionRef, redeemedAt: redeemed.redeemedAt } : null })
     }
     if (path[0] === "operations" && path[1]) {
       const s = await requireSession()
-      const op = svc.loadOperation(s.sessionId, path[1])
+      const op = await svc.loadOperation(s.sessionId, path[1])
       if (path[2] === "evidence") return json(svc.evidence(op))
       return json(svc.toResult(op))
     }
@@ -93,7 +96,7 @@ export async function POST(req: Request, ctx: Ctx) {
         case "presentation/request": return json(await svc.presentationRequest(s.sessionId, id))
         case "presentation/submit": return json(await svc.presentationSubmit(s.sessionId, id, { presentationId: str(b.presentationId, 64), disclosed: b.disclosed && typeof b.disclosed === "object" ? (b.disclosed as Record<string, unknown>) : {}, signatureB64: str(b.signatureB64, 512) }))
         case "presentation/deny": return json(await svc.presentationDeny(s.sessionId, id))
-        case "proposal": { const op = svc.loadOperation(s.sessionId, id); return json(await svc.proposalCreate(s.sessionId, id, venueCtx(op.venueId, locale(b.locale)))) }
+        case "proposal": { const op = await svc.loadOperation(s.sessionId, id); return json(await svc.proposalCreate(s.sessionId, id, venueCtx(op.venueId, locale(b.locale)))) }
         case "delegation/prepare": return json(await svc.delegationPrepare(s.sessionId, id, { userAddress: str(b.userAddress, 70), signer: b.signer === "zklogin" ? "zklogin" : "demo", walletProof: { message: str((b.walletProof as { message?: string })?.message, 256), signature: str((b.walletProof as { signature?: string })?.signature, 4096) }, approvedProposalDigest: str(b.approvedProposalDigest, 80) }))
         case "delegation/submit": return json(await svc.delegationSubmit(s.sessionId, id, { txBytesDigest: str(b.txBytesDigest, 80), userSignature: str(b.userSignature, 8192) }))
         case "agent/run": return json(await svc.agentRun(s.sessionId, id))

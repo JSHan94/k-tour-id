@@ -20,6 +20,8 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 const post = <T,>(path: string, body?: unknown) => call<T>(path, { method: "POST", body: JSON.stringify(body ?? {}) })
 
 export const api = {
+  /** Establish the HttpOnly session cookie before parallel calls so they cannot race to mint different ids. */
+  session: () => post<{ ok: true; sessionId: string }>("/sessions"),
   config: () => call<PublicConfig>("/config"),
   entitlements: (venueId: string) => call<EntitlementInfo>(`/places/${encodeURIComponent(venueId)}/demo-entitlements`),
   create: (venueId: string, consentVersion: string, locale: string) => post<OperationResult>("/operations", { venueId, consentVersion, locale }),

@@ -4,6 +4,7 @@
 //        → chain(OmniOne outbox) → done. Every step re-validates server state; a
 //        client can never advance a phase by asserting success.
 import { verifyPersonalMessageSignature } from "@mysten/sui/verify"
+import { toBase64 } from "@mysten/sui/utils"
 import { hkConfig, HK_CONSENT_VERSION, HK_SCHEMA_VERSION, HK_SERVICE_ACCESS, HK_TTL } from "./config"
 import { withStore, readStore, redemptionKey, type OperationRecord, type OutboxRecord } from "./store"
 import { canonicalJson, digestOf, isPast, nowIso, plusMs, randomHex32, randomId, sha256Hex, HkError, assert } from "./util"
@@ -13,6 +14,14 @@ import { issueCredential, presentationPayload, verifyHolderSignature, verifyIssu
 import { proposePerk } from "./adapters/ai"
 import { agentConsume, buildDelegationPtb, executeDelegation, issueEntitlement, readGrant, readTransaction, suiClient, suiKeys, suiTargets, explorerTx, explorerObject } from "./adapters/sui"
 import { getRedemption, omnioneConfigured, receiptStatus, submitRedemption } from "./adapters/omnione"
+
+/** Sui GraphQL endpoint for the configured network (used only as a zkLogin verification cross-check). */
+function zkLoginGraphqlUrl(): string | null {
+  const explicit = process.env.HK_SUI_GRAPHQL_URL
+  if (explicit) return explicit
+  const n = hkConfig().sui.network
+  return n === "testnet" || n === "mainnet" || n === "devnet" ? `https://graphql.${n}.sui.io/graphql` : null
+}
 
 // ── result projection ─────────────────────────────────────────────────
 export function toResult(op: OperationRecord): OperationResult {
@@ -46,8 +55,8 @@ function fail(op: OperationRecord, code: string, message: string, retryable = fa
   touch(op, "error", { code, message })
 }
 
-export function loadOperation(sessionId: string, operationId: string): OperationRecord {
-  const op = readStore((db) => db.operations[operationId])
+export async function loadOperation(sessionId: string, operationId: string): Promise<OperationRecord> {
+  const op = await readStore((db) => db.operations[operationId])
   if (!op || op.sessionId !== sessionId) throw new HkError("not_found", "operation not found", 404)
   return op
 }
@@ -95,7 +104,7 @@ export async function createOperation(input: { sessionId: string; venueId: strin
 
 // ── identity (CX) ─────────────────────────────────────────────────────
 export async function identityStart(sessionId: string, operationId: string, mobile: boolean) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "identity", "phase", "identity not in progress", 409)
   const started = await cxStart({ operationId, mobile })
   return mutate(sessionId, operationId, (o) => {
@@ -107,7 +116,7 @@ export async function identityStart(sessionId: string, operationId: string, mobi
 }
 
 export async function identityComplete(sessionId: string, operationId: string, sample?: { outcome: "verified" | "cancelled" | "failed" | "expired"; subjectSeed: string }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "identity" && op.identity?.handoff, "phase", "no identity handoff", 409)
   if (isPast(op.identity.handoff.expiresAt)) return mutate(sessionId, operationId, (o) => { o.identity = null; touch(o, "identity.expired"); return toResult(o) })
   const result = await cxComplete({ operationId, token: op.secrets.cxToken, txId: op.secrets.cxTxId, mobile: op.identity.handoff.kind === "app", sample })
@@ -139,7 +148,7 @@ export async function identityComplete(sessionId: string, operationId: string, s
 
 // ── issuance (OpenDID) ────────────────────────────────────────────────
 export async function credentialIssue(sessionId: string, operationId: string, holder: { publicKeyPem: string; alg: "Ed25519" | "ECDSA-P256" }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "issuance" && op.identity?.personVerified, "phase", "identity required", 409)
   assert(!isPast(op.identity.expiresAt), "evidence_expired", "identity evidence expired", 409)
   assert(/BEGIN PUBLIC KEY/.test(holder.publicKeyPem) && holder.publicKeyPem.length < 1200, "holder_key", "holder public key must be SPKI PEM")
@@ -154,7 +163,7 @@ export async function credentialIssue(sessionId: string, operationId: string, ho
 }
 
 export async function credentialHolderAck(sessionId: string, operationId: string, ack: { signatureB64: string }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "issuance" && op.credential && op.secrets.holderPublicKeyPem && op.secrets.holderKeyAlg, "phase", "credential not issued", 409)
   const payload = canonicalJson({ typ: "ondo-kpass-holder-ack/v1", credentialRef: op.credential.credentialRef, vcId: op.credential.vcId, holderBinding: op.credential.holderBinding })
   const ok = verifyHolderSignature({ alg: op.secrets.holderKeyAlg, publicKeyPem: op.secrets.holderPublicKeyPem, payload, signatureB64: ack.signatureB64 })
@@ -237,7 +246,7 @@ export async function presentationDeny(sessionId: string, operationId: string) {
 
 // ── proposal (AI) ─────────────────────────────────────────────────────
 export async function proposalCreate(sessionId: string, operationId: string, ctx: { locale: "ko" | "en" | "ja"; venueName: string; category: string; district: string }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "proposal" && op.presentation?.decision === "allow", "phase", "allow decision required", 409)
   assert(!isPast(op.presentation.decisionExpiresAt), "decision_expired", "decision expired; present again", 409)
   if (op.proposal) return toResult(op)
@@ -254,7 +263,7 @@ export async function proposalCreate(sessionId: string, operationId: string, ctx
 
 // ── delegation (Sui, user PTB) ────────────────────────────────────────
 export async function delegationPrepare(sessionId: string, operationId: string, input: { userAddress: string; signer: "zklogin" | "demo"; walletProof: { message: string; signature: string }; approvedProposalDigest: string }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "delegation" && op.proposal && op.presentation?.decision === "allow", "phase", "proposal approval required", 409)
   assert(op.proposal.proposalDigest === input.approvedProposalDigest, "proposal_digest", "approved proposal does not match", 409)
   assert(/^0x[0-9a-f]{64}$/i.test(input.userAddress), "address", "bad sui address")
@@ -264,7 +273,34 @@ export async function delegationPrepare(sessionId: string, operationId: string, 
   try {
     await verifyPersonalMessageSignature(new TextEncoder().encode(expectedMsg), input.walletProof.signature, { address: input.userAddress, client: suiClient() })
   } catch (e) {
-    throw new HkError("wallet_proof", `wallet proof invalid: ${e instanceof Error ? e.message : "unknown"}`, 400)
+    let detail = e instanceof Error ? e.message : "unknown"
+    let accepted = false
+    if (input.signer === "zklogin") {
+      // The fullnode gRPC SignatureVerificationService has been observed to pick the wrong
+      // zkLogin verifying key on Testnet (MystenLabs/sui gRPC vs JSON-RPC/GraphQL mismatch).
+      // Re-verify through GraphQL, which validators' path agrees with, before rejecting.
+      const gqlUrl = zkLoginGraphqlUrl()
+      if (gqlUrl) {
+        try {
+          const res = await fetch(gqlUrl, { method: "POST", headers: { "content-type": "application/json" }, signal: AbortSignal.timeout(15_000), body: JSON.stringify({
+            // GraphQL RPC 2.x schema: verifySignature(message, signature, intentScope, author) { success }
+            query: "query($b:Base64!,$s:Base64!,$a:SuiAddress!){ verifySignature(message:$b, signature:$s, intentScope:PERSONAL_MESSAGE, author:$a){ success } }",
+            variables: { b: toBase64(new TextEncoder().encode(expectedMsg)), s: input.walletProof.signature, a: input.userAddress },
+          }) })
+          const j = (await res.json()) as { data?: { verifySignature?: { success: boolean } }; errors?: Array<{ message: string }> }
+          const v = j.data?.verifySignature
+          if (v?.success === true) accepted = true
+          else detail += ` · graphql: ${v ? `success=${String(v.success)}` : (j.errors ?? []).map((x) => x.message).join("; ")}`.slice(0, 400)
+        } catch (e2) { detail += ` · graphql: ${e2 instanceof Error ? e2.message.slice(0, 200) : "?"}` }
+      }
+      if (!accepted) {
+        try {
+          const r = await suiClient().core.verifyZkLoginSignature({ bytes: toBase64(new TextEncoder().encode(expectedMsg)), signature: input.walletProof.signature, intentScope: "PersonalMessage", address: input.userAddress })
+          detail += ` · grpc: success=${String(r.success)}${r.errors.length ? " " + r.errors.join("; ").slice(0, 300) : ""}`
+        } catch (e2) { detail += ` · grpc: ${e2 instanceof Error ? e2.message.slice(0, 300) : "?"}` }
+      }
+    }
+    if (!accepted) throw new HkError("wallet_proof", `wallet proof invalid: ${detail}`, 400)
   }
   if (op.delegation?.status === "awaiting_signature" && op.secrets.lastTxBytesB64 && op.delegation.userAddress === input.userAddress) {
     return { result: toResult(op), txBytesB64: op.secrets.lastTxBytesB64 }
@@ -285,7 +321,7 @@ export async function delegationPrepare(sessionId: string, operationId: string, 
 }
 
 export async function delegationSubmit(sessionId: string, operationId: string, input: { txBytesDigest: string; userSignature: string }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "delegation" && op.delegation?.status === "awaiting_signature" && op.secrets.lastTxBytesB64, "phase", "no delegation awaiting signature", 409)
   assert(op.delegation.txBytesDigest === input.txBytesDigest, "tx_mismatch", "transaction bytes changed", 409)
   assert(op.delegation.expiresAtMs > Date.now(), "grant_window_expired", "delegation window expired", 409)
@@ -312,7 +348,7 @@ export async function delegationSubmit(sessionId: string, operationId: string, i
 
 // ── agent (Sui, consume PTB) ──────────────────────────────────────────
 export async function agentRun(sessionId: string, operationId: string) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "agent" && op.delegation?.grant && op.proposal, "phase", "delegation required", 409)
   if (op.agent?.status === "executed") return toResult(op)
   const grantState = await readGrant(op.delegation.grant.objectId)
@@ -357,7 +393,7 @@ export async function agentRun(sessionId: string, operationId: string) {
 
 // ── fulfillment (server redeem) + OmniOne outbox ──────────────────────
 export async function redeem(sessionId: string, operationId: string, input: { idempotencyKey: string; bodyDigest: string }) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "fulfillment" && op.agent?.status === "executed" && op.agent.txDigest, "phase", "verified Sui execution required", 409)
   // independent re-verification of the Sui execution before committing service state
   const suiTx = await readTransaction(op.agent.txDigest)
@@ -399,12 +435,12 @@ export async function redeem(sessionId: string, operationId: string, input: { id
     return outbox
   })
   if (outboxRecord) await processOutbox(outboxRecord.outboxId).catch(() => undefined)
-  return toResult(loadOperation(sessionId, operationId))
+  return toResult(await loadOperation(sessionId, operationId))
 }
 
 /** OmniOne outbox worker step: submit if pending, confirm if submitted. Safe to re-run. */
 export async function processOutbox(outboxId: string) {
-  const row = readStore((db) => db.outbox[outboxId])
+  const row = await readStore((db) => db.outbox[outboxId])
   if (!row || row.status === "confirmed" || row.status === "failed") return row
   if (!omnioneConfigured()) { await withStore((db) => { const r = db.outbox[outboxId]; r.lastError = "omnione_unconfigured"; r.updatedAt = nowIso(); mirror(db, r) }); return row }
   try {
@@ -414,12 +450,12 @@ export async function processOutbox(outboxId: string) {
       if (existing.exists) {
         const matches = existing.payloadCommitment.toLowerCase() === row.payloadCommitment.toLowerCase()
         await withStore((db) => { const r = db.outbox[outboxId]; r.status = matches ? "confirmed" : "failed"; r.lastError = matches ? null : "duplicate_eventKey_payload_mismatch"; r.confirmedAt = matches ? nowIso() : null; r.updatedAt = nowIso(); mirror(db, r) })
-        return readStore((db) => db.outbox[outboxId])
+        return await readStore((db) => db.outbox[outboxId])
       }
       const submitted = await submitRedemption({ eventKeyHex: row.eventKey, payloadCommitmentHex: row.payloadCommitment })
       await withStore((db) => { const r = db.outbox[outboxId]; r.attempts += 1; r.txHash = submitted.txHash; r.status = submitted.txHash ? "submitted" : "unknown"; r.updatedAt = nowIso(); mirror(db, r) })
     }
-    const after = readStore((db) => db.outbox[outboxId])
+    const after = await readStore((db) => db.outbox[outboxId])
     if (after.status === "submitted" && after.txHash) {
       const rc = await receiptStatus(after.txHash)
       if (rc.status === "confirmed") {
@@ -433,7 +469,7 @@ export async function processOutbox(outboxId: string) {
   } catch (e) {
     await withStore((db) => { const r = db.outbox[outboxId]; r.attempts += 1; r.status = r.txHash ? "submitted" : "unknown"; r.lastError = e instanceof Error ? e.message.slice(0, 200) : "unknown"; r.updatedAt = nowIso(); mirror(db, r) })
   }
-  return readStore((db) => db.outbox[outboxId])
+  return await readStore((db) => db.outbox[outboxId])
 }
 function mirror(db: Parameters<Parameters<typeof withStore>[0]>[0], r: OutboxRecord) {
   const o = db.operations[r.operationId]
@@ -455,7 +491,7 @@ export async function cancel(sessionId: string, operationId: string) {
 }
 
 export async function reconcile(sessionId: string, operationId: string) {
-  const op = loadOperation(sessionId, operationId)
+  const op = await loadOperation(sessionId, operationId)
   if (op.chain?.outboxId) await processOutbox(op.chain.outboxId)
   if (op.agent?.status === "unknown" && op.delegation?.grant) {
     const g = await readGrant(op.delegation.grant.objectId).catch(() => null)
@@ -465,7 +501,7 @@ export async function reconcile(sessionId: string, operationId: string) {
     const tx = await readTransaction(op.delegation.userTxDigest).catch(() => null)
     if (tx?.success) await mutate(sessionId, operationId, (o) => { o.delegation!.status = "delegated"; o.phase = "agent"; touch(o, "delegation.reconciled") })
   }
-  return toResult(loadOperation(sessionId, operationId))
+  return toResult(await loadOperation(sessionId, operationId))
 }
 
 export function evidence(op: OperationRecord) {

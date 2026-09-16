@@ -63,5 +63,8 @@
 .cta:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }
 
 /* demo-only floating entry above the dock and its review chip (nav ≈92px + chip 42px) */
+.entryGroup { position:fixed; right:16px; bottom:calc(150px + env(safe-area-inset-bottom)); z-index:65; display:grid; gap:8px; justify-items:end; }
+.entryGroup .entry { position:static; }
+.entry[data-variant="auto"] { background:var(--ondo-surface-raised); color:var(--ondo-ink); border-color:var(--ondo-line-strong); }
 .entry { position:fixed; right:16px; bottom:calc(150px + env(safe-area-inset-bottom)); z-index:65; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border-radius:999px; border:1px solid var(--ondo-control); background:var(--ondo-control); color:var(--ondo-control-ink); font:inherit; font-size:13px; font-weight:740; box-shadow:var(--ondo-shadow); cursor:pointer; }
 .entry:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }

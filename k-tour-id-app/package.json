@@ -13,6 +13,7 @@
     "prepare:sites:ondo-b": "node scripts/ondo-b-standalone/prepare.mjs",
     "build:sites:ondo-b": "node scripts/ondo-b-standalone/build.mjs",
     "build:vercel:ondo-b": "pnpm prepare:sites:ondo-b && cd .ondo-b-standalone && ../node_modules/.bin/next build --webpack && cd .. && pnpm scan:vercel:ondo-b",
+    "build:vercel:hackathon": "next build",
     "scan:sites:ondo-b": "node scripts/ondo-b-standalone/scan-artifact.mjs",
     "scan:next:ondo-b": "node scripts/ondo-b-next-client-artifact.mjs",
     "scan:vercel:ondo-b": "ONDO_B_NEXT_SOURCE_ROOT=.ondo-b-standalone ONDO_B_NEXT_ROOT=.ondo-b-standalone/.next node scripts/ondo-b-next-client-artifact.mjs",

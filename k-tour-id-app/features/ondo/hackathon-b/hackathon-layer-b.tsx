@@ -5,7 +5,7 @@
 // Consumer copy uses actions ("신원 확인", "혜택 확인", "확인하고 사용하기");
 // technology names live in the evidence section.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Ticket, X } from "lucide-react"
+import { Play, Ticket, X } from "lucide-react"
 import type { OperationResult } from "@/lib/hackathon/types"
 import { requestPlaceServiceReturnB } from "../commerce-b/place-service-registry-b"
 import { useOndoB } from "../shared/state/ondo-b-provider"
@@ -56,6 +56,8 @@ export function HackathonEntitlementLayerB() {
     if (pending && (!hk || hk === pending.resumeOperationId)) setOpen(pending)
     // `/hackathon` deep link → jump to the designated venue so the CTA is one tap away
     else if (hk === "start" && HACKATHON_DEMO_ENTRY) openHackathonVenueB(300)
+    // `/?hk=auto` (or `hk=auto-execute`) → open the venue and run the whole journey hands-free
+    else if ((hk === "auto" || hk === "auto-execute") && HACKATHON_DEMO_ENTRY) openHackathonVenueB(300, hk === "auto" ? "redeem" : "execute")
     if (hk) { url.searchParams.delete("hk"); window.history.replaceState(null, "", url.toString()) }
     return () => window.removeEventListener(HACKATHON_OPEN_EVENT_B, onOpen)
   }, [])
@@ -68,10 +70,17 @@ function DemoEntryButton() {
   const { state } = useOndoB()
   if (state.tab !== "ondo" || state.surface.kind !== "map") return null
   const label = state.locale === "en" ? "Start perk journey" : state.locale === "ja" ? "体験特典を始める" : "체험 혜택 여정 시작"
+  const autoLabel = state.locale === "en" ? "Run full journey" : state.locale === "ja" ? "全フロー自動実行" : "전체 플로우 자동 실행"
+  const loc = state.locale === "en" ? "en" : state.locale === "ja" ? "ja" : "ko"
   return (
-    <button type="button" className={styles.entry} data-testid="hackathon-demo-entry" onClick={() => openHackathonVenueB()}>
-      <Ticket size={16} aria-hidden="true" /><span>{label}</span>
-    </button>
+    <div className={styles.entryGroup}>
+      <button type="button" className={styles.entry} data-testid="hackathon-demo-entry" onClick={() => openHackathonVenueB()}>
+        <Ticket size={16} aria-hidden="true" /><span>{label}</span>
+      </button>
+      <button type="button" className={styles.entry} data-variant="auto" data-testid="hackathon-demo-entry-auto" onClick={() => openHackathonVenueB(0, "redeem", loc)}>
+        <Play size={16} aria-hidden="true" /><span>{autoLabel}</span>
+      </button>
+    </div>
   )
 }
 
@@ -104,12 +113,16 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
   useEffect(() => {
     let alive = true
     ;(async () => {
+      await api.session().catch(() => undefined) // one cookie first; parallel calls below then share it
       const [cfg, ent] = await Promise.all([api.config(), api.entitlements(detail.venueId)])
       if (!alive) return
       setConfig(cfg); setInfo(ent)
       const resumeId = detail.resumeOperationId ?? ent.operation?.operationId
       if (resumeId) {
-        const current = await api.get(resumeId).catch(() => null)
+        let current = await api.get(resumeId).catch(() => null)
+        // A finished operation is not resumable: drop the stale pending marker and, in
+        // autopilot, start a fresh journey instead of re-showing the old result.
+        if (current && current.status !== "pending") { writePendingHackathon(null); if (detail.auto) current = null }
         if (current && alive) { setOp(current); setSigner(readSigner(current.operationId)); try { vcRef.current = JSON.parse(sessionStorage.getItem(`ondo-b.hackathon.vc:${current.operationId}`) ?? "null") } catch { vcRef.current = null } }
         // zkLogin callback stored a JWT for this operation?
         const jwt = sessionStorage.getItem(`ondo-b.hackathon.jwt:${resumeId}`)
@@ -119,7 +132,7 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
     return () => { alive = false }
   }, [detail.venueId, detail.resumeOperationId, run])
 
-  useEffect(() => { if (op && op.status === "pending") writePendingHackathon({ venueId: detail.venueId, locale: detail.locale, resumeOperationId: op.operationId }) }, [op, detail.venueId, detail.locale])
+  useEffect(() => { if (op && op.status === "pending") writePendingHackathon({ venueId: detail.venueId, locale: detail.locale, resumeOperationId: op.operationId, auto: detail.auto }) }, [op, detail.venueId, detail.locale, detail.auto])
 
   const close = useCallback((returnToPlace: boolean) => {
     if (op && op.status !== "pending") { writePendingHackathon(null); clearJourneySecrets(op.operationId); try { sessionStorage.removeItem(`ondo-b.hackathon.vc:${op.operationId}`) } catch { /* ignore */ } }
@@ -162,7 +175,7 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
     if (kind === "demo") { setSigner(createDemoSigner(op.operationId)); return }
     const params = await api.zkParams()
     if (!params.configured) throw new Error("zkLogin is not configured (NEXT_PUBLIC_GOOGLE_CLIENT_ID / HK_ZKLOGIN_SALT_SEED)")
-    writePendingHackathon({ venueId: detail.venueId, locale: detail.locale, resumeOperationId: op.operationId })
+    writePendingHackathon({ venueId: detail.venueId, locale: detail.locale, resumeOperationId: op.operationId, auto: detail.auto })
     window.location.assign(await beginZkLogin(op.operationId, params.googleClientId, params.maxEpoch))
   })
   const delegate = () => run("delegate", async () => {
@@ -179,6 +192,75 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
   const reconcile = () => run("reconcile", async () => { if (op) setOp(await api.reconcile(op.operationId)) })
   const cancel = () => run("cancel", async () => { if (op) setOp(await api.cancel(op.operationId)) })
   const loadEvidence = () => run("evidence", async () => { if (op) setEvidence(await api.evidence(op.operationId)) })
+
+  // Sample identity seed: one synthetic person per operation so the demo can be
+  // replayed (the server still enforces one redemption per subject+campaign).
+  const sampleSeed = op ? `sample-${op.operationId}`.slice(0, 64) : "sample-person-1"
+  const approveSample = () => identityComplete({ outcome: "verified", subjectSeed: sampleSeed })
+
+  // ── autopilot ─────────────────────────────────────────────────────
+  // Drives the same step actions a person would tap, one server phase at a time.
+  // Stops (and hands back to the UI) on any error, on a real-provider handoff
+  // (QR / Mobile ID app, Google zkLogin redirect) or when the chosen end is reached.
+  const auto = detail.auto
+  const [autoPaused, setAutoPaused] = useState(false)
+  const autoFiredRef = useRef("")
+  const autoReconcileRef = useRef(0)
+  const autoActive = Boolean(auto) && !autoPaused && !error
+  useEffect(() => {
+    if (!autoActive || busy || !info || !config) return
+    const key = op
+      ? `${op.phase}:${op.status}:${op.identity?.handoff?.kind ?? ""}:${op.credential ? 1 : 0}:${op.presentation?.decision ?? ""}:${op.proposal ? 1 : 0}:${signer?.kind ?? ""}:${op.delegation?.status ?? ""}:${op.agent?.status ?? ""}:${op.fulfillment?.status ?? ""}`
+      : `consent:${info.supported}:${info.redeemed ? 1 : 0}`
+    if (autoFiredRef.current === key) return
+    autoFiredRef.current = key
+    if (!op) {
+      // `info.redeemed` refers to the session's last verified subject; with one sample
+      // person per operation the server decides at identity time, so start regardless.
+      if (info.supported) { setConsent(true); start() }
+      return
+    }
+    if (op.status !== "pending") {
+      // done: poll the OmniOne outbox a few times until the record is confirmed
+      if (op.phase === "done" && op.chain && (op.chain.status === "pending" || op.chain.status === "submitted" || op.chain.status === "unknown") && autoReconcileRef.current < 6) {
+        autoReconcileRef.current += 1
+        const t = window.setTimeout(() => { autoFiredRef.current = ""; reconcile() }, 2500)
+        return () => window.clearTimeout(t)
+      }
+      return
+    }
+    switch (op.phase) {
+      case "identity":
+        if (!op.identity?.handoff) identityStart()
+        else if (op.identity.handoff.kind === "mock") approveSample()
+        // qr / app handoff (real CX): a person must finish in the Mobile ID app
+        break
+      case "issuance":
+        break // handled by the issuance effect above
+      case "presentation":
+        if (op.presentation?.decision !== "deny") present()
+        break
+      case "proposal":
+        propose()
+        break
+      case "delegation":
+        if (!op.proposal) break
+        if (!signer) chooseSigner("demo") // zkLogin needs a Google redirect; autopilot uses the sample signer
+        else if (signer.kind === "zklogin" && signer.jwtPending) break
+        else if (op.delegation?.status !== "delegated") { setApprove(true); delegate() }
+        break
+      case "agent":
+        if (op.agent?.status === "unknown") reconcile()
+        else runAgent()
+        break
+      case "fulfillment":
+        if (auto === "redeem" && op.fulfillment?.status !== "blocked") redeem()
+        break
+      default:
+        break
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoActive, busy, info, config, op, signer])
 
   const stepIndex = op ? STEP_OF_PHASE[op.phase] ?? 0 : 0
   const modes = info?.modes ?? config?.modes ?? {}
@@ -207,6 +289,17 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
           </div>
         </header>
         <div className={styles.body}>
+          {auto ? (
+            <div className={styles.notice} data-tone={autoActive ? "ok" : undefined} data-testid="hackathon-autopilot">
+              {autoActive
+                ? (locale === "ko" ? `자동 실행 중 · ${auto === "redeem" ? "사용 확정까지" : "실행까지"} 진행합니다` : `Autopilot · running to ${auto === "redeem" ? "confirmation" : "execution"}`)
+                : (locale === "ko" ? "자동 실행이 멈췄어요. 아래 버튼으로 직접 진행할 수 있어요." : "Autopilot paused. Continue with the buttons below.")}
+              {" "}
+              <button type="button" className={styles.ghost} onClick={() => { if (autoActive) setAutoPaused(true); else { setError(null); autoFiredRef.current = ""; setAutoPaused(false) } }} disabled={!!busy}>
+                {autoActive ? (locale === "ko" ? "멈추기" : "Pause") : (locale === "ko" ? "다시 자동 실행" : "Resume")}
+              </button>
+            </div>
+          ) : null}
           {error ? <div className={styles.notice} data-tone="error">{error}</div> : null}
 
           {!op ? (
@@ -228,11 +321,11 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
               </> : op.identity.handoff.kind === "mock" ? <>
                 <div className={styles.notice}>{op.identity.handoff.label} · {locale === "ko" ? "CX 테스트 계정 확보 전까지 결과를 샘플로 대체합니다. 서버는 이 결과를 실제 신분증 결과로 표기하지 않습니다." : "Sample result until CX test access is available; the server never labels it as a real ID result."}</div>
                 <div className={styles.actions}>
-                  <button type="button" className={styles.primary} disabled={!!busy} onClick={() => identityComplete({ outcome: "verified", subjectSeed: "sample-person-1" })} data-testid="hackathon-identity-approve">{busy === "identity" ? <span className={styles.spinner} /> : null}{c.mockApprove}</button>
+                  <button type="button" className={styles.primary} disabled={!!busy} onClick={approveSample} data-testid="hackathon-identity-approve">{busy === "identity" ? <span className={styles.spinner} /> : null}{c.mockApprove}</button>
                 </div>
                 <div className={styles.actions}>
-                  <button type="button" className={styles.secondary} disabled={!!busy} onClick={() => identityComplete({ outcome: "cancelled", subjectSeed: "sample-person-1" })}>{c.mockCancel}</button>
-                  <button type="button" className={styles.secondary} disabled={!!busy} onClick={() => identityComplete({ outcome: "failed", subjectSeed: "sample-person-1" })}>{c.mockFail}</button>
+                  <button type="button" className={styles.secondary} disabled={!!busy} onClick={() => identityComplete({ outcome: "cancelled", subjectSeed: sampleSeed })}>{c.mockCancel}</button>
+                  <button type="button" className={styles.secondary} disabled={!!busy} onClick={() => identityComplete({ outcome: "failed", subjectSeed: sampleSeed })}>{c.mockFail}</button>
                 </div>
               </> : op.identity.handoff.kind === "qr" ? <>
                 <img className={styles.qr} alt="Mobile ID QR" src={`data:image/png;base64,${op.identity.handoff.qrBase64}`} />
