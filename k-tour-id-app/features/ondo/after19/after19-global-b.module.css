@@ -17,6 +17,7 @@
 
 .root button:focus-visible,
 .root summary:focus-visible,
+.notice button:focus-visible,
 .layer button:focus-visible,
 .layer summary:focus-visible {
   outline: 3px solid var(--ondo-focus, #ff72b8);
@@ -184,6 +185,7 @@
   font-weight: 790;
 }
 .notice .noticeDismiss { display: grid; width: 44px; padding: 0; place-items: center; border-radius: 50%; background: transparent; }
+.notice[data-notice-placement="stack"] { position: static; width: 100%; max-width: none; }
 
 .layer {
   position: fixed;

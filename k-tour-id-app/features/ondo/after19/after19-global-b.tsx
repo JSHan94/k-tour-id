@@ -60,6 +60,7 @@ type GlobalAfter19BProps = {
   locale: OndoBLocale
   context: GlobalAfter19ContextB
   accountActive?: boolean
+  noticeTarget?: HTMLElement | null
   onActiveChange?(active: boolean, activation: GlobalAfter19SessionB["activation"]): void
 }
 
@@ -297,7 +298,7 @@ function focusVisibleDestination(element: HTMLElement) {
   return true
 }
 
-export function GlobalAfter19B({ locale, context, accountActive = false, onActiveChange }: GlobalAfter19BProps) {
+export function GlobalAfter19B({ locale, context, accountActive = false, onActiveChange, noticeTarget = null }: GlobalAfter19BProps) {
   const reviewMode = useQaControls()
   const [hydrated, setHydrated] = useState(false)
   const [preference, setPreference] = useState<GlobalAfter19PreferenceB>(DEFAULT_GLOBAL_AFTER19_PREFERENCE)
@@ -969,6 +970,14 @@ export function GlobalAfter19B({ locale, context, accountActive = false, onActiv
 
   if (!hydrated) return null
 
+  const noticeContent = notice ? (
+    <section className={styles.notice} role="status" data-notice-placement={noticeTarget ? "stack" : "inline"} data-testid={notice === "expired" ? "global-after19-expiry-notice" : "global-after19-off-notice"}>
+      <span>{notice === "expired" ? t.expired : t.offNotice}</span>
+      <button type="button" onClick={notice === "expired" ? openGate : undoOff}>{notice === "expired" ? t.checkAgain : t.undo}</button>
+      <button type="button" className={styles.noticeDismiss} onClick={dismissNotice} aria-label={t.dismiss}><X size={16} aria-hidden="true" /></button>
+    </section>
+  ) : null
+
   return (
     <div
       className={styles.root}
@@ -1031,13 +1040,7 @@ export function GlobalAfter19B({ locale, context, accountActive = false, onActiv
         </section>
       )}
 
-      {notice ? (
-        <section className={styles.notice} role="status" data-testid={notice === "expired" ? "global-after19-expiry-notice" : "global-after19-off-notice"}>
-          <span>{notice === "expired" ? t.expired : t.offNotice}</span>
-          <button type="button" onClick={notice === "expired" ? openGate : undoOff}>{notice === "expired" ? t.checkAgain : t.undo}</button>
-          <button type="button" className={styles.noticeDismiss} onClick={dismissNotice} aria-label={t.dismiss}><X size={16} aria-hidden="true" /></button>
-        </section>
-      ) : null}
+      {noticeContent && noticeTarget ? createPortal(noticeContent, noticeTarget) : noticeContent}
 
       {gatePresentation ? renderGate(gatePresentation) : null}
     </div>

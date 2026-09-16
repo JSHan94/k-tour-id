@@ -308,9 +308,15 @@
 }
 
 @media (max-width: 800px) {
-  .canvas { width: 100vw; border: 0; }
+  .canvas { width: 100vw; grid-template-columns: minmax(0, 1fr); border: 0; }
+
+  /* Only Explore paints through the dock lane. Other tabs keep their own
+     scrollable content row; map controls reserve the measured dock height. */
+  .content[data-active-tab="ondo"] { grid-column: 1; grid-row: 1 / -1; }
+  .content:not([data-active-tab="ondo"]) { --ondo-map-dock-space: 0px; }
 
   .nav {
+    grid-column: 1;
     width: min(calc(100% - 24px), 398px);
     min-height: 64px;
     gap: 4px;

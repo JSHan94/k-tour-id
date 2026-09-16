@@ -885,10 +885,10 @@
   width: min(320px, calc(100cqw - 20px));
   margin: 0;
   padding: 12px 13px;
-  border: 1px solid rgb(23 23 23 / 11%);
+  border: 1px solid var(--ondo-line);
   border-radius: 14px;
-  background: rgb(255 255 255 / 98%);
-  color: #555;
+  background: var(--ondo-surface-raised);
+  color: var(--ondo-muted);
   box-shadow: 0 14px 36px rgb(0 0 0 / 12%);
   font-size: 12px;
   font-weight: 620;
@@ -1264,13 +1264,14 @@
 .brand {
   display: grid;
   grid-template-columns: auto;
-  gap: 3px;
+  min-width: 0;
+  gap: 8px;
 }
 .brand > [data-ondo-brand-lockup] {
   display: inline-flex;
   width: max-content;
 }
-.brand > small { color: var(--ondo-muted, #666); font-size: 12px; line-height: 1.1; }
+.brand > small { margin: 0; color: var(--ondo-muted, #666); font-size: 12px; font-weight: 500; line-height: 1.4; }
 
 .resultBar[data-effective-view="map"],
 .resultBar[data-effective-view="list"] {
@@ -3236,6 +3237,35 @@
   overflow: hidden;
 }
 
+/* A measured masthead, not a hard-coded 72px overlay: brand, subtitle and
+   atlas remain in normal flow even when a translation wraps. */
+.root:has(> .nation) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.root:has(> .nation) > .header {
+  position: relative;
+  inset: auto;
+  align-items: flex-start;
+  gap: 12px;
+  margin: max(20px, env(safe-area-inset-top)) var(--map-edge, 16px) 16px;
+}
+.root > .nation:has(.koreaAtlas) {
+  height: auto;
+  min-height: 0;
+  padding-top: 0;
+}
+
+@media (max-width: 800px) {
+  .compatRoot > .root {
+    height: calc(100% - var(--ondo-map-dock-space, 0px));
+    min-height: 0;
+  }
+  .compatRoot > .persistentMap :global(.maplibregl-ctrl-bottom-right) {
+    bottom: calc(72px + var(--ondo-map-dock-space, 0px));
+  }
+}
+
 .koreaAtlas,
 .dotMap.koreaAtlas {
   position: relative;
@@ -4274,9 +4304,10 @@
   max-width: none;
   min-height: 44px;
   max-height: none;
-  border-color: rgb(122 32 72 / 25%);
-  background: rgb(255 255 255 / 97%);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 11%);
+  border-color: var(--ondo-line);
+  background: var(--ondo-surface-raised);
+  color: var(--ondo-ink);
+  box-shadow: var(--ondo-shadow);
 }
 
 .mapUtilityCluster .locationMessage[data-location-recovery="true"] > summary {
@@ -4323,6 +4354,72 @@
   right: 0;
   left: auto;
   width: min(320px, calc(100cqw - (2 * var(--map-edge, 14px))));
+}
+
+/* Recovery and mode-change feedback share one measured flow region. A long
+   translation or expanded disclosure pushes the next notice, never covers it. */
+.mapFeedbackStack {
+  position: absolute;
+  z-index: 19;
+  top: var(--map-feedback-top, 170px);
+  right: var(--map-edge, 14px);
+  display: flex;
+  width: min(320px, calc(100% - (2 * var(--map-edge, 14px))));
+  max-height: var(--map-feedback-height, 40cqh);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scroll-padding-block: 8px;
+  pointer-events: auto;
+}
+.mapFeedbackStack:not(:has(> .mapFeedbackSlot > *)),
+.mapFeedbackStack[hidden] { display: none; }
+.root[data-layout-mode="spacious-map"] > .mapFeedbackStack {
+  /* Keep the native zoom buttons in their own right-hand hit-target lane. */
+  right: calc(var(--map-edge, 14px) + 52px);
+  width: min(320px, calc(100% - (2 * var(--map-edge, 14px)) - 52px));
+}
+.mapFeedbackStack > * { flex: 0 0 auto; }
+.mapFeedbackSlot:empty { display: none; }
+.mapFeedbackStack .locationMessage[data-location-recovery="true"] {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-height: 44px;
+  max-height: none;
+  border: 1px solid var(--ondo-line);
+  border-radius: 17px;
+  background: var(--ondo-surface-raised);
+  color: var(--ondo-ink);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.mapFeedbackStack .locationMessage > summary {
+  height: auto;
+  padding: 10px 12px;
+  color: var(--ondo-ink);
+}
+.mapFeedbackStack .locationMessage > summary > span {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: visible;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.mapFeedbackStack .locationMessage > p {
+  position: static;
+  width: auto;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--ondo-line);
+  border-radius: 0 0 17px 17px;
+  background: var(--ondo-surface-raised);
+  color: var(--ondo-muted);
+  box-shadow: none;
 }
 
 .root[data-after19-active="true"] .mapUtilityCluster .locationMessage[data-location-state="locating"]::after,

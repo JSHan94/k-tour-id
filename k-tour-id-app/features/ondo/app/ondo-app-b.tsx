@@ -255,14 +255,30 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
 
   useLayoutEffect(() => {
     const region = contentRef.current
-    if (!region) return
-    const syncViewport = () => region.style.setProperty("--ondo-scroll-viewport", `${region.clientHeight}px`)
+    const canvas = canvasRef.current
+    const dock = canvas?.querySelector<HTMLElement>("#ondo-main-nav")
+    if (!region || !canvas || !dock) return
+    const syncViewport = () => {
+      region.style.setProperty("--ondo-scroll-viewport", `${region.clientHeight}px`)
+      // The map paints behind the phone dock, but its interactive overlay
+      // retains the original content lane. Measure the real dock (including
+      // safe-area margins) rather than duplicating its size in map CSS.
+      const dockStyle = getComputedStyle(dock)
+      const dockSpace = window.matchMedia("(max-width: 800px)").matches && dockStyle.display !== "none"
+        ? dock.offsetHeight + parseFloat(dockStyle.marginTop) + parseFloat(dockStyle.marginBottom)
+        : 0
+      canvas.style.setProperty("--ondo-map-dock-space", `${dockSpace}px`)
+    }
     const observer = new ResizeObserver(syncViewport)
     observer.observe(region)
+    observer.observe(dock)
+    window.addEventListener("resize", syncViewport)
     syncViewport()
     return () => {
       observer.disconnect()
+      window.removeEventListener("resize", syncViewport)
       region.style.removeProperty("--ondo-scroll-viewport")
+      canvas.style.removeProperty("--ondo-map-dock-space")
     }
   }, [])
 

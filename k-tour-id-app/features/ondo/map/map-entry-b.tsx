@@ -497,10 +497,11 @@ const KOREA_ATLAS_CITY_COORDINATES = {
 
 function fitNationOverview(map: MapLibreMap, container: HTMLElement, duration = 0) {
   const { width, height } = container.getBoundingClientRect()
+  const dockSpace = parseFloat(getComputedStyle(container).getPropertyValue("--ondo-map-dock-space")) || 0
   map.fitBounds([[124.4, 32.2], [131.6, 39.4]], {
     padding: width >= 801
       ? { top: 82, right: 54, bottom: 58, left: Math.round(width * .38) }
-      : { top: Math.min(142, Math.round(height * .2)), right: 28, bottom: 70, left: 28 },
+      : { top: Math.min(142, Math.round((height - dockSpace) * .2)), right: 28, bottom: 70 + dockSpace, left: 28 },
     maxZoom: 6.2,
     pitch: 0,
     bearing: 0,
@@ -1053,7 +1054,10 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly { longitude: num
     map.jumpTo({ center: [venues[0].longitude, venues[0].latitude], zoom: 15 })
     return
   }
-  const container = map.getContainer().getBoundingClientRect()
+  const mapContainer = map.getContainer()
+  const bounds = mapContainer.getBoundingClientRect()
+  const dockSpace = parseFloat(getComputedStyle(mapContainer).getPropertyValue("--ondo-map-dock-space")) || 0
+  const container = { width: bounds.width, height: bounds.height - dockSpace }
   const shortLandscape = container.height <= 500 && container.width > container.height
   const horizontalPadding = Math.round(Math.max(24, Math.min(72, container.width * 0.08)))
   const topPadding = shortLandscape
@@ -1070,7 +1074,7 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly { longitude: num
   ], {
     duration: 0,
     maxZoom: 14.5,
-    padding: { top: topPadding, right: horizontalPadding, bottom: bottomPadding, left: horizontalPadding },
+    padding: { top: topPadding, right: horizontalPadding, bottom: bottomPadding + dockSpace, left: horizontalPadding },
   })
 }
 
@@ -1101,6 +1105,7 @@ function cityOverviewBounds(
 
 function cityOverviewPadding(root: HTMLElement) {
   const rootBox = root.getBoundingClientRect()
+  const dockSpace = parseFloat(getComputedStyle(root).getPropertyValue("--ondo-map-dock-space")) || 0
   const headerBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
   const locationBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-location-message']")?.getBoundingClientRect()
   const keyBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")?.getBoundingClientRect()
@@ -1111,7 +1116,7 @@ function cityOverviewPadding(root: HTMLElement) {
   return {
     top: Math.ceil(Math.max(headerBox?.bottom ?? rootBox.top, locationBox?.bottom ?? rootBox.top) - rootBox.top + 26),
     right: horizontal,
-    bottom: Math.ceil(rootBox.bottom - (keyBox?.top ?? rootBox.bottom) + (compactLandscape ? 48 : 26)),
+    bottom: Math.ceil(rootBox.bottom - (keyBox?.top ?? rootBox.bottom) + (compactLandscape ? 48 : 26) + dockSpace),
     left: horizontal,
   }
 }
@@ -1291,6 +1296,9 @@ export function MapEntryB() {
   const [mapAttempt, setMapAttempt] = useState(1)
   const [retryListForeground, setRetryListForeground] = useState(false)
   const [locationState, setLocationState] = useState<LocationState>("idle")
+  const [locationDetailsOpen, setLocationDetailsOpen] = useState(false)
+  const [mapFeedbackTarget, setMapFeedbackTarget] = useState<HTMLDivElement | null>(null)
+  const mapFeedbackRootRef = useRef<HTMLDivElement | null>(null)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [online, setOnline] = useState(true)
   const [mapLayoutMode, setMapLayoutMode] = useState<MapLayoutMode>("measuring")
@@ -1843,6 +1851,30 @@ export function MapEntryB() {
             ? copy.locating
             : copy.locationReady
   const locationNeedsRecovery = !online || locationState === "denied" || locationState === "unsupported"
+
+  useLayoutEffect(() => {
+    const root = cityRootNode.current
+    const stack = mapFeedbackRootRef.current
+    if (!root || !stack || !mapFeedbackTarget) return
+    const header = root.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")
+    const utilities = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-utility-cluster']")
+    const chrome = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-chrome']")
+    const layout = () => {
+      const bounds = root.getBoundingClientRect()
+      const bottom = (node: HTMLElement | null) => node && node.getClientRects().length ? node.getBoundingClientRect().bottom - bounds.top : 0
+      // Share one flow region below the actual controls. Notice text and an
+      // expanded location explanation never require guessed vertical offsets.
+      const top = Math.max(bottom(header), bottom(utilities)) + 8
+      const chromeTop = chrome?.getBoundingClientRect().top ?? bounds.bottom
+      const limit = chromeTop > bounds.top + top ? Math.min(bounds.bottom, chromeTop) : bounds.bottom
+      stack.style.setProperty("--map-feedback-top", `${top}px`)
+      stack.style.setProperty("--map-feedback-height", `${Math.max(44, limit - bounds.top - top - 8)}px`)
+    }
+    const observer = new ResizeObserver(layout)
+    for (const node of [root, header, utilities, chrome]) if (node) observer.observe(node)
+    layout()
+    return () => observer.disconnect()
+  }, [city, compactChrome, editorialOpen, mapFeedbackTarget, mapLayoutMode, after19ThemeActive])
 
   useEffect(() => { setVisibleCount(30) }, [category, city, query])
 
@@ -3306,6 +3338,26 @@ export function MapEntryB() {
     }, { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 })
   }
 
+  const locationDisclosure = !compactChrome && effectiveView === "map" && mapState !== "error" ? (
+    <details
+      className={styles.locationMessage}
+      data-testid="ondo-b-location-message"
+      name="ondo-map-disclosure"
+      data-message-kind={!online ? "offline" : locationState === "idle" ? "disclosure" : "status"}
+      data-location-state={locationState}
+      data-location-recovery={locationNeedsRecovery ? "true" : "false"}
+      open={locationDetailsOpen}
+      onToggle={event => setLocationDetailsOpen(event.currentTarget.open)}
+    >
+      <summary aria-label={locationSummary}>
+        {locationNeedsRecovery ? <LocateOff size={18} aria-hidden="true" /> : <MapPin size={18} aria-hidden="true" />}
+        <span>{locationSummary}</span>
+        <ChevronRight size={16} aria-hidden="true" />
+      </summary>
+      <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
+    </details>
+  ) : null
+
   if (!city) return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
       <div
@@ -3513,23 +3565,7 @@ export function MapEntryB() {
               }}
             ><Layers2 size={19} aria-hidden="true" /></button>
           ) : null}
-          {!compactChrome && effectiveView === "map" && mapState !== "error" ? (
-            <details
-              className={styles.locationMessage}
-              data-testid="ondo-b-location-message"
-              name="ondo-map-disclosure"
-              data-message-kind={!online ? "offline" : locationState === "idle" ? "disclosure" : "status"}
-              data-location-state={locationState}
-              data-location-recovery={locationNeedsRecovery ? "true" : "false"}
-            >
-              <summary aria-label={locationSummary}>
-                {locationNeedsRecovery ? <LocateOff size={18} aria-hidden="true" /> : <MapPin size={18} aria-hidden="true" />}
-                <span>{locationSummary}</span>
-                <ChevronRight size={16} aria-hidden="true" />
-              </summary>
-              <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
-            </details>
-          ) : null}
+          {!locationNeedsRecovery ? locationDisclosure : null}
           {!compactChrome && effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} data-online={online ? "true" : "false"} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}>{locationState === "denied" || locationState === "unsupported" ? <LocateOff size={19} aria-hidden="true" /> : <LocateFixed size={19} aria-hidden="true" />}</button> : null}
           <GlobalAfter19B
             locale={locale}
@@ -3541,8 +3577,13 @@ export function MapEntryB() {
               venueLabel: selectedVenue ? venueDisplayName(selectedVenue.name.ko, locale) : null,
             }}
             onActiveChange={setAfter19Active}
+            noticeTarget={mapFeedbackTarget}
           />
           {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} open={editorialOpen} compactTrigger={compactChrome} returnFocusSelector={compactChrome ? "[data-testid='ondo-b-map-options-open']" : undefined} presentation={effectiveView === "list" || mapState === "error" ? "list" : "map"} onOpenChange={setEditorialOpen} onSelectEditorialPlace={city === "jeju" ? focusEditorialPlace : undefined} /> : null}
+        </div>
+        <div ref={mapFeedbackRootRef} className={styles.mapFeedbackStack} data-testid="ondo-b-map-feedback" hidden={editorialOpen}>
+          <div className={styles.mapFeedbackSlot}>{locationNeedsRecovery ? locationDisclosure : null}</div>
+          <div ref={setMapFeedbackTarget} className={styles.mapFeedbackSlot} />
         </div>
         {effectiveView === "map" && mapState !== "error" && !locationNeedsRecovery && locationState !== "idle" ? (
           <span className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">{locationMessage}</span>
