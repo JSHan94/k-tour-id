@@ -39,7 +39,7 @@ export function hkConfig() {
       purpose: HK_SERVICE_ACCESS,
       policyVersion: HK_POLICY_VERSION,
       endsAt: env("HK_CAMPAIGN_ENDS_AT", "2026-09-30T23:59:59+09:00"),
-      title: { ko: "ONDO 체험 혜택", en: "ONDO experience perk", ja: "ONDO 体験特典" },
+      title: { ko: "K-Tour ID 체험 혜택", en: "K-Tour ID experience perk", ja: "K-Tour ID 体験特典" },
       description: {
         ko: "해커톤 체험용 비금전 혜택 1회. 실제 결제·예약·매장 제공 의무가 없습니다.",
         en: "One non-financial hackathon experience perk. No payment, reservation or merchant obligation.",
