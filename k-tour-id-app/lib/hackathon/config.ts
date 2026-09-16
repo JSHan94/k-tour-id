@@ -49,9 +49,16 @@ export function hkConfig() {
     cx: {
       mode: cxMode,
       baseUrl: env("HK_CX_BASE_URL", "https://cx.raonsecure.co.kr:18543"),
-      provider: env("HK_CX_PROVIDER", "comrc"),
+      // Hackathon CX server: `comrc`(주민등록증) and `coresidence`(외국인증) are disabled
+      // (provider/list status_code = "n"); `comdl`(모바일운전면허증) and
+      // `coidentitydocument`(모바일신분증) are active.
+      provider: env("HK_CX_PROVIDER", "comdl"),
       zkpType: env("HK_CX_ZKP_TYPE", "AdultVerify"),
       apiKey: env("HK_CX_API_KEY"),
+      // Live CX needs a holder who actually owns this credential type. Keep a clearly
+      // labelled sample path so the journey can still be demonstrated end to end;
+      // the resulting evidence is recorded as mode "mock", never as a provider result.
+      sampleFallback: env("HK_CX_SAMPLE_FALLBACK", "1") !== "0",
     },
     opendid: {
       mode: openDidMode,

@@ -25,6 +25,7 @@ export type OperationRecord = OperationResult & {
     lastTxBytesB64?: string         // sponsored user PTB bytes awaiting user signature
     cxToken?: string
     cxTxId?: string
+    cxCxId?: string                 // CX-issued correlation id; required by the result call
     proposalPromptDigest?: string
   }
   audit: Array<{ at: string; event: string; detail?: Record<string, unknown> }>

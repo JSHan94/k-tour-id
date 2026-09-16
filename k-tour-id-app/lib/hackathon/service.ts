@@ -109,7 +109,7 @@ export async function identityStart(sessionId: string, operationId: string, mobi
   const started = await cxStart({ operationId, mobile })
   return mutate(sessionId, operationId, (o) => {
     o.identity = { evidenceId: "", subjectRef: "", source: "cx_mobile_id", mode: hkConfig().cx.mode, provider: hkConfig().cx.provider, personVerified: false, adultVerified: null, verifiedAt: "", expiresAt: started.handoff.expiresAt, providerTransactionRef: started.txId ?? "", handoff: started.handoff }
-    o.secrets.cxToken = started.token; o.secrets.cxTxId = started.txId
+    o.secrets.cxToken = started.token; o.secrets.cxTxId = started.txId; o.secrets.cxCxId = started.cxId
     touch(o, "identity.handoff", { kind: started.handoff.kind })
     return toResult(o)
   })
@@ -119,7 +119,7 @@ export async function identityComplete(sessionId: string, operationId: string, s
   const op = await loadOperation(sessionId, operationId)
   assert(op.status === "pending" && op.phase === "identity" && op.identity?.handoff, "phase", "no identity handoff", 409)
   if (isPast(op.identity.handoff.expiresAt)) return mutate(sessionId, operationId, (o) => { o.identity = null; touch(o, "identity.expired"); return toResult(o) })
-  const result = await cxComplete({ operationId, token: op.secrets.cxToken, txId: op.secrets.cxTxId, mobile: op.identity.handoff.kind === "app", sample })
+  const result = await cxComplete({ operationId, token: op.secrets.cxToken, txId: op.secrets.cxTxId, cxId: op.secrets.cxCxId, mobile: op.identity.handoff.kind === "app", sample })
   return mutate(sessionId, operationId, (o, db) => {
     if ("pending" in result) { touch(o, "identity.pending"); return toResult(o) }
     if ("failed" in result) {
@@ -132,7 +132,7 @@ export async function identityComplete(sessionId: string, operationId: string, s
     // uniqueness pre-check: one redemption per subject+campaign
     const already = db.redemptions[redemptionKey(result.evidence.subjectRef, o.campaignId)]
     o.identity = { ...result.evidence, handoff: null }
-    o.secrets.cxToken = undefined; o.secrets.cxTxId = undefined
+    o.secrets.cxToken = undefined; o.secrets.cxTxId = undefined; o.secrets.cxCxId = undefined
     db.sessions[sessionId].subjectRef = result.evidence.subjectRef
     if (already) {
       o.fulfillment = { status: "blocked", reason: "already_redeemed", redemptionRef: already.redemptionRef, redeemedAt: already.redeemedAt, recheck: null }

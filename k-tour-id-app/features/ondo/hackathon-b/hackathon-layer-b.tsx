@@ -22,7 +22,8 @@ const T = {
     steps: ["동의", "신원 확인", "K-Tour 패스", "패스 제시", "혜택 제안", "실행 승인", "실행", "사용 확정", "기록"],
     consentTitle: "이용 조건 확인", consentBody: "해커톤 체험용 비금전 혜택 1회입니다. 실제 결제·예약·매장의 제공 의무가 없고, 신원 확인 결과는 혜택 자격 판단에만 쓰이며 신분증·패스 원문은 체인에 올리지 않습니다.",
     consentCheck: "위 내용을 확인했고 이 장소의 체험 혜택 1회를 진행합니다.", start: "확인하고 시작", startIdentity: "모바일 신분증으로 확인", mockApprove: "샘플 확인 승인", mockCancel: "취소 시뮬레이션", mockFail: "실패 시뮬레이션",
-    identityWait: "모바일 신분증 앱에서 확인을 마치면 아래 버튼으로 결과를 가져옵니다.", fetchResult: "결과 확인", issuing: "K-Tour 패스를 발급하고 보관 중…", present: "패스 제시", deny: "제시하지 않기",
+    identityWait: "모바일 신분증 앱에서 확인을 마치면 아래 버튼으로 결과를 가져옵니다.", fetchResult: "결과 확인", sampleInstead: "샘플 결과로 계속 (SIMULATION)",
+    sampleNote: "모바일 운전면허증이 없으면 아래에서 샘플 결과로 진행할 수 있어요. 샘플은 실제 신분증 결과가 아니며 증거에 SIMULATION으로 남습니다.", issuing: "K-Tour 패스를 발급하고 보관 중…", present: "패스 제시", deny: "제시하지 않기",
     presentBody: "이 장소의 혜택 목적으로 최소 항목만 제시합니다.", propose: "혜택 제안 받기", approveTitle: "실행 범위 확인", approveBody: "도우미가 아래 범위 안에서 1회만 실행합니다. 대상·수령 지갑·기한 밖 실행은 계약이 거절합니다.",
     approveCheck: "이 범위에 동의하고 실행 권한을 1회 위임합니다.", signerZk: "Google로 계속 (zkLogin)", signerDemo: "샘플 서명자로 계속", signDelegate: "위임 서명", runAgent: "실행", redeem: "확인하고 사용하기",
     done: "혜택 사용이 확정됐어요", blocked: "사용이 확정되지 않았어요", chainPending: "기록 확인 중", chainConfirmed: "기록 확정", reconcile: "다시 확인", evidence: "증거 보기", cancel: "그만두기",
@@ -33,7 +34,8 @@ const T = {
     steps: ["Consent", "Identity", "K-Tour pass", "Present", "Proposal", "Approve", "Execute", "Confirm", "Record"],
     consentTitle: "Before you start", consentBody: "One non-financial hackathon perk. No payment, reservation or merchant obligation. The identity result is used only for eligibility; ID and pass originals never go on-chain.",
     consentCheck: "I understand and want to use this place's one-time perk.", start: "Confirm and start", startIdentity: "Check with Mobile ID", mockApprove: "Approve sample check", mockCancel: "Simulate cancel", mockFail: "Simulate failure",
-    identityWait: "Finish in the Mobile ID app, then fetch the result.", fetchResult: "Fetch result", issuing: "Issuing and storing your K-Tour pass…", present: "Present pass", deny: "Don't present",
+    identityWait: "Finish in the Mobile ID app, then fetch the result.", fetchResult: "Fetch result", sampleInstead: "Continue with a sample result (SIMULATION)",
+    sampleNote: "No mobile driver's licence? Continue with a sample result. It is not a government ID result and is recorded as SIMULATION.", issuing: "Issuing and storing your K-Tour pass…", present: "Present pass", deny: "Don't present",
     presentBody: "Only the minimum claims for this place and purpose are presented.", propose: "Get a perk proposal", approveTitle: "Confirm execution scope", approveBody: "The assistant executes once within this scope. Anything outside target, recipient or expiry is rejected by the contract.",
     approveCheck: "I agree to this scope and delegate a single execution.", signerZk: "Continue with Google (zkLogin)", signerDemo: "Continue with sample signer", signDelegate: "Sign delegation", runAgent: "Execute", redeem: "Confirm and use",
     done: "Perk use confirmed", blocked: "Use was not confirmed", chainPending: "Recording", chainConfirmed: "Recorded", reconcile: "Check again", evidence: "Show evidence", cancel: "Stop",
@@ -232,8 +234,9 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
     switch (op.phase) {
       case "identity":
         if (!op.identity?.handoff) identityStart()
-        else if (op.identity.handoff.kind === "mock") approveSample()
-        // qr / app handoff (real CX): a person must finish in the Mobile ID app
+        // Real CX handoff needs a holder with that credential; autopilot takes the
+        // clearly-labelled sample path so the rest of the journey can still be shown.
+        else approveSample()
         break
       case "issuance":
         break // handled by the issuance effect above
@@ -282,7 +285,7 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
             <div className={styles.segments} aria-hidden="true">{c.steps.map((s, i) => <span key={s} className={styles.segment} data-state={stateOf(i)} />)}</div>
           </div>
           <div className={styles.chips} aria-label="modes">
-            <span className={styles.badge} data-tone={tone(modes.cx)}>ID {modes.cx === "cx" ? c.live : c.sample}</span>
+            <span className={styles.badge} data-tone={op?.identity ? tone(op.identity.mode) : tone(modes.cx)}>ID {(op?.identity ? op.identity.mode === "cx" : modes.cx === "cx") ? c.live : c.sample}</span>
             <span className={styles.badge} data-tone={tone(modes.opendid)}>PASS {modes.opendid === "opendid" ? c.live : c.sample}</span>
             <span className={styles.badge} data-tone={modes.sui === "testnet" ? "chain" : "sample"}>SUI {modes.sui === "testnet" ? c.chain : "—"}</span>
             <span className={styles.badge} data-tone={modes.omnione === "stage" ? "chain" : "sample"}>OMNIONE {modes.omnione === "stage" ? "STAGE" : "—"}</span>
@@ -331,6 +334,8 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
                 <img className={styles.qr} alt="Mobile ID QR" src={`data:image/png;base64,${op.identity.handoff.qrBase64}`} />
                 <p>{c.identityWait}</p>
                 <div className={styles.actions}><button type="button" className={styles.primary} disabled={!!busy} onClick={() => identityComplete()}>{c.fetchResult}</button><button type="button" className={styles.ghost} disabled={!!busy} onClick={cancel}>{c.cancel}</button></div>
+                <div className={styles.notice}>{c.sampleNote}</div>
+                <div className={styles.actions}><button type="button" className={styles.secondary} disabled={!!busy} onClick={approveSample} data-testid="hackathon-identity-sample">{c.sampleInstead}</button></div>
               </> : <>
                 <div className={styles.actions}>
                   {op.identity.handoff.ssPayLink ? <a className={styles.primary} href={op.identity.handoff.ssPayLink}>Samsung Wallet</a> : null}
@@ -339,6 +344,8 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
                 </div>
                 <p>{c.identityWait}</p>
                 <div className={styles.actions}><button type="button" className={styles.primary} disabled={!!busy} onClick={() => identityComplete()}>{c.fetchResult}</button><button type="button" className={styles.ghost} disabled={!!busy} onClick={cancel}>{c.cancel}</button></div>
+                <div className={styles.notice}>{c.sampleNote}</div>
+                <div className={styles.actions}><button type="button" className={styles.secondary} disabled={!!busy} onClick={approveSample} data-testid="hackathon-identity-sample">{c.sampleInstead}</button></div>
               </>}
             </section>
           ) : null}
