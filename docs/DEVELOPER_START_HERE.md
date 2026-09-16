@@ -2,7 +2,7 @@
 
 **현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 현재 배포·검수 SHA와 두 브랜치 동기화는 [배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md), 9/15 여정 수정과 그 상태는 [UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)를 따른다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
 
-**최신 UX 운영 배포:** 앱 source `9980472`를 main/Harvey에 함께 반영했다. [공개 가이드 릴리스](./KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md)에서 무료 읽기·선택적 패스 저장·패스 재열람의 검수/배포를 확인한다. 목업 상태·함수와 실제 구현 매핑은 [체험 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다. 기존 `8fcbeb1`의 매장·충전·holder 개선은 [이전 라운드](./ux-refinement/2026-09-15/round-20260916.md)로 보존하며, 외부 네 기술의 실제 연동 완료는 아니다.
+**최신 UX 운영 배포:** 앱 source `5ba76a2`를 main/Harvey에 함께 반영했다. [지도 UI 보정](./KTOUR_MAP_LAYOUT_FIX_2026-09-16.md)은 안내 겹침·다크 대비·상단 타이포·하단 지도 확장만 변경한다. 인증·결제·백엔드 계약은 그대로다. `9980472`의 무료 읽기·선택적 패스 저장·패스 재열람은 [공개 가이드 릴리스](./KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md), 실제 구현 매핑은 [체험 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다. 기존 `8fcbeb1`의 매장·충전·holder 개선은 [이전 라운드](./ux-refinement/2026-09-15/round-20260916.md)로 보존하며, 외부 네 기술의 실제 연동 완료는 아니다.
 
 **9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 선택적 가이드 저장 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. 기술·보안·제출 요건과 Sui → 최종 서비스 DB → OmniOne 순서는 [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)를, 현재 무료 읽기/선택적 저장과 v2 action·campaign·recipient는 [가이드 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 우선한다. 기존 명세의 혜택 사용/redeem은 컬렉션 저장이며 읽기 권한이 아니다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
 

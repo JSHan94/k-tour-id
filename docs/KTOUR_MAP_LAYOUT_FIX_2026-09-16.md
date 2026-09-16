@@ -1,6 +1,6 @@
 # 지도 안내·첫 화면·하단 캔버스 보정
 
-2026-09-16 · `fix/map-feedback-layout-20260916` · 로컬 검수 완료, 원격 배포 검수 예정.
+2026-09-16 · `fix/map-feedback-layout-20260916` · 앱 source `5ba76a2b701f740969782207791ed7814b5f24bd`. **로컬·Preview·운영 검수와 배포 완료**. main/Harvey를 동기화했으며 이후 결과 문서 커밋은 앱 검수 source와 구분한다.
 
 ## 변경 범위
 
@@ -34,3 +34,22 @@
 - 개발 중 grid 자동 열 배치 문제와 확대 버튼 가림을 발견해 배포 전에 보정했다. 테스트의 Options 자동닫기와 EN→JA 순서 가정도 실제 UI 계약에 맞췄다. 초기 중단/실패 실행은 최종 PASS 수에 포함하지 않는다.
 
 로컬 증거는 ignored `k-tour-id-app/artifacts/qa/map-masthead-final17`, `map-feedback-l8pi-final-v2`, `map-layout-boundaries-final-l8pi`다. 공개 GitHub 첨부가 아니라 재현용 테스트와 이 요약을 Git으로 전달한다.
+
+### Preview
+
+[검수한 Preview](https://ondo-5yqz8wntm-jaewook-9643s-projects.vercel.app) · `dpl_quqBe3Q4KTqH4H2UNUWDUKJL9qsf` · source `5ba76a2` · Ready. 실제 원격 page chunk는 `86674988c0801dda`이며 로컬과 구분한다.
+
+- 새 레이아웃/경계 **10/10 PASS**(65.95초), 알림 조합 **3/3 PASS**(121.01초). 고유13개, workers1/retries0, pageerror·금지된 provider 요청0. 실제 원격 캡처도 직접 확인했다.
+- HTTP root200, 공개30·차단41·build19·legacy308·discovery7 PASS.
+- 이후 main과 `handoff/harvey-20260914`를 같은 source로 atomic fast-forward했다. 강제 push나 다른 작업자의 변경 덮어쓰기는 없다.
+
+### 운영
+
+[대표 주소](https://ktour-id.vercel.app) · [검수한 Production](https://ondo-hadlaqqrp-jaewook-9643s-projects.vercel.app) · `dpl_53qYCXhsb89oAYatA83QLc7Lb86t` · source `5ba76a2`, Ready. 대표 주소의 alias와 실제 page `86674988c0801dda` 일치를 확인했다.
+
+- 대표 주소에서 레이아웃/경계 **10/10 PASS**(67.66초), 알림 조합 **3/3 PASS**(104.53초). 운영 고유 **13개**, workers1/retries0, skip/flaky/pageerror·금지 요청0. 로컬23·Preview13과 합산하지 않는다.
+- 실제 운영 캡처의 EN390 첫 화면/하단 지도, JA320 모달·ID 복귀·키보드 포커스, dark/light 위치 거절+After 19 OFF 동시 상태를 직접 확인했다. 외부 지도 타일의 모든 확대 수준·모든 장소·실기기까지 확인했다는 뜻은 아니다.
+- HTTP root200, 공개30·차단41·build19·legacy308·discovery7 PASS. 개발자 인계 정합9개 및 수정 Markdown 상대 링크68개 검사 PASS(누락0).
+- 운영 증거: ignored `artifacts/qa/map-production5ba-layout10`, `artifacts/qa/map-feedback-production5ba`, `/tmp/ktour-map-production5ba-layout10.json`, `/tmp/ktour-feedback-production5ba.json`. 실제 신원 확인·자금 이동·체인 트랜잭션은 실행하지 않았다.
+
+후속 문서만 바꾼 커밋도 main·Harvey·수정 브랜치에 함께 전달한다. 위 deployment는 실제 브라우저 검수 대상이고, 이후 문서 빌드의 deployment ID를 이 검수에 소급 적용하지 않는다.

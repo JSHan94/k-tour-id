@@ -1,8 +1,15 @@
 # K-Tour ID · 현재 운영 배포와 개발자 인계
 
-갱신일: 2026-09-16. 상태: **Ready — 가이드 무료 읽기·선택적 패스 저장 운영 배포**. 앱 source는 `9980472`이며 실제 환경별 검사 결과는 [D04 릴리스](./KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md)를 따른다. 아래 과거 배포의 증거는 별도로 보존한다.
+갱신일: 2026-09-16. 상태: **Ready — 지도 안내·타이포·모바일 하단 확장 운영 배포**. 앱 source는 `5ba76a2`이며 실제 환경별 검사 결과는 [지도 UI 보정 기록](./KTOUR_MAP_LAYOUT_FIX_2026-09-16.md)을 따른다. 아래 과거 배포의 증거는 별도로 보존한다.
 
-## 최신 앱·개발 시작점 — 9980472
+## 최신 앱·개발 시작점 — 5ba76a2
+
+- 대표 앱: [ktour-id.vercel.app](https://ktour-id.vercel.app). `dpl_53qYCXhsb89oAYatA83QLc7Lb86t`, [고유 Production](https://ondo-hadlaqqrp-jaewook-9643s-projects.vercel.app), Ready·대표 주소 alias와 실제 page `86674988c0801dda` 확인.
+- 앱 source: `5ba76a2b701f740969782207791ed7814b5f24bd`. main/`handoff/harvey-20260914`를 같은 소스로 atomic fast-forward했다. 이후 결과 문서 커밋은 앱 소스와 구분한다.
+- 지도 안내의 대비·겹침, 첫 화면 로고/설명 간격, 모바일 하단 지도 확장을 보정했다. 내비게이션과 지도 조작·목록 영역은 분리한다. 기존 공개 가이드·선택적 저장과 외부 네 기술의 개발 계약은 변경하지 않았다.
+- [선행 Preview](https://ondo-5yqz8wntm-jaewook-9643s-projects.vercel.app), `dpl_quqBe3Q4KTqH4H2UNUWDUKJL9qsf`. 로컬/Preview/운영의 검수 수와 한계는 [보정 기록](./KTOUR_MAP_LAYOUT_FIX_2026-09-16.md)에 환경별로 구분한다.
+
+## 이전 가이드 앱·개발 시작점 — 9980472
 
 - 대표 앱: [ktour-id.vercel.app](https://ktour-id.vercel.app). `dpl_EPhXrY7zDf5pgPk5CBUUWXiPYwPy`, [고유 Production](https://ondo-dxilo68xo-jaewook-9643s-projects.vercel.app), Ready·대표 주소 alias 확인.
 - 앱 source: `99804728133245baef441c47df1a2643c3e28690`. main/`handoff/harvey-20260914`를 같은 소스로 atomic fast-forward했다. 이후 문서 전용 결과 커밋도 같은 브랜치로 전달하며 실제 앱 검수 source와 구분한다.
