@@ -32,3 +32,32 @@ Autopilot: `/?hk=auto` (runs to 사용 확정 + OmniOne 기록), `/?hk=auto-exec
 - `service.ts` delegationPrepare: zkLogin wallet-proof verification cross-checks via Sui GraphQL before rejecting (gRPC verifier mismatch on Testnet is a known issue).
 - `demo-entitlements` only resumes pending operations; finished ones are no longer re-shown.
 - `next.config.mjs`: `HK_BUILD_IGNORE_TS=1` escape hatch for type-only build breaks.
+
+## OmniOne CX (2026-09-16, later that day)
+
+The hackathon CX verifier needs **no API key**: `POST https://cx.raonsecure.co.kr:18543/oacx/api/v1.0/trans`
+answers `OACX_SUCCESS` unauthenticated. The adapter had been written from the manual alone, so it was
+aligned with the live responses:
+
+| item | before | now |
+| --- | --- | --- |
+| provider | `comrc` (주민등록증) — `provider/list` reports `status_code: "n"` | `comdl` (모바일운전면허증); `coidentitydocument` also active |
+| QR | `res.qrBase64` | `res.data.qrBase64` |
+| progress | `res.status` | `res.oacxStatus` |
+| verification | `res.verified` | `res.data.verified` |
+| claims | `res.ci` | `res.data.ci` (full PII lives here; only CI and the adult flag are read) |
+| result request | token/txId | + `provider`, `cxId` (manual 2.3.3/2.3.4) |
+
+Result codes now map to outcomes instead of errors: 402/408 pending, 406 cancelled, 312 expired,
+30020 (`OACX_VERIFIER_ERROR`, no completed submission) failed-and-retryable.
+
+Verified live through our own API: `mode: cx`, `provider: comdl`, real `cxId`, real QR PNG, `ID LIVE` badge.
+
+**Network limit — CX is not reachable from Vercel.** `ConnectTimeoutError` from both `iad1` and `icn1`
+(confirmed running in Seoul via `x-vercel-id`), and a third-party non-Korean proxy returns 522. The CX
+host appears to refuse cloud/datacenter egress. Production therefore stays on `HK_MODE_CX=mock`; set
+`HK_MODE_CX=cx` when running from a Korean network to demonstrate the real verifier.
+
+Completing a live check additionally requires a holder who owns a 모바일운전면허증 in the Mobile ID app.
+`HK_CX_SAMPLE_FALLBACK` (default on) keeps a clearly labelled sample path so the journey still completes;
+that evidence is recorded as mode `mock`, and the ID badge reflects the path actually taken.
