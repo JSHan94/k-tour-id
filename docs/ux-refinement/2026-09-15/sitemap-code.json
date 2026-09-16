@@ -12,7 +12,8 @@
     "date": "2026-09-16",
     "baseline_sha": "b7bdba0",
     "branch": "feat/ktour-public-guide-20260916",
-    "status": "V2_SOURCE_MAPPED_RUNTIME_PENDING",
+    "status": "V2_SOURCE_MAPPED_WITH_SCOPED_DEPLOYMENT_EVIDENCE",
+    "app_source": "99804728133245baef441c47df1a2643c3e28690",
     "delta": "D04 separates free public reading from optional v2 pass saving: one node, five cross-surface edges, one internal group added; no new public URL.",
     "added_source_files": [
       "features/ondo/experience-b/experience-model-b.ts",
@@ -22,7 +23,7 @@
       "features/ondo/experience-b/experience-b.module.css",
       "features/ondo/experience-b/saved-experience-b.tsx"
     ],
-    "evidence_note": "D04 runtime pending. Earlier v1 scoped browser evidence remains historical.",
+    "evidence_note": "See docs/KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md for environment-specific scoped D04 evidence. Earlier v1 browser evidence remains historical, not inherited coverage.",
     "previous_revision": {
       "date": "2026-09-16",
       "baseline_sha": "173e71c",

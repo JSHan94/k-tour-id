@@ -1,6 +1,6 @@
 # K-Tour ID · 비금전 체험 목업 인계
 
-2026-09-16 D04 · **공개 골목 가이드 읽기와 선택적 패스 저장의 연결 계약**. 사용자 승인 후 `feat/ktour-public-guide-20260916`에서 기준 `b7bdba0` 위에 작업한다. 아래 v2는 이번 변경 계약이며, 배포·브라우저 검수 완료를 뜻하지 않는다. 소스별 결과는 별도 릴리스 기록을 따른다. 이전 운영 앱 `505e475`의 검수는 [기존 UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)에 별도로 남긴다.
+2026-09-16 D04 · **공개 골목 가이드 읽기와 선택적 패스 저장의 연결 계약**. 사용자 승인 후 `feat/ktour-public-guide-20260916`에서 구현한 앱 source `9980472`를 운영과 main/Harvey에 반영했다. 아래는 v2 계약이며 실제 환경별 검수 범위·증거는 [공개 가이드 릴리스](./KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md)를 따른다. 모든 앱 상태·실기기·실제 연동 완료를 뜻하지 않는다. 이전 운영 앱 `505e475`의 검수는 [기존 UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)에 별도로 남긴다.
 
 체험과 한국 여행 OG의 최초 9/15 검수·배포 기록은 [당시 릴리스](./KTOUR_EXPERIENCE_RELEASE_2026-09-15.md)다. 이 문서는 수치를 중복 유지하지 않으며 이전 운영 결과나 중간 artifact의 PASS를 이후 소스와 합산하지 않는다.
 
@@ -62,6 +62,7 @@ v2 저장 sheet의 `ktour.experience-save-open.v2` session marker(`place`/`pass`
 | 저장 제안·범위 승인 | proposals → delegations. 실제 허용 AI 호출, 저장할 가이드·패스 수신자·지갑·기한·1회·정책/제안 digest에 묶인 사용자 승인과 durable intent |
 | 한정 실행 | delegation submit + operation 조회. 실제 zkLogin **및** PTB, Move/agent effects·network/package/grant·provenance 검증. digest 수신만으로 성공 처리 금지 |
 | 컬렉션 저장 확정·기록 | redeem + operation/evidence 조회. 현재 자격 재검증 후 동일 subject/campaign의 DB 컬렉션 항목 1개와 outbox를 확정; OmniOne 기록은 독립 조회. Sui consume만으로 저장 완료가 아니며 DB rollback 대상도 아님. 별도 signed VC 발급을 암시하지 않음 |
+| 저장 컬렉션 조회·재열람 | 인증된 서버 session의 subject/pass에 속한 컬렉션만 조회하는 읽기 API를 연결. 항목의 guideId·contentVersion·저장 operation 참조/상태를 반환하고 다시 읽기는 새 저장·Move 실행·VC 발급을 만들지 않음. `local-demo-traveler`·`demo-traveler-pass`는 목업 값이며 실제 소유권 근거로 받지 않음. 공개 가이드 원문은 이 개인별 목록 조회와 별개로 인증 없이 읽을 수 있음 |
 | 중단·같은 장소 복귀 | actor 범위 operation 재조회, 단계별 cancel/revoke, TTL 복귀 context. 메모리 UI snapshot과 달리 외부 앱/cold return을 복구해야 함 |
 
 실제 구현은 서버 session·소유권·idempotency·동일 subject/campaign 중복 방지·철회·만료·재시작 복구와 암호학적 commitment·issuer/서명된 scope 검증을 별도로 갖춰야 한다. 목업 IndexedDB의 탭 간 직렬화는 서버 DB unique 제약이나 동일인 판정의 대체물이 아니다. `KPassDemoCredential`의 SIMULATED 경계를 provider allow로 바꾸지 않는다.

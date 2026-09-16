@@ -4,14 +4,16 @@
 
 **2026-09-14 추가 요청으로 OmniOne CX + OpenDID + OmniOne Chain + Sui 모두 이번 팀의 필수 구현 범위다.** [Sui 필수 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 Move·zkLogin·PTB·Agentic AI 및 A13–A20도 함께 구현한다. 인원·환경·일정은 재확인이 필요하다. [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)에서 시작하며, 아래 API·타입·설정은 새 구현 제안이지 이미 연결된 서버나 공급자 공식 규격이 아니다.
 
+**9/16 동기화:** 기술·보안·제출 요건과 Sui→최종 DB→OmniOne 순서는 추가 명세를, 현재 무료 읽기/선택 저장 및 v2 scope는 [가이드 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 우선한다. 아래 기존 `redeem`·redemption·혜택 사용 용어는 **패스 컬렉션 저장**을 뜻하며 읽기 접근 제한이나 저장 결과의 새 VC 발급이 아니다. 일정은 9/14 계획 기준이며 실제 담당·진행 상태로 다시 확인한다.
+
 ## 0. 먼저 읽을 한 페이지
 
 ### 이번 주의 결과
 
-**지도 속 장소 1곳 → 비금전 체험 혜택 1개 → 실제 모바일 신분증 확인 → K-Pass 발급·보관·제시 → AI 제안·사용자 승인 → Sui 한정 권한 위임·agent 실행 → 서버 최종 자격 판정·혜택 1회 사용 → OmniOne 기록 → 같은 장소 복귀.**
+**지도 속 장소 1곳 → 공개 가이드 무료 읽기 → [선택] 내 패스에 담기 → 실제 모바일 신분증 확인 → K-Pass 발급·보관·제시 → AI 저장 제안·사용자 승인 → Sui 한정 권한 위임·agent 실행 → 서버 최종 자격 판정·컬렉션 1회 저장 → OmniOne 기록 → 같은 장소 복귀.**
 
 - 국내 Mobile ID 경로 1개, 실제 holder 1종, 시연자 1명 이상, 장소 1곳, 캠페인 1개, OmniOne 계약 1개와 Sui Move package 1개를 연결한다.
-- 신원은 CX, VC/VP는 OpenDID, 제한된 agent 실행은 실제 Sui effects, 업무 기록은 OmniOne receipt로 검증한다. 서비스 혜택은 **금전·실물 제공 의무 없는 해커톤 체험 권한**이다.
+- 신원은 CX, VC/VP는 OpenDID, 제한된 agent 실행은 실제 Sui effects, 업무 기록은 OmniOne receipt로 검증한다. 저장 대상은 **금전·실물 제공 의무 없는 가이드 컬렉션 항목**이다. 공개 읽기는 인증·gate·intent·사용 기록 없이 가능하다.
 - 화면을 새로 디자인하지 않는다. 기존 모바일 지도·장소·동의·결과·복귀 UX를 재사용한다. 기술명은 소비자 주 CTA에 올리지 않는다.
 - 기존 결제·충전·예약·외국인 여권 흐름은 목업으로 유지한다. 이들의 실제 연동은 이번 주 완료 조건이 아니다.
 - **기술 범위는 위 요청을 따르되 일정·담당·환경은 착수 합의가 필요하다. 문서 작성이나 기존 목업 테스트 통과가 실제 연동 완료를 뜻하지 않는다.**
@@ -82,39 +84,41 @@ pnpm exec next start .ondo-b-standalone -p 3438
 | 서비스 정책·장소·사용자 중복 기준 | A + 제품 책임자 | 아래 캠페인 1개 확정. 신원 subject 연속성·만료·사용횟수 기준 문서화 |
 | 제출 마감/동영상 형식/테스트 환경 인정, 인원·지원 담당자 | 제품 책임자 | 최신 팀 안내 확인 및 담당자 기재 |
 
-**정책 기본안:** `hk-identity-perk-v1`, 서비스 목적 `redeem_demo_entitlement`, 신원 확인된 동일 subject당 1회, 현금 가치 0, 만료는 캠페인 종료 시각. 국내/외국인·체류·연령·지출 한도 조건은 넣지 않는다. 실제 협력 매장이 없다면 기존 장소는 시연 배경일 뿐이며 “해커톤 체험 혜택”임을 사용 전/결과에 짧게 표시한다.
+**현재 정책 연결안:** campaign `ktour-neighborhood-guide-save-v2`, action `save-neighborhood-guide-to-pass`, 샘플 recipient `demo-traveler-pass`. 현재 유효한 Person을 확인한 동일 subject/campaign당 컬렉션 저장 1회·현금 가치 0이며, 공개 읽기는 반복 가능하다. 국내/외국인·체류·연령·지출 한도 조건은 넣지 않는다. 실제 수신자는 서버가 검증된 subject/pass로 바인딩하고 샘플 recipient를 소유권으로 신뢰하지 않는다. 캠페인 종료와 요청·grant·최종 저장 기한은 별도로 확정한다. 기존 장소는 시연 배경이며 실제 제휴·매장 제공 의무를 주장하지 않는다. 9/14의 `hk-identity-perk-v1` 기본안 및 이전 `open-neighborhood-guide` 동의는 이 v2 저장 승인으로 재사용하지 않는다. 내부 gate 이름 `REDEEM_DEMO_ENTITLEMENT`와 API의 `redeem`은 유지할 수 있지만 사용자 승인 scope는 위 v2 값에 바인딩한다.
 
 **Gate:** 9/15 정오까지 네 기술의 환경 준비 상태·blocker를 공유하고, 당일 종료까지 실제 smoke를 목표로 한다. 어느 하나라도 미확보이면 원인·지원 담당·해결 기한·추가 인력 필요를 즉시 팀에 공유한다. **OpenDID/OmniOne/Sui를 자동 제외하거나 CX-only를 이번 팀 완료로 처리하지 않는다.** 범위 변경은 제품 책임자의 별도 새 승인 사항이다. 샘플을 실제 연결로 바꾸어 말하지 않으며 정부 SDK 전환도 별도 승인·환경 확인 없이 즉석 우회책으로 취급하지 않는다.
 
 ## 4. 만들 사용자 흐름
 
 ```text
-장소 상세 → 체험 혜택 확인 → 이용 조건·정보 제공 동의
+장소 상세 → 공개 가이드 무료 읽기 → [선택] 내 패스에 담기
+ → 필요한 신원 확인·정보 제공 동의
  → CX 실제 확인 → OpenDID K-Pass 발급·holder 보관
- → 해당 장소/혜택 목적의 VP 요청·동의·검증
- → 서버 자격 판정 → AI의 허용된 행동 제안 → 범위 확인·사용자 승인
+ → 해당 장소/저장 목적의 VP 요청·동의·검증
+ → 서버 자격 판정 → AI의 허용된 저장 제안 → 범위 확인·사용자 승인
  → zkLogin/PTB 위임 → Sui agent 실행 → 실제 effects 검증
- → 서버 최종 자격/취소 재확인 → 1회 사용 기록
+ → 서버 최종 자격/취소 재확인 → 패스 컬렉션 1회 저장
  → 같은 장소로 복귀
                   └→ outbox → OmniOne 실제 기록 → 증거 조회
 ```
 
 | 상태 | 소비자에게 보일 행동 | 서버 결과 |
 |---|---|---|
-| 미확인 | 필요한 신원 확인 시작 또는 닫기 | `proof_required`, 사용 기록 없음 |
-| 유효한 VC·VP | 조건 확인 후 혜택 사용 | `allow`; **허용 판정만으로 사용하지 않음** |
-| 전송 전 동의 거절/취소 | 같은 장소로 돌아가기 | 해당 요청 종료, 발급/사용을 임의 생성하지 않음. 전송 후 중단은 추가 명세 §4의 경합 처리 적용 |
+| 공개 읽기 | 무료 내용 읽기·닫기·선택적 저장 | 인증/gate/intent/사용 기록 없음 |
+| 저장을 선택했으나 미확인 | 필요한 신원 확인 시작 또는 무료 읽기로 돌아가기 | `proof_required`, 저장 기록 없음 |
+| 유효한 VC·VP | 저장 범위 확인 후 승인 | `allow`; **허용 판정만으로 저장하지 않음** |
+| 전송 전 동의 거절/취소 | 무료 읽기 또는 같은 장소로 돌아가기 | 해당 요청 종료, 발급/저장을 임의 생성하지 않음. 전송 후 중단은 추가 명세 §4의 경합 처리 적용 |
 | 만료·철회·다른 요청의 proof | 재확인 또는 이용 불가와 이유 | `expired` / `deny` |
 | 공급자 장애/결과 미확정 | 같은 요청의 상태 확인 | `pending` / `unknown`; 자격 false나 성공으로 바꾸지 않음 |
-| 사용 완료/재클릭 | 동일 사용 내역 보기 | 사용 1회, 기존 operation 반환 |
-| 사용 완료·체인 대기 | 서비스 결과 유지, 상세에서 기록 상태 확인 | 업무 완료와 체인 확인 상태 분리 |
-| Sui 실행됨·서비스 미확정 | 처리 확인/이유 보기 | `authorization_consumed / fulfillment_pending` 또는 `fulfillment_blocked`; 혜택 완료로 표시하지 않음 |
+| 저장 완료/재클릭 | 저장 내역 보기·가이드 다시 읽기 | 저장 1회, 기존 operation 반환; 읽기는 새 저장/실행을 만들지 않음 |
+| 저장 완료·체인 대기 | 저장 항목 유지, 상세에서 기록 상태 확인 | 업무 완료와 체인 확인 상태 분리 |
+| Sui 실행됨·저장 미확정 | 처리 확인/이유 보기, 무료 읽기는 유지 | `authorization_consumed / fulfillment_pending` 또는 `fulfillment_blocked`; 저장 완료로 표시하지 않음 |
 
-### 기존 코드에서 새로 필요한 부분
+### 기존 코드 재사용과 실제 연결 작업
 
-현재 `START_CHECKOUT`은 account+payment KYC를 요구하고 `visitor_benefit`은 체류 조건을 소비한다. 이 경로의 검사를 제거해서 CX 전용 시연을 만들지 않는다. **금액 없는 `REDEEM_DEMO_ENTITLEMENT` action·정책·작은 확인/결과 UI를 별도 추가**한다. 이는 이번 개발의 명시적 FE 작업이며 현재 목업에 이미 연결되어 있다는 뜻이 아니다.
+현재 `START_CHECKOUT`은 account+payment KYC를 요구하고 `visitor_benefit`은 체류 조건을 소비한다. 이 경로의 검사를 제거해서 CX 전용 시연을 만들지 않는다. **금액 없는 `REDEEM_DEMO_ENTITLEMENT` gate와 공개 가이드·선택적 v2 저장·결과·컬렉션 UI는 이미 목업에 있다.** 이를 재사용하고 실제 SDK/앱 복귀·서버 자격 판정·제안/위임·저장/감사 adapter를 연결한다. UI 존재는 실제 네 기술 연동 완료를 뜻하지 않는다.
 
-- 필요 화면은 기존 장소 CTA, 신원/holder/presentation sheet, 결과 카드 디자인으로 조립한다. 주 CTA는 “체험 혜택 보기”, “확인하고 사용하기”처럼 사용자 행동으로 표현한다.
+- 기존 장소 CTA, 공개 reader, 신원/holder/presentation sheet, 저장 결과·컬렉션 화면을 재사용한다. 주 CTA는 “골목 가이드”, “내 패스에 담기”, “확인하고 저장하기”처럼 사용자 행동으로 표현한다. 저장 실패/취소가 무료 읽기를 막아서는 안 된다.
 - 결제·충전·예약 목업은 별도 모드에 남긴다. 실제 인증 결과를 목업 결제 권한으로 복사하지 않는다.
 - `KPassDemoCredential`의 SIMULATED 경계를 완화하지 않는다. 실제 결과는 별도 provider DTO와 서버 판정 adapter로 연결한다.
 - 외부 앱 복귀는 전체 페이지 재생성을 전제로 한다. 현재 메모리 기반 지도 snapshot만으로 충분하지 않다. 장소·도시·검색·목록/지도·카메라·선택 UI를 TTL 있는 복귀 context로 보존하고, 서버 operation 조회 후 복원한다. 권한/proof/메모/서명은 URL이나 UI 저장소에 넣지 않는다.
@@ -134,7 +138,7 @@ pnpm exec next start .ondo-b-standalone -p 3438
 
 - 선택한 release의 issuer/TA/verifier/holder를 동일 환경·버전으로 고정한다. 공식 release 설치 문서를 사용하되 새 native wallet 제품 개발은 하지 않는다. [공식 release 자료](https://github.com/OmniOneID/did-release)
 - **`did-demo-app` 웹페이지는 실제 holder의 대체물이 아니다.** 공식 README도 실제 데이터 및 QR 자격 거래가 없는 시뮬레이션임을 설명한다. 준비된 실제 앱/SDK로 발급·보관·제시 receipt를 얻어야 한다. [공식 Demo App 설명](https://github.com/OmniOneID/did-demo-app)
-- 앱 정규화 schema 제안: `KPassHackathonCredential/v1`. `holderBinding, issuerRef, schemaVersion, personVerified, serviceAccess=["redeem_demo_entitlement"], validFrom, validUntil, policyVersion, statusRef`만 사용한다. 실제 VC 문서 구조·proof 필드와의 mapping은 고정 release 규격으로 구현한다.
+- 앱 정규화 schema 제안: `KPassHackathonCredential/v1`. `holderBinding, issuerRef, schemaVersion, personVerified, serviceAccess=["redeem_demo_entitlement"], validFrom, validUntil, policyVersion, statusRef`만 사용한다. 이 서버 DTO 초안의 serviceAccess는 목업의 `person` capability와 adapter에서 대응하며 v2 저장 action/동의를 대신하지 않는다. 실제 VC 문서 구조·proof 필드와의 mapping은 고정 release 규격으로 구현한다.
 - `personVerified`는 CX 검증에서, `serviceAccess`는 K-Tour ID 체험 정책에서 부여한다. 정부의 상업 혜택 보증이나 실제 관광 주민증 발급으로 표현하지 않는다. 불필요한 이름·생년월일·국적·체류기간·결제한도를 VC에 추가하지 않는다.
 - 발급 성공과 holder 저장 완료를 분리한다. 저장 확인 실패는 같은 발급 operation을 조회·재전달하며 새 VC를 무조건 발급하지 않는다. CX subject와 holder 소유 증명을 발급 세션에 바인딩한다.
 - VP는 holder 동의·proof·issuer 신뢰·현재 status·유효기간·요청 nonce/audience/domain/purpose를 검증한다. 최소 claim을 가진 VC/VP를 사용한다. 별도 ZKP를 구현하지 않았다면 최소공개와 영지식증명을 동일시하지 않는다.
@@ -210,17 +214,17 @@ Sui 때문에 `agent_proposals, delegations, sui_operations` 또는 동등 구�
 
 ## 7. FE 연결 파일과 배포 체크
 
-경로 기준은 `k-tour-id-app/features/ondo/`이다. 아래는 기존 파일이며, 오른쪽의 provider adapter·새 action은 **이번 주 구현 대상**이다.
+경로 기준은 `k-tour-id-app/features/ondo/`이다. 아래 기존 화면·gate를 재사용하며, 오른쪽의 **실제 provider/BFF adapter가 이번 주 구현 대상**이다.
 
 | 기존 연결점 | 이번 주 바꿀 지점 |
 |---|---|
-| `place/place-service-actions-b.tsx`, `commerce-b/place-service-registry-b.ts` | 지정 장소의 독립 체험 혜택 capability/CTA. 기존 가격·결제·예약 capability와 분리 |
+| `place/place-service-actions-b.tsx`, `experience-b/experience-b.tsx`, `experience-b/saved-experience-b.tsx` | 지정 장소의 공개 읽기/선택 저장·컬렉션 UI와 서버 capability/조회 연결. 기존 27개 가격·결제·예약 registry와 별개 |
 | `identity-b/identity-handoff-step-b.tsx`, `ktour-id-setup-b.tsx` | 실제 CX 시작·앱 복귀·서버 조회. provider 모드에서 sample 승인 버튼 사용 금지 |
 | `identity-b/identity-holder-step-b.tsx` | 실제 발급/보관 상태·부분실패·동일 operation 재조회 |
-| `identity-b/action-gate-contract-b.ts`, `action-gate-coordinator-b.tsx` | 새 비금전 action, 최소 목적 동의, provider DTO/VP adapter. 기존 checkout/person/payment 규칙을 느슨하게 만들지 않음 |
+| `identity-b/action-gate-contract-b.ts`, `action-gate-coordinator-b.tsx` | 기존 비금전 gate에 저장 목적·v2 scope·provider DTO/VP adapter 연결. 기존 checkout/person/payment 규칙을 느슨하게 만들지 않음 |
 | `map/map-entry-b.tsx`, `map/place-service-map-return-b.ts` | TTL 복귀 context와 cold return. useRef snapshot 유실 시 기본 지도만 보여주고 원 행동 성공을 추정하지 않음 |
 | `integration-demo-b/integration-demo-b.tsx`, `integration-demo-model-b.ts` | 최소 증거 panel에 실제 operation·chain receipt 연결. 로컬 mock event와 provider event 분리 |
-| `commerce-b/wallet-connection-preview-b.tsx`, `labs/labs-entry.tsx` | 디자인만 재사용. 실제 zkLogin/PTB/agent adapter·provider 상태·새 action은 구현 대상; 기존 방문 badge/fixture와 분리 |
+| `commerce-b/wallet-connection-preview-b.tsx`, `labs/labs-entry.tsx` | 필요 디자인만 참고. 실제 zkLogin/PTB/agent adapter·provider 상태·Move 실행은 구현 대상; 기존 방문 badge/fixture와 분리 |
 
 최소 환경 항목: `HACKATHON_EXECUTION_MODE`, `PUBLIC_APP_ORIGIN`, 허용 callback origin, DB 접속 secret, CX 팀 config/검증 설정, OpenDID release·서버 주소·schema·키 참조, OmniOne network·contract·ABI·signer secret·finality 정책, 캠페인/장소/만료. 이름은 제안이며 실제 vendor 설정명을 가장하지 않는다.
 
