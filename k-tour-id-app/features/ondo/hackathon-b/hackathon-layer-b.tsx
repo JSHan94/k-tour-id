@@ -26,7 +26,7 @@ const T = {
     presentBody: "이 장소의 혜택 목적으로 최소 항목만 제시합니다.", propose: "혜택 제안 받기", approveTitle: "실행 범위 확인", approveBody: "도우미가 아래 범위 안에서 1회만 실행합니다. 대상·수령 지갑·기한 밖 실행은 계약이 거절합니다.",
     approveCheck: "이 범위에 동의하고 실행 권한을 1회 위임합니다.", signerZk: "Google로 계속 (zkLogin)", signerDemo: "샘플 서명자로 계속", signDelegate: "위임 서명", runAgent: "실행", redeem: "확인하고 사용하기",
     done: "혜택 사용이 확정됐어요", blocked: "사용이 확정되지 않았어요", chainPending: "기록 확인 중", chainConfirmed: "기록 확정", reconcile: "다시 확인", evidence: "증거 보기", cancel: "그만두기",
-    sample: "SIMULATION", live: "LIVE", chain: "TESTNET",
+    sample: "SAMPLE", live: "LIVE", chain: "TESTNET",
   },
   en: {
     title: "Experience perk", sub: "Identity → pass → perk → use", close: "Close", back: "Return to this place",
@@ -37,7 +37,7 @@ const T = {
     presentBody: "Only the minimum claims for this place and purpose are presented.", propose: "Get a perk proposal", approveTitle: "Confirm execution scope", approveBody: "The assistant executes once within this scope. Anything outside target, recipient or expiry is rejected by the contract.",
     approveCheck: "I agree to this scope and delegate a single execution.", signerZk: "Continue with Google (zkLogin)", signerDemo: "Continue with sample signer", signDelegate: "Sign delegation", runAgent: "Execute", redeem: "Confirm and use",
     done: "Perk use confirmed", blocked: "Use was not confirmed", chainPending: "Recording", chainConfirmed: "Recorded", reconcile: "Check again", evidence: "Show evidence", cancel: "Stop",
-    sample: "SIMULATION", live: "LIVE", chain: "TESTNET",
+    sample: "SAMPLE", live: "LIVE", chain: "TESTNET",
   },
 } as const
 const copyFor = (l: Locale) => (l === "en" ? T.en : T.ko)
@@ -185,18 +185,28 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
   const tone = (m: string | undefined) => (m === "mock" || m === "rule" || m === "demo-signer" ? "sample" : m === "unconfigured" ? "sample" : "live")
   const stateOf = (i: number) => (op?.status === "cancelled" || op?.status === "failed" || op?.status === "expired" ? (i < stepIndex ? "done" : i === stepIndex ? "blocked" : "todo") : i < stepIndex ? "done" : i === stepIndex ? "current" : "todo")
   const title = useMemo(() => info?.campaign?.title?.[locale] ?? c.title, [info, locale, c.title])
+  const stepMeta = stepIndex === 1 && op?.identity?.mode ? op.identity.mode.toUpperCase() : stepIndex === 5 && (signer?.kind ?? op?.delegation?.signer) ? (signer?.kind ?? op?.delegation?.signer) : ""
 
   return (
     <div ref={rootRef} className={styles.root} role="dialog" aria-modal="true" aria-label={c.title} data-testid="hackathon-layer" data-modal-layer-priority={ONDO_MODAL_PRIORITY.critical}>
       <div className={styles.sheet}>
         <header className={styles.head}>
-          <div><h2>{title}</h2><p>{c.sub} · <span className={styles.badge} data-tone={tone(modes.cx)}>ID {modes.cx === "cx" ? c.live : c.sample}</span> <span className={styles.badge} data-tone={tone(modes.opendid)}>PASS {modes.opendid === "opendid" ? c.live : c.sample}</span> <span className={styles.badge} data-tone={modes.sui === "testnet" ? "chain" : "sample"}>SUI {modes.sui === "testnet" ? c.chain : "—"}</span> <span className={styles.badge} data-tone={modes.omnione === "stage" ? "chain" : "sample"}>OMNIONE {modes.omnione === "stage" ? "STAGE" : "—"}</span></p></div>
-          <button type="button" className={styles.close} aria-label={c.close} onClick={() => close(true)}><X size={18} /></button>
+          <div className={styles.headRow}>
+            <h2>{title}</h2>
+            <button type="button" className={styles.close} aria-label={c.close} onClick={() => close(true)}><X size={18} /></button>
+          </div>
+          <div className={styles.progress} role="group" aria-label={`${c.steps[stepIndex]} · ${stepIndex + 1}/${c.steps.length}`}>
+            <div className={styles.progressLabel}><span><b>{c.steps[stepIndex]}</b>{stepMeta ? ` · ${stepMeta}` : ""}</span><span>{stepIndex + 1} / {c.steps.length}</span></div>
+            <div className={styles.segments} aria-hidden="true">{c.steps.map((s, i) => <span key={s} className={styles.segment} data-state={stateOf(i)} />)}</div>
+          </div>
+          <div className={styles.chips} aria-label="modes">
+            <span className={styles.badge} data-tone={tone(modes.cx)}>ID {modes.cx === "cx" ? c.live : c.sample}</span>
+            <span className={styles.badge} data-tone={tone(modes.opendid)}>PASS {modes.opendid === "opendid" ? c.live : c.sample}</span>
+            <span className={styles.badge} data-tone={modes.sui === "testnet" ? "chain" : "sample"}>SUI {modes.sui === "testnet" ? c.chain : "—"}</span>
+            <span className={styles.badge} data-tone={modes.omnione === "stage" ? "chain" : "sample"}>OMNIONE {modes.omnione === "stage" ? "STAGE" : "—"}</span>
+          </div>
         </header>
         <div className={styles.body}>
-          <ol className={styles.steps} aria-label="progress">
-            {c.steps.map((s, i) => <li key={s} className={styles.step} data-state={stateOf(i)}><span className={styles.dot}>{stateOf(i) === "done" ? "✓" : i + 1}</span><span>{s}</span><small>{i === 1 && op?.identity?.mode ? op.identity.mode.toUpperCase() : i === 5 && op?.delegation?.signer ? op.delegation.signer : ""}</small></li>)}
-          </ol>
           {error ? <div className={styles.notice} data-tone="error">{error}</div> : null}
 
           {!op ? (
@@ -218,7 +228,9 @@ function Journey({ detail, onClose }: { detail: HackathonOpenDetail; onClose: ()
               </> : op.identity.handoff.kind === "mock" ? <>
                 <div className={styles.notice}>{op.identity.handoff.label} · {locale === "ko" ? "CX 테스트 계정 확보 전까지 결과를 샘플로 대체합니다. 서버는 이 결과를 실제 신분증 결과로 표기하지 않습니다." : "Sample result until CX test access is available; the server never labels it as a real ID result."}</div>
                 <div className={styles.actions}>
-                  <button type="button" className={styles.primary} disabled={!!busy} onClick={() => identityComplete({ outcome: "verified", subjectSeed: "sample-person-1" })} data-testid="hackathon-identity-approve">{c.mockApprove}</button>
+                  <button type="button" className={styles.primary} disabled={!!busy} onClick={() => identityComplete({ outcome: "verified", subjectSeed: "sample-person-1" })} data-testid="hackathon-identity-approve">{busy === "identity" ? <span className={styles.spinner} /> : null}{c.mockApprove}</button>
+                </div>
+                <div className={styles.actions}>
                   <button type="button" className={styles.secondary} disabled={!!busy} onClick={() => identityComplete({ outcome: "cancelled", subjectSeed: "sample-person-1" })}>{c.mockCancel}</button>
                   <button type="button" className={styles.secondary} disabled={!!busy} onClick={() => identityComplete({ outcome: "failed", subjectSeed: "sample-person-1" })}>{c.mockFail}</button>
                 </div>
