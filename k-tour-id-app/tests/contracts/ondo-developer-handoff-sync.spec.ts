@@ -31,6 +31,12 @@ test("HANDOFF-SYNC-008 concise handoff keeps the flow, all four integrations, re
   expect(brief).toContain("외부 앱 복귀")
   expect(brief).toContain("취소·잘못된 증명·만료·철회")
   expect(brief).toContain("현재 공개 앱은 목업")
+  for (const scope of ["골목 가이드 무료 읽기", "내 패스에 담기", "save-neighborhood-guide-to-pass", "ktour-neighborhood-guide-save-v2", "demo-traveler-pass"]) {
+    expect(brief, scope).toContain(scope)
+  }
+  expect(brief).toContain("공개 읽기는 IDB·gate·intent를 만들지 않습니다")
+  expect(brief).toContain("이전 v1 읽기 승인·기록은 삭제/변환하거나 새 저장 동의로 재사용하지 않습니다")
+  expect(brief).toContain("별도 서명 VC·방문 배지·결제·예약·매장 제공 의무가 아닙니다")
   expect(brief).toContain("https://github.com/OmniOneID/did-release")
   expect(brief.length).toBeLessThan(6000)
   expect(detailed).toContain("이번 팀의 필수 구현 범위")
@@ -74,7 +80,7 @@ test("HANDOFF-SYNC-002 every concrete B source touchpoint in the start guide exi
 })
 
 test("HANDOFF-SYNC-003 current handoff and README local document links resolve", () => {
-  for (const file of ["README.md", "docs/DEVELOPER_START_HERE.md", "docs/DEPLOYMENT_SPEC.md", "docs/BACKEND_HANDOFF_CHECKLIST_2026-09-09.md", "docs/HACKATHON_INTEGRATION_MATRIX_2026-09-08.md", "docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md", "docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md", "docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md", "docs/MAP_FIRST_ENTRY_2026-09-14.md", "docs/PLACE_AFTER19_FIX_2026-09-14.md"]) {
+  for (const file of ["README.md", "docs/DEVELOPER_START_HERE.md", "docs/DEPLOYMENT_SPEC.md", "docs/BACKEND_HANDOFF_CHECKLIST_2026-09-09.md", "docs/HACKATHON_INTEGRATION_MATRIX_2026-09-08.md", "docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md", "docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md", "docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md", "docs/KTOUR_PRODUCTION_HANDOFF_2026-09-15.md", "docs/GITHUB_BRAND_CLEANUP_2026-09-15.md", "docs/MAP_FIRST_ENTRY_2026-09-14.md", "docs/PLACE_AFTER19_FIX_2026-09-14.md"]) {
     const text = readFileSync(resolve(root, file), "utf8")
     const links = [...text.matchAll(/\]\(([^)]+)\)/g)].map(match => match[1])
     for (const link of links.filter(link => !/^(?:https?:|#)/.test(link))) {
@@ -111,30 +117,73 @@ test("HANDOFF-SYNC-005 all provider work retains separate responsibility and off
   expect(guide).toContain("실제 연동·테스트 자금 이동·운영 credential 발급을 목업 완료의 조건으로 요구하지 않는다")
 })
 
-test("HANDOFF-SYNC-006 every current handoff points to the same deployed release record", () => {
-  const releaseName = "BRAND_SHARE_REFRESH_2026-09-14.md"
-  const release = doc(releaseName)
-  const source = release.match(/배포 source `([a-f0-9]{7})`/)?.[1]
-  expect(source).toBeDefined()
+test("HANDOFF-SYNC-006 current app/main/Harvey paths agree and historical release evidence stays separate", () => {
+  const currentName = "KTOUR_PRODUCTION_HANDOFF_2026-09-15.md"
+  const current = doc(currentName)
+  const brief = doc("HARVEY_HACKATHON_HANDOFF_2026-09-14.md")
+  const detailed = doc("HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
   const readme = readFileSync(resolve(root, "README.md"), "utf8")
-  for (const text of [readme, guide, spec, work, matrix]) expect(text).toContain(releaseName)
-  const guideBases = guide.split("\n").filter(line => line.startsWith("기준:"))
-  expect(guideBases).toHaveLength(1)
-  expect(guideBases[0]).toContain(source!)
+
+  for (const text of [readme, guide, spec, work, matrix, brief, detailed]) {
+    expect(text).toContain(currentName)
+    expect(text).toContain("https://ktour-id.vercel.app")
+    expect(text).toContain("handoff/harvey-20260914")
+    expect(text).toContain("main")
+    expect(text).not.toContain("git clone --branch release/ktour-brand-20260915")
+    expect(text).not.toContain("오래된 `main`")
+  }
+  for (const text of [readme, detailed]) {
+    expect(text).toContain("git clone --branch handoff/harvey-20260914 --single-branch")
+  }
+  for (const text of [current, brief]) {
+    expect(text).toContain("https://ktour-id.vercel.app")
+    expect(text).toContain("https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914")
+    expect(text).toContain("OmniOne Chain")
+    expect(text).toContain("OpenDID")
+    expect(text).toContain("Sui")
+    expect(text).toContain("Sumsub")
+    expect(text).toContain("별도")
+  }
+  expect(current).toContain("https://github.com/woogieboogie-jl/k-tour-id/tree/main")
+  expect(current).toContain("동일한 앱·문서 소스로 동기화")
+  expect(current).toMatch(/상태: \*\*(?:pending|Ready)/)
+  // These are documentation guards, not proof that remote branches or deployment agree.
+  // A release marked Ready must nevertheless identify the runtime and the verified branch heads.
+  if (/상태: \*\*Ready/.test(current)) {
+    for (const label of ["배포 source", "배포 ID·고유 URL", "main / Harvey 원격 HEAD"]) {
+      const row = current.split("\n").find(line => line.startsWith("| " + label + " |"))
+      expect(row, label).toBeDefined()
+      expect(row, label).not.toContain("pending")
+    }
+    expect(current).toMatch(/\| 배포 source \|[^\n]*[a-f0-9]{7,40}/)
+    expect(current).toMatch(/\| 배포 ID·고유 URL \|[^\n]*dpl_[A-Za-z0-9]+/)
+    expect(current).toMatch(/\| main \/ Harvey 원격 HEAD \|[^\n]*[a-f0-9]{7,40}/)
+  }
+
+  const historicalName = "BRAND_SHARE_REFRESH_2026-09-14.md"
+  const historical = doc(historicalName)
+  const historicalSource = historical.match(/배포 source `([a-f0-9]{7})`/)?.[1]
+  expect(historicalSource).toBeDefined()
+  for (const text of [readme, guide, spec, work, matrix]) expect(text).toContain(historicalName)
   expect(readme).toContain("./docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
   expect(guide).toContain("./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")
-  expect(doc("HACKATHON_ONE_WEEK_SPEC_2026-09-14.md")).toContain("runtime source `" + source + "`")
   const currentRelease = spec.split("\n").find(line => line.includes("`release:current`"))
-  expect(currentRelease).toContain(source!)
-  expect(work).toContain("`baseline:current:" + source + "`")
-  const readmeRelease = readme.split("\n").find(line => /\[(?:production app|latest preview)\]/.test(line))
-  expect(readmeRelease?.match(/(?:deployment )?source(?:\/runtime)? `([a-f0-9]{7})`/i)?.[1]).toBe(source)
-  expect(release).toContain("실제 provider 연결")
-  expect(release).toContain("실제 iPhone Safari/Android")
+  expect(currentRelease).toContain(currentName)
+  expect(currentRelease).not.toContain(historicalSource!)
+  expect(spec).toContain("`release:historical:" + historicalSource + "`")
+  const currentBaseline = work.split("\n").find(line => line.includes("`baseline:current`"))
+  expect(currentBaseline).toContain(currentName)
+  expect(work).not.toContain("`baseline:current:" + historicalSource + "`")
+  expect(work).toContain("`baseline:historical:" + historicalSource + "`")
+  for (const text of [readme, current, doc("GITHUB_BRAND_CLEANUP_2026-09-15.md")]) {
+    expect(text).toContain("https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9")
+  }
+  expect(historical).toContain("실제 provider 연결")
+  expect(historical).toContain("실제 iPhone Safari/Android")
   expect(readme).toContain("last functional-flow QA baseline is historical `e2ad7c4`")
   expect(guide).toContain("마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`")
-  expect(release).toContain("계약833/833")
-  expect(release).toContain("이번 소스에서 재실행한 결과가 아님")
+  expect(historical).toContain("계약833/833")
+  expect(historical).toContain("이번 소스에서 재실행한 결과가 아님")
 })
 
 test("HANDOFF-SYNC-007 map-wallet journeys have matching place, order and reservation backend contracts", () => {

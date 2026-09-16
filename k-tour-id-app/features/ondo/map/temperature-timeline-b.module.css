@@ -23,7 +23,7 @@
   border-radius: 9px;
 }
 .disclosure > summary::-webkit-details-marker { display: none; }
-.disclosure > summary small { font-size: 9px; font-weight: 650; line-height: 1.2; white-space: nowrap; }
+.disclosure > summary small { font-size: 11px; font-weight: 650; line-height: 1.2; white-space: nowrap; }
 .disclosure > summary time { font-size: 14px; font-weight: 750; font-variant-numeric: tabular-nums; line-height: 1.25; }
 .thermalTrace { position: absolute; right: 5px; bottom: 1px; left: 4px; height: 2px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, currentColor 10%, transparent); }
 .thermalTrace b { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #eeb35e, #ed714c 55%, #a82b66); transition: width 900ms linear; }

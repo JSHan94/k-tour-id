@@ -1,0 +1,111 @@
+import { expect, test, type Page } from "@playwright/test"
+
+test.describe.configure({ timeout: 60_000 })
+const pageErrors = new WeakMap<Page, string[]>()
+test.beforeEach(({ page }) => {
+  const errors: string[] = []
+  pageErrors.set(page, errors)
+  page.on("pageerror", error => errors.push(error.message))
+})
+test.afterEach(async ({ page }) => { expect(pageErrors.get(page) ?? []).toEqual([]) })
+
+test("UX-06 a researched place uses its licensed photo with accessible credit and stable error fallback", async ({ page }) => {
+  await page.goto("/?city=seoul&view=list", { waitUntil: "domcontentloaded" })
+  const card = page.locator('[data-research-id="research-seoul-onion-anguk"]').first()
+  const thumbnail = card.locator('[data-food-photo="photograph"]')
+  await thumbnail.scrollIntoViewIfNeeded()
+  await expect(thumbnail).toHaveAttribute("data-photo-state", "loaded")
+  await expect(thumbnail.getByRole("img")).toHaveAttribute("src", "/media/venues/onion-anguk-christopher-phua-20250301.jpg")
+  await card.click()
+  const detail = page.getByTestId("researched-food-detail")
+  await expect(detail).toHaveAttribute("data-research-id", "research-seoul-onion-anguk")
+  await expect(detail.locator('[data-food-photo="photograph"]')).toHaveAttribute("data-photo-state", "loaded")
+  await detail.getByTestId("research-photo-credit").locator("summary").click()
+  await expect(detail).toContainText("Christopher Phua / Unsplash")
+  await expect(detail.getByRole("link", { name: "Unsplash License" })).toHaveAttribute("href", "https://unsplash.com/license")
+
+  await page.route("**/media/venues/onion-anguk-christopher-phua-20250301.jpg", route => route.abort("failed"))
+  await page.reload({ waitUntil: "domcontentloaded" })
+  const failedCard = page.locator('[data-research-id="research-seoul-onion-anguk"]').first()
+  await failedCard.scrollIntoViewIfNeeded()
+  await expect(failedCard.locator('[data-food-photo="photograph"]')).toHaveAttribute("data-photo-state", "error")
+  await expect(failedCard).toContainText("Photo unavailable")
+  await failedCard.click()
+  await expect(page.getByTestId("researched-food-detail")).toHaveAttribute("data-research-id", "research-seoul-onion-anguk")
+})
+
+for (const height of [480, 568]) test(`AV-02 settled Japanese peek retains both actions at 320×${height}`, async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 320, height })
+  await page.addInitScript(() => localStorage.setItem("ondo-b.device.v1", JSON.stringify({ locale: "ja", appearancePreference: "dark", onboarding: "ONB-COMPLETE" })))
+  await page.goto("/?venueId=mois-0021cd596bc5b2a922ad", { waitUntil: "domcontentloaded" })
+  const peek = page.getByTestId("canonical-place-peek")
+  await expect(peek.getByTestId("canonical-place-pulse")).toHaveAttribute("data-origin", "PREPARED_ILLUSTRATION")
+  const service = peek.getByTestId("peek-place-service")
+  const details = peek.getByTestId("canonical-place-details")
+  for (const action of [service, details]) {
+    const box = await action.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.y).toBeGreaterThanOrEqual(0)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height)
+    expect(await action.evaluate(node => {
+      const r = node.getBoundingClientRect()
+      return node.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2))
+    })).toBe(true)
+  }
+  await page.screenshot({ path: testInfo.outputPath(`peek-${height}-settled.png`), scale: "css" })
+  const contribute = peek.getByTestId("sample-add-moment")
+  await contribute.focus()
+  await expect(contribute).toBeFocused()
+  const contributionBox = await contribute.boundingBox()
+  const serviceBox = await service.boundingBox()
+  expect(contributionBox!.y + contributionBox!.height).toBeLessThanOrEqual(serviceBox!.y)
+  await service.focus()
+  await page.keyboard.press("Tab")
+  await expect(details).toBeFocused()
+  const scrollBefore = await peek.evaluate(node => node.scrollTop)
+  await service.click()
+  await page.getByTestId("commerce-origin-return").click()
+  await expect(peek).toHaveAttribute("data-venue-id", "mois-0021cd596bc5b2a922ad")
+  await expect.poll(() => peek.evaluate(node => node.scrollTop)).toBeCloseTo(scrollBefore, 0)
+})
+
+test("UX-03 only registered peeks show one service action and closing returns to the exact peek", async ({ page }) => {
+  await page.goto("/?venueId=mois-0021cd596bc5b2a922ad", { waitUntil: "domcontentloaded" })
+  const peek = page.getByTestId("canonical-place-peek")
+  await expect(peek.getByTestId("peek-place-service")).toBeVisible()
+  await expect(peek.getByTestId("canonical-place-details")).toHaveAttribute("data-visual-priority", "secondary")
+  await expect(peek.getByTestId("canonical-venue-directions")).toHaveCount(0)
+  await peek.getByTestId("peek-place-service").click()
+  await expect(page.getByTestId("commerce-place-context")).toHaveAttribute("data-venue-id", "mois-0021cd596bc5b2a922ad")
+  await page.getByTestId("commerce-origin-return").click()
+  await expect(peek).toHaveAttribute("data-venue-id", "mois-0021cd596bc5b2a922ad")
+  await peek.getByTestId("canonical-place-details").click()
+  await expect(page.getByTestId("canonical-place-overlay").getByTestId("canonical-venue-primary-directions")).toBeVisible()
+
+  await page.goto("/?venueId=mois-18939eecb43c15ab4305", { waitUntil: "domcontentloaded" })
+  await expect(page.getByTestId("canonical-place-peek").getByTestId("peek-place-service")).toHaveCount(0)
+  await expect(page.getByTestId("canonical-place-peek").getByTestId("canonical-place-details")).toHaveAttribute("data-visual-priority", "primary")
+  await expect(page.getByTestId("canonical-place-peek").getByTestId("canonical-venue-directions")).toBeVisible()
+})
+
+test("AV-02 expanded editorial place information survives the service round trip", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 480 })
+  await page.goto("/?city=jeju&editorialPlaceId=jeju-haenyeo-kitchen-bukchon", { waitUntil: "domcontentloaded" })
+  const source = page.getByTestId("editorial-place-source-summary")
+  await source.locator(":scope > summary").click()
+  await expect(source).toHaveAttribute("open", "")
+  const peek = source.locator("xpath=ancestor::*[@data-place-service-scroll][1]")
+  const service = peek.getByTestId("peek-place-service")
+  await service.focus()
+  // click() may scroll a partly visible button before activating it. Capture
+  // the actual user's departure position, before the app's handoff handler,
+  // rather than an earlier focus position. Never read the private snapshot.
+  const activationScroll = service.evaluate(node => new Promise<number>(resolve => {
+    node.addEventListener("click", () => resolve(node.closest<HTMLElement>("[data-place-service-scroll]")!.scrollTop), { once: true, capture: true })
+  }))
+  await service.click()
+  const before = await activationScroll
+  await page.getByTestId("commerce-origin-return").click()
+  await expect(source).toHaveAttribute("open", "")
+  await expect.poll(() => peek.evaluate(node => node.scrollTop)).toBeCloseTo(before, 0)
+})

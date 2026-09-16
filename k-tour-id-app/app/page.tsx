@@ -2,9 +2,10 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { OndoProductB } from "@/features/ondo/app/ondo-product-b"
 
-const title = "K-TOUR ID | ONDO 溫圖"
-const description = "Find your next food stop in Korea with K-TOUR ID by ONDO—discover restaurants, cafés and bars on the map, and keep your travel pass close."
-const socialImage = "/og-ktour-food-v1.png"
+const title = "K-Tour ID"
+const description = "Find your next food stop in Korea with K-Tour ID—discover restaurants, cafés and bars on the map, and keep your travel pass close."
+const socialImage = "/og-ktour-korea-v3.png"
+const productionOrigin = "https://ktour-id.vercel.app"
 
 function configuredOrigin() {
   const configured = process.env.NEXT_PUBLIC_ONDO_B_ORIGIN
@@ -27,6 +28,9 @@ function requestOrigin(requestHeaders: Awaited<ReturnType<typeof headers>>) {
       return "https://ondo-directory.invalid"
     }
   }
+  // Production aliases share one public identity; preview and local QA remain
+  // on their own origins instead of advertising the production deployment.
+  if (process.env.VERCEL_ENV === "production") return productionOrigin
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.phenixnet-jl\.chatgpt\.site$/.test(host)) return `https://${host}`
   if (/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.vercel\.app$/.test(host)) return `https://${host}`
   const configured = configuredOrigin()
@@ -41,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     metadataBase: new URL(origin),
-    applicationName: "K-TOUR ID",
+    applicationName: "K-Tour ID",
     title,
     description,
     icons: {
@@ -55,7 +59,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     alternates: { canonical: "/" },
     openGraph: {
-      siteName: "K-TOUR ID",
+      siteName: "K-Tour ID",
       title,
       description,
       type: "website",
@@ -64,7 +68,7 @@ export async function generateMetadata(): Promise<Metadata> {
         url: imageUrl,
         width: 1200,
         height: 630,
-        alt: "K-TOUR ID — Food, Cafés and Bars in Korea, by ONDO",
+        alt: "K-Tour ID — Korean hanok alley, barbecue and a café with yakgwa",
       }],
     },
     twitter: {

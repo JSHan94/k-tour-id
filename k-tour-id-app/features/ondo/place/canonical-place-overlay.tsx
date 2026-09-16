@@ -42,7 +42,7 @@ import { FoodPhotoB } from "../map/food-photo-b"
 import { canonicalVenueMoodImage } from "../map/canonical-venue-capsule-b"
 import { ONDO_B_TABLES, ondoBTableTimeline } from "../connect/table-model"
 import { capturePlaceServiceMapReturnB } from "../map/place-service-map-return-b"
-import { PlaceServiceActionsB } from "./place-service-actions-b"
+import { PlacePeekActionsB, PlaceServiceActionsB } from "./place-service-actions-b"
 import { HackathonEntitlementCtaB } from "../hackathon-b/hackathon-cta-b"
 import {
   canonicalFactFreshness,
@@ -163,8 +163,8 @@ const COPY = {
     pulseLimited: "Explore · limited signals",
     pulseConfidence: "Confidence",
     pulseFreshness: "Freshness",
-    pulseEvidence: "Why this ONDO temperature",
-    temperature: "ONDO temperature",
+    pulseEvidence: "About this place temperature",
+    temperature: "Place temperature",
     pulseHigh: "High",
     pulseMedium: "Medium",
     pulseLow: "Low",
@@ -245,8 +245,8 @@ const COPY = {
     pulseLimited: "탐색 · 신호 부족",
     pulseConfidence: "신뢰도",
     pulseFreshness: "최신성",
-    pulseEvidence: "이 온도의 근거",
-    temperature: "온도",
+    pulseEvidence: "장소 온도의 근거",
+    temperature: "장소 온도",
     pulseHigh: "높음",
     pulseMedium: "보통",
     pulseLow: "낮음",
@@ -327,8 +327,8 @@ const COPY = {
     pulseLimited: "探索中・シグナル不足",
     pulseConfidence: "確度",
     pulseFreshness: "更新状況",
-    pulseEvidence: "このONDO温度の根拠",
-    temperature: "ONDO温度",
+    pulseEvidence: "このにぎわいの根拠",
+    temperature: "スポットのにぎわい",
     pulseHigh: "高い",
     pulseMedium: "中程度",
     pulseLow: "低い",
@@ -357,25 +357,25 @@ const EVIDENCE_COPY = {
   en: {
     title: "Evidence", source: "Source", close: "Close evidence", observed: "Observed", freshness: "Freshness", current: "Current", stale: "May be outdated",
     value: "What the source says", retry: "Try again", unavailableValue: "Not available", conditionalValue: "Check directly with the place",
-    official_directory: "Official directory", editorial: "Editorial source", ondo: "ONDO signal", merchant: "Place-provided",
+    official_directory: "Official directory", editorial: "Editorial source", ondo: "K-Tour ID signal", merchant: "Place-provided",
     opendid: "OpenDID credential", eas: "EAS attestation",
-    official_directoryNote: "Public directory record", editorialNote: "Linked editorial source", ondoNote: "A recent ONDO signal",
+    official_directoryNote: "Public directory record", editorialNote: "Linked editorial source", ondoNote: "A recent K-Tour ID signal",
     merchantNote: "Information supplied by the place", opendidNote: "A credential presented through OpenDID", easNote: "An EAS attestation",
   },
   ko: {
     title: "근거", source: "출처", close: "근거 닫기", observed: "확인 시점", freshness: "최신성", current: "현재", stale: "오래됐을 수 있음",
     value: "출처에서 확인된 내용", retry: "다시 시도", unavailableValue: "이용 불가", conditionalValue: "장소에 직접 확인하세요",
-    official_directory: "공식 등록 정보", editorial: "편집 출처", ondo: "ONDO 신호", merchant: "장소 제공",
+    official_directory: "공식 등록 정보", editorial: "편집 출처", ondo: "K-Tour ID 신호", merchant: "장소 제공",
     opendid: "OpenDID 자격 증명", eas: "EAS 증명",
-    official_directoryNote: "공개 등록 정보", editorialNote: "연결된 편집 출처", ondoNote: "최근 ONDO 신호",
+    official_directoryNote: "공개 등록 정보", editorialNote: "연결된 편집 출처", ondoNote: "최근 K-Tour ID 신호",
     merchantNote: "장소에서 제공한 정보", opendidNote: "OpenDID로 제시한 자격 증명", easNote: "EAS 증명",
   },
   ja: {
     title: "根拠", source: "出典", close: "根拠を閉じる", observed: "確認日時", freshness: "更新状況", current: "最新", stale: "古い可能性あり",
     value: "出典の内容", retry: "もう一度試す", unavailableValue: "利用不可", conditionalValue: "店舗に直接確認してください",
-    official_directory: "公的登録情報", editorial: "編集情報", ondo: "ONDOシグナル", merchant: "店舗提供",
+    official_directory: "公的登録情報", editorial: "編集情報", ondo: "K-Tour ID シグナル", merchant: "店舗提供",
     opendid: "OpenDID資格情報", eas: "EAS証明",
-    official_directoryNote: "公開登録情報", editorialNote: "リンクされた編集情報", ondoNote: "最近のONDOシグナル",
+    official_directoryNote: "公開登録情報", editorialNote: "リンクされた編集情報", ondoNote: "最近のK-Tour ID シグナル",
     merchantNote: "店舗から提供された情報", opendidNote: "OpenDIDで提示された資格情報", easNote: "EAS証明",
   },
 } as const
@@ -1038,7 +1038,7 @@ export function CanonicalPlaceOverlay({ locale: mountedLocale, presenceState, ve
   }
 
   if (!visualSnapshot.expanded) return (
-    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} aria-busy={closing ? "true" : undefined} tabIndex={-1} data-testid="canonical-place-peek" data-modal-layer-priority={ONDO_MODAL_PRIORITY.peek} data-place-presence={presenceState} data-venue-id={venue.id} onKeyDown={handlePeekKeyDown} onClickCapture={consumeClosingInput} onPointerDownCapture={consumeClosingInput} onKeyDownCapture={consumeClosingInput}>
+    <div id="canonical-place-dialog" ref={peekRef} className={styles.peek} role="dialog" aria-modal="true" aria-label={`${name.officialName} · ${name.officialNameLabel}`} aria-busy={closing ? "true" : undefined} tabIndex={-1} data-testid="canonical-place-peek" data-place-service-scroll="true" data-modal-layer-priority={ONDO_MODAL_PRIORITY.peek} data-place-presence={presenceState} data-venue-id={venue.id} onKeyDown={handlePeekKeyDown} onClickCapture={consumeClosingInput} onPointerDownCapture={consumeClosingInput} onKeyDownCapture={consumeClosingInput}>
       <div className={styles.grabber} />
       <button type="button" className={styles.close} onClick={close} aria-label={copy.close}><X size={18} /></button>
       <section className={styles.peekIdentityStage} data-testid="canonical-place-identity-stage" data-pulse-level={pulse.level}>
@@ -1068,10 +1068,9 @@ export function CanonicalPlaceOverlay({ locale: mountedLocale, presenceState, ve
         data-source-presentation="nonvisual-metadata"
         data-source-contract={OFFICIAL_DIRECTORY_SOURCE_CONTRACT}
       >{copy.active}. {copy.sourceBoundary}</span>
-      <div className={styles.peekActions}>
-        <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority="primary">{copy.details}<ChevronRight size={17} /></button>
-        <a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>
-      </div>
+      <PlacePeekActionsB placeId={venue.id} locale={locale} className={styles.peekActions} onOffer={openMealBenefitFromPlace}
+        details={hasService => <button ref={openRef} type="button" onClick={() => { openBDiscoveryDetail(venue.id); setExpanded(true) }} data-testid="canonical-place-details" data-visual-priority={hasService ? "secondary" : "primary"}>{copy.details}<ChevronRight size={17} /></button>}
+        directions={<a href={directions} target="_blank" rel="noreferrer" data-testid="canonical-venue-directions" data-visual-priority="secondary"><Navigation size={17} />{copy.directions}</a>} />
     </div>
   )
 

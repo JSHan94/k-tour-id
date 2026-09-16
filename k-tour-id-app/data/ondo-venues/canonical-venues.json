@@ -1,7 +1,7 @@
 {
   "schemaVersion": "ondo-venues-1.0.0",
   "generatedAt": "2026-08-19T02:34:13.000Z",
-  "truthNotice": "Records prove an active food-service license at the LOCALDATA snapshot. They do not prove current opening hours, popularity, tourist suitability, card acceptance, menu, price, or ONDO heat.",
+  "truthNotice": "Records prove an active food-service license at the LOCALDATA snapshot. They do not prove current opening hours, popularity, tourist suitability, card acceptance, menu, price, or place heat.",
   "counts": {
     "total": 400,
     "byCity": {

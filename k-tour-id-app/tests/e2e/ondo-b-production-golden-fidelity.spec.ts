@@ -51,7 +51,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
   const listPulse = curatedRow.getByTestId("ondo-b-list-pulse")
   await expect(listPulse).toHaveAttribute("data-pulse-level", "peak")
   await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
-  await expect(listPulse).toHaveAttribute("aria-label", "ONDO temperature · PEAK")
+  await expect(listPulse).toHaveAttribute("aria-label", "Place temperature · PEAK")
   await curatedRow.locator("button").click()
   await page.getByTestId("canonical-place-details").click()
 
@@ -72,7 +72,7 @@ test("FID-LIVE-001 Pulse exposes curated evidence, freshness, confidence, and pe
     await koPage.locator("[data-city='seoul']").click()
     await koPage.getByTestId("ondo-b-view-toggle").click()
     const koCuratedRow = koPage.locator(`[data-venue-id='${VENUE_ID}']`)
-    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", "온도 · 피크")
+    await expect(koCuratedRow.getByTestId("ondo-b-list-pulse")).toHaveAttribute("aria-label", "장소 온도 · 피크")
   } finally {
     await koContext.close()
   }
@@ -103,7 +103,7 @@ test("FID-LIVE-002 contextual benefit makes one debit, one consumer receipt, and
   await expect(receipt).toHaveAttribute("data-refunded", "true")
   await expect(receipt).toContainText("Original payment")
   await expect(receipt).toContainText(/Refunded\s*₩19,000/)
-  await expect(receipt).toContainText(/ONDO benefit\s*₩3,000/)
+  await expect(receipt).toContainText(/K-Tour ID benefit\s*₩3,000/)
   await expect(receipt.getByTestId("commerce-settlement-details")).toContainText("+19 OOKRW")
   await expect(receipt).toContainText("₩60,000")
 })

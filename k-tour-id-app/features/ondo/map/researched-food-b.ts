@@ -1,7 +1,7 @@
 import seoul from "@/data/ondo/research/seoul-food-pulse.json" with { type: "json" }
 import busan from "@/data/ondo/research/busan-food-pulse.json" with { type: "json" }
 import jeju from "@/data/ondo/research/jeju-food-pulse.json" with { type: "json" }
-import type { FoodPhotoSubjectB } from "./food-photo-b"
+import type { FoodPhotographB, FoodPhotoSubjectB } from "./food-photo-b"
 
 type Localized = Record<"en" | "ko" | "ja", string>
 export type ResearchedFoodB = {
@@ -11,7 +11,7 @@ export type ResearchedFoodB = {
   reason: Localized
   sources: Array<{ url: string; title: string; publishedAt: string | null; evidence: "operator" | "tourism" | "award" | "editorial" }>
   canonicalVenueId: string | null
-  photo: { url: string; sourceUrl: string; credit: string; license: string; licenseUrl: string } | null
+  photo: { url: string; sourceUrl: string; deliveredUrl?: string; credit: string; license: string; licenseUrl: string; localSrc?: string; alt?: Localized; publishedAt?: string; objectPosition?: FoodPhotographB["objectPosition"] } | null
 }
 
 /** Editorial research, NOT the official venue directory or live activity feed. */
@@ -21,8 +21,8 @@ export function researchFoodMatchesB(place: ResearchedFoodB, query: string) {
   const needle = query.trim().toLocaleLowerCase()
   return !needle || [...Object.values(place.name), ...Object.values(place.district), ...Object.values(place.signature), place.address].join(" ").toLocaleLowerCase().includes(needle)
 }
-/** No licensed venue/menu photos are recorded for these picks. Broad cuisine
- * mood photos cannot accurately represent their named signature dishes. */
+/** Broad cuisine mood photos cannot stand in for a named signature dish.
+ * Approved venue photographs are resolved separately from illustrative media. */
 const RESEARCH_FOOD_SUBJECTS_B: Readonly<Record<string, FoodPhotoSubjectB>> = {
   "research-seoul-zest": "cocktail",
   "research-seoul-bar-cham": "cocktail",
@@ -65,6 +65,15 @@ export function researchFoodIllustrationB(place: ResearchedFoodB): { src: string
     ? `/editorial/food/ondo-category-night-${place.id === "research-seoul-bar-cham" ? "v3" : "v1"}.jpg`
     : null)
   return { src, subject }
+}
+
+export function researchFoodMediaB(place: ResearchedFoodB): { src: string | null; subject: FoodPhotoSubjectB; photograph?: FoodPhotographB } {
+  const illustration = researchFoodIllustrationB(place)
+  const photo = place.photo
+  // Never turn a research URL into a browser hotlink. Deployable local media
+  // and translated, place-specific alt text must pass the asset manifest gate.
+  if (!photo?.localSrc?.startsWith("/media/venues/") || !photo.alt) return illustration
+  return { ...illustration, photograph: { src: photo.localSrc, alt: photo.alt, ...(photo.objectPosition ? { objectPosition: photo.objectPosition } : {}) } }
 }
 export function researchFoodDirectionsB(place: ResearchedFoodB) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`

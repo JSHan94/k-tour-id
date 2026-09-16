@@ -1,10 +1,14 @@
-# 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
+# K-Tour ID 개발자 시작 문서 — 목업을 실제 서비스에 연결하기
 
-**9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 같은 비금전 혜택 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)의 범위·실행 순서가 기존 단일안과 아래 전체 제품 목록보다 우선한다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 현재 배포·검수 SHA와 두 브랜치 동기화는 [배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md), 9/15 여정 수정과 그 상태는 [UX 릴리스](./ux-refinement/2026-09-15/RELEASE.md)를 따른다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
+
+**최신 UX 운영 배포:** 앱 source `5ba76a2`를 main/Harvey에 함께 반영했다. [지도 UI 보정](./KTOUR_MAP_LAYOUT_FIX_2026-09-16.md)은 안내 겹침·다크 대비·상단 타이포·하단 지도 확장만 변경한다. 인증·결제·백엔드 계약은 그대로다. `9980472`의 무료 읽기·선택적 패스 저장·패스 재열람은 [공개 가이드 릴리스](./KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md), 실제 구현 매핑은 [체험 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 따른다. 기존 `8fcbeb1`의 매장·충전·holder 개선은 [이전 라운드](./ux-refinement/2026-09-15/round-20260916.md)로 보존하며, 외부 네 기술의 실제 연동 완료는 아니다.
+
+**9/21 제출 작업은 [해커톤 연동 개발 요약](./HARVEY_HACKATHON_HANDOFF_2026-09-14.md)부터 확인한다.** CX·OpenDID·OmniOne Chain·Sui 네 기술 모두 팀 필수다. 선택적 가이드 저장 여정에 실제 Move·zkLogin/PTB·사용자가 제한적으로 위임한 AI 실행을 연결한다. 기술·보안·제출 요건과 Sui → 최종 서비스 DB → OmniOne 순서는 [Sui 필수 통합 추가 명세](./HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md)를, 현재 무료 읽기/선택적 저장과 v2 action·campaign·recipient는 [가이드 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 우선한다. 기존 명세의 혜택 사용/redeem은 컬렉션 저장이며 읽기 권한이 아니다. 실제 금융·예약·bridge·여권/체류증 연동은 목업으로 유지한다.
 
 **[단일 통합 개발안](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)은 공통 CX/OpenDID·서버 계약의 상세 참고다.** Sui 담당·환경·가용 시간을 추가 확인해 일정을 확정한다. 네 기술과 AI 실행을 기존 1주 일정에 그대로 완료할 수 있다고 가정하지 않으며, 프로그램 등록·별도 제출 자격·추가 상금 적용 조건도 확인한다. 아래는 전체 제품 인계로, 금융·예약 등 전체 목록이 이번 주 필수라는 뜻은 아니다.
 
-기준: **2026-09-14 · ONDO B · 운영 배포 source/runtime `cc3d7c3` · 인계 branch `handoff/harvey-20260914`**. [운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 확인한다. 이번 변경은 음식·카페·바 중심 공유 카드와 무채색 K-TOUR ID 아이콘뿐이며 최종 production Ready·검수 범위는 해당 기록을 따른다. 인계는 최신 소스 스냅샷이며 과거 배포 commit ID는 이 브랜치의 checkout 대상이 아닌 이력 참고값이다.
+기준: **기존 2026-09-14 운영 source/runtime `cc3d7c3` · [원 인계 snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)**. [운영 앱](https://ondo-tau.vercel.app)과 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 확인한다. 당시 변경은 공유 카드·아이콘뿐이며 해당 기록의 Ready·검수 수치를 이번 릴리스로 이월하지 않는다. 과거 배포 commit ID는 이력 참고값이며 현재 시작점은 위 Harvey 브랜치다.
 
 이전 운영 source `d9eda4f`의 [지도 우선 진입 릴리스](./MAP_FIRST_ENTRY_2026-09-14.md)와 `82ea4c9`의 [지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md)는 역사적 배포·검수 기록으로 별도 보존한다. 현재 앱의 기준으로 혼용하지 않는다.
 
@@ -21,7 +25,7 @@
 
 **위 세 문서가 현행 인계 정본이다.** `DEVELOPMENT_SPEC.md`, 예전 traceability·Sui 브리프·실행팩은 배경/역사적 요구 자료다. 옛 독립 route나 과거 Sui 프로그램 조건을 현재 앱의 완료/필수 조건으로 그대로 이식하지 않는다. 범위 충돌은 DEPLOYMENT_SPEC §1.1을 따른다.
 
-실제 앱은 인계 브랜치를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. 이 브랜치의 앱과 문서를 함께 사용하며 오래된 `main`과 혼용하지 않는다.
+실제 앱은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. [README 실행 안내](../README.md#run-the-handoff)를 따른다. `main`과 인계 브랜치는 앱 검수 기준 `505e475`에서 같은 소스로 확인했다. 이후 결과 문서·테스트만 바꾼 커밋도 두 브랜치에 동일 반영하며 앱 코드 검수 기준과 구분한다. 예전 로컬 checkout과 새 문서를 혼용하지 않는다.
 
 ## 2. 실행 화면과 구현 상태
 
@@ -29,7 +33,7 @@
 - 지도/추천의 선택 매장과 지도 잔액 진입, ID/Wallet, Tables, My Korea, Settings, Demo의 sheet·탭이 플로우 진입점이다. 매장에서는 혜택·결제·Table·예약으로 이어지고 길찾기/저장은 보조 행동이다. `/pass`, `/wallet`, `/present`, `/partner/verify`, `/partner/settlements`, `/evidence`를 새 API나 현재 공개 페이지로 가정하지 않는다.
 - 기본 데모에서 샘플 상황을 선택할 수 있다. `review=0`은 실제 미연결 경계를 확인하는 경로이며, provider 실패를 샘플 성공으로 자동 대체하지 않는다.
 - 준비된 K-Pass 자격 선택기는 **테스트 fixture 주입**이다. 별도의 K-Tour ID setup walkthrough는 provider 동의/복귀/holder 보관을 시연한다. walkthrough의 `review-draft`가 실제 Person/Age/Payment 자격 발급을 의미하지 않는다.
-- **최신 브랜딩 공개판:** source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. [아트워크·생성 프롬프트](../k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md)를 별도로 보존한다.
+- **기존 운영 브랜딩 기준선:** source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다. [아트워크·생성 프롬프트](../k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md)를 별도로 보존한다.
 - **기능 검수 이력:** 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개·계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md), [9월 11일 검수](./FINAL_JOURNEY_QA_2026-09-11.md)도 각각의 실행 범위만 따른다.
 
 ### 플로우 → 개발 작업
@@ -56,6 +60,8 @@
 
 ## 3. DID 해커톤에서 우선 연결할 것
 
+골목 가이드의 화면·상태·연결 함수는 [체험 목업 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)에서 바로 찾는다. 무료 읽기에는 인증이 없고 **내 패스에 담기**를 선택했을 때만 Person 확인·패스·목적별 제시·저장 승인을 요청한다. 국적/체류/성인/결제 자격이나 매장 할인권을 만들지 않는다. v2 컬렉션 저장은 서명 VC가 아니며 이전 v1 열람 승인을 재사용하지 않는다. 실제 연동과 검수 범위는 아래 네 기술의 증거로 판단한다.
+
 공식 과제 구분은 [매트릭스 §1의 원문 근거](./HACKATHON_INTEGRATION_MATRIX_2026-09-08.md)를 따른다. 아래는 **프로젝트에서 개발할 범위**이며 목업만으로 공식 기술활용 인정이 완료됐다는 뜻이 아니다.
 
 | 기술 | 이번 서비스에서 맡는 일 | 구분 / 개발 완료 증거 |
@@ -63,17 +69,19 @@
 | **OmniOne CX** | Mobile ID와 지원되는 Residence 결과를 IdentityEvidence로 정규화 | 모바일 신분증은 공식 필수 축, CX는 프로젝트가 채택한 경로. 실제 테스트 Holder 결과·검증·취소/만료/replay 거절 — BE-02 |
 | **OpenDID** | K-Pass VC 발급→holder 보관→최소 VP→verifier/status→서비스 allow/deny | 공식 선택과제이지만 **프로젝트 범위에 포함**. issue/holder ack/VP/status와 같은 행동의 허용·거절 증거 — BE-04/05 |
 | **OmniOne Chain** | 비식별 업무 event 기록·receipt, 최소 1개 계약 불변식 | 공식 선택과제이지만 **프로젝트 범위에 포함**. 실제 tx/receipt와 중복 redemption 등 거절 테스트 — BE-13 |
-| **Sui** | 별도 signer, 스테이블코인 자산 동작, 선택적 방문 badge | **사용자 지정 추가 범위**. signer intent/effects·Move/asset receipt — BE-15. Sui↔OmniOne 경로는 승인된 route/authority가 있을 때만 BE-16 활성화 |
+| **Sui** | 해커톤: 사용자 범위 승인→zkLogin/PTB 위임→Agent의 Move 1회 실행·provenance. 금융/방문 badge는 별도 전체 제품 범위 | **팀 필수**. 실제 grant/consume·effects·제한 위반 거절, 같은 intent의 서비스 확정과 구분 — BE-15. 실제 bridge는 이번 최소 연동에서 제외 |
 
-권장 첫 수직 슬라이스:
+네 기술을 포함하는 첫 수직 슬라이스:
 
 ```text
-Mobile ID 승인 → CX 결과 검증 → 최소 evidence / TrustProfile
+공개 가이드 읽기 → [선택] 내 패스에 담기
+ → Mobile ID 승인 → CX 결과 검증 → 최소 evidence / TrustProfile
  → OpenDID 발급 + holder ack → 같은 서비스의 VP / 서버 정책
- → allow 또는 deny → 발생한 업무만 OmniOne outbox / receipt
+ → 허용된 가이드 저장 제안 → 사용자 범위 승인 → zkLogin/PTB → Agent/Move 1회 실행
+ → 서버 현재 자격 재확인 → DB 패스 컬렉션 저장 → 발생한 업무만 OmniOne outbox / receipt
 ```
 
-이후 Passport/Residence와 연령·만료·철회 반례를 연결하고, commerce 및 Sui를 병렬로 붙인다. Sui signer 연결은 DID 신원확인이나 결제 KYC의 대체재가 아니다.
+만료·철회·취소·중복·unknown·사용 후 감사 기록 지연은 같은 여정에서 검수한다. Passport/Residence·실제 commerce는 이번 최소 범위 밖이다. Sui signer 연결은 DID 신원확인이나 결제 KYC의 대체재가 아니다.
 
 ## 4. 구현 순서와 책임
 
@@ -98,7 +106,7 @@ Mobile ID 승인 → CX 결과 검증 → 최소 evidence / TrustProfile
 | `B/identity-b/ktour-id-setup-b.tsx`, `B/identity-b/identity-handoff-step-b.tsx`, `B/identity-b/identity-holder-step-b.tsx` | method/session/동의/return/holder ack·status adapter |
 | `B/identity-b/action-gate-contract-b.ts`, `B/identity-b/action-gate-coordinator-b.tsx` | 원 action의 private context·TTL·one-shot 복귀를 서버 request/quote 바인딩으로 연결 |
 | `B/commerce-b/place-service-registry-b.ts`, `B/shared/state/ondo-b-provider.tsx` | 27개 체험 사용처(조사 장소24+Table 연결 장소3)의 source ID·originKind·offer/table/reservation capability와 같은 장소 복귀. 실제 merchant 지원표/상태로 교체하며 조사 listing을 제휴로 승격하지 않음 |
-| `B/commerce-b/funding-rail-model-b.ts`, `B/commerce-b/stablecoin-funding-b.tsx`, `B/commerce-b/stable-commerce-model-b.ts`, `B/commerce-b/id-wallet-commerce-b.tsx` | mount 세션의 공통 funding credit·주문별 원장/환불을 서버 wallet/order로 연결. `PREPARE_QUOTE`는 부족액 충전 전 quote 보존일 뿐 결제 승인이 아님. 충전 복귀 후 별도 동의, sample 고정 환율/자산 ID·옛 receipt 잔액 복원 금지 |
+| `B/commerce-b/funding-rail-model-b.ts`, `B/commerce-b/stablecoin-funding-b.tsx`, `B/commerce-b/stable-commerce-model-b.ts`, `B/commerce-b/id-wallet-commerce-b.tsx` | mount 세션의 공통 funding credit·주문별 원장/환불을 서버 wallet/order로 연결. `PREPARE_QUOTE`는 부족액 충전 전 quote 보존일 뿐 결제 승인이 아님. 충전 복귀 때 아직 미승인인 결제는 별도 동의가 필요하며, 이미 승인한 유효한 동일 quote는 기존 승인 범위에서 재개. 충전만으로 구매 승인을 만들지 않으며 sample 고정 환율/자산 ID·옛 receipt 잔액 복원 금지 |
 | `B/integration-demo-b/integration-demo-model-b.ts` | partner 결과/정산/event/support 상태를 tenant별 API·worker·ticket 저장소로 연결 |
 | `B/reservation-b/reservation-b.tsx`, `B/reservation-b/reservation-model-b.ts`, `B/connect/tables-entry-b.tsx` | 장소별 예약 기록·operation/confirmation 조회와 식당 provider를 연결. 모임 membership/chat은 별도 API, 일반 예약에 불필요한 Person/Age/결제 gate 추가 금지 |
 | `B/labs/labs-entry.tsx`, `B/labs/labs-review-truth-b.ts` | 시연 fixture와 실제 signer/Move receipt를 분리. Labs 결과로 Wallet credit 생성 금지 |

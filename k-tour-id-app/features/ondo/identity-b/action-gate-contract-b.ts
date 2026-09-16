@@ -19,6 +19,7 @@ import {
 import { isLiveReviewFixtureExecution, type FixtureId, type ReviewFixtureExecution } from "../contracts/execution-mode"
 import { evaluateKPassService, isKPassPresentationBinding, sameKPassPresentationBinding, type KPassDemoCredential, type KPassPresentationBinding } from "../contracts/kpass-capabilities"
 import type { OndoBPresentationRequest, OndoBPresentationResolution } from "./ktour-id-setup-model-b"
+import { EXPERIENCE_CAMPAIGN_ID_B, EXPERIENCE_PLACE_ID_B } from "../experience-b/experience-model-b"
 
 export const B_ACTION_GATE_TTL_MS = 15 * 60 * 1000
 export const B_ACTION_AXIS_TTL_MS = 60 * 60 * 1000
@@ -30,7 +31,7 @@ export const B_ACTION_GATE_CANCEL_EVENT = "ondo:b:action-gate-cancel"
 export const B_ACTION_AXIS_SESSION_EVENT = "ondo:b:action-axis-session"
 
 export type BActionGateKind = "account" | "person" | "age" | "payment_kyc"
-export type BActionGateCta = "JOIN_TABLE" | "SUBMIT_LOCAL_SIGNAL" | "START_CHECKOUT" | "MINT_BADGE"
+export type BActionGateCta = "JOIN_TABLE" | "SUBMIT_LOCAL_SIGNAL" | "START_CHECKOUT" | "MINT_BADGE" | "REDEEM_DEMO_ENTITLEMENT"
 export type BPersonRouteB = "mobile_id_cx" | "mobile_residence_card" | "passport_ekyc"
 
 type BActionReturnBase = {
@@ -62,7 +63,11 @@ export type BBadgeActionReturn = BActionReturnBase & {
   cta: "MINT_BADGE"
 }
 
-export type BActionReturnTo = BTableActionReturn | BLocalSignalActionReturn | BCheckoutActionReturn | BBadgeActionReturn
+export type BExperienceActionReturn = BActionReturnBase & {
+  cta: "REDEEM_DEMO_ENTITLEMENT"; venueId: typeof EXPERIENCE_PLACE_ID_B
+  campaignId: typeof EXPERIENCE_CAMPAIGN_ID_B; intentId: string
+}
+export type BActionReturnTo = BTableActionReturn | BLocalSignalActionReturn | BCheckoutActionReturn | BBadgeActionReturn | BExperienceActionReturn
 
 const TABLE_ID = /^table-[a-z0-9-]{1,80}$/
 const DRAFT_NONCE = /^[a-z0-9:-]{1,180}$/i
@@ -79,7 +84,8 @@ export type BLocalSignalPrivateActionContext = {
   photoPreviewUrl: string | null
 }
 export type BCheckoutPrivateActionContext = { cta: "START_CHECKOUT"; quote: StableCommerceBLockedQuote }
-export type BActionPrivateContext = BTablePrivateActionContext | BLocalSignalPrivateActionContext | BCheckoutPrivateActionContext
+export type BExperiencePrivateActionContext = { cta: "REDEEM_DEMO_ENTITLEMENT"; intentId: string; campaignId: typeof EXPERIENCE_CAMPAIGN_ID_B }
+export type BActionPrivateContext = BTablePrivateActionContext | BLocalSignalPrivateActionContext | BCheckoutPrivateActionContext | BExperiencePrivateActionContext
 
 // Drafts live only for the lifetime of this mounted JS context. The persisted
 // envelope contains an opaque token plus allowlisted public entity ids; a page
@@ -97,6 +103,7 @@ const blockedFinalizationAttempts = new Set<string>()
 
 function samePrivateActionContext(left: BActionPrivateContext, right: BActionPrivateContext) {
   if (left.cta !== right.cta) return false
+  if (left.cta === "REDEEM_DEMO_ENTITLEMENT" && right.cta === "REDEEM_DEMO_ENTITLEMENT") return left.intentId === right.intentId && left.campaignId === right.campaignId
   if (left.cta === "JOIN_TABLE" && right.cta === "JOIN_TABLE") return left.draft === right.draft
   if (left.cta === "SUBMIT_LOCAL_SIGNAL" && right.cta === "SUBMIT_LOCAL_SIGNAL") {
     return left.draftNonce === right.draftNonce
@@ -173,15 +180,21 @@ export function gatePlanForBAction(
     ]
   }
   if (cta === "SUBMIT_LOCAL_SIGNAL") return ["account", "person"]
+  if (cta === "REDEEM_DEMO_ENTITLEMENT") return ["account", "person"]
   if (cta === "START_CHECKOUT") return ["account", "payment_kyc"]
   return ["person"]
 }
 
 /** A contextual K-Tour presentation is an adjacent action step, not a gate. */
 export function requiresBActionPresentation(value: BActionReturnTo) {
+  if (value.cta === "REDEEM_DEMO_ENTITLEMENT") return true
   if (value.cta === "JOIN_TABLE") return ondoBTablePolicyById(value.tableId)?.requiresKTourPresentation === true
   const context = privateContextForBAction(value)
   return value.cta === "START_CHECKOUT" && context?.cta === "START_CHECKOUT" && context.quote.benefitMode === "ktour"
+}
+
+export function bActionPresentationPurpose(value: BActionReturnTo) {
+  return value.cta === "REDEEM_DEMO_ENTITLEMENT" ? "person" as const : "visitor_benefit" as const
 }
 
 function base(cta: BActionGateCta, gatePlan: readonly BActionGateKind[], now: Date): BActionReturnBase {
@@ -253,6 +266,14 @@ export function createBBadgeActionReturn(input: { now?: Date } = {}): BBadgeActi
   return { ...base("MINT_BADGE", gatePlanForBAction("MINT_BADGE"), now), cta: "MINT_BADGE" }
 }
 
+export function createBExperienceActionReturn(input: { venueId: string; campaignId: string; intentId: string; now?: Date }): BExperienceActionReturn {
+  if (input.venueId !== EXPERIENCE_PLACE_ID_B || input.campaignId !== EXPERIENCE_CAMPAIGN_ID_B || !/^EXP-[a-z0-9-]{8,80}$/i.test(input.intentId)) throw new Error("Invalid experience context")
+  const returnTo: BExperienceActionReturn = { ...base("REDEEM_DEMO_ENTITLEMENT", gatePlanForBAction("REDEEM_DEMO_ENTITLEMENT"), input.now ?? new Date()),
+    cta: "REDEEM_DEMO_ENTITLEMENT", venueId: EXPERIENCE_PLACE_ID_B, campaignId: EXPERIENCE_CAMPAIGN_ID_B, intentId: input.intentId }
+  if (!rememberPrivateActionContext(returnTo, { cta: "REDEEM_DEMO_ENTITLEMENT", intentId: input.intentId, campaignId: EXPERIENCE_CAMPAIGN_ID_B })) throw new Error("Action token collision")
+  return returnTo
+}
+
 function samePlan(value: unknown, expected: readonly BActionGateKind[]) {
   return Array.isArray(value) && value.length === expected.length && value.every((gate, index) => gate === expected[index])
 }
@@ -265,7 +286,7 @@ function hasExactKeys(candidate: Record<string, unknown>, specific: readonly str
 export function isBActionReturnStructurallyValid(value: unknown): value is BActionReturnTo {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
   const candidate = value as Record<string, unknown>
-  if (candidate.version !== 1 || (candidate.cta !== "JOIN_TABLE" && candidate.cta !== "SUBMIT_LOCAL_SIGNAL" && candidate.cta !== "START_CHECKOUT" && candidate.cta !== "MINT_BADGE")) return false
+  if (candidate.version !== 1 || (candidate.cta !== "JOIN_TABLE" && candidate.cta !== "SUBMIT_LOCAL_SIGNAL" && candidate.cta !== "START_CHECKOUT" && candidate.cta !== "MINT_BADGE" && candidate.cta !== "REDEEM_DEMO_ENTITLEMENT")) return false
   const createdAt = typeof candidate.createdAt === "string" ? Date.parse(candidate.createdAt) : Number.NaN
   const expiresAt = typeof candidate.expiresAt === "string" ? Date.parse(candidate.expiresAt) : Number.NaN
   if (!Number.isFinite(createdAt) || !Number.isFinite(expiresAt) || expiresAt - createdAt !== B_ACTION_GATE_TTL_MS) return false
@@ -277,6 +298,7 @@ export function isBActionReturnStructurallyValid(value: unknown): value is BActi
   if (!samePlan(candidate.gatePlan, gatePlanForBAction(candidate.cta, candidate))) return false
   if (candidate.cta === "MINT_BADGE") return hasExactKeys(candidate, [], false)
   if (typeof candidate.venueId !== "string") return false
+  if (candidate.cta === "REDEEM_DEMO_ENTITLEMENT") return hasExactKeys(candidate, ["campaignId", "intentId"]) && candidate.venueId === EXPERIENCE_PLACE_ID_B && candidate.campaignId === EXPERIENCE_CAMPAIGN_ID_B && typeof candidate.intentId === "string" && /^EXP-[a-z0-9-]{8,80}$/i.test(candidate.intentId)
   if (candidate.cta === "JOIN_TABLE") return hasExactKeys(candidate, ["tableId"])
     && typeof candidate.tableId === "string" && TABLE_ID.test(candidate.tableId) && isOndoBTableVenuePair(candidate.tableId, candidate.venueId)
   if (candidate.cta === "SUBMIT_LOCAL_SIGNAL") return hasExactKeys(candidate, []) && isCanonicalVenueId(candidate.venueId)
@@ -302,6 +324,7 @@ export function snapshotBActionReturnTo(value: BActionReturnTo): CanonicalSnapsh
     tokenId: value.tokenId,
     venueId: value.cta === "MINT_BADGE" ? null : value.venueId,
     version: value.version,
+    ...(value.cta === "REDEEM_DEMO_ENTITLEMENT" ? { campaignId: value.campaignId, intentId: value.intentId } : {}),
   }
 }
 
@@ -327,6 +350,10 @@ function sameBActionReturn(left: BActionReturnTo, right: BActionReturnTo) {
 
 function createRenewedBActionReturnTo(value: BActionReturnTo, now: Date): BActionReturnTo | null {
   const context = privateContextForBAction(value)
+  if (value.cta === "REDEEM_DEMO_ENTITLEMENT") {
+    if (!context || context.cta !== "REDEEM_DEMO_ENTITLEMENT") return null
+    return createBExperienceActionReturn({ venueId: value.venueId, campaignId: value.campaignId, intentId: value.intentId, now })
+  }
   if (value.cta === "JOIN_TABLE") {
     if (!context || context.cta !== "JOIN_TABLE") return null
     return createBTableActionReturn({ tableId: value.tableId, venueId: value.venueId, draft: context.draft, now })
@@ -457,7 +484,8 @@ function isExactPresentationRequest(value: unknown): value is OndoBPresentationR
 
 export function registerBActionPresentationRequest(expected: BActionReturnTo, request: OndoBPresentationRequest) {
   const snapshotHash = privateBindingHash(expected)
-  if (request.binding && (request.binding.purpose !== "visitor_benefit" || expected.cta === "MINT_BADGE" || request.binding.audience !== expected.venueId)) return false
+  if (request.binding && (request.binding.purpose !== bActionPresentationPurpose(expected) || expected.cta === "MINT_BADGE" || request.binding.audience !== expected.venueId)) return false
+  if (expected.cta === "REDEEM_DEMO_ENTITLEMENT" && !request.binding) return false
   if (!isExactPresentationRequest(request) || !snapshotHash || !isBActionReturnPending(expected, new Date(request.issuedAt)) || !requiresBActionPresentation(expected)
     || request.consumedAt !== null || request.issuedAt < Date.parse(expected.createdAt)
     || request.expiresAt <= request.issuedAt) return false
@@ -628,7 +656,7 @@ function sanitizeConsumptionMarker(value: unknown): BActionConsumptionMarker | n
   const record = value as Record<string, unknown>
   const cta = record.cta
   const consumedAt = typeof record.consumedAt === "string" ? Date.parse(record.consumedAt) : Number.NaN
-  if ((cta !== "JOIN_TABLE" && cta !== "SUBMIT_LOCAL_SIGNAL" && cta !== "START_CHECKOUT" && cta !== "MINT_BADGE")
+  if ((cta !== "JOIN_TABLE" && cta !== "SUBMIT_LOCAL_SIGNAL" && cta !== "START_CHECKOUT" && cta !== "MINT_BADGE" && cta !== "REDEEM_DEMO_ENTITLEMENT")
     || typeof record.tokenId !== "string"
     || !Number.isFinite(consumedAt)) return null
   // Accept the previous full-envelope representation only to migrate it
@@ -774,6 +802,41 @@ export function hasBActionPresentationApproval(session: BActionGateSession, pend
   const expected = presentationApprovalExpectationByToken.get(pending.tokenId)
   if (expected?.binding && (!credential || expected.binding.credentialId !== credential.credentialId || evaluateKPassService(credential, { service: expected.binding.purpose, now }).status !== "allowed")) return false
   return Boolean(snapshotHash && expected?.phase === "recorded" && expected.snapshotHash === snapshotHash && expected.approvedAt === session.presentation.approvedAt)
+}
+
+export type BExperiencePersonHandoff = Readonly<{
+  tokenId: string; intentId: string; snapshotHash: ReturnToSnapshotHash
+  route: "mobile_id_cx"; receiptIssuedAt: string; receiptExpiresAt: string
+}>
+const liveExperiencePersonHandoffs = new WeakSet<object>()
+function currentExperiencePersonHandoff(storage: Pick<Storage, "getItem">, now: Date, options: BActionGateSessionOptions): BExperiencePersonHandoff | null {
+  if (options.allowReviewFixture !== true || options.credential) return null
+  const session = restoreBActionGateSession(storage, now, options)
+  const pending = session.pending
+  const receipt = session.person.reviewReceipt
+  if (!pending || pending.cta !== "REDEEM_DEMO_ENTITLEMENT" || !isBActionReturnPending(pending, now)
+    || session.personRoute?.tokenId !== pending.tokenId || session.personRoute.route !== "mobile_id_cx"
+    || session.person.status !== "eligible" || !receipt || receipt.fixtureId !== "FX-PER-CX-SUCCESS"
+    || receipt.issuer !== "ONDO_REVIEW_FIXTURE" || receipt.executionTruth !== "FIXTURE_REVIEW" || receipt.provenanceTruth !== "SIMULATED"
+    || Date.parse(receipt.issuedAt) < Date.parse(pending.createdAt) || Date.parse(receipt.expiresAt) <= now.getTime()) return null
+  const snapshotHash = hashBActionReturnTo(pending)
+  return snapshotHash ? { tokenId: pending.tokenId, intentId: pending.intentId, snapshotHash, route: "mobile_id_cx", receiptIssuedAt: receipt.issuedAt, receiptExpiresAt: receipt.expiresAt } : null
+}
+
+/** Reuse only a live, same-action prepared Mobile ID result. Persisted JSON
+ * cannot mint this process-only handoff or an identity credential. */
+export function createBExperiencePersonHandoff(storage: Pick<Storage, "getItem">, now = new Date(), options: BActionGateSessionOptions = {}): BExperiencePersonHandoff | null {
+  const snapshot = currentExperiencePersonHandoff(storage, now, options)
+  if (!snapshot) return null
+  const handoff = Object.freeze(snapshot)
+  liveExperiencePersonHandoffs.add(handoff)
+  return handoff
+}
+export function isBExperiencePersonHandoffCurrent(storage: Pick<Storage, "getItem">, expected: BExperiencePersonHandoff, now = new Date(), options: BActionGateSessionOptions = {}) {
+  if (!expected || !liveExperiencePersonHandoffs.has(expected)) return false
+  const current = currentExperiencePersonHandoff(storage, now, options)
+  return Boolean(current && current.tokenId === expected.tokenId && current.intentId === expected.intentId && current.snapshotHash === expected.snapshotHash
+    && current.route === expected.route && current.receiptIssuedAt === expected.receiptIssuedAt && current.receiptExpiresAt === expected.receiptExpiresAt)
 }
 
 export function recordBActionPresentationApproval(

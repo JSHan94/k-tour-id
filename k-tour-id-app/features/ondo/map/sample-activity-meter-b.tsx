@@ -48,9 +48,9 @@ export function SampleActivityMeterB({ city, venueId, locale, fallback, onContri
         <svg viewBox="0 0 100 32" className={styles.sparkline}><polyline points={coordinates} /><circle cx="96" cy={(28 - weight * 24).toFixed(2)} r="2.5" /></svg>
       </div>
       <div className={styles.contributions} data-testid="sample-traveler-contributions" data-activity-origin="PREPARED_ILLUSTRATION" data-window-minutes="30" aria-label={copy.disclosure}>
-        <span><Footprints size={14} aria-hidden="true" /><b>{activity.arrivals}</b><small>{copy.visits}</small></span>
-        <span><Camera size={14} aria-hidden="true" /><b>{activity.photos}</b><small>{copy.photos}</small></span>
-        <span><MessageCircle size={14} aria-hidden="true" /><b>{activity.updates}</b><small>{copy.updates}</small></span>
+        <span><Footprints size={14} aria-hidden="true" /><b key={`${venueId}:arrivals:${activity.arrivals}`} className={styles.count}>{activity.arrivals}</b><small>{copy.visits}</small></span>
+        <span><Camera size={14} aria-hidden="true" /><b key={`${venueId}:photos:${activity.photos}`} className={styles.count}>{activity.photos}</b><small>{copy.photos}</small></span>
+        <span><MessageCircle size={14} aria-hidden="true" /><b key={`${venueId}:updates:${activity.updates}`} className={styles.count}>{activity.updates}</b><small>{copy.updates}</small></span>
       </div>
       <span className={styles.scale} data-testid="canonical-place-temperature-meter" aria-hidden="true"><i /></span>
       {onContribute ? <button type="button" className={styles.contribute} onClick={onContribute} data-testid="sample-add-moment">

@@ -258,6 +258,7 @@ test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native jou
   expectReachable("features/ondo/commerce-b/stable-commerce-model-b.ts")
   expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.tsx")
   expectReachable("features/ondo/commerce-b/id-wallet-commerce-b.module.css")
+  expectReachable("features/ondo/commerce-b/commerce-refunds-b.tsx")
   expectLiveEvidence([
     "ondo-b-id-wallet-commerce",
     "travel-pass-status",
@@ -276,7 +277,15 @@ test("FID-P0-012 ID · Wallet and truthful stable checkout are live B-native jou
     "payment-receipt",
     "commerce-provider-status",
     "NOT_CONNECTED",
-    "payment-refund",
+    "CommerceRefundsB",
+    'scope="checkout"',
+    'scope="wallet"',
+    "REFUND_REQUEST",
+    "${scope}-refund-amount",
+    "${scope}-refund-all",
+    "${scope}-refund-submit",
+    "${scope}-refund-check",
+    "${scope}-refund-retry",
     "canonical-meal-benefit-open",
     "commerce-origin-return",
     "__ONDO_B_QA__",

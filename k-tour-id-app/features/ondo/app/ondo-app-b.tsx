@@ -58,9 +58,9 @@ const B_NAV_ARIA_COPY = {
 } as const
 
 const SHELL_COPY = {
-  en: { app: "ONDO Korea food and travel app", content: "content", nav: "Main navigation", skipNav: "Skip to main navigation", navigationError: "Couldn't switch tabs. Try again.", sample: "Sample", exitSample: "Exit sample and return to the regular app" },
-  ko: { app: "ONDO 한국 먹거리·여행 앱", content: "콘텐츠", nav: "주요 메뉴", skipNav: "주요 메뉴로 건너뛰기", navigationError: "탭을 바꾸지 못했어요. 다시 시도해 주세요.", sample: "샘플", exitSample: "샘플을 종료하고 일반 앱으로 돌아가기" },
-  ja: { app: "ONDO 韓国フード・旅行アプリ", content: "コンテンツ", nav: "メインメニュー", skipNav: "メインメニューへ移動", navigationError: "タブを切り替えられませんでした。もう一度お試しください。", sample: "サンプル", exitSample: "サンプルを終了して通常のアプリに戻る" },
+  en: { app: "K-Tour ID Korea food and travel app", content: "content", nav: "Main navigation", skipNav: "Skip to main navigation", navigationError: "Couldn't switch tabs. Try again.", sample: "Sample", exitSample: "Exit sample and return to the regular app" },
+  ko: { app: "K-Tour ID 한국 먹거리·여행 앱", content: "콘텐츠", nav: "주요 메뉴", skipNav: "주요 메뉴로 건너뛰기", navigationError: "탭을 바꾸지 못했어요. 다시 시도해 주세요.", sample: "샘플", exitSample: "샘플을 종료하고 일반 앱으로 돌아가기" },
+  ja: { app: "K-Tour ID 韓国フード・旅行アプリ", content: "コンテンツ", nav: "メインメニュー", skipNav: "メインメニューへ移動", navigationError: "タブを切り替えられませんでした。もう一度お試しください。", sample: "サンプル", exitSample: "サンプルを終了して通常のアプリに戻る" },
 } as const
 
 function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
@@ -255,14 +255,30 @@ function OndoBShell({ slots }: { slots: OndoBAppSlots }) {
 
   useLayoutEffect(() => {
     const region = contentRef.current
-    if (!region) return
-    const syncViewport = () => region.style.setProperty("--ondo-scroll-viewport", `${region.clientHeight}px`)
+    const canvas = canvasRef.current
+    const dock = canvas?.querySelector<HTMLElement>("#ondo-main-nav")
+    if (!region || !canvas || !dock) return
+    const syncViewport = () => {
+      region.style.setProperty("--ondo-scroll-viewport", `${region.clientHeight}px`)
+      // The map paints behind the phone dock, but its interactive overlay
+      // retains the original content lane. Measure the real dock (including
+      // safe-area margins) rather than duplicating its size in map CSS.
+      const dockStyle = getComputedStyle(dock)
+      const dockSpace = window.matchMedia("(max-width: 800px)").matches && dockStyle.display !== "none"
+        ? dock.offsetHeight + parseFloat(dockStyle.marginTop) + parseFloat(dockStyle.marginBottom)
+        : 0
+      canvas.style.setProperty("--ondo-map-dock-space", `${dockSpace}px`)
+    }
     const observer = new ResizeObserver(syncViewport)
     observer.observe(region)
+    observer.observe(dock)
+    window.addEventListener("resize", syncViewport)
     syncViewport()
     return () => {
       observer.disconnect()
+      window.removeEventListener("resize", syncViewport)
       region.style.removeProperty("--ondo-scroll-viewport")
+      canvas.style.removeProperty("--ondo-map-dock-space")
     }
   }, [])
 

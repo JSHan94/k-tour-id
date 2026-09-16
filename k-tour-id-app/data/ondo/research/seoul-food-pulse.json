@@ -117,7 +117,16 @@
       { "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=191156", "title": "Onion Anguk Branch — VISITKOREA", "publishedAt": null, "evidence": "tourism" }
     ],
     "canonicalVenueId": null,
-    "photo": null
+    "photo": {
+      "url": "https://images.unsplash.com/photo-1740799246453-bf871357820d?auto=format&fit=max&fm=jpg&q=85&w=1200",
+      "sourceUrl": "https://unsplash.com/photos/desserts-and-a-coffee-are-served-on-a-tray-VVwfHGp8in8",
+      "credit": "Christopher Phua / Unsplash",
+      "license": "Unsplash License",
+      "licenseUrl": "https://unsplash.com/license",
+      "publishedAt": "2025-03-01",
+      "localSrc": "/media/venues/onion-anguk-christopher-phua-20250301.jpg",
+      "alt": { "en": "Pastries and coffee photographed at Onion Anguk", "ko": "어니언 안국에서 촬영된 빵과 커피", "ja": "オニオン安国で撮影されたパンとコーヒー" }
+    }
   },
   {
     "id": "research-seoul-london-bagel-dosan",
@@ -233,5 +242,42 @@
     ],
     "canonicalVenueId": null,
     "photo": null
+  },
+  {
+    "id": "research-seoul-hakrim-dabang",
+    "city": "seoul",
+    "name": { "en": "Hakrim Dabang", "ko": "학림다방", "ja": "学林茶房" },
+    "district": { "en": "Jongno-gu", "ko": "종로구", "ja": "チョンノ区" },
+    "kind": "cafe",
+    "signature": { "en": "Vienna coffee", "ko": "비엔나커피", "ja": "ウインナーコーヒー" },
+    "address": "서울특별시 종로구 대학로 119 2층",
+    "latitude": 37.5819287995496,
+    "longitude": 127.001679855807,
+    "coordinateSourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=47863",
+    "checkedAt": "2026-09-15",
+    "reason": {
+      "en": "A long-running Daehak-ro cafe known for Vienna coffee.",
+      "ko": "대학로에서 비엔나커피를 즐기는 오래된 카페.",
+      "ja": "大学路でウインナーコーヒーを楽しめる老舗喫茶店。"
+    },
+    "sources": [
+      { "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=47863", "title": "Hakrim — VISITKOREA", "publishedAt": null, "evidence": "tourism" }
+    ],
+    "canonicalVenueId": null,
+    "photo": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Hakrim_Dabang_01.jpg",
+      "deliveredUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Hakrim_Dabang_01.jpg/960px-Hakrim_Dabang_01.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hakrim_Dabang_01.jpg",
+      "credit": "Hakrim Dabang 01.jpg — Seefooddiet / Wikimedia Commons, CC BY-SA 4.0. Wikimedia 960px thumbnail; top-aligned display crop. Photographed 2025-01-10.",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "localSrc": "/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
+      "objectPosition": "50% 0%",
+      "alt": {
+        "en": "Hakrim Dabang's sign and entrance photographed in 2025",
+        "ko": "2025년에 촬영된 학림다방 간판과 입구",
+        "ja": "2025年に撮影された学林茶房の看板と入口"
+      }
+    }
   }
 ]

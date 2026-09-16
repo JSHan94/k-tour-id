@@ -1,10 +1,12 @@
-# 해커톤 필수 Sui 연동 — 개발·제출 추가 명세
+# K-Tour ID 해커톤 필수 Sui 연동 — 개발·제출 추가 명세
 
 작성일: 2026-09-14 · 상태: **개발 대상, 실제 구현·검수 완료 아님**
 
 ## 1. 범위와 공식 근거
 
 이번 팀의 필수 기술은 **OmniOne CX + OpenDID + OmniOne Chain + Sui**다. 이 문서는 [1주 개발 명세](./HACKATHON_ONE_WEEK_SPEC_2026-09-14.md)의 Sui 상세 계약이며, 기존 Sui 제외 문구와 DB 선사용 방식보다 아래의 통합 순서가 우선한다. 실제 금융·브리지·매장 예약·외국인 인증까지 확대하는 것은 아니다.
+
+**9/16 사용자 흐름 매핑:** 기술·보안·제출 요건과 Sui→최종 DB→OmniOne 순서는 이 문서, 무료 읽기/선택적 패스 저장과 v2 action `save-neighborhood-guide-to-pass`·campaign `ktour-neighborhood-guide-save-v2`·샘플 recipient `demo-traveler-pass`는 [가이드 인계](./EXPERIENCE_MOCK_HANDOFF_2026-09-15.md)를 우선한다. 아래 혜택 사용/redeem은 **컬렉션 저장**이며 열람 허가나 새 VC 발급이 아니다. 공개 읽기는 인증·gate·intent·사용 기록을 만들지 않는다. 실제 수신자는 검증된 서버 subject/pass로 바인딩하며 샘플 식별자를 소유권으로 신뢰하지 않는다.
 
 2026-09-14에 직접 읽은 [Sui 재단 프로그램 안내](https://mystenlabs.notion.site/2026-AI-1-1-Sui-2c76d9dcb4e980c4ba47c9c81dd1564a)는 아래를 요구한다. 이는 DID 주관사의 공식 후원/트랙이 아니라 **독립적인 Sui 지원 프로그램**이다.
 
@@ -26,28 +28,28 @@ DeepSurge 공개 페이지의 기간 표시는 최종 제출 시각·시간대�
 아래는 프로그램 조건을 서비스에 연결하는 **우리 구현안**이다. 운영자가 이 구체 설계의 바운티 인정을 사전 승인한 것은 아니다.
 
 ```text
-지도 → 지정 장소의 체험 혜택
+지도 → 지정 장소의 공개 가이드 무료 읽기 → [선택] 내 패스에 담기
  → 실제 CX 신원 확인 → OpenDID 패스 발급·보관·VP 검증
- → 혜택 도우미가 허용된 비금전 행동 제안
+ → 도우미가 허용된 가이드 저장 제안
  → 사용자가 대상·수신 지갑·1회 범위·기한 확인/승인
  → zkLogin 서명 + PTB로 제한된 Sui 실행 권한 위임
  → agent가 Move 권한을 1회 행사하고 결정·실행 기록 연결
  → 서버가 Sui 결과 검증 + 현재 자격·취소·만료 최종 재확인
- → DB 혜택 사용 1건 + OmniOne outbox 1건
- → 같은 장소의 사용 내역으로 복귀
+ → DB 패스 컬렉션 저장 1건 + OmniOne outbox 1건
+ → 같은 장소로 복귀 / 패스에서 저장한 가이드 다시 읽기
                          └→ OmniOne 기록·확정 결과 조회
 ```
 
-- **CX:** 신원 근거. **OpenDID:** 사용자가 보관·제시하는 자격. **Sui:** 사용자가 한정한 agent 실행 권한과 검증 가능한 실행 기록. **서비스 DB:** 체험 혜택 사용 여부. **OmniOne Chain:** 그 서비스 결과의 감사 기록.
-- 사용자 CTA는 “혜택 확인”, “확인하고 사용하기”, “사용 내역”처럼 유지한다. 기술 이름과 explorer는 설명/증거 화면에만 둔다. 이미 지도 탐색 중인 사용자에게 선제 신원 확인을 요구하지 않는다.
+- **CX:** 신원 근거. **OpenDID:** 사용자가 보관·제시하는 자격. **Sui:** 사용자가 한정한 agent 실행 권한과 검증 가능한 실행 기록. **서비스 DB:** 패스 컬렉션 저장 여부. **OmniOne Chain:** 그 서비스 결과의 감사 기록.
+- 사용자 CTA는 “골목 가이드”, “내 패스에 담기”, “확인하고 저장하기”처럼 유지한다. 기술 이름과 explorer는 설명/증거 화면에만 둔다. 지도 탐색과 공개 읽기에 선제 신원 확인을 요구하지 않는다.
 - 사용자는 거절·나가기가 가능하다. 다만 이번 납품·대표 시연은 Sui까지 실제 완료해야 한다. Sui를 생략한 CX 데모를 전체 완료로 판정하지 않는다.
-- 혜택은 금전/실물 제공 의무 없는 ONDO 체험이다. 실제 방문, 10회 방문 badge, 19+, 금융 KYC, KRW 잔액을 올리지 않는다.
+- 혜택은 금전/실물 제공 의무 없는 K-Tour ID 체험이다. 실제 방문, 10회 방문 badge, 19+, 금융 KYC, KRW 잔액을 올리지 않는다.
 
 ## 3. 구현 작업
 
 ### HK-06 · Move 권한 및 실제 결과
 
-- package 1개, 캠페인 1개, 비금전 action 1종. ONDO의 검증된 발급 근거와 사용자 승인을 모두 요구한다. 임의 사용자가 유효 권한을 생성하는 public mint는 불가다.
+- package 1개, 캠페인 1개, 비금전 action 1종. K-Tour ID의 검증된 발급 근거와 사용자 승인을 모두 요구한다. 임의 사용자가 유효 권한을 생성하는 public mint는 불가다.
 - `logicalIntent`에 대응하는 무작위 참조, 허용 agent, 행동/대상 commitment, 수신 지갑, network/package, 정책 버전, 제안·동의 digest, 실행 기한, 최대 1회, 금전 이동 0을 묶는다. 공개 객체에는 DID/VC/내부 subject/실제 위치·개인정보를 넣지 않는다.
 - 계약이 발급자·소유권·허용 agent·범위·만료·철회·사용 횟수를 검사한다. 동일 grant는 revoke/consume 중 먼저 확정된 결과를 따른다.
 - 서버는 network/package/version, grant/intent, owner/agent, event·성공 effects·객체 상태를 확인한다. 서명 성공·digest 수신만으로 완료 표시 금지. 업그레이드 권한·signer 보관 방식도 고정한다.
@@ -109,7 +111,7 @@ DeepSurge 공개 페이지의 기간 표시는 최종 제출 시각·시간대�
 
 `agent_proposals`, `delegations`, `sui_operations` 또는 동등 구조를 추가한다. `logicalIntent`, subject/campaign, request digest, grant 참조, Sui digest/effects, fulfillment 상태·버전, idempotency와 provenance를 연결한다. chain별 outbox/receipt는 독립적이다. 전체 enum·OpenAPI·에러와 상태 mapping은 D2에 고정한다.
 
-기존 장소/신원 sheet, Labs의 승인·대기·실패 UI와 evidence 레이아웃만 재사용한다. **현재 fixture 모델·10회 방문 badge·샘플 지갑 연결을 실제 SDK/Move/agent로 간주하지 않는다.** 현재 앱에 실제 Sui·zkLogin·Move·agent 구현은 없다.
+기존 장소/신원 sheet와 전용 공개 가이드·선택 저장·컬렉션 UI를 재사용하고 실제 provider adapter를 연결한다. **현재 fixture 모델·10회 방문 badge·샘플 지갑 연결을 실제 SDK/Move/agent로 간주하지 않는다.** 현재 앱에 실제 Sui·zkLogin·Move·agent 구현은 없다.
 
 ## 6. 추가 수락 검사 — A13–A20
 

@@ -17,6 +17,7 @@ import { useOndoB } from "../shared/state/ondo-b-provider"
 import type { OndoBLocale } from "../shared/state/ondo-b-preferences"
 import { LocalCheckWalkthroughB, type LocalCheckKind, type LocalCheckOutcome } from "./local-check-walkthrough-b"
 import { IdWalletCommerceB } from "../commerce-b/id-wallet-commerce-b"
+import { SavedExperienceB } from "../experience-b/saved-experience-b"
 import {
   GLOBAL_AFTER19_SESSION_EVENT,
   GLOBAL_AFTER19_SESSION_KEY,
@@ -56,7 +57,7 @@ const COPY = {
     eyebrow: "YOUR KOREA, YOUR CONTROL",
     title: "Travel Pass",
     body: "Your places, plans and wallet — ready when you need them.",
-    passLabel: "ONDO · KOREA TRAVEL PASS",
+    passLabel: "K-Tour ID · KOREA TRAVEL PASS",
     passState: "Guest pass",
     passStateActive: "Account ready",
     passBody: "Explore first. Activate only when saving, joining or paying needs it.",
@@ -102,7 +103,7 @@ const COPY = {
     eyebrow: "나의 한국 여행, 나의 선택",
     title: "여행 패스",
     body: "장소·일정·지갑을 필요한 순간에만 준비해요.",
-    passLabel: "ONDO · KOREA TRAVEL PASS",
+    passLabel: "K-Tour ID · KOREA TRAVEL PASS",
     passState: "게스트 패스",
     passStateActive: "계정 준비됨",
     passBody: "먼저 둘러보세요. 저장·참여·결제에 필요할 때만 활성화합니다.",
@@ -148,7 +149,7 @@ const COPY = {
     eyebrow: "韓国の旅を、自分で管理",
     title: "トラベルパス",
     body: "場所・予定・ウォレットを、必要な時だけ準備します。",
-    passLabel: "ONDO · KOREA TRAVEL PASS",
+    passLabel: "K-Tour ID · KOREA TRAVEL PASS",
     passState: "ゲストパス",
     passStateActive: "アカウント準備済み",
     passBody: "まずは自由に探せます。保存・参加・支払いで必要になったときだけ準備します。",
@@ -449,6 +450,8 @@ export function TravelerIdEntryB() {
           <KPassServiceCardB paymentReady={paymentStatus === "success"} compact />
           <IdWalletCommerceB />
         </div>
+
+        <SavedExperienceB locale={locale} />
 
         <details className={styles.readiness} data-testid="travel-pass-status" aria-labelledby="travel-readiness-title">
           <summary className={styles.sectionHeading} data-testid="travel-pass-readiness-toggle">

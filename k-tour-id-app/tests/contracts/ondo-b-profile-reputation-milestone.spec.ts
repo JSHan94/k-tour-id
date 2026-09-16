@@ -85,7 +85,7 @@ test("B-PROFILE-003 B activity is session-only, idempotent by evidence, and paym
   expect(visitReceipt).toContain('data-testid="visit-stamp-details"')
   expect(visitReceipt).toMatch(/<details className=\{styles\.details\}[\s\S]*<summary>\{copy\.details\}[\s\S]*<p>\{copy\.boundary\}<\/p>[\s\S]*<\/details>/)
   expect(visitReceipt).not.toContain('<small className={styles.boundary}>{copy.boundary}</small>')
-  expect(visitReceipt).toContain("Your meal balance and visit history stay separate")
+  expect(visitReceipt).toContain("Your travel balance and visit history stay separate")
   expect(visitReceipt).toContain("여행 잔액과 방문 기록은 별개예요")
   expect(visitReceipt).toContain("旅の残高と訪問履歴は別です")
   expect(visitReceipt).toContain('details: "Privacy & visit details"')

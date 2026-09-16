@@ -282,5 +282,52 @@
     ],
     "canonicalVenueId": null,
     "photo": null
+  },
+  {
+    "id": "research-jeju-sinseoloreum",
+    "city": "jeju",
+    "name": { "en": "Sinseoloreum", "ko": "신설오름", "ja": "シンソルオルム" },
+    "district": { "en": "Jeju City · Ildo", "ko": "제주시 · 일도", "ja": "済州市・イルド" },
+    "kind": "food",
+    "signature": { "en": "Momguk seaweed and pork soup", "ko": "제주 몸국", "ja": "済州のモムクッ" },
+    "address": "제주특별자치도 제주시 고마로17길 2",
+    "latitude": 33.50546,
+    "longitude": 126.54163,
+    "coordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020185&menuId=DOM_000001719000000000",
+    "checkedAt": "2026-09-16",
+    "reason": {
+      "en": "VisitJeju and the Korea Tourism Organization introduce this Jeju City restaurant for momguk, a local seaweed and pork-broth soup.",
+      "ko": "비짓제주와 한국관광공사가 모자반과 돼지고기 육수로 끓인 제주 몸국을 소개하는 제주시 음식점.",
+      "ja": "VisitJejuと韓国観光公社が紹介する済州市の店。海藻と豚肉のだしで煮込む郷土スープ、モムクッが特徴。"
+    },
+    "sources": [
+      {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020185&menuId=DOM_000001719000000000",
+        "title": "VisitJeju — 신설오름",
+        "publishedAt": null,
+        "evidence": "tourism"
+      },
+      {
+        "url": "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=f8eee625-9581-4af7-99c8-bd69e9dcde02",
+        "title": "Korea Tourism Organization — 신설오름",
+        "publishedAt": null,
+        "evidence": "tourism"
+      }
+    ],
+    "canonicalVenueId": null,
+    "photo": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/12/%EC%8B%A0%EC%84%A4%EC%98%A4%EB%A6%84_%EB%AA%B8%EA%B5%AD.jpg",
+      "sourceUrl": "https://commons.wikimedia.org/wiki/File:신설오름_몸국.jpg",
+      "deliveredUrl": "https://upload.wikimedia.org/wikipedia/commons/1/12/%EC%8B%A0%EC%84%A4%EC%98%A4%EB%A6%84_%EB%AA%B8%EA%B5%AD.jpg",
+      "credit": "신설오름 몸국 — 공석배 / Wikimedia Commons, CC BY 4.0. Photographed 2019-07-23. Original JPEG; display crop only.",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "localSrc": "/media/venues/research-jeju-sinseoloreum/momguk-gong-seokbae-20190723-v1.jpg",
+      "alt": {
+        "en": "Momguk photographed at Sinseoloreum in 2019",
+        "ko": "2019년 신설오름에서 촬영된 몸국",
+        "ja": "2019年にシンソルオルムで撮影されたモムクッ"
+      }
+    }
   }
 ]

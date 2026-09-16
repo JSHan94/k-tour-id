@@ -74,18 +74,36 @@ test("BRAND-MEDIA-004 ONDO ships optically tuned micro marks and written usage g
   expect(guide).toMatch(/identity|eKYC|credential/i)
 })
 
-test("BRAND-MEDIA-005 lockup is path-native and has a wider optical field", () => {
+test("BRAND-MEDIA-005 retained historical lockup is path-native and has a wider optical field", () => {
   const source = readFileSync(resolve(root, "public/brand/ondo-lockup.svg"), "utf8")
-  const component = readFileSync(resolve(root, "features/ondo/shared/ui/ondo-brand-lockup-b.tsx"), "utf8")
   expect(source).toContain('viewBox="0 0 288 64"')
   expect(source).not.toContain("<circle")
   expect(source).not.toContain("#722044")
   expect(source).not.toContain("<text")
   expect(source).toContain('data-part="wordmark"')
-  expect(component).toContain('aria-label="ONDO"')
-  expect(component).toContain('lang="ko-Hani"')
-  expect(component).toContain("溫圖")
+})
+
+test("BRAND-MEDIA-006 current app lockup uses one accessible K-Tour ID name and monochrome mark", () => {
+  const component = readFileSync(resolve(root, "features/ondo/shared/ui/ondo-brand-lockup-b.tsx"), "utf8")
+  const mark = readFileSync(resolve(root, "features/ondo/shared/ui/ktour-id-mark.tsx"), "utf8")
+  const shell = readFileSync(resolve(root, "features/ondo/app/ondo-shell.module.css"), "utf8")
+  expect(component).toContain('aria-label="K-Tour ID"')
+  expect(component).toContain("<KTourIdMark")
+  expect(component).toContain('aria-hidden="true">K-Tour ID</b>')
+  expect(component).not.toMatch(/aria-label="ONDO"|ko-Hani|溫圖|<img\b|\/brand\/ondo-/)
   expect(component).toContain('aria-hidden="true"')
+  expect(mark).toContain('data-ktour-mark="monochrome"')
+  expect(mark).toContain('fill="currentColor"')
+  expect(mark).toContain("useId()")
+  expect(mark).not.toMatch(/<(?:image|img|linearGradient|radialGradient|filter)\b/)
+  expect(shell).toContain("/brand/ktour-id-mono-v1-192.png")
+  expect(shell).not.toContain("/brand/ktour-id-mark-192.png")
+  const paints = [...mark.matchAll(/(?:fill|stroke)="(#[a-f\d]{3}(?:[a-f\d]{3})?)"/gi)].map(match => match[1].slice(1))
+  for (const paint of paints) {
+    const rgb = paint.length === 3 ? [...paint].map(channel => channel.repeat(2)).join("") : paint
+    expect(rgb.slice(0, 2), `Mask paint #${paint} must stay grayscale`).toBe(rgb.slice(2, 4))
+    expect(rgb.slice(2, 4)).toBe(rgb.slice(4, 6))
+  }
 })
 
 test("BRAND-MEDIA-003 fictional people never enter identity or evidence source code", () => {

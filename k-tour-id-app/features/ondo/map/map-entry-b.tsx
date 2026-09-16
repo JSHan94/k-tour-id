@@ -80,6 +80,7 @@ type ServiceMapSnapshotB = {
   placeId: string; city: CityId; view: ViewMode; query: string; category: BDiscoveryCategory
   editorialCategory: EditorialCategory; listScroll: number; camera?: BDiscoveryCamera
   balancePlacesOnly: boolean; history: BDiscoveryHistoryEntry | null; detailScroll: number
+  expandedDisclosures: string[]
 }
 const BALANCE_MAP_COPY = {
   ko: { places: "사용할 곳", clear: "사용할 곳 필터 해제", filter: "사용할 곳 보기" },
@@ -175,13 +176,13 @@ const COPY = {
     noResultsBodyLocked: "Clear the search to see every bar and pub in this city.",
     clearResults: "Clear search and category",
     clearSearch: "Clear search",
-    mapKey: "ONDO temperature · place groups",
+    mapKey: "Place temperature · place groups",
     mapKeyBody: "Outlined numbers group nearby places. Small dots are individual places.",
     mapKeyDetails: "How to read this map",
     mapCredits: "Map credits",
-    pulseActive: "ONDO temperature · curated food signal",
-    pulseGrowing: "ONDO temperature · coverage growing",
-    pulseExplore: "ONDO temperature · limited signals",
+    pulseActive: "Place temperature · curated food signal",
+    pulseGrowing: "Place temperature · coverage growing",
+    pulseExplore: "Place temperature · limited signals",
     pulseSignals: "curated signals",
     pulseLocal: "Your Local Signal is included on this device",
     jejuStatus: "Island picks",
@@ -192,7 +193,7 @@ const COPY = {
     editorialMapUnavailable: "The map could not load. Jeju place links and stories remain available.",
     aboutMap: "About this Korea map",
     mapScopeSummary: "Seoul · Busan · Jeju",
-    methodology: "How ONDO temperature works",
+    methodology: "How place temperature works",
     filterLabel: "Food category",
     recentSaveFailed: "The place opened, but this device could not update Recently viewed.",
   },
@@ -235,13 +236,13 @@ const COPY = {
     noResultsBodyLocked: "검색어를 지우면 이 도시의 주점을 모두 볼 수 있어요.",
     clearResults: "검색어와 업태 초기화",
     clearSearch: "검색어 지우기",
-    mapKey: "온도 · 장소 묶음",
+    mapKey: "장소 온도 · 장소 묶음",
     mapKeyBody: "테두리 숫자는 가까운 장소 묶음, 작은 점은 개별 장소를 뜻합니다.",
     mapKeyDetails: "지도 읽는 법",
     mapCredits: "지도 출처",
-    pulseActive: "온도 · 선별 식음료 신호",
-    pulseGrowing: "온도 · 신호 범위 확장 중",
-    pulseExplore: "온도 · 신호 부족",
+    pulseActive: "장소 온도 · 선별 식음료 신호",
+    pulseGrowing: "장소 온도 · 신호 범위 확장 중",
+    pulseExplore: "장소 온도 · 신호 부족",
     pulseSignals: "선별 신호",
     pulseLocal: "이 기기의 로컬 시그널이 포함됨",
     jejuStatus: "섬의 추천 장소",
@@ -252,7 +253,7 @@ const COPY = {
     editorialMapUnavailable: "지도를 불러오지 못했어요. 제주 장소 링크와 이야기는 계속 볼 수 있어요.",
     aboutMap: "대한민국 지도 안내",
     mapScopeSummary: "서울 · 부산 · 제주",
-    methodology: "온도를 만드는 방식과 장소",
+    methodology: "장소 온도 알아보기",
     filterLabel: "음식 분류",
     recentSaveFailed: "장소는 열었지만 이 기기의 최근 본 목록에는 저장하지 못했어요.",
   },
@@ -295,13 +296,13 @@ const COPY = {
     noResultsBodyLocked: "検索語を解除すると、この都市の居酒屋・パブを確認できます。",
     clearResults: "検索語と業種を解除",
     clearSearch: "検索語を解除",
-    mapKey: "ONDO温度・場所グループ",
+    mapKey: "スポットのにぎわい・場所グループ",
     mapKeyBody: "枠付きの数字は近くの場所のまとまり、小さな点は個別の場所です。",
     mapKeyDetails: "地図の見方",
     mapCredits: "地図クレジット",
-    pulseActive: "ONDO温度・選定した飲食シグナル",
-    pulseGrowing: "ONDO温度・シグナル範囲を拡大中",
-    pulseExplore: "ONDO温度・シグナル不足",
+    pulseActive: "スポットのにぎわい・選定した飲食シグナル",
+    pulseGrowing: "スポットのにぎわい・シグナル範囲を拡大中",
+    pulseExplore: "スポットのにぎわい・シグナル不足",
     pulseSignals: "キュレーションシグナル",
     pulseLocal: "この端末のローカルシグナルを含みます",
     jejuStatus: "島のおすすめ",
@@ -312,22 +313,22 @@ const COPY = {
     editorialMapUnavailable: "地図を読み込めませんでした。済州の場所リンクとストーリーは引き続き確認できます。",
     aboutMap: "韓国マップについて",
     mapScopeSummary: "ソウル・釜山・済州",
-    methodology: "ONDO温度の仕組みと場所",
+    methodology: "にぎわいの見方",
     filterLabel: "飲食カテゴリー",
     recentSaveFailed: "場所は開きましたが、この端末の最近見た場所には保存できませんでした。",
   },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
 const MAP_UI = {
-  en: { atlas: "Korea overview map showing Seoul, Busan, and Jeju", clearSearch: "Clear search", mapRegion: "Korea food map", editorialRegion: "Jeju travel map", officialGroups: "Place groups", pulseRange: "Low → Peak", pulseLegend: "ONDO temperature level legend", pulsePlaces: "ONDO temperature places", mapAttribution: "Map attribution", shortList: "List view on a short screen", locationTab: "Location · this tab only", locationOff: "Location off · Search still works", locationUnavailable: "Location unavailable", freshness: "freshness", confidence: "confidence", directoryKind: "Explore", editorialKind: "Explore" },
-  ko: { atlas: "서울·부산·제주를 표시한 대한민국 탐색 지도", clearSearch: "검색어 지우기", mapRegion: "한국 먹거리 지도", editorialRegion: "제주 여행 지도", officialGroups: "장소 묶음", pulseRange: "여유 → 피크", pulseLegend: "온도 단계 범례", pulsePlaces: "온도 장소", mapAttribution: "지도 출처", shortList: "좁은 화면에서 목록 보기 사용 중", locationTab: "위치 · 이 탭에서만", locationOff: "위치 꺼짐 · 검색은 계속 가능", locationUnavailable: "위치 미지원", freshness: "최신성", confidence: "신뢰도", directoryKind: "탐색", editorialKind: "탐색" },
-  ja: { atlas: "ソウル・釜山・済州を示す韓国マップ", clearSearch: "検索語を消去", mapRegion: "韓国フードマップ", editorialRegion: "済州トラベルマップ", officialGroups: "場所のまとまり", pulseRange: "ゆったり → ピーク", pulseLegend: "ONDO温度レベルの凡例", pulsePlaces: "ONDO温度の場所", mapAttribution: "地図の出典", shortList: "高さの低い画面ではリスト表示", locationTab: "現在地・このタブ内のみ", locationOff: "位置情報オフ・検索は利用可能", locationUnavailable: "位置情報を利用できません", freshness: "更新状況", confidence: "確度", directoryKind: "探す", editorialKind: "探す" },
+  en: { atlas: "Korea overview map showing Seoul, Busan, and Jeju", clearSearch: "Clear search", mapRegion: "Korea food map", editorialRegion: "Jeju travel map", officialGroups: "Place groups", pulseRange: "Low → Peak", pulseLegend: "Place temperature level legend", pulsePlaces: "Places by temperature", mapAttribution: "Map attribution", shortList: "List view on a short screen", locationTab: "Location · this tab only", locationOff: "Location off · Search still works", locationUnavailable: "Location unavailable", freshness: "freshness", confidence: "confidence", directoryKind: "Explore", editorialKind: "Explore" },
+  ko: { atlas: "서울·부산·제주를 표시한 대한민국 탐색 지도", clearSearch: "검색어 지우기", mapRegion: "한국 먹거리 지도", editorialRegion: "제주 여행 지도", officialGroups: "장소 묶음", pulseRange: "여유 → 피크", pulseLegend: "장소 온도 단계 범례", pulsePlaces: "장소별 온도", mapAttribution: "지도 출처", shortList: "좁은 화면에서 목록 보기 사용 중", locationTab: "위치 · 이 탭에서만", locationOff: "위치 꺼짐 · 검색은 계속 가능", locationUnavailable: "위치 미지원", freshness: "최신성", confidence: "신뢰도", directoryKind: "탐색", editorialKind: "탐색" },
+  ja: { atlas: "ソウル・釜山・済州を示す韓国マップ", clearSearch: "検索語を消去", mapRegion: "韓国フードマップ", editorialRegion: "済州トラベルマップ", officialGroups: "場所のまとまり", pulseRange: "ゆったり → ピーク", pulseLegend: "スポットのにぎわいレベルの凡例", pulsePlaces: "スポット別のにぎわい", mapAttribution: "地図の出典", shortList: "高さの低い画面ではリスト表示", locationTab: "現在地・このタブ内のみ", locationOff: "位置情報オフ・検索は利用可能", locationUnavailable: "位置情報を利用できません", freshness: "更新状況", confidence: "確度", directoryKind: "探す", editorialKind: "探す" },
 } satisfies Record<OndoBLocale, Record<string, string>>
 
 const TEMPERATURE_NAME: Record<OndoBLocale, string> = {
-  en: "ONDO temperature",
-  ko: "온도",
-  ja: "ONDO温度",
+  en: "Place temperature",
+  ko: "장소 온도",
+  ja: "スポットのにぎわい",
 }
 
 const TEMPERATURE_FRESHNESS: Record<PulseFreshnessB, Record<OndoBLocale, string>> = {
@@ -496,10 +497,11 @@ const KOREA_ATLAS_CITY_COORDINATES = {
 
 function fitNationOverview(map: MapLibreMap, container: HTMLElement, duration = 0) {
   const { width, height } = container.getBoundingClientRect()
+  const dockSpace = parseFloat(getComputedStyle(container).getPropertyValue("--ondo-map-dock-space")) || 0
   map.fitBounds([[124.4, 32.2], [131.6, 39.4]], {
     padding: width >= 801
       ? { top: 82, right: 54, bottom: 58, left: Math.round(width * .38) }
-      : { top: Math.min(142, Math.round(height * .2)), right: 28, bottom: 70, left: 28 },
+      : { top: Math.min(142, Math.round((height - dockSpace) * .2)), right: 28, bottom: 70 + dockSpace, left: 28 },
     maxZoom: 6.2,
     pitch: 0,
     bearing: 0,
@@ -1052,7 +1054,10 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly { longitude: num
     map.jumpTo({ center: [venues[0].longitude, venues[0].latitude], zoom: 15 })
     return
   }
-  const container = map.getContainer().getBoundingClientRect()
+  const mapContainer = map.getContainer()
+  const bounds = mapContainer.getBoundingClientRect()
+  const dockSpace = parseFloat(getComputedStyle(mapContainer).getPropertyValue("--ondo-map-dock-space")) || 0
+  const container = { width: bounds.width, height: bounds.height - dockSpace }
   const shortLandscape = container.height <= 500 && container.width > container.height
   const horizontalPadding = Math.round(Math.max(24, Math.min(72, container.width * 0.08)))
   const topPadding = shortLandscape
@@ -1069,7 +1074,7 @@ function focusFilteredVenues(map: MapLibreMap, venues: readonly { longitude: num
   ], {
     duration: 0,
     maxZoom: 14.5,
-    padding: { top: topPadding, right: horizontalPadding, bottom: bottomPadding, left: horizontalPadding },
+    padding: { top: topPadding, right: horizontalPadding, bottom: bottomPadding + dockSpace, left: horizontalPadding },
   })
 }
 
@@ -1100,6 +1105,7 @@ function cityOverviewBounds(
 
 function cityOverviewPadding(root: HTMLElement) {
   const rootBox = root.getBoundingClientRect()
+  const dockSpace = parseFloat(getComputedStyle(root).getPropertyValue("--ondo-map-dock-space")) || 0
   const headerBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")?.getBoundingClientRect()
   const locationBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-location-message']")?.getBoundingClientRect()
   const keyBox = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-key']")?.getBoundingClientRect()
@@ -1110,7 +1116,7 @@ function cityOverviewPadding(root: HTMLElement) {
   return {
     top: Math.ceil(Math.max(headerBox?.bottom ?? rootBox.top, locationBox?.bottom ?? rootBox.top) - rootBox.top + 26),
     right: horizontal,
-    bottom: Math.ceil(rootBox.bottom - (keyBox?.top ?? rootBox.bottom) + (compactLandscape ? 48 : 26)),
+    bottom: Math.ceil(rootBox.bottom - (keyBox?.top ?? rootBox.bottom) + (compactLandscape ? 48 : 26) + dockSpace),
     left: horizontal,
   }
 }
@@ -1290,6 +1296,9 @@ export function MapEntryB() {
   const [mapAttempt, setMapAttempt] = useState(1)
   const [retryListForeground, setRetryListForeground] = useState(false)
   const [locationState, setLocationState] = useState<LocationState>("idle")
+  const [locationDetailsOpen, setLocationDetailsOpen] = useState(false)
+  const [mapFeedbackTarget, setMapFeedbackTarget] = useState<HTMLDivElement | null>(null)
+  const mapFeedbackRootRef = useRef<HTMLDivElement | null>(null)
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [online, setOnline] = useState(true)
   const [mapLayoutMode, setMapLayoutMode] = useState<MapLayoutMode>("measuring")
@@ -1842,6 +1851,30 @@ export function MapEntryB() {
             ? copy.locating
             : copy.locationReady
   const locationNeedsRecovery = !online || locationState === "denied" || locationState === "unsupported"
+
+  useLayoutEffect(() => {
+    const root = cityRootNode.current
+    const stack = mapFeedbackRootRef.current
+    if (!root || !stack || !mapFeedbackTarget) return
+    const header = root.querySelector<HTMLElement>("[data-testid='ondo-b-city-header']")
+    const utilities = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-utility-cluster']")
+    const chrome = root.querySelector<HTMLElement>("[data-testid='ondo-b-map-chrome']")
+    const layout = () => {
+      const bounds = root.getBoundingClientRect()
+      const bottom = (node: HTMLElement | null) => node && node.getClientRects().length ? node.getBoundingClientRect().bottom - bounds.top : 0
+      // Share one flow region below the actual controls. Notice text and an
+      // expanded location explanation never require guessed vertical offsets.
+      const top = Math.max(bottom(header), bottom(utilities)) + 8
+      const chromeTop = chrome?.getBoundingClientRect().top ?? bounds.bottom
+      const limit = chromeTop > bounds.top + top ? Math.min(bounds.bottom, chromeTop) : bounds.bottom
+      stack.style.setProperty("--map-feedback-top", `${top}px`)
+      stack.style.setProperty("--map-feedback-height", `${Math.max(44, limit - bounds.top - top - 8)}px`)
+    }
+    const observer = new ResizeObserver(layout)
+    for (const node of [root, header, utilities, chrome]) if (node) observer.observe(node)
+    layout()
+    return () => observer.disconnect()
+  }, [city, compactChrome, editorialOpen, mapFeedbackTarget, mapLayoutMode, after19ThemeActive])
 
   useEffect(() => { setVisibleCount(30) }, [category, city, query])
 
@@ -3066,6 +3099,7 @@ export function MapEntryB() {
       listScroll, camera,
       history: history ? { ...history, listScroll, ...(camera ? { camera } : {}) } : null,
       detailScroll: detail?.scrollTop ?? 0,
+      expandedDisclosures: Array.from(detail?.querySelectorAll<HTMLDetailsElement>("details[open][data-testid]") ?? []).map(node => node.dataset.testid!).filter(Boolean),
     })
     return true
   }
@@ -3098,15 +3132,33 @@ export function MapEntryB() {
     if (place.originKind === "canonical") actions.setSurface({ kind: "venue", venueId: place.id })
     else if (editorial) actions.setSurface({ kind: "editorial_place", editorialPlaceId: editorial.id })
     else actions.setSurface({ kind: "map" })
-    const focus = "focus" in detail && (detail.focus === "reservation" || detail.focus === "table") ? detail.focus : "offer"
-    setResearchReturnFocus(place.originKind === "research" ? { placeId: place.id, focus } : null)
+    const focus = "focus" in detail && (detail.focus === "reservation" || detail.focus === "table" || detail.focus === "experience") ? detail.focus : "offer"
+    setResearchReturnFocus(place.originKind === "research" ? { placeId: place.id, focus: focus === "experience" ? "offer" : focus } : null)
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       if (snapshot && listPanelRef.current) listPanelRef.current.scrollTop = snapshot.listScroll
       const scroll = place.originKind === "research"
         ? document.querySelector<HTMLElement>("[data-testid='researched-food-detail']")?.closest<HTMLElement>("[data-sheet-scroll-owner]")
         : document.querySelector<HTMLElement>("[data-place-service-scroll]")
-      if (scroll && snapshot) scroll.scrollTop = snapshot.detailScroll
-      document.querySelector<HTMLElement>(`[data-place-service='${focus}']`)?.focus({ preventScroll: true })
+      if (scroll && snapshot) {
+        // Restore only named disclosures in this place's scroll owner before
+        // restoring its position; collapsed content would clamp scrollTop.
+        const expanded = new Set(snapshot.expandedDisclosures ?? [])
+        scroll.querySelectorAll<HTMLDetailsElement>("details[data-testid]").forEach(node => {
+          node.open = expanded.has(node.dataset.testid ?? "")
+        })
+        scroll.scrollTop = snapshot.detailScroll
+      }
+      const target = document.querySelector<HTMLElement>(`[data-place-service='${focus}']`)
+      if (focus === "experience" && target && scroll) {
+        // A resized viewport can put the restored row below the visible sheet.
+        // Keep the original position unless this specific return focus is hidden.
+        const row = target.getBoundingClientRect()
+        const owner = scroll.getBoundingClientRect()
+        if (row.top < Math.max(0, owner.top) || row.bottom > Math.min(window.innerHeight, owner.bottom)) {
+          target.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" })
+        }
+      }
+      target?.focus({ preventScroll: true })
     }))
   }
 
@@ -3285,6 +3337,26 @@ export function MapEntryB() {
       setLocationState("denied")
     }, { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 })
   }
+
+  const locationDisclosure = !compactChrome && effectiveView === "map" && mapState !== "error" ? (
+    <details
+      className={styles.locationMessage}
+      data-testid="ondo-b-location-message"
+      name="ondo-map-disclosure"
+      data-message-kind={!online ? "offline" : locationState === "idle" ? "disclosure" : "status"}
+      data-location-state={locationState}
+      data-location-recovery={locationNeedsRecovery ? "true" : "false"}
+      open={locationDetailsOpen}
+      onToggle={event => setLocationDetailsOpen(event.currentTarget.open)}
+    >
+      <summary aria-label={locationSummary}>
+        {locationNeedsRecovery ? <LocateOff size={18} aria-hidden="true" /> : <MapPin size={18} aria-hidden="true" />}
+        <span>{locationSummary}</span>
+        <ChevronRight size={16} aria-hidden="true" />
+      </summary>
+      <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
+    </details>
+  ) : null
 
   if (!city) return (
     <div className={styles.compatRoot} data-testid="ondo-map-entry">
@@ -3493,23 +3565,7 @@ export function MapEntryB() {
               }}
             ><Layers2 size={19} aria-hidden="true" /></button>
           ) : null}
-          {!compactChrome && effectiveView === "map" && mapState !== "error" ? (
-            <details
-              className={styles.locationMessage}
-              data-testid="ondo-b-location-message"
-              name="ondo-map-disclosure"
-              data-message-kind={!online ? "offline" : locationState === "idle" ? "disclosure" : "status"}
-              data-location-state={locationState}
-              data-location-recovery={locationNeedsRecovery ? "true" : "false"}
-            >
-              <summary aria-label={locationSummary}>
-                {locationNeedsRecovery ? <LocateOff size={18} aria-hidden="true" /> : <MapPin size={18} aria-hidden="true" />}
-                <span>{locationSummary}</span>
-                <ChevronRight size={16} aria-hidden="true" />
-              </summary>
-              <p id="ondo-b-location-message" role={!online || locationState !== "idle" ? "status" : undefined} data-testid="ondo-b-location-details">{locationMessage}</p>
-            </details>
-          ) : null}
+          {!locationNeedsRecovery ? locationDisclosure : null}
           {!compactChrome && effectiveView === "map" && mapState !== "error" ? <button type="button" className={styles.locate} data-testid="ondo-b-locate" data-location-state={locationState} data-online={online ? "true" : "false"} aria-describedby="ondo-b-location-message" aria-label={locationState === "denied" ? copy.retryLocation : copy.locate} onClick={locateUser}>{locationState === "denied" || locationState === "unsupported" ? <LocateOff size={19} aria-hidden="true" /> : <LocateFixed size={19} aria-hidden="true" />}</button> : null}
           <GlobalAfter19B
             locale={locale}
@@ -3521,8 +3577,13 @@ export function MapEntryB() {
               venueLabel: selectedVenue ? venueDisplayName(selectedVenue.name.ko, locale) : null,
             }}
             onActiveChange={setAfter19Active}
+            noticeTarget={mapFeedbackTarget}
           />
           {city === "seoul" || city === "jeju" ? <JapanFirstDiscoveryB locale={locale} city={city} open={editorialOpen} compactTrigger={compactChrome} returnFocusSelector={compactChrome ? "[data-testid='ondo-b-map-options-open']" : undefined} presentation={effectiveView === "list" || mapState === "error" ? "list" : "map"} onOpenChange={setEditorialOpen} onSelectEditorialPlace={city === "jeju" ? focusEditorialPlace : undefined} /> : null}
+        </div>
+        <div ref={mapFeedbackRootRef} className={styles.mapFeedbackStack} data-testid="ondo-b-map-feedback" hidden={editorialOpen}>
+          <div className={styles.mapFeedbackSlot}>{locationNeedsRecovery ? locationDisclosure : null}</div>
+          <div ref={setMapFeedbackTarget} className={styles.mapFeedbackSlot} />
         </div>
         {effectiveView === "map" && mapState !== "error" && !locationNeedsRecovery && locationState !== "idle" ? (
           <span className={styles.srOnly} role="status" aria-live="polite" aria-atomic="true">{locationMessage}</span>

@@ -1911,6 +1911,13 @@
 .decisionActions a,
 .decisionActions button { border:1px solid var(--ondo-line); background:var(--ondo-surface-raised); color:var(--ondo-ink); box-shadow:none; }
 .peekActions button { border:1px solid var(--ondo-control, #171717); background:var(--ondo-control, #171717); color:var(--ondo-control-ink, #fff); box-shadow:none; }
+.peekActions[data-peek-has-service="true"] button:last-child { border-color: var(--ondo-line, #dedede); background: var(--ondo-surface-raised, #fff); color: var(--ondo-ink, #171717); box-shadow: none; }
+/* Keep the next action visible when the live sample meter expands a short
+   peek. Retain the original scroll owner and normal-flow space for the row. */
+.peek { scroll-padding-block: 52px 88px; }
+.peekActions { position: sticky; bottom: -14px; z-index: 2; padding: 8px 0 14px; background: var(--ondo-surface-raised, #fff); }
+.peekActions a, .peekActions button { min-height: 52px; }
+@media (forced-colors: active) { .peekActions { background: Canvas; } }
 @media (min-width:900px) and (min-height:501px) {
   .body { grid-template-areas:"identity pulse" "offer pulse" "table table" "decisions utility" "after19 after19" "save save" "before before"; }
   .body > :global([data-testid="place-service-actions"]) { grid-area:offer; margin:12px 0 0; }

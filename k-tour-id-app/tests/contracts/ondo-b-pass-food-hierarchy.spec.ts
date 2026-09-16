@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { expect, test } from "@playwright/test"
-import { RESEARCHED_FOOD_B, researchedFoodByIdB, researchFoodIllustrationB } from "../../features/ondo/map/researched-food-b"
+import { RESEARCHED_FOOD_B, researchedFoodByIdB, researchFoodIllustrationB, researchFoodMediaB } from "../../features/ondo/map/researched-food-b"
 
 const source = (path: string) => readFileSync(resolve(path), "utf8")
 
@@ -12,12 +12,27 @@ test("PASS-FOOD-001 named noodle and tteokgalbi picks use distinct illustrative 
   expect(grill).toEqual({ src: "/editorial/food/tteokgalbi-illustration-v1.jpg", subject: "grill" })
   expect(noodles.src).not.toEqual(grill.src)
   for (const pick of RESEARCHED_FOOD_B) {
+    const provenanceBefore = structuredClone(pick.photo)
     const media = researchFoodIllustrationB(pick)
     expect(media.src, pick.id).not.toBe("/editorial/food/ondo-category-korean-v1.jpg")
     if (media.src) expect(existsSync(resolve("public", media.src.slice(1))), pick.id).toBe(true)
     // The decorative media mapping never changes the sourced photo provenance.
-    expect(pick.photo, pick.id).toBeNull()
+    expect(pick.photo, pick.id).toEqual(provenanceBefore)
   }
+})
+
+test("PASS-FOOD-004 a licensed local venue photo is distinct from illustrations and never becomes a remote hotlink", () => {
+  const onion = researchedFoodByIdB("research-seoul-onion-anguk")!
+  const media = researchFoodMediaB(onion)
+  expect(media.photograph?.src).toBe("/media/venues/onion-anguk-christopher-phua-20250301.jpg")
+  expect(existsSync(resolve("public", media.photograph!.src.slice(1)))).toBe(true)
+  expect(media.photograph?.alt.en).toContain("Onion Anguk")
+  expect(onion.photo?.credit).toBe("Christopher Phua / Unsplash")
+  expect(researchFoodIllustrationB(onion).src).toBeNull()
+  // A source/licensing URL alone is not a deployable photo.
+  expect(researchFoodMediaB({ ...onion, photo: { ...onion.photo!, localSrc: undefined } }).photograph).toBeUndefined()
+  expect(researchFoodMediaB({ ...onion, photo: { ...onion.photo!, localSrc: "https://example.com/unapproved.jpg" } }).photograph).toBeUndefined()
+  expect(researchFoodMediaB(researchedFoodByIdB("research-seoul-london-bagel-dosan")!).photograph).toBeUndefined()
 })
 
 test("PASS-FOOD-002 unmatched dishes keep honest category fallbacks, not unrelated café or Korean photos", () => {
@@ -34,6 +49,17 @@ test("PASS-FOOD-002 unmatched dishes keep honest category fallbacks, not unrelat
   expect(photo).toContain('data-food-photo="category-placeholder"')
   expect(photo).toContain('data-photo-state="not-provided"')
   expect(photo).toContain("not a photo of this venue or its menu")
+})
+
+test("PASS-FOOD-005 Hakrim uses its licensed local entrance photo, top-aligned at square detail size", () => {
+  const place = researchedFoodByIdB("research-seoul-hakrim-dabang")!
+  const media = researchFoodMediaB(place)
+  expect(media.subject).toBe("coffee")
+  expect(media.photograph).toEqual({ src: "/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg", alt: place.photo!.alt, objectPosition: "50% 0%" })
+  expect(place.photo?.license).toBe("CC BY-SA 4.0")
+  expect(place.photo?.credit).toContain("Wikimedia 960px thumbnail; top-aligned display crop")
+  expect(source("features/ondo/map/food-photo-b.tsx")).toContain("objectPosition: photograph.objectPosition")
+  expect(source("features/ondo/map/researched-food-panel-b.tsx")).toContain('<div className={styles.identity}><FoodPhotoB {...researchFoodMediaB(place)} locale={locale} compact />')
 })
 
 test("PASS-FOOD-003 secondary readiness uses a native disclosure and preserves all independent controls", () => {

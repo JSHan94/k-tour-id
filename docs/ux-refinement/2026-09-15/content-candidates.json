@@ -1,0 +1,1319 @@
+{
+  "schemaVersion": "ux-content-candidates-1.0",
+  "phase": "B_CONTENT_IMPLEMENTED_PENDING_INDEPENDENT_QA",
+  "checkedAt": "2026-09-16",
+  "appBaseline": "b9cdc42",
+  "runtimeChanged": true,
+  "countMeaning": "existingResearch and existingPhotoAudit preserve the original b9cdc42 audit. Integration counts describe current approvals; current research catalog has26 records after Hakrim and Sinseoloreum, without changing400 canonical/80 curated pulse/27 sample service capabilities.",
+  "count": {
+    "existingResearch": 24,
+    "newCandidates": 12,
+    "newByCity": {
+      "seoul": 4,
+      "busan": 4,
+      "jeju": 4
+    },
+    "approvedForIntegration": 2,
+    "readyForParentNewContentReview": 0
+  },
+  "authorityBoundary": "Factual public sources and licensed historical photographs do not prove live heat, current opening, real partnership, benefit eligibility, payment acceptance, reservation availability or personal visit.",
+  "existingPhotoAudit": [
+    {
+      "venueId": "research-seoul-zest",
+      "city": "seoul",
+      "name": "제스트",
+      "existingAddress": "서울특별시 강남구 도산대로55길 26",
+      "existingCoordinateSourceUrl": "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Zest.html",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.the50.com/stories/News/asias-50-best-bars-2026-the-list-revealed.html",
+        "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Zest.html"
+      ]
+    },
+    {
+      "venueId": "research-seoul-bar-cham",
+      "city": "seoul",
+      "name": "바 참",
+      "existingAddress": "서울특별시 종로구 자하문로7길 34",
+      "existingCoordinateSourceUrl": "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Bar-Cham.html",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.the50.com/stories/News/asias-50-best-bars-2026-the-list-revealed.html",
+        "https://www.theworlds50best.com/discovery/Establishments/South-Korea/Seoul/Bar-Cham.html"
+      ]
+    },
+    {
+      "venueId": "research-seoul-gosari-express",
+      "city": "seoul",
+      "name": "고사리 익스프레스",
+      "existingAddress": "서울특별시 중구 퇴계로85길 12-10",
+      "existingCoordinateSourceUrl": "https://guide.michelin.com/kr/ko/seoul-capital-area/kr-seoul/restaurant/gosari-express",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026",
+        "https://guide.michelin.com/kr/ko/seoul-capital-area/kr-seoul/restaurant/gosari-express",
+        "https://www.badcarrotgroup.com/kr"
+      ]
+    },
+    {
+      "venueId": "research-seoul-3rd-samgyetang",
+      "city": "seoul",
+      "name": "3대삼계장인",
+      "existingAddress": "서울특별시 서초구 반포대로28길 56-3",
+      "existingCoordinateSourceUrl": "https://guide.michelin.com/en/seoul-capital-area/kr-seoul/restaurant/3rd-samgyetang",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026",
+        "https://guide.michelin.com/en/seoul-capital-area/kr-seoul/restaurant/3rd-samgyetang"
+      ]
+    },
+    {
+      "venueId": "research-seoul-onion-anguk",
+      "city": "seoul",
+      "name": "어니언 안국",
+      "existingAddress": "서울특별시 종로구 계동길 5",
+      "existingCoordinateSourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=191156",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [
+        "photo-onion-anguk-vvwf"
+      ],
+      "status": "LICENSE_AND_SOURCE_IDENTITY_EVIDENCE_FOUND",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=191156"
+      ]
+    },
+    {
+      "venueId": "research-seoul-london-bagel-dosan",
+      "city": "seoul",
+      "name": "런던베이글뮤지엄 도산점",
+      "existingAddress": "서울특별시 강남구 언주로168길 33",
+      "existingCoordinateSourceUrl": "https://english.visitseoul.net/restaurants/LondonBagelMuseumDosan/ENPxyqzye",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Commons Jamsil photographs are not Dosan photographs; reject substitution.",
+      "sourceLinks": [
+        "https://english.visitseoul.net/restaurants/LondonBagelMuseumDosan/ENPxyqzye"
+      ]
+    },
+    {
+      "venueId": "research-seoul-okdongsik",
+      "city": "seoul",
+      "name": "옥동식",
+      "existingAddress": "서울특별시 마포구 양화로7길 44-10",
+      "existingCoordinateSourceUrl": "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191592",
+      "existingFactsCheckedAt": "2026-09-11",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191592",
+        "https://guide.michelin.com/sg/en/seoul-capital-area/kr-seoul/restaurant/okdongsik"
+      ]
+    },
+    {
+      "venueId": "research-seoul-geumdwaeji-sikdang",
+      "city": "seoul",
+      "name": "금돼지식당",
+      "existingAddress": "서울특별시 중구 다산로 149",
+      "existingCoordinateSourceUrl": "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191564",
+      "existingFactsCheckedAt": "2026-09-11",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://english.visitkorea.or.kr/svc/whereToGo/locIntrdn/rgnContentsView.do?vcontsId=191564",
+        "https://guide.michelin.com/tw/en/seoul-capital-area/kr-seoul/restaurant/geumdwaeji-sikdang"
+      ]
+    },
+    {
+      "venueId": "research-busan-moemiljip",
+      "city": "busan",
+      "name": "뫼밀집",
+      "existingAddress": "부산광역시 해운대구 마린시티3로 23, 오렌지 프라자 2층",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000202017001000&uc_seq=2768",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026",
+        "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000202017001000&uc_seq=2768"
+      ]
+    },
+    {
+      "venueId": "research-busan-songheonjip",
+      "city": "busan",
+      "name": "송헌집",
+      "existingAddress": "부산광역시 수영구 민락로19번길 18",
+      "existingCoordinateSourceUrl": "https://guide.michelin.com/hk/zh_HK/busan-region/busan_1025838/restaurant/songheonjip",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://guide.michelin.com/vn/en/article/michelin-guide-ceremony/korea-bib-gourmand-2026",
+        "https://guide.michelin.com/hk/zh_HK/busan-region/busan_1025838/restaurant/songheonjip"
+      ]
+    },
+    {
+      "venueId": "research-busan-momos-yeongdo",
+      "city": "busan",
+      "name": "모모스 로스터리 & 커피바",
+      "existingAddress": "부산광역시 영도구 봉래나루로 160",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?menuCd=DOM_000000202002001000&uc_seq=2158",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [
+        "photo-momos-yeongdo-013508"
+      ],
+      "status": "LICENSE_AND_SOURCE_IDENTITY_EVIDENCE_FOUND",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitbusan.net/index.do?menuCd=DOM_000000202002001000&uc_seq=2158",
+        "https://momos.co.kr/faq"
+      ]
+    },
+    {
+      "venueId": "research-busan-waveon-coffee",
+      "city": "busan",
+      "name": "웨이브온커피",
+      "existingAddress": "부산광역시 기장군 장안읍 해맞이로 286",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=174",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=174"
+      ]
+    },
+    {
+      "venueId": "research-busan-sour-yeongdo",
+      "city": "busan",
+      "name": "사우어 영도",
+      "existingAddress": "부산광역시 영도구 대교로46번길 46, 끄티봉래 8층",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2139",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000202012001000&uc_seq=1767",
+        "https://www.wildwavebrew.com/?pageName=sourlocation~service",
+        "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2139"
+      ]
+    },
+    {
+      "venueId": "research-busan-living-room-bar",
+      "city": "busan",
+      "name": "파크 하얏트 부산 리빙룸 바",
+      "existingAddress": "부산광역시 해운대구 마린시티1로 51, 파크 하얏트 부산 31층",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2243",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.hyatt.com/park-hyatt/en-US/busph-park-hyatt-busan/dining",
+        "https://www.hyatt.com/park-hyatt/en-US/busph-park-hyatt-busan/dining/living-room",
+        "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201001001000&uc_seq=2243"
+      ]
+    },
+    {
+      "venueId": "research-busan-hapcheon-gukbapjip",
+      "city": "busan",
+      "name": "합천국밥집",
+      "existingAddress": "부산광역시 남구 용호로 235",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=1511",
+      "existingFactsCheckedAt": "2026-09-11",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=1511"
+      ]
+    },
+    {
+      "venueId": "research-busan-haeundae-amso-galbijip",
+      "city": "busan",
+      "name": "해운대암소갈비집",
+      "existingAddress": "부산광역시 해운대구 해운대해변로 333",
+      "existingCoordinateSourceUrl": "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201002001000&uc_seq=2370",
+      "existingFactsCheckedAt": "2026-09-11",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitbusan.net/index.do?lang_cd=ko&menuCd=DOM_000000201002001000&uc_seq=2370"
+      ]
+    },
+    {
+      "venueId": "research-jeju-woojin-haejangguk",
+      "city": "jeju",
+      "name": "우진해장국",
+      "existingAddress": "제주특별자치도 제주시 서사로 11",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018375",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018375"
+      ]
+    },
+    {
+      "venueId": "research-jeju-gozip-dolwurock-jungmun",
+      "city": "jeju",
+      "name": "고집돌우럭 중문점",
+      "existingAddress": "제주특별자치도 서귀포시 일주서로 879",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000021950",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000021950",
+        "https://www.gozipfish.com/"
+      ]
+    },
+    {
+      "venueId": "research-jeju-azulejo",
+      "city": "jeju",
+      "name": "아줄레주",
+      "existingAddress": "제주특별자치도 서귀포시 성산읍 신풍하동로19번길 59",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000008044",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000008044",
+        "https://www.visitjeju.net/en/detail/view?contentsid=CNTS_200000000008044"
+      ]
+    },
+    {
+      "venueId": "research-jeju-moasi",
+      "city": "jeju",
+      "name": "모아시",
+      "existingAddress": "제주특별자치도 서귀포시 대정읍 무릉중앙로24번길 16",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_300000000013818",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_300000000013818"
+      ]
+    },
+    {
+      "venueId": "research-jeju-delmoondo-hamdeok",
+      "city": "jeju",
+      "name": "델문도 함덕",
+      "existingAddress": "제주특별자치도 제주시 조천읍 조함해안로 519-10",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000001501",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000001501",
+        "https://visitjeju.net/kr/themtour/view?contentsid=CNTS_300000000013659&menuId=DOM_000002000000000221",
+        "https://www.delmoondo.com/"
+      ]
+    },
+    {
+      "venueId": "research-jeju-magpie-tapdong",
+      "city": "jeju",
+      "name": "맥파이 탑동점",
+      "existingAddress": "제주특별자치도 제주시 탑동로2길 7 2층",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012588",
+      "existingFactsCheckedAt": "2026-09-09",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012588",
+        "https://www.magpiebrewing.com/"
+      ]
+    },
+    {
+      "venueId": "research-jeju-oneunjeong-gimbap",
+      "city": "jeju",
+      "name": "오는정김밥",
+      "existingAddress": "제주특별자치도 서귀포시 동문동로 2",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020123",
+      "existingFactsCheckedAt": "2026-09-11",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020123",
+        "https://visitjeju.net/en/detail/view?contentsid=CNTS_300000000013865"
+      ]
+    },
+    {
+      "venueId": "research-jeju-yaksuteo-olle-market",
+      "city": "jeju",
+      "name": "제주약수터 올레시장점",
+      "existingAddress": "제주특별자치도 서귀포시 중앙로48번길 10",
+      "existingCoordinateSourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012730",
+      "existingFactsCheckedAt": "2026-09-11",
+      "auditedAt": "2026-09-15",
+      "photoFieldNull": true,
+      "canonicalVenueId": null,
+      "photoCandidateIds": [],
+      "status": "BLOCKED_NO_MATCHED_LICENSED_PHOTO_IN_INITIAL_PASS",
+      "identityAndRightsCaveat": "Existing factual source is not itself a photo reuse grant.",
+      "sourceLinks": [
+        "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012730"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "candidateId": "candidate-seoul-hakrim-dabang",
+      "proposedVenueId": "research-seoul-hakrim-dabang",
+      "city": "seoul",
+      "name": {
+        "ko": "학림다방",
+        "en": "Hakrim Dabang"
+      },
+      "kind": "cafe",
+      "address": "서울특별시 종로구 대학로 119 2층",
+      "summaryDraft": "Coffee and a historic cafe interior",
+      "menuEvidence": "Vienna coffee",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=47863",
+        "authority": "Korea Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 37.5819287995496,
+        "longitude": 127.001679855807,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=47863",
+        "extraction": "Public page JSON-LD latitude/longitude",
+        "status": "CROSS_SOURCE_COORDINATES_CORROBORATED_NOT_DOOR_SURVEY",
+        "corroboration": {
+          "sourceUrl": "https://commons.wikimedia.org/wiki/Category:Hakrim_Dabang",
+          "authority": "Wikimedia Commons / Wikidata Q129177008 community-maintained point",
+          "latitude": 37.5818,
+          "longitude": 127.0016,
+          "extractedValue": "37°34′54.48″N 127°00′05.76″E",
+          "distanceFromPrimaryMeters": 16,
+          "checkedAt": "2026-09-15",
+          "limits": "Cross-source agreement within approximately 16 m is not survey-grade doorway accuracy or independent on-site confirmation."
+        }
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_EXACT_ID_NAME_OR_ADDRESS_PREFIX_MATCH_IN_EXISTING_SETS",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [
+          "photo-hakrim-01"
+        ],
+        "rightsStatus": "LICENSE_AND_LOCAL_OFFICIAL_THUMBNAIL_VERIFIED_PENDING_BROWSER_QA",
+        "noTourismGalleryHotlink": true,
+        "blockedAlternativeMediaIds": [
+          "photo-hakrim-02"
+        ]
+      },
+      "status": "IMPLEMENTED_CONTENT_ONLY_PENDING_BUILD_AND_BROWSER_QA",
+      "integrationAllowed": true,
+      "blockers": [
+        "Verify actual 4:3 recommendation and 1:1 detail top-aligned crop, EN/KO/JA alt, visible credit, loading and failure UI after build"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      },
+      "translationStatus": "EN/KO/JA concise project editorial drafts, not official multilingual venue branding",
+      "appDataDraft": {
+        "id": "research-seoul-hakrim-dabang",
+        "city": "seoul",
+        "name": {
+          "en": "Hakrim Dabang",
+          "ko": "학림다방",
+          "ja": "学林茶房"
+        },
+        "district": {
+          "en": "Jongno-gu",
+          "ko": "종로구",
+          "ja": "チョンノ区"
+        },
+        "kind": "cafe",
+        "signature": {
+          "en": "Vienna coffee",
+          "ko": "비엔나커피",
+          "ja": "ウインナーコーヒー"
+        },
+        "address": "서울특별시 종로구 대학로 119 2층",
+        "latitude": 37.5819287995496,
+        "longitude": 127.001679855807,
+        "coordinateSourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=47863",
+        "checkedAt": "2026-09-15",
+        "reason": {
+          "en": "A long-running Daehak-ro cafe known for Vienna coffee.",
+          "ko": "대학로에서 비엔나커피를 즐기는 오래된 카페.",
+          "ja": "大学路でウインナーコーヒーを楽しめる老舗喫茶店。"
+        },
+        "sources": [
+          {
+            "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=47863",
+            "title": "Hakrim — VISITKOREA",
+            "publishedAt": null,
+            "evidence": "tourism"
+          }
+        ],
+        "canonicalVenueId": null,
+        "photo": {
+          "url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Hakrim_Dabang_01.jpg",
+          "deliveredUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Hakrim_Dabang_01.jpg/960px-Hakrim_Dabang_01.jpg?utm_campaign=index&utm_content=thumbnail&utm_source=commons.wikimedia.org",
+          "sourceUrl": "https://commons.wikimedia.org/wiki/File:Hakrim_Dabang_01.jpg",
+          "credit": "Hakrim Dabang 01.jpg — Seefooddiet / Wikimedia Commons, CC BY-SA 4.0. Wikimedia 960px thumbnail; top-aligned display crop. Photographed 2025-01-10.",
+          "license": "CC BY-SA 4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+          "localSrc": "/media/venues/research-seoul-hakrim-dabang/exterior-seefooddiet-20250110-v1.jpg",
+          "objectPosition": "50% 0%",
+          "alt": {
+            "en": "Hakrim Dabang's sign and entrance photographed in 2025",
+            "ko": "2025년에 촬영된 학림다방 간판과 입구",
+            "ja": "2025年に撮影された学林茶房の看板と入口"
+          }
+        }
+      },
+      "appDataDraftNote": "Implemented as content only. Existing 24 research capability IDs are explicitly allowlisted; Hakrim has no offer, reservation, table or partnership. Local JPEG is the unchanged official Wikimedia 960px thumbnail, not an on-device bitmap edit. Production release and browser QA are pending."
+    },
+    {
+      "candidateId": "candidate-seoul-tosokchon-samgyetang",
+      "proposedVenueId": "research-seoul-tosokchon-samgyetang",
+      "city": "seoul",
+      "name": {
+        "ko": "토속촌삼계탕",
+        "en": "Tosokchon Samgyetang"
+      },
+      "kind": "food",
+      "address": "서울특별시 종로구 자하문로5길 5",
+      "summaryDraft": "Samgyetang near Gyeongbokgung",
+      "menuEvidence": "Samgyetang",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=97919",
+        "authority": "Korea Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 37.5775621208271,
+        "longitude": 126.971577362193,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=97919",
+        "extraction": "Public page JSON-LD latitude/longitude",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-seoul-myeongdong-kyoja-main",
+      "proposedVenueId": "research-seoul-myeongdong-kyoja-main",
+      "city": "seoul",
+      "name": {
+        "ko": "명동교자 본점",
+        "en": "Myeongdong Kyoja · main branch"
+      },
+      "kind": "food",
+      "address": "서울특별시 중구 명동10길 29",
+      "summaryDraft": "Noodles and dumplings in Myeongdong",
+      "menuEvidence": "Kalguksu; mandu",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=99925",
+        "authority": "Korea Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 37.5625753160165,
+        "longitude": 126.985768071964,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=99925",
+        "extraction": "Public page JSON-LD latitude/longitude",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-seoul-cheongsudang-ikseon",
+      "proposedVenueId": "research-seoul-cheongsudang-ikseon",
+      "city": "seoul",
+      "name": {
+        "ko": "청수당 익선",
+        "en": "Cheongsudang · Ikseon"
+      },
+      "kind": "cafe",
+      "address": "서울특별시 종로구 돈화문로11나길 31-9",
+      "summaryDraft": "Hanok garden-style cafe",
+      "menuEvidence": "Coffee and cake",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": "2024-01-24",
+      "source": {
+        "url": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=187836",
+        "authority": "Korea Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 37.5738943,
+        "longitude": 126.9897864,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://english.visitkorea.or.kr/svc/contents/contentsView.do?vcontsId=187836",
+        "extraction": "Public article setMapInfos(5); marker-to-section binding requires second check",
+        "status": "BLOCKED_MARKER_BINDING_RECHECK"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Article published 2024-01-24; content written November 2023. Recheck operating/address freshness and bind map index 5 to this exact branch.",
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-busan-brown-hands-baekje",
+      "proposedVenueId": "research-busan-brown-hands-baekje",
+      "city": "busan",
+      "name": {
+        "ko": "브라운핸즈백제",
+        "en": "Brown Hands Baekje"
+      },
+      "kind": "cafe",
+      "address": "부산광역시 동구 중앙대로209번길 16",
+      "summaryDraft": "Cafe in a converted hospital building",
+      "menuEvidence": "Espresso; Americano",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=231",
+        "authority": "Busan official tourism",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 35.116352,
+        "longitude": 129.03912,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=231",
+        "extraction": "Public page findPath_goal_lat/lng and default_lat/lng",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-busan-choryang-1941",
+      "proposedVenueId": "research-busan-choryang-1941",
+      "city": "busan",
+      "name": {
+        "ko": "초량1941",
+        "en": "Choryang 1941"
+      },
+      "kind": "cafe",
+      "address": "부산광역시 동구 망양로 533-5",
+      "summaryDraft": "Cafe in a reused 1941 house",
+      "menuEvidence": "Bottled milk drinks",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=245",
+        "authority": "Busan official tourism",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 35.11969,
+        "longitude": 129.02942,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitbusan.net/index.do?lang_cd=en&menuCd=DOM_000000301002001000&uc_seq=245",
+        "extraction": "Public page findPath_goal_lat/lng and default_lat/lng",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-busan-geumsu-bokguk-haeundae",
+      "proposedVenueId": "research-busan-geumsu-bokguk-haeundae",
+      "city": "busan",
+      "name": {
+        "ko": "금수복국 해운대본점",
+        "en": "Geumsu Bokguk · Haeundae"
+      },
+      "kind": "food",
+      "address": "부산광역시 해운대구 중동1로43번길 23",
+      "summaryDraft": "Pufferfish soup restaurant",
+      "menuEvidence": "Bokguk",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitbusan.net/index.do?menuCd=DOM_000000202017001000&uc_seq=1941",
+        "authority": "Busan official tourism",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 35.162388,
+        "longitude": 129.16444,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitbusan.net/index.do?menuCd=DOM_000000202017001000&uc_seq=1941",
+        "extraction": "Public page findPath_goal_lat/lng and default_lat/lng",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-busan-sinbalwon",
+      "proposedVenueId": "research-busan-sinbalwon",
+      "city": "busan",
+      "name": {
+        "ko": "신발원",
+        "en": "Sinbalwon"
+      },
+      "kind": "food",
+      "address": "부산광역시 동구 대영로243번길 62",
+      "summaryDraft": "Chinese-style dumpling stop in Choryang",
+      "menuEvidence": "Meat dumplings",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitbusan.net/index.do?menuCd=DOM_000000201001001000&uc_seq=242",
+        "authority": "Busan official tourism",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 35.114815,
+        "longitude": 129.03873,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitbusan.net/index.do?menuCd=DOM_000000201001001000&uc_seq=242",
+        "extraction": "Public page findPath_goal_lat/lng and default_lat/lng",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-jeju-sinseoloreum",
+      "proposedVenueId": "research-jeju-sinseoloreum",
+      "city": "jeju",
+      "name": {
+        "ko": "신설오름",
+        "en": "Sinseoloreum",
+        "ja": "シンソルオルム"
+      },
+      "kind": "food",
+      "address": "제주특별자치도 제주시 고마로17길 2",
+      "summaryDraft": "Jeju soup restaurant",
+      "menuEvidence": "Momguk",
+      "checkedAt": "2026-09-16",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020185&menuId=DOM_000001719000000000",
+        "authority": "Jeju Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 33.50546,
+        "longitude": 126.54163,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020185&menuId=DOM_000001719000000000",
+        "extraction": "Public page latitude/longitude fields",
+        "status": "TWO_OFFICIAL_SOURCE_POINTS_WITHIN_TEN_METERS",
+        "corroboratingSource": {
+          "url": "https://korean.visitkorea.or.kr/call?cmd=TOUR_CONTENT_BODY_DETAIL&cotId=f8eee625-9581-4af7-99c8-bd69e9dcde02&locationx=&locationy=&stampId=",
+          "checkedAt": "2026-09-16",
+          "method": "Public unauthenticated GET; no submission or account",
+          "latitude": 33.5053848808039,
+          "longitude": 126.541578109031,
+          "address": "제주특별자치도 제주시 고마로17길 2",
+          "limits": "Two tourism points agree approximately; not an independently surveyed entrance or current opening proof"
+        }
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [
+          "photo-sinseoloreum-momguk"
+        ],
+        "rightsStatus": "CC_BY_4_0_SOURCE_AND_UNCHANGED_LOCAL_PHOTO_VERIFIED",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "IMPLEMENTED_CONTENT_ONLY_PENDING_INDEPENDENT_BROWSER_QA",
+      "integrationAllowed": true,
+      "blockers": [
+        "Independent actual UI crop/credit/failure/no-capability QA and release verification remain pending"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      },
+      "additionalFactSources": [
+        {
+          "url": "https://korean.visitkorea.or.kr/detail/ms_detail.do?cotid=f8eee625-9581-4af7-99c8-bd69e9dcde02",
+          "authority": "Korea Tourism Organization",
+          "scope": "Restaurant/address corroborated; public content GET now supplies the second matching coordinate pair on2026-09-16"
+        },
+        {
+          "url": "https://0spei.tistory.com/8",
+          "authority": "Photographer's original 2019 publication",
+          "scope": "Historical restaurant/photo context; not independent current geocoding"
+        }
+      ]
+    },
+    {
+      "candidateId": "candidate-jeju-bomnal-cafe",
+      "proposedVenueId": "research-jeju-bomnal-cafe",
+      "city": "jeju",
+      "name": {
+        "ko": "봄날",
+        "en": "Bomnal Cafe"
+      },
+      "kind": "cafe",
+      "address": "제주특별자치도 제주시 애월읍 애월로1길 25",
+      "summaryDraft": "Seaside cafe in Aewol",
+      "menuEvidence": "Coffee and tea",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018337&menuId=DOM_000002017001000000",
+        "authority": "Jeju Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 33.46246,
+        "longitude": 126.30959,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000018337&menuId=DOM_000002017001000000",
+        "extraction": "Public page latitude/longitude fields",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-jeju-myeongjin-jeonbok",
+      "proposedVenueId": "research-jeju-myeongjin-jeonbok",
+      "city": "jeju",
+      "name": {
+        "ko": "명진전복",
+        "en": "Myeongjin Jeonbok"
+      },
+      "kind": "food",
+      "address": "제주특별자치도 제주시 구좌읍 해맞이해안로 1282",
+      "summaryDraft": "Abalone restaurant in Gujwa",
+      "menuEvidence": "Abalone stone-pot rice; grilled abalone",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020047&menuId=DOM_000001719000000000",
+        "authority": "Jeju Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": 33.53242,
+        "longitude": 126.84985,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_000000000020047&menuId=DOM_000001719000000000",
+        "extraction": "Public page latitude/longitude fields",
+        "status": "SOURCE_POINT_EXTRACTED_MAP_QA_PENDING"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    },
+    {
+      "candidateId": "candidate-jeju-jamae-guksu-iho",
+      "proposedVenueId": "research-jeju-jamae-guksu-iho",
+      "city": "jeju",
+      "name": {
+        "ko": "자매국수 본점",
+        "en": "Jamae Guksu · Iho main branch"
+      },
+      "kind": "food",
+      "address": "제주특별자치도 제주시 항골남길 46",
+      "summaryDraft": "Jeju pork-noodle restaurant",
+      "menuEvidence": "Gogi-guksu; bibim-guksu",
+      "checkedAt": "2026-09-15",
+      "sourcePublishedAt": null,
+      "source": {
+        "url": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012575",
+        "authority": "Jeju Tourism Organization",
+        "evidence": "tourism",
+        "factsChecked": [
+          "venue_name",
+          "branch_address",
+          "venue_category",
+          "menu_description"
+        ]
+      },
+      "geo": {
+        "latitude": null,
+        "longitude": null,
+        "crs": "EPSG:4326",
+        "sourceUrl": "https://www.visitjeju.net/kr/detail/view?contentsid=CNTS_200000000012575",
+        "extraction": "Public page latitude/longitude fields",
+        "status": "BLOCKED_ADDRESS_COORDINATE_CONFLICT"
+      },
+      "dedup": {
+        "against": [
+          "400 canonical venue records",
+          "24 research venue records",
+          "10 Jeju editorial seeds"
+        ],
+        "method": "NFKC, strip spacing/punctuation, Korean name/branch review; no normalized name match. No ID rewrite or merge performed.",
+        "matchedExistingIds": [],
+        "status": "NO_NAME_MATCH_ADDRESS_ALIAS_REVIEW_REQUIRED",
+        "preserveExistingIds": true
+      },
+      "photos": {
+        "candidateMediaIds": [],
+        "rightsStatus": "BLOCKED_NO_ITEM_REUSE_PERMISSION",
+        "noTourismGalleryHotlink": true
+      },
+      "status": "STAGING_NOT_APPROVED",
+      "integrationAllowed": false,
+      "blockers": [
+        "Tourism page says Iho-dong/Hanggolnam-gil 46 but embeds 33.5168201,126.5169905; retain those only as rejected source evidence, never use as accepted pin.",
+        "Independent map/address and alias review",
+        "Item-specific photo reuse permission",
+        "Three-UX-role/PRD integration gate not yet approved"
+      ],
+      "liveClaimsAllowed": false,
+      "merchantCapabilities": {
+        "realPayment": false,
+        "realReservation": false,
+        "partnership": false,
+        "benefit": false
+      }
+    }
+  ],
+  "runtimeChangedByThisResearchAgent": true,
+  "runtimeChangedMeaning": "Initial2026-09-15 research changed no runtime. On2026-09-16 explicit approval authorized this agent to add only Sinseoloreum content/photo and category badge sizing. existingPhotoAudit remains baseline b9cdc42; no service or live activity capability was added."
+}

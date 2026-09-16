@@ -1,7 +1,8 @@
 .photo { position: relative; margin: 0; overflow: hidden; isolation: isolate; border-radius: 17px; background: var(--ondo-surface-soft, #f1f2f3); aspect-ratio: 4 / 3; }
 .photo img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .photo > svg { position: absolute; width: 26px; height: 26px; inset: 0; margin: auto; color: var(--ondo-muted, #62666c); }
-.photo figcaption { position: absolute; inset: auto 6px 6px auto; max-width: calc(100% - 12px); padding: 3px 5px; border-radius: 5px; color: #fff; background: rgb(0 0 0 / 72%); font-size: 9px; font-weight: 600; line-height: 1.25; }
+.photo figcaption { position: absolute; inset: auto 6px 6px auto; max-width: calc(100% - 12px); padding: 3px 5px; border-radius: 5px; color: #fff; background: rgb(0 0 0 / 78%); font-size: 11px; font-weight: 600; line-height: 1.25; }
+.failed { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px; color: var(--ondo-muted, #62666c); font-size: 11px; text-align: center; overflow-wrap: anywhere; }
 .photo[data-compact="true"] { aspect-ratio: 1; }
 .photo[data-food-photo="category-placeholder"] { --category-tint: #6a7954; --category-ink: var(--ondo-ink, #292a25); display: grid; grid-template-rows: minmax(min-content, 1fr) auto; align-items: center; gap: 6px; width: 100%; min-width: 0; min-height: 104px; aspect-ratio: auto; padding: 8px; box-sizing: border-box; border: 1px solid color-mix(in srgb, var(--category-tint) 22%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--category-tint) 11%, var(--ondo-surface-raised, #fff)), color-mix(in srgb, var(--category-tint) 4%, var(--ondo-surface-raised, #fff))); color: var(--category-ink); }
 .photo[data-food-subject="grill"], .photo[data-food-subject="bakery"] { --category-tint: #ba7952; }
@@ -15,5 +16,5 @@
 .categoryArt { display: grid; justify-items: center; align-content: center; gap: 6px; width: 100%; min-width: 0; text-align: center; }
 .categoryArt svg { display: block; width: clamp(24px, 8vw, 32px); height: clamp(24px, 8vw, 32px); color: var(--category-ink); }
 .categoryArt strong { max-width: 100%; font-size: 12px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
-.photo[data-food-photo="category-placeholder"] figcaption { position: static; inset: auto; padding: 0; max-width: 100%; border-radius: 0; color: var(--ondo-muted, #62666c); background: transparent; text-align: center; font-size: 9px; font-weight: 500; overflow-wrap: anywhere; }
+.photo[data-food-photo="category-placeholder"] figcaption { position: static; inset: auto; padding: 0; max-width: 100%; border-radius: 0; color: var(--ondo-muted, #62666c); background: transparent; text-align: center; font-size: 11px; font-weight: 500; overflow-wrap: anywhere; }
 @media (forced-colors: active) { .photo figcaption { color: CanvasText; background: Canvas; border: 1px solid CanvasText; } }

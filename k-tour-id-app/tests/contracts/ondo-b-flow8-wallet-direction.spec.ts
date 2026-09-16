@@ -165,7 +165,6 @@ test("FLOW8-FREEZE-008 the complete PRD action and testid graph stays present", 
     "wallet-benefit",
     "wallet-activity",
     "wallet-activity-receipt",
-    "wallet-activity-refund",
     "wallet-privacy",
     "benefit-accept",
     "benefit-decline",
@@ -176,9 +175,19 @@ test("FLOW8-FREEZE-008 the complete PRD action and testid graph stays present", 
     "payment-recovery",
     "payment-retry",
     "payment-receipt",
-    "payment-refund",
     "payment-receipt-return",
   ]) expect(`${commerce}\n${my}`).toContain(`data-testid="${testId}"`)
+
+  // One amount-aware refund panel per receipt owner replaces the competing
+  // legacy full-refund buttons without removing full or partial refunds.
+  const refunds = source("features/ondo/commerce-b/commerce-refunds-b.tsx")
+  expect(commerce).toContain('scope="checkout"')
+  expect(commerce).toContain('scope="wallet"')
+  for (const action of ["amount", "all", "submit", "check", "retry"]) {
+    expect(refunds).toContain('data-testid={`${scope}-refund-' + action + '`}')
+  }
+  expect(commerce).not.toContain('data-testid="payment-refund"')
+  expect(commerce).not.toContain('data-testid="wallet-activity-refund"')
 
   for (const action of [
     "acknowledgeCommerceLocalBoundary",
@@ -302,13 +311,20 @@ test("FLOW8-JIT-018 action-gate credential issuance and setup closure publish at
   expect(completion).toContain("completeIdentitySetup: (method, options) => {")
   expect(completion.match(/\bcommitEphemeral\(/g)).toHaveLength(1)
   expect(completion).toContain("commitEphemeral((current) => ({")
-  expect(completion).toContain("identityCredential: recovered ?? createSimulatedCredentialB(method, Date.now(), current.identityDemoScenario)")
-  const reviewGuard = completion.indexOf("if (options?.sampleRecovery && !qaReviewFixtureOptions().allowReviewFixture) return")
-  const recoveryGuard = completion.indexOf("if (options?.sampleRecovery && (!recovered || recovered.method !== method)) return")
+  expect(completion).toContain('identityCredential: options?.issuanceScope === "person" ? createPersonOnlySimulatedCredentialB() : recovered ?? createSimulatedCredentialB(method, Date.now(), current.identityDemoScenario)')
+  const reviewGuard = completion.indexOf("if (options?.sampleRecovery && !qaReviewFixtureOptions().allowReviewFixture) return false")
+  const recoveryGuard = completion.indexOf("if (options?.sampleRecovery && (!recovered || recovered.method !== method)) return false")
   const atomicPublish = completion.indexOf("commitEphemeral((current) => ({")
   expect(reviewGuard).toBeGreaterThanOrEqual(0)
   expect(recoveryGuard).toBeGreaterThan(reviewGuard)
   expect(atomicPublish).toBeGreaterThan(recoveryGuard)
+  const personScopeGuard = completion.indexOf('if (options?.issuanceScope === "person")')
+  const liveHandoffGuard = completion.indexOf("isBExperiencePersonHandoffCurrent(window.sessionStorage, options.experiencePersonHandoff")
+  expect(personScopeGuard).toBeGreaterThan(reviewGuard)
+  expect(liveHandoffGuard).toBeGreaterThan(personScopeGuard)
+  expect(atomicPublish).toBeGreaterThan(liveHandoffGuard)
+  expect(completion).toContain('stateRef.current.identityCredential || stateRef.current.identitySetupOrigin !== "action_gate") return false')
+  expect(completion.lastIndexOf("return true")).toBeGreaterThan(atomicPublish)
   expect(completion).toContain("recoverSimulatedCredentialB(stateRef.current.identityCredential)")
   expect(completion).not.toContain("identityDemoScenario:")
   expect(completion).toContain('current.identitySetupOrigin === "action_gate"')
@@ -316,7 +332,11 @@ test("FLOW8-JIT-018 action-gate credential issuance and setup closure publish at
   expect(completion).toContain(": current.identitySetupOrigin")
   expect(completion).not.toContain("closeIdentitySetup()")
   expect(holderCompletion).toContain('if (origin === "action_gate") return')
-  expect(holderCompletion).toContain("actions.completeIdentitySetup(method, sampleRecovery ? { sampleRecovery: true } : undefined)")
+  expect(holderCompletion).toContain("const saved = actions.completeIdentitySetup(method, experiencePersonRef.current")
+  expect(holderCompletion).toContain('? { issuanceScope: "person", experiencePersonHandoff: experiencePersonRef.current }')
+  expect(holderCompletion).toContain(": sampleRecovery ? { sampleRecovery: true } : undefined)")
+  expect(holderCompletion.indexOf("if (!saved)")).toBeGreaterThan(holderCompletion.indexOf("const saved ="))
+  expect(holderCompletion.indexOf('if (origin === "action_gate") return')).toBeGreaterThan(holderCompletion.indexOf("if (!saved)"))
   expect(holderCompletion).not.toContain("actions.closeIdentitySetup()")
 })
 
@@ -430,7 +450,7 @@ test("FLOW8-FUNDING-016 external funding has consented sample rails without faki
   const quoteHandoff = commerce.slice(commerce.indexOf("function openFundingForQuote("), commerce.indexOf("function pay("))
   expect(quoteHandoff).toContain('actions.dispatchCommerce({ type: "PREPARE_QUOTE", quote })')
   expect(quoteHandoff).toContain("setConsent(false)")
-  expect(quoteHandoff).toContain("onOpenFunding(trigger)")
+  expect(quoteHandoff).toContain("onOpenFunding(trigger, purpose)")
   expect(commerce).toContain('const walletPresentationState = walletStatus === "ready" && !reviewMode ? "empty" : walletStatus')
   expect(commerce).toContain('data-wallet-state={walletPresentationState}')
   expect(commerce).toContain('reviewMode ? copy.balanceReady : copy.balanceEmptyStatus')
@@ -458,8 +478,8 @@ test("FLOW8-FUNDING-017 the child funding portal exits without releasing its par
   expect(fundingMount).toContain("focusReturn?.exact.isConnected && isRenderedFocusable(focusReturn.exact)")
   expect(fundingMount).toContain("focusFirstAvailableDestination(focusReturn.fallbackSelectors)")
   expect(fundingMount).not.toMatch(/function close\(\)[\s\S]{0,260}requestAnimationFrame/)
-  expect(commerce).toContain("setDraftSource(source)")
-  expect(commerce).toContain("[source, subject, reviewMode]")
+  expect(commerce).toContain('setDraftSource(purpose === "topup" && source === "travel_balance" ? "krw_bank" : source)')
+  expect(commerce).toContain("[source, subject, purpose, reviewMode]")
   expect(commerce).toContain("readFundingRailB(window.sessionStorage.getItem(FUNDING_RAIL_SESSION_KEY_B))")
   expect(commerce).toContain('if (onSelect(draftSource)) onClose()')
   expect(css).toContain('.fundingBackdrop[data-funding-presence="closing"]')

@@ -668,11 +668,11 @@ test("FLOW7-PULSE-011 posting preserves the full shared tuple on Place, List, Ma
   expect(rowIndex).toBe(3)
   const listPulse = list.locator(`[data-venue-id='${VENUE_ID}'] [data-testid='ondo-b-list-pulse']`)
   await expect(listPulse).toHaveAttribute("data-pulse-numeric", "hidden")
-  await expect(listPulse).toHaveAttribute("aria-label", "ONDO temperature · PEAK · Your Local Signal is included on this device")
+  await expect(listPulse).toHaveAttribute("aria-label", "Place temperature · PEAK · Your Local Signal is included on this device")
   expect(await targetRow.count()).toBeLessThanOrEqual(1)
   await page.getByTestId("ondo-b-view-toggle").click()
   const accessible = page.getByTestId("ondo-b-pulse-marker-accessible-detail").locator("li")
-  await expect(accessible.first()).toContainText("ONDO temperature · PEAK · freshness curated snapshot · confidence high")
+  await expect(accessible.first()).toContainText("Place temperature · PEAK · freshness curated snapshot · confidence high")
 })
 
 test("FLOW7-CONSENT-012 phone Person gate keeps both 44px decisions visible and details progressively reachable", async ({ page }) => {

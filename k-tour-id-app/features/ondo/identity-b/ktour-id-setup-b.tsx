@@ -19,12 +19,15 @@ import { KTourIdMark } from "../shared/ui/ktour-id-mark"
 import { isRenderedFocusable } from "../shared/ui/is-rendered-focusable"
 import { ONDO_MODAL_PRIORITY } from "../shared/ui/modal-layer-priority"
 import { useDocumentScrollLock, useModalIsolation } from "../shared/ui/use-modal-isolation"
-import { enterReviewSample, readQaRuntime, useQaControls } from "../shared/ui/use-qa-controls"
+import { enterReviewSample, qaReviewFixtureOptions, readQaRuntime, useQaControls } from "../shared/ui/use-qa-controls"
+import { createBExperiencePersonHandoff, isBExperiencePersonHandoffCurrent, restoreBActionGateSession, type BExperiencePersonHandoff } from "./action-gate-contract-b"
+import { EXPERIENCE_COPY_B } from "../experience-b/experience-copy-b"
 import { useSheetPresence } from "../shared/ui/use-sheet-presence"
 import {
   createPresentationRequestB,
   createIdentitySetupSessionB,
   isIdentitySetupSessionActiveB,
+  isPersonOnlySimulatedCredentialB,
   isPresentationRequestActiveB,
       isReviewCredentialDraftB,
       isSimulatedCredentialActiveB,
@@ -44,7 +47,7 @@ import { IdentityHolderStepB } from "./identity-holder-step-b"
 import styles from "./ktour-id-setup-b.module.css"
 
 type Phase =
-  | "method_select" | "consent" | "cx_handoff_preview"
+  | "method_select" | "consent" | "cx_handoff_preview" | "verified_person_consent"
   | "document_preview" | "face_liveness_preview" | "provider_processing_preview"
   | "holder_delivery_preview"
   | "credential_ready" | "presentation_request" | "presentation_consent"
@@ -114,7 +117,7 @@ const COPY = {
     methodUnavailable: "Unavailable now", methodReview: "Review path", reviewTruth: "Review path · no external service confirmation", presentationReviewPending: "Review only · nothing will be sent", presentationReviewResult: "Review result · nothing sent",
     separate: "Passport eKYC uses a separate provider — not OmniOne CX.", review: "Review consent", later: "Not now — keep exploring",
     consentTitle: "Check before you continue", consentBody: "Review what this step needs, then continue when you’re ready.",
-    requester: "Requester", requesterValue: "ONDO K-Tour ID", purpose: "Purpose", purposeValue: "Set up K-Tour ID for this trip",
+    requester: "Requester", requesterValue: "K-Tour ID", purpose: "Purpose", purposeValue: "Set up K-Tour ID for this trip",
     provider: "Proofing route", evidence: "Requested evidence", retention: "Retention",
     mobileRetention: "No Mobile ID payload, name, birth date, signed callback or provider result is stored. Only trip eligibility and private K-Tour credential state remain in this tab.",
     residenceRetention: "No residence-card payload, name, birth date, signed callback or provider result is stored. Only trip eligibility and private K-Tour credential state remain in this tab.",
@@ -123,9 +126,9 @@ const COPY = {
     consentDetails: "Data & storage details",
     accept: "Agree and continue", decline: "Go back", next: "Continue",
     cx: "Preview the ID handoff", cxBody: "See the next step with a prepared sample. No ID app opens and no personal data is sent.",
-    handoffRoute: "How your ID returns to ONDO", handoffConsent: "Consent reviewed", handoffConsentNote: "Only the evidence you agreed to.",
+    handoffRoute: "How your ID returns to K-Tour ID", handoffConsent: "Consent reviewed", handoffConsentNote: "Only the evidence you agreed to.",
     handoffCheck: "Review an ID response", handoffCheckNote: "Prepared sample · not a provider result.",
-    handoffReturn: "Add your travel pass", handoffReturnNote: "You decide whether to save it in ONDO.", handoffContinue: "Review sample response",
+    handoffReturn: "Add your travel pass", handoffReturnNote: "You decide whether to save it in K-Tour ID.", handoffContinue: "Review sample response",
     document: "Check the passport page", documentBody: "The review route uses a bundled redacted sample and does not collect passport data.",
     face: "Face check", faceBody: "Continue when you’re ready.",
     processing: "Preparing the next step", processingBody: "Keep this screen open for a moment.",
@@ -134,7 +137,7 @@ const COPY = {
     walletReady: "Payments stay separate", walletReadyNote: "Add KRW or USD later in ID & Wallet",
     present: "Review eligibility", request: "Review travel eligibility", requestBody: "This review shows one minimum yes/no result here. Nothing is sent to an external service.",
     presentConsent: "Review this one request?", presentConsentBody: "This applies once. There is no always allow, and declining does not change the draft.",
-    presentationRequester: "ONDO Table", presentationPurpose: "Minimum trip eligibility for this one request",
+    presentationRequester: "K-Tour ID Table", presentationPurpose: "Minimum trip eligibility for this one request",
     presentationEvidence: "K-Tour travel eligibility · yes/no only", presentationRetention: "This request only · expires automatically · result not stored",
     presentationPredicate: "K-Tour travel eligibility · yes/no only", presentationPredicateRetention: "One request · result not stored",
     presentationRequestEyebrow: "TRAVEL ELIGIBILITY",
@@ -168,7 +171,7 @@ const COPY = {
     methodUnavailable: "현재 이용할 수 없음", methodReview: "검토 경로", reviewTruth: "검토 경로 · 외부 서비스 확인 없음", presentationReviewPending: "검토용 · 외부 전송 없음", presentationReviewResult: "검토용 결과 · 전송 없음",
     separate: "여권 eKYC는 OmniOne CX가 아닌 별도 제공자입니다.", review: "동의 내용 보기", later: "나중에 — 게스트로 계속",
     consentTitle: "계속하기 전에 확인하세요", consentBody: "이 단계에 필요한 내용을 확인한 뒤 계속하세요.",
-    requester: "요청자", requesterValue: "ONDO K-Tour ID", purpose: "목적", purposeValue: "이번 여행에서 사용할 K-Tour ID 준비",
+    requester: "요청자", requesterValue: "K-Tour ID", purpose: "목적", purposeValue: "이번 여행에서 사용할 K-Tour ID 준비",
     provider: "확인 경로", evidence: "요청 증빙", retention: "보관",
     mobileRetention: "모바일 신분증 원문·이름·생년월일·서명 콜백·기관 응답은 저장하지 않습니다. 이 탭에는 여행 자격과 민간 K-Tour 자격 상태만 남습니다.",
     residenceRetention: "외국인등록증 원문·이름·생년월일·서명 콜백·기관 응답은 저장하지 않습니다. 이 탭에는 여행 자격과 민간 K-Tour 자격 상태만 남습니다.",
@@ -177,9 +180,9 @@ const COPY = {
     consentDetails: "데이터·보관 상세",
     accept: "동의하고 계속", decline: "돌아가기", next: "계속",
     cx: "신분증 연결을 미리 볼게요", cxBody: "준비된 샘플로 다음 단계를 살펴봐요. 신분증 앱을 열거나 개인정보를 보내지 않아요.",
-    handoffRoute: "신분증 확인 후 ONDO로 돌아오는 과정", handoffConsent: "동의 내용 확인", handoffConsentNote: "동의한 증빙만 요청해요.",
+    handoffRoute: "신분증 확인 후 K-Tour ID로 돌아오는 과정", handoffConsent: "동의 내용 확인", handoffConsentNote: "동의한 증빙만 요청해요.",
     handoffCheck: "신분증 응답 검토", handoffCheckNote: "준비된 샘플 · 실제 기관 응답 아님",
-    handoffReturn: "여행 패스에 담기", handoffReturnNote: "ONDO에 보관할지 직접 선택해요.", handoffContinue: "샘플 응답 확인",
+    handoffReturn: "여행 패스에 담기", handoffReturnNote: "K-Tour ID에 보관할지 직접 선택해요.", handoffContinue: "샘플 응답 확인",
     document: "여권 면 확인", documentBody: "검토 경로는 가림 처리 샘플을 사용하며 여권 데이터를 수집하지 않습니다.",
     face: "얼굴 확인", faceBody: "준비되면 계속하세요.",
     processing: "다음 단계 준비 중", processingBody: "잠시 이 화면을 열어두세요.",
@@ -188,7 +191,7 @@ const COPY = {
     walletReady: "결제는 별도로 준비", walletReadyNote: "원화·달러는 나중에 ID·지갑에서 추가",
     present: "여행 자격 검토", request: "여행 자격 검토", requestBody: "최소한의 예/아니오 결과 하나를 이 화면에서만 확인합니다. 외부 서비스로 전송하지 않아요.",
     presentConsent: "이번 요청을 검토할까요?", presentConsentBody: "이번 한 번만 적용됩니다. 항상 허용은 없고 거절해도 초안은 바뀌지 않아요.",
-    presentationRequester: "ONDO 테이블", presentationPurpose: "이번 한 번의 요청을 위한 최소 여행 자격 확인",
+    presentationRequester: "K-Tour ID 테이블", presentationPurpose: "이번 한 번의 요청을 위한 최소 여행 자격 확인",
     presentationEvidence: "K-Tour 여행 자격 · 예/아니오만", presentationRetention: "이번 요청에만 사용 · 자동 만료 · 결과 저장 안 함",
     presentationPredicate: "K-Tour 여행 자격 · 예/아니오만", presentationPredicateRetention: "한 번의 요청 · 결과 저장 안 함",
     presentationRequestEyebrow: "여행 자격 확인",
@@ -222,7 +225,7 @@ const COPY = {
     methodUnavailable: "現在利用できません", methodReview: "検証用ルート", reviewTruth: "検証用ルート・外部サービスによる確認なし", presentationReviewPending: "レビュー用 · 外部送信なし", presentationReviewResult: "レビュー結果 · 送信なし",
     separate: "パスポートeKYCはOmniOne CXではなく別の事業者です。", review: "同意内容を確認", later: "今はしない — ゲスト利用を続ける",
     consentTitle: "続ける前に確認", consentBody: "この手順に必要な内容を確認してから続けてください。",
-    requester: "依頼者", requesterValue: "ONDO K-Tour ID", purpose: "目的", purposeValue: "今回の旅行で使うK-Tour IDを準備",
+    requester: "依頼者", requesterValue: "K-Tour ID", purpose: "目的", purposeValue: "今回の旅行で使うK-Tour IDを準備",
     provider: "確認ルート", evidence: "依頼する証拠", retention: "保持",
     mobileRetention: "モバイルID本文、氏名、生年月日、署名済みコールバック、事業者結果は保存しません。このタブには旅行資格と民間K-Tour資格状態だけが残ります。",
     residenceRetention: "在留カード本文、氏名、生年月日、署名済みコールバック、事業者結果は保存しません。このタブには旅行資格と民間K-Tour資格状態だけが残ります。",
@@ -231,9 +234,9 @@ const COPY = {
     consentDetails: "データと保存の詳細",
     accept: "同意して続ける", decline: "戻る", next: "続ける",
     cx: "ID連携をプレビュー", cxBody: "用意されたサンプルで次の手順を確認します。IDアプリは開かず、個人情報も送信しません。",
-    handoffRoute: "ID確認からONDOに戻るまで", handoffConsent: "同意内容を確認", handoffConsentNote: "同意した証明だけを依頼します。",
+    handoffRoute: "ID確認からK-Tour IDに戻るまで", handoffConsent: "同意内容を確認", handoffConsentNote: "同意した証明だけを依頼します。",
     handoffCheck: "IDの応答をレビュー", handoffCheckNote: "サンプル・実際の事業者応答ではありません。",
-    handoffReturn: "トラベルパスに追加", handoffReturnNote: "ONDOに保存するか自分で選べます。", handoffContinue: "サンプル応答を確認",
+    handoffReturn: "トラベルパスに追加", handoffReturnNote: "K-Tour IDに保存するか自分で選べます。", handoffContinue: "サンプル応答を確認",
     document: "パスポート面を確認", documentBody: "検証ルートではマスキング済みサンプルを使い、パスポート情報を収集しません。",
     face: "顔確認", faceBody: "準備ができたら続けてください。",
     processing: "次の手順を準備中", processingBody: "この画面をしばらく開いたままにしてください。",
@@ -242,7 +245,7 @@ const COPY = {
     walletReady: "支払いは別に設定", walletReadyNote: "KRWまたはUSDは後からID・ウォレットで追加",
     present: "旅行資格をレビュー", request: "旅行資格をレビュー", requestBody: "最小限の可否結果をこの画面だけで確認します。外部サービスには送信しません。",
     presentConsent: "今回の依頼をレビューしますか？", presentConsentBody: "今回一回だけ適用します。「常に許可」はなく、進めなくても下書きは変わりません。",
-    presentationRequester: "ONDOテーブル", presentationPurpose: "今回一回の依頼に必要な最小限の旅行資格確認",
+    presentationRequester: "K-Tour ID テーブル", presentationPurpose: "今回一回の依頼に必要な最小限の旅行資格確認",
     presentationEvidence: "K-Tour旅行資格 · 可否のみ", presentationRetention: "今回の依頼だけに使用 · 自動で期限切れ · 結果は保存しない",
     presentationPredicate: "K-Tour旅行資格 · 可否のみ", presentationPredicateRetention: "一回の依頼 · 結果は保存しない",
     presentationRequestEyebrow: "旅行資格の確認",
@@ -275,7 +278,7 @@ function methodDetails(method: OndoBIdentityMethod, copy: typeof COPY.en) {
 function progressStep(phase: Phase) {
   if (phase === "method_select" || phase === "recovery_intro") return 1
   if (["consent", "cx_handoff_preview", "document_preview", "face_liveness_preview", "provider_processing_preview", "unavailable", "failed", "expired", "cancelled", "manual_review"].includes(phase)) return 2
-  if (["holder_delivery_preview", "credential_ready"].includes(phase)) return 3
+  if (["holder_delivery_preview", "credential_ready", "verified_person_consent"].includes(phase)) return 3
   return 4
 }
 
@@ -299,6 +302,7 @@ export function KTourIdSetupB() {
   const [manualOutcome, setManualOutcome] = useState<IdentityManualOutcome>("approved")
   const [manualChecking, setManualChecking] = useState(false)
   const [sampleRecovery, setSampleRecovery] = useState(false)
+  const [fullPassChecks, setFullPassChecks] = useState(false)
   const [boundaryRetry, setBoundaryRetry] = useState(false)
   const [recoveryKind, setRecoveryKind] = useState<"renew" | "device">("renew")
   const sampleConsumedRef = useRef(false)
@@ -311,6 +315,7 @@ export function KTourIdSetupB() {
   const consumedPresentationQaRef = useRef<OndoBIdentityRecoveryCode | null>(null)
   const issuedOnceRef = useRef(false)
   const holderReceiptRef = useRef(false)
+  const experiencePersonRef = useRef<BExperiencePersonHandoff | null>(null)
   const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const exitRequestedRef = useRef(false)
@@ -395,18 +400,26 @@ export function KTourIdSetupB() {
 
   useLayoutEffect(() => {
     if (!desiredOrigin || closing || exitRequestedRef.current) return
-    setMethod(state.identityCredential?.method ?? "passport_ekyc")
-    setPhase(state.identityCredential ? "credential_ready" : "method_select")
+    const handoff = desiredOrigin === "action_gate" && !state.identityCredential && reviewMode
+      ? createBExperiencePersonHandoff(window.sessionStorage, new Date(), { ...qaReviewFixtureOptions(), credential: state.identityCredential }) : null
+    experiencePersonRef.current = handoff
+    setMethod(handoff ? "mobile_id" : state.identityCredential?.method ?? "passport_ekyc")
+    let additionalChecks = false
+    if (desiredOrigin === "action_gate" && isPersonOnlySimulatedCredentialB(state.identityCredential)) {
+      try { const pending = restoreBActionGateSession(window.sessionStorage, new Date(), qaReviewFixtureOptions()).pending; additionalChecks = Boolean(pending && pending.cta !== "REDEEM_DEMO_ENTITLEMENT") } catch { /* Preserve the existing pass when the gate cannot be read. */ }
+    }
+    setFullPassChecks(additionalChecks)
+    setPhase(additionalChecks ? "method_select" : state.identityCredential ? "credential_ready" : handoff ? "verified_person_consent" : "method_select")
     setSession(null); setRecoveryCode(null); setPresentationApproved(null); setPresentationRequest(null)
     setCredentialClock(Date.now())
     consumedSetupQaRef.current = null
     consumedPresentationQaRef.current = null
-    issuedOnceRef.current = Boolean(state.identityCredential)
+    issuedOnceRef.current = !additionalChecks && Boolean(state.identityCredential)
     setSampleCase("success"); sampleConsumedRef.current = false
     setManualReview(null); setManualChecking(false); setManualOutcome("approved")
     setSampleRecovery(false)
     setBoundaryRetry(false); holderReceiptRef.current = false
-  }, [closing, desiredOrigin, state.identityCredential])
+  }, [closing, desiredOrigin, state.identityCredential, reviewMode])
 
   useEffect(() => {
     if (!active || finalExitActive || !session || ["method_select", "recovery_intro", "credential_ready"].includes(phase) || presentationPhase) return
@@ -577,6 +590,7 @@ export function KTourIdSetupB() {
   }
 
   function startFreshRequest() {
+    experiencePersonRef.current = null
     setSession(null); setManualReview(null); setRecoveryCode(null)
     setSampleCase("success"); sampleConsumedRef.current = false
     setBoundaryRetry(false); holderReceiptRef.current = false
@@ -596,8 +610,15 @@ export function KTourIdSetupB() {
 
   function beginSampleRecovery(kind: "renew" | "device") {
     if (!reviewMode || !state.identityCredential) return
+    setFullPassChecks(false)
     setRecoveryKind(kind)
     setPhase("recovery_intro")
+  }
+
+  function beginAdditionalPassChecks() {
+    if (!reviewMode || !isPersonOnlySimulatedCredentialB(state.identityCredential)) return
+    setSampleRecovery(false); setFullPassChecks(true); issuedOnceRef.current = false
+    startFreshRequest()
   }
 
   function confirmSampleRecovery() {
@@ -652,6 +673,20 @@ export function KTourIdSetupB() {
     setPhase(method === "passport_ekyc" ? "document_preview" : "cx_handoff_preview")
   }
 
+  function experienceHandoffCurrent() {
+    const handoff = experiencePersonRef.current
+    return Boolean(handoff && origin === "action_gate" && reviewMode && !state.identityCredential
+      && isBExperiencePersonHandoffCurrent(window.sessionStorage, handoff, new Date(), qaReviewFixtureOptions()))
+  }
+  function acceptCheckedPerson() {
+    if (!experienceHandoffCurrent()) return fail("IDENTITY_SESSION_EXPIRED", "verified_person_consent")
+    // Explicit issuance consent follows the already completed Person check.
+    // It does not repeat the provider and does not itself issue a credential.
+    setSession(createIdentitySetupSessionB("action_gate", "mobile_id"))
+    setRecoveryCode(null); holderReceiptRef.current = false; setBoundaryRetry(false)
+    setPhase("holder_delivery_preview")
+  }
+
   function interruptBoundary(reason: "cancelled" | "timeout" | "expired", safePhase: Phase) {
     holderReceiptRef.current = false
     if (reason === "expired") return fail("IDENTITY_SESSION_EXPIRED", "consent")
@@ -668,6 +703,7 @@ export function KTourIdSetupB() {
   function prepareHolder() {
     holderReceiptRef.current = false
     if (!reviewMode) { fail("IDENTITY_METHOD_UNAVAILABLE", "method_select"); return false }
+    if (experiencePersonRef.current && !experienceHandoffCurrent()) { fail("IDENTITY_SESSION_EXPIRED", "verified_person_consent"); return false }
     if (!session || !isIdentitySetupSessionActiveB(session)) { fail("IDENTITY_SESSION_EXPIRED", "consent"); return false }
     if (manualReview && !mayDeliverIdentityManualReview(manualReview, session.nonce)) { fail("MANUAL_REVIEW_REQUIRED", "consent"); return false }
     if (applySampleCheckpoint("holder", "holder_delivery_preview")) return false
@@ -678,6 +714,7 @@ export function KTourIdSetupB() {
   function finishHolder() {
     if (issuedOnceRef.current) return setPhase("credential_ready")
     if (!holderReceiptRef.current || !reviewMode) return
+    if (experiencePersonRef.current && !experienceHandoffCurrent()) return fail("IDENTITY_SESSION_EXPIRED", "verified_person_consent")
     if (!session || !isIdentitySetupSessionActiveB(session)) return fail("IDENTITY_SESSION_EXPIRED", "holder_delivery_preview")
     if (manualReview && !mayDeliverIdentityManualReview(manualReview, session.nonce)) return fail("MANUAL_REVIEW_REQUIRED", "consent")
     if (applySampleCheckpoint("holder", "holder_delivery_preview")) return
@@ -688,7 +725,15 @@ export function KTourIdSetupB() {
     if (origin === "action_gate" && !beginFinalDismiss()) return
     holderReceiptRef.current = false
     issuedOnceRef.current = true
-    actions.completeIdentitySetup(method, sampleRecovery ? { sampleRecovery: true } : undefined)
+    const saved = actions.completeIdentitySetup(method, experiencePersonRef.current
+      ? { issuanceScope: "person", experiencePersonHandoff: experiencePersonRef.current }
+      : sampleRecovery ? { sampleRecovery: true } : undefined)
+    if (!saved) {
+      issuedOnceRef.current = false
+      exitRequestedRef.current = false
+      restoreFocusAfterExitRef.current = false
+      return fail("IDENTITY_SESSION_EXPIRED", experiencePersonRef.current ? "verified_person_consent" : "holder_delivery_preview")
+    }
     // The provider atomically closes an action-gate setup with issuance so the
     // coordinator cannot reopen a missing-credential layer between updates.
     if (origin === "action_gate") return
@@ -762,6 +807,7 @@ export function KTourIdSetupB() {
     // Renewal/device recovery remain explicit, separately consented journeys.
     if (phase === "credential_ready") { requestFinalDismiss(); return }
     if (phase === "recovery_intro") { setPhase("credential_ready"); return }
+    if (experiencePersonRef.current && phase === "holder_delivery_preview") { setPhase("verified_person_consent"); return }
     const previous: Partial<Record<Phase, Phase>> = {
       consent: "method_select", cx_handoff_preview: "consent", document_preview: "consent",
       face_liveness_preview: "document_preview", provider_processing_preview: method === "passport_ekyc" ? "face_liveness_preview" : "cx_handoff_preview",
@@ -817,20 +863,24 @@ export function KTourIdSetupB() {
   const liveDialog = <section ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-label={copy.dialog} tabIndex={-1}
       data-testid="k-tour-id-setup" data-phase={phase} data-method={method} data-origin={origin} data-environment="simulated" data-integration-status="not_configured" data-execution-mode={reviewMode ? "review" : "normal"} data-public-sample={reviewMode && sampleConsumedRef.current ? "true" : undefined} data-recovery-in-progress={sampleRecovery ? "true" : "false"} onKeyDown={handleKeyDown}>
       <header className={styles.header}>
-        {phase === "method_select" ? <span className={styles.brandMark}><KTourIdMark size={28} /></span> : <button type="button" className={styles.iconButton} aria-label={copy.back} onClick={goBack}><ChevronLeft size={21} aria-hidden="true" /></button>}
+        {phase === "method_select" || phase === "verified_person_consent" ? <span className={styles.brandMark}><KTourIdMark size={28} /></span> : <button type="button" className={styles.iconButton} aria-label={copy.back} onClick={goBack}><ChevronLeft size={21} aria-hidden="true" /></button>}
         <p data-testid="k-tour-id-environment"><span>{copy.env}</span></p>
         <button type="button" className={styles.iconButton} data-testid="k-tour-id-cancel" aria-label={copy.close} onClick={requestFinalDismiss}><X size={20} aria-hidden="true" /></button>
       </header>
       {!presentationPhase ? <div className={styles.progress} role="list" aria-label={copy.dialog}>{steps.map((label, index) => <div key={label} role="listitem" aria-label={label} aria-current={currentStep === index + 1 ? "step" : undefined} data-current={currentStep === index + 1} data-complete={currentStep > index + 1}><span aria-hidden="true">{currentStep > index + 1 ? <Check size={12} aria-hidden="true" /> : index + 1}</span><small>{label}</small></div>)}</div> : null}
       {reviewMode ? <p className={styles.reviewScope} data-testid="k-tour-id-review-scope" data-review-stage={phase === "presentation_result" ? "result" : presentationPhase ? "request" : "setup"}><ShieldCheck size={15} aria-hidden="true" />{reviewScopeLabel}</p> : null}
 
+      {phase === "verified_person_consent" ? <div className={styles.body} data-testid="experience-pass-consent"><p className={styles.eyebrow}>{copy.mobile}</p><h1>{EXPERIENCE_COPY_B[state.locale].passTitle}</h1><p className={styles.lead}>{EXPERIENCE_COPY_B[state.locale].passBody}</p><Disclosure rows={[[copy.requester, "K-Tour ID", "identity-consent-requester"], [copy.evidence, EXPERIENCE_COPY_B[state.locale].proof, "identity-consent-evidence"]]} /><div className={styles.actions}><button type="button" data-identity-initial-focus data-testid="experience-pass-approve" className={styles.primary} onClick={acceptCheckedPerson}>{EXPERIENCE_COPY_B[state.locale].passApprove}<ChevronRight size={17} aria-hidden="true" /></button><button type="button" className={styles.secondary} onClick={requestFinalDismiss}>{copy.decline}</button></div></div> : null}
+
       {phase === "method_select" ? <div className={styles.body}>
         <h1>{copy.title}</h1>
+        {fullPassChecks ? <p className={styles.lead} data-testid="identity-additional-checks-scope">{EXPERIENCE_COPY_B[state.locale].additionalBody}</p> : null}
         <div className={styles.routes} data-testid="k-tour-id-methods">{routes.filter(route => !sampleRecovery || route.id === state.identityCredential?.method).map(({ id, icon: Icon, title, note, oldId, newId }) => <button key={id} type="button" data-identity-initial-focus={sampleRecovery || id === "mobile_id" ? true : undefined} data-testid={oldId} className={styles.route} data-availability={reviewMode ? "review" : "unavailable"} aria-label={`${title} · ${note} · ${reviewMode ? copy.methodReview : copy.methodUnavailable}`} onClick={() => chooseMethod(id)}><span data-testid={newId}><Icon size={22} aria-hidden="true" /></span><span><strong>{title}</strong><small>{note}</small></span><i><ChevronRight size={17} aria-hidden="true" /></i></button>)}</div>
         {sampleRecovery ? <p className={styles.sampleBoundary}>{sampleCopy.recoveryBoundary}</p> : null}
       </div> : null}
 
       {phase === "consent" ? <div className={styles.body} data-testid="k-tour-id-consent"><p className={styles.eyebrow}>{details.title}</p><h1>{copy.consentTitle}</h1>
+        {fullPassChecks ? <p className={styles.lead} data-testid="identity-additional-checks-consent">{EXPERIENCE_COPY_B[state.locale].additionalBody}</p> : null}
         <Disclosure rows={[[copy.requester, copy.requesterValue, "identity-consent-requester"], [copy.purpose, copy.purposeValue, "identity-consent-purpose"], [copy.evidence, details.evidence, "identity-consent-evidence"]]} />
         <Disclosure label={copy.consentDetails} rows={[[copy.retention, details.retention, "identity-consent-retention"], [copy.provider, details.provider, "identity-consent-provider"]]} />
         {reviewMode ? <details className={styles.sampleControls} data-testid="identity-sample-controls">
@@ -846,16 +896,18 @@ export function KTourIdSetupB() {
       {phase === "document_preview" ? <div className={styles.body}><PassportOcrStepB locale={state.locale} reviewMode={reviewMode} onComplete={() => advance("face_liveness_preview", "document_preview")} /></div> : null}
       {phase === "face_liveness_preview" ? <div className={styles.body}><PassportFaceStepB locale={state.locale} reviewMode={reviewMode} onComplete={() => advance("provider_processing_preview", "face_liveness_preview")} /></div> : null}
       {phase === "provider_processing_preview" ? <Panel testId="k-tour-id-route-step" icon={<RefreshCw />} eyebrow={copy.onDevice} title={copy.processing} body={copy.processingBody} visual="processing" /> : null}
-      {phase === "holder_delivery_preview" ? <IdentityHolderStepB locale={state.locale} onPrepare={prepareHolder} onAcknowledge={finishHolder} onCancel={() => interruptBoundary("cancelled", "holder_delivery_preview")} /> : null}
+      {phase === "holder_delivery_preview" ? <IdentityHolderStepB locale={state.locale} onPrepare={prepareHolder} onAcknowledge={finishHolder} onCancel={() => interruptBoundary("cancelled", "holder_delivery_preview")} autoPrepare={experiencePersonRef.current !== null} /> : null}
 
       {phase === "credential_ready" ? <div className={`${styles.body} ${styles.centered}`} data-testid="k-tour-id-credential" data-status={credentialSurfaceStatus} data-review-result={credentialSurfaceStatus === "review-draft" ? "current" : statusMessage && isReviewCredentialDraftB(state.identityCredential) ? credentialSurfaceStatus : "none"} data-code={statusMessage ? `CREDENTIAL_${credentialStatus.toUpperCase()}` : undefined} data-issuance-count={issuedOnceRef.current ? 1 : 0} data-wallet-provisioning="separate">
         <span data-testid="ktour-id-result" className={styles.heroIcon}><KTourIdMark size={38} /></span><h1>{statusMessage ?? copy.ready}</h1>
+        {isPersonOnlySimulatedCredentialB(state.identityCredential) ? <p className={styles.lead} data-testid="identity-person-only-scope">{EXPERIENCE_COPY_B[state.locale].limitedPass}</p> : null}
         {statusMessage ? null : <div className={styles.credentialStack}><div className={styles.credential} data-testid="k-tour-id-wallet-separate"><WalletCards size={27} aria-hidden="true" /><span><strong>{copy.walletReady}</strong><small>{copy.walletReadyNote}</small></span></div></div>}
         <div className={styles.actions}>
           {statusMessage && reviewMode ? <button type="button" data-identity-initial-focus data-testid="identity-recovery-open" className={styles.primary} onClick={() => beginSampleRecovery("renew")}><RefreshCw size={17} aria-hidden="true" />{sampleCopy.renew}</button> : statusMessage ? null : origin === "action_gate" ? <button type="button" data-identity-initial-focus data-testid="k-tour-id-presentation-open" className={styles.primary} onClick={openPresentation}>{copy.present}<ArrowRight size={17} aria-hidden="true" /></button> : null}
           <button type="button" data-identity-initial-focus={(!statusMessage || !reviewMode) && origin !== "action_gate" ? true : undefined} data-testid="k-tour-id-return" className={styles.secondary} onClick={requestFinalDismiss}>{returnLabel}</button>
         </div>
         {reviewMode && state.identityCredential ? <details className={styles.lifecycleControls} data-testid="identity-lifecycle-controls"><summary>{sampleCopy.recovery}<ChevronRight size={16} aria-hidden="true" /></summary>
+          {isPersonOnlySimulatedCredentialB(state.identityCredential) ? <button type="button" data-testid="identity-additional-checks-open" onClick={beginAdditionalPassChecks}><ShieldCheck size={17} aria-hidden="true" />{EXPERIENCE_COPY_B[state.locale].additionalChecks}</button> : null}
           {!statusMessage ? <button type="button" data-testid="identity-renew-open" onClick={() => beginSampleRecovery("renew")}><RefreshCw size={17} aria-hidden="true" />{sampleCopy.renew}</button> : null}
           <button type="button" data-testid="identity-device-recovery-open" onClick={() => beginSampleRecovery("device")}><Smartphone size={17} aria-hidden="true" />{sampleCopy.restore}</button>
         </details> : null}

@@ -21,7 +21,7 @@ button.capsule { cursor: pointer; }
 .list .media { width: 100%; height: auto; aspect-ratio: 1 / 1.08; }
 .preview .media { width: 52px; height: 52px; }
 .media img { width: 100%; height: 100%; object-fit: cover; }
-.media[data-photo-state="error"]::before { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ondo-muted, #626262); font-size: 11px; font-weight: 800; content: "ONDO"; }
+.media[data-photo-state="error"]::before { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ondo-muted, #626262); font-size: 11px; font-weight: 800; content: "K-Tour ID"; }
 .body { display: grid; min-width: 0; gap: 2px; }
 .body small { min-width: 0; color: var(--ondo-muted, #626262); font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
 .body strong { min-width: 0; font-size: 16px; font-weight: 730; line-height: 1.28; overflow-wrap: anywhere; }

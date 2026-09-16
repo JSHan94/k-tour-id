@@ -1,10 +1,12 @@
-# Backend 인계 작업표
+# K-Tour ID Backend 인계 작업표
 
-최신 브랜딩 배포: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다.
+**현재 앱·소스:** 대표 주소는 [K-Tour ID](https://ktour-id.vercel.app), 기준 소스는 [`main`](https://github.com/woogieboogie-jl/k-tour-id/tree/main), Harvey 시작 브랜치는 [`handoff/harvey-20260914`](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)다. 배포와 두 브랜치의 동일 소스 동기화 상태는 [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에서 확인한다. Production Ready이며 앱 코드·배포 및 브랜치 동기화 검수 기준은 `4cb1964`다. 아래 과거 source·검수 기록과 구분하며 Sumsub 실험은 별도다. CX·OpenDID·OmniOne Chain·Sui 필수 구현 범위는 유지한다.
+
+기존 운영 브랜딩 기준선: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 이번 로컬 검수는 관련 계약44/44·typecheck·production build/scan·HTTP probe(공개 자산41개)·mobile/desktop 브랜드 E2E6/6(workers1/retries0) PASS다. 최종 고유 배포의 HTTP probe 및 mobile/desktop 브랜드4/4(7.4초, workers1/retries0) PASS. 별칭별 추가 확인 범위는 릴리스 기록을 따르며, 전체 여정 재검수나 실제 provider/실기기 검수로 확대하지 않는다.
 
 마지막 기능 흐름 검수 기준은 이전 `e2ad7c4`다. 당시 전체 계약833/833·After 19 공개 경로 로컬5/5 및 운영5/5 PASS(운영2.0분, workers1/retries0; project mismatch skip5개 제외)는 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md)의 역사적 증거이며 `cc3d7c3`에서 재실행한 결과가 아니다. 이전 `82ea4c9`의 공개 mobile12개/desktop·tablet2개·계약826개는 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md), [9월 11일 검수](./FINAL_JOURNEY_QA_2026-09-11.md)도 별도다. 운영 공개와 QA는 실제 연동 체크박스의 완료를 뜻하지 않는다.
 
-정본: [DEPLOYMENT_SPEC](./DEPLOYMENT_SPEC.md). 기능·해커톤 대응: [Integration Matrix](./HACKATHON_INTEGRATION_MATRIX_2026-09-08.md). 개발 시작점은 `handoff/harvey-20260914`를 clone한 저장소의 `k-tour-id-app/`이다. 배포 이력은 위 기준을 따른다. 배포 전 source/document 대조는 [인계 정합성 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 공개판 `3dc392b`는 [9월 10일 릴리스](./PROTOTYPE_COMPLETION_2026-09-10.md)에 보존한다.
+정본: [DEPLOYMENT_SPEC](./DEPLOYMENT_SPEC.md). 기능·해커톤 대응: [Integration Matrix](./HACKATHON_INTEGRATION_MATRIX_2026-09-08.md). 원 인계 기준선은 [snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9)의 `k-tour-id-app/`이며 현재 시작점은 위 main/Harvey 경로다. 배포 이력은 위 기준을 따른다. 배포 전 source/document 대조는 [인계 정합성 점검](./HANDOFF_SYNC_2026-09-11.md), 이전 공개판 `3dc392b`는 [9월 10일 릴리스](./PROTOTYPE_COMPLETION_2026-09-10.md)에 보존한다.
 
 이 문서는 **개발자가 실제 연동 단계에서 수행할 일**을 분리한 실행 목록이다. 빈 체크박스는 실제 연동 미완료를 뜻하며 목업 완성의 차단 조건이 아니다. UI 상태 구현, 해당 소스의 브라우저 검수, 실제 공급자 연동 증거를 각각 판정한다. 새 문의 이력은 모델 계약과 기존 f79 공개 기준선의 모바일 브라우저 EN390/KO320 두 케이스를 통과했다. 실제 공급자 접수나 전체 기기 검수를 뜻하지 않는다.
 
@@ -73,7 +75,7 @@ BE-02/04/05/13은 **DID 해커톤 핵심 시연에 우선 배정**한다. BE-06/
 
 ### 앱 제안 API와 공급업체 계약의 경계
 
-다음 경로는 [Deployment Spec §4–5](./DEPLOYMENT_SPEC.md)의 **새 ONDO BFF 제안**이다. 현재 배포된 API, CX/OpenDID/OmniOne/Sui의 공식 endpoint, 확정된 provider schema로 읽지 않는다. 업체 선택·팀 환경 수령 후 담당자가 request/response·callback·error·receipt mapping 문서를 작성한다.
+다음 경로는 [Deployment Spec §4–5](./DEPLOYMENT_SPEC.md)의 **새 K-Tour ID BFF 제안**이다. 현재 배포된 API, CX/OpenDID/OmniOne/Sui의 공식 endpoint, 확정된 provider schema로 읽지 않는다. 업체 선택·팀 환경 수령 후 담당자가 request/response·callback·error·receipt mapping 문서를 작성한다.
 
 POST 성공만 연결해서 완료 처리하지 않는다. [§4.3 조회·복구 API](./DEPLOYMENT_SPEC.md#43-성공-화면-외에-연결해야-할-조회복구-api)의 `GET /operations/{id}`, capture/void/funding cancel, 문의 이력/export job 조회, 방문/badge 조회를 해당 BE 작업에 함께 배정한다. 취소 요청이 허용되는 단계와 이미 제출된 작업의 상태 조회를 구분하고 FE의 닫기·재진입·unknown CTA를 실제 응답에 연결한다.
 
@@ -147,7 +149,8 @@ PLAYWRIGHT_BASE_URL=http://127.0.0.1:3438 pnpm exec playwright test tests/e2e/on
 
 <!-- ktour-backend-handoff:v1 -->
 
-- [x] `baseline:current:cc3d7c3`: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 마지막 기능 흐름 검수 `e2ad7c4`의 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md) 및 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md) 결과와 합산하지 않는다
+- [x] `baseline:current`: [현재 배포·인계 기록](./KTOUR_PRODUCTION_HANDOFF_2026-09-15.md)에 대표 URL·main·Harvey 브랜치·배포 상태가 있다. 실제 동기화·배포 확인은 해당 기록을 따른다.
+- [x] `baseline:historical:cc3d7c3`: source/runtime `cc3d7c3`, [운영 앱](https://ondo-tau.vercel.app). 브랜딩 전용 production Ready이며 최종 deployment `dpl_Bf4rBwnqH5PpaHeMRW6NmM8y3Wk1`의 고유 주소·검수 범위는 [브랜딩 공유·아이콘 릴리스](./BRAND_SHARE_REFRESH_2026-09-14.md)를 따른다. 마지막 기능 흐름 검수 `e2ad7c4`의 [이전 매장 After 19 기능 검수](./PLACE_AFTER19_FIX_2026-09-14.md) 및 [이전 지도·지갑 릴리스](./MAP_WALLET_JOURNEYS_2026-09-12.md) 결과와 합산하지 않는다
 - [x] `baseline:historical:996119f`: 이전 G09-S 수치·URL이 historical로 분리되고 current evidence와 합산되지 않음
 - [x] `trace:G01-G13`: [DEPLOYMENT_SPEC Appendix A](./DEPLOYMENT_SPEC.md#appendix-a-g01g13-인계-추적-요약)의 각 row에 public component·fixture/test·FE gap·BE/H·ADR·proof status가 있음
 - [ ] `fe:provider-sdk`: `FE-CX-PASSPORT`, `FE-OPENDID`, `FE-PAYMENT`, `FE-SUI`, `FE-RESERVATION` 각각 실제 handoff evidence 보유

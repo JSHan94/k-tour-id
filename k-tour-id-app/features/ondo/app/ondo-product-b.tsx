@@ -7,6 +7,7 @@ import { TravelerIdEntryB } from "../identity-b/traveler-id-entry-b"
 import { KTourIdSetupB } from "../identity-b/ktour-id-setup-b"
 import { AccountSaveGateMountB } from "../identity-b/account-save-gate-b"
 import { BActionGateCoordinator } from "../identity-b/action-gate-coordinator-b"
+import { ExperienceMountB } from "../experience-b/experience-b"
 import { BActivityProfileProvider } from "../identity-b/activity-profile-b-provider"
 import { LocalSignalLayerB } from "../local-signal-b/local-signal-layer-b"
 import { LabsEntryB } from "../labs/labs-entry"
@@ -29,7 +30,7 @@ export function OndoProductB() {
         tables: <PulseTablesEntryB />,
         travelerId: <TravelerIdEntryB />,
         settings: <SettingsEntryB />,
-        overlays: <><CanonicalPlaceMount /><EditorialPlaceMountB /><CommerceOfferMountB /><WalletFundingMountB /><AccountSaveGateMountB /><LocalSignalLayerB /><OfficialDirectoryOnboardingLayer /><KTourIdSetupB /><BActionGateCoordinator /><LabsEntryMountB /><HackathonEntitlementLayerB /></>,
+        overlays: <><CanonicalPlaceMount /><EditorialPlaceMountB /><CommerceOfferMountB /><WalletFundingMountB /><AccountSaveGateMountB /><LocalSignalLayerB /><OfficialDirectoryOnboardingLayer /><ExperienceMountB /><KTourIdSetupB /><BActionGateCoordinator /><LabsEntryMountB /><HackathonEntitlementLayerB /></>,
       }} />
     </BActivityProfileProvider>
   )

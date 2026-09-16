@@ -306,7 +306,7 @@ test("Wave 1 mobile decision zones reserve space and keep accessibility fallback
   expect(commerceCss).toMatch(/@media \(max-width: 699px\)[\s\S]*?\.offerBody\s*\{[\s\S]*?padding:\s*10px 11px calc\(138px \+ env\(safe-area-inset-bottom\)\)/)
   expect(commerceCss).toContain(".offerDecision .paymentConsequence { grid-column: 1 / -1; }")
   expect(commerceCss).toContain(".offerDecision .payButton { grid-column: 1; }")
-  expect(commerce).toContain("<Soup size={30} aria-hidden=\"true\" />")
+  expect(commerce).toContain("<Store size={30} aria-hidden=\"true\" />")
   expect(commerceCss).toMatch(/\.offerMark\s*\{[^}]*width:\s*60px;[^}]*height:\s*60px/)
   expect(commerceCss).toMatch(/\.fundingSummary strong\s*\{[^}]*overflow-wrap:\s*anywhere/)
   expect(commerceCss).toMatch(/\.offerBenefit p\s*\{[^}]*display:\s*block;[^}]*overflow:\s*visible/)

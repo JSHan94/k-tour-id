@@ -37,26 +37,26 @@ export type UnifiedPulseResultB = {
 }
 
 export const PULSE_COMPOSITION_DISCLOSURE = Object.freeze({
-  en: "Fixed walkthrough snapshots — not weather, live crowding or official LOCALDATA facts. Production ONDO temperature will use only verified Japan-interest, Korea-local and ONDO evidence; paid placements never count.",
-  ko: "날씨·실시간 혼잡도·공식 LOCALDATA 사실이 아닌 고정 워크스루 스냅샷입니다. 실제 온도는 검증된 일본 관심도·한국 로컬·ONDO 근거만 합산하며, 유료 노출은 제외합니다.",
-  ja: "気温・リアルタイムの混雑状況・LOCALDATAの公式情報ではない固定スナップショットです。実運用のONDO温度では、検証済みの日本での関心、韓国ローカル、ONDOの根拠のみを使用し、広告・有料掲載は算定に含めません。",
+  en: "Fixed walkthrough snapshots — not weather, live crowding or official LOCALDATA facts. Production place temperature will use only verified Japan-interest, Korea-local and first-party evidence; paid placements never count.",
+  ko: "날씨·실시간 혼잡도·공식 LOCALDATA 사실이 아닌 고정 워크스루 스냅샷입니다. 실제 장소 온도는 검증된 일본 관심도·한국 로컬·자체 서비스 근거만 합산하며, 유료 노출은 제외합니다.",
+  ja: "気温・リアルタイムの混雑状況・LOCALDATAの公式情報ではない固定スナップショットです。実運用のスポットのにぎわいでは、検証済みの日本での関心、韓国ローカル、自社サービスの根拠のみを使用し、広告・有料掲載は算定に含めません。",
 })
 
 export const PULSE_PRODUCTION_DRIVER_DISCLOSURE = Object.freeze({
   en: [
     { id: "japan", label: "Japan interest", state: "Growing", detail: "Source and place links pending verification" },
     { id: "korea", label: "Korea local", state: "Growing", detail: "Current local evidence not connected" },
-    { id: "ondo", label: "ONDO", state: "Growing", detail: "First-party production evidence not connected" },
+    { id: "ondo", label: "K-Tour ID", state: "Growing", detail: "First-party production evidence not connected" },
   ],
   ko: [
     { id: "japan", label: "일본 관심도", state: "성장 중", detail: "출처와 장소 연결 검증 중" },
     { id: "korea", label: "한국 로컬", state: "성장 중", detail: "최신 로컬 근거 미연결" },
-    { id: "ondo", label: "ONDO", state: "성장 중", detail: "실서비스 자체 근거 미연결" },
+    { id: "ondo", label: "K-Tour ID", state: "성장 중", detail: "실서비스 자체 근거 미연결" },
   ],
   ja: [
     { id: "japan", label: "日本での関心", state: "拡充中", detail: "情報源と場所リンクを確認中" },
     { id: "korea", label: "韓国ローカル", state: "拡充中", detail: "最新のローカル根拠は未接続" },
-    { id: "ondo", label: "ONDO", state: "拡充中", detail: "実運用の自社データは未接続" },
+    { id: "ondo", label: "K-Tour ID", state: "拡充中", detail: "実運用の自社データは未接続" },
   ],
 })
 
@@ -251,7 +251,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "서울 시장의 즉석 참기름을 표현한 편집 이미지",
         ja: "ソウル市場の搾りたてごま油を表現した編集画像",
       },
-      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
+      credit: { en: "K-Tour ID original editorial illustration", ko: "K-Tour ID 오리지널 편집 이미지", ja: "K-Tour ID 編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["seoul"],
@@ -280,7 +280,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "서울 8시간 여행 동선을 표현한 편집 콜라주",
         ja: "ソウル8時間の旅程を表現した編集コラージュ",
       },
-      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
+      credit: { en: "K-Tour ID original editorial illustration", ko: "K-Tour ID 오리지널 편집 이미지", ja: "K-Tour ID 編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["seoul"],
@@ -298,7 +298,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "스킨케어 오브제와 서울 지도를 담은 뷰티 취재 편집 이미지",
         ja: "スキンケア用品とソウル地図を配した美容取材の編集画像",
       },
-      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
+      credit: { en: "K-Tour ID original editorial illustration", ko: "K-Tour ID 오리지널 편집 이미지", ja: "K-Tour ID 編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["seoul"],
@@ -338,7 +338,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "귤과 돌담, 바다로 구성한 제주 촬영지 편집 이미지",
         ja: "みかん、石垣、海で構成した済州ロケ地の編集画像",
       },
-      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
+      credit: { en: "K-Tour ID original editorial illustration", ko: "K-Tour ID 오리지널 편집 이미지", ja: "K-Tour ID 編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["jeju"],
@@ -356,7 +356,7 @@ export const JAPAN_FIRST_LAUNCH_CONTENT: readonly JapanFirstLaunchContentB[] = O
         ko: "음악과 공연 모티프를 담은 제주 해안 여행 편집 이미지",
         ja: "音楽とステージのモチーフを配した済州海岸ルートの編集画像",
       },
-      credit: { en: "ONDO original editorial illustration", ko: "ONDO 오리지널 편집 이미지", ja: "ONDO編集イラスト" },
+      credit: { en: "K-Tour ID original editorial illustration", ko: "K-Tour ID 오리지널 편집 이미지", ja: "K-Tour ID 編集イラスト" },
       rightsMode: "ondo-original",
     },
     cityIds: ["jeju"],

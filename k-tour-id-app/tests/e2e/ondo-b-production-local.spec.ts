@@ -305,7 +305,7 @@ test.describe("ONDO B production security and resilience boundaries", () => {
       const response = await request.get("/", { headers: { host } })
       expect(response.ok()).toBeTruthy()
       const html = await response.text()
-      expect(html).toContain("K-TOUR ID | ONDO 溫圖")
+      expect(html).toContain("<title>K-Tour ID</title>")
       expect(html).toContain('<link rel="canonical"')
       expect(html).not.toContain("NEXT_HTTP_ERROR_FALLBACK")
       expect(html).not.toContain("attacker.example")

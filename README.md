@@ -1,14 +1,22 @@
-# ONDO 溫圖
+# K-Tour ID
 
-ONDO 溫圖 is a map-first Korea food and travel product. It combines 400 official Seoul and Busan food-service records with a clearly separated Jeju editorial collection, then connects discovery to saved places, Tables and an optional privacy-preserving K-Tour ID travel credential flow.
+K-Tour ID is a map-first Korea food and travel product. It combines 400 official Seoul and Busan food-service records with a clearly separated Jeju editorial collection, then connects discovery to saved places, Tables and an optional privacy-preserving travel credential flow.
 
-`溫` means warmth and `圖` means map. ONDO remains the international product name; `溫圖` is its Hanja signature. This repository is a clickable mock. Identity, funding, payment and chain outcomes are **simulated**; a sample credential, ticket or receipt is not external confirmation.
+This release is a clickable **mock**. Identity, funding, payment, reservation and chain outcomes are simulated; a sample credential, ticket or receipt is not external confirmation. CX, OpenDID, OmniOne Chain and Sui remain required developer integrations.
+
+**[K-Tour ID app](https://ktour-id.vercel.app)** · **[main](https://github.com/woogieboogie-jl/k-tour-id/tree/main)** · **[Harvey handoff](https://github.com/woogieboogie-jl/k-tour-id/tree/handoff/harvey-20260914)**. **App source `5ba76a2` is deployed: clearer map feedback, refined masthead spacing, and a mobile map that continues behind the navigation dock.** See the [current map release record](./docs/KTOUR_MAP_LAYOUT_FIX_2026-09-16.md) for scoped checks and the [production handoff](./docs/KTOUR_PRODUCTION_HANDOFF_2026-09-15.md) for deployment and synchronized branches. The [free guide reading and optional pass saving](./docs/KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md) from `9980472` remain unchanged. Later documentation-only commits preserve this app source. [Earlier September 16 UX polish](./docs/ux-refinement/2026-09-15/round-20260916.md), the [initial experience release](./docs/KTOUR_EXPERIENCE_RELEASE_2026-09-15.md) and [previous UX release](./docs/ux-refinement/2026-09-15/RELEASE.md) remain historical evidence. Provider integrations remain incomplete.
+
+The [separate Sumsub Sandbox Preview](https://ondo-hinsi4hdz-jaewook-9643s-projects.vercel.app) lives on `feat/sumsub-sandbox-onboarding-20260914` and is **not included in this release**. Its real WebSDK/API tests are not production KYC or verified real face/liveness. See its [separate handoff](https://github.com/woogieboogie-jl/k-tour-id/blob/feat/sumsub-sandbox-onboarding-20260914/docs/SUMSUB_SANDBOX_HANDOFF_2026-09-14.md).
+
+K-Tour ID is the public product name. Historical ONDO names, `ondo` module/API identifiers, environment keys and existing deployment hostnames remain unchanged for compatibility.
 
 ## Developer handoff — start here
 
-For the September 21 submission, start with [해커톤 연동 개발 요약](./docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md), then [Sui 필수 통합 추가 명세](./docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) and the [1주 해커톤 통합 개발안](./docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). **CX, OpenDID, OmniOne Chain and Sui are all required by the team.** The same nonfinancial entitlement journey adds real Move, zkLogin/PTB and a user-authorized, bounded AI agent. The addendum takes precedence for scope and execution order; Sui staffing and readiness must be confirmed before treating the original one-week schedule as feasible. Financial/reservation integrations, bridge and passport/residence integrations remain mock. Program registration, submission eligibility and matching-prize terms require separate confirmation. The full-product handoff below remains the longer-term reference.
+For the September 21 submission, start with [해커톤 연동 개발 요약](./docs/HARVEY_HACKATHON_HANDOFF_2026-09-14.md), then [Sui 필수 통합 추가 명세](./docs/HACKATHON_SUI_REQUIRED_ADDENDUM_2026-09-14.md) and the [1주 해커톤 통합 개발안](./docs/HACKATHON_ONE_WEEK_SPEC_2026-09-14.md). **CX, OpenDID, OmniOne Chain and Sui are all required by the team.** The optional guide-saving journey adds real Move, zkLogin/PTB and a user-authorized, bounded AI agent. The addendum governs technical/security/submission requirements and the Sui → final service DB → OmniOne order; the [current guide handoff](./docs/EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) governs free reading, optional saving and the v2 action/campaign/recipient. “Redemption” means saving a collection entry, never unlocking reading. Sui staffing and readiness must be confirmed before treating the original one-week schedule as feasible. Financial/reservation integrations, bridge and passport/residence integrations remain mock. Program registration, submission eligibility and matching-prize terms require separate confirmation. The full-product handoff below remains the longer-term reference.
 
-Read [개발자 시작 문서](./docs/DEVELOPER_START_HERE.md) for the current mock → API/SDK/backend work map and implementation order. Start from branch `handoff/harvey-20260914`, which contains the app and docs together. This is a source snapshot; commit IDs in historical release notes describe prior deployments, not checkout targets in this branch.
+Read [개발자 시작 문서](./docs/DEVELOPER_START_HERE.md) for the mock → API/SDK/backend work map. Harvey starts from `handoff/harvey-20260914`; `main` is the canonical source. The current release record tracks their synchronization, so use the app and docs from the same confirmed handoff. The [original handoff snapshot `9d4aec9`](https://github.com/woogieboogie-jl/k-tour-id/tree/9d4aec9) is historical, not the moving branch head.
+
+The approved [nonfinancial guide flow](./docs/EXPERIENCE_MOCK_HANDOFF_2026-09-15.md) now separates **Roba → freely read the guide** from **optional Add to my pass → Person/pass/presentation → explicit saving approval → local pass collection**. Holder acknowledgement and purpose-specific presentation consent remain explicit. Old opening approvals are not reused for the new save campaign. It adds no real CX/OpenDID/AI/Sui/OmniOne calls, merchant voucher or financial/visit entitlement. The [public-guide release record](./docs/KTOUR_PUBLIC_GUIDE_RELEASE_2026-09-16.md) distinguishes this source change from its verification and deployment status.
 
 ### Run the handoff
 
@@ -28,13 +36,15 @@ Open `http://localhost:3438`. Contract tests regenerate the standalone stage, so
 
 The acceptance boundary is **complete mock journeys + matching developer requirements**. Actual integrations are the developer's work, including provider SDK/handoff adapters in the frontend.
 
-## Production deployment
+## Original production baseline
 
-Open the [production app](https://ondo-tau.vercel.app), deployment source/runtime `cc3d7c3`. This is a branding-only update: a food/café/bar sharing card and monochrome K-TOUR ID icons. The [brand sharing release](./docs/BRAND_SHARE_REFRESH_2026-09-14.md) owns the final deployment ID, unique URL and verification status; the final production deployment is **Ready**, with its HTTP probe and 4 mobile/desktop brand cases passing (one worker, no retries). Local checks passed: 44 related contracts, typecheck, production build/scan, HTTP probe covering 41 public assets, and 6 mobile/desktop brand browser cases (one worker, no retries). Artwork and the generation prompt are documented in the [brand asset record](./k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md).
+The original [production app](https://ondo-tau.vercel.app), deployment source/runtime `cc3d7c3`, is the pre-rebrand baseline. The September 14 [brand sharing release](./docs/BRAND_SHARE_REFRESH_2026-09-14.md) records that deployment's ID, URL and verification status: Ready, with its HTTP probe and 4 mobile/desktop brand cases passing (one worker, no retries). Its local checks passed: 44 related contracts, typecheck, production build/scan, HTTP probe covering 41 public assets, and 6 mobile/desktop brand browser cases (one worker, no retries). Those results belong to that earlier sharing-card/icon update, not this release. Its [brand asset record](./k-tour-id-app/docs/branding/KTOUR_SOCIAL_REFRESH_2026-09-14.md) is retained as history.
 
 The last functional-flow QA baseline is historical `e2ad7c4`: 833 contracts and the After 19 public-route checks (local 5/5; production 5/5 in 2.0 minutes, one worker, no retries; 5 project-mismatch skips excluded). Its [After 19 fix record](./docs/PLACE_AFTER19_FIX_2026-09-14.md), the [previous map-first entry](./docs/MAP_FIRST_ENTRY_2026-09-14.md) and [map–wallet release](./docs/MAP_WALLET_JOURNEYS_2026-09-12.md) preserve their own evidence; those flows were not rerun by this branding update. This remains a publicly deployed **mock**: no actual identity, payment, reservation or chain provider was added, and actual iPhone Safari/Android devices were not tested. Earlier [production](./docs/PRODUCTION_RELEASE_2026-09-12.md) and [full-journey QA](./docs/FINAL_JOURNEY_QA_2026-09-11.md) remain historical.
 
-## Golden flow
+## Full-product mock flow
+
+This is the longer-term product journey, not the one-week mandatory integration scope. The hackathon brief and Sui addendum above define that narrower scope.
 
 ```text
 Identity source
@@ -109,13 +119,13 @@ pnpm build:vercel:ondo-b
 pnpm exec next start .ondo-b-standalone -p 3438
 ```
 
-Set `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_ONDO_B_ORIGIN` to the deployed ONDO origin so canonical and social-preview URLs resolve correctly.
+Set `NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_ONDO_B_ORIGIN` to the deployed K-Tour ID origin so canonical and social-preview URLs resolve correctly. The existing environment key names stay unchanged.
 
-The current UI uses Next.js 16, React 19, TypeScript and Tailwind CSS v4. ONDO's map-first flow uses MapLibre with a source-attributed OpenFreeMap basemap for prototype validation; this is not a partnership claim. Its visual language is modern white and black with restrained Pulse and editorial accents.
+The current UI uses Next.js 16, React 19, TypeScript and Tailwind CSS v4. K-Tour ID's map-first flow uses MapLibre with a source-attributed OpenFreeMap basemap for prototype validation; this is not a partnership claim. Its visual language is modern white and black with restrained Pulse and editorial accents.
 
 ## Repository boundaries
 
-- `k-tour-id-app/` is the active ONDO product mock; the directory name stays stable to preserve historical evidence and test contracts.
-- `docs/` contains the current canonical trio above and clearly dated historical records. The ONDO rebrand does not delete identity, privacy or recovery requirements.
+- `k-tour-id-app/` is the active K-Tour ID product mock; internal module names stay stable to preserve API, storage and test contracts.
+- `docs/` contains the current canonical trio above and clearly dated historical records. The public-name change does not delete identity, privacy or recovery requirements.
 - `legacy-contracts/` contains earlier experimental contracts and is not part of the golden-path production architecture. It must not be deployed or presented as audited product code.
 - Brand logos in the mock are target-integration examples, not evidence of partnership.

@@ -1227,7 +1227,7 @@ test("FLOW8-DECLINED-012 declined benefit keeps 22 → 38, refunds to 60, and re
   await expect(paymentGate).toHaveAttribute("data-gate-view", /^(processing|success)$/)
   const receipt = offer.getByTestId("payment-receipt")
   await expect(receipt).toContainText(/Amount\s*₩22,000/)
-  await expect(receipt).toContainText(/ONDO benefit\s*₩0/)
+  await expect(receipt).toContainText(/K-Tour ID benefit\s*₩0/)
   await expect(receipt).toContainText(/Balance left\s*₩38,000/)
   await expect(receipt.getByTestId("commerce-settlement-details")).toContainText("22 OOKRW")
   await expect(receipt.getByTestId("commerce-settlement-details")).toContainText("0 OOKRW")
