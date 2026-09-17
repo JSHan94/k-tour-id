@@ -16,7 +16,7 @@ export const HACKATHON_PENDING_KEY = "ondo-b.hackathon.pending.v1"
 /** Autopilot: `execute` stops after the on-chain agent execution (step 7) so the
  * final "confirm and use" stays a human tap; `redeem` runs through the service
  * redemption (step 8) and the OmniOne record (step 9). Undefined = manual. */
-export type HackathonAuto = "execute" | "redeem"
+export type HackathonAuto = "execute" | "redeem" | "step"
 export type HackathonOpenDetail = { venueId: string; locale: "en" | "ko" | "ja"; resumeOperationId?: string; auto?: HackathonAuto }
 
 export function isHackathonVenue(venueId: unknown) {

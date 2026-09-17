@@ -68,3 +68,8 @@
 .entry[data-variant="auto"] { background:var(--ondo-surface-raised); color:var(--ondo-ink); border-color:var(--ondo-line-strong); }
 .entry { position:fixed; right:16px; bottom:calc(150px + env(safe-area-inset-bottom)); z-index:65; display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:0 16px; border-radius:999px; border:1px solid var(--ondo-control); background:var(--ondo-control); color:var(--ondo-control-ink); font:inherit; font-size:13px; font-weight:740; box-shadow:var(--ondo-shadow); cursor:pointer; }
 .entry:focus-visible { outline:3px solid var(--ondo-focus-ring, #2563eb); outline-offset:3px; }
+
+/* step console: back / current step / next */
+.stepNav { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 16px; border-bottom:1px solid var(--ondo-line); background:var(--ondo-surface-soft); }
+.stepNav > span { flex:1 1 auto; text-align:center; font-size:12.5px; color:var(--ondo-muted); line-height:1.4; }
+.stepNav .ghost, .stepNav .secondary { flex:0 0 auto; min-height:36px; font-size:13px; }
